@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/event_trigger.schema.json",
+  "title": "Event Trigger Schema",
+  "description": "Defines the structure for simple event triggers that link a game event condition to one or more actions.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A single event trigger definition.",
+    "required": [
+      "id",
+      "listen_to",
+      "actions"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique identifier for this specific trigger definition (e.g., 'demo:trigger_unlock_treasure_door').",
+        "pattern": "^[a-zA-Z0-9_\\-:]+$"
+      },
+      "listen_to": {
+        "type": "object",
+        "description": "Specifies the event condition that activates this trigger.",
+        "required": [
+          "event_type"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "description": "The name of the core game event to listen for.",
+            "enum": [
+              "entity_died"
+            ],
+            "examples": [
+              "entity_died"
+            ]
+          },
+          "filters": {
+            "type": "object",
+            "description": "Optional conditions to further specify which event instances should match.",
+            "additionalProperties": false,
+            "properties": {
+              "source_id": {
+                "type": "string",
+                "description": "If specified, the trigger only matches if the event was caused by the entity with this ID (e.g., the ID of the entity that died).",
+                "pattern": "^[a-zA-Z0-9_\\-:]+$",
+                "examples": [
+                  "demo:enemy_goblin"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "type": "array",
+        "description": "A list of one or more actions to execute when the 'listen_to' condition is met.",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "description": "Defines a single action to be performed.",
+          "required": [
+            "type",
+            "target",
+            "parameters"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of action to perform.",
+              "enum": [
+                "set_connection_state"
+              ],
+              "examples": [
+                "set_connection_state"
+              ]
+            },
+            "target": {
+              "type": "object",
+              "description": "Specifies the object or context the action affects. Structure depends on the action 'type'.",
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "set_connection_state"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "location_id",
+                  "connection_direction"
+                ],
+                "properties": {
+                  "location_id": {
+                    "type": "string",
+                    "description": "The ID of the location containing the connection to modify.",
+                    "pattern": "^[a-zA-Z0-9_\\-:]+$"
+                  },
+                  "connection_direction": {
+                    "type": "string",
+                    "description": "The direction identifier (from the Connections component) of the connection to modify within the specified location.",
+                    "examples": [
+                      "north",
+                      "east",
+                      "enter airlock"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Contains values and settings needed for the action. Structure depends on the action 'type'.",
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "set_connection_state"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "description": "The new state value to set for the targeted connection (e.g., 'unlocked', 'hidden', 'blocked').",
+                    "examples": [
+                      "unlocked",
+                      "locked",
+                      "hidden",
+                      "revealed",
+                      "blocked",
+                      "unblocked"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "one_shot": {
+        "type": "boolean",
+        "description": "If true, this trigger will automatically disable itself after its actions have been successfully executed once.",
+        "default": true
+      }
+    }
+  }
+}

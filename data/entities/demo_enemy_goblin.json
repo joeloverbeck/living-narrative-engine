@@ -1,0 +1,15 @@
+{
+  "id": "demo:enemy_goblin",
+  "components": {
+    "Name": {
+      "value": "Goblin"
+    },
+    "Health": {
+      "current": 5,
+      "max": 5
+    },
+    "Attack": {
+      "damage": 2
+    }
+  }
+}

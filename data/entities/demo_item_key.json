@@ -1,0 +1,19 @@
+{
+  "id": "demo:item_key",
+  "components": {
+    "Name": {
+      "value": "Iron Key"
+    },
+    "Description": {
+      "text": "A heavy, rusted iron key. It looks like it fits a sturdy lock."
+    },
+    "Item": {
+      "tags": [
+        "key",
+        "iron"
+      ],
+      "stackable": false,
+      "value": 5
+    }
+  }
+}

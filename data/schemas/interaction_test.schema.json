@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/interaction_test.schema.json",
+  "title": "Interaction Test Definition Schema",
+  "description": "Defines the structure for tests triggered by interactions, including types like stat checks and probability checks, and their outcomes.",
+  "definitions": {
+    "TestDefinition": {
+      "type": "object",
+      "description": "Defines a test to determine the outcome of an action or interaction.",
+      "required": [
+        "id",
+        "type",
+        "on_success",
+        "on_failure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this specific test instance (e.g., 'demo:test_force_hallway_door').",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of test to perform.",
+          "enum": [
+            "stat_check",
+            "probability"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional narrative description of the test being attempted."
+        },
+        "stat_or_skill_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "description": "The ID of the entity skill or statistic to check. Required if type is 'stat_check'."
+        },
+        "difficulty_class": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The target number (DC) the actor must meet or exceed. Required if type is 'stat_check'."
+        },
+        "success_probability": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "The probability of success (0.0 to 1.0). Required if type is 'probability'."
+        },
+        "on_success": {
+          "$ref": "#/definitions/TestOutcome",
+          "description": "Defines what happens if the test succeeds."
+        },
+        "on_failure": {
+          "$ref": "#/definitions/TestOutcome",
+          "description": "Defines what happens if the test fails."
+        }
+      },
+      "if": {
+        "properties": {
+          "type": {
+            "const": "stat_check"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "stat_or_skill_id",
+          "difficulty_class"
+        ]
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "type": {
+              "const": "probability"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "success_probability"
+          ]
+        }
+      }
+    },
+    "TestOutcome": {
+      "type": "object",
+      "description": "Defines the results of a test succeeding or failing.",
+      "required": [
+        "message"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Message template displayed to the acting entity upon this outcome."
+        },
+        "effects": {
+          "type": "array",
+          "description": "A list of effects to apply upon this outcome. Effects implicitly target the object hosting the interaction unless specified otherwise.",
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
+          "default": []
+        }
+      }
+    },
+    "Effect": {
+      "type": "object",
+      "description": "Defines a single consequence of a test outcome.",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of effect to execute.",
+          "enum": [
+            "set_state",
+            "fire_event"
+          ]
+        },
+        "new_state": {
+          "type": "string",
+          "description": "The new state value to apply. Used if type is 'set_state'. (e.g., 'unlocked', 'broken', 'disarmed')."
+        },
+        "event_name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "description": "The name of the event to publish. Used if type is 'fire_event'."
+        },
+        "event_data": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Optional arbitrary data payload to include with the fired event."
+        }
+      },
+      "if": {
+        "properties": {
+          "type": {
+            "const": "set_state"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "new_state"
+        ]
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "type": {
+              "const": "fire_event"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "event_name"
+          ]
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/TestDefinition"
+}

@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/item.schema.json",
+  "title": "Item Entity Schema",
+  "description": "Defines the structure for an Item entity in the adventure game platform. Items are entities composed of components, extending the base entity schema.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "entity.schema.json"
+    }
+  ],
+  "properties": {
+    "components": {
+      "type": "object",
+      "description": "Components defining the item's properties. Must include Name and Item components.",
+      "required": [
+        "Name",
+        "Item"
+      ],
+      "properties": {
+        "Name": {
+          "$ref": "entity.schema.json#/definitions/NameComponent",
+          "description": "The display name of the item."
+        },
+        "Description": {
+          "$ref": "#/definitions/DescriptionComponent",
+          "description": "Optional textual description shown when examining the item."
+        },
+        "Item": {
+          "$ref": "#/definitions/ItemComponent",
+          "description": "Core component marking this entity as an item and defining basic properties like tags."
+        },
+        "Usable": {
+          "$ref": "#/definitions/UsableComponent",
+          "description": "Optional component defining direct use effects (like drinking a potion)."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "definitions": {
+    "DescriptionComponent": {
+      "type": "object",
+      "description": "Provides a textual description of the item.",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text displayed when the item is examined (e.g., 'A heavy, rusted iron key.', 'A swirling red liquid in a vial.')."
+        }
+      }
+    },
+    "ItemComponent": {
+      "type": "object",
+      "description": "Core component identifying an entity as an item and providing fundamental properties.",
+      "additionalProperties": false,
+      "required": [
+        "tags"
+      ],
+      "properties": {
+        "tags": {
+          "type": "array",
+          "description": "List of keywords identifying the item's type, material, or purpose (e.g., 'key', 'potion', 'consumable', 'metal', 'quest_item'). Used by game systems for identification and filtering.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-]+$",
+            "description": "A tag string (lowercase, alphanumeric, underscores, hyphens)."
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [
+            [
+              "key",
+              "iron"
+            ],
+            [
+              "potion",
+              "healing",
+              "consumable"
+            ],
+            [
+              "weapon",
+              "sword",
+              "metal"
+            ]
+          ]
+        },
+        "stackable": {
+          "type": "boolean",
+          "description": "Whether multiple instances of this item can stack into a single inventory slot.",
+          "default": false
+        },
+        "value": {
+          "type": "integer",
+          "description": "Optional base monetary or point value of the item.",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "UsableComponent": {
+      "type": "object",
+      "description": "Defines the effect when the item is used directly (typically targeting the user). Not all items have this component.",
+      "additionalProperties": false,
+      "required": [
+        "effect_type",
+        "effect_details",
+        "consumable"
+      ],
+      "properties": {
+        "effect_type": {
+          "type": "string",
+          "description": "Categorizes the primary effect of using the item. Defines which fields in 'effect_details' are relevant.",
+          "enum": [
+            "heal",
+            "event"
+          ],
+          "examples": [
+            "heal"
+          ]
+        },
+        "effect_details": {
+          "type": "object",
+          "description": "Contains parameters specific to the chosen 'effect_type'.",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "description": "The amount of health points to restore (used if effect_type is 'heal').",
+              "minimum": 1
+            },
+            "event_name": {
+              "type": "string",
+              "description": "The name of the event to trigger/publish via the event bus (used if effect_type is 'event').",
+              "pattern": "^[a-zA-Z0-9_\\-:]+$"
+            },
+            "event_data": {
+              "type": "object",
+              "description": "Optional arbitrary data payload to include with the triggered event.",
+              "additionalProperties": true
+            }
+          },
+          "if": {
+            "properties": {
+              "effect_type": {
+                "const": "heal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "event_name": false,
+              "event_data": false
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "effect_type": {
+                  "const": "event"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "event_name"
+              ],
+              "properties": {
+                "amount": false
+              }
+            }
+          }
+        },
+        "consumable": {
+          "type": "boolean",
+          "description": "Is the item consumed (removed from inventory) after successful use?",
+          "default": false
+        },
+        "use_message": {
+          "type": "string",
+          "description": "Optional message displayed to the player upon successful use (e.g., 'You drink the potion and feel refreshed.'). If omitted, the consuming system might generate a default message based on effect type."
+        }
+      }
+    }
+  }
+}

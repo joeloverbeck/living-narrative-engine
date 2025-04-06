@@ -1,0 +1,29 @@
+{
+  "id": "demo:item_potion_heal_minor",
+  "components": {
+    "Name": {
+      "value": "Minor Healing Potion"
+    },
+    "Description": {
+      "text": "A small vial containing a swirling red liquid. Feels slightly warm to the touch."
+    },
+    "Item": {
+      "tags": [
+        "potion",
+        "healing",
+        "consumable",
+        "liquid"
+      ],
+      "stackable": true,
+      "value": 10
+    },
+    "Usable": {
+      "effect_type": "heal",
+      "effect_details": {
+        "amount": 5
+      },
+      "consumable": true,
+      "use_message": "You uncork the vial and quickly drink the red liquid. A warm sensation spreads through you, soothing some aches."
+    }
+  }
+}

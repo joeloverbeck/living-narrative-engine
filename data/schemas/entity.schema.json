@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/entity.schema.json",
+  "title": "Game Entity Schema",
+  "description": "Schema for a game entity (player, NPC, item, etc.) composed of modular components. Each entity is defined by a unique id and a collection of components that determine its attributes and behavior.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this entity. Typically includes a module prefix and specific name (e.g., \"core:player\", \"demo:item_key\").",
+      "pattern": "^[a-zA-Z0-9_\\-:]+$"
+    },
+    "components": {
+      "type": "object",
+      "description": "Object containing the components that make up this entity. Each key is a component name and its value is the component data object.",
+      "properties": {
+        "Name": {
+          "$ref": "#/definitions/NameComponent",
+          "description": "(Optional but recommended) The display name of the entity."
+        },
+        "Health": {
+          "$ref": "#/definitions/HealthComponent",
+          "description": "(Optional) Component for entities that have health points."
+        },
+        "Inventory": {
+          "$ref": "#/definitions/InventoryComponent",
+          "description": "(Optional) Component for entities that can carry items."
+        },
+        "Attack": {
+          "$ref": "#/definitions/AttackComponent",
+          "description": "(Optional) Component for entities that can perform basic attacks."
+        },
+        "Skill": {
+          "$ref": "#/definitions/SkillComponent",
+          "description": "(Optional) Component tracking entity skill levels (basic MVP version)."
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "NameComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key')."
+        }
+      }
+    },
+    "HealthComponent": {
+      "type": "object",
+      "description": "Tracks the entity's health points.",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "description": "Current HP (hit points).",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "description": "Maximum HP for the entity.",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "current",
+        "max"
+      ],
+      "additionalProperties": false
+    },
+    "InventoryComponent": {
+      "type": "object",
+      "description": "Holds a list of item IDs the entity carries.",
+      "properties": {
+        "items": {
+          "type": "array",
+          "description": "Array of item entity identifier strings currently in the entity's inventory.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "AttackComponent": {
+      "type": "object",
+      "description": "Defines the entity's base attack capability for MVP.",
+      "properties": {
+        "damage": {
+          "type": "integer",
+          "description": "Base damage or attack strength value.",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "damage"
+      ],
+      "additionalProperties": false
+    },
+    "SkillComponent": {
+      "type": "object",
+      "description": "Tracks the entity's basic skill levels for MVP.",
+      "properties": {
+        "skills": {
+          "type": "object",
+          "description": "A map of skill IDs (e.g., 'core:skill_strength') to their current integer value.",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "examples": [
+            {
+              "core:skill_strength": 5,
+              "core:skill_perception": 3
+            }
+          ]
+        }
+      },
+      "required": [
+        "skills"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

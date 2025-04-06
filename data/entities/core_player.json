@@ -1,0 +1,20 @@
+{
+  "id": "core:player",
+  "components": {
+    "Name": {
+      "value": "Player"
+    },
+    "Health": {
+      "current": 10,
+      "max": 10
+    },
+    "Inventory": {
+      "items": []
+    },
+    "Skill": {
+      "skills": {
+        "core:skill_strength": 5
+      }
+    }
+  }
+}
