@@ -5,7 +5,7 @@
       "value": "Treasure Room"
     },
     "Description": {
-      "text": "This small vault houses the dungeon’s treasure. Piles of gold and jewels are strewn about, shimmering in the torchlight. An ornate chest overflowing with riches stands at the center. An exit beckons to the north, and the monster’s lair lies to the south."
+      "text": "This small vault houses the dungeon’s treasure. Piles of gold and jewels are strewn about, shimmering in the torchlight. An ornate chest overflowing with riches stands at the center. An exit beckons to the north, and the monster’s lair lies to the south. West leads to the hallway."
     },
     "MetaDescription": {
       "keywords": [
@@ -24,6 +24,10 @@
         {
           "direction": "north",
           "target": "demo:room_exit"
+        },
+        {
+          "direction": "west",
+          "target": "demo:room_hallway"
         }
       ]
     }

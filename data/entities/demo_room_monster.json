@@ -5,7 +5,7 @@
       "value": "Monster Room"
     },
     "Description": {
-      "text": "You enter a larger chamber littered with bones. A foul stench of rot fills the air. A snarling goblin is here on guard. To the north, an archway leads onward, and the hallway lies back to the south."
+      "text": "You enter a larger chamber littered with bones. A foul stench of rot fills the air. To the north, an archway leads onward, and the hallway lies back to the south."
     },
     "MetaDescription": {
       "keywords": [
@@ -17,10 +17,6 @@
     },
     "Connections": {
       "connections": [
-        {
-          "direction": "south",
-          "target": "demo:room_hallway"
-        },
         {
           "direction": "north",
           "target": "demo:room_treasure"

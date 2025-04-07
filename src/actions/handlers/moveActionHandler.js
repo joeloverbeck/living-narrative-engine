@@ -1,47 +1,48 @@
 // src/actions/handlers/moveActionHandler.js
 
-import { ConnectionsComponent } from '../../components/connectionsComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 
-// Import type definition JSDoc comments
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
+/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */ // Keep for structure
 
 /**
  * Handles the 'core:action_move' action.
- * Relies solely on the provided context for game state and dependencies.
+ * Relies solely on the provided context. Dispatches messages via context.dispatch.
  * Signals a location change back to GameLoop via `ActionResult.newState`.
- *
  * @param {ActionContext} context - The action context.
  * @returns {ActionResult} - The result of the action.
  */
 export function executeMove(context) {
-    // Destructure context for easier access
-    const { playerEntity, currentLocation, targets, dataManager, entityManager } = context; // Added playerEntity, dm, em for completeness, though not used heavily here yet
-    /** @type {ActionMessage[]} */
-    const messages = [];
+    // Destructure context, including dispatch
+    const {playerEntity, currentLocation, targets, dataManager, entityManager, dispatch} = context;
+    const messages = []; // Keep for potential logging/testing, but UI uses dispatch
     let success = false;
-    let newState = undefined; // Explicitly undefined initially
+    let newState = undefined;
 
     if (!currentLocation) {
-        // Should ideally be caught by GameLoop before calling, but safety check
-        messages.push({ text: "Cannot move: your current location is unknown.", type: 'error' });
+        const errorMsg = "Cannot move: your current location is unknown.";
+        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        messages.push({text: errorMsg, type: 'error'}); // Optional: keep for return value
         console.error("executeMove handler called with invalid currentLocation in context.");
-        return { success, messages, newState };
+        return {success, messages, newState};
     }
 
     if (targets.length === 0) {
-        messages.push({ text: "Move where? (Specify a direction like 'north', 'south', 'east', or 'west')", type: 'error' });
-        return { success, messages, newState };
+        const errorMsg = "Move where? (Specify a direction like 'north', 'south', 'east', or 'west')";
+        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        messages.push({text: errorMsg, type: 'error'});
+        return {success, messages, newState};
     }
 
     const direction = targets[0].toLowerCase();
 
     const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComp || !Array.isArray(connectionsComp.connections) || connectionsComp.connections.length === 0) {
-        messages.push({ text: "There are no obvious exits from here.", type: 'info' });
-        // Optional: console.warn maybe too noisy if many rooms lack connections
-        return { success, messages, newState };
+        const infoMsg = "There are no obvious exits from here.";
+        dispatch('ui:message_display', {text: infoMsg, type: 'info'});
+        messages.push({text: infoMsg, type: 'info'});
+        return {success, messages, newState};
     }
 
     const connection = connectionsComp.connections.find(
@@ -49,34 +50,36 @@ export function executeMove(context) {
     );
 
     if (connection) {
-        // TODO: Add connection state checks (locked, blocked) using context.dataManager/entityManager if needed
         const targetLocationId = connection.target;
         if (!targetLocationId) {
-            messages.push({ text: `The way ${direction} seems improperly constructed.`, type: 'error' });
+            const errorMsg = `The way ${direction} seems improperly constructed.`;
+            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+            messages.push({text: errorMsg, type: 'error'});
             console.error(`Invalid connection data in ${currentLocation.id} for direction ${direction}: missing target.`);
-            return { success, messages, newState };
+            return {success, messages, newState};
         }
 
-        // Verify the target location *definition* exists using context.dataManager
-        // GameLoop will handle instance creation/retrieval using context.entityManager
         const targetDefinition = dataManager.getEntityDefinition(targetLocationId);
         if (targetDefinition) {
             success = true;
-            messages.push({ text: `You move ${direction}.`, type: 'info' });
-            // +++ Signal state change to GameLoop +++
-            // Do NOT modify context.currentLocation here.
-            newState = { currentLocationId: targetLocationId };
+            const infoMsg = `You move ${direction}.`;
+            dispatch('ui:message_display', {text: infoMsg, type: 'info'});
+            messages.push({text: infoMsg, type: 'info'});
+            newState = {currentLocationId: targetLocationId};
         } else {
-            // This means the connection points to an ID that doesn't exist in the loaded data.
-            messages.push({ text: `Something is wrong with the passage leading ${direction}.`, type: 'error' });
+            const errorMsg = `Something is wrong with the passage leading ${direction}.`;
+            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+            messages.push({text: errorMsg, type: 'error'});
             console.error(`Move handler failed: Target location definition not found via dataManager for ID: ${targetLocationId}`);
             // success remains false
         }
     } else {
-        messages.push({ text: "You can't go that way.", type: 'info' });
+        const infoMsg = "You can't go that way.";
+        dispatch('ui:message_display', {text: infoMsg, type: 'info'});
+        messages.push({text: infoMsg, type: 'info'});
         // success remains false
     }
 
-    // Return the complete ActionResult
-    return { success, messages, newState };
+    // Return the complete ActionResult (messages array might be less important now)
+    return {success, messages, newState};
 }

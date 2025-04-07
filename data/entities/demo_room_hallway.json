@@ -5,7 +5,7 @@
       "value": "Narrow Hallway"
     },
     "Description": {
-      "text": "You are in a narrow hallway carved from rough stone. It continues north back towards the entrance. To the east stands a sturdy wooden door. A faint scraping sound echoes from somewhere deeper within the dungeon."
+      "text": "You are in a narrow hallway carved from rough stone. To the south leads the dungeon's entrance. To the east stands a sturdy wooden door. A faint scraping sound echoes from somewhere deeper within the dungeon."
     },
     "MetaDescription": {
       "keywords": [
@@ -18,10 +18,11 @@
     "Connections": {
       "connections": [
         {
-          "direction": "north",
+          "direction": "south",
           "target": "demo:room_entrance"
         },
-        { "direction": "east",
+        {
+          "direction": "east",
           "target": "demo:room_treasure",
           "description_override": "A sturdy door. The goblin blocks it.",
           "initial_state": "locked"
@@ -29,7 +30,9 @@
       ]
     },
     "EntitiesPresent": {
-      "entityIds": ["demo:enemy_goblin"]
+      "entityIds": [
+        "demo:enemy_goblin"
+      ]
     }
   }
 }
