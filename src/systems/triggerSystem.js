@@ -2,25 +2,26 @@
 
 import {ConnectionsComponent} from "../components/connectionsComponent.js";
 
-/** @typedef {import('../dataManager.js').default} DataManager */
-/** @typedef {import('./entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../gameStateManager.js').default} GameStateManager */
-/** @typedef {import('./eventBus.js').default} EventBus */
-/** @typedef {import('./actions/actionTypes.js').ActionMessage} ActionMessage */ // For return type hinting
+/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Corrected path if needed
+/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../../eventBus.js').default} EventBus */              // Corrected path if needed
+/** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */ // <<<--- ADDED Import
+/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */ // <<<--- ADDED Import
 
-/** @typedef {import('../entities/entity.js').default} Entity
 
-
- /**
- * Listens for game events via the EventBus, checks trigger conditions defined
- * in data, and executes corresponding actions.
- * Also handles certain built-in reactions to core game events (like ensuring entities are present).
+/**
+ * Listens for game events, checks trigger conditions, executes actions,
+ * and handles built-in reactions like auto-look on move and entity instantiation.
  */
 class TriggerSystem {
     #eventBus;
     #dataManager;
     #entityManager;
     #gameStateManager; // May be needed for future triggers/actions
+    #actionExecutor;
 
     /** @type {Map<string, Function>} */
     #triggerIdToHandlerMap = new Map(); // To store handlers for potential unsubscription
@@ -29,35 +30,48 @@ class TriggerSystem {
     #activeOneShotTriggerIds = new Set(); // Store IDs of one-shot triggers that haven't fired yet
 
     /**
-     * @param {EventBus} eventBus
-     * @param {DataManager} dataManager
-     * @param {EntityManager} entityManager
-     * @param {GameStateManager} gameStateManager
+     * @param {object} options
+     * @param {EventBus} options.eventBus
+     * @param {DataManager} options.dataManager
+     * @param {EntityManager} options.entityManager
+     * @param {GameStateManager} options.gameStateManager
+     * @param {ActionExecutor} options.actionExecutor
      */
-    constructor(eventBus, dataManager, entityManager, gameStateManager) {
-        if (!eventBus) throw new Error("TriggerSystem requires an EventBus instance.");
-        if (!dataManager) throw new Error("TriggerSystem requires a DataManager instance.");
-        if (!entityManager) throw new Error("TriggerSystem requires an EntityManager instance.");
-        if (!gameStateManager) throw new Error("TriggerSystem requires a GameStateManager instance.");
+    constructor(options) {
+        const {
+            eventBus,
+            dataManager,
+            entityManager,
+            gameStateManager,
+            actionExecutor
+        } = options || {};
+
+        if (!eventBus) throw new Error("TriggerSystem requires options.eventBus.");
+        if (!dataManager) throw new Error("TriggerSystem requires options.dataManager.");
+        if (!entityManager) throw new Error("TriggerSystem requires options.entityManager.");
+        if (!gameStateManager) throw new Error("TriggerSystem requires options.gameStateManager.");
+        if (!actionExecutor) throw new Error("TriggerSystem requires options.actionExecutor."); // <<<--- ADDED Validation
 
         this.#eventBus = eventBus;
         this.#dataManager = dataManager;
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
+        this.#actionExecutor = actionExecutor;
 
         console.log("TriggerSystem: Instance created.");
     }
 
     /**
      * Initializes the TriggerSystem by reading trigger definitions and subscribing to events.
-     * Should be called after DataManager has loaded all data.
      */
     initialize() {
         console.log("TriggerSystem: Initializing subscriptions...");
         const allTriggers = this.#dataManager.getAllTriggers();
 
+        // --- Initialize Custom Triggers ---
         if (allTriggers && allTriggers.length > 0) {
             for (const triggerDef of allTriggers) {
+                // ... (existing loop for custom triggers remains the same) ...
                 if (!triggerDef || !triggerDef.id || !triggerDef.listen_to || !triggerDef.listen_to.event_type) {
                     console.warn("TriggerSystem: Skipping invalid trigger definition:", triggerDef);
                     continue;
@@ -66,45 +80,89 @@ class TriggerSystem {
                     this.#activeOneShotTriggerIds.add(triggerDef.id);
                 }
                 const eventName = triggerDef.listen_to.event_type;
+                // Ensure handler is bound correctly if needed, or use arrow function
                 const handler = (eventData) => this._handleTriggerEvent(triggerDef, eventName, eventData);
                 this.#triggerIdToHandlerMap.set(triggerDef.id, handler);
                 this.#eventBus.subscribe(eventName, handler);
             }
-            console.log(`TriggerSystem: Finished initializing ${allTriggers.length} triggers. Active one-shots: ${this.#activeOneShotTriggerIds.size}`);
+            console.log(`TriggerSystem: Finished initializing ${allTriggers.length} custom triggers. Active one-shots: ${this.#activeOneShotTriggerIds.size}`);
         } else {
             console.log("TriggerSystem: No custom trigger definitions found in DataManager.");
         }
 
+        // --- Subscribe Combined Handler for Built-in Room Entered Logic ---
         this.#eventBus.subscribe('event:room_entered', this.#handleRoomEntered.bind(this));
-        console.log("TriggerSystem: Subscribed to 'event:room_entered' for entity instantiation.");
+        console.log("TriggerSystem: Subscribed #handleRoomEntered to 'event:room_entered' for entity instantiation and auto-look.");
     }
 
     /**
-     * Handles the 'event:room_entered' event to ensure entities listed in the
-     * new location's EntitiesPresentComponent are instantiated.
+     * Handles the 'event:room_entered' event:
+     * 1. Ensures entities in the new location are instantiated.
+     * 2. Triggers an automatic 'look' action *if* this was a player move (not initial load).
      * @private
      * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity }} eventData
      */
     #handleRoomEntered(eventData) {
         console.log("TriggerSystem: Handling 'event:room_entered'.");
-        const {newLocation} = eventData;
+        const {newLocation, playerEntity, previousLocation} = eventData;
 
-        if (!newLocation) {
-            console.error("TriggerSystem #handleRoomEntered: Received 'event:room_entered' but newLocation was missing in event data.", eventData);
+        // Validate essential data for both parts
+        if (!newLocation || !playerEntity) {
+            console.error("TriggerSystem #handleRoomEntered: Received 'event:room_entered' but newLocation or playerEntity was missing.", eventData);
             return;
         }
 
-        // Delegate the instantiation logic to EntityManager
+        // --- Part 1: Ensure Entities are Instantiated ---
         try {
             this.#entityManager.ensureLocationEntitiesInstantiated(newLocation);
+            console.log(`TriggerSystem: Ensured entities are instantiated for ${newLocation.id}.`);
         } catch (error) {
-            // Catch potential errors during the process, although ensure... itself should log specifics
-            console.error(`TriggerSystem: Error occurred while calling ensureLocationEntitiesInstantiated for ${newLocation.id}:`, error);
-            // Optionally dispatch a UI error message
+            console.error(`TriggerSystem: Error during ensureLocationEntitiesInstantiated for ${newLocation.id}:`, error);
             this.#eventBus.dispatch('ui:message_display', {
                 text: `Internal Error: Problem loading entities for location ${newLocation.id}.`,
                 type: 'error'
             });
+            // If entities fail to load, it might be confusing to show the room description. Stop here.
+            return;
+        }
+
+        // --- Part 2: Trigger Automatic 'Look' if it was a player move ---
+        if (previousLocation) { // Check if previousLocation exists (indicates a move, not initial game load)
+            console.log(`TriggerSystem: Player moved from ${previousLocation.id} to ${newLocation.id}. Triggering automatic 'look'.`);
+
+            /** @type {ActionContext} */
+            const lookContext = {
+                playerEntity: playerEntity,
+                currentLocation: newLocation, // Use the *new* location for the look action
+                targets: [], // 'look' action doesn't typically need targets when triggered this way
+                dataManager: this.#dataManager,
+                entityManager: this.#entityManager,
+                dispatch: this.#eventBus.dispatch.bind(this.#eventBus) // Pass the dispatcher for the action handler
+            };
+
+            try {
+                // Execute the 'look' action via the injected executor.
+                // The result isn't directly used here; the action handler dispatches UI messages.
+                const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
+
+                // Log potential issues from the look action itself for debugging.
+                if (!lookResult.success) {
+                    console.warn(`TriggerSystem: Automatic 'core:action_look' execution reported failure. Messages:`, lookResult.messages);
+                    // Note: UI messages should have already been dispatched by the look handler or ActionExecutor via context.dispatch.
+                } else {
+                    console.log(`TriggerSystem: Automatic 'core:action_look' executed successfully.`);
+                }
+            } catch (error) {
+                console.error("TriggerSystem: Uncaught error executing automatic 'core:action_look':", error);
+                // Dispatch a generic error if the call to executeAction fails unexpectedly.
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: "Internal Error: Failed to perform automatic look after moving.",
+                    type: 'error'
+                });
+            }
+
+        } else {
+            console.log("TriggerSystem: 'event:room_entered' received without previousLocation (likely initial game load). Skipping automatic 'look'.");
         }
     }
 
@@ -202,27 +260,43 @@ class TriggerSystem {
      * @returns {boolean} True if all filters match or no filters are defined, false otherwise.
      */
     _checkFilters(listenCondition, eventName, eventData) {
+        // ... (existing implementation remains the same) ...
         if (!listenCondition.filters) {
-            return true;
+            return true; // No filters defined, always matches
         }
 
-        // --- Implement specific filter logic based on eventName and filter keys ---
-        // Example: 'entity_died' event with 'source_id' filter
+        // Example filter check (add more as needed for custom triggers)
         if (eventName === 'entity_died' && listenCondition.filters.source_id) {
             if (!eventData || typeof eventData.deceasedEntityId !== 'string') {
                 console.warn(`TriggerSystem Filter Check (${listenCondition.event_type}): Filter requires 'deceasedEntityId' in eventData, but not found or invalid.`, eventData);
-                return false; // Expected data missing
+                return false;
             }
             if (eventData.deceasedEntityId !== listenCondition.filters.source_id) {
-                // console.debug(`Filter mismatch: event deceasedEntityId (${eventData.deceasedEntityId}) !== filter source_id (${listenCondition.filters.source_id})`);
-                return false; // ID does not match
+                return false;
             }
         }
 
-        // Add other filter checks here...
+        // If using event:room_entered for custom triggers, add filter checks here
+        if (eventName === 'event:room_entered' && listenCondition.filters) {
+            // Example: Filter by the ID of the room entered
+            if (listenCondition.filters.location_id && (!eventData.newLocation || eventData.newLocation.id !== listenCondition.filters.location_id)) {
+                return false;
+            }
+            // Example: Filter by the ID of the room exited
+            if (listenCondition.filters.previous_location_id && (!eventData.previousLocation || eventData.previousLocation.id !== listenCondition.filters.previous_location_id)) {
+                return false;
+            }
+            // Example: Filter only if it was a move (previousLocation exists)
+            if (listenCondition.filters.is_move === true && !eventData.previousLocation) {
+                return false;
+            }
+            // Example: Filter only if it was NOT a move (initial load)
+            if (listenCondition.filters.is_move === false && eventData.previousLocation) {
+                return false;
+            }
+        }
 
-        // If we haven't returned false yet, all defined filters matched
-        return true;
+        return true; // All defined filters passed
     }
 
     /**

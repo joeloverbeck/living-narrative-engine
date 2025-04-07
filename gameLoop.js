@@ -163,19 +163,18 @@ class GameLoop {
     }
 
     /**
-     * Prepares context, delegates action execution, processes state changes via ActionResultProcessor,
-     * triggers follow-up 'look' on location change, and relies on handlers/EventBus for messages.
+     * Prepares context, delegates action execution, processes state changes via ActionResultProcessor.
+     * The automatic 'look' after movement is now handled by an event listener (e.g., in TriggerSystem).
      * @param {string} actionId - The ID of the action to execute.
      * @param {string[]} targets - The target identifiers from the parser.
      * @private
      */
     executeAction(actionId, targets) {
         const currentPlayer = this.#gameStateManager.getPlayer();
-        // Get current location *before* the action executes, in case the action needs it
         const currentLocationBeforeAction = this.#gameStateManager.getCurrentLocation();
 
         if (!currentPlayer || !currentLocationBeforeAction) {
-            console.error("executeAction called but state missing from GameStateManager.");
+            console.error("GameLoop executeAction called but state missing from GameStateManager.");
             this.#eventBus.dispatch('ui:message_display', {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
@@ -186,7 +185,7 @@ class GameLoop {
         /** @type {ActionContext} */
         const context = {
             playerEntity: currentPlayer,
-            currentLocation: currentLocationBeforeAction, // Provide the location at the start of the action
+            currentLocation: currentLocationBeforeAction,
             targets: targets,
             dataManager: this.#dataManager,
             entityManager: this.#entityManager,
@@ -197,18 +196,8 @@ class GameLoop {
         const result = this.#actionExecutor.executeAction(actionId, context);
 
         // --- Process Action Result using the dedicated processor ---
-        const processResult = this.#actionResultProcessor.process(result);
-
-        // --- Trigger 'look' action automatically AFTER a successful location change ---
-        // --- Use the result from the processor to make the decision ---
-        if (processResult.locationChanged) {
-            // console.log("GameLoop: Location changed, executing automatic 'look'."); // Verbose
-            // Execute look action non-recursively.
-            // NOTE: 'look' action itself should use GameStateManager.getCurrentLocation()
-            // to get the *new* location when it executes.
-            this.executeAction('core:action_look', []);
-        }
-
+        // This is still crucial for updating game state (like location) and dispatching events.
+        this.#actionResultProcessor.process(result);
     }
 
     /**

@@ -30,6 +30,7 @@ import {executeAttack} from "./src/actions/handlers/attackActionHandler.js";
 import {executeUse} from "./src/actions/handlers/useActionHandler.js";
 import GameInitializer from "./src/core/gameInitializer.js";
 import ActionResultProcessor from "./src/actions/actionResultProcessor.js";
+import {UsableComponent} from "./src/components/usableComponent.js";
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -106,6 +107,7 @@ async function initializeGame() {
         entityManager.registerComponent('Description', DescriptionComponent);
         entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
         entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);
+        entityManager.registerComponent('Usable', UsableComponent);
         // ... register any other components ...
 
         // --- Instantiate CORE entities (Player) ---
@@ -133,7 +135,7 @@ async function initializeGame() {
         // Register other handlers as they are implemented
 
         // --- Instantiate Trigger System ---
-        triggerSystem = new TriggerSystem(eventBus, dataManager, entityManager, gameStateManager);
+        triggerSystem = new TriggerSystem({eventBus, dataManager, entityManager, gameStateManager, actionExecutor});
 
         // --- Initialize Trigger System (Subscribes to events) ---
         triggerSystem.initialize();
@@ -156,8 +158,7 @@ async function initializeGame() {
             title.textContent = "Game Initialization Failed!";
             renderer.renderMessage("<p>Game Initialization failed. See messages above. Cannot start game loop.</p>", "error");
             // Ensure input remains disabled (renderer should catch disable event if needed)
-            if (inputHandler) inputHandler.disable(); // Belt-and-suspenders
-            else if (renderer) renderer.setInputState(false, "Initialization Failed.");
+            if (renderer) renderer.setInputState(false, "Initialization Failed.");
 
             console.error("main.js: GameInitializer.initializeGame() returned false. Aborting game start.");
             return; // Stop execution here
@@ -227,7 +228,7 @@ async function initializeGame() {
 
         if (inputHandler) inputHandler.disable();
         // Attempt to stop gameLoop if it was somehow partially created and running
-        if (gameLoop?.stop) {
+        if (gameLoop && gameLoop?.stop) {
             try {
                 gameLoop.stop();
             } catch (stopErr) { /* Log stop error */
@@ -238,7 +239,7 @@ async function initializeGame() {
 
 // Kick off the game initialization
 initializeGame().then(() => {
-    console.log("main.js: initializeGame sequence finished (either successfully started or aborted after init failure).");
+    console.log("main.js: initializeGame sequence finished.");
 }).catch(err => {
     // Catches errors *outside* the main try/catch in initializeGame
     console.error("Unhandled error during initializeGame promise chain:", err);

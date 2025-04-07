@@ -30,6 +30,11 @@
           "target": "demo:room_hallway"
         }
       ]
+    },
+    "EntitiesPresent": {
+      "entityIds": [
+        "demo:item_key"
+      ]
     }
   }
 }

@@ -2,35 +2,120 @@
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-
-/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+import {InventoryComponent} from '../../components/inventoryComponent.js';
+import {ItemComponent} from '../../components/itemComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {EntitiesPresentComponent} from '../../components/entitiesPresentComponent.js';
 
 /**
- * Handles the 'core:action_take' action. Dispatches messages via context.dispatch.
- * Placeholder implementation.
- * @param {ActionContext} context - The action context.
- * @returns {ActionResult} - The result of the action.
+ * Handles the 'take' action ('core:action_take'). Allows the player to pick up items
+ * from the current location. Dispatches UI messages via context.dispatch.
+ * MVP: Handles taking a single item by name, assumes names are unique in the location for now.
+ * @param {ActionContext} context - The context for the action.
+ * @returns {ActionResult} The result of the action (success/fail, empty messages array).
  */
 export function executeTake(context) {
-    // Destructure context, including dispatch
-    const {targets, dispatch} = context;
-    const messages = []; // Keep for potential non-UI use
-    let success = false; // Placeholder: Assume failure until implemented
+    const {playerEntity, currentLocation, targets, entityManager, dispatch} = context;
 
-    if (targets.length === 0) {
-        const errorMsg = "Take what?";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'}); // Optional retain
-    } else {
-        const itemName = targets.join(' ');
-        const tryMsg = `(Placeholder) You try to take the ${itemName}...`;
-        const notImplMsg = "Taking items not fully implemented.";
-
-        dispatch('ui:message_display', {text: tryMsg, type: 'info'});
-        dispatch('ui:message_display', {text: notImplMsg, type: 'warning'});
-        messages.push({text: tryMsg, type: 'info'}); // Optional retain
-        messages.push({text: notImplMsg, type: 'warning'}); // Optional retain
-        // TODO: Implement logic: find item in room, check weight/capacity, add to player inv, remove from room
+    // Basic validation
+    if (!playerEntity || !currentLocation) {
+        console.error("executeTake: Missing player or location in context.");
+        // Dispatch error message to UI
+        dispatch('ui:message_display', {text: "Internal error: Cannot perform action.", type: 'error'});
+        // Return failure, messages array is now empty as it was dispatched
+        return {success: false, messages: []};
     }
-    return {success, messages};
+
+    if (!targets || targets.length === 0) {
+        // Dispatch feedback to UI
+        dispatch('ui:message_display', {text: "Take what?", type: 'info'});
+        return {success: false, messages: []};
+    }
+
+    const targetName = targets.join(' ').trim().toLowerCase(); // Handle multi-word targets simply
+
+    // Find the item in the current location
+    const locationEntitiesPresent = currentLocation.getComponent(EntitiesPresentComponent);
+    if (!locationEntitiesPresent || locationEntitiesPresent.entityIds.length === 0) {
+        // Dispatch feedback to UI
+        dispatch('ui:message_display', {text: "There's nothing here to take.", type: 'info'});
+        return {success: false, messages: []};
+    }
+
+    let targetItemEntity = null;
+    let targetItemId = null;
+
+    for (const entityId of locationEntitiesPresent.entityIds) {
+        const entity = entityManager.getEntityInstance(entityId);
+        if (!entity) {
+            continue; // Skip if entity instance not found
+        }
+
+        const nameComp = entity.getComponent(NameComponent);
+        const itemComp = entity.getComponent(ItemComponent);
+
+        // Check if it's an item and has a name matching the target
+        if (itemComp && nameComp && nameComp.value.toLowerCase() === targetName) {
+            targetItemEntity = entity;
+            targetItemId = entityId;
+            break; // Found the first match (MVP limitation)
+        }
+    }
+
+    // Process the take action if item was found
+    if (targetItemEntity && targetItemId) {
+        const playerInventory = playerEntity.getComponent(InventoryComponent);
+        if (!playerInventory) {
+            console.error(`executeTake: Player entity ${playerEntity.id} missing InventoryComponent!`);
+            // Dispatch error message to UI
+            dispatch('ui:message_display', {text: "Internal error: Your inventory is broken!", type: 'error'});
+            return {success: false, messages: []};
+        }
+
+        // --- Check if Item is Takeable (Future Enhancement Placeholder) ---
+        // const itemDetails = targetItemEntity.getComponent(ItemComponent);
+        // if (itemDetails && itemDetails.takeable === false) {
+        //     dispatch('ui:message_display', { text: `You cannot take the ${targetName}.`, type: 'info' });
+        //     return { success: false, messages: [] };
+        // }
+        // --- End Placeholder ---
+
+        // Add item to player inventory
+        playerInventory.addItem(targetItemId);
+
+        // Remove item from location's entities list
+        const removed = locationEntitiesPresent.removeEntity(targetItemId);
+        if (!removed) {
+            console.warn(`executeTake: Failed to remove ${targetItemId} from location ${currentLocation.id}'s EntitiesPresentComponent after supposedly finding it.`);
+            // Optionally dispatch a warning? Probably not necessary for player.
+        }
+
+        // Dispatch internal game event (NOT a UI message)
+        dispatch('event:item_taken', {
+            player: playerEntity,
+            item: targetItemEntity,
+            location: currentLocation
+        });
+
+        // Dispatch success message to UI
+        const itemName = targetItemEntity.getComponent(NameComponent).value; // Get the proper case name
+        dispatch('ui:message_display', {text: `You take the ${itemName}.`, type: 'info'});
+
+        // Return success result (messages array is empty)
+        return {
+            success: true,
+            messages: [],
+            newState: undefined // No core state change needed from the handler itself
+        };
+
+    } else {
+        // Item not found - Dispatch feedback to UI
+        dispatch('ui:message_display', {text: `You don't see any item '${targets.join(' ')}' here.`, type: 'info'});
+        return {
+            success: false,
+            messages: [],
+            newState: undefined
+        };
+    }
 }
