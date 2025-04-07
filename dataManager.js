@@ -21,7 +21,9 @@ const CONTENT_FILES = {
         'core_action_attack.json', // Underscore instead of colon
         'core_action_move.json',   // Underscore instead of colon
         'core_action_take.json',   // Underscore instead of colon
-        'core_action_use.json'     // Underscore instead of colon
+        'core_action_use.json',     // Underscore instead of colon
+        'core_action_look.json',
+        'core_action_inventory.json'
     ],
     entities: [ // Includes items and characters
         'core_player.json',        // Underscore instead of colon

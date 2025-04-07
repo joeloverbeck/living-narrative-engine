@@ -6,6 +6,7 @@ import GameLoop from "./gameLoop.js";
 import InputHandler from "./inputHandler.js";
 import DomRenderer from "./domRenderer.js";
 import CommandParser from './commandParser.js';
+import ActionExecutor from './src/actions/actionExecutor.js';
 
 // Import ALL component classes you need
 import { AttackComponent } from './src/components/attackComponent.js';
@@ -17,6 +18,12 @@ import { NameComponent } from './src/components/nameComponent.js';
 import { SkillComponent } from './src/components/skillComponent.js';
 import { DescriptionComponent } from './src/components/descriptionComponent.js';
 import { MetaDescriptionComponent } from './src/components/metaDescriptionComponent.js';
+import {executeMove} from "./src/actions/handlers/moveActionHandler.js";
+import {executeLook} from "./src/actions/handlers/lookActionHandler.js";
+import {executeTake} from "./src/actions/handlers/takeActionHandler.js";
+import {executeInventory} from "./src/actions/handlers/inventoryActionHandler.js";
+import {executeAttack} from "./src/actions/handlers/attackActionHandler.js";
+import {executeUse} from "./src/actions/handlers/useActionHandler.js";
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -24,14 +31,17 @@ const inputEl = document.getElementById('command-input');
 const title = document.querySelector('h1');
 
 async function initializeGame() {
-    const dataManager = new DataManager();
+    let dataManager = null;
     let entityManager = null; // Initialize entityManager
-    let gameLoop = null;      // Initialize gameLoop
-    let inputHandler = null;  // Initialize inputHandler
     let renderer = null;
+    let inputHandler = null;  // Initialize inputHandler
+    let commandParser = null;
+    let actionExecutor = null;
+    let gameLoop = null;      // Initialize gameLoop
 
     try {
         title.textContent = "Loading Game Data...";
+        dataManager = new DataManager(); // Instantiate DM first
         await dataManager.loadAllData();
         title.textContent = "Game Data Loaded. Initializing Entities...";
         // Use a temporary message area or console for pre-renderer output
@@ -61,34 +71,46 @@ async function initializeGame() {
 
         renderer.renderMessage("<p>Components registered.</p>");
 
-        // --- Instantiate CORE entities needed BEFORE game loop starts ---
+        // --- Instantiate CORE entities (Player) ---
         const playerEntity = entityManager.createEntityInstance('core:player');
         if (!playerEntity) {
             throw new Error("Failed to instantiate player entity 'core:player'. Cannot start game.");
         }
-
-        renderer.renderMessage("<p>Player entity 'core:player' instantiated.</p>");
+        renderer.renderMessage("<p>Player entity instantiated.</p>");
 
         // --- Initialize Input Handler ---
-        // Now InputHandler only handles events and focus, not placeholder/disabled state
         inputHandler = new InputHandler(inputEl, (command) => {
             if (gameLoop) {
-                gameLoop.processSubmittedCommand(command);
+                gameLoop.processSubmittedCommand(command); // Renamed method
             } else {
-                console.error("InputHandler callback triggered, but GameLoop is not yet initialized!");
+                console.error("InputHandler callback triggered, but GameLoop is not ready!");
                 errorDiv.textContent = "Error: Input handling called before game loop was ready.";
-                if(renderer) renderer.setInputState(false, "Error: Game loop unavailable."); // Use renderer to update state
+                if(renderer) renderer.setInputState(false, "Error: Game loop unavailable.");
             }
         });
-
         renderer.renderMessage("<p>Input Handler initialized.</p>");
 
-        const commandParser = new CommandParser();
+        // --- Initialize Command Parser ---
+        commandParser = new CommandParser();
+        renderer.renderMessage("<p>Command Parser initialized.</p>");
+
+        // +++ Initialize Action Executor and Register Handlers +++
+        actionExecutor = new ActionExecutor();
+        renderer.renderMessage("<p>Action Executor initialized. Registering handlers...</p>");
+
+        actionExecutor.registerHandler('core:action_move', executeMove);
+        actionExecutor.registerHandler('core:action_look', executeLook);
+        actionExecutor.registerHandler('core:action_take', executeTake);
+        actionExecutor.registerHandler('core:action_inventory', executeInventory);
+        actionExecutor.registerHandler('core:action_attack', executeAttack);
+        actionExecutor.registerHandler('core:action_use', executeUse);
+        // Register other handlers as they are implemented
+        renderer.renderMessage("<p>Action Handlers registered.</p>");
 
         // --- Initialize and Start the Game Loop ---
         title.textContent = "Starting Game Loop...";
 
-        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler, commandParser);
+        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler, commandParser, actionExecutor);
 
         await gameLoop.initializeAndStart(); // Initialize player, starting location etc.
 
@@ -97,22 +119,23 @@ async function initializeGame() {
     } catch (error) {
         console.error("Game initialization failed:", error);
         title.textContent = "Fatal Error!";
-        const errorMsg = `Game initialization failed. Check the console (F12) for details. Error: ${error.message}`;
-        errorDiv.textContent = errorMsg; // Keep errorDiv for critical failures before renderer might be ready
-
-        // Use renderer if available to update input state, otherwise fallback
+        const errorMsg = `Game initialization failed. Check console (F12). Error: ${error.message}`;
         if (renderer) {
-            // Also tell input handler to stop listening etc.
-            if (inputHandler) inputHandler.disable();
-            renderer.setInputState(false, "Error during startup.");
-        } else if (inputHandler) {
-            inputHandler.disable("Error during startup."); // Handler might still manage its own state
+            renderer.renderMessage(errorMsg, "error");
         } else {
-            inputEl.placeholder = "Error during startup."; // Fallback
+            errorDiv.textContent = errorMsg; // Fallback
+        }
+
+        // Disable input etc. (using renderer if possible)
+        if (inputHandler) inputHandler.disable();
+        if (renderer) {
+            renderer.setInputState(false, "Error during startup.");
+        } else if (inputEl) {
+            inputEl.placeholder = "Error during startup.";
             inputEl.disabled = true;
         }
         if (gameLoop && gameLoop.isRunning) {
-            gameLoop.stop(); // Attempt to stop loop if it partially started
+            gameLoop.stop();
         }
     }
 }
@@ -121,22 +144,19 @@ async function initializeGame() {
 initializeGame().then(() => {
     console.log("Game initialization sequence finished.");
 }).catch(err => {
-    // Similar error handling as above, prioritizing renderer if available
     console.error("Unhandled error during game initialization promise chain:", err);
     title.textContent = "Fatal Unhandled Error!";
-    errorDiv.textContent = `An unexpected error occurred: ${err.message}. Check console.`;
-
-    // Attempt to disable input via handler and renderer if they exist
-    // Access instance if made global or retrieve otherwise (this part is complex, assumes access exists)
-    const handler = window.inputHandler; // Example access
-    const rendr = window.renderer; // Example access (need to expose renderer globally or pass refs)
-
-    // Best effort disable
-    if (handler) handler.disable(); // Stop listening
-    if (rendr) { // Update visuals via renderer
-        rendr.setInputState(false, "Error during startup.");
-    } else { // Fallback direct DOM manipulation
+    // Simplified error display for unhandled promise rejection
+    const errorMsg = `An unexpected error occurred: ${err.message}. Check console.`;
+    if (document.getElementById('error-output')) { // Use errorDiv if available
+        document.getElementById('error-output').textContent = errorMsg;
+    } else {
+        alert(errorMsg); // Crude fallback
+    }
+    if (inputEl) {
         inputEl.placeholder = "Error during startup.";
         inputEl.disabled = true;
     }
+    // Attempt to access and disable handlers/renderers might be complex here
+    // depending on how they are exposed or stored globally (if at all).
 });

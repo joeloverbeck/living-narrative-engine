@@ -1,0 +1,13 @@
+{
+  "id": "core:action_look",
+  "name": "Look",
+  "description": "Examine the surroundings or a specific target.",
+  "commands": [
+    "look",
+    "l",
+    "examine",
+    "look at"
+  ],
+  "requires_target": false,
+  "target_type": "none"
+}
