@@ -7,6 +7,7 @@ import InputHandler from "./inputHandler.js";
 import DomRenderer from "./domRenderer.js";
 import CommandParser from './commandParser.js';
 import ActionExecutor from './src/actions/actionExecutor.js';
+import GameStateManager from './gameStateManager.js';
 
 // Import ALL component classes you need
 import { AttackComponent } from './src/components/attackComponent.js';
@@ -34,6 +35,7 @@ const title = document.querySelector('h1');
 async function initializeGame() {
     let dataManager = null;
     let entityManager = null; // Initialize entityManager
+    let gameStateManager = null;
     let renderer = null;
     let inputHandler = null;  // Initialize inputHandler
     let commandParser = null;
@@ -80,6 +82,10 @@ async function initializeGame() {
         }
         renderer.renderMessage("<p>Player entity instantiated.</p>");
 
+        // +++ Instantiate Game State Manager +++
+        gameStateManager = new GameStateManager();
+        renderer.renderMessage("<p>Game State Manager initialized.</p>");
+
         // --- Initialize Input Handler ---
         inputHandler = new InputHandler(inputEl, (command) => {
             if (gameLoop) {
@@ -112,7 +118,7 @@ async function initializeGame() {
         // --- Initialize and Start the Game Loop ---
         title.textContent = "Starting Game Loop...";
 
-        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler, commandParser, actionExecutor);
+        gameLoop = new GameLoop(dataManager, entityManager, gameStateManager, renderer, inputHandler, commandParser, actionExecutor);
 
         await gameLoop.initializeAndStart(); // Initialize player, starting location etc.
 
