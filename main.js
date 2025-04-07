@@ -28,10 +28,15 @@ import {executeTake} from "./src/actions/handlers/takeActionHandler.js";
 import {executeInventory} from "./src/actions/handlers/inventoryActionHandler.js";
 import {executeAttack} from "./src/actions/handlers/attackActionHandler.js";
 import {executeUse} from "./src/actions/handlers/useActionHandler.js";
+import {executeEquip} from "./src/actions/handlers/equipActionHandler.js";
+import {executeUnequip} from "./src/actions/handlers/unequipActionHandler.js";
 import GameInitializer from "./src/core/gameInitializer.js";
 import ActionResultProcessor from "./src/actions/actionResultProcessor.js";
 import {UsableComponent} from "./src/components/usableComponent.js";
 import {StatsComponent} from "./src/components/statsComponent.js";
+import {EquipmentComponent} from './src/components/equipmentComponent.js';
+import EquipmentSystem from './src/systems/equipmentSystem.js';
+
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -48,6 +53,7 @@ async function initializeGame() {
     let actionExecutor = null;
     let eventBus = null;
     let triggerSystem = null;
+    let equipmentSystem = null;
     let gameInitializer = null;
     let gameLoop = null;      // Initialize gameLoop
 
@@ -127,6 +133,7 @@ async function initializeGame() {
         entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
         entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);
         entityManager.registerComponent('Usable', UsableComponent);
+        entityManager.registerComponent('Equipment', EquipmentComponent);
         // ... register any other components ...
 
         // --- Instantiate CORE entities (Player) ---
@@ -151,6 +158,8 @@ async function initializeGame() {
         actionExecutor.registerHandler('core:action_inventory', executeInventory);
         actionExecutor.registerHandler('core:action_attack', executeAttack);
         actionExecutor.registerHandler('core:action_use', executeUse);
+        actionExecutor.registerHandler('core:action_equip', executeEquip);
+        actionExecutor.registerHandler('core:action_unequip', executeUnequip);
         // Register other handlers as they are implemented
 
         // --- Instantiate Trigger System ---
@@ -158,6 +167,14 @@ async function initializeGame() {
 
         // --- Initialize Trigger System (Subscribes to events) ---
         triggerSystem.initialize();
+
+        // --- Instantiate Equipment System --- // <-- Instantiate NEW system
+        equipmentSystem = new EquipmentSystem({
+            eventBus,
+            entityManager,
+            dataManager
+        });
+        equipmentSystem.initialize();
 
         // --- *** GAME INITIALIZATION *** ---
         title.textContent = "Initializing Game State...";

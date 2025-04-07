@@ -50,17 +50,13 @@
           "$ref": "#/definitions/EntitiesPresentComponent",
           "description": "(Optional, usually for locations) Lists IDs of entities within."
         },
-        "Item": {
-          "$ref": "#/definitions/ItemComponent",
-          "description": "(Optional) Marker component for items."
-        },
-        "Usable": {
-          "$ref": "#/definitions/UsableComponent",
-          "description": "(Optional) Defines how an item/object can be used."
-        },
         "Connections": {
           "$ref": "#/definitions/ConnectionsComponent",
           "description": "(Optional, for locations) Defines exits to other locations."
+        },
+        "Equipment": {
+          "$ref": "#/definitions/EquipmentComponent",
+          "description": "(Optional) Component for entities that can equip items."
         }
       },
       "minProperties": 1,
@@ -245,65 +241,6 @@
       ],
       "additionalProperties": false
     },
-    "ItemComponent": {
-      "type": "object",
-      "description": "Marker component indicating this entity is an item.",
-      "properties": {
-        "stackable": {
-          "type": "boolean",
-          "default": false,
-          "description": "Can multiple instances stack?"
-        },
-        "value": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "(Optional) Base monetary value."
-        },
-        "tags": {
-          "type": "array",
-          "description": "Tags for the item.",
-          "items": {
-            "type": "string",
-            "pattern": "^[a-zA-Z0-9_\\-:]+$"
-          },
-          "default": []
-        }
-      },
-      "additionalProperties": false
-    },
-    "UsableComponent": {
-      "type": "object",
-      "description": "Defines how an item or object can be used.",
-      "properties": {
-        "effect_type": {
-          "type": "string",
-          "description": "Identifier for the type of effect triggered on use (e.g., 'heal', 'unlock_door', 'apply_status'). Needs interpretation by an Action handler or system."
-        },
-        "effect_details": {
-          "type": "object",
-          "description": "(Optional) Provides specific parameters for the effect identified by effect_type (e.g., amount for heal, target ID for unlock, status effect ID).",
-          "additionalProperties": true
-        },
-        "target": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_\\-:]+$",
-          "description": "(Optional) The ID of the specific target entity this item should be used on (e.g., a specific door ID for a key)."
-        },
-        "consumable": {
-          "type": "boolean",
-          "default": true,
-          "description": "Is the item destroyed after use?"
-        },
-        "use_message": {
-          "type": "string",
-          "description": "(Optional) Message displayed to the player upon successful use of the item/object."
-        }
-      },
-      "required": [
-        "effect_type"
-      ],
-      "additionalProperties": false
-    },
     "ConnectionsComponent": {
       "type": "object",
       "description": "Defines exits from a location.",
@@ -329,6 +266,39 @@
       },
       "required": [
         "exits"
+      ],
+      "additionalProperties": false
+    },
+    "EquipmentComponent": {
+      "type": "object",
+      "description": "Tracks items equipped by the entity in specific body slots.",
+      "properties": {
+        "slots": {
+          "type": "object",
+          "description": "A map where keys are slot IDs (e.g., 'core:slot_main_hand') and values are the entity ID string of the equipped item, or null if the slot is empty.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "propertyNames": {
+            "description": "Equipment slot ID, following pattern e.g., 'core:slot_head'",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "examples": [
+            {
+              "core:slot_main_hand": "demo:item_sword",
+              "core:slot_off_hand": null,
+              "core:slot_body": "demo:item_leather_armor",
+              "core:slot_head": null
+            }
+          ]
+        }
+      },
+      "required": [
+        "slots"
       ],
       "additionalProperties": false
     }

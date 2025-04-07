@@ -42,6 +42,7 @@
         "item_in_room",
         "entity_in_room",
         "item_in_inventory",
+        "item_in_equipment",
         "location_connection",
         "none"
       ]

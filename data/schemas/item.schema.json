@@ -74,6 +74,7 @@
             "description": "A tag string (lowercase, alphanumeric, underscores, hyphens)."
           },
           "minItems": 1,
+          "default": [],
           "uniqueItems": true,
           "examples": [
             [
@@ -94,7 +95,7 @@
         },
         "stackable": {
           "type": "boolean",
-          "description": "Whether multiple instances of this item can stack into a single inventory slot.",
+          "description": "Whether multiple instances can stack.",
           "default": false
         },
         "value": {
@@ -102,6 +103,59 @@
           "description": "Optional base monetary or point value of the item.",
           "minimum": 0,
           "default": 0
+        },
+        "equipSlot": {
+          "type": "string",
+          "description": "Optional. The ID of the equipment slot this item occupies (e.g., 'core:slot_main_hand'). If omitted, the item cannot be equipped.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "examples": [
+            "core:slot_main_hand",
+            "core:slot_body"
+          ]
+        },
+        "equipEffects": {
+          "type": "array",
+          "description": "Optional. Effects applied to the wearer when this item is equipped.",
+          "items": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of effect.",
+                "enum": [
+                  "stat_mod"
+                ]
+              },
+              "stat": {
+                "type": "string",
+                "description": "The ID of the stat to modify. Required if type is 'stat_mod'.",
+                "pattern": "^[a-zA-Z0-9_\\-:]+$"
+              },
+              "value": {
+                "type": "integer",
+                "description": "The amount to modify the stat by. Required if type is 'stat_mod'."
+              }
+            },
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "stat_mod"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "stat",
+                "value"
+              ]
+            }
+          },
+          "default": [],
+          "examples": [
+          ]
         }
       }
     },
@@ -190,6 +244,78 @@
           "description": "Optional message displayed to the player upon successful use (e.g., 'You drink the potion and feel refreshed.'). If omitted, the consuming system might generate a default message based on effect type."
         }
       }
+    },
+    "equipSlot": {
+      "type": "string",
+      "description": "Optional. The ID of the equipment slot this item occupies (e.g., 'core:slot_main_hand'). If omitted, the item cannot be equipped.",
+      "pattern": "^[a-zA-Z0-9_\\-:]+$",
+      "examples": [
+        "core:slot_main_hand",
+        "core:slot_body"
+      ]
+    },
+    "equipEffects": {
+      "type": "array",
+      "description": "Optional. Effects applied to the wearer when this item is equipped.",
+      "items": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of effect.",
+            "enum": [
+              "stat_mod"
+            ]
+          },
+          "stat": {
+            "type": "string",
+            "description": "The ID of the stat to modify (e.g., 'core:attr_strength'). Required if type is 'stat_mod'.",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "value": {
+            "type": "integer",
+            "description": "The amount to modify the stat by (can be negative). Required if type is 'stat_mod'."
+          }
+        },
+        "if": {
+          "properties": {
+            "type": {
+              "const": "stat_mod"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "stat",
+            "value"
+          ]
+        }
+      },
+      "default": [],
+      "examples": [
+        [
+          {
+            "type": "stat_mod",
+            "stat": "core:attr_strength",
+            "value": 1
+          }
+        ],
+        [
+          {
+            "type": "stat_mod",
+            "stat": "core:attr_defense",
+            "value": 5
+          },
+          {
+            "type": "stat_mod",
+            "stat": "core:attr_agility",
+            "value": -1
+          }
+        ]
+      ]
     }
   }
 }

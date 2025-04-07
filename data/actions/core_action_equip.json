@@ -1,0 +1,12 @@
+{
+  "id": "core:action_equip",
+  "name": "Equip",
+  "description": "Equip an item from your inventory.",
+  "commands": [
+    "equip",
+    "wear",
+    "wield"
+  ],
+  "target_type": "item_in_inventory",
+  "requires_target": true
+}

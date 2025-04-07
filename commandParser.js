@@ -33,7 +33,12 @@ class CommandParser {
         'examine': 'core:action_look',
         'inventory': 'core:action_inventory',
         'inv': 'core:action_inventory',
-        'i': 'core:action_inventory'
+        'i': 'core:action_inventory',
+        'equip': 'core:action_equip',
+        'wear': 'core:action_equip',
+        'wield': 'core:action_equip',
+        'unequip': 'core:action_unequip',
+        'remove': 'core:action_unequip'
         // Add other aliases as needed
     };
 
@@ -55,8 +60,8 @@ class CommandParser {
         const lowerCommand = commandString.trim().toLowerCase();
         const parts = lowerCommand.split(' ').filter(p => p); // Split and remove empty strings
 
-        let actionId = null;
-        let targets = [];
+        let actionId;
+        let targets;
         let error = null; // Initialize error as null
 
         if (parts.length === 0) {
@@ -71,45 +76,22 @@ class CommandParser {
             actionId = CommandParser.#actionMap[verb] || null;
 
             // Special handling for movement directions as the verb
-            if (CommandParser.#directions.includes(verb)) {
+            if (!actionId && CommandParser.#directions.includes(verb)) { // Check !actionId to avoid overriding equip/unequip if they matched
                 actionId = 'core:action_move';
-                // Map aliases to full direction name for consistency
-                targets = [CommandParser.#directionMap[verb] || verb]; // The direction is the target
+                targets = [CommandParser.#directionMap[verb] || verb];
             }
             // Handle "look at [target]" vs simple "look"
-            else if (verb === 'look') {
-                actionId = 'core:action_look'; // Ensure actionId is set for 'look'
+            else if (verb === 'look') { // Keep existing look logic
+                actionId = 'core:action_look';
                 if (targets.length > 0 && targets[0] === 'at') {
-                    targets = targets.slice(1); // Target is after "at"
-                } else {
-                    // If 'look' has targets but no 'at', we could treat them as targets
-                    // or require 'at'. Current logic implies 'look thing' works same as 'look at thing'
-                    // Keep original logic for now:  simple "look" (targets.length === 0) handled below
-                    // or "look at thing" (targets handled above)
-                    // or "look thing" (targets = ['thing'] as parsed initially)
-                    // Let's refine slightly: if verb is look and targets exist but don't start with 'at',
-                    // assume they meant 'look at'. This matches common MUD/IF behavior.
-                    // NO, the *original* logic didn't require 'at' if targets were present.
-                    // Let's stick to *functional equivalence* for this ticket.
-                    // The previous logic:
-                    // if (verb === 'look' && targets.length > 0 && targets[0] === 'at') { finalTargets = targets.slice(1); }
-                    // else if (verb === 'look' && targets.length === 0) { finalTargets = []; }
-                    // Otherwise `finalTargets` remained `parts.slice(1)`
-                    // This means `look door` resulted in actionId: 'core:action_look', targets: ['door']
-                    // And `look at door` also resulted in actionId: 'core:action_look', targets: ['door']
-                    // And `look` resulted in actionId: 'core:action_look', targets: []
-                    // So the current assignment `targets = parts.slice(1)` combined with the special
-                    // 'look at' handling *already correctly replicates* the original logic.
+                    targets = targets.slice(1);
                 }
+                // 'look thing' and 'look' are handled by initial targets assignment
             }
-            // } else if (verb === 'look' && targets.length === 0) {
-            //     targets = []; // Handled naturally by initial `targets = parts.slice(1)` being empty
-            // }
 
-            // If after all checks, actionId is still null, it's an unknown command
-            if (!actionId && parts.length > 0) { // Check parts.length avoids error on empty input
-                // error = `Unknown command verb: "${verb}"`; // Optionally set a specific error
-                // For now, just return null actionId as per original logic's outcome
+            // If actionId is still null, it's unknown
+            if (!actionId && parts.length > 0) {
+                // Unknown command
             }
         }
 
@@ -126,7 +108,8 @@ class CommandParser {
             error: error
         };
 
-        console.debug(`CommandParser.parse("${originalInput}") ->`, result); // Debug log
+        // Use console.debug for less noise, or remove in production
+        console.debug(`CommandParser.parse("${originalInput}") ->`, JSON.stringify(result)); // Stringify for cleaner log
         return result;
     }
 }

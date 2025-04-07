@@ -23,6 +23,8 @@ const CONTENT_FILES = {
         'core_action_take.json',   // Underscore instead of colon
         'core_action_use.json',     // Underscore instead of colon
         'core_action_look.json',
+        'core_action_equip.json',
+        'core_action_unequip.json',
         'core_action_inventory.json'
     ],
     entities: [ // Includes items and characters
@@ -30,6 +32,8 @@ const CONTENT_FILES = {
         'demo_enemy_goblin.json',  // Underscore instead of colon
         'demo_item_key.json',      // Underscore instead of colon
         'demo_item_potion_heal_minor.json', // Underscore instead of colon
+        'demo_item_sword.json',
+        'demo_item_leather_vest.json',
         'demo_room_entrance.json', // Underscore instead of colon
         'demo_room_hallway.json',  // Underscore instead of colon
         'demo_room_monster.json',  // Underscore instead of colon
