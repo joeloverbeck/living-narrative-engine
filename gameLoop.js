@@ -4,6 +4,7 @@ import { DescriptionComponent } from './src/components/descriptionComponent.js';
 import { ConnectionsComponent } from "./src/components/connectionsComponent.js";
 import { InventoryComponent } from "./src/components/inventoryComponent.js";
 // ... import other necessary components ...
+import commandParser from "./commandParser.js";
 
 class GameLoop {
     /**
@@ -11,8 +12,9 @@ class GameLoop {
      * @param {import('./src/entities/entityManager.js').default} entityManager
      * @param {object} renderer - An object implementing the IGameRenderer interface (like DomRenderer).
      * @param {import('./InputHandler.js').default} inputHandler - The handler for user input events.
+     * @param {CommandParser} commandParser // +++ Add commandParser parameter
      */
-    constructor(dataManager, entityManager, renderer, inputHandler) {
+    constructor(dataManager, entityManager, renderer, inputHandler, commandParser) {
         // --- Validate constructor arguments ---
         if (!dataManager) throw new Error("GameLoop requires DataManager.");
         if (!entityManager) throw new Error("GameLoop requires EntityManager.");
@@ -23,11 +25,15 @@ class GameLoop {
         if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function') {
             throw new Error("GameLoop requires a valid InputHandler object.");
         }
+        if (!commandParser || typeof commandParser.parse !== 'function') {
+            throw new Error("GameLoop requires a valid CommandParser object.");
+        }
 
         this.dataManager = dataManager;
         this.entityManager = entityManager;
         this.renderer = renderer;       // +++ Store the renderer instance
         this.inputHandler = inputHandler; // +++ Store the handler instance
+        this.commandParser = commandParser;
 
         this.playerEntity = null;
         this.currentLocation = null;
@@ -114,16 +120,17 @@ class GameLoop {
         this.renderer.renderLocation(locationData);
         // --- All direct DOM manipulation / outputHtml building is REMOVED ---
     }
+
     /**
      * Processes a command string submitted by the input handler.
      * @param {string} command - The raw command string from the input.
      */
     processSubmittedCommand(command) {
         if (!this.isRunning) return;
-        // Temporarily disable input visually while processing? Maybe not needed yet.
-        // this.renderer.setInputState(false, "Processing...");
         this.handleCommand(command);
-        // Re-enable prompt is typically handled at the end of handleCommand or executeAction
+        if (this.isRunning) { // Check if stop() was called during handleCommand
+            this.promptInput(); // Re-prompt is now handled here uniformly after command processing
+        }
     }
 
     /**
@@ -133,18 +140,22 @@ class GameLoop {
      */
     handleCommand(command) {
         console.log(`GameLoop: Received command: "${command}"`);
-        // Echo command using renderer
-        this.renderer.renderMessage(`> ${command}`, "command");
+        this.renderer.renderMessage(`> ${command}`, "command"); // Echo command
 
-        const { actionId, targets } = this.parseCommand(command);
+        // +++ Use the CommandParser +++
+        const parsedCommand = this.commandParser.parse(command);
+        const { actionId, targets, originalInput } = parsedCommand; // Destructure result
 
         if (!actionId) {
-            // Use renderer for output
-            this.renderer.renderMessage("Unknown command. Try 'move [direction]', 'look', 'take [item]', etc.", "error");
-            this.promptInput(); // Ask for input again
+            // Handle unknown or empty commands
+            if (originalInput.trim().length > 0) { // Only show error for non-empty unknowns
+                this.renderer.renderMessage("Unknown command. Try 'move [direction]', 'look', 'inventory', etc.", "error");
+            }
+            // Don't prompt here anymore, handled in processSubmittedCommand
             return;
         }
 
+        // Action definition check remains useful
         const actionDefinition = this.dataManager.getAction(actionId);
         if (!actionDefinition) {
             console.warn(`GameLoop: Action definition not found for ID: ${actionId}, but proceeding with hardcoded logic.`);
@@ -153,85 +164,14 @@ class GameLoop {
             console.log(`GameLoop: Found action definition for ${actionId}`);
         }
 
-        console.log(`GameLoop: Parsed action: ${actionId}, Targets: ${targets.join(', ')}`);
+        console.log(`GameLoop: Executing action: ${actionId}, Targets: ${targets.join(', ')}`);
 
         this.executeAction(actionId, targets);
 
-        // Re-enable input prompt *unless* the action sequence requires more steps
-        // For now, most actions lead back to prompting.
-        // Complex actions (multi-stage) might delay this.
-        if (this.isRunning) { // Check if stop() was called during executeAction
-            this.promptInput();
-        }
-    }
-
-    /**
-     * Parses the raw command string into an action ID and targets.
-     * VERY basic parser, needs significant improvement.
-     * @param {string} command
-     * @returns {{actionId: string | null, targets: string[]}}
-     * @private
-     */
-    parseCommand(command) {
-        const lowerCommand = command.toLowerCase();
-        const parts = lowerCommand.split(' ').filter(p => p); // Split and remove empty strings
-        if (parts.length === 0) return { actionId: null, targets: [] };
-
-        const verb = parts[0];
-        const targets = parts.slice(1);
-
-        // Simple verb-to-actionID mapping (replace with more robust lookup)
-        // Using core actions defined in project plan/data files
-        const actionMap = {
-            'move': 'core:action_move',
-            'go': 'core:action_move',
-            'north': 'core:action_move',
-            'south': 'core:action_move',
-            'east': 'core:action_move',
-            'west': 'core:action_move',
-            // Add other directions if needed (up, down, ne, sw, etc.)
-            'n': 'core:action_move',
-            's': 'core:action_move',
-            'e': 'core:action_move',
-            'w': 'core:action_move',
-            'attack': 'core:action_attack',
-            'hit': 'core:action_attack',
-            'take': 'core:action_take',
-            'get': 'core:action_take',
-            'use': 'core:action_use',
-            'look': 'core:action_look',
-            'l': 'core:action_look',
-            'examine': 'core:action_look',
-            'inventory': 'core:action_inventory',
-            'inv': 'core:action_inventory',
-            'i': 'core:action_inventory'
-        };
-
-        let actionId = actionMap[verb] || null;
-        let finalTargets = targets;
-
-        // Special handling for movement directions as the verb
-        const directions = ['north', 'south', 'east', 'west', 'n', 's', 'e', 'w']; // Add aliases
-        if (directions.includes(verb)) {
-            actionId = 'core:action_move';
-            // Map aliases to full direction name for consistency in executeMove
-            const directionMap = { n: 'north', s: 'south', e: 'east', w: 'west' };
-            finalTargets = [directionMap[verb] || verb]; // The direction is the target
-        }
-        // Handle "look at [target]"
-        else if (verb === 'look' && targets.length > 0 && targets[0] === 'at') {
-            finalTargets = targets.slice(1); // Target is after "at"
-        } else if (verb === 'look' && targets.length === 0) {
-            finalTargets = []; // Simple "look" (at the room)
-        }
-
-
-        // TODO: Implement more sophisticated parsing:
-        // - Match targets against entities in the current location.
-        // - Handle prepositions ("take key from chest").
-        // - Use action definitions from DataManager to guide parsing.
-
-        return { actionId, targets: finalTargets };
+        // --- Re-enable input prompt removed from here ---
+        // It's now handled after handleCommand returns in processSubmittedCommand
+        // This ensures prompt happens even if executeAction leads to early return,
+        // unless stop() is called.
     }
 
     /**
@@ -241,23 +181,25 @@ class GameLoop {
      * @private
      */
     executeAction(actionId, targets) {
+        // Content of executeAction remains the same...
         switch (actionId) {
             case 'core:action_move':
                 if (targets.length > 0) {
                     this.executeMove(targets[0]);
                 } else {
-                    // Use renderer for output
                     this.renderer.renderMessage("Move where? (Specify a direction like 'north', 'south', 'east', or 'west')", "error");
                 }
                 break;
             case 'core:action_look':
                 if (targets.length > 0) {
+                    // Handles both 'look target' and 'look at target' because parser produces same targets array
                     this.executeLookAt(targets.join(' '));
                 } else {
                     // Looking at the room just re-displays location info
                     this.displayLocation();
                 }
                 break;
+            // ... other cases (take, attack, use, inventory) remain the same ...
             case 'core:action_take':
                 if (targets.length > 0) {
                     this.executeTake(targets.join(' '));
@@ -282,8 +224,8 @@ class GameLoop {
             case 'core:action_inventory':
                 this.executeInventory();
                 break;
+
             default:
-                // Use renderer for output
                 this.renderer.renderMessage(`Action '${actionId}' is recognized but not implemented yet.`, "warning");
         }
     }
@@ -391,7 +333,6 @@ class GameLoop {
         // this.renderer.renderMessage("Inventory display not fully implemented.", "warning"); // Use renderer
     }
 
-
     /**
      * Checks for and executes simple event triggers.
      * Placeholder for future phases.
@@ -419,11 +360,7 @@ class GameLoop {
      */
     promptInput(message = "Enter command...") {
         if (!this.isRunning) return; // Don't prompt if stopped
-
-        // 1. Tell InputHandler to start listening and focus
-        this.inputHandler.enable(); // Does NOT set placeholder/disabled anymore
-
-        // 2. Tell Renderer to update visual state
+        this.inputHandler.enable();
         this.renderer.setInputState(true, message);
     }
 
@@ -432,24 +369,16 @@ class GameLoop {
      * and tells renderer to update the input field's visual state (disabled).
      */
     stop() {
-        if (!this.isRunning) return; // Already stopped
+        // ... stop() method remains the same ...
+        if (!this.isRunning) return;
         this.isRunning = false;
-
         const stopMessage = "Game stopped.";
-
-        // 1. Tell InputHandler to stop listening/processing
         this.inputHandler.disable();
-
-        // 2. Tell Renderer to update visual state
-        if (this.renderer) { // Check if renderer exists (might be called during error handling)
-            this.renderer.setInputState(false, stopMessage);
-        }
-
-        console.log("GameLoop: Stopped.");
-        // Optionally render a final "Game stopped." message
         if (this.renderer) {
+            this.renderer.setInputState(false, stopMessage);
             this.renderer.renderMessage(stopMessage, "info");
         }
+        console.log("GameLoop: Stopped.");
     }
 }
 

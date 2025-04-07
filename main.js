@@ -5,6 +5,7 @@ import EntityManager from "./src/entities/entityManager.js";
 import GameLoop from "./gameLoop.js";
 import InputHandler from "./inputHandler.js";
 import DomRenderer from "./domRenderer.js";
+import CommandParser from './commandParser.js';
 
 // Import ALL component classes you need
 import { AttackComponent } from './src/components/attackComponent.js';
@@ -82,11 +83,13 @@ async function initializeGame() {
 
         renderer.renderMessage("<p>Input Handler initialized.</p>");
 
+        const commandParser = new CommandParser();
+
         // --- Initialize and Start the Game Loop ---
-        // Pass the renderer and inputHandler instances
         title.textContent = "Starting Game Loop...";
-        // --- GameLoop constructor now takes renderer instead of outputDiv ---
-        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler);
+
+        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler, commandParser);
+
         await gameLoop.initializeAndStart(); // Initialize player, starting location etc.
 
         title.textContent = "Dungeon Run Demo"; // Set final title
