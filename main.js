@@ -1,8 +1,10 @@
 // main.js
 
-import DataManager from "./DataManager.js";
+import DataManager from "./dataManager.js";
 import EntityManager from "./src/entities/entityManager.js";
 import GameLoop from "./gameLoop.js";
+import InputHandler from "./inputHandler.js";
+import DomRenderer from "./domRenderer.js";
 
 // Import ALL component classes you need
 import { AttackComponent } from './src/components/attackComponent.js';
@@ -23,18 +25,24 @@ const title = document.querySelector('h1');
 async function initializeGame() {
     const dataManager = new DataManager();
     let entityManager = null; // Initialize entityManager
-    let gameLoop = null;
+    let gameLoop = null;      // Initialize gameLoop
+    let inputHandler = null;  // Initialize inputHandler
+    let renderer = null;
 
     try {
         title.textContent = "Loading Game Data...";
         await dataManager.loadAllData();
         title.textContent = "Game Data Loaded. Initializing Entities...";
-        outputDiv.innerHTML = `<p>Data Manager ready. Schemas and definitions loaded.</p>`;
+        // Use a temporary message area or console for pre-renderer output
+        console.log("Data Manager ready. Schemas and definitions loaded.");
+
+        // +++ Instantiate Renderer FIRST (needs DOM elements) +++
+        renderer = new DomRenderer(outputDiv, inputEl);
+        renderer.renderMessage("<p>Data Manager ready. Schemas and definitions loaded.</p>"); //
 
         // --- Instantiate EntityManager ---
         entityManager = new EntityManager(dataManager);
-        // Components should be auto-registered in the constructor now
-        outputDiv.innerHTML += `<p>Entity Manager initialized. Registering components...</p>`;
+        renderer.renderMessage("<p>Entity Manager initialized. Registering components...</p>");
 
         // --- Manually Register Components ---
         // The first argument is the EXACT key used in your JSON files' "components" object
@@ -50,20 +58,35 @@ async function initializeGame() {
         entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
         // ... register any other components ...
 
-        outputDiv.innerHTML += `<p>Components registered.</p>`;
+        renderer.renderMessage("<p>Components registered.</p>");
 
         // --- Instantiate CORE entities needed BEFORE game loop starts ---
-        // Player is crucial for the loop
         const playerEntity = entityManager.createEntityInstance('core:player');
         if (!playerEntity) {
             throw new Error("Failed to instantiate player entity 'core:player'. Cannot start game.");
         }
-        outputDiv.innerHTML += `<p>Player entity 'core:player' instantiated.</p>`;
-        // You might instantiate starting location items/NPCs here too, or let GameLoop handle it
+
+        renderer.renderMessage("<p>Player entity 'core:player' instantiated.</p>");
+
+        // --- Initialize Input Handler ---
+        // Now InputHandler only handles events and focus, not placeholder/disabled state
+        inputHandler = new InputHandler(inputEl, (command) => {
+            if (gameLoop) {
+                gameLoop.processSubmittedCommand(command);
+            } else {
+                console.error("InputHandler callback triggered, but GameLoop is not yet initialized!");
+                errorDiv.textContent = "Error: Input handling called before game loop was ready.";
+                if(renderer) renderer.setInputState(false, "Error: Game loop unavailable."); // Use renderer to update state
+            }
+        });
+
+        renderer.renderMessage("<p>Input Handler initialized.</p>");
 
         // --- Initialize and Start the Game Loop ---
+        // Pass the renderer and inputHandler instances
         title.textContent = "Starting Game Loop...";
-        gameLoop = new GameLoop(dataManager, entityManager, outputDiv, inputEl);
+        // --- GameLoop constructor now takes renderer instead of outputDiv ---
+        gameLoop = new GameLoop(dataManager, entityManager, renderer, inputHandler);
         await gameLoop.initializeAndStart(); // Initialize player, starting location etc.
 
         title.textContent = "Dungeon Run Demo"; // Set final title
@@ -72,11 +95,19 @@ async function initializeGame() {
         console.error("Game initialization failed:", error);
         title.textContent = "Fatal Error!";
         const errorMsg = `Game initialization failed. Check the console (F12) for details. Error: ${error.message}`;
-        // Display error in dedicated init error div OR the main output
-        errorDiv.textContent = errorMsg; // Use dedicated div
-        // outputDiv.innerHTML = `<div class="message message-error">${errorMsg}</div>`; // Use main output
-        inputEl.placeholder = "Error during startup.";
-        inputEl.disabled = true;
+        errorDiv.textContent = errorMsg; // Keep errorDiv for critical failures before renderer might be ready
+
+        // Use renderer if available to update input state, otherwise fallback
+        if (renderer) {
+            // Also tell input handler to stop listening etc.
+            if (inputHandler) inputHandler.disable();
+            renderer.setInputState(false, "Error during startup.");
+        } else if (inputHandler) {
+            inputHandler.disable("Error during startup."); // Handler might still manage its own state
+        } else {
+            inputEl.placeholder = "Error during startup."; // Fallback
+            inputEl.disabled = true;
+        }
         if (gameLoop && gameLoop.isRunning) {
             gameLoop.stop(); // Attempt to stop loop if it partially started
         }
@@ -87,9 +118,22 @@ async function initializeGame() {
 initializeGame().then(() => {
     console.log("Game initialization sequence finished.");
 }).catch(err => {
+    // Similar error handling as above, prioritizing renderer if available
     console.error("Unhandled error during game initialization promise chain:", err);
     title.textContent = "Fatal Unhandled Error!";
     errorDiv.textContent = `An unexpected error occurred: ${err.message}. Check console.`;
-    inputEl.placeholder = "Error during startup.";
-    inputEl.disabled = true;
+
+    // Attempt to disable input via handler and renderer if they exist
+    // Access instance if made global or retrieve otherwise (this part is complex, assumes access exists)
+    const handler = window.inputHandler; // Example access
+    const rendr = window.renderer; // Example access (need to expose renderer globally or pass refs)
+
+    // Best effort disable
+    if (handler) handler.disable(); // Stop listening
+    if (rendr) { // Update visuals via renderer
+        rendr.setInputState(false, "Error during startup.");
+    } else { // Fallback direct DOM manipulation
+        inputEl.placeholder = "Error during startup.";
+        inputEl.disabled = true;
+    }
 });

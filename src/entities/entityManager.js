@@ -9,7 +9,7 @@ import Entity from "./entity.js";
  */
 class EntityManager {
     /**
-     * @param {import('../../DataManager.js').default} dataManager - The loaded data manager instance.
+     * @param {import('../../dataManager.js').default} dataManager - The loaded data manager instance.
      */
     constructor(dataManager) {
         if (!dataManager) {
