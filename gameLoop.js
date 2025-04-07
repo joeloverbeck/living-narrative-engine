@@ -10,6 +10,7 @@
 /** @typedef {import('./InputHandler.js').default} InputHandler */
 /** @typedef {import('./commandParser.js').default} CommandParser */
 /** @typedef {import('./src/actions/actionExecutor.js').default} ActionExecutor */
+/** @typedef {import('./src/actions/actionResultProcessor.js').default} ActionResultProcessor */
 
 /** @typedef {import('./eventBus.js').default} EventBus */
 
@@ -38,6 +39,7 @@ class GameLoop {
     #inputHandler;
     #commandParser;
     #actionExecutor;
+    #actionResultProcessor;
     #eventBus;
 
     #isRunning = false;
@@ -55,6 +57,7 @@ class GameLoop {
             inputHandler,
             commandParser,
             actionExecutor,
+            actionResultProcessor,
             eventBus
         } = options || {};
 
@@ -70,6 +73,9 @@ class GameLoop {
         if (!actionExecutor || typeof actionExecutor.executeAction !== 'function') {
             throw new Error("GameLoop requires a valid options.actionExecutor object.");
         }
+        if (!actionResultProcessor || typeof actionResultProcessor.process !== 'function') {
+            throw new Error("GameLoop requires a valid options.actionResultProcessor object.");
+        }
         if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') {
             throw new Error("GameLoop requires a valid options.eventBus object.");
         }
@@ -80,6 +86,7 @@ class GameLoop {
         this.#inputHandler = inputHandler;
         this.#commandParser = commandParser;
         this.#actionExecutor = actionExecutor;
+        this.#actionResultProcessor = actionResultProcessor;
         this.#eventBus = eventBus;
 
         this.#isRunning = false; // Initialize running state
@@ -156,7 +163,7 @@ class GameLoop {
     }
 
     /**
-     * Prepares context, delegates action execution, processes state changes,
+     * Prepares context, delegates action execution, processes state changes via ActionResultProcessor,
      * triggers follow-up 'look' on location change, and relies on handlers/EventBus for messages.
      * @param {string} actionId - The ID of the action to execute.
      * @param {string[]} targets - The target identifiers from the parser.
@@ -164,11 +171,11 @@ class GameLoop {
      */
     executeAction(actionId, targets) {
         const currentPlayer = this.#gameStateManager.getPlayer();
-        let currentLocation = this.#gameStateManager.getCurrentLocation(); // Use let as it might change
+        // Get current location *before* the action executes, in case the action needs it
+        const currentLocationBeforeAction = this.#gameStateManager.getCurrentLocation();
 
-        if (!currentPlayer || !currentLocation) {
+        if (!currentPlayer || !currentLocationBeforeAction) {
             console.error("executeAction called but state missing from GameStateManager.");
-            // Dispatch error via EventBus
             this.#eventBus.dispatch('ui:message_display', {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
@@ -176,76 +183,32 @@ class GameLoop {
             return;
         }
 
-        // console.log(`GameLoop: Executing action: ${actionId}, Targets: ${targets.join(', ')}`); // Verbose
-
         /** @type {ActionContext} */
         const context = {
             playerEntity: currentPlayer,
-            currentLocation: currentLocation,
+            currentLocation: currentLocationBeforeAction, // Provide the location at the start of the action
             targets: targets,
             dataManager: this.#dataManager,
             entityManager: this.#entityManager,
-            dispatch: this.#eventBus.dispatch.bind(this.#eventBus) // Provide dispatch directly
+            dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
         };
 
         /** @type {ActionResult} */
         const result = this.#actionExecutor.executeAction(actionId, context);
 
-        // --- Process Action Result ---
+        // --- Process Action Result using the dedicated processor ---
+        const processResult = this.#actionResultProcessor.process(result);
 
-        // Apply state changes via GameStateManager based on newState
-        let locationChanged = false; // Flag to check if we need to trigger 'look'
-        if (result.newState) {
-            if (typeof result.newState.currentLocationId === 'string') {
-                const newLocationId = result.newState.currentLocationId;
-                const newLocation = this.#entityManager.createEntityInstance(newLocationId);
-
-                if (newLocation) {
-                    const previousLocation = currentLocation; // Store previous location before updating state
-                    this.#gameStateManager.setCurrentLocation(newLocation);
-
-                    // --- Get updated state for post-action logic ---
-                    const updatedLocation = this.#gameStateManager.getCurrentLocation(); // Re-get
-                    const playerForEvent = this.#gameStateManager.getPlayer(); // Re-get (usually same)
-
-                    if (!updatedLocation || !playerForEvent) { // Should not happen
-                        console.error("GameLoop: State became invalid after setting location in GameStateManager!");
-                        this.#eventBus.dispatch('ui:message_display', {
-                            text: "Critical Internal Error: State inconsistency after move.",
-                            type: "error"
-                        });
-                        this.stop();
-                        return;
-                    }
-                    currentLocation = updatedLocation; // Update local variable for context if needed later
-
-                    // Dispatch room entered event (TriggerSystem will listen for this)
-                    this.#eventBus.dispatch('event:room_entered', {
-                        playerEntity: playerForEvent,
-                        newLocation: updatedLocation,
-                        previousLocation: previousLocation
-                    });
-
-                    locationChanged = true; // Mark that location changed successfully
-
-                } else {
-                    console.error(`GameLoop: Failed to get/create entity instance for target location ID: ${newLocationId}`);
-                    this.#eventBus.dispatch('ui:message_display', {
-                        text: "There seems to be a problem with where you were trying to go. You remain here.",
-                        type: "error"
-                    });
-                }
-            }
-            // Handle other potential newState flags here...
-        }
-
-        // Trigger 'look' action automatically AFTER a successful location change
-        if (locationChanged) {
+        // --- Trigger 'look' action automatically AFTER a successful location change ---
+        // --- Use the result from the processor to make the decision ---
+        if (processResult.locationChanged) {
             // console.log("GameLoop: Location changed, executing automatic 'look'."); // Verbose
-            // Execute look action non-recursively (using a fresh call, not tail recursion)
-            // Ensure the context for 'look' uses the *new* location from GameStateManager
+            // Execute look action non-recursively.
+            // NOTE: 'look' action itself should use GameStateManager.getCurrentLocation()
+            // to get the *new* location when it executes.
             this.executeAction('core:action_look', []);
         }
+
     }
 
     /**

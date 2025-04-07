@@ -29,6 +29,7 @@ import {executeInventory} from "./src/actions/handlers/inventoryActionHandler.js
 import {executeAttack} from "./src/actions/handlers/attackActionHandler.js";
 import {executeUse} from "./src/actions/handlers/useActionHandler.js";
 import GameInitializer from "./src/core/gameInitializer.js";
+import ActionResultProcessor from "./src/actions/actionResultProcessor.js";
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -183,6 +184,12 @@ async function initializeGame() {
             }
         });
 
+        const actionResultProcessor = new ActionResultProcessor({
+            gameStateManager,
+            entityManager,
+            eventBus
+        });
+
         gameLoop = new GameLoop({
             dataManager,
             entityManager,
@@ -190,6 +197,7 @@ async function initializeGame() {
             inputHandler,
             commandParser,
             actionExecutor,
+            actionResultProcessor,
             eventBus
         });
 
