@@ -69,7 +69,6 @@ class DataManager {
         this.schemas = new Map();
         this.actions = new Map();
         this.entities = new Map();
-        this.locations = new Map();
         this.triggers = new Map();
     }
 
@@ -283,8 +282,9 @@ class DataManager {
                 }
 
                 if (!isValid) {
-                    const errorDetails = JSON.stringify(validationErrors, null, 2);
-                    throw new Error(`Schema validation failed for ${path} (type: ${entityType}) using schema <span class="math-inline">\{usedSchemaId\}\:\\n</span>{errorDetails}`);
+                    const errorDetailsString = JSON.stringify(validationErrors, null, 2);
+                    console.error(`Schema validation failed for ${path} (type: ${entityType}) using schema ${usedSchemaId}. Errors:\n`, validationErrors); // Log the detailed errors object
+                    throw new Error(`Schema validation failed for ${path} (type: ${entityType}) using schema ${usedSchemaId}:\n${errorDetailsString}`); // Include details string in error message
                 }
 
                 // Store the validated data

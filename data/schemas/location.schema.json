@@ -39,6 +39,10 @@
         "Connections": {
           "$ref": "#/definitions/ConnectionsComponent",
           "description": "Component defining the exits or links from this location to others."
+        },
+        "EntitiesPresent": {
+          "$ref": "#/definitions/EntitiesPresentComponent",
+          "description": "(Optional) Component listing the IDs of entities currently present in this location."
         }
       },
       "anyOf": [
@@ -210,6 +214,25 @@
           }
         }
       }
+    },
+    "EntitiesPresentComponent": {
+      "type": "object",
+      "description": "Lists the IDs of entities currently present within this entity (typically used for Locations).",
+      "properties": {
+        "entityIds": {
+          "type": "array",
+          "description": "Array of entity identifier strings present.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "entityIds"
+      ],
+      "additionalProperties": false
     }
   }
 }

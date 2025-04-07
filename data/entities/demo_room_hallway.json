@@ -21,57 +21,15 @@
           "direction": "north",
           "target": "demo:room_entrance"
         },
-        {
-          "direction": "east",
+        { "direction": "east",
           "target": "demo:room_treasure",
-          "description_override": "A sturdy wooden door, banded with iron, blocks the way east. It appears to be locked.",
-          "type": "door",
-          "initial_state": "locked",
-          "interactions": [
-            {
-              "action_id": "core:action_force_open",
-              "requires_state": "locked",
-              "test_definition": {
-                "id": "demo:test_force_hallway_door",
-                "type": "stat_check",
-                "description": "Attempting to force the sturdy wooden door open.",
-                "stat_or_skill_id": "core:skill_strength",
-                "difficulty_class": 12,
-                "on_success": {
-                  "message": "With a mighty heave, the lock splinters and the door smashes open!",
-                  "effects": [
-                    {
-                      "type": "set_state",
-                      "new_state": "unlocked"
-                    },
-                    {
-                      "type": "fire_event",
-                      "event_name": "demo:event_door_forced_open",
-                      "event_data": {
-                        "location_id": "demo:room_hallway",
-                        "direction": "east"
-                      }
-                    }
-                  ]
-                },
-                "on_failure": {
-                  "message": "You slam your shoulder against the door, but the solid wood and iron bands hold firm. Ouch.",
-                  "effects": [
-                    {
-                      "type": "fire_event",
-                      "event_name": "demo:event_force_failed",
-                      "event_data": {
-                        "location_id": "demo:room_hallway",
-                        "direction": "east"
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          ]
+          "description_override": "A sturdy door. The goblin blocks it.",
+          "initial_state": "locked"
         }
       ]
+    },
+    "EntitiesPresent": {
+      "entityIds": ["demo:enemy_goblin"]
     }
   }
 }

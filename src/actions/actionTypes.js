@@ -16,6 +16,7 @@
  * @property {string[]} targets - An array of strings representing the targets/arguments derived from the parsed command.
  * @property {DataManager} dataManager - The central manager for game data definitions.
  * @property {EntityManager} entityManager - The manager for creating and tracking entity instances.
+ * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events.
  * // Add other relevant state here if needed in the future (e.g., gameTime, weather)
  */
 

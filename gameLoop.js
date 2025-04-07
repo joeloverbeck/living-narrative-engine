@@ -2,6 +2,7 @@
 import { NameComponent } from './src/components/nameComponent.js';
 import { DescriptionComponent } from './src/components/descriptionComponent.js';
 import { ConnectionsComponent } from "./src/components/connectionsComponent.js";
+import { EntitiesPresentComponent } from './src/components/entitiesPresentComponent.js';
 // ... import other necessary components ...
 import ActionExecutor from './src/actions/actionExecutor.js';
 
@@ -84,14 +85,20 @@ class GameLoop {
         }
         this.currentLocation = startLocation; // Assign the instance
 
+        // +++ Instantiate Entities Present in Starting Location +++
+        this.ensureEntitiesPresentAreInstantiated(this.currentLocation);
+
         console.log(`GameLoop: Player starting at ${this.currentLocation.id}`);
+
+        // --- Trigger initial room entered event (after setting location) ---
+        this.dispatchGameEvent('event:room_entered', {
+            playerEntity: this.playerEntity,
+            newLocation: this.currentLocation
+        });
 
         this.isRunning = true;
         this.renderer.renderMessage("Welcome to Dungeon Run Demo!");
-        // --- Display initial location ---
-        // Look handler now manages formatting, but GameLoop triggers the initial look
-        this.displayLocation(); // Display initial location info ONCE. Subsequent looks handled by LookActionHandler.
-
+        this.displayLocation();
         this.promptInput();
         console.log("GameLoop: Started.");
     }
@@ -173,6 +180,37 @@ class GameLoop {
     }
 
     /**
+     * Checks a location for an EntitiesPresentComponent and ensures all listed
+     * entity IDs have corresponding instances created in the EntityManager.
+     * @param {import('./src/entities/entity.js').default} locationEntity - The location entity instance to check.
+     * @private
+     */
+    ensureEntitiesPresentAreInstantiated(locationEntity) {
+        if (!locationEntity) return;
+
+        const presentComp = locationEntity.getComponent(EntitiesPresentComponent);
+        if (presentComp && Array.isArray(presentComp.entityIds)) {
+            console.log(`GameLoop: Ensuring entities present in ${locationEntity.id} are instantiated.`);
+            presentComp.entityIds.forEach(entityId => {
+                // Don't try to re-instantiate the player if listed (though unlikely)
+                if (this.playerEntity && entityId === this.playerEntity.id) {
+                    return;
+                }
+                // Attempt to create/get the instance. This will either create it
+                // if it's the first time, or just return the existing one.
+                const instance = this.entityManager.createEntityInstance(entityId);
+                if (!instance) {
+                    // Log an error if an entity listed couldn't be created
+                    console.error(`GameLoop: Failed to ensure instance for entity ID '${entityId}' listed in location '${locationEntity.id}'. Definition might be missing or invalid.`);
+                    // Decide if this should halt the game or just warn
+                } else {
+                    // Optional: Log success only if newly created? createEntityInstance logs it currently.
+                }
+            });
+        }
+    }
+
+    /**
      * Prepares context and delegates action execution to the ActionExecutor.
      * Processes the ActionResult to update game state and render messages.
      *
@@ -209,6 +247,7 @@ class GameLoop {
             targets: targets,
             dataManager: this.dataManager,
             entityManager: this.entityManager,
+            dispatch: this.dispatchGameEvent.bind(this)
         };
 
         // --- Delegate to Action Executor ---
@@ -241,15 +280,32 @@ class GameLoop {
 
                 if (newLocation) {
                     // --- State Update ---
+                    const previousLocation = this.currentLocation; // Store previous location (optional use)
                     this.currentLocation = newLocation; // Update GameLoop's state
                     console.log(`GameLoop: Successfully updated currentLocation to ${this.currentLocation.id}`);
 
+                    // +++ Instantiate Entities Present in New Location +++
+                    this.ensureEntitiesPresentAreInstantiated(this.currentLocation);
+
+                    // --- Dispatch Event: Room Entered (P1-EVT-001) ---
+                    // This happens *after* the state transition is confirmed and completed.
+                    this.dispatchGameEvent('event:room_entered', {
+                        playerEntity: this.playerEntity,
+                        newLocation: this.currentLocation,
+                        // previousLocation: previousLocation // Optional future enhancement
+                    });
+                    // --- End Event Dispatch ---
+
                     // --- Post-State-Update Action ---
-                    // Display the details of the *new* location after the move is complete.
+                    // Display the details of the *new* location after the move is complete
+                    // and after the event has been dispatched.
+                    // We display *after* the event so listeners could potentially modify
+                    // the description lookup or add messages before the default display.
                     this.displayLocation();
 
                 } else {
-                    // Handler indicated success moving to a location, but it couldn't be instantiated.
+                    // Handler indicated a successful move attempt to a location,
+                    // but that location entity couldn't be instantiated. Critical error.
                     console.error(`GameLoop: Failed to get/create entity instance for target location ID: ${newLocationId} (requested by handler for ${actionId}).`);
                     this.renderer.renderMessage("There seems to be a problem with where you were trying to go. You remain here.", "error");
                     // Potentially consider reverting other side-effects if the action was complex
@@ -266,22 +322,132 @@ class GameLoop {
     }
 
     /**
-     * Checks for and executes simple event triggers.
-     * Placeholder for future phases.
+     * Checks for and executes simple event triggers based on loaded data.
+     * Basic MVP implementation.
+     * @param {string} eventName The name of the event that was just dispatched.
+     * @param {object} eventData The data associated with the dispatched event.
      * @private
      */
-    checkTriggers() {
-        // TODO: Implement in Phase 2+ based on data definitions
+    checkTriggers(eventName, eventData) {
+        console.log(`GameLoop: Checking triggers for event: ${eventName}`);
+        const allTriggers = this.dataManager.getAllTriggers(); // Assumes DataManager has this
+
+        for (const triggerDef of allTriggers) {
+            // Basic check if trigger is active (implement one_shot disabling later)
+            // if (triggerDef.disabled) continue; // Add mechanism for this later
+
+            const listenCondition = triggerDef.listen_to;
+
+            // 1. Check Event Type
+            if (listenCondition.event_type !== eventName) {
+                continue; // Does not match event type
+            }
+
+            // 2. Check Filters (MVP: source_id for entity_died)
+            let filtersMatch = true;
+            if (listenCondition.filters) {
+                if (eventName === 'event:entity_died' && listenCondition.filters.source_id) {
+                    // Ensure eventData has the expected structure
+                    if (!eventData || typeof eventData.deceasedEntityId !== 'string') {
+                        console.warn(`Trigger Check: ${triggerDef.id} expects 'deceasedEntityId' in eventData for 'entity_died', but not found or invalid.`, eventData);
+                        filtersMatch = false;
+                    } else if (eventData.deceasedEntityId !== listenCondition.filters.source_id) {
+                        filtersMatch = false; // Specific entity ID doesn't match
+                    }
+                }
+                // Add other filter checks for different events/filters later
+            }
+
+            if (!filtersMatch) {
+                continue; // Filter condition not met
+            }
+
+            // --- Trigger Matches! Execute Actions ---
+            console.log(`GameLoop: Trigger MATCHED: ${triggerDef.id}`);
+
+            for (const action of triggerDef.actions) {
+                console.log(`GameLoop: Executing trigger action:`, action);
+                try {
+                    switch (action.type) {
+                        case 'set_connection_state':
+                            this.executeTriggerAction_SetConnectionState(action.target, action.parameters);
+                            break;
+                        // Add more trigger action types later
+                        default:
+                            console.warn(`GameLoop: Unknown trigger action type '${action.type}' in trigger ${triggerDef.id}`);
+                    }
+                } catch (error) {
+                    console.error(`GameLoop: Error executing action for trigger ${triggerDef.id}:`, error);
+                }
+            }
+
+            // Handle one_shot (basic MVP: just log it needs disabling)
+            if (triggerDef.one_shot) {
+                console.log(`GameLoop: Trigger ${triggerDef.id} is one_shot and should be disabled.`);
+                // TODO MVP+: Implement disabling mechanism (e.g., add flag to instance state or remove from active list)
+            }
+
+        } // End loop through triggers
     }
 
     /**
-     * Dispatches a game event. Basic placeholder for MVP.
-     * @param {string} eventName The name of the event (e.g., 'event:room_entered').
-     * @param {object} eventData Associated data for the event.
+     * Executes the 'set_connection_state' trigger action.
+     * @param {{location_id: string, connection_direction: string}} target
+     * @param {{state: string}} parameters
+     * @private
+     */
+    executeTriggerAction_SetConnectionState(target, parameters) {
+        const locationEntity = this.entityManager.getEntityInstance(target.location_id);
+        if (!locationEntity) {
+            console.error(`Trigger Action Error: Target location '${target.location_id}' not found.`);
+            return;
+        }
+
+        const connectionsComp = locationEntity.getComponent(ConnectionsComponent);
+        if (!connectionsComp || !Array.isArray(connectionsComp.connections)) {
+            console.error(`Trigger Action Error: Location '${target.location_id}' has no valid ConnectionsComponent.`);
+            return;
+        }
+
+        const connection = connectionsComp.connections.find(c => c.direction === target.connection_direction);
+        if (!connection) {
+            console.error(`Trigger Action Error: Connection '${target.connection_direction}' not found in location '${target.location_id}'.`);
+            return;
+        }
+
+        // --- Update the state ---
+        const oldState = connection.state;
+        connection.state = parameters.state; // Directly modify the component data instance
+        console.log(`Trigger Action: Set connection '${target.connection_direction}' in '${target.location_id}' state from '${oldState || 'undefined'}' to '${parameters.state}'.`);
+
+        // Notify player? Optional. Might spam messages.
+        // For 'unlocked', a message might be good.
+        if (parameters.state === 'unlocked' && oldState === 'locked') {
+            this.renderer.renderMessage(`You hear a click from the ${target.connection_direction}.`, 'sound'); // Use a 'sound' type maybe
+        }
+        // If the player is IN the location where the change happened, maybe redisplay exits?
+        if (this.currentLocation && this.currentLocation.id === target.location_id) {
+            // This requires the Look action to re-evaluate connections
+            // For MVP, this state change will just be reflected next time player 'look's or tries 'move'
+        }
+    }
+
+    /**
+     * Dispatches a game event. Now bound and passed in context.
+     * In Phase 1, this logs the event and checks simple triggers.
+     *
+     * @param {string} eventName The name of the event (e.g., 'event:room_entered', 'event:entity_died').
+     * @param {object} eventData Associated data payload for the event.
      */
     dispatchGameEvent(eventName, eventData) {
+        // MVP Implementation: Log the event
         console.log(`Game Event Dispatched: ${eventName}`, eventData);
-        // TODO: Integrate with a proper Event Bus in Phase 2+
+
+        // +++ Basic MVP Trigger Check +++
+        this.checkTriggers(eventName, eventData);
+        // ---
+
+        // Phase 2+ TODO: Integrate with a proper Event Bus
     }
 
     /**

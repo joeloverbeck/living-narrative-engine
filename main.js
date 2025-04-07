@@ -18,6 +18,7 @@ import { NameComponent } from './src/components/nameComponent.js';
 import { SkillComponent } from './src/components/skillComponent.js';
 import { DescriptionComponent } from './src/components/descriptionComponent.js';
 import { MetaDescriptionComponent } from './src/components/metaDescriptionComponent.js';
+import { EntitiesPresentComponent } from './src/components/entitiesPresentComponent.js';
 import {executeMove} from "./src/actions/handlers/moveActionHandler.js";
 import {executeLook} from "./src/actions/handlers/lookActionHandler.js";
 import {executeTake} from "./src/actions/handlers/takeActionHandler.js";
@@ -67,6 +68,7 @@ async function initializeGame() {
         entityManager.registerComponent('Skill', SkillComponent);
         entityManager.registerComponent('Description', DescriptionComponent);
         entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
+        entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);
         // ... register any other components ...
 
         renderer.renderMessage("<p>Components registered.</p>");

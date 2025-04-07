@@ -33,6 +33,10 @@
         "Skill": {
           "$ref": "#/definitions/SkillComponent",
           "description": "(Optional) Component tracking entity skill levels (basic MVP version)."
+        },
+        "EntitiesPresent": {
+          "$ref": "#/definitions/EntitiesPresentComponent",
+          "description": "(Optional, usually for locations) Lists IDs of entities within."
         }
       },
       "minProperties": 1,
@@ -134,6 +138,25 @@
       },
       "required": [
         "skills"
+      ],
+      "additionalProperties": false
+    },
+    "EntitiesPresentComponent": {
+      "type": "object",
+      "description": "Lists the IDs of entities currently present within this entity (typically used for Locations).",
+      "properties": {
+        "entityIds": {
+          "type": "array",
+          "description": "Array of entity identifier strings present.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "entityIds"
       ],
       "additionalProperties": false
     }
