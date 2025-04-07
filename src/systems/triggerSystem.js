@@ -1,16 +1,20 @@
 // src/systems/triggerSystem.js
 
+import {ConnectionsComponent} from "../components/connectionsComponent.js";
+
 /** @typedef {import('../dataManager.js').default} DataManager */
 /** @typedef {import('./entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./eventBus.js').default} EventBus */
 /** @typedef {import('./actions/actionTypes.js').ActionMessage} ActionMessage */ // For return type hinting
 
-import {ConnectionsComponent} from "../components/connectionsComponent.js";
+/** @typedef {import('../entities/entity.js').default} Entity
 
-/**
+
+ /**
  * Listens for game events via the EventBus, checks trigger conditions defined
  * in data, and executes corresponding actions.
+ * Also handles certain built-in reactions to core game events (like ensuring entities are present).
  */
 class TriggerSystem {
     #eventBus;
@@ -52,37 +56,56 @@ class TriggerSystem {
         console.log("TriggerSystem: Initializing subscriptions...");
         const allTriggers = this.#dataManager.getAllTriggers();
 
-        if (!allTriggers || allTriggers.length === 0) {
-            console.log("TriggerSystem: No trigger definitions found in DataManager.");
+        if (allTriggers && allTriggers.length > 0) {
+            for (const triggerDef of allTriggers) {
+                if (!triggerDef || !triggerDef.id || !triggerDef.listen_to || !triggerDef.listen_to.event_type) {
+                    console.warn("TriggerSystem: Skipping invalid trigger definition:", triggerDef);
+                    continue;
+                }
+                if (triggerDef.one_shot !== false) {
+                    this.#activeOneShotTriggerIds.add(triggerDef.id);
+                }
+                const eventName = triggerDef.listen_to.event_type;
+                const handler = (eventData) => this._handleTriggerEvent(triggerDef, eventName, eventData);
+                this.#triggerIdToHandlerMap.set(triggerDef.id, handler);
+                this.#eventBus.subscribe(eventName, handler);
+            }
+            console.log(`TriggerSystem: Finished initializing ${allTriggers.length} triggers. Active one-shots: ${this.#activeOneShotTriggerIds.size}`);
+        } else {
+            console.log("TriggerSystem: No custom trigger definitions found in DataManager.");
+        }
+
+        this.#eventBus.subscribe('event:room_entered', this.#handleRoomEntered.bind(this));
+        console.log("TriggerSystem: Subscribed to 'event:room_entered' for entity instantiation.");
+    }
+
+    /**
+     * Handles the 'event:room_entered' event to ensure entities listed in the
+     * new location's EntitiesPresentComponent are instantiated.
+     * @private
+     * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity }} eventData
+     */
+    #handleRoomEntered(eventData) {
+        console.log("TriggerSystem: Handling 'event:room_entered'.");
+        const {newLocation} = eventData;
+
+        if (!newLocation) {
+            console.error("TriggerSystem #handleRoomEntered: Received 'event:room_entered' but newLocation was missing in event data.", eventData);
             return;
         }
 
-        for (const triggerDef of allTriggers) {
-            if (!triggerDef || !triggerDef.id || !triggerDef.listen_to || !triggerDef.listen_to.event_type) {
-                console.warn("TriggerSystem: Skipping invalid trigger definition:", triggerDef);
-                continue;
-            }
-
-            // Track one-shot triggers that should start active
-            // Note: JSON schema defaults one_shot to true if omitted. We respect that.
-            if (triggerDef.one_shot !== false) { // Default to true
-                this.#activeOneShotTriggerIds.add(triggerDef.id);
-            }
-
-            const eventName = triggerDef.listen_to.event_type;
-
-            // Create a specific handler function bound to this trigger definition.
-            // This function reference is needed if we want to unsubscribe later.
-            const handler = (eventData) => this._handleTriggerEvent(triggerDef, eventName, eventData);
-
-            // Store the handler reference associated with the trigger ID
-            this.#triggerIdToHandlerMap.set(triggerDef.id, handler);
-
-            // Subscribe the specific handler to the event bus
-            this.#eventBus.subscribe(eventName, handler);
-            // console.log(`TriggerSystem: Subscribed to "${eventName}" for trigger "${triggerDef.id}"`);
+        // Delegate the instantiation logic to EntityManager
+        try {
+            this.#entityManager.ensureLocationEntitiesInstantiated(newLocation);
+        } catch (error) {
+            // Catch potential errors during the process, although ensure... itself should log specifics
+            console.error(`TriggerSystem: Error occurred while calling ensureLocationEntitiesInstantiated for ${newLocation.id}:`, error);
+            // Optionally dispatch a UI error message
+            this.#eventBus.dispatch('ui:message_display', {
+                text: `Internal Error: Problem loading entities for location ${newLocation.id}.`,
+                type: 'error'
+            });
         }
-        console.log(`TriggerSystem: Finished initializing ${allTriggers.length} triggers. Active one-shots: ${this.#activeOneShotTriggerIds.size}`);
     }
 
     /**
@@ -164,15 +187,6 @@ class TriggerSystem {
             if (this.#activeOneShotTriggerIds.has(triggerDef.id)) {
                 console.log(`TriggerSystem: Deactivating successful one-shot trigger ${triggerDef.id}.`);
                 this.#activeOneShotTriggerIds.delete(triggerDef.id);
-
-                // Optional: Unsubscribe from the event bus to potentially save memory/processing.
-                // Requires retrieving the exact handler function reference.
-                // const handler = this.#triggerIdToHandlerMap.get(triggerDef.id);
-                // if (handler) {
-                //     this.#eventBus.unsubscribe(eventName, handler);
-                //     this.#triggerIdToHandlerMap.delete(triggerDef.id); // Clean up map
-                //     console.log(`TriggerSystem: Unsubscribed handler for one-shot trigger ${triggerDef.id}.`);
-                // }
             }
         } else if (triggerDef.one_shot !== false && !allActionsSucceeded) {
             console.warn(`TriggerSystem: One-shot trigger ${triggerDef.id} matched but action(s) failed. Trigger remains active.`);
@@ -189,7 +203,7 @@ class TriggerSystem {
      */
     _checkFilters(listenCondition, eventName, eventData) {
         if (!listenCondition.filters) {
-            return true; // No filters defined, always matches
+            return true;
         }
 
         // --- Implement specific filter logic based on eventName and filter keys ---
@@ -205,11 +219,7 @@ class TriggerSystem {
             }
         }
 
-        // Add checks for other event types and filter keys here...
-        // Example placeholder:
-        // if (eventName === 'item_used' && listenCondition.filters.item_id) {
-        //     if (!eventData || eventData.itemId !== listenCondition.filters.item_id) return false;
-        // }
+        // Add other filter checks here...
 
         // If we haven't returned false yet, all defined filters matched
         return true;
@@ -224,10 +234,8 @@ class TriggerSystem {
      * @returns {{ success: boolean, messages: ActionMessage[] }} Result object.
      */
     _executeSetConnectionState(target, parameters) {
-        /** @type {ActionMessage[]} */
         const messages = [];
         let success = false;
-
         if (!target || !target.location_id || !target.connection_direction || !parameters || typeof parameters.state !== 'string') {
             messages.push({
                 text: `Trigger Action Error: Invalid target or parameters for set_connection_state.`,
@@ -236,7 +244,6 @@ class TriggerSystem {
             console.error("TriggerSystem _executeSetConnectionState: Invalid target/parameters.", target, parameters);
             return {success: false, messages};
         }
-
         const locationEntity = this.#entityManager.getEntityInstance(target.location_id);
         if (!locationEntity) {
             messages.push({
@@ -246,7 +253,6 @@ class TriggerSystem {
             console.error(`TriggerSystem _executeSetConnectionState: Target location '${target.location_id}' not found.`);
             return {success: false, messages};
         }
-
         const connectionsComp = locationEntity.getComponent(ConnectionsComponent);
         if (!connectionsComp || !Array.isArray(connectionsComp.connections)) {
             messages.push({
@@ -256,7 +262,6 @@ class TriggerSystem {
             console.error(`TriggerSystem _executeSetConnectionState: Location '${target.location_id}' has no valid ConnectionsComponent.`);
             return {success: false, messages};
         }
-
         const connection = connectionsComp.connections.find(c => c.direction === target.connection_direction);
         if (!connection) {
             messages.push({
@@ -266,30 +271,17 @@ class TriggerSystem {
             console.error(`TriggerSystem _executeSetConnectionState: Connection '${target.connection_direction}' not found in location '${target.location_id}'.`);
             return {success: false, messages};
         }
-
         const oldState = connection.state;
         if (oldState === parameters.state) {
-            // console.debug(`Trigger Action: Connection '${target.connection_direction}' in '${target.location_id}' is already in state '${parameters.state}'. No change needed.`);
-            success = true; // Considered success as the desired state is achieved
+            success = true;
         } else {
-            connection.state = parameters.state; // Direct modification of component data
+            connection.state = parameters.state;
             console.log(`Trigger Action (via TriggerSystem): Set connection '${target.connection_direction}' in '${target.location_id}' state from '${oldState || 'undefined'}' to '${parameters.state}'.`);
-
-            // Generate feedback message only if state actually changed to unlocked from locked
             if (parameters.state === 'unlocked' && oldState === 'locked') {
                 messages.push({text: `You hear a click from the ${target.connection_direction}.`, type: 'sound'});
             }
-            // Add other feedback messages for different state changes if needed
             success = true;
         }
-
-        // Optional: Check if the player is currently in the affected location
-        // const currentLocation = this.#gameStateManager.getCurrentLocation();
-        // if (currentLocation && currentLocation.id === target.location_id) {
-        //    console.log("Player is in the affected location. State change might require UI update (e.g., next LOOK).");
-        //    // Could potentially dispatch another event like 'location:updated' if needed
-        // }
-
         return {success, messages};
     }
 }

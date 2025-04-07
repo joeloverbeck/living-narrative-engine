@@ -28,6 +28,7 @@ import {executeTake} from "./src/actions/handlers/takeActionHandler.js";
 import {executeInventory} from "./src/actions/handlers/inventoryActionHandler.js";
 import {executeAttack} from "./src/actions/handlers/attackActionHandler.js";
 import {executeUse} from "./src/actions/handlers/useActionHandler.js";
+import GameInitializer from "./src/core/gameInitializer.js";
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -44,6 +45,7 @@ async function initializeGame() {
     let actionExecutor = null;
     let eventBus = null;
     let triggerSystem = null;
+    let gameInitializer = null;
     let gameLoop = null;      // Initialize gameLoop
 
     try {
@@ -51,16 +53,44 @@ async function initializeGame() {
         dataManager = new DataManager(); // Instantiate DM first
         await dataManager.loadAllData();
         title.textContent = "Game Data Loaded. Initializing Entities...";
-        // Use a temporary message area or console for pre-renderer output
-        console.log("Data Manager ready. Schemas and definitions loaded.");
 
         // +++ Instantiate Renderer FIRST (needs DOM elements) +++
         renderer = new DomRenderer(outputDiv, inputEl);
-        renderer.renderMessage("<p>Data Manager ready. Schemas and definitions loaded.</p>"); //
+
+        // --- Instantiate Core Systems (order matters for dependencies) ---
+
+        // --- Instantiate Event Bus ---
+        eventBus = new EventBus();
+
+        // --- Subscribe Renderer to EventBus Events EARLY ---
+        // (Do this *before* initializer runs so init messages are caught)
+        eventBus.subscribe('ui:message_display', (message) => {
+            if (renderer && message && typeof message.text === 'string') {
+                renderer.renderMessage(message.text, message.type || 'info');
+            } else { /* console warning */
+            }
+        });
+        eventBus.subscribe('ui:command_echo', (data) => {
+            if (renderer && data && typeof data.command === 'string') {
+                renderer.renderMessage(`> ${data.command}`, 'command');
+            } else { /* console warning */
+            }
+        });
+        eventBus.subscribe('ui:enable_input', (data) => {
+            if (renderer && data && typeof data.placeholder === 'string') {
+                renderer.setInputState(true, data.placeholder);
+            } else { /* console warning */
+            }
+        });
+        eventBus.subscribe('ui:disable_input', (data) => {
+            if (renderer && data && typeof data.message === 'string') {
+                renderer.setInputState(false, data.message);
+            } else { /* console warning */
+            }
+        });
 
         // --- Instantiate EntityManager ---
         entityManager = new EntityManager(dataManager);
-        renderer.renderMessage("<p>Entity Manager initialized. Registering components...</p>");
 
         // --- Manually Register Components ---
         // The first argument is the EXACT key used in your JSON files' "components" object
@@ -77,26 +107,21 @@ async function initializeGame() {
         entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);
         // ... register any other components ...
 
-        renderer.renderMessage("<p>Components registered.</p>");
-
         // --- Instantiate CORE entities (Player) ---
+        // CRITICAL: Do this *before* GameInitializer needs it.
         const playerEntity = entityManager.createEntityInstance('core:player');
         if (!playerEntity) {
-            throw new Error("Failed to instantiate player entity 'core:player'. Cannot start game.");
+            // This is a pre-initialization failure, handle directly
+            throw new Error("Fatal: Failed to instantiate core player entity 'core:player'. Cannot proceed.");
         }
-        renderer.renderMessage("<p>Player entity instantiated.</p>");
-
         // +++ Instantiate Game State Manager +++
         gameStateManager = new GameStateManager();
-        renderer.renderMessage("<p>Game State Manager initialized.</p>");
 
         // --- Initialize Command Parser ---
         commandParser = new CommandParser();
-        renderer.renderMessage("<p>Command Parser initialized.</p>");
 
         // +++ Initialize Action Executor and Register Handlers +++
         actionExecutor = new ActionExecutor();
-        renderer.renderMessage("<p>Action Executor initialized. Registering handlers...</p>");
 
         actionExecutor.registerHandler('core:action_move', executeMove);
         actionExecutor.registerHandler('core:action_look', executeLook);
@@ -105,92 +130,60 @@ async function initializeGame() {
         actionExecutor.registerHandler('core:action_attack', executeAttack);
         actionExecutor.registerHandler('core:action_use', executeUse);
         // Register other handlers as they are implemented
-        renderer.renderMessage("<p>Action Handlers registered.</p>");
-
-        // --- Instantiate Event Bus ---
-        eventBus = new EventBus();
-        renderer.renderMessage("<p>Event Bus initialized.</p>");
 
         // --- Instantiate Trigger System ---
         triggerSystem = new TriggerSystem(eventBus, dataManager, entityManager, gameStateManager);
-        renderer.renderMessage("<p>Trigger System initialized.</p>");
 
         // --- Initialize Trigger System (Subscribes to events) ---
         triggerSystem.initialize();
-        renderer.renderMessage("<p>Trigger System subscriptions active.</p>");
 
-        eventBus.subscribe('ui:message_display', (message) => {
-            if (renderer && message && typeof message.text === 'string') {
-                // Use renderer directly here as this IS the UI update layer
-                renderer.renderMessage(message.text, message.type || 'info');
-            } else {
-                console.warn("Received ui:message_display event but renderer or message format is invalid.", message);
-            }
+        // --- *** GAME INITIALIZATION *** ---
+        title.textContent = "Initializing Game State...";
+
+        gameInitializer = new GameInitializer({ // <--- Instantiate Initializer
+            dataManager,
+            entityManager,
+            gameStateManager,
+            eventBus,
+            actionExecutor
         });
-        renderer.renderMessage("<p>Renderer subscribed to UI messages.</p>");
 
-        // Command Echo Listener
-        eventBus.subscribe('ui:command_echo', (data) => {
-            if (renderer && data && typeof data.command === 'string') {
-                renderer.renderMessage(`> ${data.command}`, 'command');
-            } else {
-                console.warn("Received ui:command_echo event but renderer or data format is invalid.", data);
-            }
-        });
-        renderer.renderMessage("<p>Renderer subscribed to Command Echo.</p>");
+        const initializationSuccess = await gameInitializer.initializeGame();
 
-        // Input Enable Listener
-        eventBus.subscribe('ui:enable_input', (data) => {
-            if (renderer && data && typeof data.placeholder === 'string') {
-                renderer.setInputState(true, data.placeholder);
-                // Focus is still handled by InputHandler.enable()
-            } else {
-                console.warn("Received ui:enable_input event but renderer or data format is invalid.", data);
-            }
-        });
-        renderer.renderMessage("<p>Renderer subscribed to Input Enable.</p>");
+        if (!initializationSuccess) { // <--- Check Result
+            // Error message should have been dispatched via EventBus by GameInitializer
+            title.textContent = "Game Initialization Failed!";
+            renderer.renderMessage("<p>Game Initialization failed. See messages above. Cannot start game loop.</p>", "error");
+            // Ensure input remains disabled (renderer should catch disable event if needed)
+            if (inputHandler) inputHandler.disable(); // Belt-and-suspenders
+            else if (renderer) renderer.setInputState(false, "Initialization Failed.");
 
-        // Input Disable Listener
-        eventBus.subscribe('ui:disable_input', (data) => {
-            if (renderer && data && typeof data.message === 'string') {
-                renderer.setInputState(false, data.message);
-            } else {
-                console.warn("Received ui:disable_input event but renderer or data format is invalid.", data);
-            }
-        });
-        renderer.renderMessage("<p>Renderer subscribed to Input Disable.</p>");
+            console.error("main.js: GameInitializer.initializeGame() returned false. Aborting game start.");
+            return; // Stop execution here
+        }
 
-        // --- Initialize Input Handler ---
-        inputHandler = new InputHandler(inputEl, (command) => {
-            // Dispatch command echo FIRST
-            if (eventBus) { // Ensure eventBus is initialized
-                eventBus.dispatch('ui:command_echo', {command});
-            } else {
-                console.error("InputHandler: Cannot dispatch command echo, EventBus not ready.");
-            }
-
-            // Then process command via GameLoop
-            if (gameLoop?.isRunning) {
-                gameLoop.processSubmittedCommand(command);
-            } else if (!gameLoop) {
-                console.error("InputHandler callback triggered, but GameLoop is not yet initialized!");
-                // Use event bus for UI update if possible, fallback to direct renderer
-                if (eventBus) {
-                    eventBus.dispatch('ui:disable_input', {message: "Error: Game systems not ready."});
-                } else if (renderer) {
-                    renderer.setInputState(false, "Error: Game systems not ready.");
-                }
-            } else {
-                console.log("InputHandler callback ignored: GameLoop is not running.");
-            }
-        });
-        renderer.renderMessage("<p>Input Handler initialized.</p>");
-
-        // --- Initialize and Start the Game Loop ---
         title.textContent = "Starting Game Loop...";
 
-        // Create GameLoop WITHOUT the renderer dependency
-        gameLoop = new GameLoop(
+        // --- Initialize Input Handler (AFTER successful init) ---
+        // Pass GameLoop instance lazily via callback closure
+        inputHandler = new InputHandler(inputEl, (command) => {
+            if (eventBus) {
+                eventBus.dispatch('ui:command_echo', {command});
+            }
+            // Check gameLoop instance and its running state *inside* the callback
+            if (gameLoop && gameLoop.isRunning) {
+                gameLoop.processSubmittedCommand(command);
+            } else {
+                console.warn("Input received, but GameLoop is not ready or not running.", {
+                    gameLoopExists: !!gameLoop,
+                    isRunning: gameLoop?.isRunning
+                });
+                // Optionally disable input again if this happens unexpectedly
+                if (eventBus) eventBus.dispatch('ui:disable_input', {message: "Game not running."});
+            }
+        });
+
+        gameLoop = new GameLoop({
             dataManager,
             entityManager,
             gameStateManager,
@@ -198,54 +191,49 @@ async function initializeGame() {
             commandParser,
             actionExecutor,
             eventBus
-        );
+        });
 
-        await gameLoop.initializeAndStart(); // Initialize player, starting location etc.
+        gameLoop.start(); // Initialize player, starting location etc.
 
         title.textContent = "Dungeon Run Demo"; // Set final title
 
     } catch (error) {
+        // --- Keep Existing Catch Block ---
+        // This catches errors during setup *before* or *outside* GameInitializer.initializeGame's try/catch
         console.error("Game initialization failed:", error);
         title.textContent = "Fatal Error During Startup!";
         const errorMsg = `Game initialization failed: ${error.message}. Check console (F12) for details.`;
 
-        // Error handling remains largely the same, trying to use renderer if available
         if (renderer) {
+            // Attempt to use renderer even if some parts failed, it might still work
             renderer.renderMessage(errorMsg, "error");
-            renderer.setInputState(false, "Error during startup.");
-        } else if (errorDiv) {
-            errorDiv.textContent = errorMsg;
-            if (inputEl) {
-                inputEl.placeholder = "Error during startup.";
-                inputEl.disabled = true;
+            // Check if message_display listener is working
+            if (!eventBus?.dispatch) {
+                console.warn("EventBus not available for final error message.");
             }
+            renderer.setInputState(false, "Error during startup.");
+        } else if (errorDiv) { /* Fallback */
         } else {
             alert(errorMsg);
         }
 
-        // Attempt cleanup/stop
         if (inputHandler) inputHandler.disable();
-        // GameLoop stop now uses events, so calling it is safe even if renderer failed,
-        // as long as eventBus was likely initialized before the error.
-        if (gameLoop?.stop) { // Check if stop method exists before calling
+        // Attempt to stop gameLoop if it was somehow partially created and running
+        if (gameLoop?.stop) {
             try {
                 gameLoop.stop();
-            } catch (stopErr) {
-                console.error("Error during gameLoop.stop():", stopErr);
+            } catch (stopErr) { /* Log stop error */
             }
-        } else if (gameLoop?.isRunning) { // Fallback check if stop doesn't exist for some reason
-            console.warn("GameLoop exists but stop method not found or failed.")
         }
     }
 }
 
 // Kick off the game initialization
 initializeGame().then(() => {
-    console.log("Game initialization sequence finished.");
+    console.log("main.js: initializeGame sequence finished (either successfully started or aborted after init failure).");
 }).catch(err => {
-    // This catch block handles errors *not* caught within the initializeGame try/catch
-    // (e.g., errors in the promise chain setup itself, though less likely here)
-    console.error("Unhandled error during game initialization promise chain:", err);
+    // Catches errors *outside* the main try/catch in initializeGame
+    console.error("Unhandled error during initializeGame promise chain:", err);
     title.textContent = "Fatal Unhandled Error!";
     const errorMsg = `An unexpected critical error occurred: ${err.message}. Check console.`;
     if (document.getElementById('error-output')) {

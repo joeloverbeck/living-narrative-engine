@@ -1,9 +1,6 @@
 // GameLoop.js
 
-import {EntitiesPresentComponent} from './src/components/entitiesPresentComponent.js';
 // ... import other necessary components ...
-import ActionExecutor from './src/actions/actionExecutor.js';
-import EventBus from './eventBus.js';
 
 /** @typedef {import('./src/actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('./src/actions/actionTypes.js').ActionResult} ActionResult */
@@ -12,14 +9,27 @@ import EventBus from './eventBus.js';
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./InputHandler.js').default} InputHandler */
 /** @typedef {import('./commandParser.js').default} CommandParser */
+/** @typedef {import('./src/actions/actionExecutor.js').default} ActionExecutor */
 
-/** @typedef {import('./src/entities/entity.js').default} Entity */
+/** @typedef {import('./eventBus.js').default} EventBus */
+
+// --- Define the options object structure ---
+/**
+ * @typedef {object} GameLoopOptions
+ * @property {DataManager} dataManager - Manages game data loading and access.
+ * @property {EntityManager} entityManager - Manages entity creation and components.
+ * @property {GameStateManager} gameStateManager - Manages core game state (player, location).
+ * @property {InputHandler} inputHandler - Handles raw user input.
+ * @property {CommandParser} commandParser - Parses user input into actions.
+ * @property {ActionExecutor} actionExecutor - Executes game actions.
+ * @property {EventBus} eventBus - Facilitates decoupled communication.
+ */
 
 /**
- * GameLoop orchestrates the main game flow.
+ * GameLoop orchestrates the main game flow *after* initialization.
  * It manages dependencies, processes user input, delegates action execution,
- * processes results (updating state via GameStateManager),
- * and relies on the EventBus for decoupled event communication.
+ * processes results, and relies on the EventBus for decoupled communication.
+ * Assumes GameInitializer has successfully set up the initial game state.
  */
 class GameLoop {
     #dataManager;
@@ -33,30 +43,35 @@ class GameLoop {
     #isRunning = false;
 
     /**
-     * @param {DataManager} dataManager
-     * @param {EntityManager} entityManager
-     * @param {GameStateManager} gameStateManager - Manages core game state.
-     * @param {InputHandler} inputHandler - The handler for user input events.
-     * @param {CommandParser} commandParser
-     * @param {ActionExecutor} actionExecutor
-     * @param {EventBus} eventBus
+     * @param {GameLoopOptions} options - Configuration object containing all dependencies.
      */
-    constructor(dataManager, entityManager, gameStateManager, inputHandler, commandParser, actionExecutor, eventBus) {
-        // --- Validate constructor arguments ---
-        if (!dataManager) throw new Error("GameLoop requires DataManager.");
-        if (!entityManager) throw new Error("GameLoop requires EntityManager.");
-        if (!gameStateManager) throw new Error("GameLoop requires a valid GameStateManager object.");
+    constructor(options) {
+        // --- Destructure and Validate constructor arguments ---
+        // (Constructor logic remains the same - dependencies are still needed for execution)
+        const {
+            dataManager,
+            entityManager,
+            gameStateManager,
+            inputHandler,
+            commandParser,
+            actionExecutor,
+            eventBus
+        } = options || {};
+
+        if (!dataManager) throw new Error("GameLoop requires options.dataManager.");
+        if (!entityManager) throw new Error("GameLoop requires options.entityManager.");
+        if (!gameStateManager) throw new Error("GameLoop requires options.gameStateManager.");
         if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function') {
-            throw new Error("GameLoop requires a valid InputHandler object.");
+            throw new Error("GameLoop requires a valid options.inputHandler object.");
         }
         if (!commandParser || typeof commandParser.parse !== 'function') {
-            throw new Error("GameLoop requires a valid CommandParser object.");
+            throw new Error("GameLoop requires a valid options.commandParser object.");
         }
         if (!actionExecutor || typeof actionExecutor.executeAction !== 'function') {
-            throw new Error("GameLoop requires a valid ActionExecutor object.");
+            throw new Error("GameLoop requires a valid options.actionExecutor object.");
         }
-        if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') { // <-- Validate eventBus
-            throw new Error("GameLoop requires a valid EventBus object.");
+        if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') {
+            throw new Error("GameLoop requires a valid options.eventBus object.");
         }
 
         this.#dataManager = dataManager;
@@ -68,84 +83,38 @@ class GameLoop {
         this.#eventBus = eventBus;
 
         this.#isRunning = false; // Initialize running state
-        console.log("GameLoop: Instance created.");
+        console.log("GameLoop: Instance created (using options object). Ready to start.");
     }
 
     /**
-     * Initializes the game loop, sets up the player, dispatches initial events,
-     * triggers initial look, and prompts for input.
+     * Starts the main game loop, enabling input processing.
+     * Assumes GameInitializer has already run successfully.
      */
-    async initializeAndStart() {
-        console.log("GameLoop: Initializing...");
-
-        // Fetch player instance (already created in main.js, just retrieving)
-        const player = this.#entityManager.getEntityInstance('core:player');
-        if (!player) {
-            // Use EventBus for error message
-            this.#eventBus.dispatch('ui:message_display', {
-                text: "Error: Player entity 'core:player' could not be retrieved!",
-                type: "error"
-            });
-            console.error("GameLoop: Could not retrieve player entity 'core:player'.");
-            this.stop(); // stop still dispatches events
+    start() {
+        // Check if already running to prevent issues
+        if (this.#isRunning) {
+            console.warn("GameLoop: start() called but loop is already running.");
             return;
         }
-        this.#gameStateManager.setPlayer(player);
 
-        // Fetch starting location instance
-        const startLocationId = 'demo:room_entrance';
-        const startLocation = this.#entityManager.createEntityInstance(startLocationId);
-        if (!startLocation) {
-            // Use EventBus for error message
-            this.#eventBus.dispatch('ui:message_display', {
-                text: `Error: Starting location '${startLocationId}' not found!`,
-                type: "error"
-            });
-            console.error("GameLoop: Could not find or create entity instance for starting location:", startLocationId);
+        // --- Game state should be already set by GameInitializer ---
+        // Perform a basic check just in case.
+        if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
+            const errorMsg = "Critical Error: GameLoop cannot start because initial game state (player/location) is missing!";
+            console.error("GameLoop:", errorMsg);
+            this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: "error"});
+            // Attempt to stop cleanly even though it didn't start properly
             this.stop();
             return;
         }
-        this.#gameStateManager.setCurrentLocation(startLocation);
-
-        // --- Get state from GameStateManager for subsequent operations ---
-        const initialLocation = this.#gameStateManager.getCurrentLocation();
-        const initialPlayer = this.#gameStateManager.getPlayer();
-
-        if (!initialLocation || !initialPlayer) {
-            console.error("GameLoop: State not set correctly in GameStateManager after init.");
-            this.#eventBus.dispatch('ui:message_display', {
-                text: "Internal Error: Failed to initialize game state.",
-                type: "error"
-            });
-            this.stop();
-            return;
-        }
-
-        this.ensureEntitiesPresentAreInstantiated(initialLocation);
-        console.log(`GameLoop: Player starting at ${initialLocation.id}`);
-
-        // --- Dispatch initial room entered event via EventBus ---
-        this.#eventBus.dispatch('event:room_entered', { // <-- Use EventBus
-            playerEntity: initialPlayer,
-            newLocation: initialLocation
-        });
 
         this.#isRunning = true;
-
-        // Dispatch welcome message via EventBus
-        this.#eventBus.dispatch('ui:message_display', {
-            text: "Welcome to Dungeon Run Demo!",
-            type: "info" // or a specific 'welcome' type
-        });
-
-        // Trigger initial 'look' action instead of calling displayLocation
-        this.executeAction('core:action_look', []);
-
-        // Prompt for input via EventBus
-        this.promptInput();
-
         console.log("GameLoop: Started.");
+
+        // Prompt for the first command *after* the loop is marked as running.
+        this.promptInput();
     }
+
 
     /**
      * Processes a command string submitted by the input handler.
@@ -183,31 +152,6 @@ class GameLoop {
         // Prompt for next command IF still running
         if (this.#isRunning) {
             this.promptInput();
-        }
-    }
-
-    /**
-     * Checks a location for EntitiesPresentComponent and ensures listed entities exist.
-     * Dispatches warnings via EventBus if issues are found.
-     * @param {Entity} locationEntity - The location entity instance.
-     * @private
-     */
-    ensureEntitiesPresentAreInstantiated(locationEntity) {
-        if (!locationEntity) return;
-        const player = this.#gameStateManager.getPlayer();
-        const presentComp = locationEntity.getComponent(EntitiesPresentComponent);
-
-        if (presentComp && Array.isArray(presentComp.entityIds)) {
-            presentComp.entityIds.forEach(entityId => {
-                if (player && entityId === player.id) return; // Don't reinstantiate player
-                const instance = this.#entityManager.createEntityInstance(entityId); // Ensures it exists
-                if (!instance) {
-                    const warningMsg = `Warning: Entity '${entityId}' listed in ${locationEntity.id} could not be found or created.`;
-                    console.error(`GameLoop: Failed to ensure instance for entity ID '${entityId}' listed in location '${locationEntity.id}'.`);
-                    // Dispatch warning via EventBus
-                    this.#eventBus.dispatch('ui:message_display', {text: warningMsg, type: 'warning'});
-                }
-            });
         }
     }
 
@@ -275,9 +219,7 @@ class GameLoop {
                     }
                     currentLocation = updatedLocation; // Update local variable for context if needed later
 
-                    this.ensureEntitiesPresentAreInstantiated(updatedLocation);
-
-                    // Dispatch room entered event
+                    // Dispatch room entered event (TriggerSystem will listen for this)
                     this.#eventBus.dispatch('event:room_entered', {
                         playerEntity: playerForEvent,
                         newLocation: updatedLocation,
@@ -288,7 +230,6 @@ class GameLoop {
 
                 } else {
                     console.error(`GameLoop: Failed to get/create entity instance for target location ID: ${newLocationId}`);
-                    // Dispatch error via EventBus - Move Handler should ideally do this
                     this.#eventBus.dispatch('ui:message_display', {
                         text: "There seems to be a problem with where you were trying to go. You remain here.",
                         type: "error"

@@ -1,6 +1,7 @@
 // src/entities/entityManager.js
 
 import Entity from "./entity.js";
+import {EntitiesPresentComponent} from '../components/entitiesPresentComponent.js';
 
 /**
  * Manages the creation of Entity instances from data definitions.
@@ -54,18 +55,20 @@ class EntityManager {
      * instantiates components with data, and attaches them to the Entity.
      *
      * Optionally stores the instance in an internal map.
+     * If an instance for the ID already exists in the active map (and forceNew is false),
+     * it returns the existing instance without creating a new one.
      *
      * @param {string} entityId - The unique ID of the entity definition to instantiate.
      * @param {boolean} [forceNew=false] - If true, always creates a new instance even if one exists in activeEntities.
-     * @returns {Entity | null} The created Entity instance, or null if definition not found or instantiation fails.
+     * @returns {Entity | null} The created or existing Entity instance, or null if definition not found or instantiation fails.
      */
     createEntityInstance(entityId, forceNew = false) {
         if (!forceNew && this.activeEntities.has(entityId)) {
-            console.log(`Returning existing instance for entity ID: ${entityId}`);
+            // console.log(`Returning existing instance for entity ID: ${entityId}`); // Keep this less verbose unless debugging
             return this.activeEntities.get(entityId);
         }
 
-        console.log(`Attempting to create instance for entity ID: ${entityId}`);
+        // console.log(`Attempting to create instance for entity ID: ${entityId}`); // Keep this less verbose
         const entityDefinition = this.dataManager.getEntityDefinition(entityId);
 
         if (!entityDefinition) {
@@ -74,39 +77,40 @@ class EntityManager {
         }
 
         if (!entityDefinition.components || typeof entityDefinition.components !== 'object') {
-            console.error(`EntityManager: Entity definition for ${entityId} is missing 'components' object.`);
-            return null;
+            console.warn(`EntityManager: Entity definition for ${entityId} has no 'components' object. Creating entity without components.`);
+            // Allow creating entities without components if needed, adjust if this should be an error
+            // return null; // Uncomment if entity MUST have components
         }
 
 
         try {
-            // Assuming Entity.js path is correct relative to EntityManager.js
             const entity = new Entity(entityId);
 
-            // Instantiate and add components
-            for (const jsonKey in entityDefinition.components) {
-                const componentData = entityDefinition.components[jsonKey];
-                const ComponentClass = this.componentRegistry.get(jsonKey);
+            // Instantiate and add components only if the components object exists
+            if (entityDefinition.components) {
+                for (const jsonKey in entityDefinition.components) {
+                    const componentData = entityDefinition.components[jsonKey];
+                    const ComponentClass = this.componentRegistry.get(jsonKey);
 
-                if (ComponentClass) {
-                    try {
-                        // Ensure ComponentClass is actually a constructor
-                        if (typeof ComponentClass !== 'function' || !ComponentClass.prototype) {
-                            throw new Error(`Registry entry for "${jsonKey}" is not a valid class/constructor.`);
+                    if (ComponentClass) {
+                        try {
+                            if (typeof ComponentClass !== 'function' || !ComponentClass.prototype) {
+                                throw new Error(`Registry entry for "${jsonKey}" is not a valid class/constructor.`);
+                            }
+                            const componentInstance = new ComponentClass(componentData);
+                            entity.addComponent(componentInstance);
+                        } catch (compError) {
+                            console.error(`EntityManager: Error instantiating component ${jsonKey} (Class: ${ComponentClass ? ComponentClass.name : 'N/A'}) for entity ${entityId}:`, compError);
+                            throw compError; // Re-throw to halt creation on component error
                         }
-                        const componentInstance = new ComponentClass(componentData);
-                        entity.addComponent(componentInstance);
-                    } catch (compError) {
-                        console.error(`EntityManager: Error instantiating component ${jsonKey} (Class: ${ComponentClass ? ComponentClass.name : 'N/A'}) for entity ${entityId}:`, compError);
-                        // Decide if this should halt entity creation or just skip the component
-                        throw compError; // Re-throw to halt creation on component error
+                    } else {
+                        console.warn(`EntityManager: No registered component class found for JSON key "${jsonKey}" in entity ${entityId}. Skipping component.`);
                     }
-                } else {
-                    console.warn(`EntityManager: No registered component class found for JSON key "${jsonKey}" in entity ${entityId}. Skipping component.`);
                 }
             }
 
-            console.log(`Successfully created instance for entity ${entityId}:`, entity.toString());
+
+            console.log(`Successfully created instance for entity ${entityId}`); // Log creation
             if (!forceNew) {
                 this.activeEntities.set(entityId, entity); // Store the new instance
             }
@@ -115,6 +119,41 @@ class EntityManager {
         } catch (error) {
             console.error(`EntityManager: Failed to create entity instance for ID ${entityId}:`, error);
             return null;
+        }
+    }
+
+    /**
+     * Ensures that all entities listed in a location's EntitiesPresentComponent
+     * are instantiated (or already exist) in the EntityManager.
+     * This is typically called when the player enters a new location.
+     * @param {Entity} locationEntity - The location entity instance.
+     */
+    ensureLocationEntitiesInstantiated(locationEntity) {
+        if (!locationEntity || !(locationEntity instanceof Entity)) {
+            console.warn("EntityManager.ensureLocationEntitiesInstantiated: Received invalid locationEntity.");
+            return;
+        }
+
+        const presentComp = locationEntity.getComponent(EntitiesPresentComponent);
+
+        if (presentComp && Array.isArray(presentComp.entityIds)) {
+            console.log(`EntityManager: Ensuring entities present in ${locationEntity.id} are instantiated.`);
+            presentComp.entityIds.forEach(entityId => {
+                if (typeof entityId !== 'string' || !entityId) {
+                    console.warn(`EntityManager: Invalid entity ID found in EntitiesPresentComponent of ${locationEntity.id}:`, entityId);
+                    return; // Skip invalid entries
+                }
+                // Call createEntityInstance - it handles checking if instance already exists
+                // and logs errors internally if definition is missing/invalid.
+                const instance = this.createEntityInstance(entityId);
+                if (!instance) {
+                    // Error is already logged by createEntityInstance, maybe add context?
+                    console.warn(`EntityManager: Failed to ensure instance for entity ID '${entityId}' listed in location '${locationEntity.id}'. See previous error.`);
+                }
+                // No need to log success here, createEntityInstance already does if it creates a new one.
+            });
+        } else {
+            // console.debug(`EntityManager: Location ${locationEntity.id} has no EntitiesPresentComponent or empty list. No entities to ensure.`); // Optional debug log
         }
     }
 
