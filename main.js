@@ -90,6 +90,23 @@ async function initializeGame() {
             } else { /* console warning */
             }
         });
+        eventBus.subscribe('ui:display_location', (locationData) => {
+            if (renderer && locationData) {
+                // Optional: Add more robust check if locationData has expected fields
+                if (typeof locationData.name === 'string' && typeof locationData.description === 'string' && Array.isArray(locationData.exits)) {
+                    renderer.renderLocation(locationData);
+                } else {
+                    console.warn("Received 'ui:display_location' event with invalid data:", locationData);
+                    // Optionally display an error message via renderer
+                    // renderer.renderMessage("Error: Could not display location details.", "error");
+                }
+            } else {
+                console.error("Error handling 'ui:display_location': Renderer not available or data missing.", {
+                    rendererExists: !!renderer,
+                    dataReceived: locationData
+                });
+            }
+        });
 
         // --- Instantiate EntityManager ---
         entityManager = new EntityManager(dataManager);

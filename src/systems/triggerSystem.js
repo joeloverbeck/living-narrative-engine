@@ -181,7 +181,7 @@ class TriggerSystem {
             return;
         }
 
-        // console.log(`TriggerSystem: Handling event "${eventName}" for trigger "${triggerDef.id}"`, eventData); // Verbose
+        console.log(`[DEBUG] TriggerSystem: Handling event "${eventName}" for trigger "${triggerDef.id}"`, eventData);
 
         // 2. Check Filters
         if (!this._checkFilters(triggerDef.listen_to, eventName, eventData)) {
@@ -260,43 +260,67 @@ class TriggerSystem {
      * @returns {boolean} True if all filters match or no filters are defined, false otherwise.
      */
     _checkFilters(listenCondition, eventName, eventData) {
-        // ... (existing implementation remains the same) ...
+        const triggerId = listenCondition.parent?.id ?? 'unknown'; // Attempt to get parent trigger ID if available
+        console.log(`[DEBUG] TriggerSystem (${triggerId}): Checking filters for event "${eventName}". Filters:`, listenCondition.filters, "Event Data:", eventData);
+
         if (!listenCondition.filters) {
+            console.log(`[DEBUG] TriggerSystem (${triggerId}): No filters defined. Filter check PASSED.`);
             return true; // No filters defined, always matches
         }
 
         // Example filter check (add more as needed for custom triggers)
         if (eventName === 'entity_died' && listenCondition.filters.source_id) {
             if (!eventData || typeof eventData.deceasedEntityId !== 'string') {
-                console.warn(`TriggerSystem Filter Check (${listenCondition.event_type}): Filter requires 'deceasedEntityId' in eventData, but not found or invalid.`, eventData);
+                console.warn(`[DEBUG] TriggerSystem Filter Check (${listenCondition.event_type}): Filter requires 'deceasedEntityId' in eventData, but not found or invalid. Filter check FAILED.`, eventData);
                 return false;
             }
             if (eventData.deceasedEntityId !== listenCondition.filters.source_id) {
+                console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. deceasedEntityId (${eventData.deceasedEntityId}) !== source_id filter (${listenCondition.filters.source_id}).`);
                 return false;
             }
+
+            console.log(`[DEBUG] TriggerSystem (${triggerId}): source_id filter check PASSED.`);
         }
 
         // If using event:room_entered for custom triggers, add filter checks here
         if (eventName === 'event:room_entered' && listenCondition.filters) {
             // Example: Filter by the ID of the room entered
-            if (listenCondition.filters.location_id && (!eventData.newLocation || eventData.newLocation.id !== listenCondition.filters.location_id)) {
-                return false;
+            if (listenCondition.filters.location_id) {
+                if (!eventData.newLocation || eventData.newLocation.id !== listenCondition.filters.location_id) {
+                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. newLocation.id mismatch.`);
+                    return false;
+                }
+                console.log(`[DEBUG] TriggerSystem (${triggerId}): location_id filter check PASSED.`);
             }
             // Example: Filter by the ID of the room exited
-            if (listenCondition.filters.previous_location_id && (!eventData.previousLocation || eventData.previousLocation.id !== listenCondition.filters.previous_location_id)) {
-                return false;
+            if (listenCondition.filters.previous_location_id) {
+                if (!eventData.previousLocation || eventData.previousLocation.id !== listenCondition.filters.previous_location_id) {
+                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. previous_location_id mismatch.`);
+                    return false;
+                }
+                console.log(`[DEBUG] TriggerSystem (${triggerId}): previous_location_id filter check PASSED.`);
             }
             // Example: Filter only if it was a move (previousLocation exists)
-            if (listenCondition.filters.is_move === true && !eventData.previousLocation) {
-                return false;
+            if (listenCondition.filters.is_move === true) {
+                if (!eventData.previousLocation) {
+                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. is_move=true requires previousLocation.`);
+                    return false;
+                }
+                console.log(`[DEBUG] TriggerSystem (${triggerId}): is_move=true filter check PASSED.`);
             }
             // Example: Filter only if it was NOT a move (initial load)
-            if (listenCondition.filters.is_move === false && eventData.previousLocation) {
-                return false;
+            if (listenCondition.filters.is_move === false) {
+                if (eventData.previousLocation) {
+                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. is_move=false forbids previousLocation.`);
+                    return false;
+                }
+                console.log(`[DEBUG] TriggerSystem (${triggerId}): is_move=false filter check PASSED.`);
             }
         }
 
-        return true; // All defined filters passed
+        // If we got here, all *defined* filters passed
+        console.log(`[DEBUG] TriggerSystem (${triggerId}): All defined filter checks PASSED.`);
+        return true;
     }
 
     /**
@@ -310,12 +334,15 @@ class TriggerSystem {
     _executeSetConnectionState(target, parameters) {
         const messages = [];
         let success = false;
+
+        console.log(`[DEBUG] TriggerSystem: Attempting to execute set_connection_state. Target:`, target, "Parameters:", parameters);
+
         if (!target || !target.location_id || !target.connection_direction || !parameters || typeof parameters.state !== 'string') {
             messages.push({
                 text: `Trigger Action Error: Invalid target or parameters for set_connection_state.`,
                 type: 'error'
             });
-            console.error("TriggerSystem _executeSetConnectionState: Invalid target/parameters.", target, parameters);
+            console.error("[DEBUG] TriggerSystem _executeSetConnectionState: Invalid target/parameters.", target, parameters);
             return {success: false, messages};
         }
         const locationEntity = this.#entityManager.getEntityInstance(target.location_id);
@@ -324,7 +351,7 @@ class TriggerSystem {
                 text: `Trigger Action Error: Target location '${target.location_id}' not found.`,
                 type: 'error'
             });
-            console.error(`TriggerSystem _executeSetConnectionState: Target location '${target.location_id}' not found.`);
+            console.error(`[DEBUG] TriggerSystem _executeSetConnectionState: Target location '${target.location_id}' not found.`);
             return {success: false, messages};
         }
         const connectionsComp = locationEntity.getComponent(ConnectionsComponent);
@@ -333,7 +360,7 @@ class TriggerSystem {
                 text: `Trigger Action Error: Location '${target.location_id}' has no valid Connections component.`,
                 type: 'error'
             });
-            console.error(`TriggerSystem _executeSetConnectionState: Location '${target.location_id}' has no valid ConnectionsComponent.`);
+            console.error(`[DEBUG] TriggerSystem _executeSetConnectionState: Location '${target.location_id}' has no valid ConnectionsComponent.`);
             return {success: false, messages};
         }
         const connection = connectionsComp.connections.find(c => c.direction === target.connection_direction);
@@ -342,19 +369,37 @@ class TriggerSystem {
                 text: `Trigger Action Error: Connection '${target.connection_direction}' not found in location '${target.location_id}'.`,
                 type: 'error'
             });
-            console.error(`TriggerSystem _executeSetConnectionState: Connection '${target.connection_direction}' not found in location '${target.location_id}'.`);
+            console.error(`[DEBUG] TriggerSystem _executeSetConnectionState: Connection '${target.connection_direction}' not found in location '${target.location_id}'.`);
             return {success: false, messages};
         }
-        const oldState = connection.state;
+
+        const oldState = connection.state ?? connection.initial_state ?? 'undefined';
         if (oldState === parameters.state) {
-            success = true;
+            console.log(`[DEBUG] Trigger Action (via TriggerSystem): Connection '${target.connection_direction}' in '${target.location_id}' state is already '${parameters.state}'. No change needed.`);
+            success = true; // Considered success even if no change
         } else {
-            connection.state = parameters.state;
-            console.log(`Trigger Action (via TriggerSystem): Set connection '${target.connection_direction}' in '${target.location_id}' state from '${oldState || 'undefined'}' to '${parameters.state}'.`);
-            if (parameters.state === 'unlocked' && oldState === 'locked') {
-                messages.push({text: `You hear a click from the ${target.connection_direction}.`, type: 'sound'});
+            // Use the component's method to set the state
+            const updated = connectionsComp.setConnectionState(target.connection_direction, parameters.state);
+            if (updated) {
+                console.log(`[DEBUG] Trigger Action (via TriggerSystem): Set connection '${target.connection_direction}' in '${target.location_id}' state from '${oldState}' to '${parameters.state}'.`);
+                // Generate UI messages based on state change
+                if (parameters.state === 'unlocked' && oldState === 'locked') {
+                    messages.push({text: `You hear a click from the ${target.connection_direction}.`, type: 'sound'}); // Keep type 'sound' or change to 'info'/'combat' as needed
+                } else if (parameters.state === 'locked' && oldState === 'unlocked') {
+                    messages.push({
+                        text: `You hear a click as the ${target.connection_direction} locks.`,
+                        type: 'sound'
+                    });
+                }
+                success = true;
+            } else {
+                console.error(`[DEBUG] TriggerSystem _executeSetConnectionState: Failed to update connection state via ConnectionsComponent method (should not happen if connection was found).`);
+                success = false; // Should ideally not happen if connection exists
+                messages.push({
+                    text: `Trigger Action Error: Failed internally to update connection state for '${target.connection_direction}' in '${target.location_id}'.`,
+                    type: 'error'
+                });
             }
-            success = true;
         }
         return {success, messages};
     }

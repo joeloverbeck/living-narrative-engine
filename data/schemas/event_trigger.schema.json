@@ -31,10 +31,11 @@
             "type": "string",
             "description": "The name of the core game event to listen for.",
             "enum": [
-              "entity_died"
+              "event:entity_died",
+              "event:room_entered"
             ],
             "examples": [
-              "entity_died"
+              "event:entity_died"
             ]
           },
           "filters": {

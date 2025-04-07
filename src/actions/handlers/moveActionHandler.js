@@ -45,11 +45,25 @@ export function executeMove(context) {
         return {success, messages, newState};
     }
 
-    const connection = connectionsComp.connections.find(
-        conn => conn.direction && conn.direction.toLowerCase() === direction
-    );
+    // Use the component's method to find the connection
+    const connection = connectionsComp.getConnection(direction);
+
 
     if (connection) {
+        // Check the current runtime state of the connection.
+        // Prioritize `state`, fall back to `initial_state` if `state` is not set yet.
+        const currentState = connection.state ?? connection.initial_state;
+        if (currentState === 'locked') {
+            // Use description_override if available and seems relevant to the locked state, else use generic message.
+            const lockMessage = connection.description_override || `The way ${direction} is locked.`;
+            dispatch('ui:message_display', {text: lockMessage, type: 'info'});
+            messages.push({text: lockMessage, type: 'info'});
+            // success remains false, return early
+            return {success, messages, newState};
+        }
+        // Add checks for other potential blocking states if needed (e.g., 'blocked')
+        // if (currentState === 'blocked') { ... }
+
         const targetLocationId = connection.target;
         if (!targetLocationId) {
             const errorMsg = `The way ${direction} seems improperly constructed.`;
@@ -59,6 +73,7 @@ export function executeMove(context) {
             return {success, messages, newState};
         }
 
+        // --- Check target definition *after* lock check ---
         const targetDefinition = dataManager.getEntityDefinition(targetLocationId);
         if (targetDefinition) {
             success = true;

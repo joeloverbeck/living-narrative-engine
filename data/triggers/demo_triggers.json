@@ -2,7 +2,7 @@
   {
     "id": "demo:trigger_unlock_treasure_door_on_goblin_death",
     "listen_to": {
-      "event_type": "entity_died",
+      "event_type": "event:entity_died",
       "filters": {
         "source_id": "demo:enemy_goblin"
       }

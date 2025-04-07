@@ -40,60 +40,43 @@ export function executeLook(context) {
         const locationName = nameComp ? nameComp.value : `Unnamed Location (${currentLocation.id})`;
         const locationDesc = descComp ? descComp.text : "You are in an undescribed location.";
 
-        // Dispatch Name as H2 (HTML within message text)
-        dispatch('ui:message_display', {text: `<h2>${locationName}</h2>`, type: 'location-name'}); // Use specific type?
-
-        // Dispatch Description
-        dispatch('ui:message_display', {text: `<p>${locationDesc}</p>`, type: 'location-desc'});
-
-        // --- Display Items Present ---
         let itemsVisible = [];
         if (presentComp && Array.isArray(presentComp.entityIds)) {
             itemsVisible = presentComp.entityIds
                 .map(id => entityManager.getEntityInstance(id))
-                .filter(entity => entity && entity.hasComponent(ItemComponent)) // Check if it's an item
-                .map(itemEntity => itemEntity.getComponent(NameComponent)?.value || itemEntity.id); // Get name or ID
-        }
-        if (itemsVisible.length > 0) {
-            dispatch('ui:message_display', {
-                text: `<p>Items here: ${itemsVisible.join(', ')}</p>`,
-                type: 'location-items'
-            });
+                .filter(entity => entity && entity.hasComponent(ItemComponent))
+                .map(itemEntity => itemEntity.getComponent(NameComponent)?.value || itemEntity.id);
         }
 
-        // --- Display NPCs/Entities Present (excluding player and items) ---
         let npcsVisible = [];
         if (presentComp && Array.isArray(presentComp.entityIds)) {
             npcsVisible = presentComp.entityIds
                 .map(id => entityManager.getEntityInstance(id))
-                .filter(entity => entity && entity.id !== playerEntity.id && !entity.hasComponent(ItemComponent)) // Exclude player and items
-                .map(npcEntity => npcEntity.getComponent(NameComponent)?.value || npcEntity.id); // Get name or ID
-        }
-        if (npcsVisible.length > 0) {
-            dispatch('ui:message_display', {text: `<p>You see: ${npcsVisible.join(', ')}</p>`, type: 'location-npcs'});
+                .filter(entity => entity && entity.id !== playerEntity.id && !entity.hasComponent(ItemComponent))
+                .map(npcEntity => npcEntity.getComponent(NameComponent)?.value || npcEntity.id);
         }
 
-        // --- Display Exits ---
-        if (connectionsComp && Array.isArray(connectionsComp.connections) && connectionsComp.connections.length > 0) {
-            const availableDirections = connectionsComp.connections
-                .filter(conn => conn.state !== 'hidden') // Respect hidden state
+        let availableDirections = [];
+        if (connectionsComp && Array.isArray(connectionsComp.connections)) {
+            availableDirections = connectionsComp.connections
+                .filter(conn => conn.state !== 'hidden')
                 .map(conn => conn.direction)
                 .filter(dir => dir);
-            if (availableDirections.length > 0) {
-                dispatch('ui:message_display', {
-                    text: `<p>Exits: ${availableDirections.join(', ')}</p>`,
-                    type: 'location-exits'
-                });
-            } else {
-                dispatch('ui:message_display', {text: `<p>There are no obvious exits.</p>`, type: 'location-exits'});
-            }
-        } else {
-            dispatch('ui:message_display', {text: `<p>There are no obvious exits.</p>`, type: 'location-exits'});
         }
 
-        // Add the combined output to messages if needed for logging/testing
-        // messages.push({ text: `Looked at location ${locationName}`, type: 'internal' }); // Example
+        // --- Construct the structured data payload ---
+        /** @type {LocationRenderData} */
+        const locationData = {
+            name: locationName,
+            description: locationDesc,
+            exits: availableDirections,
+            // Only include optional fields if they have content
+            items: itemsVisible.length > 0 ? itemsVisible : undefined,
+            npcs: npcsVisible.length > 0 ? npcsVisible : undefined,
+        };
 
+        // --- Dispatch the single structured event for the renderer ---
+        dispatch('ui:display_location', locationData);
     } else {
         // Look at a specific target
         const targetName = targets.join(' ').toLowerCase();
@@ -105,7 +88,8 @@ export function executeLook(context) {
             messages.push({text: lookSelfMsg, type: 'info'}); // Optional retain
             // Could add health status, equipment etc. later
         }
-            // Example: Check if target is an entity in the room (NPCs/Items)
+
+        // Example: Check if target is an entity in the room (NPCs/Items)
         // Example: Check if target is an item in player inventory
         else {
             // Generic placeholder / "not found" message for now

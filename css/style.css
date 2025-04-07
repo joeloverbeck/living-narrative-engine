@@ -1,0 +1,290 @@
+/* css/style.css */
+
+/* --- Theme Variables --- */
+/* These variables define the core look and feel and are intended for easy theming (Phase 4) */
+:root {
+    /* -- Colors -- */
+    --color-text-default: #333; /* Default body text */
+    --color-text-heading: #333; /* Primary headings (like h1) */
+    --color-text-secondary: #666; /* Less important text (like exits) */
+    --color-text-command: #000080; /* User input echo */
+    --color-text-error: #dc3545; /* Error messages */
+    --color-text-warning: #856404; /* Warning messages */
+    --color-text-info: var(--color-text-default); /* Info messages (can use default) */
+    --color-text-location: var(--color-text-default); /* Location block text */
+
+    --color-background-page: #fff; /* Overall page background */
+    --color-background-output: #f8f9fa; /* Main game output area */
+    --color-background-input: #fff; /* Background for input field */
+    --color-background-error: #f8d7da; /* Background for error messages */
+    --color-background-warning: #fff3cd; /* Background for warning messages */
+    --color-background-location: #e9ecef; /* Background for location blocks */
+    --color-background-pre: #eee; /* Background for <pre> blocks (if used) */
+
+    --color-border-default: #ced4da; /* Default borders (input, output area) */
+    --color-border-error: #f5c6cb; /* Border for error messages (match bg) */
+    --color-border-warning: #ffeeba; /* Border for warning messages (match bg) */
+    --color-border-location: #adb5bd; /* Border for location blocks */
+    --color-accent-error: #dc3545; /* Accent border (e.g., left border on errors) */
+    --color-accent-warning: #ffc107; /* Accent border for warnings */
+    --color-accent-location: #6c757d; /* Accent border for location blocks */
+
+    /* -- Combat Colors -- */
+    --color-text-combat: #495057; /* General combat action text */
+    --color-text-combat-hit: #155724; /* Player hit success */
+    --color-text-combat-crit: #721c24; /* Significant outcome (death/crit) */
+
+    --color-background-combat: transparent; /* Default: no special background */
+    --color-background-combat-hit: #d4edda; /* Subtle green background for hits */
+    --color-background-combat-crit: #f8d7da; /* Subtle red/pink background for crits/death */
+
+    --color-accent-combat: #6c757d; /* Subtle accent for general combat */
+    --color-accent-combat-hit: #28a745; /* Green accent for hits */
+    --color-accent-combat-crit: #dc3545; /* Red accent for crits/death */
+
+    /* -- Typography -- */
+    --font-family-base: sans-serif; /* Base font stack */
+    --font-size-base: 1rem; /* Base font size (16px default) */
+    --line-height-base: 1.5; /* Base line height */
+
+    /* -- Spacing & Sizing -- */
+    --padding-small: 0.25rem; /* 4px */
+    --padding-medium: 0.5rem; /* 8px */
+    --padding-large: 1rem; /* 16px */
+
+    --margin-small: 0.25rem; /* 4px */
+    --margin-medium: 0.5rem; /* 8px */
+    --margin-large: 1rem; /* 16px */
+
+    /* -- Borders & Radius -- */
+    --border-radius-small: 0.2rem; /* ~3px */
+    --border-radius-medium: 0.25rem; /* ~4px */
+}
+
+/* --- Base Styles --- */
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--color-text-default);
+    background-color: var(--color-background-page);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    color: var(--color-text-heading);
+    text-align: center;
+    margin: var(--margin-medium) 0; /* Use variables */
+    padding: 0 var(--padding-medium); /* Add some horizontal padding */
+    flex-shrink: 0;
+    font-size: 1.75rem; /* Slightly larger */
+}
+
+/* --- Layout Containers --- */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 0 var(--padding-medium) var(--padding-medium); /* Adjust padding */
+    overflow: hidden;
+}
+
+#output {
+    background-color: var(--color-background-output);
+    border: 1px solid var(--color-border-default);
+    padding: var(--padding-medium); /* Use variable */
+    border-radius: var(--border-radius-medium);
+    flex-grow: 1;
+    overflow-y: auto; /* Keep scroll */
+    margin-bottom: var(--margin-medium); /* Use variable */
+    /* Improve scrollbar appearance slightly (non-standard, best effort) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-default) var(--color-background-output);
+}
+
+#output::-webkit-scrollbar {
+    width: 8px;
+}
+
+#output::-webkit-scrollbar-track {
+    background: var(--color-background-output);
+}
+
+#output::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-default);
+    border-radius: var(--border-radius-medium);
+    border: 2px solid var(--color-background-output); /* Creates padding around thumb */
+}
+
+
+#input-container {
+    flex-shrink: 0;
+}
+
+#command-input {
+    width: 100%;
+    padding: var(--padding-medium); /* Use variable */
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--border-radius-small);
+    box-sizing: border-box; /* Keep this */
+    font-size: inherit; /* Inherit from body */
+    line-height: inherit;
+    background-color: var(--color-background-input);
+    color: var(--color-text-default);
+}
+
+#command-input:disabled {
+    background-color: #e9ecef; /* Slightly greyed out when disabled */
+    cursor: not-allowed;
+}
+
+/* --- Message Styling --- */
+.message {
+    margin-bottom: var(--margin-medium); /* More space between messages */
+    padding: var(--padding-medium); /* More padding within messages */
+    border-radius: var(--border-radius-small);
+    border: 1px solid transparent; /* Base border */
+    border-left-width: 4px; /* Standard left accent */
+}
+
+/* Default/Info Message */
+.message-info {
+    color: var(--color-text-info);
+    border-left-color: var(--color-border-default); /* Subtle left border */
+    /* No specific background needed, uses #output background */
+}
+
+/* Command Echo */
+.message-command {
+    color: var(--color-text-command);
+    font-style: italic;
+    border-left-color: var(--color-text-command);
+    background-color: rgba(0, 0, 128, 0.05); /* Very subtle background */
+}
+
+/* Error Message */
+.message-error {
+    color: var(--color-text-error);
+    background-color: var(--color-background-error);
+    border-color: var(--color-border-error); /* Match background border */
+    border-left-color: var(--color-accent-error); /* Strong accent */
+    font-weight: bold;
+}
+
+/* Warning Message */
+.message-warning {
+    color: var(--color-text-warning);
+    background-color: var(--color-background-warning);
+    border-color: var(--color-border-warning); /* Match background border */
+    border-left-color: var(--color-accent-warning); /* Strong accent */
+}
+
+/* Location Block Message */
+.message-location {
+    color: var(--color-text-location);
+    background-color: var(--color-background-location);
+    border-color: var(--color-border-location); /* Match background border */
+    border-left-color: var(--color-accent-location); /* Accent */
+}
+
+/* Remove default margins from elements inside a location block */
+.message-location > *:first-child {
+    margin-top: 0;
+}
+
+.message-location > *:last-child {
+    margin-bottom: 0;
+}
+
+
+/* --- Location Element Styling --- */
+/* Styles for dynamically generated elements within a .message-location block */
+.location__name {
+    font-size: 1.25rem; /* Make name stand out */
+    font-weight: bold;
+    color: var(--color-text-heading);
+    margin-bottom: var(--margin-small);
+}
+
+.location__description {
+    margin-bottom: var(--margin-medium); /* Space before exits/other elements */
+}
+
+.location__exits {
+    color: var(--color-text-secondary); /* Use secondary color */
+    font-size: 0.9rem; /* Slightly smaller */
+}
+
+/* Example for future items/npcs */
+/*
+.location__items {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+.location__npcs {
+    color: var(--color-text-secondary);
+    font-weight: bold;
+}
+*/
+
+/* General Combat Action (e.g., swing) */
+.message-combat {
+    color: var(--color-text-combat);
+    background-color: var(--color-background-combat); /* Often transparent */
+    border-left-color: var(--color-accent-combat);
+    /* Optional: Slightly different font style if desired */
+    /* font-style: italic; */
+}
+
+/* Combat Hit (Player successful hit) */
+.message-combat-hit {
+    color: var(--color-text-combat-hit);
+    background-color: var(--color-background-combat-hit);
+    border-color: #c3e6cb; /* Border matching background */
+    border-left-color: var(--color-accent-combat-hit);
+    font-weight: bold; /* Make hits stand out */
+}
+
+/* Combat Critical / Death */
+.message-combat-crit {
+    color: var(--color-text-combat-crit);
+    background-color: var(--color-background-combat-crit);
+    border-color: #f5c6cb; /* Border matching background */
+    border-left-color: var(--color-accent-combat-crit);
+    font-weight: bold; /* Make significant outcomes stand out */
+}
+
+/* Example for future combat info (like remaining HP) */
+/*
+.message-combat-info {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    border-left-color: var(--color-accent-combat);
+}
+*/
+
+/* --- Utility Styles --- */
+/* For general errors outside game loop (e.g., init failure) */
+#error-output {
+    color: var(--color-text-error);
+    font-weight: bold;
+    padding: var(--padding-medium);
+    text-align: center;
+}
+
+/* Preformatted text styling (if needed later) */
+pre {
+    background-color: var(--color-background-pre);
+    border: 1px solid var(--color-border-default);
+    padding: var(--padding-medium);
+    border-radius: var(--border-radius-medium);
+    white-space: pre-wrap; /* Keep */
+    word-wrap: break-word; /* Keep */
+    max-height: 300px; /* Keep */
+    overflow-y: auto; /* Keep */
+    font-size: 0.9rem; /* Slightly smaller for code/debug */
+    color: var(--color-text-default);
+}

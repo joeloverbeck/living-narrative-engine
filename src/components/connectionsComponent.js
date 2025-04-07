@@ -18,7 +18,41 @@ export class ConnectionsComponent extends Component {
         if (!data || !Array.isArray(data.connections)) {
             console.warn(`ConnectionsComponent constructor received unexpected data format. Expected { connections: [...] }, got:`, data);
         }
+
+        // --- TEMPORARY DEBUG LOG (Task 1) ---
+        // Check the state of connections immediately after creation.
+        if (this.connections.length > 0) {
+            console.log(`[DEBUG] ConnectionsComponent initialized. Connections state:`,
+                this.connections.map(c => ({dir: c.direction, state: c.state ?? c.initial_state ?? 'undefined'})) // Check both state and initial_state for clarity
+            );
+        }
     }
 
-    // TODO: Add methods like getConnection(direction), setConnectionState(direction, newState)
+    /**
+     * Finds a connection object by direction (case-insensitive).
+     * @param {string} direction
+     * @returns {object | undefined} The connection object or undefined if not found.
+     */
+    getConnection(direction) {
+        if (!direction || typeof direction !== 'string') return undefined;
+        const lowerDir = direction.toLowerCase();
+        return this.connections.find(
+            conn => conn.direction && conn.direction.toLowerCase() === lowerDir
+        );
+    }
+
+    /**
+     * Updates the state of a specific connection.
+     * @param {string} direction - The direction of the connection to update.
+     * @param {string} newState - The new state value (e.g., 'unlocked', 'locked').
+     * @returns {boolean} True if the connection was found and updated, false otherwise.
+     */
+    setConnectionState(direction, newState) {
+        const connection = this.getConnection(direction);
+        if (connection) {
+            connection.state = newState;
+            return true;
+        }
+        return false;
+    }
 }

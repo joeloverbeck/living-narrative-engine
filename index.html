@@ -4,22 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adventure Game Platform - MVP Test</title>
-    <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
-        h1 { color: #333; text-align: center; margin-top: 10px; flex-shrink: 0;}
-        #game-container { display: flex; flex-direction: column; flex-grow: 1; padding: 10px; overflow: hidden; }
-        #output { background-color: #f4f4f4; border: 1px solid #ccc; padding: 10px; border-radius: 5px; flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
-        #input-container { flex-shrink: 0;}
-        #command-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box; }
-        .message { margin-bottom: 5px; padding: 2px 5px; border-radius: 3px; }
-        .message-command { color: #000080; font-style: italic; }
-        .message-error { color: red; font-weight: bold; background-color: #ffebeb; border-left: 3px solid red; }
-        .message-warning { color: #856404; background-color: #fff3cd; border-left: 3px solid #ffc107; }
-        .message-info { /* Default */ }
-        pre { background-color: #eee; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto; }
-        .error { color: red; font-weight: bold; } /* For general errors outside game loop */
-
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <h1>Adventure Game</h1>
@@ -29,7 +14,8 @@
         <input type="text" id="command-input" placeholder="Loading..." disabled>
     </div>
 </div>
-<div id="error-output" class="error"></div> <script type="module" src="main.js"></script>
+<div id="error-output" class="error"></div>
+<script type="module" src="main.js"></script>
 
 </body>
 </html>
