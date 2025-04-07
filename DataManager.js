@@ -1,3 +1,5 @@
+// dataManager.js
+
 // Import from Skypack CDN (specifying version 8 is safer)
 import Ajv from 'https://cdn.skypack.dev/ajv@8';
 
@@ -25,9 +27,7 @@ const CONTENT_FILES = {
         'core_player.json',        // Underscore instead of colon
         'demo_enemy_goblin.json',  // Underscore instead of colon
         'demo_item_key.json',      // Underscore instead of colon
-        'demo_item_potion_heal_minor.json' // Underscore instead of colon
-    ],
-    locations: [
+        'demo_item_potion_heal_minor.json', // Underscore instead of colon
         'demo_room_entrance.json', // Underscore instead of colon
         'demo_room_hallway.json',  // Underscore instead of colon
         'demo_room_monster.json',  // Underscore instead of colon
@@ -145,14 +145,13 @@ class DataManager {
      * @private
      */
     async loadContent() {
-        if (!this.ajv) throw new Error("Ajv not initialized before loading content!"); // Safety check
+        if (!this.ajv) throw new Error("Ajv not initialized before loading content!");
 
         console.log("DataManager: Loading content definitions...");
 
         const loadingPromises = [
             this.loadAndValidateContentType('actions', CONTENT_FILES.actions, CONTENT_TYPE_SCHEMAS.actions),
-            this.loadAndValidateEntities(),
-            this.loadAndValidateContentType('locations', CONTENT_FILES.locations, CONTENT_TYPE_SCHEMAS.locations),
+            this.loadAndValidateEntities(), // This will now handle locations too
             this.loadAndValidateTriggers(),
         ];
 
@@ -217,24 +216,29 @@ class DataManager {
     }
 
     /**
-     * Special handler for entities, distinguishing between base entities and items.
+     * Special handler for entities, distinguishing between items, locations, and base entities.
      * @private
      */
     async loadAndValidateEntities() {
         const typeName = 'entities';
-        console.log(`DataManager: Loading ${typeName}...`);
-        const filenames = CONTENT_FILES.entities;
+        console.log(`DataManager: Loading ${typeName} (incl. items, locations)...`);
+        const filenames = CONTENT_FILES.entities; // Get the combined list
         const targetMap = this.entities;
 
+        // Get validators for all relevant types
         const entityValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.entities);
         const itemValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.items);
+        const locationValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.locations); // Get location validator
 
-        if (!entityValidator || !itemValidator) {
-            throw new Error(`DataManager: Entity or Item schema not found for validating entities.`);
+        if (!entityValidator || !itemValidator || !locationValidator) { // Check all validators
+            throw new Error(`DataManager: Entity, Item, or Location schema not found for validating entities.`);
         }
 
         const filePromises = filenames.map(async (filename) => {
-            const path = `${BASE_DATA_PATH}/${typeName}/${filename}`;
+            const path = `${BASE_DATA_PATH}/${typeName}/${filename}`; // Use backticks and ${}
+
+            console.log(path);
+
             try {
                 const response = await fetch(path);
                 if (!response.ok) {
@@ -249,25 +253,36 @@ class DataManager {
                 let isValid = false;
                 let validationErrors = null;
                 let usedSchemaId = '';
+                let entityType = 'Entity'; // Default type
 
-                // Determine if it's an item (heuristic: has Item component)
+                // Determine entity type (heuristic based on components or specific properties)
                 const isItem = data.components && data.components.Item;
+                // Check if it's a location (e.g., has Connections component or a specific 'type' property)
+                const isLocation = data.components && data.components.Connections; // Adjust this check as needed
 
-                if (isItem) {
+                if (isLocation) {
+                    // Validate against Location schema
+                    isValid = locationValidator(data);
+                    validationErrors = locationValidator.errors;
+                    usedSchemaId = CONTENT_TYPE_SCHEMAS.locations;
+                    entityType = 'Location';
+                } else if (isItem) {
                     // Validate against Item schema
                     isValid = itemValidator(data);
                     validationErrors = itemValidator.errors;
                     usedSchemaId = CONTENT_TYPE_SCHEMAS.items;
+                    entityType = 'Item';
                 } else {
                     // Validate against base Entity schema
                     isValid = entityValidator(data);
                     validationErrors = entityValidator.errors;
                     usedSchemaId = CONTENT_TYPE_SCHEMAS.entities;
+                    entityType = 'Entity';
                 }
 
                 if (!isValid) {
                     const errorDetails = JSON.stringify(validationErrors, null, 2);
-                    throw new Error(`Schema validation failed for ${path} using schema ${usedSchemaId}:\n${errorDetails}`);
+                    throw new Error(`Schema validation failed for ${path} (type: ${entityType}) using schema <span class="math-inline">\{usedSchemaId\}\:\\n</span>{errorDetails}`);
                 }
 
                 // Store the validated data
@@ -275,7 +290,7 @@ class DataManager {
                     console.warn(`DataManager: Duplicate ID detected for ${typeName}: ${data.id} in ${filename}. Overwriting previous definition.`);
                 }
                 targetMap.set(data.id, data);
-                // console.log(`DataManager: Validated and stored ${typeName} (${isItem ? 'Item' : 'Entity'}): ${data.id}`);
+                // console.log(`DataManager: Validated and stored <span class="math-inline">\{typeName\} \(</span>{entityType}): ${data.id}`);
 
             } catch (error) {
                 console.error(`DataManager: Failed to load, parse, or validate ${path}`, error);
@@ -284,7 +299,7 @@ class DataManager {
         });
 
         await Promise.all(filePromises);
-        console.log(`DataManager: Finished loading ${targetMap.size} entities/items.`);
+        console.log(`DataManager: Finished loading ${targetMap.size} entities/items/locations.`);
     }
 
     /**
@@ -348,12 +363,8 @@ class DataManager {
         return this.actions.get(id);
     }
 
-    getEntityDefinition(id) {
+    getEntityDefinition(id) { // This now correctly searches the unified map
         return this.entities.get(id);
-    }
-
-    getLocation(id) {
-        return this.locations.get(id);
     }
 
     getTrigger(id) {
@@ -369,12 +380,9 @@ class DataManager {
     _logLoadedCounts() {
         console.log("DataManager Load Summary:");
         console.log(`  - Actions: ${this.actions.size}`);
-        console.log(`  - Entities/Items: ${this.entities.size}`);
-        console.log(`  - Locations: ${this.locations.size}`);
+        console.log(`  - Entities/Items/Locations: ${this.entities.size}`);
         console.log(`  - Triggers: ${this.triggers.size}`);
     }
 }
 
-
-// Add this line at the end:
 export default DataManager;
