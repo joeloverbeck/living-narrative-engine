@@ -18,6 +18,14 @@
           "$ref": "#/definitions/NameComponent",
           "description": "(Optional but recommended) The display name of the entity."
         },
+        "Description": {
+          "$ref": "#/definitions/DescriptionComponent",
+          "description": "(Optional) Static text description of the entity."
+        },
+        "MetaDescription": {
+          "$ref": "#/definitions/MetaDescriptionComponent",
+          "description": "(Optional) Data used for LLM-generated descriptions."
+        },
         "Health": {
           "$ref": "#/definitions/HealthComponent",
           "description": "(Optional) Component for entities that have health points."
@@ -34,9 +42,25 @@
           "$ref": "#/definitions/SkillComponent",
           "description": "(Optional) Component tracking entity skill levels (basic MVP version)."
         },
+        "Stats": {
+          "$ref": "#/definitions/StatsComponent",
+          "description": "(Optional) Component tracking entity core attributes (Strength, Agility etc.)."
+        },
         "EntitiesPresent": {
           "$ref": "#/definitions/EntitiesPresentComponent",
           "description": "(Optional, usually for locations) Lists IDs of entities within."
+        },
+        "Item": {
+          "$ref": "#/definitions/ItemComponent",
+          "description": "(Optional) Marker component for items."
+        },
+        "Usable": {
+          "$ref": "#/definitions/UsableComponent",
+          "description": "(Optional) Defines how an item/object can be used."
+        },
+        "Connections": {
+          "$ref": "#/definitions/ConnectionsComponent",
+          "description": "(Optional, for locations) Defines exits to other locations."
         }
       },
       "minProperties": 1,
@@ -59,6 +83,36 @@
         "value": {
           "type": "string",
           "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key')."
+        }
+      }
+    },
+    "DescriptionComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "A static description text for the entity."
+        }
+      }
+    },
+    "MetaDescriptionComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keywords"
+      ],
+      "properties": {
+        "keywords": {
+          "type": "string",
+          "description": "Comma-separated keywords or a short phrase for LLM description generation."
+        },
+        "style_hint": {
+          "type": "string",
+          "description": "(Optional) Hint for the LLM about the desired writing style."
         }
       }
     },
@@ -141,6 +195,37 @@
       ],
       "additionalProperties": false
     },
+    "StatsComponent": {
+      "type": "object",
+      "description": "Tracks the entity's core attributes (stats).",
+      "properties": {
+        "attributes": {
+          "type": "object",
+          "description": "A map of attribute IDs (e.g., 'core:attr_strength') to their current integer value.",
+          "additionalProperties": {
+            "type": "integer",
+            "description": "The integer value of the attribute.",
+            "minimum": 0
+          },
+          "propertyNames": {
+            "description": "Attribute ID, following pattern e.g., 'core:attr_strength'",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "examples": [
+            {
+              "core:attr_strength": 8,
+              "core:attr_agility": 12,
+              "core:attr_intelligence": 10,
+              "core:attr_constitution": 9
+            }
+          ]
+        }
+      },
+      "required": [
+        "attributes"
+      ],
+      "additionalProperties": false
+    },
     "EntitiesPresentComponent": {
       "type": "object",
       "description": "Lists the IDs of entities currently present within this entity (typically used for Locations).",
@@ -157,6 +242,93 @@
       },
       "required": [
         "entityIds"
+      ],
+      "additionalProperties": false
+    },
+    "ItemComponent": {
+      "type": "object",
+      "description": "Marker component indicating this entity is an item.",
+      "properties": {
+        "stackable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Can multiple instances stack?"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "(Optional) Base monetary value."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for the item.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "UsableComponent": {
+      "type": "object",
+      "description": "Defines how an item or object can be used.",
+      "properties": {
+        "effect_type": {
+          "type": "string",
+          "description": "Identifier for the type of effect triggered on use (e.g., 'heal', 'unlock_door', 'apply_status'). Needs interpretation by an Action handler or system."
+        },
+        "effect_details": {
+          "type": "object",
+          "description": "(Optional) Provides specific parameters for the effect identified by effect_type (e.g., amount for heal, target ID for unlock, status effect ID).",
+          "additionalProperties": true
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "description": "(Optional) The ID of the specific target entity this item should be used on (e.g., a specific door ID for a key)."
+        },
+        "consumable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Is the item destroyed after use?"
+        },
+        "use_message": {
+          "type": "string",
+          "description": "(Optional) Message displayed to the player upon successful use of the item/object."
+        }
+      },
+      "required": [
+        "effect_type"
+      ],
+      "additionalProperties": false
+    },
+    "ConnectionsComponent": {
+      "type": "object",
+      "description": "Defines exits from a location.",
+      "properties": {
+        "exits": {
+          "type": "object",
+          "description": "Map where keys are directions (or exit names) and values are target location IDs.",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          },
+          "propertyNames": {
+            "description": "Direction or exit name (e.g., 'north', 'south', 'ladder_up')",
+            "type": "string"
+          },
+          "examples": [
+            {
+              "north": "demo:room_hallway",
+              "east": "demo:room_storage"
+            }
+          ]
+        }
+      },
+      "required": [
+        "exits"
       ],
       "additionalProperties": false
     }

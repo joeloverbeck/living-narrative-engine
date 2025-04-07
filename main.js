@@ -31,6 +31,7 @@ import {executeUse} from "./src/actions/handlers/useActionHandler.js";
 import GameInitializer from "./src/core/gameInitializer.js";
 import ActionResultProcessor from "./src/actions/actionResultProcessor.js";
 import {UsableComponent} from "./src/components/usableComponent.js";
+import {StatsComponent} from "./src/components/statsComponent.js";
 
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error-output');
@@ -121,6 +122,7 @@ async function initializeGame() {
         entityManager.registerComponent('Item', ItemComponent);
         entityManager.registerComponent('Name', NameComponent);
         entityManager.registerComponent('Skill', SkillComponent);
+        entityManager.registerComponent('Stats', StatsComponent);
         entityManager.registerComponent('Description', DescriptionComponent);
         entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
         entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);

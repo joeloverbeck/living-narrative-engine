@@ -11,9 +11,12 @@
     "Inventory": {
       "items": []
     },
-    "Skill": {
-      "skills": {
-        "core:skill_strength": 5
+    "Stats": {
+      "attributes": {
+        "core:attr_strength": 8,
+        "core:attr_agility": 10,
+        "core:attr_intelligence": 10,
+        "core:attr_constitution": 9
       }
     }
   }
