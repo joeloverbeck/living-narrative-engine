@@ -1,8 +1,8 @@
 // src/actions/handlers/attackActionHandler.js
 
-import {EntitiesPresentComponent} from '../../components/entitiesPresentComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';
 import {HealthComponent} from '../../components/healthComponent.js';
+import {AttackComponent} from '../../components/attackComponent.js'; // Ensure AttackComponent is imported if used directly
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
@@ -11,11 +11,11 @@ import {HealthComponent} from '../../components/healthComponent.js';
 /** @typedef {import('../../src/components/healthComponent.js').HealthComponent} HealthComponent */
 /** @typedef {import('../../src/components/nameComponent.js').NameComponent} NameComponent */
 
-/** @typedef {import('../../src/components/entitiesPresentComponent.js').EntitiesPresentComponent} EntitiesPresentComponent */
+/** @typedef {import('../../src/components/attackComponent.js').AttackComponent} AttackComponent */
 
 /**
- * Executes the 'attack' action. Finds target, applies damage, checks for death,
- * dispatches messages via context.dispatch, and dispatches game events.
+ * Validates the intent to execute the 'attack' action and fires an event.
+ * Does NOT apply damage or handle death directly.
  * @param {ActionContext} context
  * @returns {ActionResult}
  */
@@ -36,28 +36,31 @@ export function executeAttack(context) {
     const targetName = targets.join(' ').toLowerCase(); // Combine targets and lowercase
 
     // --- 2. Find Target Entity in Current Location ---
-    let targetEntity = null;
-    const presentComp = currentLocation.getComponent(EntitiesPresentComponent);
 
-    if (presentComp && Array.isArray(presentComp.entityIds)) {
-        for (const entityId of presentComp.entityIds) {
+    let targetEntity = null;
+    // Use the new spatial query function to get entity IDs in the location
+    const entityIdsInLocation = entityManager.getEntitiesInLocation(currentLocation.id);
+
+    if (entityIdsInLocation && entityIdsInLocation.size > 0) {
+        // Iterate through the entity IDs obtained from the spatial index
+        for (const entityId of entityIdsInLocation) {
             const potentialTarget = entityManager.getEntityInstance(entityId);
             if (potentialTarget) {
                 const nameComp = potentialTarget.getComponent(NameComponent);
+                // Check if the entity has a name and if it matches the target name (case-insensitive)
                 if (nameComp && nameComp.value.toLowerCase() === targetName) {
                     targetEntity = potentialTarget;
-                    break;
+                    break; // Found the target, exit the loop
                 }
             } else {
-                console.warn(`Attack Handler: Entity ID '${entityId}' listed in location '${currentLocation.id}' but instance not found.`);
+                // This case should be less common now that the spatial index is synced, but good to log
+                console.warn(`Attack Handler: Entity ID '${entityId}' listed in location '${currentLocation.id}' via spatial index, but instance not found in EntityManager.`);
             }
         }
     } else {
-        const errorMsg = "(Internal Error: Cannot determine who is in this room.)";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        console.warn(`Attack Handler: Location '${currentLocation.id}' has no EntitiesPresentComponent or invalid entityIds.`);
-        return {success: false, messages, newState: undefined};
+        // Handle case where the spatial index reports no entities or the set is empty
+        console.warn(`Attack Handler: No entities found in location '${currentLocation.id}' via spatial index or index is empty.`);
+        // Note: We don't immediately return an error here; the check for !targetEntity below handles the case where the specific target wasn't found.
     }
 
     // --- 3. Validate Target Entity ---
@@ -90,59 +93,47 @@ export function executeAttack(context) {
         const infoMsg = `The ${targetDisplayName} is already defeated.`;
         dispatch('ui:message_display', {text: infoMsg, type: 'info'});
         messages.push({text: infoMsg, type: 'info'});
-        return {success: true, messages, newState: undefined}; // Considered success
+        // Keep original logic: return success true even if target is dead
+        return {success: true, messages, newState: undefined};
     }
 
-    // --- 4. Calculate Damage (MVP: Fixed Value) ---
-    const damage = 1;
+    // --- 4. Calculate Potential Damage ---
+    // Read from player's AttackComponent, fallback to MVP fixed value if needed
+    const playerAttackComp = playerEntity.getComponent(AttackComponent);
+    const potentialDamage = playerAttackComp ? playerAttackComp.damage : 1; // Default to 1 if no AttackComponent
+    if (!playerAttackComp) {
+        console.warn(`Attack Handler: Player entity ${playerEntity.id} has no AttackComponent. Defaulting damage to 1.`);
+    }
+
     const playerName = playerEntity.getComponent(NameComponent)?.value ?? 'You';
 
+    // --- 5. Dispatch Swing Message (Attempt Indication) ---
     const swingMsg = `${playerName} swing${playerName === 'You' ? '' : 's'} at the ${targetDisplayName}!`;
     dispatch('ui:message_display', {text: swingMsg, type: 'combat'});
     messages.push({text: swingMsg, type: 'combat'});
 
-    // --- 5. Apply Damage ---
-    const previousHealth = healthComp.current;
-    healthComp.current = Math.max(0, previousHealth - damage);
+    // --- 6. FIRE INTENT EVENT ---
+    // Validation successful, fire the intent event for other systems (CombatSystem) to handle.
+    const eventPayload = {
+        attackerId: playerEntity.id,
+        targetId: targetEntity.id,
+        potentialDamage: potentialDamage,
+        // Future: add weaponId, damageType etc. here
+    };
 
-    const hitMsg = `You hit the ${targetDisplayName} for ${damage} damage!`;
-    dispatch('ui:message_display', {text: hitMsg, type: 'combat-hit'});
-    messages.push({text: hitMsg, type: 'combat-hit'});
-    success = true;
-
-    // --- 6. Check for Death ---
-    if (healthComp.current <= 0 && previousHealth > 0) {
-        const deathMsg = `The ${targetDisplayName} collapses, defeated!`;
-        dispatch('ui:message_display', {text: deathMsg, type: 'combat-crit'});
-        messages.push({text: deathMsg, type: 'combat-crit'});
-
-        // --- 7. Dispatch Death Event (GAME EVENT - not UI) ---
-        try {
-            dispatch('event:entity_died', { // <<-- THIS dispatch stays the same
-                deceasedEntityId: targetEntity.id,
-                killerEntityId: playerEntity.id,
-            });
-        } catch (dispatchError) {
-            const errorMsg = "(Internal Error: Death event dispatch failed)";
-            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-            messages.push({text: errorMsg, type: 'error'});
-            console.error("Attack Handler: Failed to dispatch entity_died event:", dispatchError);
-        }
-
-        // --- Remove entity from location ---
-        if (presentComp) {
-            presentComp.removeEntity(targetEntity.id);
-            console.log(`Attack Handler: Removed deceased entity ${targetEntity.id} from location ${currentLocation.id}`);
-            // Maybe dispatch a UI message about removal? Optional.
-            // dispatch('ui:message_display', { text: `The body of the ${targetDisplayName} disappears.`, type: 'info' });
-        }
-    } else if (healthComp.current > 0) {
-        // Optional: Indicate current health state
-        // const woundMsg = `The ${targetDisplayName} looks wounded. (HP: ${healthComp.current}/${healthComp.max})`;
-        // dispatch('ui:message_display', { text: woundMsg, type: 'combat-info' });
-        // messages.push({ text: woundMsg, type: 'combat-info' });
+    try {
+        dispatch('event:attack_intended', eventPayload);
+        success = true; // Mark success as the intent was valid and event fired
+    } catch (dispatchError) {
+        const errorMsg = "(Internal Error: Attack intent event dispatch failed)";
+        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        messages.push({text: errorMsg, type: 'error'});
+        console.error("Attack Handler: Failed to dispatch event:attack_intended event:", dispatchError);
+        success = false; // If dispatch fails, the action effectively failed
     }
 
-    // --- 8. Return Result ---
+    // --- 7. Return Result ---
+    // Result indicates if the *intent* was successfully validated and the event fired.
+    // It does NOT indicate if the attack hit or killed the target.
     return {success, messages, newState: undefined};
 }

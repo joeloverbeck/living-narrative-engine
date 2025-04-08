@@ -101,16 +101,12 @@ class CommandParser {
         // - Use action definitions from DataManager to guide parsing.
 
         /** @type {ParsedCommand} */
-        const result = {
+        return {
             actionId: actionId,
             targets: targets,
             originalInput: originalInput,
             error: error
         };
-
-        // Use console.debug for less noise, or remove in production
-        console.debug(`CommandParser.parse("${originalInput}") ->`, JSON.stringify(result)); // Stringify for cleaner log
-        return result;
     }
 }
 

@@ -7,6 +7,9 @@
     "Description": {
       "text": "A vest made of stiff, boiled leather. Offers basic protection."
     },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
     "Item": {
       "tags": [
         "armor",

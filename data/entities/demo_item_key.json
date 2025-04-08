@@ -7,6 +7,9 @@
     "Description": {
       "text": "A heavy, rusted iron key. It looks like it fits a sturdy lock."
     },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
     "Item": {
       "tags": [
         "key",

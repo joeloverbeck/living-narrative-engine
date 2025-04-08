@@ -18,14 +18,6 @@ export class ConnectionsComponent extends Component {
         if (!data || !Array.isArray(data.connections)) {
             console.warn(`ConnectionsComponent constructor received unexpected data format. Expected { connections: [...] }, got:`, data);
         }
-
-        // --- TEMPORARY DEBUG LOG (Task 1) ---
-        // Check the state of connections immediately after creation.
-        if (this.connections.length > 0) {
-            console.log(`[DEBUG] ConnectionsComponent initialized. Connections state:`,
-                this.connections.map(c => ({dir: c.direction, state: c.state ?? c.initial_state ?? 'undefined'})) // Check both state and initial_state for clarity
-            );
-        }
     }
 
     /**

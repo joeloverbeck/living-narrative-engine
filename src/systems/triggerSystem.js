@@ -8,19 +8,20 @@ import {ConnectionsComponent} from "../components/connectionsComponent.js";
 /** @typedef {import('../../eventBus.js').default} EventBus */              // Corrected path if needed
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */ // <<<--- ADDED Import
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */ // <<<--- ADDED Import
+/** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
+
+/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
 
 /**
  * Listens for game events, checks trigger conditions, executes actions,
- * and handles built-in reactions like auto-look on move and entity instantiation.
+ * and handles built-in reactions like auto-look and entity instantiation.
  */
 class TriggerSystem {
     #eventBus;
     #dataManager;
     #entityManager;
-    #gameStateManager; // May be needed for future triggers/actions
+    #gameStateManager;
     #actionExecutor;
 
     /** @type {Map<string, Function>} */
@@ -28,6 +29,9 @@ class TriggerSystem {
 
     /** @type {Set<string>} */
     #activeOneShotTriggerIds = new Set(); // Store IDs of one-shot triggers that haven't fired yet
+
+    /** @type {Set<string>} */
+    #instantiatedLocationIds = new Set(); // Keep track of locations where entities have been instantiated
 
     /**
      * @param {object} options
@@ -50,7 +54,7 @@ class TriggerSystem {
         if (!dataManager) throw new Error("TriggerSystem requires options.dataManager.");
         if (!entityManager) throw new Error("TriggerSystem requires options.entityManager.");
         if (!gameStateManager) throw new Error("TriggerSystem requires options.gameStateManager.");
-        if (!actionExecutor) throw new Error("TriggerSystem requires options.actionExecutor."); // <<<--- ADDED Validation
+        if (!actionExecutor) throw new Error("TriggerSystem requires options.actionExecutor.");
 
         this.#eventBus = eventBus;
         this.#dataManager = dataManager;
@@ -90,79 +94,122 @@ class TriggerSystem {
             console.log("TriggerSystem: No custom trigger definitions found in DataManager.");
         }
 
-        // --- Subscribe Combined Handler for Built-in Room Entered Logic ---
-        this.#eventBus.subscribe('event:room_entered', this.#handleRoomEntered.bind(this));
-        console.log("TriggerSystem: Subscribed #handleRoomEntered to 'event:room_entered' for entity instantiation and auto-look.");
+        // --- Subscribe Handlers for Built-in Logic ---
+        // Handler for the *initial* game start look
+        this.#eventBus.subscribe('event:room_entered', this.#handleRoomEnteredInitialLook.bind(this));
+        console.log("TriggerSystem: Subscribed #handleRoomEnteredInitialLook to 'event:room_entered' for initial auto-look.");
+
+        // Handler for subsequent moves (instantiation + look)
+        this.#eventBus.subscribe('event:entity_moved', this._handleEntityMoved.bind(this));
+        console.log("TriggerSystem: Subscribed _handleEntityMoved to 'event:entity_moved' for subsequent instantiation and auto-look.");
     }
 
     /**
-     * Handles the 'event:room_entered' event:
-     * 1. Ensures entities in the new location are instantiated.
-     * 2. Triggers an automatic 'look' action *if* this was a player move (not initial load).
+     * Handles the 'event:room_entered' event *only* for the initial game load scenario.
+     * Triggers an automatic 'look' action because previousLocation is null.
+     * Entity instantiation is now handled by _handleEntityMoved.
      * @private
-     * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity }} eventData
+     * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity | null }} eventData
      */
-    #handleRoomEntered(eventData) {
+    #handleRoomEnteredInitialLook(eventData) {
         console.log("TriggerSystem: Handling 'event:room_entered'.");
         const {newLocation, playerEntity, previousLocation} = eventData;
 
-        // Validate essential data for both parts
+        // Validate essential data
         if (!newLocation || !playerEntity) {
-            console.error("TriggerSystem #handleRoomEntered: Received 'event:room_entered' but newLocation or playerEntity was missing.", eventData);
+            console.error("TriggerSystem #handleRoomEnteredInitialLook: Received 'event:room_entered' but newLocation or playerEntity was missing.", eventData);
             return;
         }
 
-        // --- Part 1: Ensure Entities are Instantiated ---
-        try {
-            this.#entityManager.ensureLocationEntitiesInstantiated(newLocation);
-            console.log(`TriggerSystem: Ensured entities are instantiated for ${newLocation.id}.`);
-        } catch (error) {
-            console.error(`TriggerSystem: Error during ensureLocationEntitiesInstantiated for ${newLocation.id}:`, error);
-            this.#eventBus.dispatch('ui:message_display', {
-                text: `Internal Error: Problem loading entities for location ${newLocation.id}.`,
-                type: 'error'
-            });
-            // If entities fail to load, it might be confusing to show the room description. Stop here.
-            return;
-        }
-
-        // --- Part 2: Trigger Automatic 'Look' if it was a player move ---
-        if (previousLocation) { // Check if previousLocation exists (indicates a move, not initial game load)
-            console.log(`TriggerSystem: Player moved from ${previousLocation.id} to ${newLocation.id}. Triggering automatic 'look'.`);
+        // --- Trigger Initial 'Look' ONLY if it's the initial game load ---
+        if (previousLocation === null || previousLocation === undefined) {
+            console.log("TriggerSystem: Initial game load detected (no previousLocation). Triggering initial 'look'.");
 
             /** @type {ActionContext} */
             const lookContext = {
                 playerEntity: playerEntity,
-                currentLocation: newLocation, // Use the *new* location for the look action
-                targets: [], // 'look' action doesn't typically need targets when triggered this way
+                currentLocation: newLocation,
+                targets: [],
                 dataManager: this.#dataManager,
                 entityManager: this.#entityManager,
-                dispatch: this.#eventBus.dispatch.bind(this.#eventBus) // Pass the dispatcher for the action handler
+                dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
             };
 
             try {
-                // Execute the 'look' action via the injected executor.
-                // The result isn't directly used here; the action handler dispatches UI messages.
                 const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
-
-                // Log potential issues from the look action itself for debugging.
                 if (!lookResult.success) {
-                    console.warn(`TriggerSystem: Automatic 'core:action_look' execution reported failure. Messages:`, lookResult.messages);
-                    // Note: UI messages should have already been dispatched by the look handler or ActionExecutor via context.dispatch.
+                    console.warn(`TriggerSystem: Initial 'core:action_look' execution reported failure. Messages:`, lookResult.messages);
                 } else {
-                    console.log(`TriggerSystem: Automatic 'core:action_look' executed successfully.`);
+                    console.log(`TriggerSystem: Initial 'core:action_look' executed successfully.`);
                 }
             } catch (error) {
-                console.error("TriggerSystem: Uncaught error executing automatic 'core:action_look':", error);
-                // Dispatch a generic error if the call to executeAction fails unexpectedly.
+                console.error("TriggerSystem: Uncaught error executing initial 'core:action_look':", error);
                 this.#eventBus.dispatch('ui:message_display', {
-                    text: "Internal Error: Failed to perform automatic look after moving.",
+                    text: "Internal Error: Failed to perform initial look.",
                     type: 'error'
                 });
             }
-
         } else {
-            console.log("TriggerSystem: 'event:room_entered' received without previousLocation (likely initial game load). Skipping automatic 'look'.");
+            // This event is now ignored if previousLocation exists, as _handleEntityMoved handles it.
+            // console.log("TriggerSystem: 'event:room_entered' received with previousLocation. Ignoring for look (handled by entity_moved).");
+        }
+    }
+
+    _handleEntityMoved(eventData) {
+        const {entityId, newLocationId} = eventData;
+        const player = this.#gameStateManager.getPlayer();
+
+        if (!player || entityId !== player.id) {
+            return;
+        }
+
+        console.log(`TriggerSystem: Player moved to ${newLocationId}. Handling instantiation and auto-look.`);
+
+        // Attempt to create/get the instance. If it already exists, getEntityInstance
+        // inside createEntityInstance (if forceNew=false) will return it.
+        // If it doesn't exist, it will be created now.
+        const newLocationEntity = this.#entityManager.createEntityInstance(newLocationId);
+
+        // Now, check if it was successfully created/retrieved
+        if (!newLocationEntity) {
+            console.error(`TriggerSystem: Failed to create or find instance for location ${newLocationId}! Cannot proceed with post-move logic.`);
+            // Dispatch error? Should not happen if definition exists and creation logic is sound.
+            this.#eventBus.dispatch('ui:message_display', {
+                text: `Critical Error: Cannot process arrival at ${newLocationId}. Location data might be corrupted.`,
+                type: 'error'
+            });
+            return;
+        }
+
+        this.#gameStateManager.setCurrentLocation(newLocationEntity);
+        console.log(`TriggerSystem: Updated GameStateManager's current location to ${newLocationId}.`);
+        // ******************************************************
+
+        // Trigger Automatic 'Look' (using the now guaranteed valid newLocationEntity)
+        console.log(`TriggerSystem: Triggering automatic 'look' for player in ${newLocationId}.`);
+        /** @type {ActionContext} */
+        const lookContext = {
+            playerEntity: player,
+            currentLocation: newLocationEntity, // Use the guaranteed valid entity instance
+            targets: [],
+            dataManager: this.#dataManager,
+            entityManager: this.#entityManager,
+            dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
+        };
+
+        try {
+            const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
+            if (!lookResult.success) {
+                console.warn(`TriggerSystem: Automatic 'core:action_look' after move reported failure. Messages:`, lookResult.messages);
+            } else {
+                console.log(`TriggerSystem: Automatic 'core:action_look' after move executed successfully.`);
+            }
+        } catch (error) {
+            console.error("TriggerSystem: Uncaught error executing automatic 'core:action_look' after move:", error);
+            this.#eventBus.dispatch('ui:message_display', {
+                text: "Internal Error: Failed to perform automatic look after moving.",
+                type: 'error'
+            });
         }
     }
 
@@ -181,7 +228,7 @@ class TriggerSystem {
             return;
         }
 
-        console.log(`[DEBUG] TriggerSystem: Handling event "${eventName}" for trigger "${triggerDef.id}"`, eventData);
+        // console.log(`[DEBUG] TriggerSystem: Handling event "${eventName}" for trigger "${triggerDef.id}"`, eventData);
 
         // 2. Check Filters
         if (!this._checkFilters(triggerDef.listen_to, eventName, eventData)) {
@@ -261,62 +308,52 @@ class TriggerSystem {
      */
     _checkFilters(listenCondition, eventName, eventData) {
         const triggerId = listenCondition.parent?.id ?? 'unknown'; // Attempt to get parent trigger ID if available
-        console.log(`[DEBUG] TriggerSystem (${triggerId}): Checking filters for event "${eventName}". Filters:`, listenCondition.filters, "Event Data:", eventData);
+        // console.log(`[DEBUG] TriggerSystem (${triggerId}): Checking filters for event "${eventName}". Filters:`, listenCondition.filters, "Event Data:", eventData);
 
         if (!listenCondition.filters) {
-            console.log(`[DEBUG] TriggerSystem (${triggerId}): No filters defined. Filter check PASSED.`);
+            // console.log(`[DEBUG] TriggerSystem (${triggerId}): No filters defined. Filter check PASSED.`);
             return true; // No filters defined, always matches
         }
 
         // Example filter check (add more as needed for custom triggers)
         if (eventName === 'entity_died' && listenCondition.filters.source_id) {
             if (!eventData || typeof eventData.deceasedEntityId !== 'string') {
-                console.warn(`[DEBUG] TriggerSystem Filter Check (${listenCondition.event_type}): Filter requires 'deceasedEntityId' in eventData, but not found or invalid. Filter check FAILED.`, eventData);
+                // console.warn(`[DEBUG] TriggerSystem Filter Check (${listenCondition.event_type}): Filter requires 'deceasedEntityId' in eventData, but not found or invalid. Filter check FAILED.`, eventData);
                 return false;
             }
             if (eventData.deceasedEntityId !== listenCondition.filters.source_id) {
-                console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. deceasedEntityId (${eventData.deceasedEntityId}) !== source_id filter (${listenCondition.filters.source_id}).`);
+                // console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. deceasedEntityId (${eventData.deceasedEntityId}) !== source_id filter (${listenCondition.filters.source_id}).`);
                 return false;
             }
 
-            console.log(`[DEBUG] TriggerSystem (${triggerId}): source_id filter check PASSED.`);
+            // console.log(`[DEBUG] TriggerSystem (${triggerId}): source_id filter check PASSED.`);
         }
 
-        // If using event:room_entered for custom triggers, add filter checks here
+        // Filters for event:room_entered (if custom triggers use it)
         if (eventName === 'event:room_entered' && listenCondition.filters) {
-            // Example: Filter by the ID of the room entered
             if (listenCondition.filters.location_id) {
-                if (!eventData.newLocation || eventData.newLocation.id !== listenCondition.filters.location_id) {
-                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. newLocation.id mismatch.`);
-                    return false;
-                }
-                console.log(`[DEBUG] TriggerSystem (${triggerId}): location_id filter check PASSED.`);
+                if (!eventData.newLocation || eventData.newLocation.id !== listenCondition.filters.location_id) return false;
             }
-            // Example: Filter by the ID of the room exited
             if (listenCondition.filters.previous_location_id) {
-                if (!eventData.previousLocation || eventData.previousLocation.id !== listenCondition.filters.previous_location_id) {
-                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. previous_location_id mismatch.`);
-                    return false;
-                }
-                console.log(`[DEBUG] TriggerSystem (${triggerId}): previous_location_id filter check PASSED.`);
+                if (!eventData.previousLocation || eventData.previousLocation.id !== listenCondition.filters.previous_location_id) return false;
             }
-            // Example: Filter only if it was a move (previousLocation exists)
-            if (listenCondition.filters.is_move === true) {
-                if (!eventData.previousLocation) {
-                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. is_move=true requires previousLocation.`);
-                    return false;
-                }
-                console.log(`[DEBUG] TriggerSystem (${triggerId}): is_move=true filter check PASSED.`);
+            if (listenCondition.filters.is_move === true && !eventData.previousLocation) return false;
+            if (listenCondition.filters.is_move === false && eventData.previousLocation) return false;
+        }
+
+        // Filters for event:entity_moved (if custom triggers use it)
+        if (eventName === 'event:entity_moved' && listenCondition.filters) {
+            if (listenCondition.filters.entity_id) {
+                if (!eventData || eventData.entityId !== listenCondition.filters.entity_id) return false;
             }
-            // Example: Filter only if it was NOT a move (initial load)
-            if (listenCondition.filters.is_move === false) {
-                if (eventData.previousLocation) {
-                    console.log(`[DEBUG] TriggerSystem (${triggerId}): Filter check FAILED. is_move=false forbids previousLocation.`);
-                    return false;
-                }
-                console.log(`[DEBUG] TriggerSystem (${triggerId}): is_move=false filter check PASSED.`);
+            if (listenCondition.filters.new_location_id) {
+                if (!eventData || eventData.newLocationId !== listenCondition.filters.new_location_id) return false;
+            }
+            if (listenCondition.filters.old_location_id) {
+                if (!eventData || eventData.oldLocationId !== listenCondition.filters.old_location_id) return false;
             }
         }
+
 
         // If we got here, all *defined* filters passed
         return true;
@@ -372,7 +409,7 @@ class TriggerSystem {
 
         const oldState = connection.state ?? connection.initial_state ?? 'undefined';
         if (oldState === parameters.state) {
-            console.log(`[DEBUG] Trigger Action (via TriggerSystem): Connection '${target.connection_direction}' in '${target.location_id}' state is already '${parameters.state}'. No change needed.`);
+            // console.log(`[DEBUG] Trigger Action (via TriggerSystem): Connection '${target.connection_direction}' in '${target.location_id}' state is already '${parameters.state}'. No change needed.`);
             success = true; // Considered success even if no change
         } else {
             // Use the component's method to set the state

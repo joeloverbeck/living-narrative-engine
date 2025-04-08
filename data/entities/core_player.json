@@ -4,6 +4,9 @@
     "Name": {
       "value": "Player"
     },
+    "Position": {
+      "locationId": "demo:room_entrance"
+    },
     "Health": {
       "current": 10,
       "max": 10
@@ -18,6 +21,9 @@
         "core:attr_intelligence": 10,
         "core:attr_constitution": 9
       }
+    },
+    "Attack": {
+      "damage": 3
     },
     "Equipment": {
       "slots": {

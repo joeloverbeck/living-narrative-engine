@@ -2,7 +2,6 @@
 
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {ItemComponent} from '../components/itemComponent.js';
-import {EntitiesPresentComponent} from '../components/entitiesPresentComponent.js'; // Import EntitiesPresentComponent
 
 /** @typedef {import('../../eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -48,13 +47,16 @@ class InventorySystem {
 
     /**
      * Handles the 'event:item_picked_up' event.
-     * Adds the item to the picker's inventory and removes it from the world.
+     * Adds the item to the picker's inventory.
+     * Assumes the item's removal from the world/spatial index is handled elsewhere
+     * (e.g., by the system dispatching the event or another listener reacting to it).
      * @private
-     * @param {{ pickerId: string, itemId: string, locationId: string }} eventData - Data from the event.
+     * @param {{ pickerId: string, itemId: string }} eventData - Data from the event.
      */
     #handleItemPickedUp(eventData) {
-        const {pickerId, itemId, locationId} = eventData;
-        console.log(`InventorySystem: Handling event:item_picked_up for item ${itemId} by ${pickerId} from ${locationId}`);
+        // locationId is destructured but no longer used in this method after refactoring.
+        const {pickerId, itemId} = eventData;
+        console.log(`InventorySystem: Handling event:item_picked_up for item ${itemId} by ${pickerId}`); // Removed location from log
 
         // --- 1. Validate Entities and Components ---
         const pickerEntity = this.#entityManager.getEntityInstance(pickerId);
@@ -69,6 +71,9 @@ class InventorySystem {
             // Or if the removeEntityInstance call happens before all listeners finish.
             // For robustness, log a warning but don't necessarily treat as a critical error unless it causes problems.
             console.warn(`InventorySystem: Item entity '${itemId}' not found when handling pickup. It might have already been removed.`);
+            // Depending on game logic, we might still want to proceed to add to inventory if the item *should* exist conceptually.
+            // However, if the entity is gone, we might lack info (like stackability if not in definition).
+            // Sticking with the original logic: return if item entity not found at this point.
             return;
         }
 
@@ -80,24 +85,13 @@ class InventorySystem {
             return;
         }
 
-        const locationEntity = this.#entityManager.getEntityInstance(locationId);
-        if (!locationEntity) {
-            console.error(`InventorySystem: Location entity '${locationId}' not found.`);
-            return; // Cannot remove item from location if location doesn't exist
-        }
-
-        const entitiesPresentComp = locationEntity.getComponent(EntitiesPresentComponent);
-        if (!entitiesPresentComp) {
-            console.warn(`InventorySystem: Location entity '${locationId}' has no EntitiesPresentComponent. Cannot verify item removal from location list.`);
-            // Continue for now, but this might indicate an issue elsewhere.
-        }
-
         // --- 2. Check Stacking / Duplicates ---
-        const itemDef = this.#dataManager.getEntityDefinition(itemId);
-        // Fallback to checking instance component if definition lookup fails (shouldn't normally happen)
+        // Attempt to get definition first for authoritative data
+        const itemDef = this.#dataManager.getEntityDefinition(itemEntity.id); // Use itemEntity.id for clarity
         const itemCompInstance = itemEntity.getComponent(ItemComponent);
 
         // Determine stackability safely, defaulting to false
+        // Check definition first, then instance component as fallback
         const isStackable = itemDef?.components?.Item?.stackable === true || itemCompInstance?.stackable === true;
         const alreadyHas = inventoryComp.hasItem(itemId);
 
@@ -109,18 +103,14 @@ class InventorySystem {
         }
 
         // --- 3. Add Item to Inventory ---
-        inventoryComp.addItem(itemId);
+        // Assuming addItem handles stacking logic internally if needed (e.g., incrementing count vs. adding new entry)
+        inventoryComp.addItem(itemId); // Might need enhancement if stacking requires quantity logic here
         console.log(`InventorySystem: Added '${itemId}' to inventory of '${pickerId}'.`);
 
-        // --- 4. Remove Item from Location's List ---
-        if (entitiesPresentComp) {
-            const removedFromLocationList = entitiesPresentComp.removeEntity(itemId);
-            if (removedFromLocationList) {
-                console.log(`InventorySystem: Removed '${itemId}' from EntitiesPresentComponent of location '${locationId}'.`);
-            } else {
-                console.warn(`InventorySystem: Item '${itemId}' was not found in EntitiesPresentComponent of location '${locationId}' during removal step.`);
-            }
-        }
+        // Note: The actual removal of the item entity from the world (EntityManager.removeEntityInstance)
+        // is assumed to be handled by another system listening to 'event:item_picked_up'
+        // or by the system that initially dispatched the event (e.g., InteractionSystem).
+        // This system (InventorySystem) is now *only* responsible for managing the inventory component state.
     }
 }
 

@@ -7,11 +7,12 @@ import EntityManager from '../entities/entityManager.js';
 import GameStateManager from '../../gameStateManager.js';
 import CommandParser from '../../commandParser.js';
 import ActionExecutor from '../actions/actionExecutor.js';
-import ActionResultProcessor from '../actions/actionResultProcessor.js';
 import TriggerSystem from '../systems/triggerSystem.js';
 import EquipmentSystem from '../systems/equipmentSystem.js';
 import InventorySystem from '../systems/inventorySystem.js';
-// GameInitializer is being absorbed, so it's not imported here.
+import CombatSystem from '../systems/combatSystem.js';
+import DeathSystem from "../systems/deathSystem.js";
+import MovementSystem from "../systems/movementSystem.js";
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
 import GameLoop from '../../gameLoop.js';
@@ -19,6 +20,7 @@ import GameLoop from '../../gameLoop.js';
 // --- Configuration Imports ---
 import {componentRegistryConfig} from '../config/componentRegistry.config.js';
 import {actionHandlerRegistryConfig} from '../config/actionHandlerRegistry.config.js';
+import {PositionComponent} from "../components/positionComponent.js";
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -44,10 +46,12 @@ class GameEngine {
     #gameStateManager = null;
     #commandParser = null;
     #actionExecutor = null;
-    #actionResultProcessor = null;
     #triggerSystem = null;
     #equipmentSystem = null;
     #inventorySystem = null;
+    #combatSystem = null;
+    #deathSystem = null;
+    #movementSystem = null;
     #renderer = null;
     #inputHandler = null;
     #gameLoop = null;
@@ -172,7 +176,29 @@ class GameEngine {
             this.#inventorySystem.initialize();
             console.log("GameEngine: InventorySystem instantiated and initialized.");
 
-            // --- 9. Core Game Setup ---
+            this.#combatSystem = new CombatSystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager,
+                dataManager: this.#dataManager
+            });
+            this.#combatSystem.initialize(); // Don't forget to initialize
+            console.log("GameEngine: CombatSystem instantiated and initialized.");
+
+            this.#deathSystem = new DeathSystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager,
+            });
+            this.#deathSystem.initialize();
+            console.log("GameEngine: DeathSystem instantiated and initialized.");
+
+            this.#movementSystem = new MovementSystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager,
+            });
+            this.#movementSystem.initialize();
+            console.log("GameEngine: Movement System instantiated and initialized.");
+
+            // --- 9. Core Game Setup (Player & Starting Location) ---
             this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});
             this.#eventBus.dispatch('ui:message_display', {text: "Setting initial game state...", type: 'info'});
             const setupSuccess = this.#setupInitialGameState();
@@ -183,14 +209,9 @@ class GameEngine {
             }
             console.log("GameEngine: Initial game state setup complete.");
 
-            // --- 10. Instantiate ActionResultProcessor ---
-            this.#actionResultProcessor = new ActionResultProcessor({
-                gameStateManager: this.#gameStateManager,
-                entityManager: this.#entityManager,
-                eventBus: this.#eventBus
-            });
-            console.log("GameEngine: ActionResultProcessor instantiated.");
-
+            // --- 10. Instantiate Other Initial Entities & Build Spatial Index ---
+            this.#instantiateInitialWorldEntities(); // New dedicated method
+            // Spatial index build is now handled within #instantiateInitialWorldEntities
 
             // --- 11. Input Handler ---
             const processInputCommand = (command) => {
@@ -214,7 +235,6 @@ class GameEngine {
                 inputHandler: this.#inputHandler, // Pass the instantiated handler
                 commandParser: this.#commandParser,
                 actionExecutor: this.#actionExecutor,
-                actionResultProcessor: this.#actionResultProcessor,
                 eventBus: this.#eventBus
             });
             console.log("GameEngine: GameLoop instantiated.");
@@ -226,6 +246,7 @@ class GameEngine {
             // Update title via event
             this.#eventBus.dispatch('ui:set_title', {text: "Initialization Complete. Starting..."});
             this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'}); // Use 'success' type
+
             return true;
 
         } catch (error) {
@@ -295,25 +316,22 @@ class GameEngine {
 
     /**
      * Sets up the initial player and location state within the GameStateManager.
-     * Includes initial message dispatch and 'look' action.
-     * (Formerly the logic within GameInitializer.initializeGame)
+     * Does NOT dispatch the initial look or welcome message; these happen later or via events.
      * @returns {boolean} True if setup was successful, false otherwise.
      * @private
      */
     #setupInitialGameState() {
         try {
             // --- 1. Retrieve/Create Player Entity ---
-            // Ensure player *definition* exists before trying to create instance
             if (!this.#dataManager.getEntityDefinition(STARTING_PLAYER_ID)) {
                 throw new Error(`Player definition '${STARTING_PLAYER_ID}' not found in DataManager.`);
             }
             const player = this.#entityManager.createEntityInstance(STARTING_PLAYER_ID);
             if (!player) {
-                // createEntityInstance logs details, throw a more specific error here
                 throw new Error(`Failed to instantiate player entity '${STARTING_PLAYER_ID}'.`);
             }
             this.#gameStateManager.setPlayer(player);
-            console.log("GameEngine: Player entity retrieved/created and set in GameStateManager.");
+            console.log("GameEngine: Player entity created and set in GameStateManager.");
 
             // --- 2. Retrieve/Create Starting Location Entity ---
             if (!this.#dataManager.getEntityDefinition(STARTING_LOCATION_ID)) {
@@ -324,46 +342,31 @@ class GameEngine {
                 throw new Error(`Failed to instantiate starting location entity '${STARTING_LOCATION_ID}'.`);
             }
             this.#gameStateManager.setCurrentLocation(startLocation);
-            console.log(`GameEngine: Starting location '${startLocation.id}' retrieved/created and set in GameStateManager.`);
+            console.log(`GameEngine: Starting location '${startLocation.id}' created and set in GameStateManager.`);
 
-            // Explicitly ensure entities in the starting location are loaded (e.g. NPCs, items)
-            this.#entityManager.ensureLocationEntitiesInstantiated(startLocation);
-
-            // --- 3. Dispatch Welcome Message ---
-            this.#eventBus.dispatch('ui:message_display', {
-                text: "Welcome to Dungeon Run Demo!",
-                type: "info"
-            });
-
-
-            // --- 4. Dispatch Initial Room Entered Event ---
-            // Crucial for triggers and potentially other systems reacting to the start
-            this.#eventBus.dispatch('event:room_entered', {
-                playerEntity: player,
-                newLocation: startLocation,
-                previousLocation: null // Important differentiator for initial entry
-            });
-            console.log("GameEngine: Initial 'event:room_entered' dispatched.");
-
-            // --- 5. Execute Initial 'look' Action ---
-            console.log("GameEngine: Executing initial 'core:action_look'.");
-            /** @type {ActionContext} */
-            const lookContext = {
-                playerEntity: player,
-                currentLocation: startLocation,
-                targets: [],
-                dataManager: this.#dataManager,
-                entityManager: this.#entityManager,
-                // Provide the dispatch function correctly bound to the eventBus instance
-                dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
-            };
-            const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
-
-            if (!lookResult.success) {
-                // Look action handler should ideally dispatch its own error messages via eventBus
-                console.warn("GameEngine: Initial 'look' action reported failure. Handler should provide user feedback.");
-                // Don't treat as fatal unless necessary
+            // --- 3. Place Player in Starting Location (Essential for Spatial Index!) ---
+            // This assumes the player definition itself doesn't have a PositionComponent,
+            // or if it does, we override it here to ensure they start correctly.
+            const playerPos = player.getComponent('Position');
+            if (playerPos) {
+                // Update player's position component to match the starting location ID
+                playerPos.setLocation(startLocation.id, 0, 0); // Assume 0,0 coords for now
+                console.log(`GameEngine: Updated player's PositionComponent to location ${startLocation.id}`);
+            } else {
+                // If the player definition *doesn't* have a PositionComponent, add one.
+                // This requires knowing the JSON key for PositionComponent ("Position").
+                try {
+                    console.log(`GameEngine: Player missing PositionComponent, attempting to add one for location ${startLocation.id}`);
+                    player.addComponent('Position', {locationId: startLocation.id, x: 0, y: 0});
+                } catch (addCompError) {
+                    console.error(`GameEngine: Failed to add PositionComponent to player: ${addCompError.message}`, addCompError);
+                    throw new Error(`Could not set player's initial position in ${startLocation.id}`);
+                }
             }
+
+            // --- NOTE: Welcome message and initial 'look' are triggered by events later ---
+            // The 'event:room_entered' dispatch is moved to the START of the game loop or post-init
+            // to ensure all entities are present *before* the first description/look.
 
             return true; // Initial state setup successful
 
@@ -373,15 +376,90 @@ class GameEngine {
             if (this.#eventBus) {
                 this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
                 this.#eventBus.dispatch('ui:disable_input', {message: "Game state setup failed."});
-                // DO NOT set title here directly, let #initialize handle it based on return/catch
             }
             return false; // Indicate failure
         }
     }
 
+    /**
+     * Iterates through entity definitions and instantiates those with a PositionComponent,
+     * skipping the player and starting location which are handled separately.
+     * Finally, builds the initial spatial index.
+     * @private
+     */
+    #instantiateInitialWorldEntities() {
+        console.log("GameEngine: Instantiating initial non-location world entities...");
+        if (!this.#entityManager || !this.#dataManager || !this.#gameStateManager) {
+            console.error("GameEngine: Cannot instantiate world entities - core managers missing.");
+            throw new Error("Core managers not initialized before world entity instantiation.");
+        }
+
+        let initialEntityCount = 0;
+        const player = this.#gameStateManager.getPlayer();
+        const startLocation = this.#gameStateManager.getCurrentLocation();
+
+        if (!player || !startLocation) {
+            throw new Error("Player or starting location not set before instantiating world entities.");
+        }
+
+        try {
+            // Iterate through all loaded entity *definitions*
+            for (const entityDef of this.#dataManager.entities.values()) {
+                // Skip player and starting location (already instantiated)
+                if (entityDef.id === player.id || entityDef.id === startLocation.id) {
+                    continue;
+                }
+
+                // Check if the definition includes a Position component configuration
+                // Use the actual key from your JSON data (e.g., "Position")
+                // This check happens *before* instantiation.
+                if (entityDef.components && entityDef.components.Position) {
+                    // Check if it's already somehow active (shouldn't happen here, but safety check)
+                    if (this.#entityManager.activeEntities.has(entityDef.id)) {
+                        console.warn(`GameEngine: Entity ${entityDef.id} requested for initial instantiation but already exists. Skipping.`);
+                        continue;
+                    }
+
+                    console.log(`GameEngine: Found initial entity definition with Position: ${entityDef.id}. Instantiating...`);
+                    const instance = this.#entityManager.createEntityInstance(entityDef.id);
+                    if (instance) {
+                        // Verify it has the PositionComponent after creation (should always be true if definition had it)
+                        if (!instance.hasComponent(PositionComponent)) {
+                            console.error(`GameEngine: CRITICAL - Instantiated ${instance.id} but it lacks the expected PositionComponent!`);
+                            // Decide how to handle this - throw? log?
+                        }
+                        initialEntityCount++;
+                    } else {
+                        // createEntityInstance should log details, but add a warning here too
+                        console.warn(`GameEngine: Failed to instantiate initial entity from definition: ${entityDef.id}`);
+                        // Consider if this failure should halt initialization. For now, just warn.
+                    }
+                }
+            }
+            console.log(`GameEngine: Instantiated ${initialEntityCount} additional initial world entities.`);
+
+            // --- Build Spatial Index AFTER all initial entities are created ---
+            console.log("GameEngine: Building initial spatial index...");
+            this.#entityManager.buildInitialSpatialIndex(); // Call the method on EntityManager
+            console.log("GameEngine: Initial spatial index built successfully.");
+
+        } catch (error) {
+            console.error("GameEngine: Error during initial world entity instantiation or spatial index build:", error);
+            // This is likely a critical failure
+            if (this.#eventBus) {
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: `Fatal Error setting up world: ${error.message}`,
+                    type: 'error'
+                });
+                this.#eventBus.dispatch('ui:set_title', {text: "Initialization Failed!"});
+                this.#eventBus.dispatch('ui:disable_input', {message: "World setup failed."});
+            }
+            throw error; // Re-throw to halt initialization
+        }
+    }
 
     /**
-     * Starts the game engine.
+     * Starts the game engine after successful initialization.
      * @returns {Promise<void>}
      */
     async start() {
@@ -394,11 +472,33 @@ class GameEngine {
                 // --- Set final title via event ---
                 this.#eventBus.dispatch('ui:set_title', {text: "Dungeon Run Demo"});
 
+                // --- Dispatch Welcome Message & Initial Room Event ---
+                // Moved here to ensure all entities are placed before first description
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: "Welcome to Dungeon Run Demo!",
+                    type: "info"
+                });
+
+                const player = this.#gameStateManager.getPlayer();
+                const startLocation = this.#gameStateManager.getCurrentLocation();
+                if (player && startLocation) {
+                    this.#eventBus.dispatch('event:room_entered', {
+                        playerEntity: player,
+                        newLocation: startLocation,
+                        previousLocation: null // Important differentiator for initial entry
+                    });
+                    console.log("GameEngine: Initial 'event:room_entered' dispatched after initialization.");
+                } else {
+                    console.error("GameEngine: Cannot dispatch initial room_entered event - player or start location missing.");
+                    // This indicates a problem earlier in initialization.
+                }
+
+
                 this.#gameLoop.start(); // This enables input via eventBus ('ui:enable_input')
                 console.log("GameEngine: GameLoop started.");
                 this.#eventBus.dispatch('ui:message_display', {text: "Game loop started. Good luck!", type: 'info'});
             } else {
-                console.error("GameEngine: Initialization failed. Cannot start GameLoop.");
+                console.error("GameEngine: Initialization failed or incomplete. Cannot start GameLoop.");
                 // Error messages/title updates should have been handled during #initialize() failure
             }
         } catch (error) {

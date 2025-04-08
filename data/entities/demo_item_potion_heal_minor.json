@@ -7,6 +7,9 @@
     "Description": {
       "text": "A small vial containing a swirling red liquid. Feels slightly warm to the touch."
     },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
     "Item": {
       "tags": [
         "potion",

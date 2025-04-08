@@ -7,6 +7,9 @@
     "Description": {
       "text": "A simple short sword, pitted with rust but still serviceable."
     },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
     "Item": {
       "tags": [
         "weapon",

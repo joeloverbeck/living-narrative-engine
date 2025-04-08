@@ -22,11 +22,6 @@
           "target": "demo:room_hallway"
         }
       ]
-    },
-    "EntitiesPresent": {
-      "entityIds": [
-        "demo:item_potion_heal_minor"
-      ]
     }
   }
 }

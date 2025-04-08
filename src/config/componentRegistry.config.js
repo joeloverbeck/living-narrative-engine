@@ -1,20 +1,20 @@
 // src/config/componentRegistry.config.js
 
 // Import ALL component classes referenced previously in main.js
-import { AttackComponent } from '../components/attackComponent.js';
-import { ConnectionsComponent } from '../components/connectionsComponent.js';
-import { DescriptionComponent } from '../components/descriptionComponent.js';
-import { EntitiesPresentComponent } from '../components/entitiesPresentComponent.js';
-import { EquipmentComponent } from '../components/equipmentComponent.js';
-import { EquippableComponent } from '../components/equippableComponent.js';
-import { HealthComponent } from '../components/healthComponent.js';
-import { InventoryComponent } from '../components/inventoryComponent.js';
-import { ItemComponent } from '../components/itemComponent.js';
-import { MetaDescriptionComponent } from '../components/metaDescriptionComponent.js';
-import { NameComponent } from '../components/nameComponent.js';
-import { SkillComponent } from '../components/skillComponent.js';
-import { StatsComponent } from '../components/statsComponent.js';
-import { UsableComponent } from '../components/usableComponent.js';
+import {AttackComponent} from '../components/attackComponent.js';
+import {ConnectionsComponent} from '../components/connectionsComponent.js';
+import {DescriptionComponent} from '../components/descriptionComponent.js';
+import {EquipmentComponent} from '../components/equipmentComponent.js';
+import {EquippableComponent} from '../components/equippableComponent.js';
+import {HealthComponent} from '../components/healthComponent.js';
+import {InventoryComponent} from '../components/inventoryComponent.js';
+import {ItemComponent} from '../components/itemComponent.js';
+import {MetaDescriptionComponent} from '../components/metaDescriptionComponent.js';
+import {NameComponent} from '../components/nameComponent.js';
+import {PositionComponent} from '../components/positionComponent.js';
+import {SkillComponent} from '../components/skillComponent.js';
+import {StatsComponent} from '../components/statsComponent.js';
+import {UsableComponent} from '../components/usableComponent.js';
 
 /**
  * Configuration mapping for component registration.
@@ -28,7 +28,6 @@ export const componentRegistryConfig = new Map([
     ['Attack', AttackComponent],
     ['Connections', ConnectionsComponent],
     ['Description', DescriptionComponent],
-    ['EntitiesPresent', EntitiesPresentComponent],
     ['Equipment', EquipmentComponent],
     ['Equippable', EquippableComponent],
     ['Health', HealthComponent],
@@ -36,6 +35,7 @@ export const componentRegistryConfig = new Map([
     ['Item', ItemComponent],
     ['MetaDescription', MetaDescriptionComponent],
     ['Name', NameComponent],
+    ['Position', PositionComponent],
     ['Skill', SkillComponent],
     ['Stats', StatsComponent],
     ['Usable', UsableComponent]

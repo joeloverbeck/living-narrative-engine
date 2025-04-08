@@ -3,17 +3,19 @@
 import {NameComponent} from '../../components/nameComponent.js';
 import {DescriptionComponent} from '../../components/descriptionComponent.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
-import {EntitiesPresentComponent} from '../../components/entitiesPresentComponent.js'; // Added for future use
-import {ItemComponent} from '../../components/itemComponent.js'; // Added for future use
+import {ItemComponent} from '../../components/itemComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js'; // Needed to confirm location, though indirectly used via spatial query
 
 // Import type definition JSDoc comments
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 
 /** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
+/** @typedef {import('../../types').LocationRenderData} LocationRenderData */ // Assuming this type definition exists
 
 /**
  * Handles the 'core:action_look' action. Dispatches messages directly via context.dispatch.
+ * Refactored to use EntityManager's spatial query instead of EntitiesPresentComponent.
  * @param {ActionContext} context
  * @returns {ActionResult}
  */
@@ -35,26 +37,26 @@ export function executeLook(context) {
         const nameComp = currentLocation.getComponent(NameComponent);
         const descComp = currentLocation.getComponent(DescriptionComponent);
         const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
-        const presentComp = currentLocation.getComponent(EntitiesPresentComponent);
+        // const presentComp = currentLocation.getComponent(EntitiesPresentComponent); // REMOVED
 
         const locationName = nameComp ? nameComp.value : `Unnamed Location (${currentLocation.id})`;
         const locationDesc = descComp ? descComp.text : "You are in an undescribed location.";
 
-        let itemsVisible = [];
-        if (presentComp && Array.isArray(presentComp.entityIds)) {
-            itemsVisible = presentComp.entityIds
-                .map(id => entityManager.getEntityInstance(id))
-                .filter(entity => entity && entity.hasComponent(ItemComponent))
-                .map(itemEntity => itemEntity.getComponent(NameComponent)?.value || itemEntity.id);
-        }
+        // Use spatial query to get entities in the current location
+        const entityIdsInLocation = entityManager.getEntitiesInLocation(currentLocation.id);
+        const entitiesInLocation = Array.from(entityIdsInLocation)
+            .map(id => entityManager.getEntityInstance(id))
+            .filter(entity => entity); // Filter out potential nulls if an ID maps to no active entity
 
-        let npcsVisible = [];
-        if (presentComp && Array.isArray(presentComp.entityIds)) {
-            npcsVisible = presentComp.entityIds
-                .map(id => entityManager.getEntityInstance(id))
-                .filter(entity => entity && entity.id !== playerEntity.id && !entity.hasComponent(ItemComponent))
-                .map(npcEntity => npcEntity.getComponent(NameComponent)?.value || npcEntity.id);
-        }
+        // Filter entities to find visible items
+        let itemsVisible = entitiesInLocation
+            .filter(entity => entity.hasComponent(ItemComponent))
+            .map(itemEntity => itemEntity.getComponent(NameComponent)?.value || itemEntity.id);
+
+        // Filter entities to find visible NPCs (not items, not the player)
+        let npcsVisible = entitiesInLocation
+            .filter(entity => entity.id !== playerEntity.id && !entity.hasComponent(ItemComponent))
+            .map(npcEntity => npcEntity.getComponent(NameComponent)?.value || npcEntity.id);
 
         let availableDirections = [];
         if (connectionsComp && Array.isArray(connectionsComp.connections)) {
@@ -77,6 +79,7 @@ export function executeLook(context) {
 
         // --- Dispatch the single structured event for the renderer ---
         dispatch('ui:display_location', locationData);
+
     } else {
         // Look at a specific target
         const targetName = targets.join(' ').toLowerCase();
@@ -93,6 +96,9 @@ export function executeLook(context) {
         // Example: Check if target is an item in player inventory
         else {
             // Generic placeholder / "not found" message for now
+            // NOTE: This section would also need refactoring if it previously
+            // relied on EntitiesPresentComponent to find targets. Currently, it's
+            // just a placeholder, so no changes needed for this specific ticket.
             const lookTargetMsg1 = `You look closely at '${targetName}'...`;
             const lookTargetMsg2 = "Looking at specific things is not fully implemented.";
             dispatch('ui:message_display', {text: lookTargetMsg1, type: 'info'});

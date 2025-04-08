@@ -28,11 +28,6 @@
           "initial_state": "locked"
         }
       ]
-    },
-    "EntitiesPresent": {
-      "entityIds": [
-        "demo:enemy_goblin"
-      ]
     }
   }
 }

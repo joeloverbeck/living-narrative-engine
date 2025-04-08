@@ -7,6 +7,9 @@
     "Description": {
       "text": "A small, wiry goblin with beady eyes and sharp teeth. It looks agitated."
     },
+    "Position": {
+      "locationId": "demo:room_hallway"
+    },
     "Health": {
       "current": 5,
       "max": 5

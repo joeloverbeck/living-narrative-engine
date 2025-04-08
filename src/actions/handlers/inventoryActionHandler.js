@@ -42,7 +42,7 @@ export function executeInventory(context) {
                 const displayName = nameComponent?.value ? nameComponent.value : '(Unknown Name)';
                 anythingEquipped = true;
                 // Apply the required format: Slot: Name (ID)
-                return `  - ${capitalize(slotName)}: ${displayName} (${itemId})\n`;
+                return `  - ${capitalize(slotName)}: ${displayName}\n`;
             } else {
                 return `  - ${capitalize(slotName)}: (empty)\n`;
             }

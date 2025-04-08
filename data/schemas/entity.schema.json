@@ -26,6 +26,10 @@
           "$ref": "#/definitions/MetaDescriptionComponent",
           "description": "(Optional) Data used for LLM-generated descriptions."
         },
+        "PositionComponent": {
+          "$ref": "#/definitions/PositionComponent",
+          "description": "Component for entities whose location is relevant."
+        },
         "Health": {
           "$ref": "#/definitions/HealthComponent",
           "description": "(Optional) Component for entities that have health points."
@@ -111,6 +115,31 @@
           "description": "(Optional) Hint for the LLM about the desired writing style."
         }
       }
+    },
+    "PositionComponent": {
+      "description": "Schema for validating PositionComponent data.",
+      "type": "object",
+      "properties": {
+        "locationId": {
+          "description": "The ID of the location entity where the entity resides.",
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "description": "The x-coordinate within the location.",
+          "type": "number",
+          "default": 0
+        },
+        "y": {
+          "description": "The y-coordinate within the location.",
+          "type": "number",
+          "default": 0
+        }
+      },
+      "required": [
+        "locationId"
+      ],
+      "additionalProperties": false
     },
     "HealthComponent": {
       "type": "object",

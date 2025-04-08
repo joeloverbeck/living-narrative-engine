@@ -10,7 +10,6 @@
 /** @typedef {import('./InputHandler.js').default} InputHandler */
 /** @typedef {import('./commandParser.js').default} CommandParser */
 /** @typedef {import('./src/actions/actionExecutor.js').default} ActionExecutor */
-/** @typedef {import('./src/actions/actionResultProcessor.js').default} ActionResultProcessor */
 
 /** @typedef {import('./eventBus.js').default} EventBus */
 
@@ -39,7 +38,6 @@ class GameLoop {
     #inputHandler;
     #commandParser;
     #actionExecutor;
-    #actionResultProcessor;
     #eventBus;
 
     #isRunning = false;
@@ -57,7 +55,6 @@ class GameLoop {
             inputHandler,
             commandParser,
             actionExecutor,
-            actionResultProcessor,
             eventBus
         } = options || {};
 
@@ -73,9 +70,6 @@ class GameLoop {
         if (!actionExecutor || typeof actionExecutor.executeAction !== 'function') {
             throw new Error("GameLoop requires a valid options.actionExecutor object.");
         }
-        if (!actionResultProcessor || typeof actionResultProcessor.process !== 'function') {
-            throw new Error("GameLoop requires a valid options.actionResultProcessor object.");
-        }
         if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') {
             throw new Error("GameLoop requires a valid options.eventBus object.");
         }
@@ -86,7 +80,6 @@ class GameLoop {
         this.#inputHandler = inputHandler;
         this.#commandParser = commandParser;
         this.#actionExecutor = actionExecutor;
-        this.#actionResultProcessor = actionResultProcessor;
         this.#eventBus = eventBus;
 
         this.#isRunning = false; // Initialize running state
@@ -163,7 +156,7 @@ class GameLoop {
     }
 
     /**
-     * Prepares context, delegates action execution, processes state changes via ActionResultProcessor.
+     * Prepares context, delegates action execution.
      * The automatic 'look' after movement is now handled by an event listener (e.g., in TriggerSystem).
      * @param {string} actionId - The ID of the action to execute.
      * @param {string[]} targets - The target identifiers from the parser.
@@ -193,11 +186,7 @@ class GameLoop {
         };
 
         /** @type {ActionResult} */
-        const result = this.#actionExecutor.executeAction(actionId, context);
-
-        // --- Process Action Result using the dedicated processor ---
-        // This is still crucial for updating game state (like location) and dispatching events.
-        this.#actionResultProcessor.process(result);
+        this.#actionExecutor.executeAction(actionId, context);
     }
 
     /**
