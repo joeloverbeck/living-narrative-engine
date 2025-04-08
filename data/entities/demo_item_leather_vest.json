@@ -12,13 +12,15 @@
         "armor",
         "body_armor",
         "leather"
-      ],
-      "equipSlot": "core:slot_body",
+      ]
+    },
+    "Equippable": {
+      "slotId": "core:slot_body",
       "equipEffects": [
         {
           "type": "stat_mod",
-          "stat": "core:attr_agility",
-          "value": -1
+          "stat": "core:attr_defense",
+          "value": 1
         }
       ]
     }

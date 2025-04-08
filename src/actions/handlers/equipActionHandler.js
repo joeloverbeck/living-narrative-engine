@@ -1,13 +1,15 @@
 // src/actions/handlers/equipActionHandler.js
+
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
-import {ItemComponent} from '../../components/itemComponent.js'; // May not be needed if reading from definition
+import {EquippableComponent} from '../../components/equippableComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 
 export function executeEquip(context) {
+    // context destructuring remains the same
     const {playerEntity, targets, entityManager, dataManager, dispatch} = context;
     const messages = [];
     let success = false;
@@ -23,24 +25,28 @@ export function executeEquip(context) {
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
 
     if (!playerInventory || !playerEquipment) {
+        // Error handling remains the same...
         const errorMsg = "(Internal Error: Player is missing inventory or equipment capability.)";
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
         console.error("executeEquip: Player entity missing InventoryComponent or EquipmentComponent.");
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
 
-    // Find the item ID in inventory matching the name
+    // Find the item instance in inventory matching the name
+    let itemInstanceToEquip = null; // Store the instance now
     let itemIdToEquip = null;
     let itemDisplayName = targetItemName; // Fallback
-    const inventoryItems = playerInventory.getItems(); // Get a copy
+
+    const inventoryItems = playerInventory.getItems();
 
     for (const itemId of inventoryItems) {
-        const itemInstance = entityManager.getEntityInstance(itemId); // Get instance for name
+        const itemInstance = entityManager.getEntityInstance(itemId);
         if (itemInstance) {
             const nameComp = itemInstance.getComponent(NameComponent);
             if (nameComp && nameComp.value.toLowerCase() === targetItemName) {
+                itemInstanceToEquip = itemInstance; // <-- Store the instance
                 itemIdToEquip = itemId;
-                itemDisplayName = nameComp.value; // Use proper name for messages
+                itemDisplayName = nameComp.value;
                 break;
             }
         } else {
@@ -48,29 +54,23 @@ export function executeEquip(context) {
         }
     }
 
-    if (!itemIdToEquip) {
+    if (!itemInstanceToEquip) {  // <-- Check for instance now
         const errorMsg = `You don't have a '${targetItemName}' to equip.`;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
 
-    // Get item definition to check if equippable and find slot
-    const itemDefinition = dataManager.getEntityDefinition(itemIdToEquip);
-    if (!itemDefinition || !itemDefinition.components || !itemDefinition.components.Item) {
-        const errorMsg = `(Internal Error: Cannot find definition for item '${itemIdToEquip}')`;
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        console.error(`executeEquip: Failed to get definition for item ID: ${itemIdToEquip}`);
-        return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
-    }
+    // --- NEW: Check if the item INSTANCE has EquippableComponent ---
+    const equippableComp = itemInstanceToEquip.getComponent(EquippableComponent);
 
-    const itemCompData = itemDefinition.components.Item;
-    const targetSlotId = itemCompData.equipSlot;
-
-    if (!targetSlotId) {
+    if (!equippableComp) {
         const errorMsg = `You cannot equip the ${itemDisplayName}.`;
         dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
         return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
     }
+
+    // --- Get the target slot from the component ---
+    const targetSlotId = equippableComp.getSlotId();
 
     // Check if the player *has* that slot defined in their EquipmentComponent
     if (!playerEquipment.hasSlot(targetSlotId)) {
@@ -80,20 +80,23 @@ export function executeEquip(context) {
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
 
-    // Check if the slot is already occupied
+    // Check if the slot is already occupied (remains the same)
     const currentItemInSlot = playerEquipment.getEquippedItem(targetSlotId);
     if (currentItemInSlot !== null) {
         const currentItemInstance = entityManager.getEntityInstance(currentItemInSlot);
         const currentItemName = currentItemInstance?.getComponent(NameComponent)?.value ?? 'something';
-        const errorMsg = `You need to unequip the ${currentItemName} from your ${targetSlotId.split(':').pop()} slot first.`;
+        // Extract user-friendly slot name if possible
+        const slotName = targetSlotId.includes(':') ? targetSlotId.split(':').pop() : targetSlotId;
+        const errorMsg = `You need to unequip the ${currentItemName} from your ${slotName} slot first.`;
         dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
         return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
     }
 
     // --- All checks passed, perform the equip ---
+    // Logic remains the same, using itemIdToEquip
     const removedFromInv = playerInventory.removeItem(itemIdToEquip);
     if (!removedFromInv) {
-        // Should not happen if checks above worked, but good safeguard
+        // Safeguard remains the same...
         const errorMsg = `(Internal Error: Failed to remove ${itemDisplayName} from inventory.)`;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
         console.error(`executeEquip: removeItem failed for ${itemIdToEquip} despite checks.`);
@@ -102,11 +105,10 @@ export function executeEquip(context) {
 
     const equipped = playerEquipment.equipItem(targetSlotId, itemIdToEquip);
     if (!equipped) {
-        // Should not happen, safeguard
+        // Safeguard remains the same...
         const errorMsg = `(Internal Error: Failed to place ${itemDisplayName} into slot ${targetSlotId}.)`;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
         console.error(`executeEquip: equipItem failed for ${itemIdToEquip} into ${targetSlotId}.`);
-        // Attempt to put item back? Complex recovery. Log and fail for now.
         playerInventory.addItem(itemIdToEquip); // Try to revert inventory change
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
@@ -116,12 +118,14 @@ export function executeEquip(context) {
     dispatch('ui:message_display', {text: successMsg, type: 'success'});
     messages.push({text: successMsg, type: 'success'});
 
-    // Dispatch the game event
+    // Dispatch the game event (remains the same)
     try {
         dispatch('event:item_equipped', {
             entity: playerEntity,
             itemId: itemIdToEquip,
             slotId: targetSlotId
+            // Consider passing itemInstanceToEquip if systems prefer instance over ID
+            // itemInstance: itemInstanceToEquip
         });
     } catch (e) {
         console.error("Failed to dispatch item_equipped event:", e);

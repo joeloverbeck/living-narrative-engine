@@ -35,6 +35,7 @@ import ActionResultProcessor from "./src/actions/actionResultProcessor.js";
 import {UsableComponent} from "./src/components/usableComponent.js";
 import {StatsComponent} from "./src/components/statsComponent.js";
 import {EquipmentComponent} from './src/components/equipmentComponent.js';
+import {EquippableComponent} from './src/components/equippableComponent.js';
 import EquipmentSystem from './src/systems/equipmentSystem.js';
 
 
@@ -134,6 +135,7 @@ async function initializeGame() {
         entityManager.registerComponent('EntitiesPresent', EntitiesPresentComponent);
         entityManager.registerComponent('Usable', UsableComponent);
         entityManager.registerComponent('Equipment', EquipmentComponent);
+        entityManager.registerComponent('Equippable', EquippableComponent);
         // ... register any other components ...
 
         // --- Instantiate CORE entities (Player) ---

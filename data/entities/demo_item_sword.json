@@ -13,8 +13,10 @@
         "sword",
         "metal",
         "melee"
-      ],
-      "equipSlot": "core:slot_main_hand",
+      ]
+    },
+    "Equippable": {
+      "slotId": "core:slot_main_hand",
       "equipEffects": [
         {
           "type": "stat_mod",

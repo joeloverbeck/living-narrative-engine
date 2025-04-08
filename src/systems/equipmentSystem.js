@@ -4,7 +4,6 @@ import {StatsComponent} from '../components/statsComponent.js';
 
 /** @typedef {import('../../dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-
 /** @typedef {import('../../eventBus.js').default} EventBus */
 
 /**
@@ -45,19 +44,28 @@ class EquipmentSystem {
         }
 
         const itemDefinition = this.dataManager.getEntityDefinition(itemId);
-        if (!itemDefinition || !itemDefinition.components || !itemDefinition.components.Item) {
-            console.warn(`EquipmentSystem: Could not find valid item definition for equipped item '${itemId}'.`);
+
+        // --- UPDATED: Check for Equippable component data in the definition ---
+        if (!itemDefinition || !itemDefinition.components || !itemDefinition.components.Equippable) {
+            // It's valid for an item to be equippable but have no effects, so don't warn here
+            // unless the definition itself is missing entirely.
+            if (!itemDefinition) {
+                console.warn(`EquipmentSystem: Could not find item definition for equipped item '${itemId}'.`);
+            }
+            // If definition exists but no Equippable component, or no effects, just return.
             return;
         }
 
-        const itemCompData = itemDefinition.components.Item;
-        const effects = itemCompData.equipEffects;
+        // --- Get effects from the Equippable component data ---
+        const equippableCompData = itemDefinition.components.Equippable;
+        const effects = equippableCompData.equipEffects; // Effects are optional, schema defaults to []
 
         if (Array.isArray(effects) && effects.length > 0) {
             const statsComp = entity.getComponent(StatsComponent);
             if (statsComp) {
                 const modsToAdd = [];
                 for (const effect of effects) {
+                    // Effect validation logic remains the same
                     if (effect.type === 'stat_mod' && effect.stat && typeof effect.value === 'number') {
                         modsToAdd.push({stat: effect.stat, value: effect.value});
                     } else {
@@ -67,8 +75,7 @@ class EquipmentSystem {
                 if (modsToAdd.length > 0) {
                     statsComp.addModifier(itemId, modsToAdd); // Use itemId as the sourceId
                     console.log(`EquipmentSystem: Applied ${modsToAdd.length} stat modifier(s) from item '${itemId}' to entity '${entity.id}'.`);
-                    // Optionally dispatch stat change events here if StatsComponent doesn't
-                    this.eventBus.dispatch('ui:message_display', {text: `(${itemId} effects applied)`, type: 'debug'}); // Debug message
+                    // this.eventBus.dispatch('ui:message_display', {text: `(${itemDisplayName} effects applied)`, type: 'debug'}); // Might need item name
                 }
             } else {
                 console.warn(`EquipmentSystem: Entity '${entity.id}' equipped item '${itemId}' with effects, but has no StatsComponent.`);
@@ -80,6 +87,8 @@ class EquipmentSystem {
      * @param {{entity: import('../entities/entity.js').default, itemId: string, slotId: string}} eventData
      */
     handleItemUnequipped(eventData) {
+        // It correctly uses itemId to remove any modifiers previously added
+        // by handleItemEquipped, regardless of where the effects were defined.
         const {entity, itemId} = eventData;
         if (!entity || !itemId) {
             console.warn("EquipmentSystem: Invalid eventData received for item_unequipped:", eventData);

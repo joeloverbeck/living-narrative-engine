@@ -319,7 +319,6 @@ class TriggerSystem {
         }
 
         // If we got here, all *defined* filters passed
-        console.log(`[DEBUG] TriggerSystem (${triggerId}): All defined filter checks PASSED.`);
         return true;
     }
 
@@ -334,8 +333,6 @@ class TriggerSystem {
     _executeSetConnectionState(target, parameters) {
         const messages = [];
         let success = false;
-
-        console.log(`[DEBUG] TriggerSystem: Attempting to execute set_connection_state. Target:`, target, "Parameters:", parameters);
 
         if (!target || !target.location_id || !target.connection_direction || !parameters || typeof parameters.state !== 'string') {
             messages.push({
