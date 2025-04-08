@@ -10,18 +10,20 @@ import ActionExecutor from '../actions/actionExecutor.js';
 import ActionResultProcessor from '../actions/actionResultProcessor.js';
 import TriggerSystem from '../systems/triggerSystem.js';
 import EquipmentSystem from '../systems/equipmentSystem.js';
+import InventorySystem from '../systems/inventorySystem.js';
 // GameInitializer is being absorbed, so it's not imported here.
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
 import GameLoop from '../../gameLoop.js';
 
 // --- Configuration Imports ---
-import { componentRegistryConfig } from '../config/componentRegistry.config.js';
-import { actionHandlerRegistryConfig } from '../config/actionHandlerRegistry.config.js';
+import {componentRegistryConfig} from '../config/componentRegistry.config.js';
+import {actionHandlerRegistryConfig} from '../config/actionHandlerRegistry.config.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../eventBus.js').default} EventBus */ // Added for clarity
 
 const STARTING_PLAYER_ID = 'core:player';
 const STARTING_LOCATION_ID = 'demo:room_entrance'; // Or fetch from config/dataManager
@@ -33,7 +35,7 @@ class GameEngine {
     // --- Essential External Dependencies ---
     #outputDiv;
     #inputElement;
-    // Could add #errorDiv if specific fallback needed here
+    #titleElement;
 
     // --- Core System Instances ---
     #dataManager = null;
@@ -45,6 +47,7 @@ class GameEngine {
     #actionResultProcessor = null;
     #triggerSystem = null;
     #equipmentSystem = null;
+    #inventorySystem = null;
     #renderer = null;
     #inputHandler = null;
     #gameLoop = null;
@@ -56,17 +59,23 @@ class GameEngine {
      * @param {object} options
      * @param {HTMLElement} options.outputDiv - The main DOM element for game output.
      * @param {HTMLInputElement} options.inputElement - The DOM input element for commands.
+     * @param {HTMLHeadingElement} options.titleElement - The H1 element for displaying titles/status.
      */
-    constructor({ outputDiv, inputElement }) {
+    constructor({outputDiv, inputElement, titleElement}) { // Added titleElement
         if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
             throw new Error("GameEngine requires a valid 'outputDiv' HTMLElement.");
         }
         if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
             throw new Error("GameEngine requires a valid 'inputElement' HTMLInputElement.");
         }
+        // --- Added Validation for titleElement ---
+        if (!titleElement || !(titleElement instanceof HTMLHeadingElement)) {
+            throw new Error("GameEngine requires a valid 'titleElement' HTMLHeadingElement (H1).");
+        }
 
         this.#outputDiv = outputDiv;
         this.#inputElement = inputElement;
+        this.#titleElement = titleElement; // Store title element
 
         console.log("GameEngine: Instance created. Ready to initialize.");
     }
@@ -90,20 +99,30 @@ class GameEngine {
             this.#eventBus = new EventBus();
             console.log("GameEngine: EventBus instantiated.");
 
+            // --- Dispatch Initial Title Update via EventBus ---
+            this.#eventBus.dispatch('ui:set_title', {text: "Initializing Engine..."});
+
             // --- 2. Instantiate Renderer (Needs DOM elements & EventBus) ---
             // Renderer subscribes to events internally now.
-            this.#renderer = new DomRenderer(this.#outputDiv, this.#inputElement, this.#eventBus);
+            this.#renderer = new DomRenderer(
+                this.#outputDiv,
+                this.#inputElement,
+                this.#titleElement,
+                this.#eventBus
+            );
             console.log("GameEngine: DomRenderer instantiated.");
+
             // Use EventBus for early messages if Renderer exists
-            this.#eventBus.dispatch('ui:message_display', { text: "Initializing data manager...", type: 'info' });
+            this.#eventBus.dispatch('ui:message_display', {text: "Initializing data manager...", type: 'info'});
             if (titleElement) titleElement.textContent = "Loading Game Data...";
 
             // --- 3. Instantiate and Load Data Manager ---
             this.#dataManager = new DataManager();
             await this.#dataManager.loadAllData(); // Critical async step
             console.log("GameEngine: DataManager instantiated and data loaded.");
-            this.#eventBus.dispatch('ui:message_display', { text: "Game data loaded.", type: 'info' });
-            if (titleElement) titleElement.textContent = "Initializing Systems...";
+            this.#eventBus.dispatch('ui:message_display', {text: "Game data loaded.", type: 'info'});
+            // Update title via event
+            this.#eventBus.dispatch('ui:set_title', {text: "Initializing Systems..."});
 
             // --- 4. Instantiate EntityManager & Register Components ---
             this.#entityManager = new EntityManager(this.#dataManager);
@@ -145,16 +164,22 @@ class GameEngine {
             this.#equipmentSystem.initialize(); // Connects listeners
             console.log("GameEngine: EquipmentSystem instantiated and initialized.");
 
-            // --- 9. *** Core Game Setup (Absorbing GameInitializer logic) *** ---
-            if (titleElement) titleElement.textContent = "Setting Initial Game State...";
-            this.#eventBus.dispatch('ui:message_display', { text: "Setting initial game state...", type: 'info' });
+            this.#inventorySystem = new InventorySystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager,
+                dataManager: this.#dataManager
+            });
+            this.#inventorySystem.initialize();
+            console.log("GameEngine: InventorySystem instantiated and initialized.");
 
+            // --- 9. Core Game Setup ---
+            this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Setting initial game state...", type: 'info'});
             const setupSuccess = this.#setupInitialGameState();
             if (!setupSuccess) {
-                // Error messages already dispatched by setupInitialGameState
                 console.error("GameEngine: Initial game state setup failed. Aborting initialization.");
-                if (titleElement) titleElement.textContent = "Initialization Failed!";
-                return false; // Indicate failure
+                this.#eventBus.dispatch('ui:set_title', {text: "Initialization Failed!"});
+                return false;
             }
             console.log("GameEngine: Initial game state setup complete.");
 
@@ -167,24 +192,16 @@ class GameEngine {
             console.log("GameEngine: ActionResultProcessor instantiated.");
 
 
-            // --- 11. Instantiate Input Handler (Needs callback referencing GameLoop) ---
-            // Define the callback that InputHandler will use.
-            // It needs access to the GameLoop instance which isn't created yet,
-            // but `this` inside the arrow function will correctly refer to the GameEngine instance.
+            // --- 11. Input Handler ---
             const processInputCommand = (command) => {
-                // Echo command via event bus (Renderer listens)
-                if (this.#eventBus) {
-                    this.#eventBus.dispatch('ui:command_echo', { command });
-                }
-                // Check if game loop is ready and running before processing
+                if (this.#eventBus) this.#eventBus.dispatch('ui:command_echo', {command});
                 if (this.#gameLoop && this.#gameLoop.isRunning) {
                     this.#gameLoop.processSubmittedCommand(command);
                 } else {
-                    console.warn("GameEngine: Input received, but GameLoop is not ready or not running.", { gameLoopExists: !!this.#gameLoop, isRunning: this.#gameLoop?.isRunning });
-                    if (this.#eventBus) this.#eventBus.dispatch('ui:disable_input', { message: "Game not running or ready." });
+                    console.warn("GameEngine: Input received, but GameLoop is not ready/running.");
+                    if (this.#eventBus) this.#eventBus.dispatch('ui:disable_input', {message: "Game not running."});
                 }
             };
-
             this.#inputHandler = new InputHandler(this.#inputElement, processInputCommand);
             console.log("GameEngine: InputHandler instantiated.");
 
@@ -206,42 +223,40 @@ class GameEngine {
             // --- Initialization Complete ---
             this.#isInitialized = true;
             console.log("GameEngine: Initialization sequence completed successfully.");
-            if (titleElement) titleElement.textContent = "Initialization Complete. Starting...";
-            this.#eventBus.dispatch('ui:message_display', { text: "Initialization complete.", type: 'success' }); // Use 'success' type
+            // Update title via event
+            this.#eventBus.dispatch('ui:set_title', {text: "Initialization Complete. Starting..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'}); // Use 'success' type
             return true;
 
         } catch (error) {
             console.error("GameEngine: CRITICAL ERROR during initialization sequence:", error);
-            if (titleElement) titleElement.textContent = "Fatal Initialization Error!";
-            const errorMsg = `Game initialization failed: ${error.message}. Check console (F12) for details.`;
-
-            // Try to use the renderer/eventBus if available, otherwise fallback
-            if (this.#renderer) {
-                try {
-                    // Use event bus first, as renderer might listen successfully
-                    if (this.#eventBus) {
-                        this.#eventBus.dispatch('ui:message_display', { text: errorMsg, type: 'error' });
-                        // Ensure input is disabled visually via event
-                        this.#eventBus.dispatch('ui:disable_input', { message: "Error during startup." });
-                    } else {
-                        // Fallback to direct renderer call if eventbus failed somehow
-                        this.#renderer.renderMessage(errorMsg, "error");
-                        this.#renderer.setInputState(false, "Error during startup.");
-                    }
-                } catch (renderError) {
-                    console.error("GameEngine: Failed to display initialization error via Renderer/EventBus:", renderError);
-                    // Fallback handled outside in main.js if engine itself fails to construct or start
-                }
+            // Update title via event (if eventBus is available)
+            if (this.#eventBus) {
+                this.#eventBus.dispatch('ui:set_title', {text: "Fatal Initialization Error!"});
             } else {
-                console.error("GameEngine: Renderer not available to display initialization error.");
-                // Fallback handled outside in main.js
+                // Fallback if event bus itself failed - use passed element directly
+                if (this.#titleElement) this.#titleElement.textContent = "Fatal Initialization Error!";
             }
 
-            // Attempt to disable input directly as a last resort if handler exists
+            const errorMsg = `Game initialization failed: ${error.message}. Check console (F12) for details.`;
+
+            // Try to use the renderer/eventBus (logic remains similar)
+            if (this.#renderer) { // Renderer check implies eventBus likely exists too
+                try {
+                    this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                    this.#eventBus.dispatch('ui:disable_input', {message: "Error during startup."});
+                } catch (renderError) {
+                    console.error("GameEngine: Failed to display initialization error via EventBus:", renderError);
+                }
+            } else {
+                console.error("GameEngine: Renderer/EventBus not available to display initialization error.");
+            }
+
+            // Attempt to disable input (logic remains similar)
             if (this.#inputHandler && typeof this.#inputHandler.disable === 'function') {
-                this.#inputHandler.disable(); // Logical disable
-            } else if(this.#inputElement) {
-                this.#inputElement.disabled = true; // Direct DOM fallback
+                this.#inputHandler.disable();
+            } else if (this.#inputElement) {
+                this.#inputElement.disabled = true;
             }
 
 
@@ -355,10 +370,10 @@ class GameEngine {
         } catch (error) {
             console.error(`GameEngine: CRITICAL ERROR during initial game state setup: ${error.message}`, error);
             const errorMsg = `Failed to set up initial game state: ${error.message}`;
-            // Ensure error is visible to user via event bus
             if (this.#eventBus) {
-                this.#eventBus.dispatch('ui:message_display', { text: errorMsg, type: 'error' });
-                this.#eventBus.dispatch('ui:disable_input', { message: "Game state setup failed." });
+                this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                this.#eventBus.dispatch('ui:disable_input', {message: "Game state setup failed."});
+                // DO NOT set title here directly, let #initialize handle it based on return/catch
             }
             return false; // Indicate failure
         }
@@ -367,8 +382,6 @@ class GameEngine {
 
     /**
      * Starts the game engine.
-     * This involves running the asynchronous initialization process
-     * and then starting the main game loop if initialization was successful.
      * @returns {Promise<void>}
      */
     async start() {
@@ -378,31 +391,32 @@ class GameEngine {
 
             if (initSuccess && this.#isInitialized && this.#gameLoop) {
                 console.log("GameEngine: Initialization successful. Starting GameLoop...");
-                const titleElement = document.querySelector('h1'); // Quick access
-                if (titleElement) titleElement.textContent = "Dungeon Run Demo"; // Set final title
+                // --- Set final title via event ---
+                this.#eventBus.dispatch('ui:set_title', {text: "Dungeon Run Demo"});
 
                 this.#gameLoop.start(); // This enables input via eventBus ('ui:enable_input')
                 console.log("GameEngine: GameLoop started.");
-                this.#eventBus.dispatch('ui:message_display', { text: "Game loop started. Good luck!", type: 'info' });
+                this.#eventBus.dispatch('ui:message_display', {text: "Game loop started. Good luck!", type: 'info'});
             } else {
                 console.error("GameEngine: Initialization failed. Cannot start GameLoop.");
-                // Error messages should have been displayed during #initialize() failure
-                // No need to start the loop
+                // Error messages/title updates should have been handled during #initialize() failure
             }
         } catch (error) {
             // Catch errors specifically from the #initialize() call itself if it threw unexpectedly
             console.error("GameEngine: Unexpected error during the start process (potentially post-initialization):", error);
             const errorMsg = `A critical error occurred preventing the game from starting: ${error.message}`;
-            const titleElement = document.querySelector('h1');
-            if (titleElement) titleElement.textContent = "Fatal Start Error!";
-            // Use fallback mechanisms as the engine state is uncertain
-            alert(errorMsg + " Check console (F12)."); // Use alert as a robust fallback
+            // --- Use direct title element access ONLY as final fallback ---
+            if (this.#titleElement) this.#titleElement.textContent = "Fatal Start Error!";
+
+            // Use alert as a robust fallback (remains the same)
+            alert(errorMsg + " Check console (F12).");
             if (this.#inputElement) {
                 this.#inputElement.placeholder = "Critical Error.";
                 this.#inputElement.disabled = true;
             }
         }
     }
+
 
     stop() {
         console.log("GameEngine: Stop requested.");

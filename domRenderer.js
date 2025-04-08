@@ -16,13 +16,15 @@
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.
  * Handles rendering messages, location details, controlling the input element's visual state,
- * and subscribes itself to necessary UI events via the EventBus.
+ * updating the main title, and subscribes itself to necessary UI events via the EventBus.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
     #outputDiv;
     /** @type {HTMLInputElement} */
     #inputElement;
+    /** @type {HTMLHeadingElement} */ // Added type
+    #titleElement; // Added
     /** @type {EventBus} */
     #eventBus;
 
@@ -30,23 +32,28 @@ class DomRenderer {
      * Creates an instance of DomRenderer.
      * @param {HTMLElement} outputDiv - The main element where game output is displayed.
      * @param {HTMLInputElement} inputElement - The input element for player commands.
+     * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
      * @param {EventBus} eventBus - The application's event bus instance.
      */
-    constructor(outputDiv, inputElement, eventBus) {
+    constructor(outputDiv, inputElement, titleElement, eventBus) { // Added titleElement
         if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
             throw new Error("DomRenderer requires a valid output HTMLElement.");
         }
         if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
             throw new Error("DomRenderer requires a valid HTMLInputElement.");
         }
-        // Ensure a valid EventBus instance is provided
+        // --- Added Validation for titleElement ---
+        if (!titleElement || !(titleElement instanceof HTMLHeadingElement)) {
+            throw new Error("DomRenderer requires a valid HTMLHeadingElement (H1).");
+        }
         if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.dispatch !== 'function') {
             throw new Error("DomRenderer requires a valid EventBus instance.");
         }
 
         this.#outputDiv = outputDiv;
         this.#inputElement = inputElement;
-        this.#eventBus = eventBus; // Store the event bus instance
+        this.#titleElement = titleElement; // Store title element
+        this.#eventBus = eventBus;
 
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
@@ -60,70 +67,87 @@ class DomRenderer {
      * @private
      */
     #subscribeToEvents() {
-        // --- Subscribe to UI Events ---
+        // --- Subscribe to standard UI Events ---
+        this.#eventBus.subscribe('ui:message_display', this.#handleMessageDisplay.bind(this));
+        this.#eventBus.subscribe('ui:command_echo', this.#handleCommandEcho.bind(this));
+        this.#eventBus.subscribe('ui:enable_input', this.#handleEnableInput.bind(this));
+        this.#eventBus.subscribe('ui:disable_input', this.#handleDisableInput.bind(this));
+        this.#eventBus.subscribe('ui:display_location', this.#handleDisplayLocation.bind(this));
 
-        this.#eventBus.subscribe('ui:message_display', (message) => {
-            // Defensive check: Ensure message object and text property exist
-            if (message && typeof message.text === 'string') {
-                this.renderMessage(message.text, message.type || 'info');
-            } else {
-                // Log a warning if the event data is malformed
-                console.warn("DomRenderer received 'ui:message_display' with invalid data:", message);
-                // Optionally display a generic error to the user
-                // this.renderMessage("Received an invalid internal message.", "error");
-            }
-        });
-
-        this.#eventBus.subscribe('ui:command_echo', (data) => {
-            // Defensive check: Ensure data object and command property exist
-            if (data && typeof data.command === 'string') {
-                this.renderMessage(`> ${data.command}`, 'command');
-            } else {
-                console.warn("DomRenderer received 'ui:command_echo' with invalid data:", data);
-            }
-        });
-
-        this.#eventBus.subscribe('ui:enable_input', (data) => {
-            // Defensive check: Ensure data object and placeholder property exist
-            if (data && typeof data.placeholder === 'string') {
-                this.setInputState(true, data.placeholder);
-            } else {
-                // If data is missing/invalid, still enable input but use a default placeholder
-                console.warn("DomRenderer received 'ui:enable_input' with invalid/missing data, using default placeholder:", data);
-                this.setInputState(true, "Enter command...");
-            }
-        });
-
-        this.#eventBus.subscribe('ui:disable_input', (data) => {
-            // Allow disabling even if data or message is missing, provide a default message.
-            const message = (data && typeof data.message === 'string') ? data.message : "Input disabled.";
-            if (!data || typeof data.message !== 'string') { // Adjusted warning logic
-                console.warn("DomRenderer received 'ui:disable_input' without specific message, using default:", data, ` -> "${message}"`);
-            }
-            this.setInputState(false, message);
-        });
-
-
-        this.#eventBus.subscribe('ui:display_location', (locationData) => {
-            // Perform a more robust check on the expected structure of locationData
-            if (locationData && typeof locationData.name === 'string' && typeof locationData.description === 'string' && Array.isArray(locationData.exits)) {
-                this.renderLocation(locationData);
-                // TODO: Consider validating items/npcs arrays if they become required
-            } else {
-                console.warn("DomRenderer received 'ui:display_location' event with invalid or incomplete data:", locationData);
-                // Display an error message to the user via the renderer itself
-                this.renderMessage("Error: Could not display location details due to invalid data.", "error");
-            }
-        });
+        // --- NEW: Subscribe to Title Update Events ---
+        this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this));
 
         console.log("DomRenderer event subscriptions complete.");
     }
 
+    // --- Private Event Handlers (Refactored for clarity) ---
+
+    /** @private @param {{text: string, type?: string}} message */
+    #handleMessageDisplay(message) {
+        if (message && typeof message.text === 'string') {
+            this.renderMessage(message.text, message.type || 'info');
+        } else {
+            console.warn("DomRenderer received 'ui:message_display' with invalid data:", message);
+        }
+    }
+
+    /** @private @param {{command: string}} data */
+    #handleCommandEcho(data) {
+        if (data && typeof data.command === 'string') {
+            this.renderMessage(`> ${data.command}`, 'command');
+        } else {
+            console.warn("DomRenderer received 'ui:command_echo' with invalid data:", data);
+        }
+    }
+
+    /** @private @param {{placeholder: string}} data */
+    #handleEnableInput(data) {
+        if (data && typeof data.placeholder === 'string') {
+            this.setInputState(true, data.placeholder);
+        } else {
+            console.warn("DomRenderer received 'ui:enable_input' with invalid/missing data, using default placeholder:", data);
+            this.setInputState(true, "Enter command...");
+        }
+    }
+
+    /** @private @param {{message?: string}} data */
+    #handleDisableInput(data) {
+        const message = (data && typeof data.message === 'string') ? data.message : "Input disabled.";
+        if (!data || typeof data.message !== 'string') {
+            console.warn("DomRenderer received 'ui:disable_input' without specific message, using default:", data, ` -> "${message}"`);
+        }
+        this.setInputState(false, message);
+    }
+
+    /** @private @param {LocationRenderData} locationData */
+    #handleDisplayLocation(locationData) {
+        if (locationData && typeof locationData.name === 'string' && typeof locationData.description === 'string' && Array.isArray(locationData.exits)) {
+            this.renderLocation(locationData);
+        } else {
+            console.warn("DomRenderer received 'ui:display_location' event with invalid or incomplete data:", locationData);
+            this.renderMessage("Error: Could not display location details due to invalid data.", "error");
+        }
+    }
+
     /**
-     * Renders a single feedback message (command echo, error, info, etc.)
-     * to the output area.
+     * Handles the 'ui:set_title' event.
+     * @private
+     * @param {{text: string}} data - The event payload. Should contain the new title text.
+     */
+    #handleSetTitle(data) {
+        if (data && typeof data.text === 'string') {
+            this.#titleElement.textContent = data.text;
+        } else {
+            console.warn("DomRenderer received 'ui:set_title' with invalid data:", data);
+            // Optionally set a default error title or do nothing
+            // this.#titleElement.textContent = "Error Setting Title";
+        }
+    }
+
+    /**
+     * Renders a single feedback message. (Implementation unchanged)
      * @param {string} message - The HTML or text message to display.
-     * @param {string} [type='info'] - Optional type ('info', 'error', 'command', 'warning', 'location') for styling.
+     * @param {string} [type='info'] - Optional type for styling.
      */
     renderMessage(message, type = 'info') {
         const messageDiv = document.createElement('div');
