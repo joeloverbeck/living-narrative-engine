@@ -3,7 +3,6 @@
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../components/inventoryComponent.js').InventoryComponent} InventoryComponent */
-// NameComponent needed for parsing, PositionComponent needed for player location
 /** @typedef {import('../../components/nameComponent.js').NameComponent} NameComponent */
 /** @typedef {import('../../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('../../src/entities/entity.js').default} Entity */
@@ -12,11 +11,10 @@
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';
 import {PositionComponent} from '../../components/positionComponent.js';
-import {ItemComponent} from '../../components/itemComponent.js'; // Assume usable things are items
-
-// Import messages and the new service
+import {ItemComponent} from '../../components/itemComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
-import {resolveTargetEntity} from '../../services/targetResolutionService.js'; // ***** IMPORT NEW SERVICE *****
+import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
 
 /**
  * Handles the 'core:action_use' action.
@@ -28,16 +26,13 @@ import {resolveTargetEntity} from '../../services/targetResolutionService.js'; /
  * @returns {ActionResult} - The result of the intent validation.
  */
 export function executeUse(context) {
-    const {playerEntity, targets, entityManager, dispatch, eventBus} = context; // Added eventBus
+    const {playerEntity, targets, entityManager, dispatch, eventBus} = context;
     /** @type {import('../actionTypes.js').ActionMessage[]} */
     const messages = [];
 
-    // --- 1. Check for Target Input (Item Name) ---
-    if (targets.length === 0) {
-        const errorMsg = TARGET_MESSAGES.PROMPT_WHAT('use');
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: "Intent Failed: No item target provided.", type: 'internal'});
-        return {success: false, messages};
+    // --- 1. Validate required target (item name) ---
+    if (!validateRequiredTargets(context, 'use')) {
+        return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
     const fullTargetString = targets.join(' '); // Full user input string
 
@@ -45,33 +40,32 @@ export function executeUse(context) {
     const inventoryComponent = playerEntity.getComponent(InventoryComponent);
     if (!inventoryComponent) {
         console.error(`executeUse: Player entity ${playerEntity.id} missing InventoryComponent.`);
+        // Uses TARGET_MESSAGES as required
         const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory');
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: "Intent Failed: Player missing InventoryComponent.", type: 'error'});
+        messages.push({text: "Intent Failed: Player missing InventoryComponent.", type: 'internal'}); // Internal log message
         return {success: false, messages};
     }
     if (inventoryComponent.getItems().length === 0) {
-        // Give specific "nothing carried" feedback before trying to resolve
+        // Uses TARGET_MESSAGES as required
         dispatch('ui:message_display', {text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'});
-        return {success: false, messages: [{text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'}]};
+        messages.push({text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'internal'}); // Internal log message mirrors user message
+        return {success: false, messages};
     }
 
-
     // --- 3. Find Target Item using Service ---
-    // Use the full target string initially to find the item.
+    // Note: resolveTargetEntity handles its own user-facing messages for NOT_FOUND/AMBIGUOUS
     const targetItemEntity = resolveTargetEntity(context, {
         scope: 'inventory',
-        requiredComponents: [ItemComponent], // Assume usable things are items
+        requiredComponents: [ItemComponent],
         actionVerb: 'use',
-        targetName: fullTargetString, // Try matching against the whole string first
+        targetName: fullTargetString,
         notFoundMessageKey: 'NOT_FOUND_INVENTORY',
-        // emptyScopeMessage: TARGET_MESSAGES.NOTHING_CARRIED, // Already checked above
     });
 
     // --- Handle Item Resolver Result ---
     if (!targetItemEntity) {
-        // Failure message dispatched by resolver.
-        // This could be NOT_FOUND or AMBIGUOUS based on the full string.
+        // No user-facing message here; resolveTargetEntity dispatched it.
         messages.push({
             text: `Intent Failed: Could not resolve unique item from '${fullTargetString}' in inventory.`,
             type: 'internal'
@@ -81,22 +75,19 @@ export function executeUse(context) {
 
     // --- Successfully found unique item ---
     const itemInstanceId = targetItemEntity.id;
-    // Assume Definition ID = Instance ID for now, adjust if necessary
-    const itemDefinitionId = targetItemEntity.id;
+    const itemDefinitionId = targetItemEntity.id; // Assume Definition ID = Instance ID for now
     const foundItemName = getDisplayName(targetItemEntity);
     messages.push({text: `Intent Parse: Found item: ${foundItemName} (${itemInstanceId})`, type: 'internal'});
 
 
     // --- 4. Identify Explicit Target Entity (if any) ---
     let explicitTargetEntityId = null;
-    let explicitTargetEntity = null; // Store the entity instance if found
+    let explicitTargetEntity = null;
 
-    // Heuristic: Try to extract target name after item name + potential preposition
-    // Example: "use red potion on goblin"
+    // (Parsing logic to separate item name from potential explicit target name - remains unchanged)
     const foundItemNameWords = foundItemName.toLowerCase().split(' ');
     const targetWords = fullTargetString.toLowerCase().split(' ');
 
-    // Find end index of item name within the target words
     let itemWordsEndIndex = -1;
     let match = true;
     for (let i = 0; i < foundItemNameWords.length; i++) {
@@ -108,8 +99,8 @@ export function executeUse(context) {
     if (match) {
         itemWordsEndIndex = foundItemNameWords.length - 1;
     } else {
-        // Fallback/Alternative: Might need more robust parsing if item names can be substrings
-        // For now, assume the resolver correctly matched the start of the string
+        // Fallback if exact name match fails (e.g., partial match)
+        // This might indicate resolveTargetEntity found a synonym or alias
         itemWordsEndIndex = foundItemNameWords.length - 1;
         console.warn(`executeUse: Potential parsing mismatch between resolved item name '${foundItemName}' and input '${fullTargetString}'`);
         messages.push({
@@ -118,7 +109,6 @@ export function executeUse(context) {
         });
     }
 
-    // Extract potential target words, removing common prepositions
     const remainingTargetWords = targets.slice(itemWordsEndIndex + 1).filter(
         word => word.toLowerCase() !== 'on' && word.toLowerCase() !== 'at'
     );
@@ -130,29 +120,25 @@ export function executeUse(context) {
             type: 'internal'
         });
 
-        // --- Use Resolver to find the explicit target nearby ---
         const playerPos = playerEntity.getComponent(PositionComponent);
         if (!playerPos?.locationId) {
             console.warn(`executeUse: Player ${playerEntity.id} missing PositionComponent or locationId; cannot resolve explicit target '${explicitTargetName}'.`);
+            // Note: No direct user message here, resolution failure below will handle it if target not found.
             messages.push({
                 text: `Intent Failed: Cannot resolve explicit target '${explicitTargetName}' - player location unknown.`,
-                type: 'warning'
+                type: 'internal' // Internal log
             });
-            // Dispatch UI message? Maybe not, let USE system handle lack of target later if needed.
-            // We can proceed without an explicit target ID.
+            // Continue, maybe the item doesn't *need* an explicit target found nearby
         } else {
-            // Use resolver to find the target in the location
+            // Note: resolveTargetEntity handles its own user-facing messages for NOT_FOUND/AMBIGUOUS
             explicitTargetEntity = resolveTargetEntity(context, {
                 scope: 'location', // Search things in the current location (excluding player)
                 requiredComponents: [], // Any named entity in the location
-                actionVerb: `use ${foundItemName} on`, // More specific verb for messages
+                actionVerb: `use ${foundItemName} on`,
                 targetName: explicitTargetName,
-                // Use specific message keys for context target resolution
-                notFoundMessageKey: 'TARGET_NOT_FOUND_CONTEXT', // Pass the item name somehow? No, just target desc.
-                // Ambiguous prompt uses actionVerb, targetName, matches - should be okay.
+                notFoundMessageKey: 'TARGET_NOT_FOUND_CONTEXT',
             });
 
-            // --- Handle Explicit Target Resolver Result ---
             if (explicitTargetEntity) {
                 explicitTargetEntityId = explicitTargetEntity.id;
                 messages.push({
@@ -160,25 +146,26 @@ export function executeUse(context) {
                     type: 'internal'
                 });
             } else {
-                // Failure message (NOT_FOUND or AMBIGUOUS) dispatched by resolver.
-                // If a target name was provided but not resolved, fail the action intent.
+                // No user-facing message here; resolveTargetEntity dispatched it.
                 messages.push({
                     text: `Intent Failed: Could not resolve unique explicit target '${explicitTargetName}' nearby.`,
                     type: 'internal'
                 });
-                return {success: false, messages};
+                return {success: false, messages}; // Fail the action if explicit target was specified but not found
             }
         }
     } else {
         messages.push({text: `Intent Parse: No explicit target name specified.`, type: 'internal'});
-        // explicitTargetEntityId remains null
     }
 
     // --- 5. Construct and Dispatch Event ---
     if (!eventBus) {
         console.error("executeUse: Critical Error! eventBus is not available in the action context.");
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Event system unavailable)";
+        // --- REFACTOR START ---
+        // Use the generic internal error message from TARGET_MESSAGES
+        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        // --- REFACTOR END ---
         messages.push({text: "Intent Failed: Event bus missing.", type: 'error'});
         return {success: false, messages};
     }
@@ -187,11 +174,8 @@ export function executeUse(context) {
     const eventPayload = {
         userEntityId: playerEntity.id,
         itemInstanceId: itemInstanceId,
-        itemDefinitionId: itemDefinitionId,
+        itemDefinitionId: itemDefinitionId, // Assuming this is correct for now
         explicitTargetEntityId: explicitTargetEntityId,
-        // Could pass resolved item/target instances too if systems need them directly
-        // itemInstance: targetItemEntity,
-        // explicitTargetInstance: explicitTargetEntity,
     };
 
     let success = false; // Default false
@@ -204,12 +188,15 @@ export function executeUse(context) {
         });
     } catch (error) {
         console.error(`executeUse: Error dispatching event:item_use_attempted:`, error);
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Event dispatch failed)";
+        // --- REFACTOR START ---
+        // Use the generic internal error message from TARGET_MESSAGES
+        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        // --- REFACTOR END ---
         messages.push({text: `Intent Failed: Error dispatching event. ${error.message}`, type: 'error'});
         // success remains false
     }
 
-    // --- 6. Return Success (Intent validated and event dispatched) ---
-    return {success, messages};
+    // --- 6. Return Result ---
+    return {success, messages}; // Return success based on event dispatch attempt
 }

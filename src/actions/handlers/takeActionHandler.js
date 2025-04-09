@@ -6,7 +6,8 @@
 
 import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
 import {ItemComponent} from "../../components/itemComponent.js";
-import {resolveTargetEntity} from '../../services/targetResolutionService.js'; // ***** IMPORT NEW SERVICE *****
+import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {validateRequiredTargets} from '../../utils/actionValidationUtils.js'; // ***** IMPORT NEW UTILITY *****
 
 /**
  * Handles the 'take' action ('core:action_take'). Allows the player to pick up items
@@ -26,22 +27,21 @@ export function executeTake(context) {
         return {success: false, messages: []};
     }
 
-    if (!targets || targets.length === 0) {
-        const errorMsg = TARGET_MESSAGES.PROMPT_WHAT('take');
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        return {success: false, messages: [{text: errorMsg, type: 'error'}]};
+    // --- Validate required targets ---
+    if (!validateRequiredTargets(context, 'take')) {
+        return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 
     const targetName = targets.join(' ');
 
     // --- 1. Resolve Target Item using Service ---
     const targetItemEntity = resolveTargetEntity(context, {
-        scope: 'location_items', // Only items in the location
-        requiredComponents: [ItemComponent], // Ensure it's an item (already implied by scope, but explicit)
+        scope: 'location_items',
+        requiredComponents: [ItemComponent],
         actionVerb: 'take',
         targetName: targetName,
-        notFoundMessageKey: 'NOT_FOUND_TAKEABLE', // Specific message
-        emptyScopeMessage: "There's nothing here to take.", // Custom empty message
+        notFoundMessageKey: 'NOT_FOUND_TAKEABLE',
+        emptyScopeMessage: "There's nothing here to take.",
     });
 
     // --- 2. Handle Resolver Result ---
@@ -69,17 +69,21 @@ export function executeTake(context) {
         success = true; // Set success only if dispatch works
         messages.push({text: `Dispatched event:item_picked_up for ${itemName} (${targetItemId})`, type: 'internal'});
     } catch (dispatchError) {
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Item pick up event dispatch failed)";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        console.error("Take Handler: Failed to dispatch event:item_picked_up event:", dispatchError);
+        // Replace concatenated hardcoded string with direct use of TARGET_MESSAGES.INTERNAL_ERROR
+        // The specific error context is logged to the console below.
+        const userFacingErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
+        const internalLogMsg = `Internal error occurred during item pick up event dispatch for ${itemName}.`;
+
+        dispatch('ui:message_display', {text: userFacingErrorMsg, type: 'error'});
+        messages.push({text: internalLogMsg, type: 'error'}); // Keep internal log specific
+        console.error(`Take Handler: Failed to dispatch event:item_picked_up for ${itemName} (${targetItemId}):`, dispatchError);
         // success remains false
     }
 
     // Return result
     return {
         success,
-        messages, // Contains internal logs and potentially the dispatch error message
+        messages,
         newState: undefined
     };
 }

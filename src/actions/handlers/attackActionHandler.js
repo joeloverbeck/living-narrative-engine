@@ -1,13 +1,15 @@
+// src/actions/handlers/attackActionHandler.js
 // Import necessary components and utilities
 import {HealthComponent} from '../../components/healthComponent.js';
 import {AttackComponent} from '../../components/attackComponent.js';
-import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
-import {resolveTargetEntity} from '../../services/targetResolutionService.js'; // ***** IMPORT NEW SERVICE *****
+import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js"; // Corrected path assumption
+import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 
-/** @typedef {import('../../src/entities/entity.js').default} Entity */
+/** @typedef {import('../../entities/entity.js').default} Entity */ // Corrected path assumption
 
 /**
  * Validates the intent to execute the 'attack' action and fires an event.
@@ -17,51 +19,43 @@ import {resolveTargetEntity} from '../../services/targetResolutionService.js'; /
  * @returns {ActionResult}
  */
 export function executeAttack(context) {
-    const {playerEntity, targets, dispatch} = context; // Removed currentLocation, entityManager (handled by resolver)
+    const {playerEntity, targets, dispatch, entityManager} = context; // Added entityManager back as it might be needed indirectly or by future logic, though resolver handles direct usage. Consider if strictly needed.
     const messages = []; // Keep for internal logs if needed
-    // let success = false; // Determined later
 
-    // --- 1. Check if targets were provided ---
-    if (targets.length === 0) {
-        const errorMsg = TARGET_MESSAGES.PROMPT_WHAT('attack');
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        // messages.push({ text: errorMsg, type: 'error' }); // Optional internal log
-        return {success: false, messages, newState: undefined};
+    // --- 1. Validate required targets ---
+    if (!validateRequiredTargets(context, 'attack')) {
+        return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 
     const targetName = targets.join(' ');
 
     // --- 2. Resolve Target Entity using Service ---
     const targetEntity = resolveTargetEntity(context, {
-        // Scope: Non-item entities in the current location (excluding player)
-        // Option 1: Specific scope
         scope: 'location_non_items',
-        // Option 2: Generic scope + component filter (might be slightly less performant if many items)
-        // scope: 'location',
-        requiredComponents: [HealthComponent], // Must have health to be attackable (implicitly needs NameComponent)
+        requiredComponents: [HealthComponent], // Must have health to be attackable
         actionVerb: 'attack',
         targetName: targetName,
-        notFoundMessageKey: 'NOT_FOUND_ATTACKABLE', // Use specific message
-        // emptyScopeMessage: "There's nothing here to attack.", // Custom empty message
+        notFoundMessageKey: 'NOT_FOUND_ATTACKABLE', // Explicitly use the key from TARGET_MESSAGES
     });
 
     // --- 3. Handle Resolver Result ---
     if (!targetEntity) {
-        // Failure message already dispatched by resolveTargetEntity
+        // Failure message already dispatched by resolveTargetEntity (using TARGET_MESSAGES via notFoundMessageKey)
         return {success: false, messages, newState: undefined};
     }
 
     // --- 4. Validate Identified Target Entity ---
-    // Note: Self-attack check is handled by the 'location' scope excluding player.
-    // Double-check HealthComponent (already filtered by resolver, but good practice)
     const healthComp = targetEntity.getComponent(HealthComponent);
     const targetDisplayName = getDisplayName(targetEntity);
+
+    // Check if target has health component (redundant if requiredComponents is strictly enforced by resolver, but safe check)
     if (!healthComp) {
-        // This case implies an issue with resolver or component removal race condition
+        // This case *should* ideally be caught by the resolver's requiredComponents,
+        // but checking defensively post-resolution.
         const warnMsg = TARGET_MESSAGES.ATTACK_NON_COMBATANT(targetDisplayName);
         dispatch('ui:message_display', {text: warnMsg, type: 'warning'});
         messages.push({text: warnMsg, type: 'warning'});
-        console.warn(`executeAttack: Target ${targetEntity.id} selected but lacks HealthComponent post-resolution.`);
+        console.warn(`executeAttack: Target ${targetEntity.id} ('${targetDisplayName}') selected but lacks HealthComponent post-resolution.`);
         return {success: false, messages, newState: undefined};
     }
 
@@ -70,21 +64,22 @@ export function executeAttack(context) {
         const infoMsg = TARGET_MESSAGES.ATTACK_DEFEATED(targetDisplayName);
         dispatch('ui:message_display', {text: infoMsg, type: 'info'});
         messages.push({text: infoMsg, type: 'info'});
-        // Keep original logic: return success true even if target is dead
-        return {success: true, messages, newState: undefined};
+        return {success: true, messages, newState: undefined}; // Still counts as success (intent wise), no action needed
     }
 
     // --- 5. Calculate Potential Damage ---
     const playerAttackComp = playerEntity.getComponent(AttackComponent);
-    const potentialDamage = playerAttackComp ? playerAttackComp.damage : 1;
+    const potentialDamage = playerAttackComp ? playerAttackComp.damage : 1; // Default damage if player lacks component
     if (!playerAttackComp) {
+        // Internal warning, not user-facing via dispatch
         console.warn(`Attack Handler: Player entity ${playerEntity.id} has no AttackComponent. Defaulting damage to 1.`);
-        messages.push({text: "Player missing AttackComponent", type: "internal"});
+        messages.push({text: "Player missing AttackComponent, defaulting damage", type: "internal"});
     }
 
     const playerName = getDisplayName(playerEntity);
 
     // --- 6. Dispatch Swing Message ---
+    // Assessed as flavor text, not target validation/error, so left as is per ticket guidance.
     const swingMsg = `${playerName} swing${playerName === 'You' ? '' : 's'} at the ${targetDisplayName}!`;
     dispatch('ui:message_display', {text: swingMsg, type: 'combat'});
     messages.push({text: swingMsg, type: 'combat'});
@@ -102,10 +97,15 @@ export function executeAttack(context) {
         success = true; // Set success only if dispatch doesn't throw
         messages.push({text: `Dispatched event:attack_intended vs ${targetEntity.id}`, type: 'internal'});
     } catch (dispatchError) {
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Attack intent event dispatch failed)";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        console.error("Attack Handler: Failed to dispatch event:attack_intended event:", dispatchError);
+        // --- REFACTOR START ---
+        // Use the generic internal error message from TARGET_MESSAGES for the user.
+        const errorMsgForUser = TARGET_MESSAGES.INTERNAL_ERROR;
+        dispatch('ui:message_display', {text: errorMsgForUser, type: 'error'});
+        // Add more specific detail to internal messages/logs.
+        const internalErrorDetail = `Attack intent event dispatch failed for target ${targetEntity.id}`;
+        messages.push({text: `${errorMsgForUser} (${internalErrorDetail})`, type: 'error'});
+        console.error(`Attack Handler: Failed to dispatch event:attack_intended event: ${internalErrorDetail}`, dispatchError);
+        // --- REFACTOR END ---
         // success remains false
     }
 

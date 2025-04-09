@@ -385,7 +385,7 @@ describe('resolveTargetEntity', () => {
         const result = resolveTargetEntity(mockContext, config);
         expect(result).toBeNull();
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: expect.stringContaining("You don't see anything suitable to take here"),
+            text: "You don't see anything suitable here to take.",
             type: 'info',
         });
     });
@@ -438,7 +438,7 @@ describe('resolveTargetEntity', () => {
         expect(result).toBeNull(); // Fails because scope is effectively empty
         expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("lacks InventoryComponent"));
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', { // Should dispatch empty scope message
-            text: expect.stringContaining("You don't see anything suitable to drop on you"),
+            text: "You have nothing suitable to drop.",
             type: 'info',
         });
         consoleWarnSpy.mockRestore();

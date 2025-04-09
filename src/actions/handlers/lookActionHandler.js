@@ -1,14 +1,12 @@
 // src/actions/handlers/lookActionHandler.js
 
-// Import necessary components and utilities
 import {NameComponent} from '../../components/nameComponent.js';
 import {DescriptionComponent} from '../../components/descriptionComponent.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
+import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
+import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 
-// Import messages and the new service
-import {getDisplayName} from '../../utils/messages.js';
-import {resolveTargetEntity} from '../../services/targetResolutionService.js'; // ***** IMPORT NEW SERVICE *****
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
@@ -24,28 +22,30 @@ import {resolveTargetEntity} from '../../services/targetResolutionService.js'; /
  */
 export function executeLook(context) {
     const {currentLocation, targets, entityManager, playerEntity, dispatch} = context;
-    const messages = []; // Keep for internal logging if needed
-    let success = true; // Assume success unless target not found/ambiguous
+    const messages = [];
+    let success = true;
 
     if (!currentLocation) {
-        const errorMsg = "You can't see anything; your location is unknown.";
+        // --- REFACTORED --- Use TARGET_MESSAGES
+        const errorMsg = TARGET_MESSAGES.LOOK_LOCATION_UNKNOWN;
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        // Still return the message for internal logging/result tracking
         return {success: false, messages: [{text: errorMsg, type: 'error'}]};
     }
 
     if (targets.length === 0) {
-        // --- Look at the current location (Existing logic remains unchanged) ---
+        // --- Look at the current location (Existing logic - No feedback strings here to refactor) ---
         const nameComp = currentLocation.getComponent(NameComponent);
         const descComp = currentLocation.getComponent(DescriptionComponent);
         const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
 
         const locationName = nameComp ? nameComp.value : `Unnamed Location (${currentLocation.id})`;
-        const locationDesc = descComp ? descComp.text : "You are in an undescribed location.";
+        const locationDesc = descComp ? descComp.text : "You are in an undescribed location."; // Note: Room description isn't a feedback message in the same category, leaving as is.
 
         const entityIdsInLocation = entityManager.getEntitiesInLocation(currentLocation.id);
         const entitiesInLocation = Array.from(entityIdsInLocation)
             .map(id => entityManager.getEntityInstance(id))
-            .filter(entity => entity); // Filter out potential nulls
+            .filter(entity => entity);
 
         let itemsVisible = entitiesInLocation
             .filter(entity => entity.hasComponent(ItemComponent))
@@ -76,35 +76,39 @@ export function executeLook(context) {
 
     } else {
         // --- Look at a specific target ---
+        // (Validation check from previous ticket could go here if needed, but not part of this ticket's changes)
+        // if (!validateRequiredTargets(context, 'look at')) {
+        //     return { success: false, messages: [], newState: undefined };
+        // }
+
         const targetName = targets.join(' ');
 
-        // Handle "look self" or "look me" (remains unchanged)
         if (targetName.toLowerCase() === 'self' || targetName.toLowerCase() === 'me') {
-            // TODO: Enhance "look self" - show health, equipped items?
-            const lookSelfMsg = "You look yourself over. You seem to be in one piece.";
+            // --- REFACTORED --- Use TARGET_MESSAGES
+            const lookSelfMsg = TARGET_MESSAGES.LOOK_SELF;
             dispatch('ui:message_display', {text: lookSelfMsg, type: 'info'});
-            messages.push({text: lookSelfMsg, type: 'info'});
+            messages.push({text: lookSelfMsg, type: 'info'}); // Keep internal log
+            // success remains true
         } else {
             // --- Use resolveTargetEntity for other targets ---
             const targetEntity = resolveTargetEntity(context, {
-                scope: 'nearby', // Search inventory + location (excluding player)
+                scope: 'nearby', // Search inventory + location
                 requiredComponents: [], // Any named entity
                 actionVerb: 'look at',
                 targetName: targetName,
-                // Use default NOT_FOUND_LOCATION message key or customize if needed
-                // notFoundMessageKey: 'NOT_FOUND_NEARBY', // Example custom key
-                // emptyScopeMessage: "There's nothing nearby matching that description.",
+                // Optional: could add notFoundMessageKey: 'NOT_FOUND_LOCATION' etc. if needed, but resolver defaults are probably fine for 'look'
             });
 
             // --- Handle Resolver Result ---
             if (!targetEntity) {
-                // Failure message dispatched by resolver
-                success = false;
+                // Failure message dispatched by resolver (which already uses TARGET_MESSAGES)
+                success = false; // Look failed
             } else {
                 // --- Display Description ---
                 const name = getDisplayName(targetEntity);
                 const descComp = targetEntity.getComponent(DescriptionComponent);
-                const description = descComp ? descComp.text : `You look closely at the ${name}, but see nothing particularly interesting.`; // Fallback
+                // --- REFACTORED --- Use TARGET_MESSAGES for fallback
+                const description = descComp ? descComp.text : TARGET_MESSAGES.LOOK_DEFAULT_DESCRIPTION(name); // Use template function
 
                 dispatch('ui:message_display', {text: description, type: 'info'});
                 messages.push({text: `Looked at ${name} (${targetEntity.id})`, type: 'internal'});
@@ -113,6 +117,6 @@ export function executeLook(context) {
         }
     }
 
-    // Return result (success might be false if specific target look failed)
+    // Return result
     return {success, messages};
 }
