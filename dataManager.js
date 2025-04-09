@@ -11,9 +11,11 @@ const SCHEMA_FILES = [
     'action.schema.json',
     'entity.schema.json',
     'event_trigger.schema.json',
-    'interaction_test.schema.json', // Needed for location validation
+    'interaction_test.schema.json',
     'item.schema.json',
-    'location.schema.json'
+    'location.schema.json',
+    'quest.schema.json',
+    'objective.schema.json',
 ];
 
 const CONTENT_FILES = {
@@ -29,37 +31,44 @@ const CONTENT_FILES = {
         'core_action_inventory.json'
     ],
     entities: [ // Includes items and characters
-        'core_player.json',        // Underscore instead of colon
-        'demo_enemy_goblin.json',  // Underscore instead of colon
-        'demo_item_key.json',      // Underscore instead of colon
-        'demo_item_potion_heal_minor.json', // Underscore instead of colon
+        'core_player.json',
+        'demo_enemy_goblin.json',
+        'demo_item_key.json',
+        'demo_item_potion_heal_minor.json',
         'demo_item_sword.json',
         'demo_item_leather_vest.json',
-        'demo_room_entrance.json', // Underscore instead of colon
-        'demo_room_hallway.json',  // Underscore instead of colon
-        'demo_room_monster.json',  // Underscore instead of colon
-        'demo_room_treasure.json', // Underscore instead of colon
-        'demo_room_exit.json'      // Underscore instead of colon
+        'demo_room_entrance.json',
+        'demo_room_hallway.json',
+        'demo_room_monster.json',
+        'demo_room_treasure.json',
+        'demo_room_exit.json'
     ],
     triggers: [ // Note: This file contains an array
-        'demo_triggers.json'       // This one was likely already okay
-    ]
+        'demo_triggers.json'
+    ],
+    objectives: [
+        'story_a_obj_defeat_boss.json'
+    ],
+    quests: [
+        'demo_quest_fetch_herbs.json'
+    ],
 };
 
 const CONTENT_TYPE_SCHEMAS = {
     actions: 'http://example.com/schemas/action.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json', // Base schema
-    items: 'http://example.com/schemas/item.schema.json',     // Specific item schema
+    interaction_tests: 'http://example.com/schemas/interaction_test.schema.json',
+    items: 'http://example.com/schemas/item.schema.json',
     locations: 'http://example.com/schemas/location.schema.json',
-    triggers: 'http://example.com/schemas/event_trigger.schema.json' // Schema for the *array*
+    triggers: 'http://example.com/schemas/event_trigger.schema.json',
+    objectives: 'http://example.com/schemas/objective.schema.json',
+    quests: 'http://example.com/schemas/quest.schema.json',
 };
 
 // -----------------------------------------
 
 class DataManager {
     constructor() {
-        // REMOVE the window.Ajv checks
-
         // Directly instantiate using the imported Ajv
         try {
             this.ajv = new Ajv({allErrors: true}); // Use the imported Ajv directly
@@ -70,11 +79,13 @@ class DataManager {
             throw e; // Halt if instantiation fails
         }
 
-        // In-memory storage... (rest of constructor is the same)
+        // In-memory storage
         this.schemas = new Map();
         this.actions = new Map();
-        this.entities = new Map();
+        this.entities = new Map(); // Stores base entities, items, locations
         this.triggers = new Map();
+        this.quests = new Map();
+        this.objectives = new Map();
     }
 
     /**
@@ -83,25 +94,25 @@ class DataManager {
      */
     async loadAllData() {
         console.log("DataManager: Starting data load...");
-        // No need to explicitly initialize Ajv here anymore
         try {
             await this.loadSchemas();
             await this.loadContent();
             console.log("DataManager: Data load completed successfully.");
-            this._logLoadedCounts(); // Optional: Log how much was loaded
+            this._logLoadedCounts(); // Log how much was loaded
         } catch (error) {
             console.error("DataManager: CRITICAL ERROR during data load. Halting.", error);
             // In a real app, you might show an error message to the user
+            // Application should not continue if core data failed to load.
+            alert(`Critical data loading error: ${error.message}. See console for details. Application cannot start.`);
             throw error; // Re-throw to halt execution
         }
     }
 
     /**
-     * Loads and compiles all JSON schemas.
+     * Loads and compiles all JSON schemas listed in SCHEMA_FILES.
      * @private
      */
     async loadSchemas() {
-        // This method should now work as `this.ajv` is already initialized
         if (!this.ajv) throw new Error("Ajv not initialized before loading schemas!"); // Safety check
 
         console.log("DataManager: Loading schemas...");
@@ -110,7 +121,8 @@ class DataManager {
             try {
                 const response = await fetch(path);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} for ${path}`);
+                    // Provide more context in the error message
+                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}) fetching schema ${path}`);
                 }
                 const schema = await response.json();
                 const schemaId = schema.$id; // Use $id from schema file
@@ -119,7 +131,6 @@ class DataManager {
                     throw new Error(`Schema file ${filename} is missing required '$id' property.`);
                 }
 
-                // Check if schema already added (e.g., if loadSchemas is called multiple times accidentally)
                 if (!this.schemas.has(schemaId)) {
                     this.schemas.set(schemaId, schema);
                     try {
@@ -127,27 +138,46 @@ class DataManager {
                         this.ajv.addSchema(schema, schemaId);
                         console.log(`DataManager: Loaded and added schema ${schemaId} from ${filename}`);
                     } catch (addSchemaError) {
-                        console.error(`DataManager: Error adding schema ${schemaId} to Ajv instance. Maybe a duplicate or invalid schema?`, addSchemaError);
-                        // Decide how to handle this - maybe log details from addSchemaError.errors
-                        throw new Error(`Failed to add schema ${schemaId} to Ajv.`);
+                        // Improve error logging for Ajv issues
+                        console.error(`DataManager: Error adding schema ${schemaId} (${filename}) to Ajv instance.`, addSchemaError);
+                        if (addSchemaError.message.includes('already exists')) {
+                            console.warn(`DataManager: Schema ${schemaId} might already exist in Ajv, possibly due to dependencies.`);
+                        } else {
+                            // Log detailed errors if available (e.g., duplicate keys within the schema itself)
+                            if (addSchemaError.errors) {
+                                console.error("Ajv Validation Errors:", JSON.stringify(addSchemaError.errors, null, 2));
+                            }
+                            throw new Error(`Failed to add schema ${schemaId} to Ajv.`);
+                        }
                     }
                 } else {
-                    console.warn(`DataManager: Schema ${schemaId} already loaded. Skipping add.`);
+                    console.warn(`DataManager: Schema ${schemaId} already loaded or added. Skipping add for ${filename}.`);
                 }
-
 
             } catch (error) {
                 console.error(`DataManager: Failed to load or parse schema ${path}`, error);
-                throw error; // Propagate error up
+                // Ensure this error propagates to halt loading
+                throw new Error(`Failed processing schema ${filename}: ${error.message}`);
             }
         });
 
+        // Wait for all schema loading and compilation attempts
         await Promise.all(schemaPromises);
-        console.log(`DataManager: All ${this.schemas.size} schemas processed and added to validator.`);
+        console.log(`DataManager: All ${this.schemas.size} specified schemas processed and attempted to add to validator.`);
+
+        // --- TICKET 5 START: Verify quest/objective schemas are loaded ---
+        if (!this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.quests)) {
+            throw new Error(`DataManager: Quest schema (${CONTENT_TYPE_SCHEMAS.quests}) failed to load or compile.`);
+        }
+        if (!this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.objectives)) {
+            throw new Error(`DataManager: Objective schema (${CONTENT_TYPE_SCHEMAS.objectives}) failed to load or compile.`);
+        }
+        console.log("DataManager: Quest and Objective schemas successfully registered with validator.");
+        // --- TICKET 5 END ---
     }
 
     /**
-     * Loads and validates all content files (actions, entities, etc.).
+     * Loads and validates all content files defined in CONTENT_FILES.
      * @private
      */
     async loadContent() {
@@ -156,9 +186,16 @@ class DataManager {
         console.log("DataManager: Loading content definitions...");
 
         const loadingPromises = [
+            // Load standard single-object-per-file types
             this.loadAndValidateContentType('actions', CONTENT_FILES.actions, CONTENT_TYPE_SCHEMAS.actions),
-            this.loadAndValidateEntities(), // This will now handle locations too
-            this.loadAndValidateTriggers(),
+            // --- TICKET 5 START: Add loading for quests and objectives ---
+            this.loadAndValidateContentType('quests', CONTENT_FILES.quests, CONTENT_TYPE_SCHEMAS.quests),
+            this.loadAndValidateContentType('objectives', CONTENT_FILES.objectives, CONTENT_TYPE_SCHEMAS.objectives),
+            // --- TICKET 5 END ---
+
+            // Load types with special handling
+            this.loadAndValidateEntities(), // Handles entities, items, locations based on schema used
+            this.loadAndValidateTriggers(), // Handles array-based trigger files
         ];
 
         await Promise.all(loadingPromises);
@@ -166,23 +203,28 @@ class DataManager {
     }
 
     /**
-     * Generic function to load, parse, validate, and store definitions of a specific type.
+     * Generic function to load, parse, validate, and store definitions of a specific type
+     * where each file contains a single JSON object definition.
      * @private
-     * @param {string} typeName - The type of content (e.g., 'actions').
+     * @param {string} typeName - The type of content (e.g., 'actions', 'quests', 'objectives').
      * @param {string[]} filenames - List of filenames for this content type.
      * @param {string} schemaId - The $id of the schema to validate against.
      * @returns {Promise<void>}
      */
     async loadAndValidateContentType(typeName, filenames, schemaId) {
         console.log(`DataManager: Loading ${typeName}...`);
-        const targetMap = this[typeName]; // Get the correct map (e.g., this.actions)
+        const targetMap = this[typeName]; // Get the correct map (e.g., this.actions, this.quests)
         if (!targetMap) {
-            throw new Error(`DataManager: Invalid content type specified: ${typeName}`);
+            // This error should ideally not happen if the constructor and config are correct
+            console.error(`DataManager: Developer Error - Target map 'this.${typeName}' does not exist.`);
+            throw new Error(`DataManager: Invalid content type specified or not initialized: ${typeName}`);
         }
 
         const validator = this.ajv.getSchema(schemaId);
         if (!validator) {
-            throw new Error(`DataManager: Schema ${schemaId} not found for validating ${typeName}.`);
+            // This indicates a schema failed to load/compile in loadSchemas
+            console.error(`DataManager: Schema ${schemaId} not found or not compiled for validating ${typeName}. Check loadSchemas logs.`);
+            throw new Error(`DataManager: Prerequisite schema ${schemaId} is not available for validating ${typeName}.`);
         }
 
         const filePromises = filenames.map(async (filename) => {
@@ -190,33 +232,40 @@ class DataManager {
             try {
                 const response = await fetch(path);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} for ${path}`);
+                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}) for ${path}`);
                 }
                 const data = await response.json();
 
                 // Validate the loaded data
                 const isValid = validator(data);
                 if (!isValid) {
+                    // Provide clearer error messages for validation failures
                     const errorDetails = JSON.stringify(validator.errors, null, 2);
-                    throw new Error(`Schema validation failed for ${path}:\n${errorDetails}`);
+                    console.error(`Schema validation failed for ${path} using schema ${schemaId}:\n${errorDetails}`);
+                    // Include file path and schema in the thrown error for better debugging
+                    throw new Error(`Schema validation failed for ${typeName} file '${filename}' against schema ${schemaId}. See console for details.`);
                 }
 
                 // Store the validated data, keyed by ID
                 if (!data.id) {
+                    // Critical data integrity issue
                     throw new Error(`Data in ${path} is missing required 'id' property.`);
                 }
                 if (targetMap.has(data.id)) {
-                    console.warn(`DataManager: Duplicate ID detected for ${typeName}: ${data.id} in ${filename}. Overwriting previous definition.`);
+                    // Warn about duplicates, as specified in acceptance criteria implicitly (loading all files)
+                    console.warn(`DataManager: Duplicate ID detected for ${typeName}: ${data.id} in ${filename}. Overwriting previous definition from an earlier file.`);
                 }
                 targetMap.set(data.id, data);
-                // console.log(`DataManager: Validated and stored ${typeName}: ${data.id}`);
+                // console.log(`DataManager: Validated and stored ${typeName}: ${data.id}`); // Optional: Verbose logging
 
             } catch (error) {
                 console.error(`DataManager: Failed to load, parse, or validate ${path}`, error);
-                throw error; // Propagate error up
+                // Re-throw to ensure the failure is caught by loadAllData
+                throw new Error(`Error processing ${typeName} file ${filename}: ${error.message}`);
             }
         });
 
+        // Wait for all files of this type to be processed
         await Promise.all(filePromises);
         console.log(`DataManager: Finished loading ${targetMap.size} ${typeName}.`);
     }
@@ -229,26 +278,24 @@ class DataManager {
         const typeName = 'entities';
         console.log(`DataManager: Loading ${typeName} (incl. items, locations)...`);
         const filenames = CONTENT_FILES.entities; // Get the combined list
-        const targetMap = this.entities;
+        const targetMap = this.entities; // Unified storage
 
         // Get validators for all relevant types
         const entityValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.entities);
         const itemValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.items);
-        const locationValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.locations); // Get location validator
+        const locationValidator = this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.locations);
 
-        if (!entityValidator || !itemValidator || !locationValidator) { // Check all validators
-            throw new Error(`DataManager: Entity, Item, or Location schema not found for validating entities.`);
-        }
+        // Ensure all required schemas are available before proceeding
+        if (!entityValidator) throw new Error(`DataManager: Base Entity schema (${CONTENT_TYPE_SCHEMAS.entities}) not found or compiled.`);
+        if (!itemValidator) throw new Error(`DataManager: Item schema (${CONTENT_TYPE_SCHEMAS.items}) not found or compiled.`);
+        if (!locationValidator) throw new Error(`DataManager: Location schema (${CONTENT_TYPE_SCHEMAS.locations}) not found or compiled.`);
 
         const filePromises = filenames.map(async (filename) => {
-            const path = `${BASE_DATA_PATH}/${typeName}/${filename}`; // Use backticks and ${}
-
-            console.log(path);
-
+            const path = `${BASE_DATA_PATH}/${typeName}/${filename}`;
             try {
                 const response = await fetch(path);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} for ${path}`);
+                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}) for ${path}`);
                 }
                 const data = await response.json();
 
@@ -257,51 +304,47 @@ class DataManager {
                 }
 
                 let isValid = false;
+                let validatorToUse = null; // Store the validator function used
                 let validationErrors = null;
                 let usedSchemaId = '';
-                let entityType = 'Entity'; // Default type
+                let entityType = 'Unknown'; // Start as unknown
 
-                // Determine entity type (heuristic based on components or specific properties)
-                const isItem = data.components && data.components.Item;
-                // Check if it's a location (e.g., has Connections component or a specific 'type' property)
-                const isLocation = data.components && data.components.Connections; // Adjust this check as needed
-
-                if (isLocation) {
-                    // Validate against Location schema
-                    isValid = locationValidator(data);
-                    validationErrors = locationValidator.errors;
-                    usedSchemaId = CONTENT_TYPE_SCHEMAS.locations;
+                // --- Determine entity type and validate ---
+                // Prioritize more specific types first (Location, then Item, then base Entity)
+                // Check for distinctive properties or components. Adjust these checks if your schema changes.
+                if (data.components?.Connections || data.components?.LocationInfo) { // Heuristic for Location
                     entityType = 'Location';
-                } else if (isItem) {
-                    // Validate against Item schema
-                    isValid = itemValidator(data);
-                    validationErrors = itemValidator.errors;
-                    usedSchemaId = CONTENT_TYPE_SCHEMAS.items;
+                    validatorToUse = locationValidator;
+                    usedSchemaId = CONTENT_TYPE_SCHEMAS.locations;
+                } else if (data.components?.Item || data.components?.Equippable) { // Heuristic for Item
                     entityType = 'Item';
-                } else {
-                    // Validate against base Entity schema
-                    isValid = entityValidator(data);
-                    validationErrors = entityValidator.errors;
-                    usedSchemaId = CONTENT_TYPE_SCHEMAS.entities;
+                    validatorToUse = itemValidator;
+                    usedSchemaId = CONTENT_TYPE_SCHEMAS.items;
+                } else { // Assume base Entity otherwise
                     entityType = 'Entity';
+                    validatorToUse = entityValidator;
+                    usedSchemaId = CONTENT_TYPE_SCHEMAS.entities;
                 }
+
+                isValid = validatorToUse(data); // Perform validation
+                validationErrors = validatorToUse.errors; // Get errors if any
 
                 if (!isValid) {
                     const errorDetailsString = JSON.stringify(validationErrors, null, 2);
-                    console.error(`Schema validation failed for ${path} (type: ${entityType}) using schema ${usedSchemaId}. Errors:\n`, validationErrors); // Log the detailed errors object
-                    throw new Error(`Schema validation failed for ${path} (type: ${entityType}) using schema ${usedSchemaId}:\n${errorDetailsString}`); // Include details string in error message
+                    console.error(`Schema validation failed for ${path} (detected type: ${entityType}) using schema ${usedSchemaId}. Errors:\n`, validationErrors);
+                    throw new Error(`Schema validation failed for ${entityType} file '${filename}' using schema ${usedSchemaId}:\n${errorDetailsString}`);
                 }
 
-                // Store the validated data
+                // Store the validated data in the unified entities map
                 if (targetMap.has(data.id)) {
-                    console.warn(`DataManager: Duplicate ID detected for ${typeName}: ${data.id} in ${filename}. Overwriting previous definition.`);
+                    console.warn(`DataManager: Duplicate ID detected for ${typeName}/${entityType}: ${data.id} in ${filename}. Overwriting previous definition.`);
                 }
                 targetMap.set(data.id, data);
-                // console.log(`DataManager: Validated and stored <span class="math-inline">\{typeName\} \(</span>{entityType}): ${data.id}`);
+                // console.log(`DataManager: Validated and stored ${entityType}: ${data.id}`); // Optional verbose log
 
             } catch (error) {
-                console.error(`DataManager: Failed to load, parse, or validate ${path}`, error);
-                throw error; // Propagate error up
+                console.error(`DataManager: Failed to load, parse, or validate entity file ${path}`, error);
+                throw new Error(`Error processing entity file ${filename}: ${error.message}`); // Propagate error
             }
         });
 
@@ -316,13 +359,14 @@ class DataManager {
     async loadAndValidateTriggers() {
         const typeName = 'triggers';
         console.log(`DataManager: Loading ${typeName}...`);
-        const filenames = CONTENT_FILES.triggers; // Expecting only one file usually
+        const filenames = CONTENT_FILES.triggers; // Expecting one or more files, each containing an array
         const targetMap = this.triggers;
-        const schemaId = CONTENT_TYPE_SCHEMAS.triggers;
+        const schemaId = CONTENT_TYPE_SCHEMAS.triggers; // Schema should validate an array of triggers
 
         const validator = this.ajv.getSchema(schemaId);
         if (!validator) {
-            throw new Error(`DataManager: Schema ${schemaId} not found for validating ${typeName}.`);
+            console.error(`DataManager: Schema ${schemaId} not found or compiled for validating ${typeName}. Check loadSchemas logs.`);
+            throw new Error(`DataManager: Prerequisite schema ${schemaId} is not available for validating ${typeName}.`);
         }
 
         const filePromises = filenames.map(async (filename) => {
@@ -330,39 +374,53 @@ class DataManager {
             try {
                 const response = await fetch(path);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} for ${path}`);
+                    throw new Error(`HTTP error! status: ${response.status} (${response.statusText}) for ${path}`);
                 }
                 // Expecting an array of triggers in the file
                 const triggerArray = await response.json();
 
-                // Validate the entire array against the schema
+                // --- Validate the entire array against the schema ---
+                // NOTE: Ensure your trigger schema (`event_trigger.schema.json`) is defined
+                //       to expect an array at the root if the file contains an array.
+                //       If the schema expects a single trigger object, this validation will fail.
+                //       Assuming the schema validates an ARRAY of trigger objects.
                 const isValid = validator(triggerArray);
                 if (!isValid) {
                     const errorDetails = JSON.stringify(validator.errors, null, 2);
-                    throw new Error(`Schema validation failed for trigger array in ${path}:\n${errorDetails}`);
+                    console.error(`Schema validation failed for trigger array in ${path} using schema ${schemaId}:\n${errorDetails}`);
+                    throw new Error(`Schema validation failed for trigger array in file '${filename}'. See console for details.`);
                 }
 
                 // Store each individual trigger object from the array, keyed by its ID
+                let countInFile = 0;
                 for (const triggerData of triggerArray) {
+                    if (!triggerData || typeof triggerData !== 'object') {
+                        console.warn(`DataManager: Non-object item found in trigger array in ${path}. Skipping.`);
+                        continue; // Skip non-objects gracefully
+                    }
                     if (!triggerData.id) {
-                        throw new Error(`Trigger object in ${path} is missing required 'id' property.`);
+                        // Halt loading if a trigger lacks an ID, as it's crucial
+                        throw new Error(`Trigger object in ${path} (index ${countInFile}) is missing required 'id' property.`);
                     }
                     if (targetMap.has(triggerData.id)) {
                         console.warn(`DataManager: Duplicate ID detected for ${typeName}: ${triggerData.id} in ${filename}. Overwriting previous definition.`);
                     }
                     targetMap.set(triggerData.id, triggerData);
-                    //  console.log(`DataManager: Validated and stored ${typeName}: ${triggerData.id}`);
+                    countInFile++;
+                    // console.log(`DataManager: Validated and stored ${typeName}: ${triggerData.id}`); // Optional verbose log
                 }
+                console.log(`DataManager: Loaded ${countInFile} triggers from ${filename}.`);
 
             } catch (error) {
-                console.error(`DataManager: Failed to load, parse, or validate ${path}`, error);
-                throw error; // Propagate error up
+                console.error(`DataManager: Failed to load, parse, or validate trigger file ${path}`, error);
+                throw new Error(`Error processing trigger file ${filename}: ${error.message}`); // Propagate error
             }
         });
 
         await Promise.all(filePromises);
-        console.log(`DataManager: Finished loading ${targetMap.size} ${typeName}.`);
+        console.log(`DataManager: Finished loading ${targetMap.size} total ${typeName}.`);
     }
+
 
     // --- Public Accessor Methods ---
 
@@ -370,7 +428,7 @@ class DataManager {
         return this.actions.get(id);
     }
 
-    getEntityDefinition(id) { // This now correctly searches the unified map
+    getEntityDefinition(id) { // Searches the unified map (entities, items, locations)
         return this.entities.get(id);
     }
 
@@ -382,13 +440,35 @@ class DataManager {
         return Array.from(this.triggers.values());
     }
 
+    /**
+     * Retrieves a quest definition by its unique ID.
+     * @param {string} questId - The unique identifier of the quest.
+     * @returns {object | undefined} The quest definition object, or undefined if not found.
+     */
+    getQuestDefinition(questId) {
+        return this.quests.get(questId);
+    }
+
+    /**
+     * Retrieves an objective definition by its unique ID.
+     * @param {string} objectiveId - The unique identifier of the objective.
+     * @returns {object | undefined} The objective definition object, or undefined if not found.
+     */
+    getObjectiveDefinition(objectiveId) {
+        return this.objectives.get(objectiveId);
+    }
+
+
     // --- Helper Methods ---
 
     _logLoadedCounts() {
         console.log("DataManager Load Summary:");
+        console.log(`  - Schemas Parsed: ${this.schemas.size}`);
         console.log(`  - Actions: ${this.actions.size}`);
         console.log(`  - Entities/Items/Locations: ${this.entities.size}`);
         console.log(`  - Triggers: ${this.triggers.size}`);
+        console.log(`  - Quests: ${this.quests.size}`);
+        console.log(`  - Objectives: ${this.objectives.size}`);
     }
 }
 

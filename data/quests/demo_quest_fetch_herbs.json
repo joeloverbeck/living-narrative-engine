@@ -1,0 +1,44 @@
+{
+  "id": "demo:quest_fetch_herbs",
+  "titleId": "quest_title_fetch_herbs",
+  "descriptionId": "quest_desc_fetch_herbs",
+  "objectiveIds": [
+    "demo:obj_collect_sunpetal_01",
+    "demo:obj_return_herbs_to_elara"
+  ],
+  "prerequisites": {
+    "type": "player_level",
+    "minLevel": 3,
+    "$comment": "Example of a single prerequisite object"
+  },
+  "rewards": {
+    "experience": 150,
+    "items": [
+      {
+        "itemId": "demo:item_potion_heal_minor",
+        "quantity": 3
+      }
+    ],
+    "currency": {
+      "gold": 25
+    },
+    "gameStateChanges": {
+      "elara_trusts_player": true
+    }
+  },
+  "startingTriggers": [
+    {
+      "type": "on_interact",
+      "npcId": "demo:npc_elara_herbalist",
+      "dialogueNode": "offer_fetch_quest",
+      "$comment": "Quest starts via interaction with Elara"
+    },
+    {
+      "type": "on_quest_complete",
+      "questId": "demo:quest_intro_talk_to_elara",
+      "$comment": "Alternative trigger: starts automatically after completing the intro quest"
+    }
+  ],
+  "questGiverId": "demo:npc_elara_herbalist",
+  "isRepeatable": false
+}

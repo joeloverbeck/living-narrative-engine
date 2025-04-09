@@ -15,6 +15,7 @@ import {PositionComponent} from '../components/positionComponent.js';
 import {SkillComponent} from '../components/skillComponent.js';
 import {StatsComponent} from '../components/statsComponent.js';
 import {UsableComponent} from '../components/usableComponent.js';
+import {QuestLogComponent} from "../components/questLogComponent.js";
 
 /**
  * Configuration mapping for component registration.
@@ -38,7 +39,8 @@ export const componentRegistryConfig = new Map([
     ['Position', PositionComponent],
     ['Skill', SkillComponent],
     ['Stats', StatsComponent],
-    ['Usable', UsableComponent]
+    ['Usable', UsableComponent],
+    ['QuestLog', QuestLogComponent]
     // Add any future components here
 ]);
 

@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/objective.schema.json",
+  "title": "Objective Definition Schema",
+  "description": "Defines the structure for a single objective, which represents a step or goal within a quest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "descriptionId",
+    "completionConditions"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this objective definition (e.g., 'story_a:obj_find_key', 'core:obj_reach_level_5'). Must be namespaced and unique across all objectives.",
+      "pattern": "^[a-zA-Z0-9_\\-:]+$"
+    },
+    "descriptionId": {
+      "type": "string",
+      "description": "Localization key for the objective's text displayed to the player (e.g., 'obj_desc_find_key', 'obj_desc_reach_level_5')."
+    },
+    "isHidden": {
+      "type": "boolean",
+      "description": "If true, this objective is not initially visible in the player's quest log or UI. It might be revealed by quest progression or other events.",
+      "default": false
+    },
+    "completionConditions": {
+      "description": "Defines how this objective is completed. Specifies one or more conditions that must be met. Currently supports requiring ALL conditions ('allOf').",
+      "type": "object",
+      "required": [
+        "allOf"
+      ],
+      "properties": {
+        "allOf": {
+          "type": "array",
+          "description": "An array of conditions. ALL of these must be met (in any order) to complete the objective.",
+          "items": {
+            "$ref": "#/definitions/CompletionCondition"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventsToFireOnCompletion": {
+      "type": "array",
+      "description": "Optional list of events to dispatch via the EventBus when this objective's state changes to completed.",
+      "items": {
+        "$ref": "#/definitions/EventDefinition"
+      },
+      "default": []
+    }
+  },
+  "definitions": {
+    "CompletionCondition": {
+      "description": "A single condition that contributes to completing the objective. Select one type.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/EventListenerCondition"
+        },
+        {
+          "$ref": "#/definitions/PlayerLocationCondition"
+        },
+        {
+          "$ref": "#/definitions/EntityStateCondition"
+        }
+      ]
+    },
+    "EventListenerCondition": {
+      "type": "object",
+      "description": "Condition is met when a specific game event occurs that matches the filters.",
+      "required": [
+        "type",
+        "eventName"
+      ],
+      "properties": {
+        "type": {
+          "const": "event_listener",
+          "description": "Identifies this as an event listener condition."
+        },
+        "eventName": {
+          "type": "string",
+          "description": "The specific game event name to listen for (e.g., 'event:item_acquired', 'event:npc_spoken_to', 'event:entity_defeated'). Must match an event dispatched via the EventBus.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "examples": [
+            "event:item_acquired",
+            "event:entity_defeated"
+          ]
+        },
+        "filters": {
+          "type": "object",
+          "description": "Optional key-value pairs to filter the event payload. The event must match all specified filters to satisfy this condition. Values are compared strictly.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "examples": [
+            {
+              "itemId": "story_a:macguffin"
+            },
+            {
+              "entityId": "story_a:boss_npc"
+            },
+            {
+              "requiredFlag": true
+            }
+          ],
+          "default": {}
+        }
+      },
+      "additionalProperties": false
+    },
+    "PlayerLocationCondition": {
+      "type": "object",
+      "description": "Condition is met when the player character enters or is within a specific location.",
+      "required": [
+        "type",
+        "locationId"
+      ],
+      "properties": {
+        "type": {
+          "const": "player_location_check",
+          "description": "Identifies this as a player location check."
+        },
+        "locationId": {
+          "type": "string",
+          "description": "The unique ID of the location entity the player must be present in.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "examples": [
+            "story_a:secret_lab",
+            "core:town_square"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "EntityStateCondition": {
+      "type": "object",
+      "description": "Condition is met when a specific entity possesses a required state value. This requires a state management system for entities.",
+      "required": [
+        "type",
+        "entityId",
+        "requiredState"
+      ],
+      "properties": {
+        "type": {
+          "const": "entity_state_check",
+          "description": "Identifies this as an entity state check."
+        },
+        "entityId": {
+          "type": "string",
+          "description": "The unique ID of the entity whose state is being checked.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "examples": [
+            "story_a:boss_npc",
+            "puzzle:lever_alpha"
+          ]
+        },
+        "requiredState": {
+          "type": "string",
+          "description": "The state the entity must have (e.g., 'core:state_defeated', 'custom:state_activated', 'puzzle:state_open'). The specific state values depend on the game's state/component system.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$",
+          "examples": [
+            "core:state_defeated",
+            "custom:state_activated"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "EventDefinition": {
+      "type": "object",
+      "description": "Defines an event to be dispatched via the EventBus.",
+      "required": [
+        "eventName"
+      ],
+      "properties": {
+        "eventName": {
+          "type": "string",
+          "description": "The name of the event to fire (e.g., 'objective:completed', 'story:flag_set').",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$"
+        },
+        "eventData": {
+          "type": "object",
+          "description": "Optional payload data to include with the fired event. Structure depends on the event.",
+          "additionalProperties": true,
+          "examples": [
+            {
+              "objectiveId": "story_a:obj_find_key",
+              "questId": "story_a:quest_01"
+            },
+            {
+              "flagName": "met_the_wizard",
+              "value": true
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
