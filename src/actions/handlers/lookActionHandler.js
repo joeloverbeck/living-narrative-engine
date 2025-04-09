@@ -1,62 +1,59 @@
 // src/actions/handlers/lookActionHandler.js
 
-import {NameComponent} from '../../components/nameComponent.js';
-import {DescriptionComponent} from '../../components/descriptionComponent.js';
-import {ConnectionsComponent} from '../../components/connectionsComponent.js';
-import {ItemComponent} from '../../components/itemComponent.js';
-import {PositionComponent} from '../../components/positionComponent.js'; // Needed to confirm location, though indirectly used via spatial query
+// Import necessary components and utilities
+import { NameComponent } from '../../components/nameComponent.js';
+import { DescriptionComponent } from '../../components/descriptionComponent.js';
+import { ConnectionsComponent } from '../../components/connectionsComponent.js';
+import { ItemComponent } from '../../components/itemComponent.js';
+import { InventoryComponent } from '../../components/inventoryComponent.js'; // Needed for inventory scope
 
-// Import type definition JSDoc comments
+// Import the findTarget utility and messages
+import { findTarget } from '../../utils/targetFinder.js';
+import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
+
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-
-/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
-/** @typedef {import('../../types').LocationRenderData} LocationRenderData */ // Assuming this type definition exists
+/** @typedef {import('../../src/entities/entity.js').default} Entity */
+/** @typedef {import('../../types').LocationRenderData} LocationRenderData */
 
 /**
  * Handles the 'core:action_look' action. Dispatches messages directly via context.dispatch.
- * Refactored to use EntityManager's spatial query instead of EntitiesPresentComponent.
+ * Uses findTarget for looking at specific targets (location + inventory scope).
  * @param {ActionContext} context
  * @returns {ActionResult}
  */
 export function executeLook(context) {
-    // Destructure context, including dispatch
-    const {currentLocation, targets, entityManager, playerEntity, dispatch} = context;
-    const messages = []; // Keep for potential non-UI use or logging
-    let success = true; // Looking generally succeeds
+    const { currentLocation, targets, entityManager, playerEntity, dispatch } = context;
+    const messages = []; // Keep for internal logging if needed
+    let success = true; // Assume success unless target not found/ambiguous
 
     if (!currentLocation) {
         const errorMsg = "You can't see anything; your location is unknown.";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'}); // Optional retain for result
-        return {success: false, messages};
+        dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+        return { success: false, messages: [{ text: errorMsg, type: 'error' }] };
     }
 
     if (targets.length === 0) {
-        // Look at the current location
+        // --- Look at the current location (Existing logic is mostly fine) ---
         const nameComp = currentLocation.getComponent(NameComponent);
         const descComp = currentLocation.getComponent(DescriptionComponent);
         const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
-        // const presentComp = currentLocation.getComponent(EntitiesPresentComponent); // REMOVED
 
         const locationName = nameComp ? nameComp.value : `Unnamed Location (${currentLocation.id})`;
         const locationDesc = descComp ? descComp.text : "You are in an undescribed location.";
 
-        // Use spatial query to get entities in the current location
         const entityIdsInLocation = entityManager.getEntitiesInLocation(currentLocation.id);
         const entitiesInLocation = Array.from(entityIdsInLocation)
             .map(id => entityManager.getEntityInstance(id))
-            .filter(entity => entity); // Filter out potential nulls if an ID maps to no active entity
+            .filter(entity => entity); // Filter out potential nulls
 
-        // Filter entities to find visible items
         let itemsVisible = entitiesInLocation
             .filter(entity => entity.hasComponent(ItemComponent))
-            .map(itemEntity => itemEntity.getComponent(NameComponent)?.value || itemEntity.id);
+            .map(itemEntity => getDisplayName(itemEntity)); // Use getDisplayName
 
-        // Filter entities to find visible NPCs (not items, not the player)
         let npcsVisible = entitiesInLocation
             .filter(entity => entity.id !== playerEntity.id && !entity.hasComponent(ItemComponent))
-            .map(npcEntity => npcEntity.getComponent(NameComponent)?.value || npcEntity.id);
+            .map(npcEntity => getDisplayName(npcEntity)); // Use getDisplayName
 
         let availableDirections = [];
         if (connectionsComp && Array.isArray(connectionsComp.connections)) {
@@ -66,48 +63,111 @@ export function executeLook(context) {
                 .filter(dir => dir);
         }
 
-        // --- Construct the structured data payload ---
-        /** @type {LocationRenderData} */
         const locationData = {
             name: locationName,
             description: locationDesc,
             exits: availableDirections,
-            // Only include optional fields if they have content
             items: itemsVisible.length > 0 ? itemsVisible : undefined,
             npcs: npcsVisible.length > 0 ? npcsVisible : undefined,
         };
 
-        // --- Dispatch the single structured event for the renderer ---
         dispatch('ui:display_location', locationData);
+        // Add a simple text message as well for consistency? Or rely solely on structured data.
+        // messages.push({ text: `Looked at ${locationName}`, type: 'internal' });
 
     } else {
-        // Look at a specific target
-        const targetName = targets.join(' ').toLowerCase();
+        // --- Look at a specific target ---
+        const targetName = targets.join(' '); // Keep case for messages
 
-        // TODO: Implement more robust target finding (check NPCs, items in room, self, items in inventory)
-        if (targetName === 'self' || targetName === 'me') {
+        // Handle "look self" or "look me"
+        if (targetName.toLowerCase() === 'self' || targetName.toLowerCase() === 'me') {
+            // TODO: Enhance "look self" - show health, equipped items?
             const lookSelfMsg = "You look yourself over. You seem to be in one piece.";
-            dispatch('ui:message_display', {text: lookSelfMsg, type: 'info'});
-            messages.push({text: lookSelfMsg, type: 'info'}); // Optional retain
-            // Could add health status, equipment etc. later
-        }
+            dispatch('ui:message_display', { text: lookSelfMsg, type: 'info' });
+            messages.push({ text: lookSelfMsg, type: 'info' });
+        } else {
+            // --- Use findTarget for other targets ---
 
-        // Example: Check if target is an entity in the room (NPCs/Items)
-        // Example: Check if target is an item in player inventory
-        else {
-            // Generic placeholder / "not found" message for now
-            // NOTE: This section would also need refactoring if it previously
-            // relied on EntitiesPresentComponent to find targets. Currently, it's
-            // just a placeholder, so no changes needed for this specific ticket.
-            const lookTargetMsg1 = `You look closely at '${targetName}'...`;
-            const lookTargetMsg2 = "Looking at specific things is not fully implemented.";
-            dispatch('ui:message_display', {text: lookTargetMsg1, type: 'info'});
-            dispatch('ui:message_display', {text: lookTargetMsg2, type: 'warning'});
-            messages.push({text: lookTargetMsg1, type: 'info'}); // Optional retain
-            messages.push({text: lookTargetMsg2, type: 'warning'}); // Optional retain
-            // In a real implementation, set success = false if target not found
+            // 1. Determine Search Scope (Location + Player Inventory)
+            const combinedSearchScope = [];
+
+            // Add entities from current location (excluding player) with NameComponent
+            const entityIdsInLocation = entityManager.getEntitiesInLocation(currentLocation.id);
+            if (entityIdsInLocation) {
+                for (const entityId of entityIdsInLocation) {
+                    if (entityId === playerEntity.id) continue; // Exclude self
+                    const entity = entityManager.getEntityInstance(entityId);
+                    if (entity && entity.hasComponent(NameComponent)) {
+                        combinedSearchScope.push(entity);
+                    } else if (entity) {
+                        // console.warn(`lookActionHandler: Entity ${entityId} in location lacks NameComponent.`);
+                    }
+                }
+            }
+
+            // Add items from player inventory with NameComponent
+            const playerInventory = playerEntity.getComponent(InventoryComponent);
+            if (playerInventory) {
+                const inventoryItemIds = playerInventory.getItems();
+                for (const itemId of inventoryItemIds) {
+                    const itemInstance = entityManager.getEntityInstance(itemId);
+                    if (itemInstance && itemInstance.hasComponent(NameComponent)) {
+                        // Avoid adding duplicates if an item could somehow be in both lists (unlikely)
+                        if (!combinedSearchScope.some(e => e.id === itemInstance.id)) {
+                            combinedSearchScope.push(itemInstance);
+                        }
+                    } else if (itemInstance) {
+                        // console.warn(`lookActionHandler: Inventory item ${itemId} lacks NameComponent.`);
+                    }
+                }
+            }
+
+            // 2. Call findTarget Utility
+            const findResult = findTarget(targetName, combinedSearchScope);
+            let targetEntity = null;
+
+            // 3. Handle Results
+            switch (findResult.status) {
+                case 'NOT_FOUND': {
+                    // Use a message appropriate for combined scope search
+                    const errorMsg = TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName); // Or a custom one like "You don't see '${targetName}' here or in your inventory."
+                    dispatch('ui:message_display', { text: errorMsg, type: 'info' });
+                    messages.push({ text: errorMsg, type: 'info' });
+                    success = false; // Indicate the specific look failed
+                    break;
+                }
+                case 'FOUND_AMBIGUOUS': {
+                    // Ask for clarification using standard prompt
+                    const errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('look at', targetName, findResult.matches);
+                    dispatch('ui:message_display', { text: errorMsg, type: 'warning' });
+                    messages.push({ text: errorMsg, type: 'warning' });
+                    success = false; // Ambiguity pauses the action
+                    break;
+                }
+                case 'FOUND_UNIQUE': {
+                    // Display the description of the found entity
+                    targetEntity = findResult.matches[0];
+                    const name = getDisplayName(targetEntity);
+                    const descComp = targetEntity.getComponent(DescriptionComponent);
+                    const description = descComp ? descComp.text : `You look closely at the ${name}, but see nothing particularly interesting.`; // Fallback description
+
+                    dispatch('ui:message_display', { text: description, type: 'info' });
+                    messages.push({ text: `Looked at ${name} (${targetEntity.id})`, type: 'internal' });
+                    success = true;
+                    break;
+                }
+                default: {
+                    // Should not happen
+                    const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Unexpected findTarget status)";
+                    dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+                    console.error("executeLook: Unexpected status from findTarget:", findResult.status);
+                    success = false;
+                    break;
+                }
+            }
         }
     }
 
-    return {success, messages}; // Return result (messages might be empty if not retained)
+    // Return result (success might be false if specific target look failed)
+    return { success, messages };
 }

@@ -5,139 +5,127 @@
 /** @typedef {import('../../components/inventoryComponent.js').InventoryComponent} InventoryComponent */
 /** @typedef {import('../../components/healthComponent.js').HealthComponent} HealthComponent */
 /** @typedef {import('../../components/usableComponent.js').UsableComponent} UsableComponent */
-/** @typedef {import('../../components/nameComponent.js').NameComponent} NameComponent */ // Added for clarity
+/** @typedef {import('../../components/nameComponent.js').NameComponent} NameComponent */
+/** @typedef {import('../../src/entities/entity.js').default} Entity */
 
-import {InventoryComponent} from '../../components/inventoryComponent.js';
-import {HealthComponent} from '../../components/healthComponent.js';
+import { InventoryComponent } from '../../components/inventoryComponent.js';
+import { HealthComponent } from '../../components/healthComponent.js';
+import { NameComponent } from '../../components/nameComponent.js'; // Ensure imported
+
+// Import the findTarget utility and messages
+import { findTarget } from '../../utils/targetFinder.js';
+import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
 
 /**
  * Handles the 'core:action_use' action.
- * Allows targeting items by exact Item ID (case-sensitive) or exact Item Name (case-insensitive).
- * Prioritizes ID matches over Name matches. Handles ambiguity if multiple names match.
+ * Uses findTarget for partial, case-insensitive matching within player's inventory.
  * @param {ActionContext} context - The action context.
  * @returns {ActionResult} - The result of the action.
  */
 export function executeUse(context) {
-    const {playerEntity, targets, dataManager, dispatch} = context;
+    const { playerEntity, targets, entityManager, dataManager, dispatch } = context; // Added entityManager
     /** @type {import('../actionTypes.js').ActionMessage[]} */
     const messages = [];
     let success = false;
 
     // --- 1. Check for Target Input ---
     if (targets.length === 0) {
-        const errorMsg = "Use what?";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        return {success: false, messages};
+        const errorMsg = TARGET_MESSAGES.PROMPT_WHAT('use'); // Use standard prompt
+        dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+        messages.push({ text: errorMsg, type: 'error' });
+        return { success: false, messages };
     }
-    // Keep the raw target for case-sensitive ID matching
-    const rawTarget = targets.join(' ');
-    const lowerCaseTarget = rawTarget.toLowerCase(); // For case-insensitive name matching
+    const targetName = targets.join(' '); // Keep case for messages if needed
 
     // --- 2. Get Player Inventory ---
     const inventoryComponent = playerEntity.getComponent(InventoryComponent);
     if (!inventoryComponent) {
         console.error(`executeUse: Player entity ${playerEntity.id} missing InventoryComponent.`);
-        const errorMsg = "Internal Error: Cannot access your inventory.";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        return {success: false, messages};
+        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory');
+        dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+        messages.push({ text: errorMsg, type: 'error' });
+        return { success: false, messages };
     }
 
-    // --- 3. Find All Potential Matches in Inventory ---
-    /** @type {{id: string, name: string}[]} */
-    const idMatches = [];
-    /** @type {{id: string, name: string}[]} */
-    const nameMatches = [];
-
+    // --- 3. Determine Search Scope (Items in inventory with NameComponent) ---
     const itemIds = inventoryComponent.getItems();
+    const searchableInventoryItems = [];
     for (const itemId of itemIds) {
-        const itemDef = dataManager.getEntityDefinition(itemId);
-        if (!itemDef) {
-            console.warn(`executeUse: Could not find item definition for ID: ${itemId} in player inventory.`);
-            continue; // Skip this item if definition is missing
-        }
-
-        // Get the item's canonical name (fall back to ID if NameComponent missing)
-        const currentItemName = itemDef.components?.Name?.value || itemId;
-
-        // Check for Exact, Case-Sensitive ID Match
-        if (rawTarget === itemId) {
-            idMatches.push({id: itemId, name: currentItemName});
-            // Do *not* break, continue checking the rest of the inventory
-        }
-
-        // Check for Exact, Case-Insensitive Name Match
-        if (currentItemName.toLowerCase() === lowerCaseTarget) {
-            nameMatches.push({id: itemId, name: currentItemName});
-            // Do *not* break
+        const itemInstance = entityManager.getEntityInstance(itemId);
+        // Must exist and have NameComponent for findTarget
+        if (itemInstance && itemInstance.hasComponent(NameComponent)) {
+            searchableInventoryItems.push(itemInstance);
+        } else if (itemInstance) {
+            console.warn(`executeUse: Item ${itemId} in inventory lacks NameComponent.`);
+        } else {
+            console.warn(`executeUse: Inventory contains ID '${itemId}' but instance not found.`);
         }
     }
 
-    // --- 4. Determine Final Target Based on Matches and Precedence ---
+    // Check if inventory has any searchable items before searching
+    if (searchableInventoryItems.length === 0) {
+        // If inventory is completely empty or has no items with names
+        const errorMsg = TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName); // Or just "Your inventory is empty."?
+        dispatch('ui:message_display', { text: errorMsg, type: 'info' });
+        return { success: false, messages: [{ text: errorMsg, type: 'info' }] };
+    }
+
+
+    // --- 4. Find Target Item using Utility ---
+    const findResult = findTarget(targetName, searchableInventoryItems);
+    let targetItemEntity = null;
     let finalItemId = null;
-    let finalItemName = null;
-    let finalItemDefinition = null; // Will retrieve this once ID is final
+    let finalItemName = targetName; // Fallback for messages if needed early
 
-    if (idMatches.length >= 1) {
-        // ID Match takes precedence. Use the first one found (arbitrary but consistent).
-        finalItemId = idMatches[0].id;
-        finalItemName = idMatches[0].name;
-        console.debug(`executeUse: Found exact ID match: ${finalItemId}`);
-    } else if (nameMatches.length === 1) {
-        // Exactly one Name Match found (and no ID match)
-        finalItemId = nameMatches[0].id;
-        finalItemName = nameMatches[0].name;
-        console.debug(`executeUse: Found unique exact name match: ${finalItemId} (name: ${finalItemName})`);
-    } else if (nameMatches.length > 1) {
-        // Name Ambiguity: Multiple items match the name exactly.
-        console.debug(`executeUse: Found ambiguous name match for "${rawTarget}"`);
-        const options = nameMatches.map(match => `${match.name} (${match.id})`).join(' or ');
-        const errorMsg = `Which item do you want to use? ${options}`;
-        dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-        messages.push({text: errorMsg, type: 'warning'});
-        return {success: false, messages}; // Action fails due to ambiguity
-    } else {
-        // No Match: Neither ID nor Name matched anything.
-        console.debug(`executeUse: No match found for "${rawTarget}"`);
-        const errorMsg = `You don't have anything like "${rawTarget}".`;
-        dispatch('ui:message_display', {text: errorMsg, type: 'info'});
-        messages.push({text: errorMsg, type: 'info'});
-        return {success: false, messages};
-    }
-
-    // --- 5. Retrieve Final Item Definition (if a match was determined) ---
-    if (finalItemId) {
-        finalItemDefinition = dataManager.getEntityDefinition(finalItemId);
-        if (!finalItemDefinition) {
-            // This would be an internal inconsistency, as we found it during matching
-            console.error(`executeUse: Internal Error! Could not re-retrieve definition for matched item ID: ${finalItemId}`);
-            const errorMsg = `Internal Error: Problem accessing item data for ${finalItemName}.`;
-            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-            messages.push({text: errorMsg, type: 'error'});
-            return {success: false, messages};
+    switch (findResult.status) {
+        case 'NOT_FOUND': {
+            const errorMsg = TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName);
+            dispatch('ui:message_display', { text: errorMsg, type: 'info' });
+            messages.push({ text: errorMsg, type: 'info' });
+            return { success: false, messages };
         }
-    } else {
-        // Should not happen if logic above is correct, but safety check
-        console.error(`executeUse: Internal Error! Reached item processing without a finalItemId.`);
-        const errorMsg = "Internal Error: Failed to determine target item.";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
-        return {success: false, messages};
+        case 'FOUND_AMBIGUOUS': {
+            const errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('use', targetName, findResult.matches);
+            dispatch('ui:message_display', { text: errorMsg, type: 'warning' });
+            messages.push({ text: errorMsg, type: 'warning' });
+            return { success: false, messages }; // Ambiguity pauses the action
+        }
+        case 'FOUND_UNIQUE':
+            targetItemEntity = findResult.matches[0];
+            finalItemId = targetItemEntity.id;
+            finalItemName = getDisplayName(targetItemEntity); // Get proper name
+            console.debug(`executeUse: Found unique match: ${finalItemName} (${finalItemId})`);
+            break; // Proceed with validation using the unique target
+        default: {
+            const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Unexpected findTarget status)";
+            dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+            console.error("executeUse: Unexpected status from findTarget:", findResult.status);
+            return { success: false, messages: [{ text: errorMsg, type: 'error' }] };
+        }
     }
 
+    // --- 5. Retrieve Final Item Definition (Required for UsableComponent checks) ---
+    // This part remains necessary as component data often resides on the definition
+    const finalItemDefinition = dataManager.getEntityDefinition(finalItemId);
+    if (!finalItemDefinition) {
+        console.error(`executeUse: Internal Error! Could not retrieve definition for matched item ID: ${finalItemId}`);
+        const errorMsg = `Internal Error: Problem accessing item data for ${finalItemName}.`;
+        dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+        messages.push({ text: errorMsg, type: 'error' });
+        return { success: false, messages };
+    }
 
-    // --- 6. Check Usability ---
+    // --- 6. Check Usability (Using Definition) ---
     const usableData = finalItemDefinition.components?.Usable;
     if (!usableData) {
-        const errorMsg = `You can't use the ${finalItemName} that way.`;
-        dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-        messages.push({text: errorMsg, type: 'warning'});
-        return {success: false, messages};
+        const errorMsg = TARGET_MESSAGES.USE_CANNOT(finalItemName);
+        dispatch('ui:message_display', { text: errorMsg, type: 'warning' });
+        messages.push({ text: errorMsg, type: 'warning' });
+        return { success: false, messages };
     }
 
-    // --- 7. Apply Effect ---
-    let effectApplied = false; // Track if an effect actually changed state
+    // --- 7. Apply Effect (Logic remains mostly the same, uses playerEntity and usableData) ---
+    let effectApplied = false;
     switch (usableData.effect_type) {
         case 'heal':
             const healthComponent = playerEntity.getComponent(HealthComponent);
@@ -145,89 +133,84 @@ export function executeUse(context) {
 
             if (!healthComponent) {
                 console.error(`executeUse: Player entity ${playerEntity.id} missing HealthComponent needed for 'heal' effect.`);
-                const errorMsg = "Internal Error: Cannot access your health.";
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-                messages.push({text: errorMsg, type: 'error'});
-                return {success: false, messages};
+                const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Health');
+                dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+                messages.push({ text: errorMsg, type: 'error' });
+                return { success: false, messages };
             }
 
             if (typeof healAmount !== 'number' || healAmount <= 0) {
                 console.error(`executeUse: Invalid heal amount specified for item ${finalItemId}:`, healAmount);
                 const errorMsg = `Internal Error: The ${finalItemName} seems misconfigured.`;
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-                messages.push({text: errorMsg, type: 'error'});
-                return {success: false, messages};
+                dispatch('ui:message_display', { text: errorMsg, type: 'error' });
+                messages.push({ text: errorMsg, type: 'error' });
+                return { success: false, messages };
             }
 
             if (healthComponent.current >= healthComponent.max) {
-                const infoMsg = "You are already at full health.";
-                dispatch('ui:message_display', {text: infoMsg, type: 'info'});
-                messages.push({text: infoMsg, type: 'info'});
-                // Even if no health gained, the *attempt* to use was valid
-                // effectApplied remains false, but success will be true
+                const infoMsg = TARGET_MESSAGES.USE_FULL_HEALTH;
+                dispatch('ui:message_display', { text: infoMsg, type: 'info' });
+                messages.push({ text: infoMsg, type: 'info' });
+                // Attempt to use was valid, even if no health gained
             } else {
                 const oldHealth = healthComponent.current;
                 healthComponent.current = Math.min(healthComponent.max, oldHealth + healAmount);
-                // Optional: add message about actual amount healed
-                // const actualHeal = healthComponent.current - oldHealth;
-                // messages.push({ text: `You recovered ${actualHeal} health.`, type: 'success' });
-                effectApplied = true; // Healing occurred
+                // Optional: Add message about actual amount healed
+                const actualHeal = healthComponent.current - oldHealth;
+                const healMsg = `You recovered ${actualHeal} health.`;
+                dispatch('ui:message_display', { text: healMsg, type: 'success' }); // Specific heal success message
+                messages.push({ text: healMsg, type: 'success' });
+                effectApplied = true;
             }
-            success = true; // Mark action as successful because the item was targeted and usable
+            success = true; // Mark action as successful (item targeted and usable)
             break;
 
         // --- Add future effect types here ---
-        // case 'unlock':
-        //    // Logic to find nearby locked doors matching key properties...
-        //    // If successful:
-        //    //   success = true;
-        //    //   effectApplied = true; // Or false if key isn't consumed but door opened
-        //    // else: add appropriate failure message
-        //    break;
-        // case 'light':
-        //    // Logic to apply 'Lit' status effect or modify environment...
-        //    // success = true; effectApplied = true;
-        //    break;
+        // case 'unlock': ...
+        // case 'light': ...
 
         default:
             console.warn(`executeUse: Unsupported effect_type "${usableData.effect_type}" for item ${finalItemId}.`);
             const errorMsg = `Using the ${finalItemName} doesn't seem to do anything right now.`;
-            dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-            messages.push({text: errorMsg, type: 'warning'});
-            return {success: false, messages}; // Fail because the defined effect is unknown/unsupported
+            dispatch('ui:message_display', { text: errorMsg, type: 'warning' });
+            messages.push({ text: errorMsg, type: 'warning'});
+            return { success: false, messages }; // Fail if effect is unknown
     }
 
     // --- 8. Consume Item (if applicable) ---
-    // Consume only if the action succeeded (item was targeted and usable)
-    // AND the item is marked as consumable.
-    // Note: We consume even if effectApplied is false (e.g., healing at full health)
-    // because the player *intended* to use the consumable.
+    // Consumed if the action succeeded (success=true) and item is consumable
     if (success && usableData.consumable) {
         const removed = inventoryComponent.removeItem(finalItemId);
         if (!removed) {
-            // This indicates an inventory inconsistency - item was matched but couldn't be removed.
-            // This could happen if the player somehow had multiple refs but only one actual item? Unlikely with current InventoryComponent.
-            console.error(`executeUse: Failed to remove consumed item ${finalItemId} from player inventory! Inventory state might be inconsistent.`);
-            // Potentially add an error message, but the primary action succeeded.
-            messages.push({text: `Internal Error: Problem consuming ${finalItemName}.`, type: 'error'});
+            console.error(`executeUse: Failed to remove consumed item ${finalItemId} from player inventory!`);
+            messages.push({ text: `Internal Error: Problem consuming ${finalItemName}.`, type: 'error' });
+            // Continue anyway? The effect likely already happened.
         } else {
             console.debug(`executeUse: Consumed item ${finalItemId}`);
         }
     }
 
-    // --- 9. Dispatch Success Message ---
-    // Use the message defined in the item's Usable component data.
-    // This message should ideally reflect the *attempt* or *action*, not necessarily the outcome.
-    if (usableData.use_message) {
-        dispatch('ui:message_display', {text: usableData.use_message, type: 'info'});
-        messages.push({text: usableData.use_message, type: 'info'});
-    } else {
-        // Fallback message if use_message is missing
+    // --- 9. Dispatch General Success Message (if defined) ---
+    // This message comes *after* specific effect messages (like healing amount)
+    // Only display the general 'use_message' if one is defined.
+    if (success && usableData.use_message) {
+        // Avoid displaying generic message if specific feedback (like healing) was already given,
+        // unless the use_message is explicitly different/adds value.
+        // For now, display it if present. Consider refining this logic based on effect types.
+        dispatch('ui:message_display', { text: usableData.use_message, type: 'info' });
+        messages.push({ text: usableData.use_message, type: 'info' });
+    } else if (success && !effectApplied && usableData.effect_type === 'heal') {
+        // If healing was attempted at full health, we already gave the "full health" message.
+        // Don't add a generic "You used the X" message unless `use_message` is explicitly set.
+    } else if (success && !usableData.use_message && !effectApplied) {
+        // If successful but no specific message was given (e.g. non-healing effect without use_message)
+        // Provide a fallback. But avoid doubling up with heal message.
         const fallbackMsg = `You used the ${finalItemName}.`;
-        dispatch('ui:message_display', {text: fallbackMsg, type: 'info'});
-        messages.push({text: fallbackMsg, type: 'info'});
+        dispatch('ui:message_display', { text: fallbackMsg, type: 'info' });
+        messages.push({ text: fallbackMsg, type: 'info' });
     }
 
+
     // --- 10. Return Final Result ---
-    return {success, messages};
+    return { success, messages };
 }
