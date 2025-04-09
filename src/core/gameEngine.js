@@ -22,6 +22,8 @@ import GameLoop from '../../gameLoop.js';
 import {componentRegistryConfig} from '../config/componentRegistry.config.js';
 import {actionHandlerRegistryConfig} from '../config/actionHandlerRegistry.config.js';
 import {PositionComponent} from "../components/positionComponent.js";
+import {NameComponent} from "../components/nameComponent.js";
+import {InventoryComponent} from "../components/inventoryComponent.js";
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -223,6 +225,7 @@ class GameEngine {
             // Spatial index build is now handled within #instantiateInitialWorldEntities
 
             // --- 11. Input Handler ---
+            // Define the callback for command submission
             const processInputCommand = (command) => {
                 if (this.#eventBus) this.#eventBus.dispatch('ui:command_echo', {command});
                 if (this.#gameLoop && this.#gameLoop.isRunning) {
@@ -232,7 +235,11 @@ class GameEngine {
                     if (this.#eventBus) this.#eventBus.dispatch('ui:disable_input', {message: "Game not running."});
                 }
             };
-            this.#inputHandler = new InputHandler(this.#inputElement, processInputCommand);
+            this.#inputHandler = new InputHandler(
+                this.#inputElement,
+                processInputCommand,
+                this.#eventBus // Pass the event bus instance
+            );
             console.log("GameEngine: InputHandler instantiated.");
 
 
@@ -248,13 +255,14 @@ class GameEngine {
             });
             console.log("GameEngine: GameLoop instantiated.");
 
+            this.#eventBus.subscribe('ui:request_inventory_render', this.#handleInventoryRenderRequest.bind(this));
+            console.log("GameEngine: Subscribed to 'ui:request_inventory_render'.");
 
             // --- Initialization Complete ---
             this.#isInitialized = true;
             console.log("GameEngine: Initialization sequence completed successfully.");
-            // Update title via event
             this.#eventBus.dispatch('ui:set_title', {text: "Initialization Complete. Starting..."});
-            this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'}); // Use 'success' type
+            this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'});
 
             return true;
 
@@ -466,6 +474,68 @@ class GameEngine {
             throw error; // Re-throw to halt initialization
         }
     }
+
+    /**
+     * Handles the 'ui:request_inventory_render' event.
+     * Fetches player inventory data and dispatches 'ui:render_inventory'.
+     * @private
+     */
+    #handleInventoryRenderRequest() {
+        if (!this.#isInitialized) return; // Don't process if not ready
+
+        const player = this.#gameStateManager.getPlayer();
+        if (!player) {
+            console.error("GameEngine: Cannot render inventory, player entity not found.");
+            // Optionally dispatch render with error state
+            this.#eventBus.dispatch('ui:render_inventory', { items: [] }); // Send empty on error
+            return;
+        }
+
+        const inventoryComp = player.getComponent(InventoryComponent);
+        if (!inventoryComp) {
+            console.log(`GameEngine: Player ${player.id} has no InventoryComponent. Rendering empty inventory.`);
+            this.#eventBus.dispatch('ui:render_inventory', { items: [] }); // Player might not have inventory
+            return;
+        }
+
+        const itemIds = inventoryComp.getItems();
+        /** @type {ItemUIData[]} */
+        const itemsData = [];
+
+        for (const itemId of itemIds) {
+            const itemInstance = this.#entityManager.getEntityInstance(itemId);
+            if (!itemInstance) {
+                console.warn(`GameEngine: Inventory contains item ID '${itemId}' but instance not found. Skipping.`);
+                continue;
+            }
+
+            const nameComp = itemInstance.getComponent(NameComponent);
+            const itemName = nameComp ? nameComp.value : '(Unknown Item)';
+
+            // Placeholder for icon/description - fetch from ItemComponent or definition if needed
+            // const itemComp = itemInstance.getComponent(ItemComponent);
+            // const itemDef = this.#dataManager.getEntityDefinition(itemId);
+            // const icon = itemComp?.icon || itemDef?.components?.Item?.icon || null;
+            // const description = itemComp?.description || itemDef?.components?.Item?.description || '';
+            const icon = null; // Placeholder
+            const description = ''; // Placeholder
+
+            itemsData.push({
+                id: itemId,
+                name: itemName,
+                icon: icon,
+                description: description
+            });
+        }
+
+        /** @type {InventoryRenderPayload} */
+        const payload = { items: itemsData };
+
+        // Dispatch the event for the DomRenderer to handle
+        this.#eventBus.dispatch('ui:render_inventory', payload);
+        console.log(`GameEngine: Dispatched 'ui:render_inventory' with ${itemsData.length} items.`);
+    }
+
 
     /**
      * Starts the game engine after successful initialization.

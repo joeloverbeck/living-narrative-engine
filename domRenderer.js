@@ -14,9 +14,24 @@
  */
 
 /**
+ * @typedef {object} ItemUIData
+ * @property {string} id - Unique ID of the item.
+ * @property {string} name - Display name of the item.
+ * @property {string} [icon] - Optional path or identifier for an icon.
+ * @property {string} [description] - Optional description for item details view.
+ */
+
+/**
+ * @typedef {object} InventoryRenderPayload
+ * @property {ItemUIData[]} items - Array of items to display in the inventory.
+ */
+
+
+/**
  * Implements the IGameRenderer contract using direct DOM manipulation.
  * Handles rendering messages, location details, controlling the input element's visual state,
- * updating the main title, and subscribes itself to necessary UI events via the EventBus.
+ * updating the main title, and managing the inventory UI panel.
+ * Subscribes itself to necessary UI events via the EventBus.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
@@ -28,6 +43,14 @@ class DomRenderer {
     /** @type {EventBus} */
     #eventBus;
 
+    // --- Inventory UI Elements ---
+    /** @type {HTMLElement | null} */
+    #inventoryPanel = null;
+    /** @type {HTMLElement | null} */
+    #inventoryList = null;
+    /** @type {boolean} */
+    #isInventoryVisible = false;
+
     /**
      * Creates an instance of DomRenderer.
      * @param {HTMLElement} outputDiv - The main element where game output is displayed.
@@ -35,14 +58,13 @@ class DomRenderer {
      * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
      * @param {EventBus} eventBus - The application's event bus instance.
      */
-    constructor(outputDiv, inputElement, titleElement, eventBus) { // Added titleElement
+    constructor(outputDiv, inputElement, titleElement, eventBus) {
         if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
             throw new Error("DomRenderer requires a valid output HTMLElement.");
         }
         if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
             throw new Error("DomRenderer requires a valid HTMLInputElement.");
         }
-        // --- Added Validation for titleElement ---
         if (!titleElement || !(titleElement instanceof HTMLHeadingElement)) {
             throw new Error("DomRenderer requires a valid HTMLHeadingElement (H1).");
         }
@@ -52,13 +74,52 @@ class DomRenderer {
 
         this.#outputDiv = outputDiv;
         this.#inputElement = inputElement;
-        this.#titleElement = titleElement; // Store title element
+        this.#titleElement = titleElement;
         this.#eventBus = eventBus;
+
+        // --- Initialize Inventory UI ---
+        this.#createInventoryPanel(); // Create the panel elements
 
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        console.log("DomRenderer initialized and subscribed to events.");
+
+        console.log("DomRenderer initialized, inventory panel created, and subscribed to events.");
+    }
+
+    /**
+     * Creates the initial HTML structure for the inventory panel.
+     * It's initially hidden.
+     * @private
+     */
+    #createInventoryPanel() {
+        this.#inventoryPanel = document.createElement('div');
+        this.#inventoryPanel.id = 'inventory-panel';
+        this.#inventoryPanel.classList.add('inventory-panel', 'hidden'); // Start hidden
+
+        const header = document.createElement('h3');
+        header.textContent = 'Inventory';
+        this.#inventoryPanel.appendChild(header);
+
+        this.#inventoryList = document.createElement('ul');
+        this.#inventoryList.id = 'inventory-list';
+        this.#inventoryPanel.appendChild(this.#inventoryList);
+
+        // Add close button (optional)
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.onclick = () => this.toggleInventory(false); // Force hide
+        this.#inventoryPanel.appendChild(closeButton);
+
+        // Append to the body or a specific container (e.g., game-container)
+        // Appending to game-container for better structure relative to output/input
+        const gameContainer = document.getElementById('game-container');
+        if (gameContainer) {
+            gameContainer.appendChild(this.#inventoryPanel);
+        } else {
+            console.warn("DomRenderer: Could not find #game-container to append inventory panel. Appending to body.");
+            document.body.appendChild(this.#inventoryPanel);
+        }
     }
 
     /**
@@ -67,15 +128,20 @@ class DomRenderer {
      * @private
      */
     #subscribeToEvents() {
-        // --- Subscribe to standard UI Events ---
+        // --- Standard UI Events ---
         this.#eventBus.subscribe('ui:message_display', this.#handleMessageDisplay.bind(this));
         this.#eventBus.subscribe('ui:command_echo', this.#handleCommandEcho.bind(this));
         this.#eventBus.subscribe('ui:enable_input', this.#handleEnableInput.bind(this));
         this.#eventBus.subscribe('ui:disable_input', this.#handleDisableInput.bind(this));
         this.#eventBus.subscribe('ui:display_location', this.#handleDisplayLocation.bind(this));
-
-        // --- NEW: Subscribe to Title Update Events ---
         this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this));
+
+        // --- Inventory UI Events ---
+        // Event to update the content of the inventory UI
+        this.#eventBus.subscribe('ui:render_inventory', this.#handleRenderInventory.bind(this));
+        // Event to toggle visibility (can be triggered by InputHandler)
+        this.#eventBus.subscribe('ui:toggle_inventory', () => this.toggleInventory());
+
 
         console.log("DomRenderer event subscriptions complete.");
     }
@@ -145,6 +211,25 @@ class DomRenderer {
     }
 
     /**
+     * Handles the 'ui:render_inventory' event, updating the inventory panel content.
+     * @private
+     * @param {InventoryRenderPayload} payload - Data containing the list of items.
+     */
+    #handleRenderInventory(payload) {
+        if (!this.#inventoryList) {
+            console.error("Inventory list element not found!");
+            return;
+        }
+        if (!payload || !Array.isArray(payload.items)) {
+            console.warn("DomRenderer received 'ui:render_inventory' with invalid data:", payload);
+            this.#inventoryList.innerHTML = '<li>Error loading inventory.</li>'; // Display error
+            return;
+        }
+
+        this.#updateInventoryUI(payload.items);
+    }
+
+    /**
      * Renders a single feedback message. (Implementation unchanged)
      * @param {string} message - The HTML or text message to display.
      * @param {string} [type='info'] - Optional type for styling.
@@ -200,6 +285,105 @@ class DomRenderer {
     setInputState(enabled, placeholderText) {
         this.#inputElement.disabled = !enabled;
         this.#inputElement.placeholder = placeholderText;
+    }
+
+    /**
+     * Toggles the visibility of the inventory panel.
+     * Optionally force show or hide.
+     * @param {boolean} [forceState] - If true, shows the panel; if false, hides it. If undefined, toggles.
+     */
+    toggleInventory(forceState) {
+        if (!this.#inventoryPanel) return;
+
+        const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
+
+        if (shouldBeVisible) {
+            // Before showing, request fresh inventory data
+            // The GameEngine or another manager should listen for this event,
+            // gather data (EntityManager -> Player -> InventoryComponent -> Item Names),
+            // and dispatch 'ui:render_inventory'
+            this.#eventBus.dispatch('ui:request_inventory_render', {});
+
+            this.#inventoryPanel.classList.remove('hidden');
+            this.#isInventoryVisible = true;
+            console.log("Inventory panel shown.");
+            // Optional: Maybe disable game input while inventory is open?
+            // this.#eventBus.dispatch('ui:disable_input', { message: 'Inventory open...' });
+        } else {
+            this.#inventoryPanel.classList.add('hidden');
+            this.#isInventoryVisible = false;
+            console.log("Inventory panel hidden.");
+            // Optional: Re-enable game input if it was disabled
+            // this.#eventBus.dispatch('ui:enable_input', { placeholder: 'Enter command...' });
+        }
+    }
+
+    /**
+     * Updates the inventory list display based on the provided item data.
+     * @private
+     * @param {ItemUIData[]} itemsData - An array of item data objects.
+     */
+    #updateInventoryUI(itemsData) {
+        if (!this.#inventoryList) return;
+
+        // Clear previous items
+        this.#inventoryList.innerHTML = '';
+
+        if (itemsData.length === 0) {
+            const emptyLi = document.createElement('li');
+            emptyLi.textContent = '(Empty)';
+            emptyLi.classList.add('inventory-item-empty');
+            this.#inventoryList.appendChild(emptyLi);
+        } else {
+            itemsData.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('inventory-item');
+                li.dataset.itemId = item.id; // Store item ID for potential interactions
+
+                // Display Icon (if available)
+                if (item.icon) {
+                    const img = document.createElement('img');
+                    img.src = item.icon; // Assuming icon is a path
+                    img.alt = item.name;
+                    img.classList.add('inventory-item-icon');
+                    li.appendChild(img);
+                } else {
+                    // Placeholder for icon if needed
+                    const iconPlaceholder = document.createElement('span');
+                    iconPlaceholder.classList.add('inventory-item-icon-placeholder');
+                    iconPlaceholder.textContent = '📦'; // Simple box emoji as placeholder
+                    li.appendChild(iconPlaceholder);
+                }
+
+                // Display Name
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('inventory-item-name');
+                nameSpan.textContent = item.name || '(Unnamed Item)';
+                li.appendChild(nameSpan);
+
+                // Add click listener for selection (basic feedback)
+                li.addEventListener('click', () => {
+                    // Remove 'selected' from previously selected item
+                    const currentSelected = this.#inventoryList?.querySelector('.selected');
+                    if (currentSelected) {
+                        currentSelected.classList.remove('selected');
+                    }
+                    // Add 'selected' to clicked item
+                    li.classList.add('selected');
+
+                    // Optional: Display item description or trigger 'view item details' event
+                    console.log(`Selected item: ${item.name} (ID: ${item.id})`);
+                    // Example: Dispatch event for other systems (e.g., an item details panel)
+                    // this.#eventBus.dispatch('ui:inventory_item_selected', { itemData: item });
+
+                    // Placeholder for item description display (could be in a separate panel)
+                    // const descPanel = document.getElementById('item-description-panel');
+                    // if(descPanel) descPanel.textContent = item.description || 'No description available.';
+                });
+
+                this.#inventoryList.appendChild(li);
+            });
+        }
     }
 }
 

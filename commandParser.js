@@ -61,45 +61,47 @@ class CommandParser {
         const lowerCommand = commandString.trim().toLowerCase();
         const parts = lowerCommand.split(' ').filter(p => p); // Split and remove empty strings
 
-        let actionId;
-        let targets;
-        let error = null; // Initialize error as null
+        let actionId = null; // Initialize
+        let targets = [];    // Initialize
+        let error = null;   // Initialize error as null
 
         if (parts.length === 0) {
             // Handle empty input - it's valid input, just results in no action
-            actionId = null;
-            targets = [];
+            // actionId and targets remain null/[]
         } else {
             const verb = parts[0];
-            targets = parts.slice(1); // Initial target assignment
+            // Initial target assignment ONLY if there's more than one part
+            targets = parts.length > 1 ? parts.slice(1) : [];
 
             // Attempt direct verb-to-action mapping
             actionId = CommandParser.#actionMap[verb] || null;
 
-            // Special handling for movement directions as the verb
-            if (!actionId && CommandParser.#directions.includes(verb)) { // Check !actionId to avoid overriding equip/unequip if they matched
-                actionId = 'core:action_move';
-                targets = [CommandParser.#directionMap[verb] || verb];
+            // Check if the verb itself is a direction. This takes precedence
+            // for setting the target if it's a single-word command.
+            if (CommandParser.#directions.includes(verb)) {
+                // If the verb is a direction, ensure the action is move
+                // and the target *is* the direction (normalized).
+                actionId = 'core:action_move'; // Ensure/overwrite action is move
+                targets = [CommandParser.#directionMap[verb] || verb]; // Set the target correctly
             }
-            // Handle "look at [target]" vs simple "look"
-            else if (verb === 'look') { // Keep existing look logic
-                actionId = 'core:action_look';
+
+            // Handle specific verbs like "look" if they weren't directions
+            else if (verb === 'look') { // Use 'else if' to avoid conflict with directions
+                actionId = 'core:action_look'; // Ensure correct action
+                // Handle "look at [target]" vs simple "look"
                 if (targets.length > 0 && targets[0] === 'at') {
-                    targets = targets.slice(1);
+                    targets = targets.slice(1); // Remove 'at'
                 }
-                // 'look thing' and 'look' are handled by initial targets assignment
+                // If 'look' was single word, targets is already [], which is correct for 'look' (look around)
+                // If 'look target', targets is already ['target'] from initial assignment.
             }
+            // Add other 'else if' blocks here for verbs with special target handling
+            // if needed in the future.
 
-            // If actionId is still null, it's unknown
-            if (!actionId && parts.length > 0) {
-                // Unknown command
-            }
+            // If actionId is still null after all checks, it's an unknown command
+            // (We can optionally add an error message here later)
+            // if (!actionId) { ... }
         }
-
-        // TODO: Implement more sophisticated parsing in future tickets:
-        // - Match targets against entities in the current location.
-        // - Handle prepositions ("take key from chest").
-        // - Use action definitions from DataManager to guide parsing.
 
         /** @type {ParsedCommand} */
         return {

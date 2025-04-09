@@ -266,6 +266,107 @@ h1 {
 }
 */
 
+/* --- Inventory Panel Styles --- */
+.inventory-panel {
+    position: absolute; /* Or fixed, depending on desired behavior */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; /* Example width */
+    max-height: 80vh; /* Example max height */
+    background-color: var(--color-background-output, #f8f9fa); /* Use theme variable */
+    border: 1px solid var(--color-border-default, #ced4da);
+    border-radius: var(--border-radius-medium, 0.25rem);
+    padding: var(--padding-medium, 0.5rem);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 10; /* Ensure it's above game output */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content spill */
+}
+
+.inventory-panel.hidden {
+    display: none;
+}
+
+.inventory-panel h3 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: var(--margin-medium, 0.5rem);
+    color: var(--color-text-heading, #333);
+    flex-shrink: 0;
+}
+
+#inventory-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto; /* Allow scrolling for long lists */
+    flex-grow: 1; /* Take available space */
+    margin-bottom: var(--margin-medium, 0.5rem);
+}
+
+.inventory-item {
+    display: flex;
+    align-items: center;
+    padding: var(--padding-small, 0.25rem) var(--padding-medium, 0.5rem);
+    margin-bottom: var(--margin-small, 0.25rem);
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-small, 0.2rem);
+    background-color: var(--color-background-page, #fff); /* Slightly different background */
+}
+
+.inventory-item:hover {
+    background-color: var(--color-background-location, #e9ecef); /* Subtle hover */
+}
+
+.inventory-item.selected {
+    border-color: var(--color-accent-location, #6c757d); /* Highlight selected */
+    font-weight: bold;
+}
+
+
+.inventory-item-icon,
+.inventory-item-icon-placeholder {
+    width: 24px; /* Adjust size as needed */
+    height: 24px;
+    margin-right: var(--margin-medium, 0.5rem);
+    object-fit: contain; /* Prevent image distortion */
+    flex-shrink: 0;
+    display: inline-flex; /* For placeholder alignment */
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem; /* Emoji size */
+}
+
+.inventory-item-name {
+    flex-grow: 1;
+    color: var(--color-text-default, #333);
+}
+
+.inventory-item-empty {
+    color: var(--color-text-secondary, #666);
+    font-style: italic;
+    text-align: center;
+    padding: var(--padding-medium, 0.5rem);
+}
+
+.inventory-panel button {
+    padding: var(--padding-small) var(--padding-medium);
+    margin-top: var(--margin-medium);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--border-radius-small);
+    background-color: var(--color-background-input);
+    cursor: pointer;
+    align-self: center; /* Center the button */
+    flex-shrink: 0;
+}
+
+.inventory-panel button:hover {
+    background-color: #eee; /* Simple hover effect */
+}
+
 /* --- Utility Styles --- */
 /* For general errors outside game loop (e.g., init failure) */
 #error-output {
