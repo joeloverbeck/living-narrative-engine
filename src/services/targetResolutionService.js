@@ -132,32 +132,30 @@ export function resolveTargetEntity(context, config) {
     });
 
     // --- 5. Handle Empty Filtered Scope ---
-    // --- MODIFICATION START ---
     if (filteredEntities.length === 0) {
-        let emptyMsg;
-        if (config.emptyScopeMessage) {
-            // Use the exact string provided by the caller (which might be from TARGET_MESSAGES itself, e.g., TAKE_EMPTY_LOCATION)
-            emptyMsg = config.emptyScopeMessage;
-        } else {
-            // Determine appropriate generic message from TARGET_MESSAGES
-            const isPersonalScope = scopes.every(s => s === 'inventory' || s === 'equipment'); // Only inv/equip searched
-            const isMixedPersonal = scopes.includes('inventory') || scopes.includes('equipment'); // At least one personal scope included (e.g., 'nearby')
-
-            if (isPersonalScope) {
-                emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb);
+        // Only dispatch if the caller didn't suppress messages via notFoundMessageKey: null
+        // (Using notFoundMessageKey as a general signal to suppress resolver messages for now)
+        if (config.notFoundMessageKey !== null) {
+            let emptyMsg;
+            if (config.emptyScopeMessage) {
+                emptyMsg = config.emptyScopeMessage;
             } else {
-                // Determine context string for generic message
-                // Simple context: 'on you' if only personal, 'here' if only location-based, 'nearby' if mixed.
-                const scopeContext = isPersonalScope ? 'on you'
-                    : isMixedPersonal ? 'nearby'
-                        : 'here';
-                emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, scopeContext);
+                const isPersonalScope = scopes.every(s => s === 'inventory' || s === 'equipment');
+                const isMixedPersonal = scopes.includes('inventory') || scopes.includes('equipment');
+
+                if (isPersonalScope) {
+                    emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb);
+                } else {
+                    const scopeContext = isPersonalScope ? 'on you'
+                        : isMixedPersonal ? 'nearby'
+                            : 'here';
+                    emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, scopeContext);
+                }
             }
+            dispatch('ui:message_display', {text: emptyMsg, type: 'info'});
         }
-        dispatch('ui:message_display', {text: emptyMsg, type: 'info'});
-        return null;
+        return null; // Always return null if scope was empty after filtering
     }
-    // --- MODIFICATION END ---
 
     // --- 6. Call findTarget --- (No changes here)
     const findResult = findTarget(config.targetName, filteredEntities);
@@ -165,57 +163,61 @@ export function resolveTargetEntity(context, config) {
     // --- 7. Handle findTarget Results ---
     switch (findResult.status) {
         case 'NOT_FOUND': {
-            // --- MODIFICATION START ---
-            // Determine appropriate message key
-            let messageKey = config.notFoundMessageKey; // Use override if provided
-            if (!messageKey) {
-                // Prioritize action-specific keys first
-                if (config.actionVerb === 'equip') messageKey = 'NOT_FOUND_EQUIPPABLE';
-                else if (config.actionVerb === 'unequip') messageKey = 'NOT_FOUND_UNEQUIPPABLE';
-                else if (config.actionVerb === 'attack') messageKey = 'NOT_FOUND_ATTACKABLE';
-                else if (config.actionVerb === 'take') messageKey = 'NOT_FOUND_TAKEABLE';
-                // Then fall back to scope-based keys
-                else if (scopes.includes('inventory') && scopes.length === 1) messageKey = 'NOT_FOUND_INVENTORY'; // More specific if ONLY inventory
-                else if (scopes.includes('equipment') && scopes.length === 1) messageKey = 'NOT_FOUND_EQUIPPED'; // More specific if ONLY equipment
-                else if (scopes.includes('inventory') || scopes.includes('equipment')) messageKey = 'NOT_FOUND_INVENTORY'; // General 'on person' fallback if mixed
-                // Final fallback based on location presence
-                else messageKey = 'NOT_FOUND_LOCATION';
-            }
+            // Only determine and dispatch a message if the caller did NOT explicitly pass null
+            // for notFoundMessageKey, indicating they want the resolver to handle it.
+            if (config.notFoundMessageKey !== null) {
+                // Determine appropriate message key
+                let messageKey = config.notFoundMessageKey; // Use override if provided and not null
 
-            const messageGenerator = TARGET_MESSAGES[messageKey];
-            let errorMsg;
+                // If key is still null/undefined (because caller didn't provide an override), determine default
+                if (!messageKey) {
+                    if (config.actionVerb === 'equip') messageKey = 'NOT_FOUND_EQUIPPABLE';
+                    else if (config.actionVerb === 'unequip') messageKey = 'NOT_FOUND_UNEQUIPPABLE';
+                    else if (config.actionVerb === 'attack') messageKey = 'NOT_FOUND_ATTACKABLE';
+                    else if (config.actionVerb === 'take') messageKey = 'NOT_FOUND_TAKEABLE';
+                    else if (scopes.length === 1 && scopes[0] === 'inventory') messageKey = 'NOT_FOUND_INVENTORY';
+                    else if (scopes.length === 1 && scopes[0] === 'equipment') messageKey = 'NOT_FOUND_EQUIPPED';
+                    else if (scopes.includes('inventory') || scopes.includes('equipment')) messageKey = 'NOT_FOUND_INVENTORY';
+                    else messageKey = 'NOT_FOUND_LOCATION';
 
-            if (typeof messageGenerator === 'function') {
-                errorMsg = messageGenerator(config.targetName);
-            } else {
-                // If the key was invalid, not found in TARGET_MESSAGES, or didn't resolve above
-                console.warn(`resolveTargetEntity: Invalid or undetermined notFoundMessageKey: ${messageKey}. Falling back to generic.`);
-                // Use the absolute generic fallback from TARGET_MESSAGES
-                errorMsg = TARGET_MESSAGES.NOT_FOUND_GENERIC(config.targetName);
-            }
+                    if (!messageKey) {
+                        console.warn(`resolveTargetEntity: Could not determine a default message key for NOT_FOUND. Action: ${config.actionVerb}, Scope: ${scopes}`);
+                        messageKey = 'NOT_FOUND_INVENTORY'; // Fallback
+                    }
+                }
 
-            dispatch('ui:message_display', {text: errorMsg, type: 'info'});
-            // --- MODIFICATION END ---
+                // Generate and dispatch the message
+                const messageGenerator = TARGET_MESSAGES[messageKey];
+                let errorMsg;
+                if (typeof messageGenerator === 'function') {
+                    errorMsg = messageGenerator(config.targetName);
+                } else {
+                    console.warn(`resolveTargetEntity: Invalid or missing message key in TARGET_MESSAGES: ${messageKey}. Falling back.`);
+                    errorMsg = `You don't find any '${config.targetName}' to ${config.actionVerb}.`; // Basic fallback
+                }
+
+                dispatch('ui:message_display', {text: errorMsg, type: 'info'});
+
+            } // End of conditional dispatch block
+
+            // Always return null when status is NOT_FOUND
             return null;
         }
         case 'FOUND_AMBIGUOUS': {
-            // --- MODIFICATION START ---
-            // Use TARGET_MESSAGES exclusively. No hardcoded strings.
-            // Note: targetName (what user typed) is used for the "type" in the prompt.
-            const errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, config.targetName, findResult.matches);
-            dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-            // --- MODIFICATION END ---
-            return null;
+            // Also suppress ambiguous prompt if notFoundMessageKey is null, assuming
+            // the caller wants to handle all non-success cases.
+            if (config.notFoundMessageKey !== null) {
+                const errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, config.targetName, findResult.matches);
+                dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
+            }
+            return null; // Always return null for ambiguous case
         }
         case 'FOUND_UNIQUE':
             return findResult.matches[0]; // Success! Return the entity.
         default: {
-            // Should not happen with current findTarget implementation
-            console.error("resolveTargetEntity: Unexpected status from findTarget:", findResult.status);
-            // --- MODIFICATION START ---
-            // Use the specific internal error message from TARGET_MESSAGES
+            // Internal errors maybe should always be dispatched? Or also suppressed?
+            // Let's assume internal errors should still be shown for debugging.
             const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_RESOLUTION(findResult.status || 'unknown');
-            // --- MODIFICATION END ---
             dispatch('ui:message_display', {text: errorMsg, type: 'error'});
             return null;
         }
