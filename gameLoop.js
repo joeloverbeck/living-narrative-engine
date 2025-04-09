@@ -83,7 +83,46 @@ class GameLoop {
         this.#eventBus = eventBus;
 
         this.#isRunning = false; // Initialize running state
+
+        this.#subscribeToEvents();
+
         console.log("GameLoop: Instance created (using options object). Ready to start.");
+    }
+
+    /**
+     * Sets up necessary event bus subscriptions for the GameLoop.
+     * @private
+     */
+    #subscribeToEvents() {
+        // Listen for commands submitted internally (e.g., from UI buttons)
+        this.#eventBus.subscribe('command:submit', this.#handleSubmittedCommandFromEvent.bind(this));
+        console.log("GameLoop: Subscribed to 'command:submit' event.");
+
+        // Add any other GameLoop-specific subscriptions here if needed in the future
+    }
+
+    /**
+     * Handles commands received via the 'command:submit' event (e.g., from UI).
+     * @private
+     * @param {{command: string}} eventData - The event payload containing the command string.
+     */
+    #handleSubmittedCommandFromEvent(eventData) {
+        if (!this.#isRunning) {
+            console.warn("GameLoop received command submission via event, but loop is not running.");
+            return;
+        }
+        if (eventData && typeof eventData.command === 'string') {
+            // Optional: Echo command if needed (DomRenderer doesn't echo its own commands)
+            // this.#eventBus.dispatch('ui:command_echo', { command: eventData.command });
+
+            // Process the command using the main processing logic
+            console.log(`GameLoop: Received command via event: "${eventData.command}"`);
+            this.processSubmittedCommand(eventData.command);
+        } else {
+            console.warn("GameLoop received invalid 'command:submit' event data:", eventData);
+            // Still prompt for input if the event data was bad
+            this.promptInput();
+        }
     }
 
     /**

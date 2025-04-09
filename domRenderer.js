@@ -320,6 +320,7 @@ class DomRenderer {
 
     /**
      * Updates the inventory list display based on the provided item data.
+     * Adds a "Drop" button to each item.
      * @private
      * @param {ItemUIData[]} itemsData - An array of item data objects.
      */
@@ -340,28 +341,64 @@ class DomRenderer {
                 li.classList.add('inventory-item');
                 li.dataset.itemId = item.id; // Store item ID for potential interactions
 
-                // Display Icon (if available)
+                // Display Icon (if available) - Unchanged
                 if (item.icon) {
+                    // ... icon logic ...
                     const img = document.createElement('img');
                     img.src = item.icon; // Assuming icon is a path
                     img.alt = item.name;
                     img.classList.add('inventory-item-icon');
                     li.appendChild(img);
                 } else {
-                    // Placeholder for icon if needed
+                    // ... placeholder logic ...
                     const iconPlaceholder = document.createElement('span');
                     iconPlaceholder.classList.add('inventory-item-icon-placeholder');
                     iconPlaceholder.textContent = '📦'; // Simple box emoji as placeholder
                     li.appendChild(iconPlaceholder);
                 }
 
-                // Display Name
+                // Display Name - Unchanged
                 const nameSpan = document.createElement('span');
                 nameSpan.classList.add('inventory-item-name');
                 nameSpan.textContent = item.name || '(Unnamed Item)';
                 li.appendChild(nameSpan);
 
-                // Add click listener for selection (basic feedback)
+                // ADD DROP BUTTON ---
+                const dropButton = document.createElement('button');
+                dropButton.textContent = 'Drop';
+                dropButton.classList.add('inventory-item-drop-button');
+                // Store item name directly on the button for the event listener
+                dropButton.dataset.itemName = item.name || '(Unnamed Item)';
+
+                dropButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); // VERY IMPORTANT: Prevent li's click listener
+
+                    const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
+                    const parentLi = clickedButton.closest('li');
+                    if (!parentLi) return; // Should not happen
+
+                    const itemIdToDrop = parentLi.dataset.itemId;
+                    const itemNameToDrop = clickedButton.dataset.itemName; // Retrieve from button's dataset
+
+                    if (!itemIdToDrop || !itemNameToDrop) {
+                        console.error('Drop button clicked, but missing item ID or name from dataset.');
+                        return;
+                    }
+
+                    // Construct the command
+                    const commandString = `drop ${itemNameToDrop}`;
+                    console.log(`Drop button clicked for item: ${itemNameToDrop} (ID: ${itemIdToDrop}). Constructing command: "${commandString}"`);
+
+                    // Submit the command via EventBus
+                    // The GameLoop should listen for 'command:submit'
+                    this.#eventBus.dispatch('command:submit', {command: commandString});
+
+                    // Optional: Close inventory after dropping
+                    this.toggleInventory(false);
+                });
+                li.appendChild(dropButton);
+
+                // Add click listener for selection (basic feedback) - Unchanged
                 li.addEventListener('click', () => {
                     // Remove 'selected' from previously selected item
                     const currentSelected = this.#inventoryList?.querySelector('.selected');
@@ -370,15 +407,9 @@ class DomRenderer {
                     }
                     // Add 'selected' to clicked item
                     li.classList.add('selected');
-
-                    // Optional: Display item description or trigger 'view item details' event
                     console.log(`Selected item: ${item.name} (ID: ${item.id})`);
-                    // Example: Dispatch event for other systems (e.g., an item details panel)
+                    // Optional: Dispatch 'ui:inventory_item_selected' event
                     // this.#eventBus.dispatch('ui:inventory_item_selected', { itemData: item });
-
-                    // Placeholder for item description display (could be in a separate panel)
-                    // const descPanel = document.getElementById('item-description-panel');
-                    // if(descPanel) descPanel.textContent = item.description || 'No description available.';
                 });
 
                 this.#inventoryList.appendChild(li);

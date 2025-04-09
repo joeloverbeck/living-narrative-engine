@@ -42,6 +42,7 @@ class InventorySystem {
      */
     initialize() {
         this.#eventBus.subscribe('event:item_picked_up', this.#handleItemPickedUp.bind(this));
+        this.#eventBus.subscribe('event:item_drop_attempted', this.#handleItemDropAttempted.bind(this));
         console.log("InventorySystem: Initialized and subscribed to 'event:item_picked_up'.");
     }
 
@@ -111,6 +112,58 @@ class InventorySystem {
         // is assumed to be handled by another system listening to 'event:item_picked_up'
         // or by the system that initially dispatched the event (e.g., InteractionSystem).
         // This system (InventorySystem) is now *only* responsible for managing the inventory component state.
+    }
+
+    /**
+     * Handles the 'event:item_drop_attempted' event.
+     * Removes the specified item from the player's inventory state.
+     * Does not handle placing the item in the world.
+     * @private
+     * @param {{ playerId: string, itemInstanceId: string, locationId: string }} eventData - Data from the event.
+     */
+    #handleItemDropAttempted(eventData) {
+        const {playerId, itemInstanceId} = eventData; // locationId is available but not needed for inventory removal
+        console.log(`InventorySystem (Drop): Handling event:item_drop_attempted for player ${playerId}, item ${itemInstanceId}`);
+
+        // --- 1. Retrieve Player Entity and Inventory ---
+        const playerEntity = this.#entityManager.getEntityInstance(playerId);
+        if (!playerEntity) {
+            // Should generally not happen if event source (dropActionHandler) validated the player
+            console.error(`InventorySystem (Drop): Player entity '${playerId}' not found when handling drop event.`);
+            return; // Cannot proceed without the player entity
+        }
+
+        const inventoryComp = playerEntity.getComponent(InventoryComponent);
+        if (!inventoryComp) {
+            // Should also not happen if dropActionHandler validated it, but check defensively
+            console.error(`InventorySystem (Drop): Player entity '${playerId}' has no InventoryComponent when handling drop event.`);
+            return; // Cannot proceed without the inventory component
+        }
+
+        // --- 2. Consistency Check ---
+        // Verify the item is still in the inventory before attempting removal.
+        // This handles potential race conditions or stale event data.
+        if (!inventoryComp.hasItem(itemInstanceId)) {
+            console.warn(`InventorySystem (Drop): Consistency check failed. Player ${playerId}'s inventory does not contain item ${itemInstanceId} when attempting drop. Event ignored.`);
+            // Log a warning as per AC, but do not crash.
+            return; // Stop processing this event
+        }
+
+        // --- 3. Remove Item from Inventory ---
+        const removed = inventoryComp.removeItem(itemInstanceId);
+
+        // --- 4. Log Result ---
+        if (removed) {
+            console.log(`InventorySystem (Drop): Successfully removed item ${itemInstanceId} from player ${playerId}'s inventory.`);
+        } else {
+            // This case *shouldn't* be reachable if the 'hasItem' check above passed,
+            // but log an error defensively in case of unexpected component behavior.
+            console.error(`InventorySystem (Drop): Failed to remove item ${itemInstanceId} from player ${playerId}'s inventory, even though it passed the consistency check.`);
+        }
+
+        // Note: This system's responsibility ends here. Placing the item in the world
+        // or dispatching UI messages would be handled by other systems listening
+        // to 'event:item_drop_attempted' or a subsequent event like 'event:item_dropped'.
     }
 }
 
