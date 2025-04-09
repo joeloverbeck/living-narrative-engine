@@ -1,13 +1,13 @@
 // src/systems/itemUsageSystem.js
 
 // Component Imports (Ensure all necessary components are imported)
-import { InventoryComponent } from '../components/inventoryComponent.js';
-import { HealthComponent } from '../components/healthComponent.js';
-import { PositionComponent } from '../components/positionComponent.js';
+import {InventoryComponent} from '../components/inventoryComponent.js';
+import {HealthComponent} from '../components/healthComponent.js';
+import {PositionComponent} from '../components/positionComponent.js';
 
 // Utilities
-import { findTarget } from '../utils/targetFinder.js'; // Potentially needed for contextual search if implemented
-import { TARGET_MESSAGES, getDisplayName } from '../utils/messages.js';
+import {findTarget} from '../utils/targetFinder.js'; // Potentially needed for contextual search if implemented
+import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
 
 // Type Imports for JSDoc
 /** @typedef {import('../../eventBus.js').default} EventBus */
@@ -69,7 +69,7 @@ class ItemUsageSystem {
      * @param {DataManager} options.dataManager
      * // @param {GameStateManager} options.gameStateManager
      */
-    constructor({ eventBus, entityManager, dataManager }) {
+    constructor({eventBus, entityManager, dataManager}) {
         if (!eventBus) throw new Error("ItemUsageSystem requires options.eventBus.");
         if (!entityManager) throw new Error("ItemUsageSystem requires options.entityManager.");
         if (!dataManager) throw new Error("ItemUsageSystem requires options.dataManager.");
@@ -120,9 +120,8 @@ class ItemUsageSystem {
      */
     _handleItemUseAttempt(payload) {
         console.log(`ItemUsageSystem: Received event:item_use_attempted`);
-        console.debug('Payload details:', payload);
 
-        const { userEntityId, itemInstanceId, itemDefinitionId, explicitTargetEntityId } = payload;
+        const {userEntityId, itemInstanceId, itemDefinitionId, explicitTargetEntityId} = payload;
         /** @type {ActionMessage[]} */
         const internalMessages = []; // For logging the process of this handler
 
@@ -146,7 +145,7 @@ class ItemUsageSystem {
         }
         if (!itemDefinition) {
             console.error(`ItemUsageSystem: Item definition ${itemDefinitionId} not found. Cannot process use attempt.`);
-            this.#eventBus.dispatch('ui:message_display', { text: "Error: Item definition is missing.", type: 'error' });
+            this.#eventBus.dispatch('ui:message_display', {text: "Error: Item definition is missing.", type: 'error'});
             return;
         }
 
@@ -157,7 +156,7 @@ class ItemUsageSystem {
         const usableComponentData = itemDefinition.components?.Usable;
         if (!usableComponentData) {
             console.warn(`ItemUsageSystem: Item ${itemDefinitionId} (${itemName}) definition lacks Usable component.`);
-            this.#eventBus.dispatch('ui:message_display', { text: `You cannot use ${itemName}.`, type: 'info' });
+            this.#eventBus.dispatch('ui:message_display', {text: `You cannot use ${itemName}.`, type: 'info'});
             return;
         }
 
@@ -181,7 +180,10 @@ class ItemUsageSystem {
         // --- 5. Handle Targeting ---
         let validatedTargetEntity = null; // Initialize validated target
         if (usableComponentData.target_required) {
-            internalMessages.push({ text: `Target required for ${itemName}. Explicit ID: ${explicitTargetEntityId}`, type: 'internal' });
+            internalMessages.push({
+                text: `Target required for ${itemName}. Explicit ID: ${explicitTargetEntityId}`,
+                type: 'internal'
+            });
 
             let potentialTargetEntity = null;
 
@@ -192,10 +194,16 @@ class ItemUsageSystem {
                     // The Action Handler resolved an ID, but the entity is gone/invalid now.
                     console.warn(`ItemUsageSystem: Explicit target entity ${explicitTargetEntityId} not found.`);
                     // We could try contextual search here, but per previous thoughts, let's fail clearly.
-                    this.#eventBus.dispatch('ui:message_display', { text: "The target you specified is no longer valid.", type: 'warning' });
+                    this.#eventBus.dispatch('ui:message_display', {
+                        text: "The target you specified is no longer valid.",
+                        type: 'warning'
+                    });
                     return;
                 }
-                internalMessages.push({ text: `Found potential explicit target: ${getDisplayName(potentialTargetEntity)} (${potentialTargetEntity.id})`, type: 'internal'});
+                internalMessages.push({
+                    text: `Found potential explicit target: ${getDisplayName(potentialTargetEntity)} (${potentialTargetEntity.id})`,
+                    type: 'internal'
+                });
             } else {
                 // --- 5b. No Explicit Target Provided (Handle Contextual Search or Failure) ---
                 // TODO: Implement contextual search if needed based on design.
@@ -217,8 +225,14 @@ class ItemUsageSystem {
                 }
                 */
                 // Sticking to failure if explicit target is missing:
-                internalMessages.push({ text: `Target required, but no explicit target entity ID was provided in the event payload.`, type: 'internal'});
-                this.#eventBus.dispatch('ui:message_display', { text: `You need to specify a target to use the ${itemName}.`, type: 'warning' });
+                internalMessages.push({
+                    text: `Target required, but no explicit target entity ID was provided in the event payload.`,
+                    type: 'internal'
+                });
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: `You need to specify a target to use the ${itemName}.`,
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -241,23 +255,26 @@ class ItemUsageSystem {
                 }
                 // Target is valid!
                 validatedTargetEntity = potentialTargetEntity;
-                internalMessages.push({ text: `Target ${getDisplayName(validatedTargetEntity)} validated successfully.`, type: 'internal'});
+                internalMessages.push({
+                    text: `Target ${getDisplayName(validatedTargetEntity)} validated successfully.`,
+                    type: 'internal'
+                });
 
             } else {
                 // Should have been handled above (explicit not found or contextual failed)
                 // If we reach here, it means target required but none found/validated.
                 if (!validatedTargetEntity) { // Double check
-                    internalMessages.push({ text: `Failed to find or validate a required target.`, type: 'internal'});
+                    internalMessages.push({text: `Failed to find or validate a required target.`, type: 'internal'});
                     // Assume appropriate feedback was given earlier
                     // Default message if somehow missed:
                     const defaultFailMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
-                    this.#eventBus.dispatch('ui:message_display', { text: defaultFailMsg, type: 'warning' });
+                    this.#eventBus.dispatch('ui:message_display', {text: defaultFailMsg, type: 'warning'});
                     return;
                 }
             }
 
         } else {
-            internalMessages.push({ text: `No target required for ${itemName}.`, type: 'internal'});
+            internalMessages.push({text: `No target required for ${itemName}.`, type: 'internal'});
             // No target required, validatedTargetEntity remains null
         }
 
@@ -278,7 +295,7 @@ class ItemUsageSystem {
                 itemName: itemName
                 // dispatch property intentionally omitted
             };
-            internalMessages.push({ text: `Executing effects loop for ${itemName}...`, type: 'internal'});
+            internalMessages.push({text: `Executing effects loop for ${itemName}...`, type: 'internal'});
 
             // --- 6b. Iterate through effects ---
             for (const effect of usableComponentData.effects) {
@@ -289,12 +306,15 @@ class ItemUsageSystem {
 
                 if (handler) {
                     try {
-                        internalMessages.push({ text: `Executing effect: ${effectData.effect_type}`, type: 'internal'});
+                        internalMessages.push({text: `Executing effect: ${effectData.effect_type}`, type: 'internal'});
                         const result = handler(effectData.effect_params, effectContext);
                         internalMessages.push(...(result.messages || [])); // Log effect messages
 
                         if (!result.success) {
-                            internalMessages.push({ text: `Effect ${effectData.effect_type} reported failure. StopPropagation: ${result.stopPropagation}`, type: 'internal'});
+                            internalMessages.push({
+                                text: `Effect ${effectData.effect_type} reported failure. StopPropagation: ${result.stopPropagation}`,
+                                type: 'internal'
+                            });
                             if (result.stopPropagation) {
                                 overallEffectsSuccess = false;
                                 break; // Stop processing further effects
@@ -302,25 +322,40 @@ class ItemUsageSystem {
                             // If stopPropagation is false, continue with next effect but note overall success might be partial
                             // For simplicity now, we only track critical failure via stopPropagation.
                         } else {
-                            internalMessages.push({ text: `Effect ${effectData.effect_type} reported success.`, type: 'internal'});
+                            internalMessages.push({
+                                text: `Effect ${effectData.effect_type} reported success.`,
+                                type: 'internal'
+                            });
                         }
                     } catch (error) {
                         console.error(`ItemUsageSystem: Error executing effect handler '${effectData.effect_type}' for ${itemName}:`, error);
-                        internalMessages.push({ text: `CRITICAL ERROR executing effect ${effectData.effect_type}. ${error.message}`, type: 'error'});
+                        internalMessages.push({
+                            text: `CRITICAL ERROR executing effect ${effectData.effect_type}. ${error.message}`,
+                            type: 'error'
+                        });
                         overallEffectsSuccess = false; // Critical error stops processing
                         // Maybe dispatch a generic error message?
-                        this.#eventBus.dispatch('ui:message_display', { text: `An error occurred while using ${itemName}.`, type: 'error' });
+                        this.#eventBus.dispatch('ui:message_display', {
+                            text: `An error occurred while using ${itemName}.`,
+                            type: 'error'
+                        });
                         break;
                     }
                 } else {
                     console.warn(`ItemUsageSystem: No registered effect handler found for type: ${effectData.effect_type} in item ${itemName}. Skipping effect.`);
-                    internalMessages.push({ text: `Unknown effect type '${effectData.effect_type}'. Skipping.`, type: 'warning'});
+                    internalMessages.push({
+                        text: `Unknown effect type '${effectData.effect_type}'. Skipping.`,
+                        type: 'warning'
+                    });
                 }
             }
-            internalMessages.push({ text: `Effects loop finished. Overall Success: ${overallEffectsSuccess}`, type: 'internal'});
+            internalMessages.push({
+                text: `Effects loop finished. Overall Success: ${overallEffectsSuccess}`,
+                type: 'internal'
+            });
 
         } else {
-            internalMessages.push({ text: `No effects defined for ${itemName}.`, type: 'internal'});
+            internalMessages.push({text: `No effects defined for ${itemName}.`, type: 'internal'});
             // If no effects, the action is still considered "successful" if conditions passed
         }
 
@@ -332,23 +367,32 @@ class ItemUsageSystem {
                 // Use the specific itemInstanceId from the payload
                 const removed = inventoryComponent.removeItem(itemInstanceId);
                 if (removed) {
-                    internalMessages.push({ text: `Consumed item instance ${itemInstanceId} (${itemName}).`, type: 'internal'});
+                    internalMessages.push({
+                        text: `Consumed item instance ${itemInstanceId} (${itemName}).`,
+                        type: 'internal'
+                    });
                     console.log(`ItemUsageSystem: Consumed item instance ${itemInstanceId} (${itemName}) from ${userEntityId}'s inventory.`);
                     // Future: Handle quantity decrement for stackable items
                     // inventoryComponent.decreaseQuantity(itemInstanceId, 1);
                 } else {
                     // This could happen if the item was somehow removed between the event firing and now.
                     console.warn(`ItemUsageSystem: Failed to remove item instance ${itemInstanceId} (${itemName}) during consumption for user ${userEntityId}. Item might have already been removed.`);
-                    internalMessages.push({ text: `Attempted to consume instance ${itemInstanceId}, but it was not found in inventory.`, type: 'warning'});
+                    internalMessages.push({
+                        text: `Attempted to consume instance ${itemInstanceId}, but it was not found in inventory.`,
+                        type: 'warning'
+                    });
                     // Should this prevent the success message? Maybe not, the *action* was successful, consumption just failed post-hoc.
                 }
             } else {
                 console.error(`ItemUsageSystem: User ${userEntityId} lacks InventoryComponent. Cannot consume item ${itemInstanceId}.`);
-                internalMessages.push({ text: `User missing inventory component, cannot consume item.`, type: 'error'});
+                internalMessages.push({text: `User missing inventory component, cannot consume item.`, type: 'error'});
                 // This is an inconsistency, the user shouldn't have been able to use an item without inventory.
             }
         } else {
-            internalMessages.push({ text: `Item consumption skipped. EffectsSuccess=${overallEffectsSuccess}, ConsumeFlag=${usableComponentData.consume_on_use}`, type: 'internal'});
+            internalMessages.push({
+                text: `Item consumption skipped. EffectsSuccess=${overallEffectsSuccess}, ConsumeFlag=${usableComponentData.consume_on_use}`,
+                type: 'internal'
+            });
         }
 
         // --- 8. Provide Final Feedback ---
@@ -357,24 +401,30 @@ class ItemUsageSystem {
         if (overallEffectsSuccess) {
             const successMsg = usableComponentData.success_message;
             if (successMsg) {
-                this.#eventBus.dispatch('ui:message_display', { text: successMsg, type: 'info' });
-                internalMessages.push({ text: `Dispatched custom success message: "${successMsg}"`, type: 'internal'});
+                this.#eventBus.dispatch('ui:message_display', {text: successMsg, type: 'info'});
+                internalMessages.push({text: `Dispatched custom success message: "${successMsg}"`, type: 'internal'});
             } else if (effectsProcessed) { // Only give generic feedback if effects actually ran
                 // Provide a generic fallback message if no specific one exists
                 const fallbackMsg = `You use the ${itemName}.`;
-                this.#eventBus.dispatch('ui:message_display', { text: fallbackMsg, type: 'info' });
-                internalMessages.push({ text: `Dispatched generic success message: "${fallbackMsg}"`, type: 'internal'});
+                this.#eventBus.dispatch('ui:message_display', {text: fallbackMsg, type: 'info'});
+                internalMessages.push({text: `Dispatched generic success message: "${fallbackMsg}"`, type: 'internal'});
             } else {
                 // If no effects processed but conditions passed, maybe no message needed unless specified?
                 // Or a different generic message? "You handle the [itemName]."
-                internalMessages.push({ text: `Overall success, but no effects processed and no success message defined.`, type: 'internal'});
+                internalMessages.push({
+                    text: `Overall success, but no effects processed and no success message defined.`,
+                    type: 'internal'
+                });
             }
         } else {
             // Failure feedback should have been handled by condition checks or critical effect failures.
             // A default failure message could be dispatched here if overallEffectsSuccess is false
             // AND no specific failure message was already sent, but that logic is complex.
             // Rely on condition/effect handlers to provide failure feedback for now.
-            internalMessages.push({ text: `Overall action failed or was stopped. Final success feedback skipped.`, type: 'internal'});
+            internalMessages.push({
+                text: `Overall action failed or was stopped. Final success feedback skipped.`,
+                type: 'internal'
+            });
             const defaultFailMsg = usableComponentData.failure_message_default || `Something prevented you from using the ${itemName} correctly.`;
             // Avoid double-messaging if a specific failure message was already sent.
             // Hard to track perfectly without more state. Let's assume prior messages were sufficient.
@@ -403,7 +453,7 @@ class ItemUsageSystem {
     #handleHealEffect = (params, context) => {
         const messages = [];
         // Note: Use context.eventBus now for UI messages
-        const { userEntity, targetEntity, entityManager, eventBus, itemName } = context;
+        const {userEntity, targetEntity, entityManager, eventBus, itemName} = context;
         const {
             amount,
             target: targetSpecifier = 'user', // Default to 'user'
@@ -414,10 +464,10 @@ class ItemUsageSystem {
         if (typeof amount !== 'number' || amount <= 0) {
             const errorMsg = `Invalid 'amount' parameter (${amount}) for 'heal' effect in item ${itemName}.`;
             console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({ text: `Internal Error: ${itemName} heal effect misconfigured.`, type: 'error' });
+            messages.push({text: `Internal Error: ${itemName} heal effect misconfigured.`, type: 'error'});
             // Dispatch error via eventBus? Maybe too noisy for config errors.
             // eventBus.dispatch('ui:message_display', { text: `Error: ${itemName} is configured incorrectly.`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true };
+            return {success: false, messages: messages, stopPropagation: true};
         }
 
         // 2. Identify Target Entity
@@ -431,10 +481,10 @@ class ItemUsageSystem {
         if (!actualTargetEntity) {
             const errorMsg = `Could not determine target ('${targetSpecifier}') for 'heal' effect in item ${itemName}. Context Target: ${targetEntity?.id}`;
             console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({ text: `Internal Error: Could not apply heal from ${itemName}.`, type: 'error' });
+            messages.push({text: `Internal Error: Could not apply heal from ${itemName}.`, type: 'error'});
             // Use eventBus for generic failure
-            eventBus.dispatch('ui:message_display', { text: `Couldn't apply healing from ${itemName}.`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true }; // Stop if target invalid
+            eventBus.dispatch('ui:message_display', {text: `Couldn't apply healing from ${itemName}.`, type: 'error'});
+            return {success: false, messages: messages, stopPropagation: true}; // Stop if target invalid
         }
 
         const targetName = getDisplayName(actualTargetEntity);
@@ -444,10 +494,13 @@ class ItemUsageSystem {
         if (!healthComponent) {
             const errorMsg = `Target ${targetName} (${actualTargetEntity.id}) lacks HealthComponent for 'heal' effect from ${itemName}.`;
             console.warn(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({ text: `${itemName} has no effect on ${targetName}.`, type: 'internal' });
+            messages.push({text: `${itemName} has no effect on ${targetName}.`, type: 'internal'});
             // Use eventBus for user feedback
-            eventBus.dispatch('ui:message_display', { text: `${targetName} cannot be healed by the ${itemName}.`, type: 'info' });
-            return { success: false, messages: messages }; // Cannot heal non-health target
+            eventBus.dispatch('ui:message_display', {
+                text: `${targetName} cannot be healed by the ${itemName}.`,
+                type: 'info'
+            });
+            return {success: false, messages: messages}; // Cannot heal non-health target
         }
 
         // 4. Check Health Status
@@ -458,15 +511,15 @@ class ItemUsageSystem {
         // 5. Handle Full Health Case
         if (isFullHealth) {
             const feedbackMsg = `${targetName}'s health is already full.`;
-            messages.push({ text: feedbackMsg, type: 'internal' });
+            messages.push({text: feedbackMsg, type: 'internal'});
 
             // Use eventBus for user feedback
-            eventBus.dispatch('ui:message_display', { text: feedbackMsg, type: 'info' });
+            eventBus.dispatch('ui:message_display', {text: feedbackMsg, type: 'info'});
 
             if (fail_if_already_max) {
-                return { success: false, messages: messages, stopPropagation: true }; // Fail and stop
+                return {success: false, messages: messages, stopPropagation: true}; // Fail and stop
             } else {
-                return { success: true, messages: messages }; // Succeed (no effect) and continue
+                return {success: true, messages: messages}; // Succeed (no effect) and continue
             }
         }
 
@@ -477,11 +530,11 @@ class ItemUsageSystem {
 
         // 7. Provide Feedback via EventBus
         const healMsg = `${targetName} recovered ${actualHeal} health.`;
-        messages.push({ text: healMsg, type: 'success' });
-        eventBus.dispatch('ui:message_display', { text: healMsg, type: 'success' }); // User-facing via EventBus
+        messages.push({text: healMsg, type: 'success'});
+        eventBus.dispatch('ui:message_display', {text: healMsg, type: 'success'}); // User-facing via EventBus
 
         // 8. Return Success
-        return { success: true, messages: messages };
+        return {success: true, messages: messages};
     };
 
     /**
@@ -494,7 +547,7 @@ class ItemUsageSystem {
     #handleTriggerEventEffect = (params, context) => {
         const messages = [];
         // Use context.eventBus for dispatching the trigger AND potential feedback
-        const { eventBus, userEntity, targetEntity, itemName } = context;
+        const {eventBus, userEntity, targetEntity, itemName} = context;
         const {
             event_name,
             event_payload = {},
@@ -505,14 +558,20 @@ class ItemUsageSystem {
         if (typeof event_name !== 'string' || event_name.trim() === '') {
             const errorMsg = `Invalid or missing 'event_name' parameter for 'trigger_event' effect in item ${itemName}.`;
             console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({ text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing event_name).`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true };
+            messages.push({
+                text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing event_name).`,
+                type: 'error'
+            });
+            return {success: false, messages: messages, stopPropagation: true};
         }
         if (typeof event_payload !== 'object' || event_payload === null) {
             const errorMsg = `Invalid 'event_payload' parameter (must be an object) for 'trigger_event' effect in item ${itemName}.`;
             console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({ text: `Internal Error: ${itemName} trigger_event effect misconfigured (invalid event_payload).`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true };
+            messages.push({
+                text: `Internal Error: ${itemName} trigger_event effect misconfigured (invalid event_payload).`,
+                type: 'error'
+            });
+            return {success: false, messages: messages, stopPropagation: true};
         }
 
         // 2. Construct Final Event Payload
@@ -527,25 +586,28 @@ class ItemUsageSystem {
         try {
             console.debug(`ItemUsageSystem: Dispatching event '${event_name}' via EventBus for item ${itemName}. Payload:`, finalEventPayload);
             eventBus.dispatch(event_name, finalEventPayload); // Dispatch the triggered event
-            messages.push({ text: `Dispatched event '${event_name}' for ${itemName}.`, type: 'internal' });
+            messages.push({text: `Dispatched event '${event_name}' for ${itemName}.`, type: 'internal'});
         } catch (error) {
             const errorMsg = `Error dispatching event '${event_name}' for item ${itemName}: ${error.message}`;
             console.error(`ItemUsageSystem: ${errorMsg}`, error);
-            messages.push({ text: `Internal Error: Failed to dispatch event for ${itemName}.`, type: 'error' });
+            messages.push({text: `Internal Error: Failed to dispatch event for ${itemName}.`, type: 'error'});
             // Dispatch UI error via eventBus
-            eventBus.dispatch('ui:message_display', { text: `An error occurred triggering an effect from ${itemName}.`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true };
+            eventBus.dispatch('ui:message_display', {
+                text: `An error occurred triggering an effect from ${itemName}.`,
+                type: 'error'
+            });
+            return {success: false, messages: messages, stopPropagation: true};
         }
 
         // 4. Optional Feedback via context.eventBus
         if (typeof feedback_message === 'string' && feedback_message.trim() !== '') {
             console.debug(`ItemUsageSystem: Triggering feedback message for ${itemName}: "${feedback_message}"`);
-            eventBus.dispatch('ui:message_display', { text: feedback_message, type: 'info' }); // Use eventBus for UI feedback
-            messages.push({ text: `Dispatched feedback message: "${feedback_message}"`, type: 'internal' });
+            eventBus.dispatch('ui:message_display', {text: feedback_message, type: 'info'}); // Use eventBus for UI feedback
+            messages.push({text: `Dispatched feedback message: "${feedback_message}"`, type: 'internal'});
         }
 
         // 5. Return Success
-        return { success: true, messages: messages };
+        return {success: true, messages: messages};
     };
 
 
@@ -555,28 +617,40 @@ class ItemUsageSystem {
     #handleApplyStatusEffectStub = (params, context) => {
         console.log(`ItemUsageSystem: STUB: Handling 'apply_status_effect' for ${context.itemName}`);
         // Future: Use context.eventBus for feedback like "You feel stronger."
-        return { success: true, messages: [{ text: `Apply_status_effect processed (stub) for ${context.itemName}.`, type: 'internal' }] };
+        return {
+            success: true,
+            messages: [{text: `Apply_status_effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
+        };
     }
 
     /** @type {EffectHandlerFunction} */
     #handleDamageEffectStub = (params, context) => {
         console.log(`ItemUsageSystem: STUB: Handling 'damage' for ${context.itemName}`);
         // Future: Use context.eventBus for feedback like "The goblin takes 5 fire damage."
-        return { success: true, messages: [{ text: `Damage effect processed (stub) for ${context.itemName}.`, type: 'internal' }] };
+        return {
+            success: true,
+            messages: [{text: `Damage effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
+        };
     }
 
     /** @type {EffectHandlerFunction} */
     #handleSpawnEntityEffectStub = (params, context) => {
         console.log(`ItemUsageSystem: STUB: Handling 'spawn_entity' for ${context.itemName}`);
         // Future: Use context.eventBus for feedback like "A small creature appears."
-        return { success: true, messages: [{ text: `Spawn_entity effect processed (stub) for ${context.itemName}.`, type: 'internal' }] };
+        return {
+            success: true,
+            messages: [{text: `Spawn_entity effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
+        };
     }
 
     /** @type {EffectHandlerFunction} */
     #handleRemoveStatusEffectStub = (params, context) => {
         console.log(`ItemUsageSystem: STUB: Handling 'remove_status_effect' for ${context.itemName}`);
         // Future: Use context.eventBus for feedback like "You feel the poison fading."
-        return { success: true, messages: [{ text: `Remove_status_effect processed (stub) for ${context.itemName}.`, type: 'internal' }] };
+        return {
+            success: true,
+            messages: [{text: `Remove_status_effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
+        };
     }
 
 
@@ -603,10 +677,16 @@ class ItemUsageSystem {
         const messages = [];
 
         if (!conditions || conditions.length === 0) {
-            return { success: true, messages: [{ text: `No ${checkType} conditions to check for ${itemName}.`, type: "internal" }] };
+            return {
+                success: true,
+                messages: [{text: `No ${checkType} conditions to check for ${itemName}.`, type: "internal"}]
+            };
         }
 
-        messages.push({ text: `Checking ${checkType} conditions for ${itemName} against ${getDisplayName(entityToCheck)}...`, type: 'internal'})
+        messages.push({
+            text: `Checking ${checkType} conditions for ${itemName} against ${getDisplayName(entityToCheck)}...`,
+            type: 'internal'
+        })
 
         for (const condition of conditions) {
             // Evaluate the core condition logic
@@ -630,17 +710,23 @@ class ItemUsageSystem {
                 }
 
                 // Use the EventBus for immediate condition failure feedback
-                eventBus.dispatch('ui:message_display', { text: failureMsg, type: 'warning' });
-                messages.push({ text: `${checkType} Condition Check Failed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}, Reason='${failureMsg}'`, type: 'internal' });
-                return { success: false, messages }; // Stop checking on the first failure
+                eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
+                messages.push({
+                    text: `${checkType} Condition Check Failed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}, Reason='${failureMsg}'`,
+                    type: 'internal'
+                });
+                return {success: false, messages}; // Stop checking on the first failure
             } else {
-                messages.push({ text: `${checkType} Condition Check Passed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}`, type: 'internal' });
+                messages.push({
+                    text: `${checkType} Condition Check Passed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}`,
+                    type: 'internal'
+                });
             }
         }
 
         // If loop completes, all conditions passed
-        messages.push({ text: `All ${checkType} conditions passed for ${itemName}.`, type: 'internal'})
-        return { success: true, messages };
+        messages.push({text: `All ${checkType} conditions passed for ${itemName}.`, type: 'internal'})
+        return {success: true, messages};
     }
 
     /**

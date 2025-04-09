@@ -182,7 +182,8 @@ class GameLoop {
             targets: targets,
             dataManager: this.#dataManager,
             entityManager: this.#entityManager,
-            dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
+            dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
+            eventBus: this.#eventBus
         };
 
         /** @type {ActionResult} */
