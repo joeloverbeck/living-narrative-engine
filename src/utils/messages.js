@@ -27,8 +27,13 @@ export const TARGET_MESSAGES = {
     EQUIP_NO_SLOT: (name, slotId) => `You don't have a slot to equip the ${name} (${slotId}).`,
     EQUIP_SLOT_FULL: (currentItemName, slotName) => `You need to unequip the ${currentItemName} from your ${slotName} slot first.`,
     UNEQUIP_SLOT_EMPTY: (slotName) => `You have nothing equipped in your ${slotName} slot.`,
+    USE_CONDITION_FAILED: (itemName) => `You cannot use the ${itemName} under the current conditions.`,
     USE_CANNOT: (name) => `You can't use the ${name} that way.`,
     USE_FULL_HEALTH: "You are already at full health.",
+    USE_REQUIRES_TARGET: (itemName) => `Using the ${itemName} requires a target.`,
+    USE_INVALID_TARGET: (itemName) => `Invalid target for the ${itemName}.`,
+    TARGET_NOT_FOUND_CONTEXT: (targetDesc) => `Could not find '${targetDesc}' nearby to target.`,
+    TARGET_AMBIGUOUS_CONTEXT: (verb, targetDesc, matches) => `Which '${targetDesc}' did you want to ${verb}? (${matches.map(m => getDisplayName(m)).join(', ')})`,
     MOVE_NO_DIRECTION: "Move where? (Specify a direction like 'north', 'south', 'east', or 'west')",
     MOVE_NO_EXITS: "There are no obvious exits from here.",
     MOVE_LOCKED: (direction) => `The way ${direction} is locked.`, // Default, can be overridden

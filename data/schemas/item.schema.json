@@ -32,7 +32,8 @@
         },
         "Usable": {
           "$ref": "#/definitions/UsableComponent",
-          "description": "Optional component defining direct use effects (like drinking a potion)."
+          "$comment": "Updated based on 'Refinement of JIRA Ticket: Item Usage Functionality'. This replaces the old structure.",
+          "description": "Optional component defining direct use effects, conditions, and targeting."
         },
         "Equippable": {
           "$ref": "#/definitions/EquippableComponent",
@@ -81,25 +82,14 @@
           "default": [],
           "uniqueItems": true,
           "examples": [
-            [
-              "key",
-              "iron"
-            ],
-            [
-              "potion",
-              "healing",
-              "consumable"
-            ],
-            [
-              "weapon",
-              "sword",
-              "metal"
-            ]
+            [ "key", "iron" ],
+            [ "potion", "healing", "consumable" ],
+            [ "weapon", "sword", "metal" ]
           ]
         },
         "stackable": {
           "type": "boolean",
-          "description": "Whether multiple instances can stack.",
+          "description": "Whether multiple instances can stack in inventory.",
           "default": false
         },
         "value": {
@@ -110,93 +100,137 @@
         }
       }
     },
+
     "UsableComponent": {
       "type": "object",
-      "description": "Defines the effect when the item is used directly (typically targeting the user). Not all items have this component.",
-      "additionalProperties": false,
+      "description": "Defines how an item can be used, including conditions, targeting, effects, and feedback. Replaces the older simpler structure.",
+      "properties": {
+        "usability_conditions": {
+          "type": "array",
+          "description": "Conditions related to the user or game state that must ALL be met for the item to be usable. If empty or omitted, there are no user/state prerequisites.",
+          "items": {
+            "$ref": "#/definitions/ConditionObject"
+          },
+          "default": [],
+          "$comment": "Checks performed before targeting or effects."
+        },
+        "target_required": {
+          "type": "boolean",
+          "description": "Does this item require a target entity (other than the user) to be used?",
+          "default": false
+        },
+        "target_conditions": {
+          "type": "array",
+          "description": "Conditions that the target entity must ALL meet. Only checked if 'target_required' is true.",
+          "items": {
+            "$ref": "#/definitions/ConditionObject"
+          },
+          "default": [],
+          "$comment": "Checked after target is acquired but before effects."
+        },
+        "effects": {
+          "type": "array",
+          "description": "The sequence of effects that occur when the item is successfully used.",
+          "items": {
+            "$ref": "#/definitions/EffectObject"
+          },
+          "minItems": 1,
+          "$comment": "Processed sequentially after all condition checks pass."
+        },
+        "consume_on_use": {
+          "type": "boolean",
+          "description": "Is the item consumed (quantity decreased/removed from inventory) after successful use?",
+          "default": true,
+          "$comment": "Checked after effects are processed."
+        },
+        "success_message": {
+          "type": "string",
+          "description": "Optional message displayed to the user upon successful completion of the item use action (e.g., 'You drink the potion.').",
+          "$comment": "Used for feedback."
+        },
+        "failure_message_default": {
+          "type": "string",
+          "description": "Optional default message displayed if usage fails for a reason not covered by a specific condition's failure message (e.g., 'You cannot use that item now.').",
+          "$comment": "Used for feedback."
+        }
+      },
       "required": [
-        "effect_type",
-        "effect_details",
-        "consumable",
-        "use_message"
+        "effects",
+        "consume_on_use"
       ],
+      "additionalProperties": false
+    },
+
+    "ConditionObject": {
+      "type": "object",
+      "description": "Defines a single condition that must be met for item usage (either by the user or the target).",
+      "properties": {
+        "condition_type": {
+          "type": "string",
+          "description": "Identifier for the type of condition check to perform.",
+          "enum": [
+            "player_state",
+            "has_status_effect",
+            "target_has_component",
+            "target_distance",
+            "health_below_max",
+            "attribute_check"
+          ]
+        },
+        "negate": {
+          "type": "boolean",
+          "description": "If true, the result of the condition check is inverted (e.g., check if player is *not* swimming becomes check if player *is* swimming).",
+          "default": false
+        },
+        "failure_message": {
+          "type": "string",
+          "description": "Optional specific message to display if *this* condition fails, overriding the default failure message."
+        }
+      },
+      "required": [ "condition_type" ],
+      "additionalProperties": true,
+      "$comment": "This is a baseline definition. Implementations will need specific parameters based on 'condition_type'. E.g., 'player_state' needs 'state: string', 'has_status_effect' needs 'effect_id: string', 'target_distance' needs 'max_distance: number'. Consider using 'oneOf' for stricter validation later.",
+      "examples": [
+        { "condition_type": "player_state", "state": "not_swimming", "failure_message": "Cannot use this while swimming." },
+        { "condition_type": "has_status_effect", "effect_id": "core:poison", "negate": true, "failure_message": "Cannot use while poisoned." },
+        { "condition_type": "health_below_max" }
+      ]
+    },
+
+    "EffectObject": {
+      "type": "object",
+      "description": "Defines a single effect to be applied when an item is used.",
       "properties": {
         "effect_type": {
           "type": "string",
-          "description": "Categorizes the primary effect of using the item. Defines which fields in 'effect_details' are relevant.",
+          "description": "Identifier for the type of effect to apply. Determines the structure of 'effect_params'.",
           "enum": [
             "heal",
-            "event"
-          ],
-          "examples": [
-            "heal"
+            "trigger_event",
+            "apply_status_effect",
+            "damage",
+            "spawn_entity",
+            "remove_status_effect"
           ]
         },
-        "effect_details": {
+        "effect_params": {
           "type": "object",
-          "description": "Contains parameters specific to the chosen 'effect_type'.",
-          "properties": {
-            "amount": {
-              "type": "integer",
-              "description": "The amount of health points to restore (used if effect_type is 'heal').",
-              "minimum": 1
-            },
-            "event_name": {
-              "type": "string",
-              "description": "The name of the event to trigger/publish via the event bus (used if effect_type is 'event').",
-              "pattern": "^[a-zA-Z0-9_\\-:]+$"
-            },
-            "event_data": {
-              "type": "object",
-              "description": "Optional arbitrary data payload to include with the triggered event.",
-              "additionalProperties": true
-            }
-          },
-          "if": {
-            "properties": {
-              "effect_type": {
-                "const": "heal"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "amount"
-            ],
-            "properties": {
-              "event_name": false,
-              "event_data": false
-            }
-          },
-          "else": {
-            "if": {
-              "properties": {
-                "effect_type": {
-                  "const": "event"
-                }
-              }
-            },
-            "then": {
-              "required": [
-                "event_name"
-              ],
-              "properties": {
-                "amount": false
-              }
-            }
-          }
-        },
-        "consumable": {
-          "type": "boolean",
-          "description": "Is the item consumed (removed from inventory) after successful use?",
-          "default": false
-        },
-        "use_message": {
-          "type": "string",
-          "description": "Optional message displayed to the player upon successful use (e.g., 'You drink the potion and feel refreshed.'). If omitted, the consuming system might generate a default message based on effect type."
+          "description": "Object containing parameters specific to the 'effect_type'. The required parameters depend on the effect type.",
+          "properties": {},
+          "additionalProperties": true
         }
-      }
+      },
+      "required": [ "effect_type", "effect_params" ],
+      "additionalProperties": false,
+      "$comment": "Structure of 'effect_params' depends heavily on 'effect_type'. E.g., 'heal' needs { amount: number, ?target: 'user'|'target', ?fail_if_already_max: boolean }. 'trigger_event' needs { event_name: string, ?event_payload: object }. 'apply_status_effect' needs { effect_id: string, ?duration: number, ?target: 'user'|'target' }.",
+      "examples": [
+        { "effect_type": "heal", "effect_params": { "amount": 10, "target": "user" } },
+        { "effect_type": "trigger_event", "effect_params": { "event_name": "game:event:door_unlocked", "event_payload": { "door_id": "demo:door_rusty" } } },
+        { "effect_type": "apply_status_effect", "effect_params": { "effect_id": "core:buff_strength", "duration": 60, "target": "user" } },
+        { "effect_type": "damage", "effect_params": { "amount": 5, "damage_type": "fire", "target": "target" } }
+      ]
     },
+
     "EquippableComponent": {
       "type": "object",
       "description": "Component defining an item's ability to be equipped, the slot it uses, and effects it grants.",
