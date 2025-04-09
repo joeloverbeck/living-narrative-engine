@@ -8,19 +8,19 @@ import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
 
-
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-/** @typedef {import('../../entities/entity.js').default} Entity */ // Adjusted path assuming src/entities
+/** @typedef {import('../../entities/entity.js').default} Entity */
 
 export function executeEquip(context) {
     const {playerEntity, targets, entityManager, dispatch} = context;
-    const messages = [];
+    const messages = []; // Primarily for internal/debug logging now
 
     // --- Validate required targets ---
     if (!validateRequiredTargets(context, 'equip')) {
-        return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
+        // Message already dispatched by utility
+        return {success: false, messages: [], newState: undefined};
     }
 
     const targetItemName = targets.join(' ');
@@ -28,7 +28,7 @@ export function executeEquip(context) {
     const playerInventory = playerEntity.getComponent(InventoryComponent);
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
 
-    // --- Use TARGET_MESSAGES for component check ---
+    // --- Component Existence Check ---
     if (!playerInventory || !playerEquipment) {
         const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment');
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
@@ -36,27 +36,24 @@ export function executeEquip(context) {
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
 
-    // --- 1. Resolve Target Item using Service (Prevent immediate dispatch) ---
+    // --- 1. Resolve Target Item ---
     const itemInstanceToEquip = resolveTargetEntity(context, {
         scope: 'inventory',
         requiredComponents: [ItemComponent, EquippableComponent],
         actionVerb: 'equip',
         targetName: targetItemName,
-        notFoundMessageKey: null, // <-- CHANGE: Let executeEquip handle the final message
-        // Assuming 'null' prevents resolveTargetEntity from dispatching.
-        // If not, you might need a specific flag like 'dispatchNotFoundMessage: false'
-        // added to resolveTargetEntity's config options.
+        notFoundMessageKey: null, // Let handler manage message
     });
 
-    // --- 2. Handle Resolver Result and Dispatch Appropriate Message ---
+    // --- 2. Handle Resolver Result & Validate Equippability ---
     if (!itemInstanceToEquip) {
-        // Now check if the item exists but isn't equippable, OR if it doesn't exist at all.
+        // Check if the item exists but isn't equippable, OR if it doesn't exist at all.
         const tempItemInstance = resolveTargetEntity(context, {
             scope: 'inventory',
-            requiredComponents: [ItemComponent], // Check if *any* item matches name
-            actionVerb: 'equip', // Verb doesn't really matter here
+            requiredComponents: [ItemComponent],
+            actionVerb: 'equip',
             targetName: targetItemName,
-            notFoundMessageKey: null, // Prevent dispatch here too
+            notFoundMessageKey: null,
         });
 
         if (tempItemInstance && !tempItemInstance.hasComponent(EquippableComponent)) {
@@ -65,22 +62,16 @@ export function executeEquip(context) {
             dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
             return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
         } else {
-            // Item not found in inventory at all (or failed component check)
-            // Use the message originally intended for the first resolver call.
+            // Item not found in inventory at all
             const errorMsg = TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE(targetItemName);
-            dispatch('ui:message_display', {text: errorMsg, type: 'info'}); // <-- ADDED DISPATCH
+            dispatch('ui:message_display', {text: errorMsg, type: 'info'});
             return {success: false, messages: [{text: errorMsg, type: 'info'}], newState: undefined};
         }
-        // Note: If the initial component check failed (e.g., no Inventory), that error
-        // message would have been dispatched earlier. This path handles item resolution failures.
     }
 
-    // --- 3. Validate Equipment Slot ---
-    // (Rest of the function remains the same)
-    const itemIdToEquip = itemInstanceToEquip.id;
+    // --- 3. Validate Equipment Slot Existence and Emptiness ---
     const itemDisplayName = getDisplayName(itemInstanceToEquip);
     const equippableComp = itemInstanceToEquip.getComponent(EquippableComponent);
-
     const targetSlotId = equippableComp.getSlotId();
 
     if (!playerEquipment.hasSlot(targetSlotId)) {
@@ -92,8 +83,10 @@ export function executeEquip(context) {
 
     const currentItemInSlotId = playerEquipment.getEquippedItem(targetSlotId);
     if (currentItemInSlotId !== null) {
+        // Slot is not empty
         const currentItemInstance = entityManager.getEntityInstance(currentItemInSlotId);
-        const currentItemName = getDisplayName(currentItemInstance);
+        // Handle case where the item in the slot might somehow not exist in entityManager anymore
+        const currentItemName = currentItemInstance ? getDisplayName(currentItemInstance) : `item ID ${currentItemInSlotId}`;
         const slotName = targetSlotId.includes(':') ? targetSlotId.split(':').pop().replace(/^slot_/, '') : targetSlotId;
 
         const errorMsg = TARGET_MESSAGES.EQUIP_SLOT_FULL(currentItemName, slotName);
@@ -101,48 +94,26 @@ export function executeEquip(context) {
         return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
     }
 
-    // --- 4. Perform the Equip ---
-    const removedFromInv = playerInventory.removeItem(itemIdToEquip);
-    if (!removedFromInv) {
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        console.error(`executeEquip: removeItem failed for ${itemIdToEquip} (${itemDisplayName}) despite checks.`);
-        return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
-    }
-    messages.push({text: `Removed ${itemIdToEquip} from inventory`, type: "internal"});
-
-    const equipped = playerEquipment.equipItem(targetSlotId, itemIdToEquip);
-    if (!equipped) {
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        console.error(`executeEquip: equipItem failed for ${itemIdToEquip} (${itemDisplayName}) into ${targetSlotId}.`);
-        // Attempt to revert inventory removal
-        playerInventory.addItem(itemIdToEquip);
-        return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
-    }
-    messages.push({text: `Equipped ${itemIdToEquip} to ${targetSlotId}`, type: "internal"});
-
-    let success = true;
-    const successMsg = `You equip the ${itemDisplayName}.`;
-    dispatch('ui:message_display', {text: successMsg, type: 'success'});
-    messages.push({text: successMsg, type: 'success'});
-
-    // Dispatch the game event
+    // --- 4. Validation Passed - Dispatch Attempt Event ---
     try {
-        dispatch('event:item_equipped', {
-            entity: playerEntity,
-            itemId: itemIdToEquip,
-            slotId: targetSlotId,
-            itemInstance: itemInstanceToEquip
+        dispatch('event:item_equip_attempted', {
+            playerEntity: playerEntity,
+            itemInstanceToEquip: itemInstanceToEquip, // Pass the actual instance
+            targetSlotId: targetSlotId,
         });
-        messages.push({text: `Dispatched event:item_equipped for ${itemIdToEquip}`, type: "internal"});
-    } catch (e) {
-        console.error("Failed to dispatch item_equipped event:", e);
         messages.push({
-            text: `${TARGET_MESSAGES.INTERNAL_ERROR} (Failed to dispatch item_equipped event)`,
-            type: 'warning'
+            text: `Dispatched event:item_equip_attempted for ${itemInstanceToEquip.id} to ${targetSlotId}`,
+            type: "internal"
         });
+        // The action handler's job is done once the intent is validated and the event is dispatched.
+        // It succeeded in *validating the attempt*.
+        return {success: true, messages, newState: undefined};
+    } catch (e) {
+        // Handle rare case where dispatch itself fails
+        const errorMsg = `${TARGET_MESSAGES.INTERNAL_ERROR} (Failed to dispatch item_equip_attempted event)`;
+        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        console.error("executeEquip: Failed to dispatch item_equip_attempted event:", e);
+        messages.push({text: errorMsg, type: 'error'});
+        return {success: false, messages, newState: undefined};
     }
-
-    return {success, messages, newState: undefined};
 }

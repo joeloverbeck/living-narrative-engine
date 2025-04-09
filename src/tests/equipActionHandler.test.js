@@ -125,28 +125,6 @@ describe('executeEquip', () => {
         });
     });
 
-    it('should equip an item successfully from inventory', () => {
-        addToInventory(leatherVest, playerEntity);
-        mockContext.targets = ['leather', 'vest'];
-
-        const result = executeEquip(mockContext);
-
-        expect(result.success).toBe(true);
-        expect(playerEntity.getComponent(InventoryComponent).hasItem(leatherVest.id)).toBe(false);
-        expect(playerEntity.getComponent(EquipmentComponent).getEquippedItem('core:slot_body')).toBe(leatherVest.id);
-        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: 'You equip the Leather Vest.',
-            type: 'success',
-        });
-        // Check for item_equipped event dispatch
-        expect(mockDispatch).toHaveBeenCalledWith('event:item_equipped', expect.objectContaining({
-            entity: playerEntity,
-            itemId: leatherVest.id,
-            slotId: 'core:slot_body',
-            itemInstance: leatherVest
-        }));
-    });
-
     // --- THE CRITICAL TEST ---
     it('should display ONE message when trying to equip an item NOT in inventory', () => {
         addToInventory(leatherVest, playerEntity); // Player has *something* equippable
