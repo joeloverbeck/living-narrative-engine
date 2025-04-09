@@ -13,6 +13,7 @@ import InventorySystem from '../systems/inventorySystem.js';
 import CombatSystem from '../systems/combatSystem.js';
 import DeathSystem from "../systems/deathSystem.js";
 import MovementSystem from "../systems/movementSystem.js";
+import WorldInteractionSystem from "../systems/worldInteractionSystem.js";
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
 import GameLoop from '../../gameLoop.js';
@@ -52,6 +53,7 @@ class GameEngine {
     #combatSystem = null;
     #deathSystem = null;
     #movementSystem = null;
+    #worldInteractionSystem = null;
     #renderer = null;
     #inputHandler = null;
     #gameLoop = null;
@@ -197,6 +199,13 @@ class GameEngine {
             });
             this.#movementSystem.initialize();
             console.log("GameEngine: Movement System instantiated and initialized.");
+
+            this.#worldInteractionSystem = new WorldInteractionSystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager
+            });
+            this.#worldInteractionSystem.initialize(); // Don't forget to initialize!
+            console.log("GameEngine: WorldInteractionSystem instantiated and initialized.");
 
             // --- 9. Core Game Setup (Player & Starting Location) ---
             this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});

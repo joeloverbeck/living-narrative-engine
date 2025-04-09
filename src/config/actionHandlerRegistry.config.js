@@ -9,6 +9,7 @@
 import { executeMove } from '../actions/handlers/moveActionHandler.js';
 import { executeLook } from '../actions/handlers/lookActionHandler.js';
 import { executeTake } from '../actions/handlers/takeActionHandler.js';
+import { executeDrop } from '../actions/handlers/dropActionHandler.js';
 import { executeInventory } from '../actions/handlers/inventoryActionHandler.js';
 import { executeAttack } from '../actions/handlers/attackActionHandler.js';
 import { executeUse } from '../actions/handlers/useActionHandler.js';
@@ -22,6 +23,7 @@ export const actionHandlerRegistryConfig = new Map([
     ['core:action_move', executeMove],
     ['core:action_look', executeLook],
     ['core:action_take', executeTake],
+    ['core:action_drop', executeDrop],
     ['core:action_inventory', executeInventory],
     ['core:action_attack', executeAttack],
     ['core:action_use', executeUse],

@@ -20,6 +20,7 @@ export const TARGET_MESSAGES = {
 
     // Action Specific
     ATTACK_SELF: "Trying to attack yourself? That's not productive.",
+    NOTHING_CARRIED: "You aren't carrying anything.",
     ATTACK_NON_COMBATANT: (name) => `You can't attack the ${name}.`,
     ATTACK_DEFEATED: (name) => `The ${name} is already defeated.`,
     EQUIP_CANNOT: (name) => `You cannot equip the ${name}.`,

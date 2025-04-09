@@ -26,6 +26,7 @@ class CommandParser {
         'attack': 'core:action_attack',
         'hit': 'core:action_attack',
         'take': 'core:action_take',
+        'drop': 'core:action_drop',
         'get': 'core:action_take',
         'use': 'core:action_use',
         'look': 'core:action_look',

@@ -18,10 +18,11 @@ const SCHEMA_FILES = [
 
 const CONTENT_FILES = {
     actions: [
-        'core_action_attack.json', // Underscore instead of colon
-        'core_action_move.json',   // Underscore instead of colon
-        'core_action_take.json',   // Underscore instead of colon
-        'core_action_use.json',     // Underscore instead of colon
+        'core_action_attack.json',
+        'core_action_move.json',
+        'core_action_take.json',
+        'core_action_drop.json',
+        'core_action_use.json',
         'core_action_look.json',
         'core_action_equip.json',
         'core_action_unequip.json',
