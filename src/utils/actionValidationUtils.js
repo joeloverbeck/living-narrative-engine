@@ -1,32 +1,38 @@
 // src/utils/actionValidationUtils.js
 
-import {TARGET_MESSAGES} from './messages.js';
+// TARGET_MESSAGES is no longer directly used here for dispatching.
+// It will be used by NotificationUISystem instead.
+// import {TARGET_MESSAGES} from './messages.js';
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
 /**
  * Checks if the targets array in the context is empty. If it is, dispatches
- * a standard "PROMPT_WHAT" message for the given action verb and returns false.
- * Otherwise, returns true.
+ * a semantic 'action:validation_failed' event with reason 'MISSING_TARGET'
+ * and returns false. Otherwise, returns true.
  *
- * @param {ActionContext} context - The action context containing targets and dispatch.
- * @param {string} actionVerb - The verb associated with the action (e.g., 'attack', 'drop').
+ * @param {ActionContext} context - The action context containing targets, dispatch, and playerEntity.
+ * @param {string} actionVerb - The verb associated with the action (e.g., 'move', 'attack', 'drop').
  * @returns {boolean} - True if targets exist (validation passed), false otherwise.
  */
 export function validateRequiredTargets(context, actionVerb) {
     if (!context || !context.targets) {
         console.error("validateRequiredTargets: Invalid context or missing targets array.");
-        // Optionally dispatch a generic internal error, but context might be too broken.
+        // Cannot reliably dispatch without context.
         return false;
     }
 
     if (context.targets.length === 0) {
-        const errorMsg = TARGET_MESSAGES.PROMPT_WHAT(actionVerb);
-        // Ensure dispatch is available before using it
-        if (context.dispatch && typeof context.dispatch === 'function') {
-            context.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        // Ensure dispatch and playerEntity are available before dispatching semantic event
+        if (context.dispatch && typeof context.dispatch === 'function' && context.playerEntity) {
+            // Dispatch semantic failure event instead of UI message
+            context.dispatch('action:validation_failed', {
+                actorId: context.playerEntity.id,
+                actionVerb: actionVerb,
+                reasonCode: 'MISSING_TARGET' // Specific reason code
+            });
         } else {
-            console.error(`validateRequiredTargets: context.dispatch is not available for action '${actionVerb}'. Cannot display prompt.`);
+            console.error(`validateRequiredTargets: context.dispatch or context.playerEntity is not available for action '${actionVerb}'. Cannot dispatch validation failure event.`);
         }
         return false; // Validation failed
     }

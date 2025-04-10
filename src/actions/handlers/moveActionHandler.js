@@ -2,54 +2,58 @@
 
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {PositionComponent} from '../../components/positionComponent.js';
-import {TARGET_MESSAGES} from '../../utils/messages.js'; // Import TARGET_MESSAGES
 import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */ // Keep for structure
 
 /**
  * Handles the 'core:action_move' action.
- * Validates the player's intent to move and emits an 'event:move_attempted' if valid.
+ * Validates the player's intent to move and emits 'event:move_attempted' if valid.
+ * If validation fails or errors occur, emits 'action:move_failed'.
  * Does NOT modify player position directly. Relies on a MovementSystem to handle the event.
- * Relies solely on the provided context. Dispatches UI messages via context.dispatch.
+ * Relies solely on the provided context. Dispatches SEMANTIC events via context.dispatch.
  * @param {ActionContext} context - The action context.
- * @returns {ActionResult} - The result of the action validation (success/fail, messages).
+ * @returns {ActionResult} - The result of the action validation (success/fail). Messages array is removed.
  */
 export function executeMove(context) {
     // Destructure context, including dispatch
     const {playerEntity, currentLocation, targets, dataManager, entityManager, dispatch} = context;
-    const messages = []; // Keep for potential logging/testing
-    let success = false;
+    let success = false; // Assume failure until event:move_attempted is dispatched
 
     // --- 1. Initial Validations ---
     if (!currentLocation) {
-        // ***** MODIFIED: Use TARGET_MESSAGES *****
-        const errorMsg = TARGET_MESSAGES.MOVE_LOCATION_UNKNOWN;
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
+        const reasonCode = 'SETUP_ERROR';
+        const details = 'Current location unknown';
+        dispatch('action:move_failed', {
+            actorId: playerEntity?.id || 'unknown', // Include actorId if possible
+            reasonCode: reasonCode,
+            details: details
+        });
         console.error("executeMove handler called with invalid currentLocation in context.");
-        return {success, messages};
+        return {success: success}; // Return immediately on fundamental setup error
     }
 
     // --- Validate required target (direction) ---
-    // Use specific verb/prompt if desired, or a generic one. 'move' implies direction.
-    // Relies on validateRequiredTargets to use TARGET_MESSAGES.PROMPT_WHAT internally.
+    // Relies on validateRequiredTargets to dispatch its own semantic event if needed.
     if (!validateRequiredTargets(context, 'move')) {
-        // No change needed here, assumes validateRequiredTargets is compliant.
-        return {success: false, messages: [], newState: undefined};
+        // validateRequiredTargets now handles the semantic event dispatch for missing target
+        return {success: false}; // Keep success as false, no messages array needed
     }
 
     // --- 2. Get Player's Position Component ---
     const playerPositionComp = playerEntity.getComponent(PositionComponent);
     if (!playerPositionComp) {
-        // ***** MODIFIED: Use TARGET_MESSAGES *****
-        const errorMsg = TARGET_MESSAGES.MOVE_POSITION_UNKNOWN;
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: errorMsg, type: 'error'});
+        const reasonCode = 'SETUP_ERROR';
+        const details = 'Player position unknown';
+        dispatch('action:move_failed', {
+            actorId: playerEntity.id,
+            locationId: currentLocation.id, // Add location context if available
+            reasonCode: reasonCode,
+            details: details
+        });
         console.error(`executeMove: Player entity ${playerEntity.id} is missing PositionComponent.`);
-        return {success, messages};
+        return {success: success};
     }
     const previousLocationId = playerPositionComp.locationId;
 
@@ -62,11 +66,14 @@ export function executeMove(context) {
 
     const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComp || !Array.isArray(connectionsComp.connections) || connectionsComp.connections.length === 0) {
-        // ***** VERIFIED: Already uses TARGET_MESSAGES *****
-        const infoMsg = TARGET_MESSAGES.MOVE_NO_EXITS;
-        dispatch('ui:message_display', {text: infoMsg, type: 'info'});
-        messages.push({text: infoMsg, type: 'info'});
-        return {success, messages}; // Not a failure, just no exits
+        const reasonCode = 'NO_EXITS';
+        dispatch('action:move_failed', {
+            actorId: playerEntity.id,
+            locationId: currentLocation.id,
+            direction: direction, // Direction attempted is still relevant
+            reasonCode: reasonCode
+        });
+        return {success: success}; // Not a failure in the sense of error, but move did not succeed.
     }
 
     const connection = connectionsComp.getConnection(direction);
@@ -75,21 +82,31 @@ export function executeMove(context) {
     if (connection) {
         const currentState = connection.state ?? connection.initial_state;
         if (currentState === 'locked') {
-            // ***** VERIFIED: Already uses TARGET_MESSAGES with override logic *****
-            const lockMessage = connection.description_override || TARGET_MESSAGES.MOVE_LOCKED(direction);
-            dispatch('ui:message_display', {text: lockMessage, type: 'info'});
-            messages.push({text: lockMessage, type: 'info'});
-            return {success, messages}; // Not a success, but not necessarily an error state
+            const reasonCode = 'DIRECTION_LOCKED';
+            dispatch('action:move_failed', {
+                actorId: playerEntity.id,
+                locationId: currentLocation.id,
+                direction: direction,
+                reasonCode: reasonCode,
+                // Pass optional override message hint for NotificationUISystem
+                lockMessageOverride: connection.description_override
+            });
+            return {success: success}; // Move did not succeed.
         }
 
         const targetLocationId = connection.target;
         if (!targetLocationId) {
-            // ***** VERIFIED: Already uses TARGET_MESSAGES with parameter *****
-            const errorMsg = TARGET_MESSAGES.MOVE_INVALID_CONNECTION(direction);
-            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-            messages.push({text: errorMsg, type: 'error'});
+            const reasonCode = 'DATA_ERROR';
+            const details = 'Invalid connection: missing target';
+            dispatch('action:move_failed', {
+                actorId: playerEntity.id,
+                locationId: currentLocation.id,
+                direction: direction,
+                reasonCode: reasonCode,
+                details: details
+            });
             console.error(`Invalid connection data in ${currentLocation.id} for direction ${direction}: missing target.`);
-            return {success, messages};
+            return {success: success};
         }
 
         const targetDefinition = dataManager.getEntityDefinition(targetLocationId);
@@ -102,38 +119,53 @@ export function executeMove(context) {
                     direction: direction,
                     previousLocationId: previousLocationId
                 };
+                // Dispatch the core semantic event indicating a valid move attempt
                 dispatch('event:move_attempted', moveAttemptPayload);
-                success = true;
-                // ***** VERIFIED: Initial success message kept as hardcoded per ticket suggestion *****
-                const infoMsg = `You move ${direction}.`; // Initial feedback
-                dispatch('ui:message_display', {text: infoMsg, type: 'info'});
-                messages.push({text: infoMsg, type: 'info'});
+                success = true; // Mark as successful *dispatch* of the attempt
+                // REMOVED: Direct dispatch of "You move {direction}" message
                 console.log(`executeMove: Dispatched event:move_attempted for entity ${playerEntity.id} to ${targetLocationId} (direction: ${direction})`);
             } catch (error) {
-                // Keep internal error handling as is, not typically a TARGET_MESSAGE scenario
-                const errorMsg = `Error preparing move attempt: ${error.message}`;
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-                messages.push({text: errorMsg, type: 'error'});
+                // Handle internal errors during the *dispatch* process itself
+                const reasonCode = 'INTERNAL_DISPATCH_ERROR';
+                dispatch('action:move_failed', {
+                    actorId: playerEntity.id,
+                    locationId: currentLocation.id,
+                    direction: direction, // Context is helpful
+                    targetLocationId: targetLocationId,
+                    reasonCode: reasonCode,
+                    details: `Error during dispatch of event:move_attempted: ${error.message}`
+                });
                 console.error(`executeMove: Failed to dispatch move attempt event for ${playerEntity.id} moving to ${targetLocationId}`, error);
-                success = false;
+                success = false; // Ensure success is false if dispatch failed
             }
 
         } else {
-            // ***** VERIFIED: Already uses TARGET_MESSAGES with parameter *****
-            const errorMsg = TARGET_MESSAGES.MOVE_BAD_TARGET_DEF(direction);
-            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-            messages.push({text: errorMsg, type: 'error'});
+            const reasonCode = 'DATA_ERROR';
+            const details = 'Target location definition not found';
+            dispatch('action:move_failed', {
+                actorId: playerEntity.id,
+                locationId: currentLocation.id,
+                direction: direction,
+                targetLocationId: targetLocationId, // Include the problematic ID
+                reasonCode: reasonCode,
+                details: details
+            });
             console.error(`Move handler validation failed: Target location definition not found via dataManager for ID: ${targetLocationId}`);
             // success remains false
         }
     } else {
-        // ***** VERIFIED: Already uses TARGET_MESSAGES *****
-        const infoMsg = TARGET_MESSAGES.MOVE_CANNOT_GO_WAY;
-        dispatch('ui:message_display', {text: infoMsg, type: 'info'});
-        messages.push({text: infoMsg, type: 'info'});
+        // No connection found for the specified direction
+        const reasonCode = 'INVALID_DIRECTION';
+        dispatch('action:move_failed', {
+            actorId: playerEntity.id,
+            locationId: currentLocation.id,
+            direction: direction,
+            reasonCode: reasonCode
+        });
         // success remains false
     }
 
     // --- 5. Return Result ---
-    return {success, messages};
+    // Return only success status. Messages are handled via semantic events.
+    return {success: success};
 }

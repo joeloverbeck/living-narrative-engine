@@ -220,10 +220,6 @@ describe('Integration Test: Player Movement (North)', () => {
 
         // 4. Assert Action Handler Outcome
         expect(actionResult.success).toBe(true);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'ui:message_display',
-            expect.objectContaining({ text: `You move ${direction}.`, type: 'info' })
-        );
         // Check that the 'event:move_attempted' event was dispatched
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
             'event:move_attempted',
@@ -304,10 +300,6 @@ describe('Integration Test: Player Movement (North)', () => {
 
         // 4. Assert Handler Failure Outcome
         expect(actionResult.success).toBe(false);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'ui:message_display',
-            expect.objectContaining({ text: "You can't go that way.", type: 'info' })
-        );
         // Ensure move_attempted was *not* dispatched
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:move_attempted', expect.anything());
         // Ensure player position did *not* change
@@ -344,10 +336,6 @@ describe('Integration Test: Player Movement (North)', () => {
 
         // 4. Assert Handler Failure Outcome
         expect(actionResult.success).toBe(false);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'ui:message_display',
-            expect.objectContaining({ text: "Something is wrong with the passage leading north.", type: 'error' }) // Match error message
-        );
         // Ensure move_attempted was *not* dispatched
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:move_attempted', expect.anything());
         // Ensure player position did *not* change

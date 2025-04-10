@@ -15,6 +15,8 @@ import DeathSystem from "../systems/deathSystem.js";
 import MovementSystem from "../systems/movementSystem.js";
 import WorldInteractionSystem from "../systems/worldInteractionSystem.js";
 import ItemUsageSystem from "../systems/itemUsageSystem.js";
+import QuestSystem from '../systems/questSystem.js';
+import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
 import GameLoop from '../../gameLoop.js';
@@ -25,6 +27,12 @@ import {actionHandlerRegistryConfig} from '../config/actionHandlerRegistry.confi
 import {PositionComponent} from "../components/positionComponent.js";
 import {NameComponent} from "../components/nameComponent.js";
 import {InventoryComponent} from "../components/inventoryComponent.js";
+
+// --- Service Imports ---
+import { QuestPrerequisiteService } from '../services/questPrerequisiteService.js';
+import { QuestRewardService } from '../services/questRewardService.js';
+import { ObjectiveEventListenerService } from '../services/objectiveEventListenerService.js';
+import { ObjectiveStateCheckerService } from '../services/objectiveStateCheckerService.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -58,9 +66,16 @@ class GameEngine {
     #movementSystem = null;
     #worldInteractionSystem = null;
     #itemUsageSystem = null;
+    #questSystem = null;
+    #notificationUISystem = null;
     #renderer = null;
     #inputHandler = null;
     #gameLoop = null;
+
+    #questPrerequisiteService = null;
+    #questRewardService = null;
+    #objectiveEventListenerService = null;
+    #objectiveStateCheckerService = null;
 
     #isInitialized = false;
 
@@ -156,6 +171,33 @@ class GameEngine {
 
 
             // --- 8. Instantiate and Initialize Systems (Order might matter) ---
+
+            // --- 8a. Instantiate Quest Services (Needed by QuestSystem) ---
+            // +++ Instantiate Quest Services +++
+            this.#questPrerequisiteService = new QuestPrerequisiteService(); // No constructor deps
+            console.log("GameEngine: QuestPrerequisiteService instantiated.");
+
+            this.#questRewardService = new QuestRewardService({
+                dataManager: this.#dataManager,
+                eventBus: this.#eventBus,
+                gameStateManager: this.#gameStateManager
+            });
+            console.log("GameEngine: QuestRewardService instantiated.");
+
+            this.#objectiveEventListenerService = new ObjectiveEventListenerService({
+                eventBus: this.#eventBus,
+                dataManager: this.#dataManager
+            });
+            console.log("GameEngine: ObjectiveEventListenerService instantiated.");
+
+            this.#objectiveStateCheckerService = new ObjectiveStateCheckerService({
+                eventBus: this.#eventBus,
+                dataManager: this.#dataManager,
+                entityManager: this.#entityManager,
+                gameStateManager: this.#gameStateManager
+            });
+            console.log("GameEngine: ObjectiveStateCheckerService instantiated.");
+
             this.#triggerSystem = new TriggerSystem({
                 eventBus: this.#eventBus,
                 dataManager: this.#dataManager,
@@ -217,6 +259,26 @@ class GameEngine {
                 dataManager: this.#dataManager
             });
             console.log("GameEngine: ItemUsageSystem instantiated and initialized.");
+
+            this.#questSystem = new QuestSystem({
+                dataManager: this.#dataManager,
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager,
+                gameStateManager: this.#gameStateManager,
+                questPrerequisiteService: this.#questPrerequisiteService,
+                questRewardService: this.#questRewardService,
+                objectiveEventListenerService: this.#objectiveEventListenerService,
+                objectiveStateCheckerService: this.#objectiveStateCheckerService
+            });
+            this.#questSystem.initialize();
+            console.log("GameEngine: QuestSystem instantiated and initialized.");
+
+            this.#notificationUISystem = new NotificationUISystem({
+                eventBus: this.#eventBus,
+                dataManager: this.#dataManager,
+            });
+            this.#notificationUISystem.initialize();
+            console.log("GameEngine: NotificationUISystem initialized.");
 
             // --- 9. Core Game Setup (Player & Starting Location) ---
             this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});

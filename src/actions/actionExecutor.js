@@ -52,7 +52,7 @@ class ActionExecutor {
                 const result = handler(context);
 
                 // Basic validation of the returned result
-                if (typeof result !== 'object' || result === null || typeof result.success !== 'boolean' || !Array.isArray(result.messages)) {
+                if (typeof result !== 'object' || result === null || typeof result.success !== 'boolean') {
                     console.error(`ActionExecutor: Handler for "${actionId}" returned an invalid ActionResult structure.`, result);
                     // Return a valid ActionResult structure for the error
                     return {
