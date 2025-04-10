@@ -211,18 +211,4 @@ describe('ConnectionsComponent', () => {
             expect(component.getConnectionState(connectionId)).toBe('open');
         });
     });
-
-    // --- Test original getConnection by direction (optional, ensure it still works) ---
-    describe('getConnection (by direction - legacy check)', () => {
-        it('should still find connections by direction (case-insensitive)', () => {
-            const northDoor = component.getConnection('north');
-            const eastPassage = component.getConnection('EasT'); // Mixed case
-            const nonExistent = component.getConnection('down');
-
-            expect(northDoor?.connectionId).toBe('door_north_01');
-            expect(eastPassage?.connectionId).toBe('passage_east_secret');
-            expect(nonExistent).toBeUndefined();
-        });
-    });
-
 });

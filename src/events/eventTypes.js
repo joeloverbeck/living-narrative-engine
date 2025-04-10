@@ -13,7 +13,8 @@
 /**
  * Defines the payload structure for the event:item_use_attempted event.
  * This event signifies that a user has successfully indicated an intent
- * to use a specific item from their inventory, potentially targeting another entity.
+ * to use a specific item from their inventory, potentially targeting another entity
+ * OR a connection within the current location.
  * It is typically fired after basic command parsing and unique item identification
  * within the user's inventory, but before system-level validation (like usability
  * conditions or target validity checks).
@@ -32,12 +33,16 @@
  * (e.g., 'potion_healing_lesser', 'sword_basic'). This is used by systems
  * to look up shared, definition-level properties like Usable component data,
  * effects, conditions, etc.
- * @property {string | null} explicitTargetEntityId The unique identifier of the entity
+ * @property {string | null} explicitTargetEntityId The unique identifier of the *entity*
  * that the user explicitly targeted with the command (e.g., the ID resolved from
- * "use potion *on goblin*"). This represents the target specified in the player's
- * input *before* the system performs validation checks (like range, valid target type,
- * target conditions). It is `null` if the use command did not specify an explicit
- * target (e.g., "use potion").
+ * "use potion *on goblin*"). This is mutually exclusive with `explicitTargetConnectionId`.
+ * It is `null` if the use command did not specify an explicit target or targeted a connection.
+ * @property {string | null} explicitTargetConnectionId The unique identifier (`connectionId`) of the *connection*
+ * within the current location that the user explicitly targeted (e.g., the ID resolved from
+ * "use key *on north door*"). This is mutually exclusive with `explicitTargetEntityId`.
+ * It is `null` if the use command did not specify an explicit target or targeted an entity.
+ * // Note: We could pass the whole connection object, but ID might be simpler for event payload.
+ * // The ItemUsageSystem can retrieve the object using the ID and location if needed.
  */
 
 /**
@@ -249,7 +254,7 @@
  * This event is typically triggered by an item's 'trigger_event' effect.
  *
  * Fired By: ItemUsageSystem (#handleTriggerEventEffect)
- * Consumed By: Systems responsible for handling connection state changes (e.g., a ConnectionSystem or InteractionSystem).
+ * Consumed By: Systems responsible for handling connection state changes (e.g., DoorSystem, InteractionSystem).
  *
  * @typedef {object} ConnectionUnlockAttemptEventPayload
  * @property {string} connectionId The unique identifier of the connection (e.g., door) being targeted.
@@ -257,7 +262,7 @@
  * @property {string} userId The unique identifier of the entity (typically the player) performing the unlock attempt.
  * @property {string} locationId The unique identifier of the location where the unlock attempt is taking place.
  * @property {string} [sourceItemId] The display name (or ID) of the item whose use triggered this event (inherited from DynamicTriggerEventPayload if applicable).
- * @property {string | null} [targetId] The unique identifier of the validated target entity of the item use, if applicable (inherited from DynamicTriggerEventPayload if applicable). Should usually match connectionId in this context.
+ * @property {string | null} [targetId] This might be deprecated if the target is always the connection. If kept, should usually match connectionId in this context.
  */
 
 
@@ -274,7 +279,7 @@
  *
  * @typedef {object} UIMessageDisplayPayload
  * @property {string} text The message content to display to the user.
- * @property {string} type A category hint for the message (e.g., 'info', 'warning', 'error', 'success', 'combat', 'combat_hit', 'combat_critical', 'sound'). Used for formatting or filtering in the UI.
+ * @property {'info' | 'warning' | 'error' | 'success' | 'combat' | 'combat_hit' | 'combat_critical' | 'sound' | 'prompt' | 'internal'} type A category hint for the message. Used for formatting or filtering in the UI.
  */
 
 /**

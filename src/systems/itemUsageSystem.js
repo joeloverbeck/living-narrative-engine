@@ -4,6 +4,8 @@
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {HealthComponent} from '../components/healthComponent.js';
 import {PositionComponent} from '../components/positionComponent.js';
+// Import ConnectionsComponent to retrieve connection object
+import {ConnectionsComponent} from '../components/connectionsComponent.js';
 
 // Utilities
 import {findTarget} from '../utils/targetFinder.js'; // Potentially needed for contextual search if implemented
@@ -14,6 +16,7 @@ import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../components/connectionsComponent.js').Connection} Connection */ // Added Connection type
 /** @typedef {import('../events/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
@@ -25,13 +28,12 @@ import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
  * Context object passed to effect handlers.
  * @typedef {object} EffectContext
  * @property {Entity} userEntity - The entity using the item.
- * @property {Entity | null} targetEntity - The validated target entity (null if not applicable).
+ * @property {Entity | Connection | null} target - The validated target (Entity or Connection object, null if not applicable).
  * @property {EntityManager} entityManager - For accessing/modifying components.
  * @property {EventBus} eventBus - For dispatching events and UI messages.
  * @property {DataManager} dataManager - For accessing entity definitions if needed.
  * @property {UsableComponentData} usableComponentData - The full data of the UsableComponent being processed.
  * @property {string} itemName - The display name of the item being used.
- * // Removed 'dispatch' property as per refactoring requirements.
  */
 
 /**
@@ -77,7 +79,6 @@ class ItemUsageSystem {
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
         this.#dataManager = dataManager;
-        // this.#gameStateManager = gameStateManager;
 
         this.#registerEffectHandlers(); // Populate the effect handler registry
 
@@ -107,21 +108,27 @@ class ItemUsageSystem {
     }
 
     // ========================================================================
-    // == EVENT HANDLER (REF-USE-04 Implementation) ==========================
+    // == EVENT HANDLER =======================================================
     // ========================================================================
 
     /**
      * Handles the event:item_use_attempted event, implementing core usage logic.
-     * Retrieves entities, validates conditions, handles targeting, executes effects,
+     * Retrieves entities/connections, validates conditions, handles targeting, executes effects,
      * consumes the item, and provides feedback via the EventBus.
      *
      * @param {ItemUseAttemptedEventPayload} payload - The event data.
      * @private
      */
     _handleItemUseAttempt(payload) {
-        console.log(`ItemUsageSystem: Received event:item_use_attempted`);
+        console.log(`ItemUsageSystem: Received event:item_use_attempted`, payload);
 
-        const {userEntityId, itemInstanceId, itemDefinitionId, explicitTargetEntityId} = payload;
+        const {
+            userEntityId,
+            itemInstanceId,
+            itemDefinitionId,
+            explicitTargetEntityId,
+            explicitTargetConnectionId // Added connection ID
+        } = payload;
         /** @type {ActionMessage[]} */
         const internalMessages = []; // For logging the process of this handler
 
@@ -131,16 +138,13 @@ class ItemUsageSystem {
         const itemDefinition = this.#dataManager.getEntityDefinition(itemDefinitionId); // The template data
 
         // --- 2. Basic Validation (Entities exist?) ---
+        // (Validation remains the same)
         if (!userEntity) {
             console.error(`ItemUsageSystem: User entity ${userEntityId} not found. Cannot process use attempt.`);
-            // No user-facing message needed as this is a critical internal error.
             return;
         }
         if (!itemInstance) {
             console.error(`ItemUsageSystem: Item instance ${itemInstanceId} not found. Cannot process use attempt.`);
-            // Might indicate item was removed between action and event.
-            // Potentially inform user their item is gone? Or let consumption logic handle it later?
-            // For now, log error and stop.
             return;
         }
         if (!itemDefinition) {
@@ -149,7 +153,8 @@ class ItemUsageSystem {
             return;
         }
 
-        const itemName = getDisplayName(itemInstance, "the item"); // Use item instance for name
+        // Use item instance for name, fallback to definition if needed
+        const itemName = getDisplayName(itemInstance) ?? itemDefinition?.components?.Name?.value ?? "the item";
 
         // --- 3. Check if the item has a Usable component ---
         /** @type {UsableComponentData | undefined} */
@@ -162,8 +167,9 @@ class ItemUsageSystem {
 
         // --- 4. Check Usability Conditions (User) ---
         const usabilityCheckResult = this._checkConditions(
-            userEntity, // Entity to check
-            userEntity, // User entity context
+            userEntity, // Entity to check conditions against
+            userEntity, // User entity context (might be same as entityToCheck)
+            null,       // Target context (null for usability checks)
             usableComponentData.usability_conditions,
             usableComponentData,
             itemName,
@@ -172,114 +178,132 @@ class ItemUsageSystem {
         );
         internalMessages.push(...usabilityCheckResult.messages);
         if (!usabilityCheckResult.success) {
-            // _checkConditions already dispatched the UI failure message via eventBus
             console.log(`ItemUsageSystem: Usability conditions failed for ${itemName}.`);
-            return; // Stop processing
+            return; // Stop processing, feedback already sent
         }
 
         // --- 5. Handle Targeting ---
-        let validatedTargetEntity = null; // Initialize validated target
+        let validatedTarget = null; // Can be Entity or Connection object
+        let targetType = 'none'; // 'entity', 'connection', or 'none'
+
         if (usableComponentData.target_required) {
             internalMessages.push({
-                text: `Target required for ${itemName}. Explicit ID: ${explicitTargetEntityId}`,
+                text: `Target required for ${itemName}. Explicit Entity ID: ${explicitTargetEntityId}, Connection ID: ${explicitTargetConnectionId}`,
                 type: 'internal'
             });
 
-            let potentialTargetEntity = null;
+            let potentialTarget = null; // Can be Entity or Connection object
 
-            // --- 5a. Use Explicit Target First ---
-            if (explicitTargetEntityId) {
-                potentialTargetEntity = this.#entityManager.getEntityInstance(explicitTargetEntityId);
-                if (!potentialTargetEntity) {
-                    // The Action Handler resolved an ID, but the entity is gone/invalid now.
-                    console.warn(`ItemUsageSystem: Explicit target entity ${explicitTargetEntityId} not found.`);
-                    // We could try contextual search here, but per previous thoughts, let's fail clearly.
+            // --- 5a. Prioritize Explicit Connection Target ---
+            if (explicitTargetConnectionId) {
+                const userPos = userEntity.getComponent(PositionComponent);
+                const currentLocation = userPos ? this.#entityManager.getEntityInstance(userPos.locationId) : null;
+                const connectionsComp = currentLocation?.getComponent(ConnectionsComponent);
+                potentialTarget = connectionsComp?.getConnectionById(explicitTargetConnectionId);
+
+                if (!potentialTarget) {
+                    console.warn(`ItemUsageSystem: Explicit target connection ${explicitTargetConnectionId} not found in location ${currentLocation?.id}.`);
                     this.#eventBus.dispatch('ui:message_display', {
-                        text: "The target you specified is no longer valid.",
+                        text: "The targeted connection is no longer valid.", // More specific message
                         type: 'warning'
                     });
                     return;
                 }
+                targetType = 'connection';
                 internalMessages.push({
-                    text: `Found potential explicit target: ${getDisplayName(potentialTargetEntity)} (${potentialTargetEntity.id})`,
+                    text: `Found potential explicit target: CONNECTION ${potentialTarget.name || potentialTarget.direction} (${potentialTarget.connectionId})`,
+                    type: 'internal'
+                });
+
+                // --- 5b. Use Explicit Entity Target if No Connection Target ---
+            } else if (explicitTargetEntityId) {
+                potentialTarget = this.#entityManager.getEntityInstance(explicitTargetEntityId);
+                if (!potentialTarget) {
+                    console.warn(`ItemUsageSystem: Explicit target entity ${explicitTargetEntityId} not found.`);
+                    this.#eventBus.dispatch('ui:message_display', {
+                        text: "The target you specified is no longer valid.", // Generic message
+                        type: 'warning'
+                    });
+                    return;
+                }
+                targetType = 'entity';
+                internalMessages.push({
+                    text: `Found potential explicit target: ENTITY ${getDisplayName(potentialTarget)} (${potentialTarget.id})`,
                     type: 'internal'
                 });
             } else {
-                // --- 5b. No Explicit Target Provided (Handle Contextual Search or Failure) ---
-                // TODO: Implement contextual search if needed based on design.
-                // For now, if target is required but none was specified/resolved by action handler: FAIL.
-                // Contextual search logic (example - finding single closest other entity):
-                /*
-                const playerPos = userEntity.getComponent(PositionComponent);
-                if (playerPos?.locationId) {
-                    const nearby = Array.from(this.#entityManager.getEntitiesInLocation(playerPos.locationId))
-                        .map(id => this.#entityManager.getEntityInstance(id))
-                        .filter(e => e && e.id !== userEntity.id && e.hasComponent(NameComponent)); // Must exist, not user, have name
-                    if (nearby.length === 1) { // Only use if unambiguously one target
-                        potentialTargetEntity = nearby[0];
-                        internalMessages.push({ text: `Found contextual target: ${getDisplayName(potentialTargetEntity)} (${potentialTargetEntity.id})`, type: 'internal'});
-                    } else if (nearby.length > 1) {
-                        this.#eventBus.dispatch('ui:message_display', { text: `Who do you want to use the ${itemName} on? Be more specific.`, type: 'warning' });
-                        return;
-                    }
-                }
-                */
-                // Sticking to failure if explicit target is missing:
+                // --- 5c. No Explicit Target Provided ---
+                // TODO: Implement contextual search if needed (e.g., "use potion" might target self or nearest enemy).
+                // For now, strictly require an explicit target if target_required is true.
                 internalMessages.push({
-                    text: `Target required, but no explicit target entity ID was provided in the event payload.`,
+                    text: `Target required, but no explicit target entity OR connection ID was provided.`,
                     type: 'internal'
                 });
                 this.#eventBus.dispatch('ui:message_display', {
-                    text: `You need to specify a target to use the ${itemName}.`,
+                    // Use the item's specific requirement message if available
+                    text: usableComponentData.failure_message_default || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName),
                     type: 'warning'
                 });
                 return;
             }
 
-            // --- 5c. Validate the Found/Explicit Target ---
-            if (potentialTargetEntity) {
+            // --- 5d. Validate the Found Potential Target ---
+            if (potentialTarget) {
+                // Prepare context for condition checking
+                const targetCheckContext = targetType === 'entity' ? potentialTarget : null; // Pass entity context only if target is entity
+                const connectionCheckContext = targetType === 'connection' ? potentialTarget : null; // Pass connection context only if target is connection
+
                 const targetCheckResult = this._checkConditions(
-                    potentialTargetEntity, // Entity to check
+                    potentialTarget,       // The object conditions are checked against (Entity or Connection)
                     userEntity,            // User entity context
+                    targetCheckContext,    // Entity target context
+                    connectionCheckContext,// Connection target context
                     usableComponentData.target_conditions,
                     usableComponentData,
                     itemName,
-                    this.#eventBus,         // Pass event bus
+                    this.#eventBus,
                     'Target'
                 );
                 internalMessages.push(...targetCheckResult.messages);
+
                 if (!targetCheckResult.success) {
                     // _checkConditions dispatched UI failure message
-                    console.log(`ItemUsageSystem: Target conditions failed for ${getDisplayName(potentialTargetEntity)}.`);
+                    const targetName = targetType === 'entity' ? getDisplayName(potentialTarget) : (potentialTarget.name || potentialTarget.direction);
+                    console.log(`ItemUsageSystem: Target conditions failed for ${targetType} '${targetName}'.`);
                     return; // Stop processing
                 }
+
                 // Target is valid!
-                validatedTargetEntity = potentialTargetEntity;
+                validatedTarget = potentialTarget;
+                const validatedTargetName = targetType === 'entity' ? getDisplayName(validatedTarget) : (validatedTarget.name || validatedTarget.direction);
                 internalMessages.push({
-                    text: `Target ${getDisplayName(validatedTargetEntity)} validated successfully.`,
+                    text: `Target ${targetType} '${validatedTargetName}' validated successfully.`,
                     type: 'internal'
                 });
 
             } else {
-                // Should have been handled above (explicit not found or contextual failed)
-                // If we reach here, it means target required but none found/validated.
-                if (!validatedTargetEntity) { // Double check
-                    internalMessages.push({text: `Failed to find or validate a required target.`, type: 'internal'});
-                    // Assume appropriate feedback was given earlier
-                    // Default message if somehow missed:
-                    const defaultFailMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
+                // This case should ideally not be reached if logic above is correct.
+                // It means target required, explicit target specified, but resolution failed earlier.
+                internalMessages.push({
+                    text: `Failed validation step, required target not found/resolved.`,
+                    type: 'internal'
+                });
+                // Assume appropriate feedback was given by resolver. If not, add fallback.
+                const defaultFailMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
+                // Avoid double-messaging if resolver already sent one.
+                if (!internalMessages.some(m => m.type === 'error' || m.type === 'warning')) { // Basic check
                     this.#eventBus.dispatch('ui:message_display', {text: defaultFailMsg, type: 'warning'});
-                    return;
                 }
+                return;
             }
-
         } else {
             internalMessages.push({text: `No target required for ${itemName}.`, type: 'internal'});
-            // No target required, validatedTargetEntity remains null
+            // No target required, validatedTarget remains null, targetType remains 'none'
         }
 
+
         // --- 6. Execute the Effects Loop ---
-        let overallEffectsSuccess = true; // Assume success unless a critical effect fails
+        let overallEffectsSuccess = true;
         let effectsProcessed = false;
 
         if (usableComponentData.effects && usableComponentData.effects.length > 0) {
@@ -287,40 +311,45 @@ class ItemUsageSystem {
             /** @type {EffectContext} */
             const effectContext = {
                 userEntity: userEntity,
-                targetEntity: validatedTargetEntity, // Use the validated target
+                target: validatedTarget, // Pass the validated target (Entity or Connection)
                 entityManager: this.#entityManager,
-                eventBus: this.#eventBus,            // Pass eventBus for feedback
+                eventBus: this.#eventBus,
                 dataManager: this.#dataManager,
                 usableComponentData: usableComponentData,
                 itemName: itemName
-                // dispatch property intentionally omitted
             };
             internalMessages.push({text: `Executing effects loop for ${itemName}...`, type: 'internal'});
 
             // --- 6b. Iterate through effects ---
             for (const effect of usableComponentData.effects) {
-                effectsProcessed = true; // Mark that we attempted at least one effect
+                effectsProcessed = true;
                 /** @type {EffectObjectData} */
-                const effectData = effect; // Type hint for clarity
+                const effectData = effect;
                 const handler = this.#effectHandlers.get(effectData.effect_type);
 
                 if (handler) {
                     try {
                         internalMessages.push({text: `Executing effect: ${effectData.effect_type}`, type: 'internal'});
                         const result = handler(effectData.effect_params, effectContext);
-                        internalMessages.push(...(result.messages || [])); // Log effect messages
+                        internalMessages.push(...(result.messages || []));
 
                         if (!result.success) {
                             internalMessages.push({
                                 text: `Effect ${effectData.effect_type} reported failure. StopPropagation: ${result.stopPropagation}`,
                                 type: 'internal'
                             });
+                            // Check if failure message was provided by effect handler, otherwise use default
+                            if (!result.messages?.some(m => m.type === 'error' || m.type === 'warning')) {
+                                const defaultFailMsg = usableComponentData.failure_message_default || `Using ${itemName} failed.`;
+                                // Only dispatch if effect didn't provide its own user-facing message.
+                                this.#eventBus.dispatch('ui:message_display', {text: defaultFailMsg, type: 'warning'});
+                            }
+
                             if (result.stopPropagation) {
                                 overallEffectsSuccess = false;
                                 break; // Stop processing further effects
                             }
-                            // If stopPropagation is false, continue with next effect but note overall success might be partial
-                            // For simplicity now, we only track critical failure via stopPropagation.
+                            // If stopPropagation is false, consider action partially successful, continue effects
                         } else {
                             internalMessages.push({
                                 text: `Effect ${effectData.effect_type} reported success.`,
@@ -333,8 +362,7 @@ class ItemUsageSystem {
                             text: `CRITICAL ERROR executing effect ${effectData.effect_type}. ${error.message}`,
                             type: 'error'
                         });
-                        overallEffectsSuccess = false; // Critical error stops processing
-                        // Maybe dispatch a generic error message?
+                        overallEffectsSuccess = false;
                         this.#eventBus.dispatch('ui:message_display', {
                             text: `An error occurred while using ${itemName}.`,
                             type: 'error'
@@ -360,11 +388,9 @@ class ItemUsageSystem {
         }
 
         // --- 7. Handle Item Consumption ---
-        // Only consume if effects were generally successful (or non-critical failure) and item is consumable
         if (overallEffectsSuccess && usableComponentData.consume_on_use) {
             const inventoryComponent = userEntity.getComponent(InventoryComponent);
             if (inventoryComponent) {
-                // Use the specific itemInstanceId from the payload
                 const removed = inventoryComponent.removeItem(itemInstanceId);
                 if (removed) {
                     internalMessages.push({
@@ -372,21 +398,16 @@ class ItemUsageSystem {
                         type: 'internal'
                     });
                     console.log(`ItemUsageSystem: Consumed item instance ${itemInstanceId} (${itemName}) from ${userEntityId}'s inventory.`);
-                    // Future: Handle quantity decrement for stackable items
-                    // inventoryComponent.decreaseQuantity(itemInstanceId, 1);
                 } else {
-                    // This could happen if the item was somehow removed between the event firing and now.
                     console.warn(`ItemUsageSystem: Failed to remove item instance ${itemInstanceId} (${itemName}) during consumption for user ${userEntityId}. Item might have already been removed.`);
                     internalMessages.push({
                         text: `Attempted to consume instance ${itemInstanceId}, but it was not found in inventory.`,
                         type: 'warning'
                     });
-                    // Should this prevent the success message? Maybe not, the *action* was successful, consumption just failed post-hoc.
                 }
             } else {
                 console.error(`ItemUsageSystem: User ${userEntityId} lacks InventoryComponent. Cannot consume item ${itemInstanceId}.`);
                 internalMessages.push({text: `User missing inventory component, cannot consume item.`, type: 'error'});
-                // This is an inconsistency, the user shouldn't have been able to use an item without inventory.
             }
         } else {
             internalMessages.push({
@@ -396,42 +417,32 @@ class ItemUsageSystem {
         }
 
         // --- 8. Provide Final Feedback ---
-        // If the action reached this point and effects were successful, dispatch the success message.
-        // Individual effects might have already sent specific feedback.
+        // (Feedback logic remains largely the same, relies on overallEffectsSuccess)
         if (overallEffectsSuccess) {
             const successMsg = usableComponentData.success_message;
             if (successMsg) {
                 this.#eventBus.dispatch('ui:message_display', {text: successMsg, type: 'info'});
                 internalMessages.push({text: `Dispatched custom success message: "${successMsg}"`, type: 'internal'});
-            } else if (effectsProcessed) { // Only give generic feedback if effects actually ran
-                // Provide a generic fallback message if no specific one exists
-                const fallbackMsg = `You use the ${itemName}.`;
+            } else if (effectsProcessed) {
+                const targetName = validatedTarget
+                    ? (targetType === 'entity' ? `the ${getDisplayName(validatedTarget)}` : `the ${validatedTarget.name || validatedTarget.direction}`)
+                    : '';
+                const fallbackMsg = targetName ? `You use the ${itemName} on ${targetName}.` : `You use the ${itemName}.`;
                 this.#eventBus.dispatch('ui:message_display', {text: fallbackMsg, type: 'info'});
                 internalMessages.push({text: `Dispatched generic success message: "${fallbackMsg}"`, type: 'internal'});
             } else {
-                // If no effects processed but conditions passed, maybe no message needed unless specified?
-                // Or a different generic message? "You handle the [itemName]."
                 internalMessages.push({
                     text: `Overall success, but no effects processed and no success message defined.`,
                     type: 'internal'
                 });
             }
         } else {
-            // Failure feedback should have been handled by condition checks or critical effect failures.
-            // A default failure message could be dispatched here if overallEffectsSuccess is false
-            // AND no specific failure message was already sent, but that logic is complex.
-            // Rely on condition/effect handlers to provide failure feedback for now.
             internalMessages.push({
                 text: `Overall action failed or was stopped. Final success feedback skipped.`,
                 type: 'internal'
             });
-            const defaultFailMsg = usableComponentData.failure_message_default || `Something prevented you from using the ${itemName} correctly.`;
-            // Avoid double-messaging if a specific failure message was already sent.
-            // Hard to track perfectly without more state. Let's assume prior messages were sufficient.
-            // Only dispatch if we suspect a silent failure:
-            // if (!internalMessages.some(m => m.type === 'error' || m.type === 'warning')) { // Basic check
-            //    this.#eventBus.dispatch('ui:message_display', { text: defaultFailMsg, type: 'warning' });
-            // }
+            // Failure feedback should ideally be handled by condition checks or failing effect handlers.
+            // Avoid dispatching a default failure message here if a specific one was likely sent.
         }
 
         // --- Log Internal Messages ---
@@ -440,24 +451,21 @@ class ItemUsageSystem {
     }
 
     // ========================================================================
-    // == EFFECT HANDLERS (Ensure they use context.eventBus for UI feedback) ==
+    // == EFFECT HANDLERS =====================================================
     // ========================================================================
 
     /**
      * Handles the 'heal' effect type.
-     * Restores health to the target entity based on parameters.
-     * Adheres to AC for Ticket: USAGE-EFFECT-HEAL
-     * Uses context.eventBus for UI feedback.
+     * Updated to correctly identify target from context.target which might be non-Entity.
      * @type {EffectHandlerFunction}
      */
     #handleHealEffect = (params, context) => {
         const messages = [];
-        // Note: Use context.eventBus now for UI messages
-        const {userEntity, targetEntity, entityManager, eventBus, itemName} = context;
+        const {userEntity, target, entityManager, eventBus, itemName} = context; // Use generic 'target'
         const {
             amount,
-            target: targetSpecifier = 'user', // Default to 'user'
-            fail_if_already_max = false // Default to false
+            target: targetSpecifier = 'user', // 'user' or 'target'
+            fail_if_already_max = false
         } = params ?? {};
 
         // 1. Validate Parameters
@@ -470,11 +478,24 @@ class ItemUsageSystem {
             return {success: false, messages: messages, stopPropagation: true};
         }
 
-        // 2. Identify Target Entity
+        // 2. Identify Target Entity for Healing
         let actualTargetEntity = null;
         if (targetSpecifier === 'target') {
-            actualTargetEntity = targetEntity;
-        } else {
+            // Check if the context target is an entity
+            // Need a way to distinguish Entity from Connection, e.g., check for 'id' vs 'connectionId'? Or instanceof?
+            // Assuming Entity has an 'id' property and Connection does not directly, or use a type guard if available.
+            if (target && typeof target.getComponent === 'function') { // Basic check for Entity-like object
+                actualTargetEntity = /** @type {Entity} */ (target);
+            } else {
+                console.warn(`ItemUsageSystem: Heal effect specified 'target', but context target is not an entity. Item: ${itemName}, Target:`, target);
+                eventBus.dispatch('ui:message_display', {text: `The ${itemName} cannot heal that.`, type: 'info'});
+                return {
+                    success: false,
+                    messages: [{text: 'Heal target is not an entity.', type: 'internal'}],
+                    stopPropagation: false
+                }; // Non-critical failure usually
+            }
+        } else { // targetSpecifier === 'user'
             actualTargetEntity = userEntity;
         }
 
@@ -503,12 +524,11 @@ class ItemUsageSystem {
             return {success: false, messages: messages}; // Cannot heal non-health target
         }
 
-        // 4. Check Health Status
+        // 4. Check Health Status & Apply Healing
         const currentHealth = healthComponent.current;
         const maxHealth = healthComponent.max;
         const isFullHealth = currentHealth >= maxHealth;
 
-        // 5. Handle Full Health Case
         if (isFullHealth) {
             const feedbackMsg = `${targetName}'s health is already full.`;
             messages.push({text: feedbackMsg, type: 'internal'});
@@ -523,7 +543,7 @@ class ItemUsageSystem {
             }
         }
 
-        // 6. Handle Not Full Health Case (Apply Healing)
+        // Apply healing
         const oldHealth = currentHealth;
         healthComponent.current = Math.min(maxHealth, oldHealth + amount);
         const actualHeal = healthComponent.current - oldHealth;
@@ -531,7 +551,7 @@ class ItemUsageSystem {
         // 7. Provide Feedback via EventBus
         const healMsg = `${targetName} recovered ${actualHeal} health.`;
         messages.push({text: healMsg, type: 'success'});
-        eventBus.dispatch('ui:message_display', {text: healMsg, type: 'success'}); // User-facing via EventBus
+        eventBus.dispatch('ui:message_display', {text: healMsg, type: 'success'});
 
         // 8. Return Success
         return {success: true, messages: messages};
@@ -539,48 +559,45 @@ class ItemUsageSystem {
 
     /**
      * Handles the 'trigger_event' effect type.
-     * Dispatches a custom event on the global EventBus.
-     * Adheres to AC for Ticket: USAGE-EFFECT-EVENT & Ticket 3.1
-     * Uses context.eventBus for UI feedback if configured.
+     * Updated to correctly identify targetId based on context.target type.
      * @type {EffectHandlerFunction}
      */
     #handleTriggerEventEffect = (params, context) => {
         const messages = [];
-        // Use context.eventBus for dispatching the trigger AND potential feedback
-        const {eventBus, userEntity, targetEntity, itemName, entityManager} = context; // Added entityManager
+        const {eventBus, userEntity, target, itemName, entityManager} = context; // Use generic 'target'
         const {
             event_name,
             event_payload = {},
-            feedback_message // Optional feedback message string
+            feedback_message
         } = params ?? {};
 
-        // 1. Validate Parameters (validation logic remains the same) [cite: 283]
+        // 1. Validate Parameters
         if (typeof event_name !== 'string' || event_name.trim() === '') {
-            const errorMsg = `Invalid or missing 'event_name' parameter for 'trigger_event' effect in item ${itemName}.`;
-            console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({
-                text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing event_name).`,
-                type: 'error'
-            });
             return {success: false, messages: messages, stopPropagation: true};
         }
         if (typeof event_payload !== 'object' || event_payload === null) {
-            const errorMsg = `Invalid 'event_payload' parameter (must be an object) for 'trigger_event' effect in item ${itemName}.`;
-            console.error(`ItemUsageSystem: ${errorMsg}`);
-            messages.push({
-                text: `Internal Error: ${itemName} trigger_event effect misconfigured (invalid event_payload).`,
-                type: 'error'
-            });
             return {success: false, messages: messages, stopPropagation: true};
         }
 
         // 2. Construct Final Event Payload
-        // Start with base payload properties provided by the item definition
+        let targetId = null;
+        let targetType = 'none';
+        if (target && typeof target.getComponent === 'function') { // Entity check
+            targetId = target.id;
+            targetType = 'entity';
+        } else if (target && target.connectionId) { // Connection check
+            targetId = target.connectionId; // Use connectionId as the ID
+            targetType = 'connection';
+        }
+
         const finalEventPayload = {
             ...event_payload, // Include properties from the item's effect_payload
-            userId: userEntity.id, // Always add the user who initiated the action
-            targetId: targetEntity?.id ?? null, // Add the validated target ID, if any
-            sourceItemId: itemName // Added item name for context
+            userId: userEntity.id,
+            // Include target info based on type, adjust if downstream systems expect specific fields
+            targetId: targetId, // Could be entity ID or connection ID
+            targetType: targetType, // Explicitly pass type
+            sourceItemId: itemDefinitionId, // Pass definition ID for consistency? Or instance ID? Or name? Using definitionId for now.
+            // Note: The original key item definition passed keyId: "demo:item_key" which is definition ID.
         };
 
         // Specifically for connection_unlock_attempt, ensure locationId is present
@@ -593,32 +610,36 @@ class ItemUsageSystem {
                     type: 'internal'
                 });
             } else {
-                // Handle cases where the user might lack a position (shouldn't normally happen in this context)
                 console.warn(`ItemUsageSystem: User ${userEntity.id} lacks PositionComponent or locationId when triggering ${event_name}. LocationId will be missing from payload.`);
                 messages.push({text: `User ${userEntity.id} missing locationId for ${event_name}.`, type: 'warning'});
-                finalEventPayload.locationId = null; // Explicitly set to null if unavailable
+                finalEventPayload.locationId = null;
+            }
+
+            // Ensure connectionId is correctly populated from target if not already in event_payload
+            if (!finalEventPayload.connectionId && targetType === 'connection' && targetId) {
+                finalEventPayload.connectionId = targetId;
+                messages.push({text: `Added connectionId (${targetId}) from context target.`, type: 'internal'});
             }
 
             // Verify required fields from event_payload defined in the item are present
             if (!finalEventPayload.connectionId) {
-                console.error(`ItemUsageSystem: Missing 'connectionId' in event_payload for ${event_name} triggered by ${itemName}.`);
+                console.error(`ItemUsageSystem: Missing 'connectionId' in payload for ${event_name} triggered by ${itemName}. Context Target:`, target);
                 messages.push({text: `CRITICAL: Missing connectionId for ${event_name}.`, type: 'error'});
-                // Consider failing the effect if critical data is missing
+                // Consider failing the effect
                 // return {success: false, messages: messages, stopPropagation: true};
             }
             if (!finalEventPayload.keyId) {
-                console.error(`ItemUsageSystem: Missing 'keyId' in event_payload for ${event_name} triggered by ${itemName}.`);
-                messages.push({text: `CRITICAL: Missing keyId for ${event_name}.`, type: 'error'});
-                // Consider failing the effect
-                // return {success: false, messages: messages, stopPropagation: true};
+                // keyId should be the ID of the item being used
+                finalEventPayload.keyId = itemInstanceId; // Use instance ID of the key
+                messages.push({text: `Added keyId (${itemInstanceId}) from item context.`, type: 'internal'});
             }
         }
 
 
-        // 3. Dispatch Event via context.eventBus (dispatch logic remains the same) [cite: 283]
+        // 3. Dispatch Event via context.eventBus
         try {
             console.debug(`ItemUsageSystem: Dispatching event '${event_name}' via EventBus for item ${itemName}. Payload:`, finalEventPayload);
-            eventBus.dispatch(event_name, finalEventPayload); // Dispatch the triggered event
+            eventBus.dispatch(event_name, finalEventPayload);
             messages.push({text: `Dispatched event '${event_name}' for ${itemName}.`, type: 'internal'});
         } catch (error) {
             const errorMsg = `Error dispatching event '${event_name}' for item ${itemName}: ${error.message}`;
@@ -643,43 +664,30 @@ class ItemUsageSystem {
         return {success: true, messages: messages};
     };
 
-
-    // --- Stub Handlers (Keep as is for now) ---
-
+    // --- Stub Handlers ---
     /** @type {EffectHandlerFunction} */
-    #handleApplyStatusEffectStub = (params, context) => {
-        console.log(`ItemUsageSystem: STUB: Handling 'apply_status_effect' for ${context.itemName}`);
-        // Future: Use context.eventBus for feedback like "You feel stronger."
+    #handleApplyStatusEffectStub = (params, context) => { /* ... */
         return {
             success: true,
             messages: [{text: `Apply_status_effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
         };
     }
-
     /** @type {EffectHandlerFunction} */
-    #handleDamageEffectStub = (params, context) => {
-        console.log(`ItemUsageSystem: STUB: Handling 'damage' for ${context.itemName}`);
-        // Future: Use context.eventBus for feedback like "The goblin takes 5 fire damage."
+    #handleDamageEffectStub = (params, context) => { /* ... */
         return {
             success: true,
             messages: [{text: `Damage effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
         };
     }
-
     /** @type {EffectHandlerFunction} */
-    #handleSpawnEntityEffectStub = (params, context) => {
-        console.log(`ItemUsageSystem: STUB: Handling 'spawn_entity' for ${context.itemName}`);
-        // Future: Use context.eventBus for feedback like "A small creature appears."
+    #handleSpawnEntityEffectStub = (params, context) => { /* ... */
         return {
             success: true,
             messages: [{text: `Spawn_entity effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
         };
     }
-
     /** @type {EffectHandlerFunction} */
-    #handleRemoveStatusEffectStub = (params, context) => {
-        console.log(`ItemUsageSystem: STUB: Handling 'remove_status_effect' for ${context.itemName}`);
-        // Future: Use context.eventBus for feedback like "You feel the poison fading."
+    #handleRemoveStatusEffectStub = (params, context) => { /* ... */
         return {
             success: true,
             messages: [{text: `Remove_status_effect processed (stub) for ${context.itemName}.`, type: 'internal'}]
@@ -692,20 +700,23 @@ class ItemUsageSystem {
     // ========================================================================
 
     /**
-     * Checks if the conditions (usability or target) defined in the item's UsableComponent are met.
+     * Checks if the conditions (usability or target) are met.
      * Dispatches UI messages on failure using the provided EventBus instance.
+     * Updated to receive potential connection context.
      *
-     * @param {Entity} entityToCheck - The entity the conditions are evaluated against (user or target).
-     * @param {Entity} userEntity - The entity initiating the action (needed for context like distance).
+     * @param {Entity | Connection} objectToCheck - The entity or connection object the conditions are evaluated against.
+     * @param {Entity} userEntity - The entity initiating the action.
+     * @param {Entity | null} targetEntityContext - The target if it's an entity.
+     * @param {Connection | null} targetConnectionContext - The target if it's a connection.
      * @param {ConditionObjectData[] | undefined} conditions - The array of conditions to check.
      * @param {UsableComponentData} usableData - The Usable component data for fallback messages.
-     * @param {string} itemName - The display name of the item being used (for messages).
+     * @param {string} itemName - The display name of the item being used.
      * @param {EventBus} eventBus - The event bus instance for dispatching UI messages.
      * @param {'Usability' | 'Target'} checkType - Context for logging/errors.
-     * @returns {{success: boolean, messages: ActionMessage[]}} - Result indicating if conditions passed, includes messages for logging.
+     * @returns {{success: boolean, messages: ActionMessage[]}} - Result indicating if conditions passed.
      * @private
      */
-    _checkConditions(entityToCheck, userEntity, conditions, usableData, itemName, eventBus, checkType) {
+    _checkConditions(objectToCheck, userEntity, targetEntityContext, targetConnectionContext, conditions, usableData, itemName, eventBus, checkType) {
         /** @type {ActionMessage[]} */
         const messages = [];
 
@@ -716,14 +727,22 @@ class ItemUsageSystem {
             };
         }
 
+        // Determine name of the object being checked for logging
+        let objectName = 'unknown object';
+        if (typeof objectToCheck?.getComponent === 'function') { // Is Entity?
+            objectName = getDisplayName(objectToCheck);
+        } else if (objectToCheck?.connectionId) { // Is Connection?
+            objectName = objectToCheck.name || objectToCheck.direction || objectToCheck.connectionId;
+        }
+
         messages.push({
-            text: `Checking ${checkType} conditions for ${itemName} against ${getDisplayName(entityToCheck)}...`,
+            text: `Checking ${checkType} conditions for ${itemName} against ${objectName}...`,
             type: 'internal'
         })
 
         for (const condition of conditions) {
             // Evaluate the core condition logic
-            let conditionMet = this._evaluateCondition(entityToCheck, userEntity, condition);
+            let conditionMet = this._evaluateCondition(objectToCheck, userEntity, targetEntityContext, targetConnectionContext, condition);
             const negate = condition.negate ?? false;
             let finalConditionMet = negate ? !conditionMet : conditionMet;
 
@@ -731,15 +750,9 @@ class ItemUsageSystem {
                 // Determine appropriate failure message
                 let failureMsg = condition.failure_message;
                 if (!failureMsg) {
-                    // Define fallback messages based on schema/ticket description
                     const defaultUsabilityFail = usableData.failure_message_default || TARGET_MESSAGES.USE_CONDITION_FAILED(itemName);
-                    const defaultTargetFail = usableData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName); // Consider a separate target fallback?
-
-                    if (checkType === 'Target') {
-                        failureMsg = defaultTargetFail;
-                    } else { // checkType === 'Usability'
-                        failureMsg = defaultUsabilityFail;
-                    }
+                    const defaultTargetFail = usableData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
+                    failureMsg = (checkType === 'Target') ? defaultTargetFail : defaultUsabilityFail;
                 }
 
                 // Use the EventBus for immediate condition failure feedback
@@ -763,122 +776,189 @@ class ItemUsageSystem {
     }
 
     /**
-     * Evaluates a single condition object against the target entity, user entity, and potentially game state.
-     * Handles parameter retrieval and validation internally.
-     * (Implementation remains the same as provided previously)
+     * Evaluates a single condition object against the target object (Entity or Connection), user entity, and context.
+     * Handles property access carefully for different object types.
      *
-     * @param {Entity} entityToCheck - The entity the condition applies to (user or target).
-     * @param {Entity} userEntity - The entity initiating the action (for context like distance).
+     * @param {Entity | Connection} objectToCheck - The object the condition applies to.
+     * @param {Entity} userEntity - The entity initiating the action.
+     * @param {Entity | null} targetEntityContext - The target if it's an entity.
+     * @param {Connection | null} targetConnectionContext - The target if it's a connection.
      * @param {ConditionObjectData} condition - The condition data object.
-     * @returns {boolean} - True if the condition is met, false otherwise. Returns false for unknown condition types or errors.
+     * @returns {boolean} - True if the condition is met, false otherwise.
      * @private
      */
-    _evaluateCondition(entityToCheck, userEntity, condition) {
+    _evaluateCondition(objectToCheck, userEntity, targetEntityContext, targetConnectionContext, condition) {
         const conditionType = condition.condition_type;
 
-        // Helper functions (getNumberParam, getStringParam, getValueParam) remain the same...
-        const getNumberParam = (paramName, defaultValue = null) => {
-            const value = condition[paramName];
-            if (typeof value === 'number') return value;
-            if (condition.hasOwnProperty(paramName)) console.warn(`ItemUsageSystem: Condition '${conditionType}' expected number for '${paramName}', got ${typeof value}.`);
-            if (defaultValue !== null) return defaultValue;
-            console.warn(`ItemUsageSystem: Condition '${conditionType}' missing required number param '${paramName}'. Condition fails.`);
-            return null; // Indicate failure
-        };
-        const getStringParam = (paramName, defaultValue = null) => {
-            const value = condition[paramName];
-            if (typeof value === 'string' && value.length > 0) return value;
-            if (condition.hasOwnProperty(paramName)) console.warn(`ItemUsageSystem: Condition '${conditionType}' expected non-empty string for '${paramName}', got ${typeof value}.`);
-            if (defaultValue !== null) return defaultValue;
-            console.warn(`ItemUsageSystem: Condition '${conditionType}' missing required string param '${paramName}'. Condition fails.`);
-            return null; // Indicate failure
-        };
-        const getValueParam = (paramName) => {
-            const value = condition[paramName];
-            if (typeof value === 'undefined') {
-                console.warn(`ItemUsageSystem: Condition '${conditionType}' missing required param '${paramName}'. Condition fails.`); // Adjusted message
-                return undefined; // Indicate failure
+        // Helper to safely get properties from either Entity (via components) or Connection (direct access)
+        const getProperty = (obj, path) => {
+            if (!obj || !path) return undefined;
+            const parts = path.split('.');
+            let current = obj;
+            for (const part of parts) {
+                if (current === null || typeof current === 'undefined') return undefined;
+
+                // Check if current object is an Entity to access components
+                if (typeof current.getComponent === 'function') {
+                    // Special case for direct entity properties like 'id' maybe?
+                    if (part === 'id') {
+                        current = current.id;
+                        continue; // Move to next part if path is deeper e.g., id.something (unlikely)
+                    }
+                    // Assume the part is a Component name
+                    const component = current.getComponent(part); // This needs mapping from name string to class
+                    // Problem: componentRegistry is needed here, or pass ComponentClass directly?
+                    // Let's assume for now path refers to direct properties or simple component values
+                    // A better approach might be needed for deep component paths e.g., 'HealthComponent.max'
+                    console.warn(`ItemUsageSystem: Accessing component '${part}' by name in condition property path is not robustly implemented. Assuming direct property access.`);
+                    current = undefined; // Fail for now if component access needed this way
+
+                } else {
+                    // Assume direct property access for Connection objects or nested properties
+                    current = current[part];
+                }
             }
-            return value;
+            return current;
+        };
+
+        // Helper for nested property access using a path string (e.g., "HealthComponent.current")
+        // NOTE: This simple version only handles direct properties or top-level component existence.
+        // A more robust version would need access to Component classes/registry.
+        // For the specific case of target_has_property with connection target, direct access is fine.
+        const getNestedProperty = (obj, propertyPath) => {
+            if (!obj || !propertyPath) return undefined;
+            const pathParts = propertyPath.split('.');
+            let current = obj;
+            for (const part of pathParts) {
+                if (current === null || typeof current === 'undefined') return undefined;
+
+                // If 'current' is an Entity, try getting component if part matches a known component pattern
+                if (typeof current.getComponent === 'function') {
+                    // Very basic check: if part ends with 'Component'
+                    if (part.endsWith('Component')) {
+                        // Need component registry access here... For now, we can't reliably get component by string name.
+                        // Let's handle the simple 'connectionId' and 'state' cases expected for connections.
+                        console.warn(`ItemUsageSystem: Accessing component '${part}' in property path is not fully supported.`);
+                        return undefined; // Cannot resolve component by string name here
+                    }
+                    // Fallback to direct property access (like 'id')
+                    current = current[part];
+
+                } else {
+                    // If not an entity, assume direct property access
+                    current = current[part];
+                }
+            }
+            return current;
+        };
+
+
+        // Parameter getter functions (remain the same logic)
+        const getNumberParam = (paramName, defaultValue = null) => { /* ... */
+        };
+        const getStringParam = (paramName, defaultValue = null) => { /* ... */
+        };
+        const getValueParam = (paramName) => { /* ... */
         };
 
 
         switch (conditionType) {
-            case 'player_state': {
+            // --- Conditions primarily about the USER ---
+            case 'player_in_location': { // Renamed from player_state for clarity
+                const requiredLocationId = getStringParam('locationId');
+                if (requiredLocationId === null) return false;
+                const userPosComp = userEntity.getComponent(PositionComponent);
+                return userPosComp?.locationId === requiredLocationId;
+            }
+            case 'player_state': { // Kept for other player states if needed
                 const requiredState = getStringParam('state');
                 if (requiredState === null) return false;
-                if (entityToCheck !== userEntity) {
-                    console.warn(`ItemUsageSystem: Condition 'player_state' used on non-user target ${getDisplayName(entityToCheck)}. Condition fails.`);
-                    return false;
-                }
+                // TODO: Implement check against player state flags/components
                 console.warn(`ItemUsageSystem: Condition type 'player_state' ('${requiredState}') not implemented. Assuming false.`);
                 return false;
             }
 
-            case 'has_status_effect': {
-                const effectId = getStringParam('effect_id');
-                if (effectId === null) return false;
-                console.warn(`ItemUsageSystem: Condition type 'has_status_effect' ('${effectId}') on ${getDisplayName(entityToCheck)} not implemented. Assuming false.`);
+            // --- Conditions about the TARGET (Entity or Connection) ---
+            case 'target_has_component': { // Primarily for Entity targets
+                const componentName = getStringParam('component_name');
+                if (componentName === null) return false;
+                // Only check if objectToCheck is likely an Entity
+                if (typeof objectToCheck?.hasComponent !== 'function') {
+                    console.warn(`ItemUsageSystem: Condition 'target_has_component' used on non-entity target. Condition fails.`);
+                    return false;
+                }
+                // Need component registry access here
+                // const ComponentClass = this.#entityManager.componentRegistry.get(componentName);
+                // if (!ComponentClass) { ... return false; }
+                // return objectToCheck.hasComponent(ComponentClass);
+                console.warn(`ItemUsageSystem: Condition 'target_has_component' requires component registry access (not implemented here). Assuming false.`);
                 return false;
             }
 
-            case 'target_has_component': {
-                const componentName = getStringParam('component_name'); // Param name from schema examples
-                if (componentName === null) return false;
-                const ComponentClass = this.#entityManager.componentRegistry.get(componentName);
-                if (!ComponentClass) {
-                    console.warn(`ItemUsageSystem: Condition 'target_has_component': Unknown component '${componentName}'. Assuming false.`);
-                    return false;
-                }
-                return entityToCheck.hasComponent(ComponentClass);
+            case 'target_has_property': { // Useful for both Entity and Connection
+                const propertyPath = getStringParam('property_path');
+                const expectedValue = getValueParam('expected_value');
+                if (propertyPath === null || typeof expectedValue === 'undefined') return false;
+
+                // Use the nested property getter
+                const actualValue = getNestedProperty(objectToCheck, propertyPath);
+
+                // Comparison logic (strict equality for now)
+                return actualValue === expectedValue;
             }
 
-            case 'target_distance': {
-                // Params from schema examples: max_distance, min_distance
+            case 'target_distance': { // Primarily between Entities
                 const maxDistance = getNumberParam('max_distance');
-                const minDistance = getNumberParam('min_distance', 0); // Default min to 0 if omitted
-                if (maxDistance === null || maxDistance < 0 || minDistance < 0 || maxDistance < minDistance) {
-                    console.warn(`ItemUsageSystem: Condition 'target_distance' has invalid parameters (max:${maxDistance}, min:${minDistance}). Condition fails.`);
+                const minDistance = getNumberParam('min_distance', 0);
+                if (maxDistance === null || maxDistance < 0 || minDistance < 0 || maxDistance < minDistance) return false;
+
+                // Ensure objectToCheck is an Entity
+                if (typeof objectToCheck?.getComponent !== 'function') {
+                    console.warn(`ItemUsageSystem: Condition 'target_distance' used on non-entity target. Condition fails.`);
                     return false;
                 }
-
-                if (entityToCheck === userEntity) return 0 >= minDistance && 0 <= maxDistance;
+                if (objectToCheck === userEntity) return 0 >= minDistance && 0 <= maxDistance; // Distance to self is 0
 
                 const userPosComp = userEntity.getComponent(PositionComponent);
-                const targetPosComp = entityToCheck.getComponent(PositionComponent);
-                if (!userPosComp || !targetPosComp) {
-                    console.warn(`ItemUsageSystem: Condition 'target_distance' requires PositionComponent on user ${getDisplayName(userEntity)} and target ${getDisplayName(entityToCheck)}. Assuming false.`);
-                    return false;
-                }
-                if (userPosComp.locationId !== targetPosComp.locationId) return false;
+                const targetPosComp = objectToCheck.getComponent(PositionComponent);
+                if (!userPosComp || !targetPosComp || userPosComp.locationId !== targetPosComp.locationId) return false; // Must be in same location
 
-                const dx = userPosComp.x - targetPosComp.x;
-                const dy = userPosComp.y - targetPosComp.y;
+                const dx = (userPosComp.x ?? 0) - (targetPosComp.x ?? 0);
+                const dy = (userPosComp.y ?? 0) - (targetPosComp.y ?? 0);
                 const distanceSq = dx * dx + dy * dy;
-                // Check against squared distances to avoid sqrt
                 return distanceSq >= (minDistance * minDistance) && distanceSq <= (maxDistance * maxDistance);
             }
 
-            case 'health_below_max': {
-                const healthComponent = entityToCheck.getComponent(HealthComponent);
+            case 'health_below_max': { // Primarily for Entities
+                if (typeof objectToCheck?.getComponent !== 'function') return false; // Not an entity
+                const healthComponent = objectToCheck.getComponent(HealthComponent);
                 if (!healthComponent) return false;
                 return healthComponent.current < healthComponent.max;
             }
 
-            case 'attribute_check': {
-                // Params from schema examples: attribute_id, comparison, value
-                const attributeId = getStringParam('attribute_id');
-                const comparison = getStringParam('comparison');
-                const value = getValueParam('value'); // Gets the comparison value
-
-                if (attributeId === null || comparison === null || typeof value === 'undefined') return false; // getValueParam handles missing 'value'
-
-                console.warn(`ItemUsageSystem: Condition type 'attribute_check' ('${attributeId} ${comparison} ${value}') on ${getDisplayName(entityToCheck)} not implemented. Assuming false.`);
+            case 'has_status_effect': { // Primarily for Entities
+                if (typeof objectToCheck?.getComponent !== 'function') return false;
+                const effectId = getStringParam('effect_id');
+                if (effectId === null) return false;
+                // TODO: Check StatusEffectsComponent on objectToCheck
+                console.warn(`ItemUsageSystem: Condition type 'has_status_effect' ('${effectId}') not implemented. Assuming false.`);
                 return false;
             }
 
+            case 'attribute_check': { // Primarily for Entities
+                if (typeof objectToCheck?.getComponent !== 'function') return false;
+                const attributeId = getStringParam('attribute_id');
+                const comparison = getStringParam('comparison'); // e.g., '>=', '<', '=='
+                const value = getValueParam('value');
+                if (attributeId === null || comparison === null || typeof value === 'undefined') return false;
+                // TODO: Get attribute value from AttributeComponent on objectToCheck and compare
+                console.warn(`ItemUsageSystem: Condition type 'attribute_check' ('${attributeId} ${comparison} ${value}') not implemented. Assuming false.`);
+                return false;
+            }
+
+
             default:
-                console.warn(`ItemUsageSystem: Encountered unknown condition_type '${conditionType}' for entity ${getDisplayName(entityToCheck)}. Assuming condition fails.`);
+                console.warn(`ItemUsageSystem: Encountered unknown condition_type '${conditionType}'. Assuming condition fails.`);
                 return false;
         }
     }

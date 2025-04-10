@@ -7,6 +7,7 @@ import Component from "./component.js";
  * @property {string} connectionId - A unique identifier for this specific connection instance.
  * @property {string} direction - The direction of travel (e.g., 'north', 'east', 'up'). Case-insensitive matching is often applied.
  * @property {string} target - The entity ID of the location this connection leads to.
+ * @property {string} [name] - Optional display name or description for the connection (e.g., "sturdy north door", "glowing portal"). Used for targeting by description.
  * @property {string} [description_override] - Optional text to display instead of the standard exit description.
  * @property {string} [type='passage'] - The type of connection (e.g., 'passage', 'door', 'portal'). Defaults to 'passage'.
  * @property {boolean} [hidden=false] - If true, this connection is not initially visible or listed in exits. Defaults to false.
@@ -56,9 +57,9 @@ export class ConnectionsComponent extends Component {
                 }
 
 
-                // Add the runtime state property to the copied connection object
+                // Add the runtime state property and ensure optional 'name' is carried over
                 return {
-                    ...conn,
+                    ...conn, // Spread existing properties (direction, target, connectionId, name, etc.)
                     state: runtimeState
                 };
             });
@@ -109,7 +110,7 @@ export class ConnectionsComponent extends Component {
      * @param {string} direction
      * @returns {Connection | undefined} The connection object or undefined if not found.
      */
-    getConnection(direction) {
+    getConnectionByDirection(direction) { // Renamed for clarity
         if (!direction || typeof direction !== 'string') return undefined;
         const lowerDir = direction.toLowerCase();
         return this.connections.find(

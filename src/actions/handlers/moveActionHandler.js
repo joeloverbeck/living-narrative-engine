@@ -5,6 +5,7 @@ import {PositionComponent} from '../../components/positionComponent.js';
 import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
+
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 
 /**
@@ -76,7 +77,7 @@ export function executeMove(context) {
         return {success: success}; // Not a failure in the sense of error, but move did not succeed.
     }
 
-    const connection = connectionsComp.getConnection(direction);
+    const connection = connectionsComp.getConnectionByDirection(direction);
 
     // --- 4. Handle Connection Result and Validation ---
     if (connection) {
