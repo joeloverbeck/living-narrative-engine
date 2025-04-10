@@ -71,7 +71,11 @@ class DataManager {
     constructor() {
         // Directly instantiate using the imported Ajv
         try {
-            this.ajv = new Ajv({allErrors: true}); // Use the imported Ajv directly
+            // Add strictTypes: false to the options
+            this.ajv = new Ajv({
+                allErrors: true,
+                strictTypes: false // Explicitly allow union types like ["string", "number", "boolean"]
+            });
             console.log("Successfully instantiated Ajv from Skypack import.");
         } catch (e) {
             console.error("Failed to instantiate Ajv even after import from Skypack:", e);
@@ -117,6 +121,7 @@ class DataManager {
 
         console.log("DataManager: Loading schemas...");
         const schemaPromises = SCHEMA_FILES.map(async (filename) => {
+            // --- TICKET 3: Adjust path to look in the base schemas folder ---
             const path = `${BASE_DATA_PATH}/schemas/${filename}`;
             try {
                 const response = await fetch(path);
@@ -165,15 +170,14 @@ class DataManager {
         await Promise.all(schemaPromises);
         console.log(`DataManager: All ${this.schemas.size} specified schemas processed and attempted to add to validator.`);
 
-        // --- TICKET 5 START: Verify quest/objective schemas are loaded ---
+        // Check if Ajv has the schemas compiled after loading all files.
         if (!this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.quests)) {
-            throw new Error(`DataManager: Quest schema (${CONTENT_TYPE_SCHEMAS.quests}) failed to load or compile.`);
+            throw new Error(`DataManager: Quest schema (${CONTENT_TYPE_SCHEMAS.quests}) failed to load or compile. Content loading cannot proceed.`);
         }
         if (!this.ajv.getSchema(CONTENT_TYPE_SCHEMAS.objectives)) {
-            throw new Error(`DataManager: Objective schema (${CONTENT_TYPE_SCHEMAS.objectives}) failed to load or compile.`);
+            throw new Error(`DataManager: Objective schema (${CONTENT_TYPE_SCHEMAS.objectives}) failed to load or compile. Content loading cannot proceed.`);
         }
         console.log("DataManager: Quest and Objective schemas successfully registered with validator.");
-        // --- TICKET 5 END ---
     }
 
     /**
@@ -188,10 +192,8 @@ class DataManager {
         const loadingPromises = [
             // Load standard single-object-per-file types
             this.loadAndValidateContentType('actions', CONTENT_FILES.actions, CONTENT_TYPE_SCHEMAS.actions),
-            // --- TICKET 5 START: Add loading for quests and objectives ---
             this.loadAndValidateContentType('quests', CONTENT_FILES.quests, CONTENT_TYPE_SCHEMAS.quests),
             this.loadAndValidateContentType('objectives', CONTENT_FILES.objectives, CONTENT_TYPE_SCHEMAS.objectives),
-            // --- TICKET 5 END ---
 
             // Load types with special handling
             this.loadAndValidateEntities(), // Handles entities, items, locations based on schema used
@@ -199,14 +201,14 @@ class DataManager {
         ];
 
         await Promise.all(loadingPromises);
-        console.log("DataManager: All content definitions loaded and validated.");
+        console.log("DataManager: All content definitions loaded and validated (or attempted).");
     }
 
     /**
      * Generic function to load, parse, validate, and store definitions of a specific type
      * where each file contains a single JSON object definition.
      * @private
-     * @param {string} typeName - The type of content (e.g., 'actions', 'quests', 'objectives').
+     * @param {string} typeName - The type of content (e.g., 'actions', 'quests', 'objectives'). Should match keys in CONTENT_FILES, CONTENT_TYPE_SCHEMAS, and this instance (e.g., this.quests).
      * @param {string[]} filenames - List of filenames for this content type.
      * @param {string} schemaId - The $id of the schema to validate against.
      * @returns {Promise<void>}
@@ -214,9 +216,9 @@ class DataManager {
     async loadAndValidateContentType(typeName, filenames, schemaId) {
         console.log(`DataManager: Loading ${typeName}...`);
         const targetMap = this[typeName]; // Get the correct map (e.g., this.actions, this.quests)
-        if (!targetMap) {
+        if (!targetMap || typeof targetMap.set !== 'function') { // Check if it's a Map-like object
             // This error should ideally not happen if the constructor and config are correct
-            console.error(`DataManager: Developer Error - Target map 'this.${typeName}' does not exist.`);
+            console.error(`DataManager: Developer Error - Target map 'this.${typeName}' does not exist or is not a Map.`);
             throw new Error(`DataManager: Invalid content type specified or not initialized: ${typeName}`);
         }
 
@@ -225,6 +227,11 @@ class DataManager {
             // This indicates a schema failed to load/compile in loadSchemas
             console.error(`DataManager: Schema ${schemaId} not found or not compiled for validating ${typeName}. Check loadSchemas logs.`);
             throw new Error(`DataManager: Prerequisite schema ${schemaId} is not available for validating ${typeName}.`);
+        }
+
+        if (!Array.isArray(filenames)) {
+            console.warn(`DataManager: No file list found for content type '${typeName}'. Skipping.`);
+            filenames = []; // Process empty list to avoid errors
         }
 
         const filePromises = filenames.map(async (filename) => {
@@ -247,9 +254,9 @@ class DataManager {
                 }
 
                 // Store the validated data, keyed by ID
-                if (!data.id) {
+                if (!data.id || typeof data.id !== 'string' || data.id.trim() === '') {
                     // Critical data integrity issue
-                    throw new Error(`Data in ${path} is missing required 'id' property.`);
+                    throw new Error(`Data in ${path} is missing a valid required 'id' property.`);
                 }
                 if (targetMap.has(data.id)) {
                     // Warn about duplicates, as specified in acceptance criteria implicitly (loading all files)
@@ -270,6 +277,7 @@ class DataManager {
         console.log(`DataManager: Finished loading ${targetMap.size} ${typeName}.`);
     }
 
+
     /**
      * Special handler for entities, distinguishing between items, locations, and base entities.
      * @private
@@ -277,7 +285,7 @@ class DataManager {
     async loadAndValidateEntities() {
         const typeName = 'entities';
         console.log(`DataManager: Loading ${typeName} (incl. items, locations)...`);
-        const filenames = CONTENT_FILES.entities; // Get the combined list
+        const filenames = CONTENT_FILES.entities || []; // Use empty array if undefined
         const targetMap = this.entities; // Unified storage
 
         // Get validators for all relevant types
@@ -299,8 +307,8 @@ class DataManager {
                 }
                 const data = await response.json();
 
-                if (!data.id) {
-                    throw new Error(`Data in ${path} is missing required 'id' property.`);
+                if (!data.id || typeof data.id !== 'string' || data.id.trim() === '') {
+                    throw new Error(`Data in ${path} is missing a valid required 'id' property.`);
                 }
 
                 let isValid = false;
