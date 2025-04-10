@@ -568,7 +568,7 @@ class ItemUsageSystem {
         return {success: true, messages: messages};
     };
     /** @type {EffectHandlerFunction} */
-    #handleTriggerEventEffect = (params, context) => { /* ... as provided ... */
+    #handleTriggerEventEffect = (params, context) => {
         const messages = [];
         // Ensure itemInstanceId and itemDefinitionId are used from context
         const {eventBus, userEntity, target, itemName, entityManager, itemInstanceId, itemDefinitionId} = context;
