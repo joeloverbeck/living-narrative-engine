@@ -41,7 +41,8 @@ const CONTENT_FILES = {
         'demo_room_hallway.json',
         'demo_room_monster.json',
         'demo_room_treasure.json',
-        'demo_room_exit.json'
+        'demo_room_exit.json',
+        'demo_room_outside.json'
     ],
     triggers: [ // Note: This file contains an array
         'demo_triggers.json'

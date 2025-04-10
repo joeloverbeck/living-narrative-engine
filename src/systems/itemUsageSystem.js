@@ -540,21 +540,21 @@ class ItemUsageSystem {
     /**
      * Handles the 'trigger_event' effect type.
      * Dispatches a custom event on the global EventBus.
-     * Adheres to AC for Ticket: USAGE-EFFECT-EVENT
+     * Adheres to AC for Ticket: USAGE-EFFECT-EVENT & Ticket 3.1
      * Uses context.eventBus for UI feedback if configured.
      * @type {EffectHandlerFunction}
      */
     #handleTriggerEventEffect = (params, context) => {
         const messages = [];
         // Use context.eventBus for dispatching the trigger AND potential feedback
-        const {eventBus, userEntity, targetEntity, itemName} = context;
+        const {eventBus, userEntity, targetEntity, itemName, entityManager} = context; // Added entityManager
         const {
             event_name,
             event_payload = {},
             feedback_message // Optional feedback message string
         } = params ?? {};
 
-        // 1. Validate Parameters
+        // 1. Validate Parameters (validation logic remains the same) [cite: 283]
         if (typeof event_name !== 'string' || event_name.trim() === '') {
             const errorMsg = `Invalid or missing 'event_name' parameter for 'trigger_event' effect in item ${itemName}.`;
             console.error(`ItemUsageSystem: ${errorMsg}`);
@@ -575,14 +575,47 @@ class ItemUsageSystem {
         }
 
         // 2. Construct Final Event Payload
+        // Start with base payload properties provided by the item definition
         const finalEventPayload = {
-            ...event_payload,
-            userId: userEntity.id,
-            targetId: targetEntity?.id ?? null,
+            ...event_payload, // Include properties from the item's effect_payload
+            userId: userEntity.id, // Always add the user who initiated the action
+            targetId: targetEntity?.id ?? null, // Add the validated target ID, if any
             sourceItemId: itemName // Added item name for context
         };
 
-        // 3. Dispatch Event via context.eventBus
+        // Specifically for connection_unlock_attempt, ensure locationId is present
+        if (event_name === 'event:connection_unlock_attempt') {
+            const positionComponent = userEntity.getComponent(PositionComponent);
+            if (positionComponent?.locationId) {
+                finalEventPayload.locationId = positionComponent.locationId;
+                messages.push({
+                    text: `Added locationId (${finalEventPayload.locationId}) for event:connection_unlock_attempt.`,
+                    type: 'internal'
+                });
+            } else {
+                // Handle cases where the user might lack a position (shouldn't normally happen in this context)
+                console.warn(`ItemUsageSystem: User ${userEntity.id} lacks PositionComponent or locationId when triggering ${event_name}. LocationId will be missing from payload.`);
+                messages.push({text: `User ${userEntity.id} missing locationId for ${event_name}.`, type: 'warning'});
+                finalEventPayload.locationId = null; // Explicitly set to null if unavailable
+            }
+
+            // Verify required fields from event_payload defined in the item are present
+            if (!finalEventPayload.connectionId) {
+                console.error(`ItemUsageSystem: Missing 'connectionId' in event_payload for ${event_name} triggered by ${itemName}.`);
+                messages.push({text: `CRITICAL: Missing connectionId for ${event_name}.`, type: 'error'});
+                // Consider failing the effect if critical data is missing
+                // return {success: false, messages: messages, stopPropagation: true};
+            }
+            if (!finalEventPayload.keyId) {
+                console.error(`ItemUsageSystem: Missing 'keyId' in event_payload for ${event_name} triggered by ${itemName}.`);
+                messages.push({text: `CRITICAL: Missing keyId for ${event_name}.`, type: 'error'});
+                // Consider failing the effect
+                // return {success: false, messages: messages, stopPropagation: true};
+            }
+        }
+
+
+        // 3. Dispatch Event via context.eventBus (dispatch logic remains the same) [cite: 283]
         try {
             console.debug(`ItemUsageSystem: Dispatching event '${event_name}' via EventBus for item ${itemName}. Payload:`, finalEventPayload);
             eventBus.dispatch(event_name, finalEventPayload); // Dispatch the triggered event
@@ -599,7 +632,7 @@ class ItemUsageSystem {
             return {success: false, messages: messages, stopPropagation: true};
         }
 
-        // 4. Optional Feedback via context.eventBus
+        // 4. Optional Feedback via context.eventBus (feedback logic remains the same) [cite: 283]
         if (typeof feedback_message === 'string' && feedback_message.trim() !== '') {
             console.debug(`ItemUsageSystem: Triggering feedback message for ${itemName}: "${feedback_message}"`);
             eventBus.dispatch('ui:message_display', {text: feedback_message, type: 'info'}); // Use eventBus for UI feedback

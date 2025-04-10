@@ -121,6 +121,11 @@
             ],
             "additionalProperties": false,
             "properties": {
+              "connectionId": {
+                "type": "string",
+                "description": "Optional unique identifier for this specific connection within the location. Used for targeting specific connections (e.g., a specific door). Must be unique within the 'connections' array if present.",
+                "pattern": "^[a-zA-Z0-9_\\-:]+$"
+              },
               "direction": {
                 "type": "string",
                 "description": "The direction or label for this exit (e.g., 'north', 'south', 'up', 'enter airlock', 'follow path'). Used for player commands/UI.",

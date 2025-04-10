@@ -243,6 +243,23 @@
  * @property {import('../entities/entity.js').default | null | undefined} previousLocation The entity instance of the location the player came from, or null/undefined on initial load.
  */
 
+/**
+ * Defines the payload structure for the event:connection_unlock_attempt event.
+ * Signals that an entity is attempting to unlock a connection (like a door) using an item (like a key).
+ * This event is typically triggered by an item's 'trigger_event' effect.
+ *
+ * Fired By: ItemUsageSystem (#handleTriggerEventEffect)
+ * Consumed By: Systems responsible for handling connection state changes (e.g., a ConnectionSystem or InteractionSystem).
+ *
+ * @typedef {object} ConnectionUnlockAttemptEventPayload
+ * @property {string} connectionId The unique identifier of the connection (e.g., door) being targeted.
+ * @property {string} keyId The unique identifier of the item instance used in the unlock attempt.
+ * @property {string} userId The unique identifier of the entity (typically the player) performing the unlock attempt.
+ * @property {string} locationId The unique identifier of the location where the unlock attempt is taking place.
+ * @property {string} [sourceItemId] The display name (or ID) of the item whose use triggered this event (inherited from DynamicTriggerEventPayload if applicable).
+ * @property {string | null} [targetId] The unique identifier of the validated target entity of the item use, if applicable (inherited from DynamicTriggerEventPayload if applicable). Should usually match connectionId in this context.
+ */
+
 
 // ========================================================================
 // == UI Events (ui:) =====================================================

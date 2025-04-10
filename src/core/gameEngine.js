@@ -15,6 +15,7 @@ import DeathSystem from "../systems/deathSystem.js";
 import MovementSystem from "../systems/movementSystem.js";
 import WorldInteractionSystem from "../systems/worldInteractionSystem.js";
 import ItemUsageSystem from "../systems/itemUsageSystem.js";
+import DoorSystem from '../systems/doorSystem.js';
 import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import DomRenderer from '../../domRenderer.js';
@@ -29,10 +30,10 @@ import {NameComponent} from "../components/nameComponent.js";
 import {InventoryComponent} from "../components/inventoryComponent.js";
 
 // --- Service Imports ---
-import { QuestPrerequisiteService } from '../services/questPrerequisiteService.js';
-import { QuestRewardService } from '../services/questRewardService.js';
-import { ObjectiveEventListenerService } from '../services/objectiveEventListenerService.js';
-import { ObjectiveStateCheckerService } from '../services/objectiveStateCheckerService.js';
+import {QuestPrerequisiteService} from '../services/questPrerequisiteService.js';
+import {QuestRewardService} from '../services/questRewardService.js';
+import {ObjectiveEventListenerService} from '../services/objectiveEventListenerService.js';
+import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -66,6 +67,7 @@ class GameEngine {
     #movementSystem = null;
     #worldInteractionSystem = null;
     #itemUsageSystem = null;
+    #doorSystem = null;
     #questSystem = null;
     #notificationUISystem = null;
     #renderer = null;
@@ -259,6 +261,13 @@ class GameEngine {
                 dataManager: this.#dataManager
             });
             console.log("GameEngine: ItemUsageSystem instantiated and initialized.");
+
+            this.#doorSystem = new DoorSystem({
+                eventBus: this.#eventBus,
+                entityManager: this.#entityManager
+            });
+            this.#doorSystem.initialize(); // Subscribes to the event
+            console.log("GameEngine: DoorSystem instantiated and initialized.");
 
             this.#questSystem = new QuestSystem({
                 dataManager: this.#dataManager,
@@ -558,14 +567,14 @@ class GameEngine {
         if (!player) {
             console.error("GameEngine: Cannot render inventory, player entity not found.");
             // Optionally dispatch render with error state
-            this.#eventBus.dispatch('ui:render_inventory', { items: [] }); // Send empty on error
+            this.#eventBus.dispatch('ui:render_inventory', {items: []}); // Send empty on error
             return;
         }
 
         const inventoryComp = player.getComponent(InventoryComponent);
         if (!inventoryComp) {
             console.log(`GameEngine: Player ${player.id} has no InventoryComponent. Rendering empty inventory.`);
-            this.#eventBus.dispatch('ui:render_inventory', { items: [] }); // Player might not have inventory
+            this.#eventBus.dispatch('ui:render_inventory', {items: []}); // Player might not have inventory
             return;
         }
 
@@ -600,7 +609,7 @@ class GameEngine {
         }
 
         /** @type {InventoryRenderPayload} */
-        const payload = { items: itemsData };
+        const payload = {items: itemsData};
 
         // Dispatch the event for the DomRenderer to handle
         this.#eventBus.dispatch('ui:render_inventory', payload);
@@ -668,13 +677,18 @@ class GameEngine {
     }
 
 
+    // Optional: Add shutdown call in stop() or a dedicated shutdown method if needed
     stop() {
         console.log("GameEngine: Stop requested.");
         if (this.#gameLoop && this.#gameLoop.isRunning) {
             this.#gameLoop.stop();
         }
-        // Add any other cleanup (e.g., unsubscribe listeners?)
+        // Call shutdown on systems that have it
+        if (this.#worldInteractionSystem?.shutdown) this.#worldInteractionSystem.shutdown();
+        if (this.#doorSystem?.shutdown) this.#doorSystem.shutdown();
+        // ... (other system shutdowns)
         this.#isInitialized = false;
+        console.log("GameEngine: Systems shut down.");
     }
 }
 
