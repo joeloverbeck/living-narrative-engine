@@ -19,14 +19,17 @@
       "connections": [
         {
           "direction": "south",
+          "connectionId": "demo:room_treasure_south",
           "target": "demo:room_monster"
         },
         {
           "direction": "north",
+          "connectionId": "demo:room_treasure_north",
           "target": "demo:room_exit"
         },
         {
           "direction": "west",
+          "connectionId": "demo:room_treasure_west",
           "target": "demo:room_hallway"
         }
       ]

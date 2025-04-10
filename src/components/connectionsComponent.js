@@ -50,7 +50,7 @@ export class ConnectionsComponent extends Component {
                 }
 
                 // --- Connection ID Check ---
-                if (!conn.connectionId) {
+                if (!conn.connectionId && (runtimeState === 'locked' || runtimeState === 'unlocked')) {
                     console.error(`ConnectionsComponent: Connection data is missing required 'connectionId'. Connection details:`, conn);
                     // Handle missing ID, maybe skip this connection or throw error?
                     // For now, let's add it but log the error. It won't be findable by ID.
@@ -64,6 +64,14 @@ export class ConnectionsComponent extends Component {
                 };
             });
         }
+    }
+
+    addConnection(connection) {
+        this.connections.push(connection);
+    }
+
+    clearConnections() {
+        this.connections = [];
     }
 
     /**

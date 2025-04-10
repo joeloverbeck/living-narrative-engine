@@ -82,9 +82,20 @@
           "default": [],
           "uniqueItems": true,
           "examples": [
-            [ "key", "iron" ],
-            [ "potion", "healing", "consumable" ],
-            [ "weapon", "sword", "metal" ]
+            [
+              "key",
+              "iron"
+            ],
+            [
+              "potion",
+              "healing",
+              "consumable"
+            ],
+            [
+              "weapon",
+              "sword",
+              "metal"
+            ]
           ]
         },
         "stackable": {
@@ -100,7 +111,6 @@
         }
       }
     },
-
     "UsableComponent": {
       "type": "object",
       "description": "Defines how an item can be used, including conditions, targeting, effects, and feedback. Replaces the older simpler structure.",
@@ -160,7 +170,6 @@
       ],
       "additionalProperties": false
     },
-
     "ConditionObject": {
       "type": "object",
       "description": "Defines a single condition that must be met for item usage (either by the user or the target).",
@@ -174,7 +183,9 @@
             "target_has_component",
             "target_distance",
             "health_below_max",
-            "attribute_check"
+            "attribute_check",
+            "player_in_location",
+            "target_has_property"
           ]
         },
         "negate": {
@@ -187,16 +198,28 @@
           "description": "Optional specific message to display if *this* condition fails, overriding the default failure message."
         }
       },
-      "required": [ "condition_type" ],
+      "required": [
+        "condition_type"
+      ],
       "additionalProperties": true,
       "$comment": "This is a baseline definition. Implementations will need specific parameters based on 'condition_type'. E.g., 'player_state' needs 'state: string', 'has_status_effect' needs 'effect_id: string', 'target_distance' needs 'max_distance: number'. Consider using 'oneOf' for stricter validation later.",
       "examples": [
-        { "condition_type": "player_state", "state": "not_swimming", "failure_message": "Cannot use this while swimming." },
-        { "condition_type": "has_status_effect", "effect_id": "core:poison", "negate": true, "failure_message": "Cannot use while poisoned." },
-        { "condition_type": "health_below_max" }
+        {
+          "condition_type": "player_state",
+          "state": "not_swimming",
+          "failure_message": "Cannot use this while swimming."
+        },
+        {
+          "condition_type": "has_status_effect",
+          "effect_id": "core:poison",
+          "negate": true,
+          "failure_message": "Cannot use while poisoned."
+        },
+        {
+          "condition_type": "health_below_max"
+        }
       ]
     },
-
     "EffectObject": {
       "type": "object",
       "description": "Defines a single effect to be applied when an item is used.",
@@ -220,17 +243,47 @@
           "additionalProperties": true
         }
       },
-      "required": [ "effect_type", "effect_params" ],
+      "required": [
+        "effect_type",
+        "effect_params"
+      ],
       "additionalProperties": false,
       "$comment": "Structure of 'effect_params' depends heavily on 'effect_type'. E.g., 'heal' needs { amount: number, ?target: 'user'|'target', ?fail_if_already_max: boolean }. 'trigger_event' needs { event_name: string, ?event_payload: object }. 'apply_status_effect' needs { effect_id: string, ?duration: number, ?target: 'user'|'target' }.",
       "examples": [
-        { "effect_type": "heal", "effect_params": { "amount": 10, "target": "user" } },
-        { "effect_type": "trigger_event", "effect_params": { "event_name": "game:event:door_unlocked", "event_payload": { "door_id": "demo:door_rusty" } } },
-        { "effect_type": "apply_status_effect", "effect_params": { "effect_id": "core:buff_strength", "duration": 60, "target": "user" } },
-        { "effect_type": "damage", "effect_params": { "amount": 5, "damage_type": "fire", "target": "target" } }
+        {
+          "effect_type": "heal",
+          "effect_params": {
+            "amount": 10,
+            "target": "user"
+          }
+        },
+        {
+          "effect_type": "trigger_event",
+          "effect_params": {
+            "event_name": "game:event:door_unlocked",
+            "event_payload": {
+              "door_id": "demo:door_rusty"
+            }
+          }
+        },
+        {
+          "effect_type": "apply_status_effect",
+          "effect_params": {
+            "effect_id": "core:buff_strength",
+            "duration": 60,
+            "target": "user"
+          }
+        },
+        {
+          "effect_type": "damage",
+          "effect_params": {
+            "amount": 5,
+            "damage_type": "fire",
+            "target": "target"
+          }
+        }
       ]
     },
-
     "EquippableComponent": {
       "type": "object",
       "description": "Component defining an item's ability to be equipped, the slot it uses, and effects it grants.",
@@ -276,17 +329,38 @@
               }
             },
             "if": {
-              "properties": { "type": { "const": "stat_mod" } }
+              "properties": {
+                "type": {
+                  "const": "stat_mod"
+                }
+              }
             },
             "then": {
-              "required": [ "stat", "value" ]
+              "required": [
+                "stat",
+                "value"
+              ]
             }
           },
           "examples": [
-            [ { "type": "stat_mod", "stat": "core:attr_strength", "value": 1 } ],
             [
-              { "type": "stat_mod", "stat": "core:attr_defense", "value": 5 },
-              { "type": "stat_mod", "stat": "core:attr_agility", "value": -1 }
+              {
+                "type": "stat_mod",
+                "stat": "core:attr_strength",
+                "value": 1
+              }
+            ],
+            [
+              {
+                "type": "stat_mod",
+                "stat": "core:attr_defense",
+                "value": 5
+              },
+              {
+                "type": "stat_mod",
+                "stat": "core:attr_agility",
+                "value": -1
+              }
             ]
           ]
         }

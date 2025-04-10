@@ -19,6 +19,7 @@
       "connections": [
         {
           "direction": "north",
+          "connectionId": "demo:room_monster_north",
           "target": "demo:room_treasure"
         }
       ]

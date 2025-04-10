@@ -19,6 +19,7 @@
       "connections": [
         {
           "direction": "south",
+          "connectionId": "demo:room_exit_south",
           "target": "demo:room_treasure"
         },
         {

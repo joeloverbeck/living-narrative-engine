@@ -116,6 +116,7 @@
             "type": "object",
             "description": "Defines a single connection or exit.",
             "required": [
+              "connectionId",
               "direction",
               "target"
             ],
@@ -123,7 +124,7 @@
             "properties": {
               "connectionId": {
                 "type": "string",
-                "description": "Optional unique identifier for this specific connection within the location. Used for targeting specific connections (e.g., a specific door). Must be unique within the 'connections' array if present.",
+                "description": "Unique identifier for this specific connection within the location. Used for targeting specific connections (e.g., a specific door). Must be unique within the 'connections' array.",
                 "pattern": "^[a-zA-Z0-9_\\-:]+$"
               },
               "direction": {

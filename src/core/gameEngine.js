@@ -34,6 +34,8 @@ import {QuestPrerequisiteService} from '../services/questPrerequisiteService.js'
 import {QuestRewardService} from '../services/questRewardService.js';
 import {ObjectiveEventListenerService} from '../services/objectiveEventListenerService.js';
 import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
+import ConditionEvaluationService from "../services/conditionEvaluationService.js";
+import {TargetResolutionService} from "../services/targetResolutionService.js";
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -74,6 +76,9 @@ class GameEngine {
     #inputHandler = null;
     #gameLoop = null;
 
+    // --- Service Instances --- // Add a section for services
+    #conditionEvaluationService = null;
+    #targetResolutionService = null;
     #questPrerequisiteService = null;
     #questRewardService = null;
     #objectiveEventListenerService = null;
@@ -156,6 +161,15 @@ class GameEngine {
             console.log("GameEngine: EntityManager instantiated.");
             this.#registerComponents(); // Use helper
             console.log("GameEngine: Components registered.");
+
+            // --- 4b. Instantiate Core Services needed by systems ---
+            this.#conditionEvaluationService = new ConditionEvaluationService({
+                entityManager: this.#entityManager
+            });
+            console.log("GameEngine: ConditionEvaluationService instantiated.");
+
+            this.#targetResolutionService = new TargetResolutionService();
+            console.log("GameEngine: TargetResolutionService instantiated.");
 
             // --- 5. Instantiate ActionExecutor & Register Handlers ---
             this.#actionExecutor = new ActionExecutor();
@@ -258,7 +272,9 @@ class GameEngine {
             this.#itemUsageSystem = new ItemUsageSystem({
                 eventBus: this.#eventBus,
                 entityManager: this.#entityManager,
-                dataManager: this.#dataManager
+                dataManager: this.#dataManager,
+                conditionEvaluationService: this.#conditionEvaluationService,
+                targetResolutionService: this.#targetResolutionService
             });
             console.log("GameEngine: ItemUsageSystem instantiated and initialized.");
 

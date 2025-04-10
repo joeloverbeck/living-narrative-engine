@@ -13,8 +13,6 @@ import MovementSystem from '../../systems/movementSystem.js'; // The system reac
 // --- Components Used ---
 import {PositionComponent} from '../../components/positionComponent.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
-// Assuming a base Component class exists and doesn't need complex mocking
-// If not, add: jest.mock('../../components/component.js');
 
 // --- Mocks Needed ---
 // Mock Entity class (since entity.js is not provided)

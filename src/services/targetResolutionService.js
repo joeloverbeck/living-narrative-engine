@@ -1,13 +1,14 @@
 // src/services/targetResolutionService.js
 
 import {findTarget} from '../utils/targetFinder.js';
-import {TARGET_MESSAGES} from '../utils/messages.js'; // Assuming this path is correct
+import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js'; // Assuming this path is correct
 import {NameComponent} from '../components/nameComponent.js';
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {EquipmentComponent} from '../components/equipmentComponent.js';
 import {ItemComponent} from '../components/itemComponent.js';
 // Import ConnectionsComponent
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
+import {PositionComponent} from "../components/positionComponent.js";
 // Import other components if needed
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -27,6 +28,190 @@ import {ConnectionsComponent} from '../components/connectionsComponent.js';
  * @property {keyof typeof TARGET_MESSAGES} [notFoundMessageKey] - Optional override for the TARGET_MESSAGES key used on NOT_FOUND. Defaults based on scope/action.
  * @property {string} [emptyScopeMessage] - Optional override for the message dispatched when the initial scope yields no suitable entities (e.g., use TARGET_MESSAGES.TAKE_EMPTY_LOCATION).
  */
+
+// ========================================================================
+// == TargetResolutionService Core Logic =======================
+// ========================================================================
+
+/**
+ * @typedef {object} ResolveItemTargetResult
+ * @property {boolean} success - True if target resolution (and validation) succeeded or if no target was required.
+ * @property {Entity | Connection | null} target - The validated target object, or null if no target was required or found/validated.
+ * @property {'entity' | 'connection' | 'none'} targetType - The type of the resolved target.
+ * @property {ActionMessage[]} messages - Array of internal/debugging messages generated during resolution.
+ */
+
+/**
+ * Provides methods for resolving action targets based on different criteria.
+ */
+export class TargetResolutionService {
+    // No constructor needed if dependencies are passed to methods.
+
+    /**
+     * Resolves the target for an item usage action based on explicit IDs and validates it.
+     * This method encapsulates the targeting logic previously found in ItemUsageSystem Section 5.
+     * It dispatches UI error messages directly via the EventBus for targeting failures.
+     *
+     * @param {object} params - The parameters for target resolution.
+     * @param {Entity} params.userEntity - The entity using the item.
+     * @param {UsableComponentData} params.usableComponentData - The item's Usable component data.
+     * @param {string | null | undefined} params.explicitTargetEntityId - Optional entity ID provided by the event.
+     * @param {string | null | undefined} params.explicitTargetConnectionId - Optional connection ID provided by the event.
+     * @param {string} params.itemName - The display name of the item being used (for messages).
+     * @param {object} dependencies - Required service dependencies.
+     * @param {EntityManager} dependencies.entityManager - For looking up entities and components.
+     * @param {EventBus} dependencies.eventBus - For dispatching UI messages.
+     * @param {ConditionEvaluationService} dependencies.conditionEvaluationService - For validating target conditions.
+     *
+     * @returns {Promise<ResolveItemTargetResult>} - A promise resolving to the outcome of the target resolution.
+     */
+    async resolveItemTarget(
+        {userEntity, usableComponentData, explicitTargetEntityId, explicitTargetConnectionId, itemName},
+        {entityManager, eventBus, conditionEvaluationService}
+    ) {
+        /** @type {ActionMessage[]} */
+        const messages = [];
+        const log = (text, type = 'internal') => messages.push({text, type});
+
+        log(`Starting resolveItemTarget for item: ${itemName}`);
+
+        // --- 1. Check if Target is Required ---
+        if (!usableComponentData.target_required) {
+            log(`Target not required for ${itemName}.`);
+            return {success: true, target: null, targetType: 'none', messages};
+        }
+
+        log(`Target required. Explicit Entity ID: ${explicitTargetEntityId}, Connection ID: ${explicitTargetConnectionId}`);
+
+        // --- 2. Resolve Potential Target from Explicit IDs ---
+        let potentialTarget = null;
+        let targetType = 'none'; // 'entity', 'connection', or 'none'
+        let targetEntityContext = null;
+        let targetConnectionContext = null;
+
+        // --- 2a. Prioritize Explicit Connection Target ---
+        if (explicitTargetConnectionId) {
+            log(`Attempting to resolve explicit connection target: ${explicitTargetConnectionId}`);
+            const userPosComp = userEntity.getComponent(PositionComponent);
+            const userLocationId = userPosComp?.locationId;
+
+            if (userLocationId) {
+                const currentLocation = entityManager.getEntityInstance(userLocationId);
+                const connectionsComp = currentLocation?.getComponent(ConnectionsComponent);
+                if (connectionsComp) {
+                    potentialTarget = connectionsComp.getConnectionById(explicitTargetConnectionId);
+                    if (potentialTarget) {
+                        targetType = 'connection';
+                        targetConnectionContext = potentialTarget;
+                        log(`Found potential explicit target: CONNECTION ${potentialTarget.name || potentialTarget.direction} (${potentialTarget.connectionId})`);
+                    } else {
+                        log(`Explicit connection target ID ${explicitTargetConnectionId} not found in current location ${userLocationId}.`, 'warning');
+                    }
+                } else {
+                    log(`User's current location ${userLocationId} lacks ConnectionsComponent.`, 'warning');
+                }
+            } else {
+                log(`User ${userEntity.id} lacks PositionComponent or locationId. Cannot resolve connection target.`, 'warning');
+            }
+
+            // If connection resolution failed, dispatch error and return
+            if (!potentialTarget) {
+                const failureMsg = `The connection you targeted is no longer valid.`; // More specific than generic invalid target
+                eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
+                log(`Failure: Explicit connection ${explicitTargetConnectionId} not found or user location invalid.`, 'error');
+                return {success: false, target: null, targetType: 'none', messages};
+            }
+        }
+
+        // --- 2b. Attempt Explicit Entity Target if No Connection Target Found/Specified ---
+        if (!potentialTarget && explicitTargetEntityId) {
+            log(`Attempting to resolve explicit entity target: ${explicitTargetEntityId}`);
+            potentialTarget = entityManager.getEntityInstance(explicitTargetEntityId);
+            if (potentialTarget) {
+                targetType = 'entity';
+                targetEntityContext = potentialTarget;
+                log(`Found potential explicit target: ENTITY ${getDisplayName(potentialTarget)} (${potentialTarget.id})`);
+            } else {
+                log(`Explicit entity target ID ${explicitTargetEntityId} not found.`, 'warning');
+                const failureMsg = `The target you specified is no longer valid.`; // More specific than generic invalid target
+                eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
+                log(`Failure: Explicit entity ${explicitTargetEntityId} not found.`, 'error');
+                return {success: false, target: null, targetType: 'none', messages};
+            }
+        }
+
+        // --- 3. Handle Target Required But Not Found/Specified ---
+        if (!potentialTarget) {
+            log(`Target required, but no valid explicit target entity OR connection ID was provided or resolved.`, 'error');
+            const failureMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
+            eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
+            return {success: false, target: null, targetType: 'none', messages};
+        }
+
+        // --- 4. Validate the Found Potential Target Against Conditions ---
+        const targetName = targetType === 'entity'
+            ? getDisplayName(/** @type {Entity} */ (potentialTarget))
+            : (/** @type {Connection} */ (potentialTarget).name || /** @type {Connection} */ (potentialTarget).direction);
+
+        log(`Validating potential target (${targetType} '${targetName}') against target_conditions.`);
+
+        if (usableComponentData.target_conditions && usableComponentData.target_conditions.length > 0) {
+            /** @type {ConditionEvaluationContext} */
+            const targetCheckContext = {
+                userEntity: userEntity,
+                targetEntityContext: targetEntityContext,     // Pass resolved entity context
+                targetConnectionContext: targetConnectionContext // Pass resolved connection context
+            };
+            /** @type {ConditionEvaluationOptions} */
+            const targetOptions = {
+                itemName: itemName,
+                checkType: 'Target',
+                fallbackMessages: {
+                    target: usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName),
+                    default: TARGET_MESSAGES.USE_INVALID_TARGET(itemName) // Generic fallback
+                }
+            };
+
+            const targetCheckResult = await conditionEvaluationService.evaluateConditions( // Add await here
+                potentialTarget,
+                targetCheckContext,
+                usableComponentData.target_conditions,
+                targetOptions
+            );
+
+            // Now targetCheckResult will be the resolved object: { success: ..., messages: ..., ... }
+            messages.push(...targetCheckResult.messages);
+
+            if (!targetCheckResult.success) {
+                log(`Target conditions failed for ${targetType} '${targetName}'.`, 'warning');
+                // Dispatch failure message provided by the condition service
+                if (targetCheckResult.failureMessage) {
+                    eventBus.dispatch('ui:message_display', {
+                        text: targetCheckResult.failureMessage,
+                        type: 'warning'
+                    });
+                } else {
+                    // Fallback if condition service didn't provide one (shouldn't happen often)
+                    const fallbackMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
+                    eventBus.dispatch('ui:message_display', {
+                        text: fallbackMsg, // Use the default message if available, otherwise the generic one
+                        type: 'warning'
+                    });
+                }
+                return {success: false, target: null, targetType: 'none', messages};
+            } else {
+                log(`Target ${targetType} '${targetName}' passed validation conditions.`);
+            }
+        } else {
+            log(`No target_conditions defined for ${itemName}. Target considered valid.`);
+        }
+
+        // --- 5. Target Found and Validated ---
+        log(`Target resolution successful. Validated Target: ${targetType} '${targetName}'.`);
+        return {success: true, target: potentialTarget, targetType: targetType, messages};
+    }
+}
+
 
 /**
  * Centralized utility function to find a target entity based on name, scope, and required components.
@@ -254,6 +439,7 @@ export function resolveTargetEntity(context, config) {
 
 /**
  * Resolves a target connection within the player's current location based on name or direction.
+ * Prioritizes exact direction matches over partial name matches.
  * Handles ambiguity and not found cases by dispatching UI messages.
  *
  * @param {ActionContext} context - The action context.
@@ -267,12 +453,11 @@ export function resolveTargetConnection(context, connectionTargetName, actionVer
     // 1. Validate Inputs
     if (!context || !currentLocation) {
         console.warn("resolveTargetConnection: Missing context or currentLocation.");
-        // Maybe dispatch an internal error? Or assume caller handled location check.
         return null;
     }
     if (typeof connectionTargetName !== 'string' || connectionTargetName.trim() === '') {
         console.warn("resolveTargetConnection: Received empty connectionTargetName. Resolution cannot proceed.");
-        // Maybe dispatch a generic "What do you want to [actionVerb]?"
+        // Consider dispatching PROMPT_WHAT if appropriate for the calling action
         // dispatch('ui:message_display', { text: TARGET_MESSAGES.PROMPT_WHAT(actionVerb), type: 'prompt' });
         return null;
     }
@@ -281,52 +466,61 @@ export function resolveTargetConnection(context, connectionTargetName, actionVer
     const connectionsComponent = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComponent) {
         console.warn(`resolveTargetConnection: Location ${currentLocation.id} lacks ConnectionsComponent.`);
-        // Maybe dispatch "There are no connections here."? Depends on context.
-        // Let the specific search handle not found.
+        // Don't dispatch here, let the search handle not found if necessary.
         return null;
     }
 
     const allConnections = connectionsComponent.getAllConnections();
     if (allConnections.length === 0) {
-        // Use SCOPE_EMPTY_GENERIC or a more specific message like MOVE_NO_EXITS?
-        const emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(actionVerb, 'in this direction');
+        const emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(actionVerb, 'in this direction'); // Or MOVE_NO_EXITS if context known
         dispatch('ui:message_display', {text: emptyMsg, type: 'info'});
         return null;
     }
 
-    // 3. Find Matching Connections
+    // 3. Find Matching Connections with Priority
     const lowerCaseTarget = connectionTargetName.trim().toLowerCase();
-    const foundMatches = allConnections.filter(conn => {
-        // Check direction match (case-insensitive)
-        if (conn.direction && conn.direction.toLowerCase() === lowerCaseTarget) {
-            return true;
-        }
-        // Check name match (case-insensitive, partial)
-        // Ensure name exists and is a string before checking
-        if (conn.name && typeof conn.name === 'string' && conn.name.toLowerCase().includes(lowerCaseTarget)) {
-            return true;
-        }
-        // Maybe check description_override as well? For simplicity, stick to direction and name for now.
-        // if (conn.description_override && typeof conn.description_override === 'string' && conn.description_override.toLowerCase().includes(lowerCaseTarget)) {
-        //    return true;
-        // }
-        return false;
-    });
 
-    // 4. Handle Results
-    if (foundMatches.length === 0) {
-        // Use TARGET_NOT_FOUND_CONTEXT or a specific connection message?
-        const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(connectionTargetName); // Generic context target not found
-        dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
+    // --- Step 3a: Prioritize Exact Direction Match ---
+    const directionMatches = allConnections.filter(conn =>
+        conn.direction && conn.direction.toLowerCase() === lowerCaseTarget
+    );
+
+    if (directionMatches.length === 1) {
+        // Unique exact direction match found. This is the highest priority.
+        return directionMatches[0];
+    }
+
+    if (directionMatches.length > 1) {
+        // Ambiguous based *only* on direction.
+        const displayNames = directionMatches.map(conn => conn.name || conn.direction || conn.connectionId).join(', ');
+        // Using a slightly more specific message for direction ambiguity
+        const ambiguousMsg = `There are multiple ways to go '${connectionTargetName}'. Which one did you mean? (${displayNames})`;
+        dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null;
-    } else if (foundMatches.length === 1) {
-        return foundMatches[0]; // Success! Return the unique connection object.
-    } else { // Ambiguous
-        // Adapt ambiguous prompt messages
-        // We need a way to display connection matches. Using 'name' or 'direction'.
-        const displayNames = foundMatches.map(conn => conn.name || conn.direction || conn.connectionId).join(', ');
+    }
+
+    // --- Step 3b: If No Unique Direction Match, Check Name Match ---
+    // Only proceed if directionMatches.length === 0
+    const nameMatches = allConnections.filter(conn =>
+        conn.name && typeof conn.name === 'string' && conn.name.toLowerCase().includes(lowerCaseTarget)
+    );
+
+    if (nameMatches.length === 1) {
+        // Unique name match found (and no unique direction match existed).
+        return nameMatches[0];
+    }
+
+    if (nameMatches.length > 1) {
+        // Ambiguous based on name match.
+        const displayNames = nameMatches.map(conn => conn.name || conn.direction || conn.connectionId).join(', ');
         const ambiguousMsg = `Which '${connectionTargetName}' did you want to ${actionVerb}? (${displayNames})`;
         dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null;
     }
+
+    // --- Step 4: Handle Not Found ---
+    // If we reach here, neither direction nor name search yielded any results.
+    const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(connectionTargetName); // Or a more specific "You can't go that way." message
+    dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
+    return null;
 }

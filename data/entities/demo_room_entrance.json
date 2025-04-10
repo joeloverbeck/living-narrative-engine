@@ -18,6 +18,7 @@
     "Connections": {
       "connections": [
         {
+          "connectionId": "entrance_hallway_north",
           "direction": "north",
           "target": "demo:room_hallway"
         }

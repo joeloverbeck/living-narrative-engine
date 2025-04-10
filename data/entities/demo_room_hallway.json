@@ -19,12 +19,15 @@
       "connections": [
         {
           "direction": "south",
+          "connectionId": "demo:room_hallway_south",
           "target": "demo:room_entrance"
         },
         {
           "direction": "east",
           "target": "demo:room_treasure",
           "description_override": "A sturdy door. The goblin blocks it.",
+          "type": "door",
+          "connectionId": "demo:treasure_room_door",
           "initial_state": "locked"
         }
       ]
