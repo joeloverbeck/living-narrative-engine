@@ -50,8 +50,6 @@ class ObjectiveEventListenerService {
      * @param {Function} onObjectiveConditionMet - Callback function `(questId, objectiveId) => void` to execute when an event matches an objective's condition.
      */
     registerListenersForQuest(questId, questDefinition, questLogComponent, onObjectiveConditionMet) {
-        console.log(`ObjectiveEventListenerService: Registering listeners for quest "${questId}"...`);
-
         if (!questDefinition || !questLogComponent || typeof onObjectiveConditionMet !== 'function') {
             console.error(`ObjectiveEventListenerService.registerListenersForQuest: Invalid arguments for quest "${questId}". Aborting registration.`);
             return;
@@ -99,8 +97,6 @@ class ObjectiveEventListenerService {
                 }
             } // End loop through conditions
         } // End loop through objectiveIds
-
-        console.log(`ObjectiveEventListenerService: Finished registering listeners for quest "${questId}".`);
     }
 
     /**

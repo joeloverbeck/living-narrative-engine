@@ -123,8 +123,6 @@ export function executeMove(context) {
                 // Dispatch the core semantic event indicating a valid move attempt
                 dispatch('event:move_attempted', moveAttemptPayload);
                 success = true; // Mark as successful *dispatch* of the attempt
-                // REMOVED: Direct dispatch of "You move {direction}" message
-                console.log(`executeMove: Dispatched event:move_attempted for entity ${playerEntity.id} to ${targetLocationId} (direction: ${direction})`);
             } catch (error) {
                 // Handle internal errors during the *dispatch* process itself
                 const reasonCode = 'INTERNAL_DISPATCH_ERROR';

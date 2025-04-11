@@ -18,6 +18,7 @@ import ItemUsageSystem from "../systems/itemUsageSystem.js";
 import DoorSystem from '../systems/doorSystem.js';
 import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
+import {QuestStartTriggerSystem} from "../systems/questStartTriggerSystem.js";
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
 import GameLoop from '../../gameLoop.js';
@@ -72,6 +73,7 @@ class GameEngine {
     #itemUsageSystem = null;
     #doorSystem = null;
     #questSystem = null;
+    #questStartTriggerSystem = null;
     #notificationUISystem = null;
     #renderer = null;
     #inputHandler = null;
@@ -303,6 +305,14 @@ class GameEngine {
             });
             this.#questSystem.initialize();
             console.log("GameEngine: QuestSystem instantiated and initialized.");
+
+            this.#questStartTriggerSystem = new QuestStartTriggerSystem({
+                eventBus: this.#eventBus,
+                dataManager: this.#dataManager,
+                gameStateManager: this.#gameStateManager,
+            });
+            this.#questStartTriggerSystem.initialize();
+            console.log("GameEngine: QuestStartTriggerSystem instantiated and initialized.");
 
             this.#notificationUISystem = new NotificationUISystem({
                 eventBus: this.#eventBus,

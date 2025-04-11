@@ -228,12 +228,10 @@ class QuestSystem {
         if (prerequisitesMet) {
             const started = questLog.startQuest(questId);
             if (started) {
-                console.log(`QuestSystem: Successfully activated quest "${questId}" for player ${player.id}.`);
                 this.eventBus.dispatch('quest:started', {
                     questId: questId,
                     titleId: titleId
                 });
-                console.log(`QuestSystem: Dispatched quest:started for quest "${questId}".`);
                 return true;
             } else {
                 console.error(`QuestSystem.activateQuest: QuestLogComponent.startQuest failed for "${questId}".`);
@@ -308,7 +306,6 @@ class QuestSystem {
                 if (objectiveDefinition?.eventsToFireOnCompletion?.length > 0) {
                     for (const eventDef of objectiveDefinition.eventsToFireOnCompletion) {
                         if (eventDef.eventName) {
-                            console.log(`QuestSystem: Firing objective completion event: "${eventDef.eventName}"`);
                             this.eventBus.dispatch(eventDef.eventName, {
                                 ...(eventDef.eventData || {}),
                                 questId: questId,
@@ -319,7 +316,6 @@ class QuestSystem {
                 }
 
                 // *** DELEGATE Listener AND Checker Unsubscription for this specific objective ***
-                console.log(`QuestSystem: Delegating cleanup for completed objective "${objectiveId}"...`);
                 this.objectiveEventListenerService.unregisterListenersForObjective(questId, objectiveId);
                 this.objectiveStateCheckerService.unregisterChecksForObjective(questId, objectiveId); // <-- ADDED Cleanup Call
 
@@ -415,10 +411,8 @@ class QuestSystem {
 
         try {
             questLogComponent.updateQuestStatus(questId, 'completed');
-            console.log(`QuestSystem: Marked quest "${questId}" as completed in QuestLogComponent.`);
 
             // ---> Delegate actual reward GRANTING (happens silently now)
-            console.log(`QuestSystem: Delegating reward granting for quest "${questId}" to QuestRewardService...`);
             this.questRewardService.grant(questDefinition, player);
 
             // ---> Get reward SUMMARY from service

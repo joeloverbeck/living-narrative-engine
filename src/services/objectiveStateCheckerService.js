@@ -88,8 +88,6 @@ class ObjectiveStateCheckerService {
      * @param {Function} onObjectiveConditionMet - Callback function `(questId, objectiveId) => void` to execute when a condition is met.
      */
     registerChecksForQuest(questId, questDefinition, questLogComponent, onObjectiveConditionMet) {
-        console.log(`ObjectiveStateCheckerService: Registering checks for quest "${questId}"...`);
-
         if (!questDefinition || !questLogComponent || typeof onObjectiveConditionMet !== 'function') {
             console.error(`ObjectiveStateCheckerService.registerChecksForQuest: Invalid arguments for quest "${questId}". Aborting registration.`);
             return;
@@ -146,7 +144,6 @@ class ObjectiveStateCheckerService {
                 }
             }
         }
-        console.log(`ObjectiveStateCheckerService: Finished registering checks for quest "${questId}".`);
     }
 
     /**

@@ -118,8 +118,6 @@ class MovementSystem {
             };
             this.#eventBus.dispatch('event:entity_moved', movedEventPayload);
 
-            console.log(`MovementSystem: Dispatched 'event:entity_moved' for ${entityId}.`);
-
             // 7. (Optional) Dispatch UI confirmation message
             // As noted, the action handler might already provide feedback. Adding another
             // message here could be redundant unless specifically desired for confirmation
