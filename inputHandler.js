@@ -12,37 +12,39 @@ class InputHandler {
     /** @type {HTMLInputElement} */
     #inputElement;
     /** @type {(command: string) => void} */
-    #onCommandCallback;
+    #onCommandCallback; // Stores the function to call on command submission
     /** @type {EventBus} */
-    #eventBus; // Added EventBus dependency
+    #eventBus;
     /** @type {boolean} */
-    #isEnabled = false; // Tracks if handler should process input commands
+    #isEnabled = false;
 
     /**
      * Creates an instance of InputHandler.
      * @param {HTMLInputElement} inputElement - The HTML input element to manage for commands.
-     * @param {(command: string) => void} onCommandCallback - The function to call when a valid command is entered.
+     * @param {(command: string) => void} [onCommandCallback = () => {}] - An *initial* command callback. Can be overridden later via setCommandCallback.
      * @param {EventBus} eventBus - The application's event bus instance.
      */
-    constructor(inputElement, onCommandCallback, eventBus) { // Added eventBus parameter
+    constructor(inputElement, onCommandCallback = () => {}, eventBus) { // Made initial callback optional
         if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
             throw new Error("InputHandler requires a valid HTMLInputElement.");
         }
-        if (typeof onCommandCallback !== 'function') {
-            throw new Error("InputHandler requires an onCommandCallback function.");
+        // Validate the initial callback if provided, otherwise use the default no-op
+        if (onCommandCallback && typeof onCommandCallback !== 'function') {
+            console.warn("InputHandler: Invalid initial onCommandCallback provided, using default.");
+            this.#onCommandCallback = () => {}; // Default to no-op function
+        } else {
+            this.#onCommandCallback = onCommandCallback; // Use the provided valid callback or the default
         }
-        // --- Added EventBus validation ---
         if (!eventBus || typeof eventBus.dispatch !== 'function') {
             throw new Error("InputHandler requires a valid EventBus instance.");
         }
 
         this.#inputElement = inputElement;
-        this.#onCommandCallback = onCommandCallback;
-        this.#eventBus = eventBus; // Store eventBus
-        this.#isEnabled = false; // Tracks if handler should process command input
+        this.#eventBus = eventBus;
+        this.#isEnabled = false; // Start disabled internally
 
         this._bindEvents();
-        this.disable(); // Start disabled (internal state)
+        this.disable(); // Set initial visual/logical state to disabled
     }
 
     /**
@@ -50,15 +52,8 @@ class InputHandler {
      * @private
      */
     _bindEvents() {
-        // --- Listen on the input element specifically for Enter key ---
         this.#inputElement.addEventListener('keydown', this._handleInputKeyDown.bind(this));
-
-        // --- Listen on the document globally for other keys (like 'I') ---
-        // This allows toggling UI even if input isn't focused
         document.addEventListener('keydown', this._handleGlobalKeyDown.bind(this));
-
-
-        // Prevent form submission if the input is part of a form
         if (this.#inputElement.form) {
             this.#inputElement.form.addEventListener('submit', (e) => e.preventDefault());
         }
@@ -70,22 +65,22 @@ class InputHandler {
      * @private
      */
     _handleInputKeyDown(event) {
-        // Handle 'Enter' for command submission if enabled
         if (event.key === 'Enter' && this.#isEnabled) {
-            event.preventDefault(); // Prevent potential form submission or newline
-
+            event.preventDefault();
             const command = this.#inputElement.value.trim();
-            this.#inputElement.value = ''; // Clear field
+            this.#inputElement.value = '';
 
             if (command) {
-                this.#onCommandCallback(command);
+                // Ensure the callback exists before calling
+                if (this.#onCommandCallback) {
+                    this.#onCommandCallback(command);
+                } else {
+                    console.warn("InputHandler: Enter pressed, but no command callback is set.");
+                }
             } else {
-                // Optional: Re-focus if Enter pressed on empty field (might already be focused)
                 this.#inputElement.focus();
             }
         }
-        // Allow other keys (like 'i') to bubble up to the global handler if needed,
-        // or handle them here if specific input-focused behavior is desired.
     }
 
     /**
@@ -94,41 +89,46 @@ class InputHandler {
      * @private
      */
     _handleGlobalKeyDown(event) {
-        // --- Check for Inventory Toggle Key ('I') ---
-        // We check regardless of whether command input is enabled,
-        // as UI toggles might be desired anytime.
-        // We also check if the event target is the input field itself
-        // to avoid toggling inventory when typing 'i' *into* the command input.
         if (event.key.toLowerCase() === 'i' && event.target !== this.#inputElement) {
-            event.preventDefault(); // Prevent default action (like typing 'i' if focus is elsewhere)
+            event.preventDefault();
             console.log("InputHandler: Detected 'I' key press. Dispatching ui:toggle_inventory.");
-            this.#eventBus.dispatch('ui:toggle_inventory', {}); // Dispatch the event
+            this.#eventBus.dispatch('ui:toggle_inventory', {});
         }
+        // Add other global key handlers here
+    }
 
-        // Add checks for other global keys here (e.g., 'Q' for Quest Log)
-        // if (event.key.toLowerCase() === 'q' && event.target !== this.#inputElement) {
-        //     event.preventDefault();
-        //     this.#eventBus.dispatch('ui:toggle_quest_log', {});
-        // }
+    /**
+     * Sets or replaces the function to be called when a command is submitted via Enter key.
+     * @param {(command: string) => void} callbackFn - The new function to call with the command string.
+     */
+    setCommandCallback(callbackFn) {
+        if (typeof callbackFn !== 'function') {
+            console.error("InputHandler: Attempted to set invalid command callback. Callback must be a function.");
+            // Optional: throw an error instead of just logging
+            // throw new Error("Command callback must be a function.");
+            return; // Keep the existing callback if the new one is invalid
+        }
+        console.log("InputHandler: Command callback updated.");
+        this.#onCommandCallback = callbackFn;
     }
 
     /**
      * Enables the handler to process Enter key presses in the input field and focuses it.
-     * Does NOT change visual state (disabled/placeholder).
      */
     enable() {
         this.#isEnabled = true;
-        this.#inputElement.focus(); // Set focus when enabling logical input
-        // console.log("InputHandler: Enabled command input listening");
+        this.#inputElement.focus();
+        // Note: Does not change the visual state (like removing disabled attribute or placeholder)
+        // That should be handled via EventBus ('ui:enable_input') if needed.
     }
 
     /**
      * Disables the handler from processing Enter key presses in the input field.
-     * Does NOT change visual state (disabled/placeholder).
      */
     disable() {
         this.#isEnabled = false;
-        // console.log("InputHandler: Disabled command input listening");
+        // Note: Does not change the visual state (like adding disabled attribute or placeholder)
+        // That should be handled via EventBus ('ui:disable_input') if needed.
     }
 
     /**
