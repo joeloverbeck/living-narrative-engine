@@ -110,6 +110,7 @@ export const getNestedProperty = (obj, propertyPath, dataAccess = null) => {
 
     for (let i = 0; i < pathParts.length; i++) {
         const part = pathParts[i];
+        // Check for null/undefined current object before trying to access properties
         if (current === null || typeof current === 'undefined') {
             return undefined;
         }
@@ -120,56 +121,59 @@ export const getNestedProperty = (obj, propertyPath, dataAccess = null) => {
             /** @type {Entity} */
             const currentEntity = current;
 
+            // Direct 'id' property access on entity
             if (part === 'id' && pathParts.length === 1) {
                 return currentEntity.id;
             }
 
+            // Check if the first part looks like a component access pattern
             if (pathParts.length > 1 && i === 0) {
                 const componentName = part;
-                const propertyName = pathParts[1];
 
                 const ComponentClass = dataAccess.getComponentClassByKey(componentName);
-
                 if (ComponentClass) {
                     const componentInstance = currentEntity.getComponent(ComponentClass);
-
                     if (componentInstance) {
+                        // Check if the *next* part is the final property we need from the component
                         if (i === pathParts.length - 2) {
-                            // Check if property exists before accessing
+                            const propertyName = pathParts[i + 1]; // Get the next part name
+                            // Return the property value or undefined if it doesn't exist
                             return propertyName in componentInstance ? componentInstance[propertyName] : undefined;
                         } else {
+                            // Path is longer (e.g., Component.Prop.NestedProp)
+                            // Set current to the component instance, and let the next loop iteration handle the property access on it.
                             current = componentInstance;
-                            i++; // Skip the property name part in the next iteration
-                            continue;
+                            // *** REMOVED i++ FROM HERE ***
+                            continue; // Skip the rest of this iteration, proceed to the next part (e.g., 'status')
                         }
                     } else {
-                        return undefined;
+                        return undefined; // Component instance not found on entity
                     }
                 }
-                // Fall through if not a component access pattern
+                // If ComponentClass wasn't found by key, fall through to direct property access on the entity,
+                // which will likely fail and return undefined if 'part' isn't a direct entity property.
             }
 
-            // Fallback/Direct property access on the entity/component
+            // Fallback/Direct property access on the entity or (in later iterations) component instance
+            // This handles entity.directProp or componentInstance.someProp
             if (part in current) {
                 current = current[part];
             } else {
-                return undefined;
+                return undefined; // Property not found directly on entity/component instance
             }
 
         } else {
-            // Direct property access for non-entities or when dataAccess is missing
+            // Direct property access for non-entities (like connections) or when dataAccess is missing
             if (typeof current === 'object' && part in current) {
                 current = current[part];
             } else {
-                // Also handle non-object cases gracefully if path continues
-                if (i < pathParts.length - 1) { // Check if it's not the last part
-                    return undefined; // Cannot access property on non-object/primitive if path continues
-                }
-                // If it's the last part, the primitive itself might be the value (e.g., checking 'state' on a connection)
-                // Let the loop finish and return current
-                return undefined; // If property not found in object
+                // Cannot access property 'part' on the current value (might be primitive or property missing)
+                // If this isn't the last part of the path, we definitely can't go further.
+                // If it is the last part, the property simply wasn't found.
+                return undefined;
             }
         }
     }
+    // If the loop completes, 'current' holds the final value
     return current;
 };

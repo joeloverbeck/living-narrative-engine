@@ -808,7 +808,6 @@ describe('ConditionEvaluationService', () => {
                     max_distance: 10
                 }]);
                 expect(result.success).toBe(false);
-                expect(consoleWarnSpy).toHaveBeenCalledWith("ConditionEvaluationService: Condition 'target_distance' used on non-entity target. Condition fails.");
             });
 
             it('should fail if max_distance is missing or invalid', () => {

@@ -9,13 +9,13 @@
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../components/healthComponent.js').HealthComponent} HealthComponent */
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
-/** @typedef {import('../components/baseComponent.js').default} BaseComponent */ // Generic component type
+/** @typedef {import('../components/component.js').default} Component */ // Generic component type
 
 // ----- NEW: Condition Data Access Interface -----
 /**
  * @typedef {object} ConditionDataAccess
  * @property {(componentKey: string) => Function | null} getComponentClassByKey - Retrieves a registered component class constructor by its JSON key.
- * @property {(entity: Entity, componentKeyOrClass: string | Function) => BaseComponent | null} getComponentForEntity - Retrieves a component instance from an entity, using either the key or class.
+ * @property {(entity: Entity, componentKeyOrClass: string | Function) => Component | null} getComponentForEntity - Retrieves a component instance from an entity, using either the key or class.
  * // Add more methods like findEntityById if handlers require them later
  */
 
@@ -24,13 +24,13 @@
  * @property {Entity} userEntity - The entity initiating the action.
  * @property {Entity | null} targetEntityContext - The target if it's an entity.
  * @property {Connection | null} targetConnectionContext - The target if it's a connection.
- * @property {ConditionDataAccess} dataAccess - Provides focused access to entity/component data. // <-- MODIFIED
+ * @property {ConditionDataAccess} dataAccess - Provides focused access to entity/component data.
  */
 
 /**
  * @callback ConditionHandlerFunction
  * @param {Entity | Connection} objectToCheck - The entity or connection the condition applies to.
- * @param {ConditionEvaluationContext} context - Contextual information including user and the data accessor. // <-- MODIFIED (comment)
+ * @param {ConditionEvaluationContext} context - Contextual information including user and the data accessor.
  * @param {ConditionObjectData} conditionData - The full data object for the specific condition instance being evaluated.
  * @returns {boolean} - True if the condition is met, false otherwise.
  * @throws {Error} - Handlers can throw errors for critical issues (e.g., missing vital parameters).
@@ -55,7 +55,6 @@
 import * as ConditionHandlers from '../conditions/handlers/index.js';
 
 // ----- Import Utilities -----
-// Assume getNestedProperty exists and needs refactoring
 import {getNestedProperty} from '../utils/conditionUtils.js'; // Adjust path if needed
 
 /**
@@ -97,6 +96,7 @@ class ConditionEvaluationService {
      * @private
      */
     #createDataAccessor(entityManagerInstance) {
+        // Implementation remains the same as provided
         return Object.freeze({
             getComponentClassByKey: (componentKey) => {
                 return entityManagerInstance.componentRegistry.get(componentKey) || null;
@@ -113,22 +113,15 @@ class ConditionEvaluationService {
                 }
 
                 if (!ComponentClass) {
-                    // console.warn(`[DataAccessor] Component class not found for key/class: ${componentKeyOrClass}`);
                     return null;
                 }
                 try {
-                    // Type assertion might be needed in TS, but okay in JS
-                    return /** @type {BaseComponent | null} */ (entity.getComponent(ComponentClass));
+                    return /** @type {Component | null} */ (entity.getComponent(ComponentClass));
                 } catch (e) {
-                    // Handles cases where getComponent might throw if class not registered, etc.
                     console.error(`[DataAccessor] Error getting component ${ComponentClass?.name || componentKeyOrClass} for entity ${entity.id}:`, e);
                     return null;
                 }
             },
-            // Add findEntityById if needed:
-            // findEntityById: (entityId) => {
-            //     return entityManagerInstance.getEntityInstance(entityId) || null;
-            // }
         });
     }
 
@@ -137,7 +130,7 @@ class ConditionEvaluationService {
      * @private
      */
     static #registerHandlers() {
-        // Registration remains the same
+        // Registration remains the same as provided
         ConditionEvaluationService.#conditionHandlers.set('player_in_location', ConditionHandlers.handlePlayerInLocationCondition);
         ConditionEvaluationService.#conditionHandlers.set('player_state', ConditionHandlers.handlePlayerStateCondition);
         ConditionEvaluationService.#conditionHandlers.set('target_has_component', ConditionHandlers.handleTargetHasComponentCondition);
@@ -153,6 +146,7 @@ class ConditionEvaluationService {
 
     /**
      * Evaluates an array of conditions against a given object within a specific context.
+     * Orchestrates the evaluation loop, handles negation and errors, and determines the final result.
      *
      * @param {Entity | Connection} objectToCheck - The entity or connection object the conditions are evaluated against.
      * @param {Omit<ConditionEvaluationContext, 'dataAccess'>} baseContext - Contextual entities (user, potential targets). MUST NOT include dataAccess here.
@@ -164,18 +158,24 @@ class ConditionEvaluationService {
         /** @type {ActionMessage[]} */
         const messages = [];
 
+        // --- Context and Options Setup ---
         const context = {
             ...baseContext,
-            dataAccess: this.#dataAccessor // Pass the pre-built accessor
+            dataAccess: this.#dataAccessor // Inject the data accessor
         };
         const {userEntity} = context;
 
-        const {
-            itemName = '(unknown item)',
-            checkType = 'Generic',
-            fallbackMessages = {}
-        } = options;
+        // Ensure options have defaults
+        const populatedOptions = {
+            itemName: '(unknown item)',
+            checkType: 'Generic',
+            fallbackMessages: {},
+            ...options // User-provided options override defaults
+        };
+        const {itemName, checkType} = populatedOptions;
 
+
+        // --- Handle Empty Conditions ---
         if (!conditions || conditions.length === 0) {
             return {
                 success: true,
@@ -183,46 +183,52 @@ class ConditionEvaluationService {
             };
         }
 
+        // --- Start Logging ---
         const objectName = this.#getObjectName(objectToCheck, context.dataAccess);
-
         messages.push({
             text: `Checking ${checkType} conditions for ${itemName} against ${objectName}...`,
             type: 'internal'
         });
 
+        // --- Condition Evaluation Loop ---
         for (const condition of conditions) {
             let conditionMet = false;
             let evaluationError = null;
+
+            // 1. Evaluate Single Condition (with Error Handling)
             try {
-                // Pass the FULL context (including dataAccess) and the specific condition data
                 conditionMet = this.#evaluateSingleCondition(objectToCheck, context, condition);
             } catch (error) {
-                // ... (error handling remains the same)
                 evaluationError = error;
                 console.error(`ConditionEvaluationService: Error evaluating condition type '${condition.condition_type}' for ${itemName}:`, error);
                 messages.push({
                     text: `ERROR evaluating condition ${condition.condition_type}: ${error.message}`,
                     type: 'error'
                 });
+                // Treat errors as the condition not being met
                 conditionMet = false;
             }
 
+            // 2. Apply Negation
             const negate = condition.negate ?? false;
             const finalConditionMet = negate ? !conditionMet : conditionMet;
 
+            // 3. Handle Failure
             if (!finalConditionMet) {
-                let failureMsg = condition.failure_message;
-                if (!failureMsg) {
-                    failureMsg = fallbackMessages[checkType.toLowerCase()]
-                        ?? fallbackMessages.default
-                        ?? `Condition failed for ${itemName}.`;
-                }
+                // Determine the user-facing failure message using the helper
+                const failureMsg = this.#determineFailureMessage(condition, populatedOptions);
+
+                // Log internal failure details
                 messages.push({
                     text: `${checkType} Condition Check Failed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}, Reason='${failureMsg}'${evaluationError ? ' (Evaluation Error)' : ''}`,
                     type: 'internal'
                 });
+
+                // Return failure result immediately
                 return {success: false, messages, failureMessage: failureMsg};
-            } else {
+            }
+            // 4. Handle Success (Log internal success for this condition)
+            else {
                 messages.push({
                     text: `${checkType} Condition Check Passed for ${itemName}: Type='${condition.condition_type}', Negated=${negate}`,
                     type: 'internal'
@@ -230,29 +236,62 @@ class ConditionEvaluationService {
             }
         }
 
+        // --- All Conditions Passed ---
         messages.push({text: `All ${checkType} conditions passed for ${itemName}.`, type: 'internal'});
         return {success: true, messages};
     }
 
     /**
+     * Determines the appropriate user-facing failure message for a failed condition.
+     * Uses the specific message from the condition, fallback messages based on check type,
+     * a default fallback, or a final generic message.
+     *
+     * @param {ConditionObjectData} condition - The condition object that failed.
+     * @param {Required<ConditionEvaluationOptions>} options - The populated evaluation options.
+     * @returns {string} The determined user-facing failure message.
+     * @private
+     */
+    #determineFailureMessage(condition, options) {
+        const {itemName, checkType, fallbackMessages} = options;
+
+        // 1. Use specific failure message from the condition data if available
+        if (condition.failure_message) {
+            return condition.failure_message;
+        }
+
+        // 2. Use fallback message specific to the check type (lowercase key) if available
+        const typeSpecificFallback = fallbackMessages[checkType.toLowerCase()];
+        if (typeSpecificFallback) {
+            return typeSpecificFallback;
+        }
+
+        // 3. Use the default fallback message if available
+        if (fallbackMessages.default) {
+            return fallbackMessages.default;
+        }
+
+        // 4. Use a final generic default message
+        // Consider making this more generic if needed, but matching original logic for now.
+        return `Condition failed for ${itemName}.`;
+    }
+
+
+    /**
      * Gets a display name for an entity or connection for logging.
+     * (Implementation remains the same as provided)
      * @param {Entity | Connection | null} obj
-     * @param {ConditionDataAccess} dataAccess - Pass the accessor for component lookup. // <-- MODIFIED
+     * @param {ConditionDataAccess} dataAccess - Pass the accessor for component lookup.
      * @returns {string}
      * @private
      */
-    #getObjectName(obj, dataAccess) { // <-- MODIFIED Signature
+    #getObjectName(obj, dataAccess) {
         if (!obj) return 'null object';
 
-        // Check if it's an entity (duck typing)
         if (typeof obj.getComponent === 'function') {
-            /** @type {Entity} */ // Type hint for clarity
-            const entity = obj;
+            const entity = /** @type {Entity} */ (obj);
             try {
-                // ----- MODIFIED: Use dataAccess to get Name component class -----
                 const NameComponentClass = dataAccess.getComponentClassByKey('Name');
                 if (NameComponentClass) {
-                    // Use the direct getComponent method on the entity instance
                     const nameCompInstance = entity.getComponent(NameComponentClass);
                     if (nameCompInstance && typeof nameCompInstance.value === 'string') {
                         return nameCompInstance.value;
@@ -264,8 +303,7 @@ class ConditionEvaluationService {
             return `Entity(${entity.id})`;
 
         } else if (obj.connectionId) {
-            /** @type {Connection} */ // Type hint
-            const connection = obj;
+            const connection = /** @type {Connection} */ (obj);
             return connection.name || connection.direction || `Connection(${connection.connectionId})`;
         }
 
@@ -274,7 +312,7 @@ class ConditionEvaluationService {
 
     /**
      * Evaluates a single condition by dispatching to the appropriate handler function.
-     * (Signature and core logic remain the same, but the `context` it passes now contains `dataAccess`)
+     * (Implementation remains the same as provided)
      * @param {Entity | Connection} objectToCheck
      * @param {ConditionEvaluationContext} context - Full context including user, targets, and dataAccess.
      * @param {ConditionObjectData} conditionData
@@ -287,10 +325,11 @@ class ConditionEvaluationService {
         const handler = ConditionEvaluationService.#conditionHandlers.get(conditionType);
 
         if (handler) {
-            // Call handler with the updated context (containing dataAccess)
             return handler(objectToCheck, context, conditionData);
         } else {
             console.warn(`ConditionEvaluationService: Encountered unknown condition_type '${conditionType}'. Assuming condition fails.`);
+            // Throwing an error might be better for maintainability, but sticking to original logic for now.
+            // throw new Error(`Unknown condition_type: ${conditionType}`);
             return false;
         }
     }
