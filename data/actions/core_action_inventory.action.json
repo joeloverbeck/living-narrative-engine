@@ -1,0 +1,11 @@
+{
+  "id": "core:action_inventory",
+  "name": "Inventory",
+  "description": "Check items being carried.",
+  "commands": [
+    "inventory",
+    "inv",
+    "i"
+  ],
+  "requires_target": false
+}

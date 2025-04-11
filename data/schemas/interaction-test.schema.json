@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/interaction-test.schema.json",
+  "title": "Interaction Test Definition Schema",
+  "description": "Defines the structure for tests triggered by interactions (e.g., trying to force a door), including types like stat checks and probability checks, and their outcomes.",
+  "definitions": {
+    "TestDefinition": {
+      "type": "object",
+      "description": "Defines a test performed during an interaction to determine success or failure.",
+      "required": [ "id", "type", "on_success", "on_failure" ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/definitions/namespacedId",
+          "description": "Unique identifier for this specific test definition (e.g., 'demo:test_force_hallway_door')."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of test to perform.",
+          "enum": [ "stat_check", "probability", "item_check" ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional narrative description of the test being attempted (e.g., 'Attempting to force the stuck door open')."
+        },
+        "stat_or_skill_id": {
+          "$ref": "common.schema.json#/definitions/namespacedId",
+          "description": "ID of the entity attribute or skill to check (e.g., 'core:attr_strength', 'core:skill_lockpicking'). Required if type is 'stat_check'."
+        },
+        "difficulty_class": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Target number (DC) the actor's check (e.g., d20 + stat_mod) must meet or exceed. Required if type is 'stat_check'."
+        },
+        "success_probability": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Probability of success (0.0 to 1.0). Required if type is 'probability'."
+        },
+        "required_item_tag": {
+          "type": "string",
+          "description": "Tag the interacting entity must possess in inventory (e.g., 'key', 'crowbar'). Required if type is 'item_check'."
+        },
+        "consume_item": {
+          "type": "boolean",
+          "description": "If true, the item matching 'required_item_tag' is consumed on success. Used only if type is 'item_check'.",
+          "default": false
+        },
+        "on_success": {
+          "$ref": "#/definitions/TestOutcome",
+          "description": "Defines what happens if the test succeeds."
+        },
+        "on_failure": {
+          "$ref": "#/definitions/TestOutcome",
+          "description": "Defines what happens if the test fails."
+        }
+      },
+      "if": { "properties": { "type": { "const": "stat_check" } } },
+      "then": { "required": [ "stat_or_skill_id", "difficulty_class" ] },
+      "else": {
+        "if": { "properties": { "type": { "const": "probability" } } },
+        "then": { "required": [ "success_probability" ] },
+        "else": {
+          "if": { "properties": { "type": { "const": "item_check" } } },
+          "then": { "required": [ "required_item_tag" ] }
+        }
+      }
+    },
+    "TestOutcome": {
+      "type": "object",
+      "description": "Defines the results (message and effects) of a test succeeding or failing.",
+      "required": [ "message" ],
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Message template displayed to the acting entity upon this outcome (e.g., 'You successfully force the door open!', 'The lock resists your efforts.')."
+        },
+        "effects": {
+          "type": "array",
+          "description": "List of effects to apply upon this outcome. Effects implicitly target the object hosting the interaction (e.g., the door) unless specified otherwise within the effect definition.",
+          "items": { "$ref": "#/definitions/Effect" },
+          "default": []
+        }
+      }
+    },
+
+    "Effect": {
+      "description": "Defines a single consequence of a test outcome. Inherits base 'type' and 'parameters' structure. Target is implicitly the interacted object unless otherwise specified.",
+      "allOf": [
+        { "$ref": "common.schema.json#/definitions/TypedParameterBase" }
+      ],
+      "properties": {
+        "type": {
+          "description": "The type of effect to execute.",
+          "enum": [
+            "set_state",
+            "fire_event",
+            "damage_actor",
+            "apply_effect_actor"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "set_state" },
+            "parameters": {
+              "type": "object",
+              "required": ["new_state"],
+              "properties": {
+                "new_state": {
+                  "type": "string",
+                  "description": "The new state value to apply to the interacted object (e.g., 'unlocked', 'broken', 'jammed')."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "fire_event" },
+            "parameters": {
+              "type": "object",
+              "required": ["event_name"],
+              "properties": {
+                "event_name": {
+                  "$ref": "common.schema.json#/definitions/namespacedId",
+                  "description": "Name of the event to publish via EventBus."
+                },
+                "event_data": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Optional arbitrary data payload to include with the fired event. May include {actorId} and {targetId} context."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "damage_actor" },
+            "parameters": {
+              "type": "object",
+              "required": ["damage_amount"],
+              "properties": {
+                "damage_amount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Amount of damage to inflict on the interacting entity."
+                },
+                "damage_type": {
+                  "type": "string",
+                  "description": "Type of damage (e.g., 'blunt', 'physical', 'arcane'). Optional."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "apply_effect_actor" },
+            "parameters": {
+              "type": "object",
+              "required": ["effect_id"],
+              "properties": {
+                "effect_id": {
+                  "$ref": "common.schema.json#/definitions/namespacedId",
+                  "description": "ID of the status effect to apply to the interacting actor."
+                },
+                "duration": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Optional duration in seconds (null/omit for permanent)."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "examples": [
+        { "type": "set_state", "parameters": { "new_state": "unlocked" } },
+        { "type": "fire_event", "parameters": { "event_name": "puzzle:lever_pulled", "event_data": { "lever_id": "demo:lever_a" } } },
+        { "type": "set_state", "parameters": { "new_state": "broken" } },
+        { "type": "damage_actor", "parameters": { "damage_amount": 5, "damage_type": "physical" } },
+        { "type": "apply_effect_actor", "parameters": { "effect_id": "core:status_bleeding", "duration": 30 } }
+      ]
+    }
+  },
+  "$ref": "#/definitions/TestDefinition"
+}

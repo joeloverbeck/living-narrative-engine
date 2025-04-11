@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/action.schema.json",
+  "title": "Action Definition Schema",
+  "description": "Defines the structure for a basic player or entity action within the game engine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "commands",
+    "requires_target"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this action definition (e.g., 'core:action_move', 'mod_combat:action_power_attack'). Must be namespaced."
+    },
+    "name": {
+      "type": "string",
+      "description": "The primary display name or label for the action (e.g., 'Move', 'Attack', 'Take Item'). May serve as a localization key."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional detailed description of the action, potentially used for help text or tooltips."
+    },
+    "commands": {
+      "type": "array",
+      "description": "A list of command keywords or aliases that the player can use to invoke this action (e.g., ['go', 'walk', 'move', 'north', 'n']). Used by the input parser.",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "target_type": {
+      "type": "string",
+      "description": "Indicates the expected type of target or parameter for this action. Required if 'requires_target' is true and the action needs a target other than 'self' or 'none'.",
+      "enum": [
+        "direction",
+        "item_in_room",
+        "entity_in_room",
+        "item_in_inventory",
+        "item_in_equipment",
+        "location_connection",
+        "self",
+        "none"
+      ],
+      "default": "none"
+    },
+    "requires_target": {
+      "type": "boolean",
+      "description": "Indicates if the player must specify a target/parameter when invoking the action (e.g., 'move NORTH', 'take KEY'). Actions like 'look' (around) or 'inventory' might have this set to false.",
+      "default": true
+    }
+  },
+  "if": {
+    "properties": { "requires_target": { "const": true } }
+  },
+  "then": {
+    "required": ["target_type"],
+    "properties": {
+      "target_type": {
+        "not": { "const": "none" },
+        "description": "Required and cannot be 'none' if 'requires_target' is true. Specifies the kind of target needed."
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "target_type": {
+        "description": "Should typically be 'none' or 'self' if 'requires_target' is false."
+      }
+    }
+  }
+}

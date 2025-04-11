@@ -1,35 +1,35 @@
 // main.js
 
-// --- ONLY Import the Engine ---
 import GameEngine from './src/core/gameEngine.js';
 import AppContainer from "./src/core/appContainer.js";
 import {registerCoreServices} from "./src/core/containerConfig.js";
+
+// --- Define the Active World ---
+const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
 // --- Bootstrap the Game Engine ---
 // Use an async IIFE (Immediately Invoked Function Expression) or top-level await
 (async () => {
     console.log("main.js: Bootstrapping application...");
 
-    // --- Get Root DOM Elements needed by the Engine or for Fallback (NOW LOCAL) ---
+    // --- Get Root DOM Elements ---
     const outputDiv = document.getElementById('output');
     const errorDiv = document.getElementById('error-output'); // For fallback errors
     const inputElement = document.getElementById('command-input');
-    const titleElement = document.querySelector('h1'); // For fallback errors/status & passing to engine
+    const titleElement = document.querySelector('h1'); // For engine status and fallback errors
 
-    // --- Basic check if essential elements exist before even creating the engine ---
-    // Uses the locally scoped variables now
+    // --- Basic check if essential elements exist ---
     if (!outputDiv || !inputElement || !errorDiv || !titleElement) {
         const missing = [
             !outputDiv ? 'output' : null,
             !inputElement ? 'command-input' : null,
             !errorDiv ? 'error-output' : null,
-            !titleElement ? 'h1 title' : null // Changed variable name here
+            !titleElement ? 'h1 title' : null
         ].filter(Boolean).join(', ');
         const errorMsg = `Fatal Error: Cannot find required HTML elements: ${missing}. Application cannot start.`;
         console.error("main.js:", errorMsg)
-        // Fallback using local variables
         if (errorDiv) errorDiv.textContent = errorMsg; else alert(errorMsg);
-        if (titleElement) titleElement.textContent = "Fatal Error!"; // Changed variable name here
+        if (titleElement) titleElement.textContent = "Fatal Error!";
         if (inputElement) inputElement.disabled = true;
         return; // Stop execution
     }
@@ -39,44 +39,65 @@ import {registerCoreServices} from "./src/core/containerConfig.js";
 
     // --- Register Services ---
     try {
-        // Pass necessary external dependencies (like UI elements) during registration
         registerCoreServices(container, { outputDiv, inputElement, titleElement });
     } catch (registrationError) {
         console.error("Fatal Error: Failed to register core services:", registrationError);
-        alert(`Fatal Error during service registration: ${registrationError.message}. Check console.`);
-        titleElement.textContent = "Fatal Registration Error!";
-        inputElement.disabled = true;
-        inputElement.placeholder = "Registration Failed.";
+        const errorMsg = `Fatal Error during service registration: ${registrationError.message}. Check console.`;
+        alert(errorMsg);
+        // Use local variables for fallback UI update
+        if (titleElement) titleElement.textContent = "Fatal Registration Error!";
+        if (inputElement) {
+            inputElement.disabled = true;
+            inputElement.placeholder = "Registration Failed.";
+        }
         return; // Stop execution
     }
 
+    let gameEngine = null; // Declare outside try block for use in unload listener
+
     // --- Create Game Engine with Container ---
     try {
-        const gameEngine = new GameEngine({
-            container: container,
-            titleElement: titleElement // Pass title element for fallback errors
+        gameEngine = new GameEngine({
+            container: container
         });
 
         // --- Start the Game ---
-        gameEngine.start().catch(startError => {
-            // Catch potential unhandled promise rejections from async start()
+        // The catch block here will handle errors thrown from gameEngine.start()
+        // which includes errors propagated from gameEngine.#initialize()
+        // --- <<< CHANGE: Pass ACTIVE_WORLD to start() (AC2) >>> ---
+        gameEngine.start(ACTIVE_WORLD).catch(startError => {
             console.error("Fatal Error: Unhandled error during game engine start:", startError);
-            alert(`Fatal Error during game start: ${startError.message}. Check console.`);
-            titleElement.textContent = "Fatal Start Error!";
-            inputElement.disabled = true;
+            const errorMsg = `Fatal Error during game start: ${startError.message}. Check console.`;
+            alert(errorMsg);
+            // Use local variables for fallback UI update
+            if (titleElement) titleElement.textContent = "Fatal Start Error!";
+            if (inputElement) {
+                inputElement.disabled = true;
+                // The placeholder might already be set by the engine's error handler
+                // if it managed to resolve the inputElement via the container,
+                // but setting it here ensures it's disabled.
+                inputElement.placeholder = "Game Failed to Start";
+            }
         });
 
         // Optional: Add cleanup on window unload
         window.addEventListener('beforeunload', () => {
+            // Check if gameEngine was successfully created before trying to stop
             if (gameEngine) {
                 gameEngine.stop();
             }
         });
 
     } catch (engineCreationError) {
+        // Catch errors during the GameEngine *constructor* itself
         console.error("Fatal Error: Failed to create GameEngine instance:", engineCreationError);
-        alert(`Fatal Error creating game engine: ${engineCreationError.message}. Check console.`);
-        titleElement.textContent = "Fatal Engine Error!";
-        inputElement.disabled = true;
+        const errorMsg = `Fatal Error creating game engine: ${engineCreationError.message}. Check console.`;
+        alert(errorMsg);
+        // Use local variables for fallback UI update
+        if (titleElement) titleElement.textContent = "Fatal Engine Error!";
+        if (inputElement) {
+            inputElement.disabled = true;
+            inputElement.placeholder = "Engine Creation Failed.";
+        }
     }
 })(); // Execute the async function immediately

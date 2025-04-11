@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/location.schema.json",
+  "title": "Location Entity Schema",
+  "description": "Defines the structure for a Location entity in the adventure game platform. Locations are entities composed of components.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "components"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "A unique identifier for this location entity (e.g., 'core:room_entry', 'story_alpha:cave_chamber_1'). Used for linking connections and references."
+    },
+    "components": {
+      "type": "object",
+      "description": "A container for the components that define this location's properties and behavior.",
+      "additionalProperties": false,
+      "required": [
+        "Name",
+        "Connections"
+      ],
+      "properties": {
+        "Name": {
+          "$ref": "common.schema.json#/definitions/NameComponent",
+          "description": "Component defining the display name of the location."
+        },
+        "Description": {
+          "$ref": "common.schema.json#/definitions/DescriptionComponent",
+          "description": "Component defining the static, pre-written narrative description of the location."
+        },
+        "MetaDescription": {
+          "$ref": "common.schema.json#/definitions/MetaDescriptionComponent",
+          "description": "Component providing concise keywords for generating dynamic descriptions via an LLM (used in Phase 3+)."
+        },
+        "Connections": {
+          "$ref": "#/definitions/ConnectionsComponent",
+          "description": "Component defining the exits or links from this location to others."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "Description"
+          ],
+          "description": "Ensures that the location has at least a static description."
+        },
+        {
+          "required": [
+            "MetaDescription"
+          ],
+          "description": "Ensures that the location has at least a meta-description for AI generation."
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "ConnectionsComponent": {
+      "type": "object",
+      "description": "Component defining the exits or links from this location to others.",
+      "additionalProperties": false,
+      "required": [
+        "connections"
+      ],
+      "properties": {
+        "connections": {
+          "type": "array",
+          "description": "A list defining pathways leading out of this location.",
+          "items": {
+            "type": "object",
+            "description": "Defines a single connection or exit.",
+            "required": [
+              "connectionId",
+              "direction",
+              "target"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "connectionId": {
+                "$ref": "./common.schema.json#/definitions/namespacedId",
+                "description": "Unique identifier for this specific connection within the location. Used for targeting specific connections (e.g., a specific door). Must be unique within the 'connections' array."
+              },
+              "direction": {
+                "type": "string",
+                "description": "The direction or label for this exit (e.g., 'north', 'south', 'up', 'enter airlock', 'follow path'). Used for player commands/UI.",
+                "examples": [
+                  "north",
+                  "east",
+                  "west",
+                  "south",
+                  "up",
+                  "down",
+                  "northeast",
+                  "southwest",
+                  "enter",
+                  "exit",
+                  "climb ladder"
+                ]
+              },
+              "target": {
+                "$ref": "./common.schema.json#/definitions/namespacedId",
+                "description": "The unique ID of the location this connection leads to."
+              },
+              "description_override": {
+                "type": "string",
+                "description": "Optional text describing this specific exit (e.g., 'A heavy iron door stands to the north.', 'Sunlight streams down the path leading west.'). If omitted, a generic description might be used."
+              },
+              "type": {
+                "type": "string",
+                "description": "Optional type of connection (e.g., 'door', 'path', 'portal', 'ladder'). Can influence travel time, description, or required actions.",
+                "examples": [
+                  "door",
+                  "archway",
+                  "path",
+                  "stairs",
+                  "ladder",
+                  "hatch",
+                  "teleporter"
+                ]
+              },
+              "hidden": {
+                "type": "boolean",
+                "description": "Optional flag indicating if the connection is initially hidden and must be discovered.",
+                "default": false
+              },
+              "initial_state": {
+                "type": "string",
+                "description": "Optional state the connection starts in when the location is loaded (e.g., 'locked', 'hidden', 'blocked'). If omitted, assumed to be 'unlocked' or determined by 'hidden' property. Triggers/events modify the runtime state.",
+                "examples": [
+                  "locked",
+                  "hidden",
+                  "blocked",
+                  "unlocked"
+                ]
+              },
+              "interactions": {
+                "type": "array",
+                "description": "Defines interactions possible with this connection, often involving tests.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "action_id"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "action_id": {
+                      "$ref": "./common.schema.json#/definitions/namespacedId",
+                      "description": "The ID of the action that triggers this interaction (e.g., 'core:action_force_open')."
+                    },
+                    "requires_state": {
+                      "type": "string",
+                      "description": "Optional state the connection must be in for this interaction to be available (e.g., 'locked')."
+                    },
+                    "requires_item_tag": {
+                      "type": "string",
+                      "description": "Optional item tag the actor must possess in inventory (e.g., 'lockpick', 'key'). Checked by interaction system."
+                    },
+                    "test_definition": {
+                      "$ref": "interaction-test.schema.json",
+                      "description": "The test performed when this interaction is attempted."
+                    }
+                  }
+                },
+                "default": []
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

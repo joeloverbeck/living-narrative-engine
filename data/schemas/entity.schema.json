@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/entity.schema.json",
+  "title": "Game Entity Schema",
+  "description": "Schema for a game entity (player, NPC, item, location, etc.) composed of modular components. Each entity is defined by a unique id and a collection of components determining its attributes and behavior.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this entity. Typically includes a module prefix and specific name (e.g., 'core:player', 'demo:item_key', 'demo:room_hall')."
+    },
+    "components": {
+      "type": "object",
+      "description": "Object containing the components that make up this entity. Each key is a component type name (string) and its value is the component data object.",
+      "properties": {
+        "Name": {
+          "$ref": "./common.schema.json#/definitions/NameComponent",
+          "description": "(Recommended) The display name of the entity."
+        },
+        "Description": {
+          "$ref": "./common.schema.json#/definitions/DescriptionComponent",
+          "description": "(Optional) Static text description of the entity."
+        },
+        "MetaDescription": {
+          "$ref": "./common.schema.json#/definitions/MetaDescriptionComponent",
+          "description": "(Optional) Data used for LLM-generated descriptions."
+        },
+        "Position": {
+          "$ref": "./common.schema.json#/definitions/PositionComponent",
+          "description": "Component for entities whose location is relevant."
+        },
+        "Health": {
+          "$ref": "./common.schema.json#/definitions/HealthComponent",
+          "description": "(Optional) Component for entities that have health points."
+        },
+        "Inventory": {
+          "$ref": "./common.schema.json#/definitions/InventoryComponent",
+          "description": "(Optional) Component for entities that can carry items."
+        },
+        "Attack": {
+          "$ref": "./common.schema.json#/definitions/AttackComponent",
+          "description": "(Optional) Component for entities that can perform basic attacks."
+        },
+        "Skills": {
+          "$ref": "./common.schema.json#/definitions/SkillComponent",
+          "description": "(Optional) Component tracking entity skill levels."
+        },
+        "Stats": {
+          "$ref": "./common.schema.json#/definitions/StatsComponent",
+          "description": "(Optional) Component tracking entity core attributes (Strength, Agility etc.)."
+        },
+        "EntitiesPresent": {
+          "$ref": "./common.schema.json#/definitions/EntitiesPresentComponent",
+          "description": "(Optional, usually for locations/containers) Lists IDs of entities within."
+        },
+        "Connections": {
+          "$ref": "./common.schema.json#/definitions/ConnectionsComponent",
+          "description": "(Optional, primarily for locations) Defines simple exits to other locations. See location.schema.json for a more detailed structure used by locations."
+        },
+        "Equipment": {
+          "$ref": "./common.schema.json#/definitions/EquipmentComponent",
+          "description": "(Optional) Component for entities that can equip items."
+        },
+        "QuestLog": {
+          "$ref": "./common.schema.json#/definitions/QuestLogComponent",
+          "description": "(Optional) Allows the entity (typically player) to track quest status and objectives."
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": true,
+      "$comment": "Allowing additional properties enables custom components defined by mods or specific game logic."
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "demo:item_leather_vest",
+  "components": {
+    "Name": {
+      "value": "Leather Vest"
+    },
+    "Description": {
+      "text": "A vest made of stiff, boiled leather. Offers basic protection."
+    },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
+    "Item": {
+      "tags": [
+        "armor",
+        "body_armor",
+        "leather"
+      ]
+    },
+    "Equippable": {
+      "slotId": "core:slot_body",
+      "equipEffects": [
+        {
+          "type": "stat_mod",
+          "stat": "core:attr_defense",
+          "value": 1
+        }
+      ]
+    }
+  }
+}

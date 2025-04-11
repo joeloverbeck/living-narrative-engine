@@ -1,0 +1,15 @@
+{
+  "id": "core:action_use",
+  "name": "Use",
+  "description": "Use an item from your inventory.",
+  "commands": [
+    "use",
+    "apply",
+    "drink",
+    "eat",
+    "read",
+    "activate"
+  ],
+  "target_type": "item_in_inventory",
+  "requires_target": true
+}

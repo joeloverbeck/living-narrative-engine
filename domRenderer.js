@@ -306,13 +306,11 @@ class DomRenderer {
 
             this.#inventoryPanel.classList.remove('hidden');
             this.#isInventoryVisible = true;
-            console.log("Inventory panel shown.");
             // Optional: Maybe disable game input while inventory is open?
             // this.#eventBus.dispatch('ui:disable_input', { message: 'Inventory open...' });
         } else {
             this.#inventoryPanel.classList.add('hidden');
             this.#isInventoryVisible = false;
-            console.log("Inventory panel hidden.");
             // Optional: Re-enable game input if it was disabled
             // this.#eventBus.dispatch('ui:enable_input', { placeholder: 'Enter command...' });
         }

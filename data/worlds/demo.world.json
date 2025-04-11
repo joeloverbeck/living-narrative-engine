@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "worldName": "Demo Dungeon",
+  "startingPlayerId": "core:player",
+  "startingLocationId": "demo:room_entrance",
+  "contentFiles": {
+    "actions": [
+      "core_action_attack.action.json",
+      "core_action_move.action.json",
+      "core_action_take.action.json",
+      "core_action_drop.action.json",
+      "core_action_use.action.json",
+      "core_action_look.action.json",
+      "core_action_equip.action.json",
+      "core_action_unequip.action.json",
+      "core_action_inventory.action.json"
+    ],
+    "entities": [
+      "core_player.entity.json",
+      "demo_enemy_goblin.entity.json"
+    ],
+    "items": [
+      "demo_item_key.item.json",
+      "demo_item_potion_heal_minor.item.json",
+      "demo_item_sword.item.json",
+      "demo_item_leather_vest.item.json"
+    ],
+    "locations": [
+      "demo_room_entrance.location.json",
+      "demo_room_hallway.location.json",
+      "demo_room_monster.location.json",
+      "demo_room_treasure.location.json",
+      "demo_room_exit.location.json",
+      "demo_room_outside.location.json"
+    ],
+    "triggers": [
+      "demo_trigger_unlock_treasure_door_on_goblin_death.trigger.json"
+    ],
+    "objectives": [
+      "story_a_obj_defeat_boss.objective.json",
+      "demo_obj_unlock_exit_door.objective.json"
+    ],
+    "quests": [
+      "demo_quest_fetch_herbs.quest.json",
+      "demo_quest_exit_dungeon.quest.json"
+    ],
+    "interactionTests": [
+
+    ]
+  }
+}

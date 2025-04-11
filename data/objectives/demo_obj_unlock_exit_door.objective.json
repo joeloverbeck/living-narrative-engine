@@ -1,0 +1,27 @@
+{
+  "id": "demo:obj_unlock_exit_door",
+  "descriptionId": "obj_desc_unlock_exit_door",
+  "isHidden": false,
+  "completionConditions": {
+    "allOf": [
+      {
+        "type": "event_listener",
+        "eventName": "event:door_unlocked",
+        "filters": {
+          "connectionId": "demo:exit_north_door"
+        },
+        "$comment": "Completed when the specific north exit door sends the unlocked event."
+      }
+    ]
+  },
+  "eventsToFireOnCompletion": [
+    {
+      "eventName": "objective:completed",
+      "eventData": {
+        "objectiveId": "demo:obj_unlock_exit_door",
+        "questId": "demo:quest_exit_dungeon"
+      },
+      "$comment": "Standard event to notify QuestSystem/UI objective is done."
+    }
+  ]
+}

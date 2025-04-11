@@ -1,0 +1,431 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/item.schema.json",
+  "title": "Item Entity Schema",
+  "description": "Defines the structure for an Item entity, inheriting from the base entity schema and adding item-specific components.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "entity.schema.json" }
+  ],
+  "properties": {
+    "components": {
+      "type": "object",
+      "description": "Components defining the item's properties. Must include Name and Item components. Inherits other components.",
+      "required": [
+        "Name",
+        "Item"
+      ],
+      "properties": {
+        "Name": {
+          "$ref": "common.schema.json#/definitions/NameComponent"
+        },
+        "Description": {
+          "$ref": "common.schema.json#/definitions/DescriptionComponent"
+        },
+        "Item": {
+          "$ref": "#/definitions/ItemComponent",
+          "description": "Core component identifying this as an item and its basic properties."
+        },
+        "Usable": {
+          "$ref": "#/definitions/UsableComponent",
+          "description": "Optional component defining direct use effects, conditions, and targeting."
+        },
+        "Equippable": {
+          "$ref": "#/definitions/EquippableComponent",
+          "description": "Optional component defining if and how the item can be equipped."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "definitions": {
+    "ItemComponent": {
+      "type": "object",
+      "description": "Core component identifying an entity as an item.",
+      "additionalProperties": false,
+      "required": [ "tags" ],
+      "properties": {
+        "tags": {
+          "type": "array",
+          "description": "Keywords identifying the item's type, material, or purpose (e.g., 'key', 'potion', 'weapon', 'metal', 'quest_item'). Used for filtering and identification.",
+          "items": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [ ["key", "iron"], ["potion", "healing", "consumable"], ["weapon", "sword", "metal"], ["quest_item"] ]
+        },
+        "stackable": {
+          "type": "boolean",
+          "description": "Whether multiple instances stack in inventory (requires quantity tracking elsewhere, perhaps on the InventoryComponent slot).",
+          "default": false
+        },
+        "value": {
+          "type": "integer",
+          "description": "Optional base monetary or point value.",
+          "minimum": 0,
+          "default": 0
+        },
+        "weight": {
+          "type": "number",
+          "description": "Optional weight value, affecting inventory capacity.",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "UsableComponent": {
+      "type": "object",
+      "description": "Defines how an item can be used: conditions, targeting, effects, feedback.",
+      "properties": {
+        "usability_conditions": {
+          "type": "array",
+          "description": "Conditions related to the user or game state that must ALL be met. Checked before targeting.",
+          "items": { "$ref": "#/definitions/ConditionObject" },
+          "default": []
+        },
+        "target_required": {
+          "type": "boolean",
+          "description": "Does this item require a target entity (other than the user)?",
+          "default": false
+        },
+        "target_conditions": {
+          "type": "array",
+          "description": "Conditions the target entity must ALL meet. Checked only if 'target_required' is true, after target acquired.",
+          "items": { "$ref": "#/definitions/ConditionObject" },
+          "default": []
+        },
+        "effects": {
+          "type": "array",
+          "description": "Sequence of effects occurring on successful use, after all condition checks pass.",
+          "items": { "$ref": "#/definitions/EffectObject" },
+          "minItems": 1
+        },
+        "consume_on_use": {
+          "type": "boolean",
+          "description": "Is the item consumed (removed/quantity decreased) after successful use?",
+          "default": true
+        },
+        "success_message": {
+          "type": "string",
+          "description": "Optional message to user upon successful use (e.g., 'You drink the potion.')."
+        },
+        "failure_message_default": {
+          "type": "string",
+          "description": "Optional default message if usage fails without a specific condition failure message (e.g., 'You cannot use that now.')."
+        }
+      },
+      "required": [ "effects" ],
+      "additionalProperties": false
+    },
+    "ConditionObject": {
+      "type": "object",
+      "description": "A single condition for item usage (checked against user or target). Specific parameters depend on 'condition_type'.",
+      "properties": {
+        "condition_type": {
+          "type": "string",
+          "description": "Identifier for the type of condition check.",
+          "enum": [
+            "player_state",
+            "has_status_effect",
+            "target_has_component",
+            "target_distance",
+            "health_below_max",
+            "health_above_percent",
+            "attribute_check",
+            "skill_check",
+            "player_in_location",
+            "target_has_property",
+            "inventory_contains"
+          ]
+        },
+        "negate": { "type": "boolean", "default": false, "description": "Invert the result (e.g., check if NOT poisoned)." },
+        "failure_message": { "type": "string", "description": "Specific message if this condition fails." }
+      },
+      "required": [ "condition_type" ],
+      "additionalProperties": true,
+      "examples": [
+        { "condition_type": "player_state", "state": "not_swimming", "failure_message": "Cannot use this while swimming." },
+        { "condition_type": "has_status_effect", "effect_id": "core:poison", "negate": true, "failure_message": "Cannot use while poisoned." },
+        { "condition_type": "health_below_max" },
+        { "condition_type": "attribute_check", "attribute_id": "core:attr_intelligence", "threshold": 12, "failure_message": "You lack the intelligence to understand this." },
+        { "condition_type": "target_has_property", "property_path": "state", "expected_value": "locked", "failure_message": "It is already unlocked." }
+      ]
+    },
+
+    "EffectObject": {
+      "description": "A single effect applied on item use. Inherits base 'type' and 'parameters' structure.",
+      "allOf": [
+        { "$ref":  "common.schema.json#/definitions/TypedParameterBase"  }
+      ],
+      "properties": {
+        "type": {
+          "description": "Identifier for the type of item effect.",
+          "enum": [
+            "heal",
+            "damage",
+            "trigger_event",
+            "apply_status_effect",
+            "remove_status_effect",
+            "spawn_entity",
+            "modify_stat",
+            "teleport",
+            "change_state",
+            "execute_script"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "heal" },
+            "parameters": {
+              "type": "object",
+              "required": ["amount", "target"],
+              "properties": {
+                "amount": { "type": "integer", "minimum": 1, "description": "Amount of health to restore." },
+                "target": { "type": "string", "enum": ["user", "target"], "description": "Who receives the healing." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "damage" },
+            "parameters": {
+              "type": "object",
+              "required": ["amount", "target"],
+              "properties": {
+                "amount": { "type": "integer", "minimum": 0, "description": "Amount of damage to inflict." },
+                "damage_type": { "type": "string", "description": "Optional type of damage (e.g., 'fire', 'physical')." },
+                "target": { "type": "string", "enum": ["user", "target"], "description": "Who receives the damage." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "trigger_event" },
+            "parameters": {
+              "type": "object",
+              "required": ["event_name"],
+              "properties": {
+                "event_name": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "Name of the event to publish." },
+                "payload": { "type": "object", "additionalProperties": true, "description": "Optional data payload for the event." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "apply_status_effect" },
+            "parameters": {
+              "type": "object",
+              "required": ["effect_id", "target"],
+              "properties": {
+                "effect_id": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "ID of the status effect to apply." },
+                "duration": { "type": ["number", "null"], "minimum": 0, "description": "Optional duration in seconds (null/omit for permanent)." },
+                "target": { "type": "string", "enum": ["user", "target"], "description": "Who receives the status effect." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "remove_status_effect" },
+            "parameters": {
+              "type": "object",
+              "required": ["effect_id", "target"],
+              "properties": {
+                "effect_id": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "ID of the status effect to remove." },
+                "target": { "type": "string", "enum": ["user", "target"], "description": "Who to remove the effect from." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "spawn_entity" },
+            "parameters": {
+              "type": "object",
+              "required": ["entity_id_to_spawn", "location"],
+              "properties": {
+                "entity_id_to_spawn": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "The ID of the entity definition to spawn." },
+                "location": { "type": "string", "enum": ["current", "target_location"], "description": "'current' means user's location, 'target_location' means target's location." },
+                "offset_x": { "type": "number", "default": 0, "description": "Optional X offset from location origin/target." },
+                "offset_y": { "type": "number", "default": 0, "description": "Optional Y offset from location origin/target." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "modify_stat" },
+            "parameters": {
+              "type": "object",
+              "required": ["stat_id", "change", "target"],
+              "properties": {
+                "stat_id": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "ID of the attribute or skill to modify (e.g., 'core:attr_strength', 'core:skill_stealth')." },
+                "change": { "type": "integer", "description": "Amount to change by (positive or negative)." },
+                "duration": { "type": ["number", "null"], "minimum": 0, "description": "Optional duration in seconds for temporary modification (null/omit for permanent)." },
+                "target": { "type": "string", "enum": ["user", "target"], "description": "Whose stat to modify." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "teleport" },
+            "parameters": {
+              "type": "object",
+              "required": ["target_location_id"],
+              "properties": {
+                "target_location_id": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "ID of the destination location." },
+                "target_x": { "type": "number", "description": "Optional destination X coordinate." },
+                "target_y": { "type": "number", "description": "Optional destination Y coordinate." },
+                "entity_to_teleport": { "type": "string", "enum": ["user", "target"], "default": "user", "description": "Which entity to teleport." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "change_state" },
+            "parameters": {
+              "type": "object",
+              "required": ["new_state", "target_entity"],
+              "properties": {
+                "new_state": { "type": "string", "description": "The new state value to apply (e.g., 'unlocked', 'activated')." },
+                "target_entity": { "type": "string", "enum": ["target", "self_item"], "description": "'target' affects the targeted entity, 'self_item' affects the item entity itself (if applicable)." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "execute_script" },
+            "parameters": {
+              "type": "object",
+              "required": ["script_id"],
+              "properties": {
+                "script_id": { "$ref": "common.schema.json#/definitions/namespacedId", "description": "ID of the script function to execute." },
+                "args": { "type": "object", "additionalProperties": true, "description": "Optional arguments for the script." }
+              },
+              "patternProperties": {
+                "^\\$.*": {}
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "examples": [
+        { "type": "heal", "parameters": { "amount": 10, "target": "user" } },
+        { "type": "damage", "parameters": { "amount": 5, "damage_type": "fire", "target": "target" } },
+        { "type": "trigger_event", "parameters": { "event_name": "game:door_unlocked", "payload": { "door_id": "demo:door_rusty" } } },
+        { "type": "apply_status_effect", "parameters": { "effect_id": "core:buff_strength", "duration": 60, "target": "user" } },
+        { "type": "spawn_entity", "parameters": { "entity_id_to_spawn": "demo:summoned_imp", "location": "current", "offset_x": 1 } }
+      ]
+    },
+    "EquippableComponent": {
+      "type": "object",
+      "description": "Defines item equippability: slot, effects.",
+      "additionalProperties": false,
+      "required": [ "slotId" ],
+      "properties": {
+        "slotId": {
+          "$ref": "common.schema.json#/definitions/namespacedId",
+          "description": "ID of the equipment slot this item occupies (e.g., 'core:slot_main_hand', 'core:slot_head'). Must match slots defined in EquipmentComponent.",
+          "examples": [ "core:slot_main_hand", "core:slot_body" ]
+        },
+        "equipEffects": {
+          "$comment": "Currently only defines 'stat_mod'. Could be expanded with other passive effects (resistances, skills, special abilities).",
+          "type": "array",
+          "description": "Passive effects applied to the wearer while equipped.",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": [ "type" ],
+            "properties": {
+              "type": { "type": "string", "enum": [ "stat_mod", "skill_mod", "resistance" ] },
+              "stat": {
+                "$ref": "common.schema.json#/definitions/namespacedId",
+                "description": "ID of stat (e.g., 'core:attr_strength'). Req for 'stat_mod'."
+              },
+              "value": { "type": "integer", "description": "Amount to modify by (can be negative). Req for 'stat_mod', 'skill_mod'." },
+              "skill": {
+                "$ref": "common.schema.json#/definitions/namespacedId",
+                "description": "ID of skill (e.g., 'core:skill_stealth'). Req for 'skill_mod'."
+              },
+              "damage_type": { "type": "string", "description": "Type of damage to resist (e.g., 'fire', 'cold'). Req for 'resistance'." },
+              "resistance_value": { "type": "integer", "description": "Amount or percentage of resistance. Req for 'resistance'." }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "type": { "const": "stat_mod" } } },
+                "then": { "required": [ "stat", "value" ] }
+              },
+              {
+                "if": { "properties": { "type": { "const": "skill_mod" } } },
+                "then": { "required": [ "skill", "value" ] }
+              },
+              {
+                "if": { "properties": { "type": { "const": "resistance" } } },
+                "then": { "required": [ "damage_type", "resistance_value" ] }
+              }
+            ]
+          },
+          "examples": [
+            [ { "type": "stat_mod", "stat": "core:attr_strength", "value": 1 } ],
+            [ { "type": "stat_mod", "stat": "core:attr_defense", "value": 5 }, { "type": "stat_mod", "stat": "core:attr_agility", "value": -1 } ],
+            [ { "type": "resistance", "damage_type": "fire", "resistance_value": 10 } ]
+          ]
+        },
+        "requirements": {
+          "type": "array",
+          "description": "Optional list of conditions the entity must meet to equip this item.",
+          "items": { "$ref": "#/definitions/ConditionObject" },
+          "default": []
+        }
+      }
+    }
+  }
+}
