@@ -36,6 +36,7 @@ import {ObjectiveEventListenerService} from '../services/objectiveEventListenerS
 import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
 import {TargetResolutionService} from "../services/targetResolutionService.js";
+import EffectExecutionService from "../services/effectExecutionService.js";
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -83,6 +84,7 @@ class GameEngine {
     #questRewardService = null;
     #objectiveEventListenerService = null;
     #objectiveStateCheckerService = null;
+    #effectExecutionService = null;
 
     #isInitialized = false;
 
@@ -170,6 +172,9 @@ class GameEngine {
 
             this.#targetResolutionService = new TargetResolutionService();
             console.log("GameEngine: TargetResolutionService instantiated.");
+
+            this.#effectExecutionService = new EffectExecutionService();
+            console.log("GameEngine: EffectExecutionService instantiated.");
 
             // --- 5. Instantiate ActionExecutor & Register Handlers ---
             this.#actionExecutor = new ActionExecutor();
@@ -274,7 +279,8 @@ class GameEngine {
                 entityManager: this.#entityManager,
                 dataManager: this.#dataManager,
                 conditionEvaluationService: this.#conditionEvaluationService,
-                targetResolutionService: this.#targetResolutionService
+                targetResolutionService: this.#targetResolutionService,
+                effectExecutionService: this.#effectExecutionService
             });
             console.log("GameEngine: ItemUsageSystem instantiated and initialized.");
 
