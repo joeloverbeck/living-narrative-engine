@@ -1,11 +1,11 @@
 // src/conditions/handlers/handleTargetHasComponentCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
+// No longer need direct EntityManager import
 
 import {getStringParam} from '../../utils/conditionUtils.js';
 
@@ -15,8 +15,8 @@ import {getStringParam} from '../../utils/conditionUtils.js';
  * @type {ConditionHandlerFunction}
  */
 export const handleTargetHasComponentCondition = (objectToCheck, context, conditionData) => {
-    const {entityManager} = context;
-    const componentName = getStringParam(conditionData, 'component_name'); // e.g., "Health"
+    const {dataAccess} = context; // Use dataAccess
+    const componentName = getStringParam(conditionData, 'component_name');
 
     if (componentName === null) {
         console.warn(`[ConditionHandler] target_has_component condition missing required 'component_name' parameter.`);
@@ -24,16 +24,17 @@ export const handleTargetHasComponentCondition = (objectToCheck, context, condit
     }
 
     // Ensure objectToCheck is an Entity capable of having components
+    // Use hasComponent for check, but getComponent for type check is fine too
     if (typeof objectToCheck?.hasComponent !== 'function') {
-        // console.warn(`[ConditionHandler] 'target_has_component' used on non-entity target. Condition fails.`);
-        return false; // Not an entity, cannot have component
-    }
-
-    const ComponentClass = entityManager.componentRegistry.get(componentName);
-    if (!ComponentClass) {
-        console.warn(`[ConditionHandler] No component class registered for name "${componentName}". Cannot check 'target_has_component'.`);
         return false;
     }
 
+    const ComponentClass = dataAccess.getComponentClassByKey(componentName);
+    if (!ComponentClass) {
+        console.warn(`[ConditionHandler] No component class found via dataAccess for name "${componentName}". Cannot check 'target_has_component'.`);
+        return false;
+    }
+
+    // Use the retrieved class with the entity's hasComponent method
     return objectToCheck.hasComponent(ComponentClass);
 };

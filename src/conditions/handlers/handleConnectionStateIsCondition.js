@@ -1,7 +1,6 @@
 // src/conditions/handlers/handleConnectionStateIsCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../entities/entity.js').default} Entity */
+// Keep necessary imports (no EntityManager was needed)
 /** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
@@ -15,6 +14,7 @@ import {getStringParam} from '../../utils/conditionUtils.js';
  * @type {ConditionHandlerFunction}
  */
 export const handleConnectionStateIsCondition = (objectToCheck, context, conditionData) => {
+    // No context.entityManager or context.dataAccess was used here.
     const requiredState = getStringParam(conditionData, 'state');
 
     if (requiredState === null) {
@@ -22,16 +22,11 @@ export const handleConnectionStateIsCondition = (objectToCheck, context, conditi
         return false;
     }
 
-    // This condition makes sense only if objectToCheck is a Connection
-    // Duck-type check: Has connectionId and NO getComponent method (to differentiate from Entity)
     if (!objectToCheck || typeof objectToCheck.getComponent === 'function' || !objectToCheck.connectionId) {
-        // console.warn(`[ConditionHandler] 'connection_state_is' used on non-connection object. Condition fails.`);
-        return false; // Not a connection object (or not the expected shape)
+        return false;
     }
 
-    // Cast for type safety after check (optional, depends on JS/TS setup)
     /** @type {Connection} */
     const connection = objectToCheck;
-
     return connection.state === requiredState;
 };

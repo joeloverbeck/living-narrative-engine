@@ -1,11 +1,11 @@
 // src/conditions/handlers/handleAttributeCheckCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
+// No longer need direct EntityManager import
 
 import {getStringParam, getValueParam} from '../../utils/conditionUtils.js';
 
@@ -15,11 +15,12 @@ import {getStringParam, getValueParam} from '../../utils/conditionUtils.js';
  * @type {ConditionHandlerFunction}
  */
 export const handleAttributeCheckCondition = (objectToCheck, context, conditionData) => {
-    // Ensure objectToCheck is an Entity
-    if (typeof objectToCheck?.getComponent !== 'function') return false;
+    const {dataAccess} = context; // Use dataAccess
+
+    if (typeof objectToCheck?.getComponent !== 'function') return false; // Ensure objectToCheck is an Entity
 
     const attributeId = getStringParam(conditionData, 'attribute_id');
-    const comparison = getStringParam(conditionData, 'comparison'); // e.g., '>=', '<', '=='
+    const comparison = getStringParam(conditionData, 'comparison');
     const value = getValueParam(conditionData, 'value');
 
     if (attributeId === null || comparison === null || typeof value === 'undefined') {
@@ -27,7 +28,12 @@ export const handleAttributeCheckCondition = (objectToCheck, context, conditionD
         return false;
     }
 
-    // TODO: Get attribute value from AttributeComponent on objectToCheck and perform comparison
+    // TODO: Implement actual check using dataAccess if needed to get AttributeComponent class
+    // const AttributeComponentClass = dataAccess.getComponentClassByKey('Attribute'); // Example
+    // if (!AttributeComponentClass) return false;
+    // const attrComp = objectToCheck.getComponent(AttributeComponentClass);
+    // ... perform comparison ...
+
     console.warn(`[ConditionHandler] Condition type 'attribute_check' ('${attributeId} ${comparison} ${value}') not implemented. Assuming false.`);
     return false;
 };

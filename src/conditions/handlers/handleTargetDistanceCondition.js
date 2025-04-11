@@ -1,11 +1,11 @@
 // src/conditions/handlers/handleTargetDistanceCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
+/** @typedef {import('../../components/positionComponent.js').PositionComponent} PositionComponent */
 
 import {getNumberParam} from '../../utils/conditionUtils.js';
 
@@ -15,18 +15,17 @@ import {getNumberParam} from '../../utils/conditionUtils.js';
  * @type {ConditionHandlerFunction}
  */
 export const handleTargetDistanceCondition = (objectToCheck, context, conditionData) => {
-    const {userEntity, entityManager} = context;
+    const {userEntity, dataAccess} = context; // Use dataAccess
     const maxDistance = getNumberParam(conditionData, 'max_distance');
     const minDistance = getNumberParam(conditionData, 'min_distance', 0);
 
     if (maxDistance === null || maxDistance < 0 || minDistance === null || minDistance < 0 || maxDistance < minDistance) {
-        console.warn(`[ConditionHandler] Invalid distance parameters for target_distance: min=<span class="math-inline">\{minDistance\}, max\=</span>{maxDistance}`);
+        console.warn(`[ConditionHandler] Invalid distance parameters for target_distance: min=${minDistance}, max=${maxDistance}`);
         return false;
     }
 
     // Ensure objectToCheck is an Entity
     if (typeof objectToCheck?.getComponent !== 'function') {
-        // Use the exact message expected by the test
         console.warn(`ConditionEvaluationService: Condition 'target_distance' used on non-entity target. Condition fails.`);
         return false;
     }
@@ -41,21 +40,23 @@ export const handleTargetDistanceCondition = (objectToCheck, context, conditionD
         return 0 >= minDistance && 0 <= maxDistance;
     }
 
-    const PositionComponent = entityManager.componentRegistry.get('Position');
-    if (!PositionComponent) {
-        console.warn("[ConditionHandler] Position component class not registered.");
+    // --- MODIFIED: Use dataAccess to get component class ---
+    const PositionComponentClass = dataAccess.getComponentClassByKey('Position');
+    if (!PositionComponentClass) {
+        console.warn("[ConditionHandler] Position component class not found via dataAccess.");
         return false;
     }
 
-    const userPosComp = userEntity.getComponent(PositionComponent);
-    const targetPosComp = objectToCheck.getComponent(PositionComponent);
+    // Use the retrieved class with the entity's getComponent method
+    /** @type {PositionComponent | null} */
+    const userPosComp = userEntity.getComponent(PositionComponentClass);
+    /** @type {PositionComponent | null} */
+    const targetPosComp = objectToCheck.getComponent(PositionComponentClass);
 
-    // Cannot calculate distance if either is missing position or they are in different locations
     if (!userPosComp || !targetPosComp || !userPosComp.locationId || userPosComp.locationId !== targetPosComp.locationId) {
         return false;
     }
 
-    // Use 0 for undefined x/y coordinates within the same location
     const ux = userPosComp.x ?? 0;
     const uy = userPosComp.y ?? 0;
     const tx = targetPosComp.x ?? 0;

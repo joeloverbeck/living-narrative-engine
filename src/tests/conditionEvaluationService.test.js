@@ -9,34 +9,36 @@ import ConditionEvaluationService from '../services/conditionEvaluationService.j
 class MockEntity {
     constructor(id) {
         this.id = id;
-        this.components = new Map();
-        // Simplified name handling for getObjectName test verification
+        this.components = new Map(); // Key will be class name (string)
         this.mockName = `Entity(${id})`;
     }
 
     addComponent(componentInstance) {
-        // Use constructor as key, matching Entity implementation detail
-        this.components.set(componentInstance.constructor, componentInstance);
-        // Update mockName if NameComponent is added
-        if (componentInstance.constructor.name === 'MockNameComponent' && componentInstance.value) {
+        const componentClassName = componentInstance.constructor.name;
+        this.components.set(componentClassName, componentInstance);
+        // -----------------------------------------
+
+        // Update mockName if NameComponent is added (using name now)
+        if (componentClassName === 'MockNameComponent' && componentInstance.value) {
             this.mockName = componentInstance.value;
         }
-        // Add direct property access for simplified component access in target_has_property
-        if (componentInstance.constructor.name === 'MockHealthComponent') {
-            this.Health = componentInstance; // e.g., for path 'Health.current'
+        // Add direct property access (using name now)
+        if (componentClassName === 'MockHealthComponent') {
+            this.Health = componentInstance;
         }
-        // Add more direct properties for other mock components if needed by tests
+        // Add more direct properties if needed
     }
 
     hasComponent(ComponentClass) {
-        return this.components.has(ComponentClass);
+        return this.components.has(ComponentClass.name);
+        // ------------------------------------------
     }
 
     getComponent(ComponentClass) {
-        return this.components.get(ComponentClass);
+        return this.components.get(ComponentClass.name);
+        // ------------------------------------------
     }
 
-    // Helper for getObjectName test verification (simpler than original getComponentByName)
     getDisplayName() {
         return this.mockName;
     }
@@ -205,7 +207,11 @@ describe('ConditionEvaluationService', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Wrong location
             targetEntity.addComponent(new MockHealthComponent({current: 5, max: 10}));
             const conditions = [
-                {condition_type: 'player_in_location', location_id: 'room-A', failure_message: 'Must be in Room A.'},
+                {
+                    condition_type: 'player_in_location',
+                    params: {location_id: 'room-A'},
+                    failure_message: 'Must be in Room A.'
+                },
                 {condition_type: 'health_below_max'}, // This won't be checked
             ];
             const options = {itemName: 'Chest', checkType: 'Target'};
@@ -257,7 +263,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use fallback message if condition failure message is missing', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', params: {location_id: 'room-A'}}];
             const options = {
                 itemName: 'Lever', checkType: 'Usability',
                 fallbackMessages: {usability: 'Cannot use the lever right now.'}
@@ -269,7 +275,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use default fallback message if specific type fallback is missing', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', params: {location_id: 'room-A'}}];
             const options = {
                 itemName: 'Button', checkType: 'Target',
                 fallbackMessages: {default: 'A generic condition failed.'}
@@ -281,7 +287,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use hardcoded default message if no fallbacks provided', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', params: {location_id: 'room-A'}}];
             const options = {itemName: 'Gadget', checkType: 'Generic'};
             const result = conditionEvaluationService.evaluateConditions(userEntity, context, conditions, options);
             expect(result.success).toBe(false);
@@ -290,7 +296,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should handle negated conditions correctly (passing case)', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails original check
-            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A', negate: true}];
+            const conditions = [{condition_type: 'player_in_location', params: {location_id: 'room-A'}, negate: true}];
             const result = conditionEvaluationService.evaluateConditions(userEntity, context, conditions);
             expect(result.success).toBe(true);
             expect(result.messages).toContainEqual({
@@ -692,7 +698,11 @@ describe('ConditionEvaluationService', () => {
             });
             it('should pass if expected_value is 0 and actual value is 0', () => {
                 targetEntity.zeroProp = 0;
-                const condition = {condition_type: 'target_has_property', property_path: 'zeroProp', expected_value: 0};
+                const condition = {
+                    condition_type: 'target_has_property',
+                    property_path: 'zeroProp',
+                    expected_value: 0
+                };
                 const result = conditionEvaluationService.evaluateConditions(targetEntity, context, [condition]);
                 expect(result.success).toBe(true);
             });
@@ -749,7 +759,7 @@ describe('ConditionEvaluationService', () => {
             it('should fail if distance is greater than max_distance', () => {
                 const result = conditionEvaluationService.evaluateConditions(targetEntity, context, [{
                     ...conditionBase,
-                    max_distance: 4.9
+                    params: {max_distance: 4.9}
                 }]);
                 expect(result.success).toBe(false);
             });

@@ -1,8 +1,7 @@
 // src/conditions/handlers/handlePlayerInLocationCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
@@ -15,18 +14,17 @@ import {getStringParam} from '../../utils/conditionUtils.js';
  * @type {ConditionHandlerFunction}
  */
 export const handlePlayerInLocationCondition = (objectToCheck, context, conditionData) => {
-    const {userEntity, entityManager} = context;
+    const {userEntity, dataAccess} = context; // Use dataAccess
     const requiredLocationId = getStringParam(conditionData, 'location_id');
 
     if (requiredLocationId === null) {
         console.warn(`[ConditionHandler] player_in_location condition missing required 'location_id' parameter.`);
-        return false; // Fail explicitly if parameter missing
+        return false;
     }
 
-    const PositionComponentClass = entityManager.componentRegistry.get('Position');
-
+    const PositionComponentClass = dataAccess.getComponentClassByKey('Position');
     if (!PositionComponentClass) {
-        console.warn("[ConditionHandler] Position component class not registered.");
+        console.warn("[ConditionHandler] Position component class not found via dataAccess.");
         return false;
     }
 
@@ -35,6 +33,7 @@ export const handlePlayerInLocationCondition = (objectToCheck, context, conditio
         return false;
     }
 
+    // Use the retrieved class with the entity's getComponent method
     const userPosComp = userEntity.getComponent(PositionComponentClass);
 
     return userPosComp?.locationId === requiredLocationId;

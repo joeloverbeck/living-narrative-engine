@@ -1,12 +1,12 @@
 // src/conditions/handlers/handleHealthBelowMaxCondition.js
 
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
-/** @typedef {import('../../components/healthComponent.js').HealthComponent} HealthComponent */ // Example import
+/** @typedef {import('../../components/healthComponent.js').HealthComponent} HealthComponent */
+// No longer need direct EntityManager import
 
 /**
  * Condition handler for 'health_below_max'.
@@ -14,25 +14,25 @@
  * @type {ConditionHandlerFunction}
  */
 export const handleHealthBelowMaxCondition = (objectToCheck, context, conditionData) => {
-    const {entityManager} = context;
+    const {dataAccess} = context; // Use dataAccess
 
     // Ensure objectToCheck is an Entity
     if (typeof objectToCheck?.getComponent !== 'function') return false;
 
-    const HealthComponent = entityManager.componentRegistry.get('Health'); // Assuming 'Health'
-    if (!HealthComponent) {
-        console.warn("[ConditionHandler] Health component class not registered.");
-        return false;
+    // --- MODIFIED: Use dataAccess to get component class ---
+    const HealthComponentClass = dataAccess.getComponentClassByKey('Health');
+    if (!HealthComponentClass) {
+        console.warn("[ConditionHandler] Health component class not found via dataAccess.");
+        return false; // Or throw error depending on desired strictness
     }
 
     /** @type {HealthComponent | null} */
-    const healthComponent = objectToCheck.getComponent(HealthComponent);
+        // Use the retrieved class with the entity's getComponent method
+    const healthComponent = objectToCheck.getComponent(HealthComponentClass);
 
-    // Check if component exists and has the required numeric properties
     if (!healthComponent || typeof healthComponent.current !== 'number' || typeof healthComponent.max !== 'number') {
         return false;
     }
 
-    // Perform the check
     return healthComponent.current < healthComponent.max;
 };

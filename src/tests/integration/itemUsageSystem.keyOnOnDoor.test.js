@@ -107,7 +107,7 @@ const roomExitDefinition = { /* Content from demo:room_exit.json */
         }
     }
 };
-const itemKeyDefinition = { /* Content from demo:item_key.json */
+const itemKeyDefinition = {
     id: "demo:item_key",
     components: {
         Name: {value: "Iron Key"},
@@ -116,6 +116,7 @@ const itemKeyDefinition = { /* Content from demo:item_key.json */
         Usable: {
             usability_conditions: [{
                 condition_type: "player_in_location",
+                // --- MODIFIED: Remove params nesting ---
                 location_id: "demo:room_exit",
                 failure_message: "..."
             }],
@@ -123,12 +124,14 @@ const itemKeyDefinition = { /* Content from demo:item_key.json */
             target_conditions: [
                 {
                     condition_type: "target_has_property",
+                    // --- MODIFIED: Remove params nesting ---
                     property_path: "connectionId",
                     expected_value: "demo:exit_north_door",
                     failure_message: "..."
                 },
                 {
                     condition_type: "target_has_property",
+                    // --- MODIFIED: Remove params nesting ---
                     property_path: "state",
                     expected_value: "locked",
                     failure_message: "..."
@@ -136,12 +139,12 @@ const itemKeyDefinition = { /* Content from demo:item_key.json */
             ],
             effects: [{
                 type: "trigger_event",
-                parameters: {
+                parameters: { // Note: Effects ALREADY use a 'parameters' object, this is fine and separate from conditions
                     event_name: "event:connection_unlock_attempt",
                     payload: {connectionId: "demo:exit_north_door", keyId: "demo:item_key"}
                 }
             }],
-            consume_on_use: false, // Important!
+            consume_on_use: false,
             success_message: "You insert the iron key into the lock. You hear a click as the lock disengages.",
             failure_message_default: "..."
         }
