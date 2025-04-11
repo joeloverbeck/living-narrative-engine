@@ -13,7 +13,7 @@ import {PositionComponent} from "../components/positionComponent.js";
  */
 class EntityManager {
     /**
-     * @param {import('../../dataManager.js').default} dataManager - The loaded data manager instance.
+     * @param {import('../core/dataManager.js').default} dataManager - The loaded data manager instance.
      */
     constructor(dataManager) {
         if (!dataManager) {

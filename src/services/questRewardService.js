@@ -1,8 +1,8 @@
 // src/services/questRewardService.js
 
-/** @typedef {import('../../dataManager.js').default} DataManager */
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */

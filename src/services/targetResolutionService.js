@@ -12,7 +12,7 @@ import {PositionComponent} from "../components/positionComponent.js";
 // Import other components if needed
 
 // Import type definitions (make sure paths are correct)
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */

@@ -1,7 +1,7 @@
 // src/services/conditionEvaluationService.js
 
 // Type Imports for JSDoc
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Keep for constructor and internal use
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */

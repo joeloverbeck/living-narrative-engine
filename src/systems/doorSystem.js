@@ -7,7 +7,7 @@ import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {getDisplayName} from "../utils/messages.js"; // Assuming you might want richer logging
 
 // Type Imports for JSDoc
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 

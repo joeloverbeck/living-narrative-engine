@@ -5,10 +5,10 @@ import { InventoryComponent } from '../components/inventoryComponent.js';
 import { ItemComponent } from '../components/itemComponent.js';
 import { NameComponent } from '../components/nameComponent.js'; // Added for item details
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../dataManager.js').default} DataManager */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */ // Added
+/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */ // Added
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 // Add JSDoc type imports for payloads if not already present globally

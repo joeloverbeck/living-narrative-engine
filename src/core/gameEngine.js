@@ -2,13 +2,13 @@
 
 // --- Type Imports ---
 /** @typedef {import('./appContainer.js').default} AppContainer */
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('./eventBus.js').default} EventBus */
+/** @typedef {import('./dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../../inputHandler.js').default} InputHandler */
-/** @typedef {import('../../gameLoop.js').default} GameLoop */
+/** @typedef {import('./gameStateManager.js').default} GameStateManager */
+/** @typedef {import('./inputHandler.js').default} InputHandler */
+/** @typedef {import('./gameLoop.js').default} GameLoop */
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('./gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('./worldInitializer.js').default} WorldInitializer */

@@ -3,7 +3,7 @@
 import {PositionComponent} from '../components/positionComponent.js';
 import {getDisplayName} from "../utils/messages.js";
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */

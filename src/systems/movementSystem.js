@@ -2,7 +2,7 @@
 
 import {PositionComponent} from '../components/positionComponent.js'; // Corrected path assumption
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */

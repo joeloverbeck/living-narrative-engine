@@ -3,7 +3,7 @@
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 
 // --- System/Functions Under Test ---
-import CommandParser from '../../../commandParser.js';
+import CommandParser from '../../core/commandParser.js';
 // NOTE: The actual error "connectionsComp.getConnection is not a function"
 // originates within this handler. It needs to be modified
 // to use connectionsComp.getConnectionByDirection() or connectionsComp.getConnectionById().

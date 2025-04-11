@@ -5,7 +5,7 @@ import {NameComponent} from '../components/nameComponent.js';
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 

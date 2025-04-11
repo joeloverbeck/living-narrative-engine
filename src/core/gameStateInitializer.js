@@ -2,8 +2,8 @@
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('./gameStateManager.js').default} GameStateManager */
+/** @typedef {import('./dataManager.js').default} DataManager */
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */ // Keep for type checking if needed
 
 // --- Component Class Imports (needed for getComponent/addComponent) ---

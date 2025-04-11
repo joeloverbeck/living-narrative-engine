@@ -4,7 +4,7 @@ import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 
 // --- Mock Core Dependencies FIRST ---
 // Mock DataManager (similar to useItemUnlockDoor.test.js)
-jest.mock('../../../dataManager.js', () => {
+jest.mock('../../core/dataManager.js', () => {
     return jest.fn().mockImplementation(() => ({
         getEntityDefinition: jest.fn(),
         getAction: jest.fn(),
@@ -44,7 +44,7 @@ jest.mock('../../entities/entity.js', () => {
 
 // --- Import Dependencies AFTER Mocks ---
 import MockEntity from '../../entities/entity.js'; // Mocked Entity
-import DataManager from '../../../dataManager.js'; // Mocked DataManager constructor
+import DataManager from '../../core/dataManager.js'; // Mocked DataManager constructor
 
 // --- System/Functions Under Test ---
 import {executeUse} from '../../actions/handlers/useActionHandler.js';

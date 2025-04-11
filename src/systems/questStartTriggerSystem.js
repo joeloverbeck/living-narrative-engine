@@ -1,8 +1,8 @@
 // src/services/questStartTriggerSystem.js
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../dataManager.js').default} DataManager */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/eventTypes.js').EntityMovedEventPayload} EntityMovedEventPayload */

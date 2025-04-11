@@ -11,6 +11,7 @@ const SCHEMA_FILES = [
     'common.schema.json',
     'action.schema.json',
     'entity.schema.json',
+    'interactable-component.schema.json',
     'event-trigger.schema.json',
     'interaction-test.schema.json',
     'item.schema.json',
@@ -26,6 +27,7 @@ const CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
+    interactableComponents: 'http://example.com/schemas/interactable-component.schema.json',
     items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
     triggers: 'http://example.com/schemas/event-trigger.schema.json', // For triggers listed under "triggers" (array)

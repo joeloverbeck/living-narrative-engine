@@ -3,7 +3,7 @@
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 
 // --- Mock Core Dependencies FIRST ---
-jest.mock('../../../dataManager.js', () => {
+jest.mock('../../core/dataManager.js', () => {
     return jest.fn().mockImplementation(() => ({
         getQuestDefinition: jest.fn(),
         getObjectiveDefinition: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('../../../dataManager.js', () => {
     }));
 });
 
-jest.mock('../../../gameStateManager.js', () => ({
+jest.mock('../../core/gameStateManager.js', () => ({
     getPlayer: jest.fn(),
     // Mock other methods if needed
 }));
@@ -54,13 +54,13 @@ jest.mock('../../entities/entity.js', () => {
 
 
 // --- Import Dependencies AFTER Mocks ---
-import DataManager from '../../../dataManager.js'; // Mocked constructor
-import GameStateManager from '../../../gameStateManager.js'; // Mocked object
+import DataManager from '../../core/dataManager.js'; // Mocked constructor
+import GameStateManager from '../../core/gameStateManager.js'; // Mocked object
 import EntityManager from '../../entities/entityManager.js'; // Mocked object
 import MockEntity from '../../entities/entity.js'; // Mocked class
 
 // Import REAL Systems & Services needed for the test flow
-import EventBus from '../../../eventBus.js'; // Use real EventBus for this integration
+import EventBus from '../../core/eventBus.js'; // Use real EventBus for this integration
 import {ObjectiveEventListenerService} from '../../services/objectiveEventListenerService.js';
 import QuestSystem from '../../systems/questSystem.js';
 // Import supporting services QuestSystem might depend on (even if indirectly used in this test)

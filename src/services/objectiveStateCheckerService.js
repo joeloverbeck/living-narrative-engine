@@ -1,9 +1,9 @@
 // src/services/objectiveStateCheckerService.js
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../../types/questTypes.js').QuestDefinition} QuestDefinition */

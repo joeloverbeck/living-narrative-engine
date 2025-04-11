@@ -5,9 +5,9 @@ import {InventoryComponent} from '../components/inventoryComponent.js';
 import {EquipmentComponent} from '../components/equipmentComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../utils/messages.js";
 
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/inventoryComponent').InventoryComponent} InventoryComponentType */
 

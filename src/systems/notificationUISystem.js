@@ -1,7 +1,7 @@
 // src/systems/notificationUISystem.js
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 // Optional: Import Localization Service if you have one
 // /** @typedef {import('../../services/localizationService.js').default} LocalizationService */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */

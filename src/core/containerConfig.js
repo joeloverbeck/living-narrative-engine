@@ -1,15 +1,15 @@
 // src/core/containerConfig.js
 
 // --- Import all necessary classes ---
-import EventBus from '../../eventBus.js';
-import DomRenderer from '../../domRenderer.js';
-import DataManager from '../../dataManager.js';
+import EventBus from './eventBus.js';
+import DomRenderer from './domRenderer.js';
+import DataManager from './dataManager.js';
 import EntityManager from '../entities/entityManager.js';
-import GameStateManager from '../../gameStateManager.js';
-import CommandParser from '../../commandParser.js';
+import GameStateManager from './gameStateManager.js';
+import CommandParser from './commandParser.js';
 import ActionExecutor from '../actions/actionExecutor.js';
-import InputHandler from '../../inputHandler.js';
-import GameLoop from '../../gameLoop.js';
+import InputHandler from './inputHandler.js';
+import GameLoop from './gameLoop.js';
 
 // Systems
 import TriggerSystem from '../systems/triggerSystem.js';

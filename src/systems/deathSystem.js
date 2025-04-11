@@ -3,7 +3,7 @@
 import {PositionComponent} from '../components/positionComponent.js'; // Import PositionComponent
 // Other necessary imports remain the same
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */

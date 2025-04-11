@@ -1,7 +1,7 @@
 // src/service/objectiveEventListenerService.js
 
-/** @typedef {import('../../eventBus.js').default} EventBus */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../../types/questTypes.js').QuestDefinition} QuestDefinition */ // Assuming type definition exists
 /** @typedef {import('../../types/questTypes.js').ObjectiveDefinition} ObjectiveDefinition */ // Assuming type definition exists

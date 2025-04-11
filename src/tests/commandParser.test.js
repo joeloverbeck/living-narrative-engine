@@ -1,7 +1,7 @@
 // src/tests/commandParser.test.js
 
 import {describe, it, expect, beforeEach} from '@jest/globals';
-import CommandParser from '../../commandParser.js'; // Adjust path if necessary
+import CommandParser from '../core/commandParser.js'; // Adjust path if necessary
 
 describe('CommandParser', () => {
     let parser;

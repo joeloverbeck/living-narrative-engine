@@ -2,10 +2,10 @@
 
 import {ConnectionsComponent} from "../components/connectionsComponent.js";
 
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Corrected path if needed
-/** @typedef {import('../../gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../../eventBus.js').default} EventBus */              // Corrected path if needed
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/eventBus.js').default} EventBus */              // Corrected path if needed
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */

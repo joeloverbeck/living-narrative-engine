@@ -7,9 +7,9 @@ import {TargetResolutionService} from '../services/targetResolutionService.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
 
 // Type Imports for JSDoc
-/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../dataManager.js').default} DataManager */
+/** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../types/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */

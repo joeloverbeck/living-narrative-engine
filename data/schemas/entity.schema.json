@@ -64,6 +64,10 @@
         "QuestLog": {
           "$ref": "./common.schema.json#/definitions/QuestLogComponent",
           "description": "(Optional) Allows the entity (typically player) to track quest status and objectives."
+        },
+        "Interactable": {
+          "$ref": "./interactable-component.schema.json",
+          "description": "(Optional) Defines how other entities can interact with this entity."
         }
       },
       "minProperties": 1,

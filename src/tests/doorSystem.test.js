@@ -8,7 +8,7 @@ import DoorSystem from '../systems/doorSystem.js'; // Adjust path if needed - As
 // Dependencies to mock
 // Note: Real EventBus/EntityManager/Entity/Components are not imported, only their mocks are used.
 import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Adjust path - Needed for 'instanceof' checks or class reference
-import EventBus from '../../eventBus.js'; // Adjust path - Mocked below
+import EventBus from '../core/eventBus.js'; // Adjust path - Mocked below
 import EntityManager from '../entities/entityManager.js'; // Adjust path - Mocked below
 import Entity from '../entities/entity.js'; // Adjust path - Mocked below
 import {getDisplayName} from '../utils/messages.js'; // Adjust path - Mocked below
