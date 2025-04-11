@@ -48,10 +48,12 @@ const CONTENT_FILES = {
         'demo_triggers.json'
     ],
     objectives: [
-        'story_a_obj_defeat_boss.json'
+        'story_a_obj_defeat_boss.json',
+        'demo_obj_unlock_exit_door.json'
     ],
     quests: [
-        'demo_quest_fetch_herbs.json'
+        'demo_quest_fetch_herbs.json',
+        'demo_quest_exit_dungeon.json'
     ],
 };
 
@@ -456,6 +458,14 @@ class DataManager {
      */
     getQuestDefinition(questId) {
         return this.quests.get(questId);
+    }
+
+    /**
+     * Retrieves all loaded quest definitions.
+     * @returns {object[]} An array of all quest definition objects.
+     */
+    getAllQuestDefinitions() {
+        return Array.from(this.quests.values());
     }
 
     /**

@@ -20,6 +20,7 @@
     --color-background-warning: #fff3cd; /* Background for warning messages */
     --color-background-location: #e9ecef; /* Background for location blocks */
     --color-background-pre: #eee; /* Background for <pre> blocks (if used) */
+    --color-background-success: var(--color-background-combat-hit, #d4edda); /* Reuse combat hit or define */
 
     --color-border-default: #ced4da; /* Default borders (input, output area) */
     --color-border-error: #f5c6cb; /* Border for error messages (match bg) */
@@ -28,6 +29,9 @@
     --color-accent-error: #dc3545; /* Accent border (e.g., left border on errors) */
     --color-accent-warning: #ffc107; /* Accent border for warnings */
     --color-accent-location: #6c757d; /* Accent border for location blocks */
+    --color-accent-success: var(--color-accent-combat-hit, #28a745); /* Reuse combat hit or define */
+    --color-accent-quest: #4a90e2; /* A distinct medium blue for quest start */
+    --color-accent-reward: var(--color-accent-success); /* Use success accent for rewards too */
 
     /* -- Combat Colors -- */
     --color-text-combat: #495057; /* General combat action text */
@@ -41,6 +45,9 @@
     --color-accent-combat: #6c757d; /* Subtle accent for general combat */
     --color-accent-combat-hit: #28a745; /* Green accent for hits */
     --color-accent-combat-crit: #dc3545; /* Red accent for crits/death */
+
+    --color-text-success: var(--color-text-combat-hit, #155724); /* Reuse combat hit or define */
+    --color-text-quest: var(--color-text-command, #000080); /* Use command blue or define custom */
 
     /* -- Typography -- */
     --font-family-base: sans-serif; /* Base font stack */
@@ -385,6 +392,56 @@ h1 {
 
 .inventory-panel button:hover {
     background-color: #eee; /* Simple hover effect */
+}
+
+/* Quest Started Message */
+.message-quest {
+    /* Inherits padding, margin, etc. from .message */
+    color: var(--color-text-quest); /* Use the defined quest text color (e.g., blue) */
+    border-left-color: var(--color-accent-quest); /* Use the distinct quest accent blue */
+    /* Optional: Add a very subtle background if desired */
+    /* background-color: rgba(74, 144, 226, 0.05); */
+    /* Optional: Make it stand out slightly */
+    /* font-style: italic; */
+}
+
+/* Quest Completed Message */
+.message-quest_complete {
+    color: var(--color-text-success); /* Dark green text */
+    background-color: var(--color-background-success); /* Light green background */
+    border-color: #c3e6cb; /* Border matching background (adjust if success bg changes) */
+    border-left-color: var(--color-accent-success); /* Strong green accent */
+    font-weight: bold; /* Emphasize completion */
+}
+
+/* Quest Failed Message */
+.message-quest_fail {
+    /* Use the same styling as errors for strong negative feedback */
+    color: var(--color-text-error);
+    background-color: var(--color-background-error);
+    border-color: var(--color-border-error); /* Match background border */
+    border-left-color: var(--color-accent-error); /* Strong red accent */
+    font-weight: bold; /* Emphasize failure */
+}
+
+/* Reward Message (XP, Items, Currency) */
+.message-reward {
+    color: var(--color-text-success); /* Use success text color for positive feedback */
+    border-left-color: var(--color-accent-reward); /* Use success/reward accent color (green) */
+    /* Keep background transparent to be less prominent than quest completion */
+    /* Optional: If you want rewards to be less prominent than completion */
+    /* font-size: 0.95rem; */
+}
+
+/* --- Add Success Message Style (General Purpose) --- */
+/* You already handle 'action:take_succeeded' with type 'success' */
+/* Let's ensure there's a style for it, similar to quest_complete */
+.message-success {
+    color: var(--color-text-success);
+    background-color: var(--color-background-success);
+    border-color: #c3e6cb; /* Match background */
+    border-left-color: var(--color-accent-success);
+    /* font-weight: bold; */ /* Optional: Make success bold too? Or keep normal */
 }
 
 /* --- Utility Styles --- */

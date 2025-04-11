@@ -37,19 +37,17 @@
       "uniqueItems": true
     },
     "prerequisites": {
-      "description": "Optional conditions that must be met before this quest can be started or offered. Can be a single condition or a list (all must be met).",
-      "$comment": "The specific structure of conditions (e.g., completed quest, level, flag) is defined by the prerequisite system.",
+      "description": "Conditions that must be met before the quest can be started. Can be a single condition object, an array of conditions (all must be met), or null if none.",
       "anyOf": [
         {
           "$ref": "#/definitions/Condition"
         },
         {
           "type": "array",
-          "items": {
-            "$ref": "#/definitions/Condition"
-          },
-          "minItems": 1,
-          "description": "A list of conditions; all must be met."
+          "items": { "$ref": "#/definitions/Condition" }
+        },
+        {
+          "type": "null"
         }
       ]
     },
@@ -80,9 +78,8 @@
       "default": false
     },
     "questGiverId": {
-      "type": "string",
-      "description": "Optional ID of the primary NPC or entity associated with giving or progressing this quest.",
-      "pattern": "^[a-zA-Z0-9_\\-:]+$"
+      "description": "The ID of the entity (NPC) that gives this quest, or null if the quest starts automatically.",
+      "type": ["string", "null"]
     }
   },
   "definitions": {

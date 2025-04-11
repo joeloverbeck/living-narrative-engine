@@ -110,6 +110,10 @@
             }
           ],
           "default": {}
+        },
+        "$comment": {
+          "type": "string",
+          "description": "Optional developer comment, ignored by the game."
         }
       },
       "additionalProperties": false
@@ -198,6 +202,10 @@
               "value": true
             }
           ]
+        },
+        "$comment": {
+          "type": "string",
+          "description": "Optional developer comment, ignored by the game."
         }
       },
       "additionalProperties": false
