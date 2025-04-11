@@ -6,8 +6,14 @@ import {ItemComponent} from '../components/itemComponent.js';
 /** @typedef {import('../../eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../dataManager.js').default} DataManager */
-
 /** @typedef {import('../entities/entity.js').default} Entity */
+
+// Add JSDoc type imports for payloads if not already present globally
+/** @typedef {import('../types/eventTypes.js').ItemPickedUpEventPayload} ItemPickedUpEventPayload */
+/** @typedef {import('../types/eventTypes.js').ItemDropAttemptedEventPayload} ItemDropAttemptedEventPayload */
+
+/** @typedef {import('../types/eventTypes.js').ItemConsumeRequestedEventPayload} ItemConsumeRequestedEventPayload */
+
 
 /**
  * Handles inventory-related events, primarily item pickup.
@@ -43,7 +49,8 @@ class InventorySystem {
     initialize() {
         this.#eventBus.subscribe('event:item_picked_up', this.#handleItemPickedUp.bind(this));
         this.#eventBus.subscribe('event:item_drop_attempted', this.#handleItemDropAttempted.bind(this));
-        console.log("InventorySystem: Initialized and subscribed to 'event:item_picked_up'.");
+        this.#eventBus.subscribe('event:item_consume_requested', this.#handleItemConsumeRequested.bind(this));
+        console.log("InventorySystem: Initialized and subscribed to 'event:item_picked_up', 'event:item_drop_attempted', and 'event:item_consume_requested'.");
     }
 
     /**
@@ -164,6 +171,41 @@ class InventorySystem {
         // Note: This system's responsibility ends here. Placing the item in the world
         // or dispatching UI messages would be handled by other systems listening
         // to 'event:item_drop_attempted' or a subsequent event like 'event:item_dropped'.
+    }
+
+    /**
+     * Handles the 'event:item_consume_requested' event.
+     * Removes the specified item from the user's inventory.
+     * @private
+     * @param {ItemConsumeRequestedEventPayload} payload - Data from the event.
+     */
+    #handleItemConsumeRequested(payload) {
+        const {userId, itemInstanceId} = payload;
+        console.log(`InventorySystem (Consume): Handling event:item_consume_requested for user ${userId}, item ${itemInstanceId}`);
+
+        const userEntity = this.#entityManager.getEntityInstance(userId);
+        if (!userEntity) {
+            console.error(`InventorySystem (Consume): User entity '${userId}' not found when handling consumption request.`);
+            return; // Cannot proceed without the user entity
+        }
+
+        const inventoryComp = userEntity.getComponent(InventoryComponent);
+        if (!inventoryComp) {
+            console.error(`InventorySystem (Consume): User entity '${userId}' has no InventoryComponent when handling consumption request.`);
+            return; // Cannot proceed without the inventory component
+        }
+
+        // Attempt removal
+        const removed = inventoryComp.removeItem(itemInstanceId);
+
+        if (removed) {
+            console.log(`InventorySystem (Consume): Successfully consumed item ${itemInstanceId} from user ${userId}'s inventory.`);
+        } else {
+            // This might happen if the event fires twice due to some race condition,
+            // or if the item was removed by another means (e.g., a direct effect, another system reacting faster)
+            // between the usage action finishing and this handler executing. Log as a warning.
+            console.warn(`InventorySystem (Consume): Failed to remove item ${itemInstanceId} from user ${userId}'s inventory during consumption request. Item might have already been removed or never existed in inventory.`);
+        }
     }
 }
 

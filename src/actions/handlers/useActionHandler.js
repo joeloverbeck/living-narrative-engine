@@ -8,7 +8,7 @@
 /** @typedef {import('../../components/connectionsComponent.js').ConnectionsComponent} ConnectionsComponent */
 /** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../../src/entities/entity.js').default} Entity */
-/** @typedef {import('../../events/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
+/** @typedef {import('../../types/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
 
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';

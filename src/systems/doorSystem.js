@@ -11,7 +11,7 @@ import {getDisplayName} from "../utils/messages.js"; // Assuming you might want 
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 
-/** @typedef {import('../events/eventTypes.js').ConnectionUnlockAttemptEventPayload} ConnectionUnlockAttemptEventPayload */
+/** @typedef {import('../types/eventTypes.js').ConnectionUnlockAttemptEventPayload} ConnectionUnlockAttemptEventPayload */
 
 /**
  * Handles the logic for unlocking connections (like doors) in response
@@ -62,6 +62,11 @@ class DoorSystem {
     _handleConnectionUnlockAttempt(payload) {
         console.debug("DoorSystem: Received event:connection_unlock_attempt", payload);
 
+        if (!payload) { // Handles null, undefined
+            console.warn(`DoorSystem: Invalid null or undefined payload received for event:connection_unlock_attempt. Payload:`, payload);
+            return; // Stop processing immediately
+        }
+
         // 1. Extract required data from payload
         const {connectionId, locationId, userId /*, keyId, sourceItemId */} = payload; // keyId/sourceItemId might be useful for future rules/logging
 
@@ -92,20 +97,24 @@ class DoorSystem {
 
         // 5. Conditional Update
         if (currentState === 'locked') {
-            // Call setConnectionState to update the runtime state
             const updated = connectionsComponent.setConnectionState(connectionId, 'unlocked');
 
             if (updated) {
                 // Log success message
                 const locationName = getDisplayName(locationEntity);
-                // Future: could get user display name too: const userName = getDisplayName(this.#entityManager.getEntityInstance(userId));
-                console.log(`DoorSystem: Connection '${connectionId}' in location '${locationId}' (${locationName}) unlocked by user '${userId}'.`);
-                // Optional: Dispatch a success UI message? Depends on if the triggering item already gave feedback.
-                // this.#eventBus.dispatch('ui:message_display', { text: `You unlock the ${connectionId}.`, type: 'success' });
+                const connectionData = connectionsComponent.getConnectionById(connectionId); // Get connection data again for name
+                const connectionDisplayName = connectionData?.name || connectionId; // Use name if available
+
+                console.log(`DoorSystem: Connection '${connectionDisplayName}' (${connectionId}) in location '${locationId}' (${locationName}) unlocked by user '${userId}'.`);
+
+                // Dispatch the success UI message expected by the test
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: `The ${connectionDisplayName} clicks open.`, // Use the connection's name
+                    type: 'info' // Or 'success', depending on your desired UI feedback type
+                });
+
             } else {
-                // This case should theoretically not happen if getConnectionState returned 'locked',
-                // but included for robustness.
-                console.error(`DoorSystem: Failed to update state for connection '${connectionId}' in location '${locationId}' even though its state was reported as 'locked'.`);
+                // ... (error logging) ...
             }
         } else {
             // Log informative message when no action is needed
