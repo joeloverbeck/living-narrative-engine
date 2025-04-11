@@ -61,6 +61,10 @@
         "Equipment": {
           "$ref": "#/definitions/EquipmentComponent",
           "description": "(Optional) Component for entities that can equip items."
+        },
+        "QuestLog": {
+          "$ref": "#/definitions/QuestLogComponent",
+          "description": "(Optional) Allows the entity to track quest status and objectives."
         }
       },
       "minProperties": 1,
@@ -329,6 +333,11 @@
       "required": [
         "slots"
       ],
+      "additionalProperties": false
+    },
+    "QuestLogComponent": {
+      "type": "object",
+      "description": "Marker component for entities that track quest progress.",
       "additionalProperties": false
     }
   }

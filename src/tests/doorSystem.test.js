@@ -286,10 +286,14 @@ describe('DoorSystem', () => {
             // *** Refined Ticket Implementation: Assert EventBus Dispatch for UI message ***
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1); // Ensure only one dispatch happened
             expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-                'ui:message_display', // Event Name
+                'event:door_unlocked', // Event Name
                 { // Payload
-                    text: `The ${mockConnectionData.name} clicks open.`, // Expected text using the mocked connection name
-                    type: 'info'
+                    "connectionId": "door_north",
+                    "keyId": "key_rusty",
+                    "locationId": "location_test_room",
+                    "newState": "unlocked",
+                    "previousState": "locked",
+                    "userId": "player1",
                 }
             );
         });

@@ -5,7 +5,7 @@
 // Optional: Import Localization Service if you have one
 // /** @typedef {import('../../services/localizationService.js').default} LocalizationService */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
-import { TARGET_MESSAGES } from '../utils/messages.js'; // Import for standard messages
+import {TARGET_MESSAGES} from '../utils/messages.js'; // Import for standard messages
 
 /**
  * Listens for semantic game events (quests, actions, etc.)
@@ -25,7 +25,7 @@ class NotificationUISystem {
      * @param {DataManager} dependencies.dataManager
      * // @param {LocalizationService} [dependencies.localizationService] // Optional
      */
-    constructor({ eventBus, dataManager /*, localizationService */ }) {
+    constructor({eventBus, dataManager /*, localizationService */}) {
         if (!eventBus) throw new Error("NotificationUISystem requires EventBus.");
         if (!dataManager) throw new Error("NotificationUISystem requires DataManager.");
         // if (localizationService) this.localizationService = localizationService; // Optional
@@ -48,14 +48,15 @@ class NotificationUISystem {
         this.eventBus.subscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet.bind(this));
 
         // Action Validation/Failure Events
-        this.eventBus.subscribe('action:validation_failed', this._handleValidationFailed.bind(this)); // NEW
+        this.eventBus.subscribe('action:validation_failed', this._handleValidationFailed.bind(this));
         this.eventBus.subscribe('action:take_failed', this._handleTakeFailed.bind(this));
-        this.eventBus.subscribe('action:move_failed', this._handleMoveFailed.bind(this));   // NEW
+        this.eventBus.subscribe('action:move_failed', this._handleMoveFailed.bind(this));
+        this.eventBus.subscribe('item:use_condition_failed', this._handleItemUseConditionFailed.bind(this));
         // Add subscriptions for other action failures (drop, use, attack, etc.) here...
 
         // Action Success/Attempt Events (that generate immediate feedback)
         this.eventBus.subscribe('action:take_succeeded', this._handleTakeSucceeded.bind(this));
-        this.eventBus.subscribe('event:move_attempted', this._handleMoveAttempted.bind(this)); // NEW (Listen for the attempt success)
+        this.eventBus.subscribe('event:move_attempted', this._handleMoveAttempted.bind(this));
         // Add subscriptions for other action successes here...
 
         console.log("NotificationUISystem: Initialization complete.");
@@ -87,7 +88,7 @@ class NotificationUISystem {
      * @param {string} payload.titleId
      * @private
      */
-    _handleQuestStarted({ questId, titleId }) {
+    _handleQuestStarted({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         this.eventBus.dispatch('ui:message_display', {
@@ -104,7 +105,7 @@ class NotificationUISystem {
      * @param {RewardSummary | null} payload.rewardSummary
      * @private
      */
-    _handleQuestCompleted({ questId, titleId, rewardSummary }) {
+    _handleQuestCompleted({questId, titleId, rewardSummary}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
 
@@ -156,7 +157,7 @@ class NotificationUISystem {
      * @param {string | null} payload.reason
      * @private
      */
-    _handleQuestFailed({ questId, titleId, reason }) {
+    _handleQuestFailed({questId, titleId, reason}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         const reasonText = reason ? `: ${reason}` : ''; // Add reason if provided
@@ -173,7 +174,7 @@ class NotificationUISystem {
      * @param {string} payload.titleId
      * @private
      */
-    _handlePrerequisitesNotMet({ questId, titleId }) {
+    _handlePrerequisitesNotMet({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         this.eventBus.dispatch('ui:message_display', {
@@ -192,7 +193,7 @@ class NotificationUISystem {
      * @param {string} payload.reasonCode - Why validation failed
      * @private
      */
-    _handleValidationFailed({ actorId, actionVerb, reasonCode }) {
+    _handleValidationFailed({actorId, actionVerb, reasonCode}) {
         // TODO: Check if the actor is the player before displaying
         let messageText = `Validation failed for action: ${actionVerb}`; // Generic fallback
         let messageType = 'error'; // Usually an error or notice
@@ -217,7 +218,7 @@ class NotificationUISystem {
      * @param {string} payload.direction - Direction of movement
      * @private
      */
-    _handleMoveAttempted({ entityId, direction }) {
+    _handleMoveAttempted({entityId, direction}) {
         // TODO: Check if the entityId is the player before displaying
         this.eventBus.dispatch('ui:message_display', {
             text: `You move ${direction}.`, // The simple confirmation
@@ -236,7 +237,7 @@ class NotificationUISystem {
      * @param {string} [payload.lockMessageOverride] - Optional override message for locked exits
      * @private
      */
-    _handleMoveFailed({ actorId, reasonCode, direction, locationId, details, lockMessageOverride }) {
+    _handleMoveFailed({actorId, reasonCode, direction, locationId, details, lockMessageOverride}) {
         // TODO: Check if the actor is the player before displaying
         let messageText = "You cannot move."; // Generic fallback
         let messageType = 'warning'; // Default type for failure
@@ -294,7 +295,7 @@ class NotificationUISystem {
      * @param {string} payload.locationId - Location where it happened
      * @private
      */
-    _handleTakeSucceeded({ actorId, itemId, itemName, locationId }) {
+    _handleTakeSucceeded({actorId, itemId, itemName, locationId}) {
         // TODO: Check if the actor is the player before displaying
         const displayItemName = this._getDisplayName(itemName || itemId, 'item');
         this.eventBus.dispatch('ui:message_display', {
@@ -313,7 +314,7 @@ class NotificationUISystem {
      * @param {any} [payload.details] - Optional extra info
      * @private
      */
-    _handleTakeFailed({ actorId, targetName, reasonCode, locationId, details }) {
+    _handleTakeFailed({actorId, targetName, reasonCode, locationId, details}) {
         // TODO: Check if the actor is the player before displaying
         let messageText;
         let messageType = 'warning'; // Default type for failure
@@ -354,6 +355,23 @@ class NotificationUISystem {
         });
     }
 
+    /**
+     * Handles 'item:use_condition_failed' event.
+     * @param {object} payload
+     * @param {string} payload.actorId - ID of the entity attempting to use the item
+     * @param {string} payload.failureMessage - The reason why usability failed
+     * @private
+     */
+    _handleItemUseConditionFailed({actorId, failureMessage}) {
+        // TODO: Check if the actor is the player before displaying, if necessary
+        // e.g., if (actorId !== playerEntityId) return;
+
+        // Directly use the failure message provided by the ItemUsageSystem/ConditionEvaluationService
+        this.eventBus.dispatch('ui:message_display', {
+            text: failureMessage, // Use the message from the event payload
+            type: 'warning'       // Or 'notice'/'info' depending on desired severity
+        });
+    }
 }
 
-export { NotificationUISystem };
+export {NotificationUISystem};

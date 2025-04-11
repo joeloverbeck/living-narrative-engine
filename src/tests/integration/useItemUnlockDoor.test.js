@@ -538,9 +538,6 @@ describe('Integration Test: Use Item to Unlock Door', () => {
         const keyName = mockKey.getComponent(NameComponent).value;
         const targetName = roomConnectionsComp.getConnectionById(targetConnectionId).name;
         expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', expect.objectContaining({text: `You use the ${keyName} on the ${targetName}.`}));
-
-        // Check DoorSystem's success message dispatch
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', expect.objectContaining({text: `The ${targetName} clicks open.`})); // Assuming DoorSystem sends this
     });
 
 }); // End describe block

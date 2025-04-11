@@ -38,6 +38,7 @@
         "core:slot_ring1": null,
         "core:slot_ring2": null
       }
-    }
+    },
+    "QuestLog": {}
   }
 }

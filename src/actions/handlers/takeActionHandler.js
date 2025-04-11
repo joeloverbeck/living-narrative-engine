@@ -87,8 +87,9 @@ export function executeTake(context) {
         // A better approach is the resolver returning an error object/code.
 
         // Infer reason (example - needs refinement based on resolveTargetEntity behavior)
-        const itemsInLocation = context.entityManager.getItemsAtLocation(locationId); // Need entityManager back? Or pass it to resolver context
-        const reasonCode = itemsInLocation.length === 0 ? 'SCOPE_EMPTY' : 'TARGET_NOT_FOUND';
+        // Use the correct method name and check the size of the returned Set
+        const entityIdsInLocation = context.entityManager.getEntitiesInLocation(locationId);
+        const reasonCode = entityIdsInLocation.size === 0 ? 'SCOPE_EMPTY' : 'TARGET_NOT_FOUND';
 
         dispatch('action:take_failed', {
             actorId: actorId,

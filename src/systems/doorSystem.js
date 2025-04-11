@@ -13,6 +13,8 @@ import {getDisplayName} from "../utils/messages.js"; // Assuming you might want 
 
 /** @typedef {import('../types/eventTypes.js').ConnectionUnlockAttemptEventPayload} ConnectionUnlockAttemptEventPayload */
 
+/** @typedef {import('../types/eventTypes.js').DoorUnlockedEventPayload} DoorUnlockedEventPayload */
+
 /**
  * Handles the logic for unlocking connections (like doors) in response
  * to the 'event:connection_unlock_attempt'.
@@ -68,7 +70,7 @@ class DoorSystem {
         }
 
         // 1. Extract required data from payload
-        const {connectionId, locationId, userId /*, keyId, sourceItemId */} = payload; // keyId/sourceItemId might be useful for future rules/logging
+        const {connectionId, locationId, userId, keyId, /* sourceItemId */} = payload; // keyId/sourceItemId might be useful for future rules/logging
 
         if (!connectionId || !locationId || !userId) {
             console.warn(`DoorSystem: Invalid payload received for event:connection_unlock_attempt. Missing required fields (connectionId, locationId, userId). Payload:`, payload);
@@ -107,14 +109,16 @@ class DoorSystem {
 
                 console.log(`DoorSystem: Connection '${connectionDisplayName}' (${connectionId}) in location '${locationId}' (${locationName}) unlocked by user '${userId}'.`);
 
-                // Dispatch the success UI message expected by the test
-                this.#eventBus.dispatch('ui:message_display', {
-                    text: `The ${connectionDisplayName} clicks open.`, // Use the connection's name
-                    type: 'info' // Or 'success', depending on your desired UI feedback type
-                });
-
-            } else {
-                // ... (error logging) ...
+                /** @type {DoorUnlockedEventPayload} */
+                const unlockEventPayload = {
+                    userId: userId,
+                    locationId: locationId,
+                    connectionId: connectionId,
+                    keyId: keyId || null, // Pass the keyId if available
+                    previousState: 'locked', // We know it was locked
+                    newState: 'unlocked' // We just set it to unlocked
+                };
+                this.#eventBus.dispatch('event:door_unlocked', unlockEventPayload);
             }
         } else {
             // Log informative message when no action is needed

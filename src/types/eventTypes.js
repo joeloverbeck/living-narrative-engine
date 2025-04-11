@@ -309,3 +309,29 @@
  * @property {string[]} [items] An optional list of display names for items visible in the location.
  * @property {string[]} [npcs] An optional list of display names for NPCs visible in the location.
  */
+
+/**
+ * Defines the payload structure for the event:door_unlocked event.
+ * Signals that a connection (like a door) has been successfully unlocked,
+ * typically as a result of an item use action (e.g., using a key).
+ * This event fires *after* the connection's state has been updated.
+ *
+ * Fired By: DoorSystem (_handleConnectionUnlockAttempt)
+ * Consumed By: QuestSystem, LoggingSystem, AchievementSystem, TriggerSystem (potentially), etc.
+ *
+ * @typedef {object} DoorUnlockedEventPayload
+ * @property {string} userId The unique identifier of the entity (usually the player)
+ * who performed the action leading to the unlock.
+ * @property {string} locationId The unique identifier of the location entity where
+ * the unlocked connection resides.
+ * @property {string} connectionId The unique identifier of the specific connection
+ * (e.g., 'north_door') that was unlocked.
+ * @property {string | null} keyId The unique identifier of the specific item instance
+ * used to unlock the connection. May be null if the unlock mechanism
+ * didn't directly involve a tracked item ID (though typically expected from
+ * connection_unlock_attempt).
+ * @property {string} previousState The state of the connection *before* it was
+ * unlocked (expected to be 'locked').
+ * @property {string} newState The state of the connection *after* it was
+ * unlocked (expected to be 'unlocked').
+ */

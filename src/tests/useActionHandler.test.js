@@ -74,6 +74,7 @@ describe('Action Handler: executeUse', () => {
     let mockConnectionObject;
     let mockCurrentLocation;
     let mockEntityManager;
+    let mockDataManager;
     let mockEventBus;
     let mockDispatch;
     let baseActionContext;
@@ -178,6 +179,23 @@ describe('Action Handler: executeUse', () => {
             // Add other methods if executeUse calls them
         };
 
+        mockDataManager = {
+            getEntityDefinition: jest.fn((definitionOrInstanceId) => {
+                // This mock needs to return *something* that looks like a definition.
+                // The code uses `itemDefinition?.id`. So, the returned object MUST have an `id` property.
+                // We can make it somewhat realistic based on the test items.
+                if (definitionOrInstanceId === 'item_def:test_key' || definitionOrInstanceId === 'item:test_key_instance_123') {
+                    return {id: 'item_def:test_key', name: 'Test Key Definition'}; // Return the definition ID
+                }
+                if (definitionOrInstanceId === 'item_def:potion_healing' || definitionOrInstanceId === 'item:potion_1') {
+                    return {id: 'item_def:potion_healing', name: 'Healing Potion Definition'}; // Return the definition ID
+                }
+                // Fallback for any other ID passed in tests
+                return {id: definitionOrInstanceId};
+            }),
+            // Add mocks for other dataManager methods if executeUse calls them
+        };
+
         mockEventBus = {
             dispatch: jest.fn(),
         };
@@ -187,11 +205,14 @@ describe('Action Handler: executeUse', () => {
         baseActionContext = {
             playerEntity: mockPlayerEntity,
             entityManager: mockEntityManager,
+            dataManager: mockDataManager,
             eventBus: mockEventBus,
             dispatch: mockDispatch,
             currentLocation: mockCurrentLocation,
             // targets will be added per test
         };
+
+        mockDataManager.getEntityDefinition.mockClear();
     });
 
     // --- Test Cases (Remain the same as previous version) ---
@@ -213,6 +234,8 @@ describe('Action Handler: executeUse', () => {
             return null;
         });
 
+        mockItemEntity.id = 'item_def:test_key';
+
         // Arrange Context
         const actionContext = {
             ...baseActionContext,
@@ -228,7 +251,12 @@ describe('Action Handler: executeUse', () => {
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Only for the item
         expect(mockResolveTargetEntity).toHaveBeenCalledWith(
             actionContext,
-            expect.objectContaining({scope: 'inventory', targetName: 'test key on north door'}) // Checks full string initially
+            expect.objectContaining({
+                scope: 'inventory',
+                targetName: 'test key', // <<< CORRECTED targetName
+                actionVerb: 'use', // Add other relevant properties if needed for precision
+                notFoundMessageKey: 'NOT_FOUND_INVENTORY'
+            })
         );
         expect(mockResolveTargetConnection).toHaveBeenCalledTimes(1);
         // The mockGetDisplayName now correctly provides 'Test Key' here
@@ -243,6 +271,19 @@ describe('Action Handler: executeUse', () => {
                 explicitTargetEntityId: null,
                 explicitTargetConnectionId: mockConnectionObject.connectionId,
             }
+        );
+
+        // Check if dataManager was called correctly
+        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledTimes(1);
+        // It should be called with the item's definitionId if available, otherwise instanceId
+        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledWith(mockItemEntity.definitionId); // Should be 'item_def:test_key'
+
+        // The event payload should now correctly use the ID from the mocked definition
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+            'event:item_use_attempted',
+            expect.objectContaining({
+                itemDefinitionId: 'item_def:test_key', // This ID comes from the mockDataManager result
+            })
         );
     });
 
@@ -286,9 +327,30 @@ describe('Action Handler: executeUse', () => {
         expect(result.success).toBe(true);
         expect(mockValidateRequiredTargets).toHaveBeenCalledWith(actionContext, 'use');
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Once for item, once for target entity
-        expect(mockResolveTargetEntity).toHaveBeenCalledWith(
+        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Called once for item, once for target
+
+// Check the FIRST call (Item from Inventory)
+        expect(mockResolveTargetEntity).toHaveBeenNthCalledWith(
+            1, // First call
             actionContext,
-            expect.objectContaining({scope: 'inventory', targetName: 'healing potion on goblin'})
+            expect.objectContaining({
+                scope: 'inventory',
+                targetName: 'healing potion', // <<< CORRECTED targetName
+                actionVerb: 'use',
+                notFoundMessageKey: 'NOT_FOUND_INVENTORY'
+            })
+        );
+
+// Check the SECOND call (Target Entity in Location)
+        expect(mockResolveTargetEntity).toHaveBeenNthCalledWith(
+            2, // Second call
+            actionContext,
+            expect.objectContaining({
+                scope: 'location',
+                targetName: 'goblin', // <<< This was likely already correct based on received call 2
+                actionVerb: expect.stringContaining('use Healing Potion on'), // Check the contextual verb
+                notFoundMessageKey: 'TARGET_NOT_FOUND_CONTEXT'
+            })
         );
         expect(mockResolveTargetEntity).toHaveBeenCalledWith(
             actionContext,

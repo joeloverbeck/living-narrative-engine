@@ -55,7 +55,7 @@
       ],
       "consume_on_use": false,
       "success_message": "You insert the iron key into the lock. You hear a click as the lock disengages.",
-      "failure_message_default": "You can't seem to use the key that way."
+      "failure_message_default": "You need to use the key on the proper door."
     }
   }
 }
