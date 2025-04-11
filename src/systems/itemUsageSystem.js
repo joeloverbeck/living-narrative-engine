@@ -1,14 +1,7 @@
 // src/systems/itemUsageSystem.js
 
-// Component Imports
-import {InventoryComponent} from '../components/inventoryComponent.js';
-import {PositionComponent} from '../components/positionComponent.js'; // Needed for target context
-import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Needed for target context
-
 // Service Imports
-import ConditionEvaluationService from '../services/conditionEvaluationService.js';
 import {TargetResolutionService} from '../services/targetResolutionService.js';
-import EffectExecutionService from '../services/effectExecutionService.js';
 
 // Utilities
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';

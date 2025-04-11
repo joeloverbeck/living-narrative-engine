@@ -247,15 +247,27 @@ class ConditionEvaluationService {
         switch (conditionType) {
             // --- Conditions primarily about the USER ---
             case 'player_in_location': {
-                const requiredLocationId = getStringParam('locationId');
-                if (requiredLocationId === null) return false;
-                // Import PositionComponent dynamically or ensure it's passed/available
-                const PositionComponent = this.#entityManager.componentRegistry.get('Position'); // Assuming registered as 'Position'
-                if (!PositionComponent) {
+                const requiredLocationId = getStringParam('location_id');
+
+                if (requiredLocationId === null) {
+                    console.warn(`[ConditionEval] player_in_location condition missing required 'location_id' parameter.`);
+                    return false; // Fail explicitly if parameter missing
+                }
+
+                const PositionComponentClass = this.#entityManager.componentRegistry.get('Position');
+
+                if (!PositionComponentClass) {
                     console.warn("ConditionEvaluationService: Position component class not registered.");
                     return false;
                 }
-                const userPosComp = userEntity.getComponent(PositionComponent);
+
+                if (!userEntity || typeof userEntity.getComponent !== 'function') {
+                    console.error(`[ConditionEval] player_in_location: Invalid userEntity!`);
+                    return false;
+                }
+
+                const userPosComp = userEntity.getComponent(PositionComponentClass);
+
                 return userPosComp?.locationId === requiredLocationId;
             }
             case 'player_state': { // Kept for other player states if needed

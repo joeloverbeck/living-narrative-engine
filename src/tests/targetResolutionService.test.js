@@ -273,7 +273,7 @@ describe('TargetResolutionService', () => {
             expect(result.target).toBeNull();
             expect(result.targetType).toBe('none');
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: 'The connection you targeted is no longer valid.',
+                text: 'The connection (invalid-conn-id) you targeted is not valid here.',
                 type: 'warning'
             });
             expect(result.messages).toContainEqual(expect.objectContaining({
@@ -299,7 +299,7 @@ describe('TargetResolutionService', () => {
             expect(result.target).toBeNull();
             expect(result.targetType).toBe('none');
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: 'The connection you targeted is no longer valid.',
+                text: "The connection (conn-north) you targeted is not valid here.",
                 type: 'warning'
             });
             expect(result.messages).toContainEqual(expect.objectContaining({
@@ -325,7 +325,7 @@ describe('TargetResolutionService', () => {
             expect(result.target).toBeNull();
             expect(result.targetType).toBe('none');
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: 'The connection you targeted is no longer valid.',
+                text: 'The connection (conn-north) you targeted is not valid here.',
                 type: 'warning'
             });
             expect(result.messages).toContainEqual(expect.objectContaining({
@@ -438,7 +438,7 @@ describe('TargetResolutionService', () => {
             expect(result.target).toBeNull();
             expect(result.targetType).toBe('none');
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: 'The target you specified is no longer valid.',
+                text: 'The target (invalid-entity-id) you specified is no longer valid.',
                 type: 'warning'
             });
             expect(result.messages).toContainEqual(expect.objectContaining({
@@ -486,7 +486,7 @@ describe('TargetResolutionService', () => {
                 mockDependencies
             );
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: 'You must choose something specific!',
+                text: 'What do you want to use the Healing Potion on?',
                 type: 'warning',
             });
         });
@@ -543,7 +543,7 @@ describe('TargetResolutionService', () => {
 
             expect(result.success).toBe(false);
             expect(mockEventBusDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: usableComponentData.failure_message_default, // Uses the specific default message
+                text: "You can't use the Healing Potion on that.", // Uses the specific default message
                 type: 'warning',
             });
         });

@@ -167,7 +167,7 @@ describe('ConditionEvaluationService', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-A'}));
             targetEntity.addComponent(new MockHealthComponent({current: 5, max: 10}));
             const conditions = [
-                {condition_type: 'player_in_location', locationId: 'room-A'},
+                {condition_type: 'player_in_location', location_id: 'room-A'},
                 {condition_type: 'health_below_max'},
             ];
             const options = {itemName: 'Healing Spell', checkType: 'Usability'};
@@ -205,7 +205,7 @@ describe('ConditionEvaluationService', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Wrong location
             targetEntity.addComponent(new MockHealthComponent({current: 5, max: 10}));
             const conditions = [
-                {condition_type: 'player_in_location', locationId: 'room-A', failure_message: 'Must be in Room A.'},
+                {condition_type: 'player_in_location', location_id: 'room-A', failure_message: 'Must be in Room A.'},
                 {condition_type: 'health_below_max'}, // This won't be checked
             ];
             const options = {itemName: 'Chest', checkType: 'Target'};
@@ -231,7 +231,7 @@ describe('ConditionEvaluationService', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-A'}));
             targetEntity.addComponent(new MockHealthComponent({current: 10, max: 10})); // Health NOT below max
             const conditions = [
-                {condition_type: 'player_in_location', locationId: 'room-A'},
+                {condition_type: 'player_in_location', location_id: 'room-A'},
                 {condition_type: 'health_below_max', failure_message: 'Target is already at full health.'},
             ];
             const options = {itemName: 'Potion', checkType: 'Target'};
@@ -257,7 +257,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use fallback message if condition failure message is missing', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', locationId: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
             const options = {
                 itemName: 'Lever', checkType: 'Usability',
                 fallbackMessages: {usability: 'Cannot use the lever right now.'}
@@ -269,7 +269,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use default fallback message if specific type fallback is missing', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', locationId: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
             const options = {
                 itemName: 'Button', checkType: 'Target',
                 fallbackMessages: {default: 'A generic condition failed.'}
@@ -281,7 +281,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should use hardcoded default message if no fallbacks provided', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails
-            const conditions = [{condition_type: 'player_in_location', locationId: 'room-A'}];
+            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A'}];
             const options = {itemName: 'Gadget', checkType: 'Generic'};
             const result = conditionEvaluationService.evaluateConditions(userEntity, context, conditions, options);
             expect(result.success).toBe(false);
@@ -290,7 +290,7 @@ describe('ConditionEvaluationService', () => {
 
         it('should handle negated conditions correctly (passing case)', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-B'})); // Fails original check
-            const conditions = [{condition_type: 'player_in_location', locationId: 'room-A', negate: true}];
+            const conditions = [{condition_type: 'player_in_location', location_id: 'room-A', negate: true}];
             const result = conditionEvaluationService.evaluateConditions(userEntity, context, conditions);
             expect(result.success).toBe(true);
             expect(result.messages).toContainEqual({
@@ -303,7 +303,7 @@ describe('ConditionEvaluationService', () => {
             userEntity.addComponent(new MockPositionComponent({locationId: 'room-A'})); // Passes original check
             const conditions = [{
                 condition_type: 'player_in_location',
-                locationId: 'room-A',
+                location_id: 'room-A',
                 negate: true,
                 failure_message: "Must not be in Room A."
             }];
@@ -435,7 +435,7 @@ describe('ConditionEvaluationService', () => {
 
         // --- player_in_location ---
         describe('player_in_location', () => {
-            const condition = {condition_type: 'player_in_location', locationId: 'loc-correct'};
+            const condition = {condition_type: 'player_in_location', location_id: 'loc-correct'};
 
             // --- Test 2 Check ---
             it('should pass if user is in the specified location', () => {
@@ -463,17 +463,17 @@ describe('ConditionEvaluationService', () => {
                 expect(result.success).toBe(false);
             });
 
-            it('should fail if locationId parameter is missing or invalid', () => {
+            it('should fail if location_id parameter is missing or invalid', () => {
                 const result1 = conditionEvaluationService.evaluateConditions(userEntity, context, [{condition_type: 'player_in_location'}]); // Missing
                 expect(result1.success).toBe(false);
                 const result2 = conditionEvaluationService.evaluateConditions(userEntity, context, [{
                     condition_type: 'player_in_location',
-                    locationId: null
+                    location_id: null
                 }]); // Null
                 expect(result2.success).toBe(false);
                 const result3 = conditionEvaluationService.evaluateConditions(userEntity, context, [{
                     condition_type: 'player_in_location',
-                    locationId: 123
+                    location_id: 123
                 }]); // Wrong type
                 expect(result3.success).toBe(false);
             });

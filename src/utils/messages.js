@@ -220,9 +220,10 @@ export const TARGET_MESSAGES = {
     /** Feedback when trying to use a healing item at full health. */
     USE_FULL_HEALTH: "You are already at full health.",
     /** Feedback when an item requires an explicit target but none was provided or resolved. */
-    USE_REQUIRES_TARGET: (itemName) => `Using the ${itemName} requires a target.`,
-    /** Feedback when an item is used on a target that is invalid for that item's effect. */
-    USE_INVALID_TARGET: (itemName) => `Invalid target for the ${itemName}.`,
+    USE_INVALID_TARGET_CONNECTION: (id) => `The connection (${id}) you targeted is not valid here.`,
+    USE_INVALID_TARGET_ENTITY: (id) => `The target (${id}) you specified is no longer valid.`,
+    USE_REQUIRES_TARGET: (itemName) => `What do you want to use the ${itemName} on?`,
+    USE_INVALID_TARGET: (itemName) => `You can't use the ${itemName} on that.`,
 
     // ================================
     // Generic Action Validation (Examples from Ticket)

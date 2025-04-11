@@ -121,9 +121,16 @@ describe('handleTriggerEventEffect', () => {
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
+                expect.objectContaining({
+                    text: expect.stringContaining('Test Item trigger_event effect misconfigured (missing/invalid event_name)'),
+                    type: 'error'
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid or missing 'event_name' parameter for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": null,
+                "event_payload": {},
+                "feedback_message": undefined
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
@@ -133,9 +140,16 @@ describe('handleTriggerEventEffect', () => {
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
+                expect.objectContaining({
+                    type: 'error',
+                    text: expect.stringContaining('misconfigured (missing/invalid event_name)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid or missing 'event_name' parameter for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": undefined,
+                "event_payload": {},
+                "feedback_message": undefined
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
@@ -145,9 +159,18 @@ describe('handleTriggerEventEffect', () => {
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
+                expect.objectContaining({
+                    type: 'error',
+                    // FIX: Use expect.stringContaining and update text
+                    text: expect.stringContaining('Test Item trigger_event effect misconfigured (missing/invalid event_name)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            // Keep consoleErrorSpy check
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid or missing 'event_name' parameter for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": "",
+                "event_payload": {},
+                "feedback_message": undefined
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
@@ -156,58 +179,97 @@ describe('handleTriggerEventEffect', () => {
             const result = handleTriggerEventEffect(mockParams, mockContext);
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
-            expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
-            ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            expect(result.messages).toEqual([{
+                "text": "Internal Error: Test Item trigger_event effect misconfigured (missing/invalid event_name).",
+                "type": "error"
+            }]);
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid or missing 'event_name' parameter for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": "   ",
+                "event_payload": {},
+                "feedback_message": undefined
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
-        it('TEST-HTEE-002: should fail if event_payload is not an object (string)', () => {
-            mockParams.event_payload = 'not_an_object';
+        it('TEST-HTEE-002: should fail if payload is not an object (string)', () => { // Rename test slightly
+            // FIX: Use 'payload' key
+            mockParams.payload = 'not_an_object';
+            // FIX: Delete event_payload if it was set in beforeEach or globally for mockParams
+            delete mockParams.event_payload;
+
             const result = handleTriggerEventEffect(mockParams, mockContext);
-            expect(result.success).toBe(false);
+            expect(result.success).toBe(false); // Now expects false because of new validation
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_payload)')})
+                // FIX: Expect the new error message
+                expect.objectContaining({
+                    type: 'error',
+                    text: expect.stringContaining('misconfigured (invalid payload type)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_payload' parameter"));
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid 'payload' parameter (must be an object or undefined) for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": "test:event",
+                "feedback_message": undefined,
+                "payload": "not_an_object"
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
-        it('TEST-HTEE-002: should fail if event_payload is null', () => {
-            mockParams.event_payload = null;
+        it('TEST-HTEE-002: should fail if payload is null', () => { // Rename test slightly
+            // FIX: Use 'payload' key
+            mockParams.payload = null;
+            // FIX: Delete event_payload if it was set in beforeEach or globally for mockParams
+            delete mockParams.event_payload;
+
             const result = handleTriggerEventEffect(mockParams, mockContext);
-            expect(result.success).toBe(false);
+            expect(result.success).toBe(false); // Now expects false because of new validation
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_payload)')})
+                // FIX: Expect the new error message
+                expect.objectContaining({
+                    type: 'error',
+                    text: expect.stringContaining('misconfigured (invalid payload type)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_payload' parameter"));
+            expect(consoleErrorSpy).toHaveBeenCalledWith("EffectExecutionService: Invalid 'payload' parameter (must be an object or undefined) for 'trigger_event' effect in item Test Item. Params:", {
+                "event_name": "test:event",
+                "feedback_message": undefined,
+                "payload": null
+            });
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
         it('TEST-HTEE-003: should fail if params object is null', () => {
             const result = handleTriggerEventEffect(null, mockContext);
-            // Should fail on event_name check because (null ?? {}) results in empty object
+            // Should fail on event_name check because (!params) is true
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
+                // FIX: Update expected string fragment
+                expect.objectContaining({
+                    type: 'error',
+                    text: expect.stringContaining('misconfigured (missing/invalid event_name)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            // FIX: Update expected console message detail
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid or missing 'event_name' parameter"), null); // Params was null
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
 
         it('TEST-HTEE-003: should fail if params object is undefined', () => {
             const result = handleTriggerEventEffect(undefined, mockContext);
-            // Should fail on event_name check because (undefined ?? {}) results in empty object
+            // Should fail on event_name check because (!params) is true
             expect(result.success).toBe(false);
             expect(result.stopPropagation).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'error', text: expect.stringContaining('misconfigured (event_name)')})
+                // FIX: Update expected string fragment
+                expect.objectContaining({
+                    type: 'error',
+                    text: expect.stringContaining('misconfigured (missing/invalid event_name)')
+                })
             ]));
-            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid 'event_name' parameter"));
+            // FIX: Update expected console message detail
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid or missing 'event_name' parameter"), undefined); // Params was undefined
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
         // --- [/SNIP] ---
@@ -244,7 +306,13 @@ describe('handleTriggerEventEffect', () => {
         });
 
         it('TEST-HTEE-005: Basic success - With custom event_payload, no target', () => {
-            mockParams.event_payload = {custom_data: 'value1', numeric: 123};
+            const mockParams = {
+                event_name: 'test:event',
+                payload: { // <-- Nest custom data here
+                    custom_data: 'value1',
+                    numeric: 123
+                }
+            };
             const result = handleTriggerEventEffect(mockParams, mockContext);
 
             expect(result.success).toBe(true);
@@ -330,19 +398,14 @@ describe('handleTriggerEventEffect', () => {
 
             expect(result.success).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({type: 'internal', text: expect.stringContaining("Added locationId (room1)")}),
-                expect.objectContaining({
-                    type: 'internal',
-                    text: expect.stringContaining("Populated connectionId (door-north-1)")
-                }),
-                expect.objectContaining({
-                    type: 'internal',
-                    text: expect.stringContaining("Added keyId (key-instance-789)")
-                }),
-                expect.objectContaining({
-                    type: 'internal',
-                    text: expect.stringContaining("Dispatched event 'event:connection_unlock_attempt'")
-                }),
+                // Add the messages that were previously missing from the expectation
+                expect.objectContaining({text: expect.stringContaining("Handling trigger_event: 'event:connection_unlock_attempt'")}),
+                expect.objectContaining({text: expect.stringContaining("Base final payload with context:")}),
+                // Keep/Adjust expected messages, matching the new wording/detail
+                expect.objectContaining({text: expect.stringContaining("Added locationId (room1) from context")}),
+                expect.objectContaining({text: expect.stringContaining("Using connectionId (door-north-1) derived from target context as fallback.")}), // Updated
+                expect.objectContaining({text: expect.stringContaining("Using keyId (key-instance-789) derived from item instance context as fallback.")}), // Updated
+                expect.objectContaining({text: expect.stringContaining("Dispatched event 'event:connection_unlock_attempt' for Gold Key.")}) // Updated wording
             ]));
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:connection_unlock_attempt', expect.objectContaining({
@@ -361,22 +424,35 @@ describe('handleTriggerEventEffect', () => {
         });
 
         it('TEST-HTEE-009: keyId provided in event_payload overrides default', () => {
-            mockParams.event_payload = {keyId: 'master-skeleton-key-def'};
-            mockContext.itemInstanceId = 'some-other-id'; // Ensure it's different
+            const mockParams = {
+                event_name: 'event:connection_unlock_attempt',
+                // CORRECT: 'payload' nesting according to schema
+                payload: {
+                    keyId: 'master-skeleton-key-def'
+                }
+            };
+            mockContext.itemInstanceId = 'some-other-id';
 
             const result = handleTriggerEventEffect(mockParams, mockContext);
 
             expect(result.success).toBe(true);
             expect(result.messages).toEqual(expect.arrayContaining([
-                expect.objectContaining({
+                // ... other messages like Handling, Base payload, Added locationId, Using connectionId ...
+                expect.objectContaining({ // Check the specific message about keyId source
                     type: 'internal',
-                    text: expect.stringContaining("Using pre-defined keyId (master-skeleton-key-def)")
+                    // FIX: Update expected message string
+                    text: expect.stringContaining("Using keyId (master-skeleton-key-def) provided in payload.")
+                }),
+                expect.objectContaining({ // Check the dispatched message too
+                    type: 'internal',
+                    text: expect.stringContaining("Dispatched event 'event:connection_unlock_attempt'")
                 })
             ]));
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:connection_unlock_attempt', expect.objectContaining({
                 keyId: 'master-skeleton-key-def', // Overridden value
                 sourceItemId: 'some-other-id'     // Original instance ID still present
+                // ... other expected payload properties (userId, target*, locationId, etc.)
             }));
         });
 

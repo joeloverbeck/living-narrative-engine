@@ -6,15 +6,24 @@ import {NameComponent} from '../components/nameComponent.js';
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {EquipmentComponent} from '../components/equipmentComponent.js';
 import {ItemComponent} from '../components/itemComponent.js';
-// Import ConnectionsComponent
+
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {PositionComponent} from "../components/positionComponent.js";
 // Import other components if needed
 
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
+// Import type definitions (make sure paths are correct)
+/** @typedef {import('../../eventBus.js').default} EventBus */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
+/** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
+/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */
+/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
+/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationOptions} ConditionEvaluationOptions */
+/** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
+/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../components/baseComponent.js').ComponentConstructor} ComponentConstructor */
+
 
 /**
  * Configuration options for resolving a target entity.
@@ -25,7 +34,7 @@ import {PositionComponent} from "../components/positionComponent.js";
  * @property {string} actionVerb - The verb used in feedback messages.
  * @property {string} targetName - The name string provided by the user.
  * @property {(entity: Entity) => boolean} [customFilter] - Optional additional filtering function.
- * @property {keyof typeof TARGET_MESSAGES} [notFoundMessageKey] - Optional override for the TARGET_MESSAGES key used on NOT_FOUND. Defaults based on scope/action.
+ * @property {keyof typeof TARGET_MESSAGES | null} [notFoundMessageKey] - Optional override for the TARGET_MESSAGES key used on NOT_FOUND. Defaults based on scope/action. null suppresses default message.
  * @property {string} [emptyScopeMessage] - Optional override for the message dispatched when the initial scope yields no suitable entities (e.g., use TARGET_MESSAGES.TAKE_EMPTY_LOCATION).
  */
 
@@ -51,6 +60,7 @@ export class TargetResolutionService {
      * Resolves the target for an item usage action based on explicit IDs and validates it.
      * This method encapsulates the targeting logic previously found in ItemUsageSystem Section 5.
      * It dispatches UI error messages directly via the EventBus for targeting failures.
+     * It now prioritizes resolving connections via explicitTargetConnectionId if provided.
      *
      * @param {object} params - The parameters for target resolution.
      * @param {Entity} params.userEntity - The entity using the item.
@@ -89,7 +99,8 @@ export class TargetResolutionService {
         let targetEntityContext = null;
         let targetConnectionContext = null;
 
-        // --- 2a. Prioritize Explicit Connection Target ---
+        // --- 2a. PRIORITIZE Explicit Connection Target ---
+        // *** Handle explicitTargetConnectionId FIRST ***
         if (explicitTargetConnectionId) {
             log(`Attempting to resolve explicit connection target: ${explicitTargetConnectionId}`);
             const userPosComp = userEntity.getComponent(PositionComponent);
@@ -99,41 +110,49 @@ export class TargetResolutionService {
                 const currentLocation = entityManager.getEntityInstance(userLocationId);
                 const connectionsComp = currentLocation?.getComponent(ConnectionsComponent);
                 if (connectionsComp) {
-                    potentialTarget = connectionsComp.getConnectionById(explicitTargetConnectionId);
-                    if (potentialTarget) {
+                    // Find the connection using the component's method
+                    const foundConnection = connectionsComp.getConnectionById(explicitTargetConnectionId);
+                    if (foundConnection) {
+                        potentialTarget = foundConnection; // Assign the Connection object
                         targetType = 'connection';
-                        targetConnectionContext = potentialTarget;
-                        log(`Found potential explicit target: CONNECTION ${potentialTarget.name || potentialTarget.direction} (${potentialTarget.connectionId})`);
+                        targetConnectionContext = foundConnection; // Set context for validation
+                        log(`Found potential explicit target: CONNECTION ${foundConnection.name || foundConnection.direction} (${foundConnection.connectionId})`);
                     } else {
-                        log(`Explicit connection target ID ${explicitTargetConnectionId} not found in current location ${userLocationId}.`, 'warning');
+                        log(`Explicit connection target ID ${explicitTargetConnectionId} not found in current location ${currentLocation?.id}.`, 'warning');
                     }
                 } else {
-                    log(`User's current location ${userLocationId} lacks ConnectionsComponent.`, 'warning');
+                    log(`User's current location ${currentLocation?.id ?? userLocationId} lacks ConnectionsComponent.`, 'warning');
                 }
             } else {
                 log(`User ${userEntity.id} lacks PositionComponent or locationId. Cannot resolve connection target.`, 'warning');
             }
 
-            // If connection resolution failed, dispatch error and return
+            // If connection resolution failed (either ID not found or setup error), dispatch error and return immediately.
+            // We don't fall back to entity ID if a connection ID was *specified* but invalid.
             if (!potentialTarget) {
-                const failureMsg = `The connection you targeted is no longer valid.`; // More specific than generic invalid target
+                const failureMsg = TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionId); // Use a specific message if available, otherwise fallback
+                // const failureMsg = `The connection you targeted (${explicitTargetConnectionId}) is not valid here.`; // Example specific message
                 eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
-                log(`Failure: Explicit connection ${explicitTargetConnectionId} not found or user location invalid.`, 'error');
+                log(`Failure: Explicit connection ${explicitTargetConnectionId} not found or user location/component invalid.`, 'error');
                 return {success: false, target: null, targetType: 'none', messages};
             }
         }
 
-        // --- 2b. Attempt Explicit Entity Target if No Connection Target Found/Specified ---
+        // --- 2b. Attempt Explicit Entity Target ONLY IF No Connection Target was Found/Specified ---
+        // This block only runs if explicitTargetConnectionId was null/undefined OR if it was provided but resolution failed above (which returns early).
+        // *** Only run if potentialTarget is STILL null ***
         if (!potentialTarget && explicitTargetEntityId) {
             log(`Attempting to resolve explicit entity target: ${explicitTargetEntityId}`);
             potentialTarget = entityManager.getEntityInstance(explicitTargetEntityId);
             if (potentialTarget) {
                 targetType = 'entity';
-                targetEntityContext = potentialTarget;
+                targetEntityContext = potentialTarget; // Set context for validation
                 log(`Found potential explicit target: ENTITY ${getDisplayName(potentialTarget)} (${potentialTarget.id})`);
             } else {
+                // Entity ID was provided but the entity doesn't exist
                 log(`Explicit entity target ID ${explicitTargetEntityId} not found.`, 'warning');
-                const failureMsg = `The target you specified is no longer valid.`; // More specific than generic invalid target
+                const failureMsg = TARGET_MESSAGES.USE_INVALID_TARGET_ENTITY(explicitTargetEntityId); // Use a specific message if available
+                // const failureMsg = `The target (${explicitTargetEntityId}) you specified is no longer valid.`; // Example specific message
                 eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
                 log(`Failure: Explicit entity ${explicitTargetEntityId} not found.`, 'error');
                 return {success: false, target: null, targetType: 'none', messages};
@@ -141,17 +160,25 @@ export class TargetResolutionService {
         }
 
         // --- 3. Handle Target Required But Not Found/Specified ---
+        // This check now correctly covers:
+        // - No explicit ID provided.
+        // - Connection ID provided but failed resolution (already returned).
+        // - Entity ID provided but failed resolution (already returned).
+        // - *Implicit* targeting (not handled here) would need changes elsewhere if required.
         if (!potentialTarget) {
-            log(`Target required, but no valid explicit target entity OR connection ID was provided or resolved.`, 'error');
-            const failureMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
+            // This case should now only be reached if target_required is true, but NEITHER explicit ID was provided.
+            log(`Target required, but no valid explicit target entity OR connection ID was provided.`, 'error');
+            // Using the generic "requires target" message seems appropriate here.
+            const failureMsg = usableComponentData.failure_message_target_required || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
             eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
             return {success: false, target: null, targetType: 'none', messages};
         }
 
         // --- 4. Validate the Found Potential Target Against Conditions ---
+        // Determine target name based on resolved type
         const targetName = targetType === 'entity'
             ? getDisplayName(/** @type {Entity} */ (potentialTarget))
-            : (/** @type {Connection} */ (potentialTarget).name || /** @type {Connection} */ (potentialTarget).direction);
+            : ((/** @type {Connection} */ (potentialTarget).name || /** @type {Connection} */ (potentialTarget).direction) ?? 'connection'); // Added nullish coalescing for safety
 
         log(`Validating potential target (${targetType} '${targetName}') against target_conditions.`);
 
@@ -159,27 +186,32 @@ export class TargetResolutionService {
             /** @type {ConditionEvaluationContext} */
             const targetCheckContext = {
                 userEntity: userEntity,
-                targetEntityContext: targetEntityContext,     // Pass resolved entity context
-                targetConnectionContext: targetConnectionContext // Pass resolved connection context
+                // Pass the correct context based on resolved type
+                targetEntityContext: targetType === 'entity' ? /** @type {Entity} */ (potentialTarget) : null,
+                targetConnectionContext: targetType === 'connection' ? /** @type {Connection} */ (potentialTarget) : null
             };
             /** @type {ConditionEvaluationOptions} */
             const targetOptions = {
                 itemName: itemName,
                 checkType: 'Target',
                 fallbackMessages: {
-                    target: usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName),
+                    target: usableComponentData.failure_message_invalid_target || TARGET_MESSAGES.USE_INVALID_TARGET(itemName), // Use specific or generic invalid message
                     default: TARGET_MESSAGES.USE_INVALID_TARGET(itemName) // Generic fallback
                 }
             };
 
-            const targetCheckResult = await conditionEvaluationService.evaluateConditions( // Add await here
-                potentialTarget,
-                targetCheckContext,
+            // Determine the subject for condition evaluation
+            // Conditions typically apply *to the target* itself.
+            const conditionSubject = potentialTarget; // The Entity or Connection object
+
+            // Evaluate conditions against the target (Entity or Connection)
+            const targetCheckResult = await conditionEvaluationService.evaluateConditions(
+                conditionSubject,       // Evaluate conditions *on* the target
+                targetCheckContext,     // Provide full context
                 usableComponentData.target_conditions,
                 targetOptions
             );
 
-            // Now targetCheckResult will be the resolved object: { success: ..., messages: ..., ... }
             messages.push(...targetCheckResult.messages);
 
             if (!targetCheckResult.success) {
@@ -191,10 +223,10 @@ export class TargetResolutionService {
                         type: 'warning'
                     });
                 } else {
-                    // Fallback if condition service didn't provide one (shouldn't happen often)
-                    const fallbackMsg = usableComponentData.failure_message_default || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
+                    // Fallback if condition service didn't provide one
+                    const fallbackMsg = usableComponentData.failure_message_invalid_target || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
                     eventBus.dispatch('ui:message_display', {
-                        text: fallbackMsg, // Use the default message if available, otherwise the generic one
+                        text: fallbackMsg,
                         type: 'warning'
                     });
                 }
@@ -203,11 +235,12 @@ export class TargetResolutionService {
                 log(`Target ${targetType} '${targetName}' passed validation conditions.`);
             }
         } else {
-            log(`No target_conditions defined for ${itemName}. Target considered valid.`);
+            log(`No target_conditions defined for ${itemName} or target type '${targetType}'. Target considered valid.`);
         }
 
         // --- 5. Target Found and Validated ---
         log(`Target resolution successful. Validated Target: ${targetType} '${targetName}'.`);
+        // Return the correct target object (Entity or Connection) and its type
         return {success: true, target: potentialTarget, targetType: targetType, messages};
     }
 }
@@ -220,6 +253,7 @@ export class TargetResolutionService {
  * @param {TargetResolverConfig} config - Configuration for the target resolution.
  * @returns {Entity | null} The found Entity or null. Dispatches UI messages on failure.
  */
+// No changes needed for resolveTargetEntity for this ticket
 export function resolveTargetEntity(context, config) {
     const {playerEntity, currentLocation, entityManager, dispatch} = context;
 
@@ -447,6 +481,7 @@ export function resolveTargetEntity(context, config) {
  * @param {string} [actionVerb='interact with'] - Verb used in feedback messages (e.g., 'use key on').
  * @returns {Connection | null} The found Connection object or null.
  */
+// No changes needed for resolveTargetConnection for this ticket
 export function resolveTargetConnection(context, connectionTargetName, actionVerb = 'interact with') {
     const {playerEntity, currentLocation, dispatch} = context;
 
