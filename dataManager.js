@@ -180,7 +180,7 @@ class DataManager {
                         try {
                             this.#ajv.addSchema(this.schemas.get(schemaId), schemaId);
                             console.log(`DataManager: Added missing schema ${schemaId} to Ajv from internal map.`);
-                        } catch(reAddError) {
+                        } catch (reAddError) {
                             console.error(`DataManager: Failed to re-add schema ${schemaId} to Ajv.`, reAddError);
                             throw new Error(`Failed to re-add schema ${schemaId} to Ajv: ${reAddError.message}`);
                         }

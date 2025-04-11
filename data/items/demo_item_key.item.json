@@ -45,7 +45,7 @@
         {
           "type": "trigger_event",
           "parameters": {
-            "event_name": "event:connection_unlock_attempt",
+            "eventName": "event:connection_unlock_attempt",
             "payload": {
               "connectionId": "demo:exit_north_door",
               "keyId": "demo:item_key"

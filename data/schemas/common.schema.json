@@ -23,7 +23,9 @@
     "NameComponent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["value"],
+      "required": [
+        "value"
+      ],
       "properties": {
         "value": {
           "type": "string",
@@ -34,7 +36,9 @@
     "DescriptionComponent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "properties": {
         "text": {
           "type": "string",
@@ -45,7 +49,9 @@
     "MetaDescriptionComponent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["keywords"],
+      "required": [
+        "keywords"
+      ],
       "properties": {
         "keywords": {
           "type": "array",
@@ -80,7 +86,9 @@
           "default": 0
         }
       },
-      "required": ["locationId"],
+      "required": [
+        "locationId"
+      ],
       "additionalProperties": false
     },
     "HealthComponent": {
@@ -98,7 +106,10 @@
           "minimum": 1
         }
       },
-      "required": ["current", "max"],
+      "required": [
+        "current",
+        "max"
+      ],
       "additionalProperties": false
     },
     "InventoryComponent": {
@@ -115,7 +126,9 @@
           "uniqueItems": false
         }
       },
-      "required": ["items"],
+      "required": [
+        "items"
+      ],
       "additionalProperties": false
     },
     "AttackComponent": {
@@ -133,7 +146,9 @@
           "default": "attacks"
         }
       },
-      "required": ["damage"],
+      "required": [
+        "damage"
+      ],
       "additionalProperties": false
     },
     "SkillComponent": {
@@ -143,14 +158,24 @@
         "skills": {
           "type": "object",
           "description": "A map of skill IDs (e.g., 'core:skill_lockpicking') to their current integer value.",
-          "additionalProperties": { "type": "integer", "minimum": 0 },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
           "propertyNames": {
             "$ref": "#/definitions/namespacedId"
           },
-          "examples": [ { "core:skill_stealth": 5, "core:skill_perception": 3 } ]
+          "examples": [
+            {
+              "core:skill_stealth": 5,
+              "core:skill_perception": 3
+            }
+          ]
         }
       },
-      "required": ["skills"],
+      "required": [
+        "skills"
+      ],
       "additionalProperties": false
     },
     "StatsComponent": {
@@ -160,14 +185,24 @@
         "attributes": {
           "type": "object",
           "description": "A map of attribute IDs (e.g., 'core:attr_strength') to their current integer value.",
-          "additionalProperties": { "type": "integer", "minimum": 0 },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
           "propertyNames": {
             "$ref": "#/definitions/namespacedId"
           },
-          "examples": [ { "core:attr_strength": 8, "core:attr_agility": 12 } ]
+          "examples": [
+            {
+              "core:attr_strength": 8,
+              "core:attr_agility": 12
+            }
+          ]
         }
       },
-      "required": ["attributes"],
+      "required": [
+        "attributes"
+      ],
       "additionalProperties": false
     },
     "EntitiesPresentComponent": {
@@ -184,7 +219,9 @@
           "uniqueItems": true
         }
       },
-      "required": ["entityIds"],
+      "required": [
+        "entityIds"
+      ],
       "additionalProperties": false
     },
     "ConnectionsComponent": {
@@ -198,11 +235,20 @@
           "additionalProperties": {
             "$ref": "#/definitions/namespacedId"
           },
-          "propertyNames": { "type": "string" },
-          "examples": [ { "north": "demo:room_hallway", "east": "demo:room_storage" } ]
+          "propertyNames": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "north": "demo:room_hallway",
+              "east": "demo:room_storage"
+            }
+          ]
         }
       },
-      "required": ["exits"],
+      "required": [
+        "exits"
+      ],
       "additionalProperties": false
     },
     "EquipmentComponent": {
@@ -218,10 +264,17 @@
           "propertyNames": {
             "$ref": "#/definitions/namespacedId"
           },
-          "examples": [ { "core:slot_main_hand": "demo:item_sword", "core:slot_head": null } ]
+          "examples": [
+            {
+              "core:slot_main_hand": "demo:item_sword",
+              "core:slot_head": null
+            }
+          ]
         }
       },
-      "required": ["slots"],
+      "required": [
+        "slots"
+      ],
       "additionalProperties": false
     },
     "QuestLogComponent": {
@@ -253,7 +306,10 @@
     "TypedParameterBase": {
       "type": "object",
       "description": "Base structure for objects where a 'type' string dictates the structure of a 'parameters' object.",
-      "required": ["type", "parameters"],
+      "required": [
+        "type",
+        "parameters"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -262,6 +318,25 @@
         "parameters": {
           "type": "object",
           "description": "Container for parameters specific to the 'type'. Specific properties defined in consuming schemas using oneOf/allOf."
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventDefinition": {
+      "type": "object",
+      "description": "Defines an event structure containing a name/ID and optional data payload.",
+      "required": [
+        "eventName"
+      ],
+      "properties": {
+        "eventName": {
+          "$ref": "#/definitions/namespacedId",
+          "description": "The unique, namespaced name/ID of the event to fire."
+        },
+        "eventData": {
+          "type": "object",
+          "description": "Optional payload data object for the event. Structure depends on the specific event being fired.",
+          "additionalProperties": true
         }
       },
       "additionalProperties": false

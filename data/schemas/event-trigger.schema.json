@@ -341,9 +341,9 @@
             },
             "parameters": {
               "type": "object",
-              "required": ["event_name"],
+              "required": ["eventName"],
               "properties": {
-                "event_name": {
+                "eventName": {
                   "$ref": "common.schema.json#/definitions/namespacedId",
                   "description": "Name of the event to publish via EventBus."
                 },

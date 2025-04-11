@@ -11,7 +11,11 @@
       "locationId": "demo:room_treasure"
     },
     "Item": {
-      "tags": ["potion", "healing", "consumable"],
+      "tags": [
+        "potion",
+        "healing",
+        "consumable"
+      ],
       "stackable": true,
       "value": 10
     },

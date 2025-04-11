@@ -140,7 +140,7 @@ const itemKeyDefinition = {
             effects: [{
                 type: "trigger_event",
                 parameters: { // Note: Effects ALREADY use a 'parameters' object, this is fine and separate from conditions
-                    event_name: "event:connection_unlock_attempt",
+                    eventName: "event:connection_unlock_attempt",
                     payload: {connectionId: "demo:exit_north_door", keyId: "demo:item_key"}
                 }
             }],

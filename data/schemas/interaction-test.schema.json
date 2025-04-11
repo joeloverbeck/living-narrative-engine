@@ -7,7 +7,12 @@
     "TestDefinition": {
       "type": "object",
       "description": "Defines a test performed during an interaction to determine success or failure.",
-      "required": [ "id", "type", "on_success", "on_failure" ],
+      "required": [
+        "id",
+        "type",
+        "on_success",
+        "on_failure"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -17,7 +22,11 @@
         "type": {
           "type": "string",
           "description": "The type of test to perform.",
-          "enum": [ "stat_check", "probability", "item_check" ]
+          "enum": [
+            "stat_check",
+            "probability",
+            "item_check"
+          ]
         },
         "description": {
           "type": "string",
@@ -56,21 +65,54 @@
           "description": "Defines what happens if the test fails."
         }
       },
-      "if": { "properties": { "type": { "const": "stat_check" } } },
-      "then": { "required": [ "stat_or_skill_id", "difficulty_class" ] },
+      "if": {
+        "properties": {
+          "type": {
+            "const": "stat_check"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "stat_or_skill_id",
+          "difficulty_class"
+        ]
+      },
       "else": {
-        "if": { "properties": { "type": { "const": "probability" } } },
-        "then": { "required": [ "success_probability" ] },
+        "if": {
+          "properties": {
+            "type": {
+              "const": "probability"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "success_probability"
+          ]
+        },
         "else": {
-          "if": { "properties": { "type": { "const": "item_check" } } },
-          "then": { "required": [ "required_item_tag" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item_check"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "required_item_tag"
+            ]
+          }
         }
       }
     },
     "TestOutcome": {
       "type": "object",
       "description": "Defines the results (message and effects) of a test succeeding or failing.",
-      "required": [ "message" ],
+      "required": [
+        "message"
+      ],
       "additionalProperties": false,
       "properties": {
         "message": {
@@ -80,16 +122,19 @@
         "effects": {
           "type": "array",
           "description": "List of effects to apply upon this outcome. Effects implicitly target the object hosting the interaction (e.g., the door) unless specified otherwise within the effect definition.",
-          "items": { "$ref": "#/definitions/Effect" },
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
           "default": []
         }
       }
     },
-
     "Effect": {
       "description": "Defines a single consequence of a test outcome. Inherits base 'type' and 'parameters' structure. Target is implicitly the interacted object unless otherwise specified.",
       "allOf": [
-        { "$ref": "common.schema.json#/definitions/TypedParameterBase" }
+        {
+          "$ref": "common.schema.json#/definitions/TypedParameterBase"
+        }
       ],
       "properties": {
         "type": {
@@ -105,10 +150,14 @@
       "oneOf": [
         {
           "properties": {
-            "type": { "const": "set_state" },
+            "type": {
+              "const": "set_state"
+            },
             "parameters": {
               "type": "object",
-              "required": ["new_state"],
+              "required": [
+                "new_state"
+              ],
               "properties": {
                 "new_state": {
                   "type": "string",
@@ -121,16 +170,20 @@
         },
         {
           "properties": {
-            "type": { "const": "fire_event" },
+            "type": {
+              "const": "fire_event"
+            },
             "parameters": {
               "type": "object",
-              "required": ["event_name"],
+              "required": [
+                "eventName"
+              ],
               "properties": {
-                "event_name": {
+                "eventName": {
                   "$ref": "common.schema.json#/definitions/namespacedId",
                   "description": "Name of the event to publish via EventBus."
                 },
-                "event_data": {
+                "eventData": {
                   "type": "object",
                   "additionalProperties": true,
                   "description": "Optional arbitrary data payload to include with the fired event. May include {actorId} and {targetId} context."
@@ -142,10 +195,14 @@
         },
         {
           "properties": {
-            "type": { "const": "damage_actor" },
+            "type": {
+              "const": "damage_actor"
+            },
             "parameters": {
               "type": "object",
-              "required": ["damage_amount"],
+              "required": [
+                "damage_amount"
+              ],
               "properties": {
                 "damage_amount": {
                   "type": "integer",
@@ -163,10 +220,14 @@
         },
         {
           "properties": {
-            "type": { "const": "apply_effect_actor" },
+            "type": {
+              "const": "apply_effect_actor"
+            },
             "parameters": {
               "type": "object",
-              "required": ["effect_id"],
+              "required": [
+                "effect_id"
+              ],
               "properties": {
                 "effect_id": {
                   "$ref": "common.schema.json#/definitions/namespacedId",
@@ -184,11 +245,41 @@
         }
       ],
       "examples": [
-        { "type": "set_state", "parameters": { "new_state": "unlocked" } },
-        { "type": "fire_event", "parameters": { "event_name": "puzzle:lever_pulled", "event_data": { "lever_id": "demo:lever_a" } } },
-        { "type": "set_state", "parameters": { "new_state": "broken" } },
-        { "type": "damage_actor", "parameters": { "damage_amount": 5, "damage_type": "physical" } },
-        { "type": "apply_effect_actor", "parameters": { "effect_id": "core:status_bleeding", "duration": 30 } }
+        {
+          "type": "set_state",
+          "parameters": {
+            "new_state": "unlocked"
+          }
+        },
+        {
+          "type": "fire_event",
+          "parameters": {
+            "eventName": "puzzle:lever_pulled",
+            "eventData": {
+              "lever_id": "demo:lever_a"
+            }
+          }
+        },
+        {
+          "type": "set_state",
+          "parameters": {
+            "new_state": "broken"
+          }
+        },
+        {
+          "type": "damage_actor",
+          "parameters": {
+            "damage_amount": 5,
+            "damage_type": "physical"
+          }
+        },
+        {
+          "type": "apply_effect_actor",
+          "parameters": {
+            "effect_id": "core:status_bleeding",
+            "duration": 30
+          }
+        }
       ]
     }
   },

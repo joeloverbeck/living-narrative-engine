@@ -9,8 +9,7 @@
         "eventName": "event:door_unlocked",
         "filters": {
           "connectionId": "demo:exit_north_door"
-        },
-        "$comment": "Completed when the specific north exit door sends the unlocked event."
+        }
       }
     ]
   },
@@ -20,8 +19,7 @@
       "eventData": {
         "objectiveId": "demo:obj_unlock_exit_door",
         "questId": "demo:quest_exit_dungeon"
-      },
-      "$comment": "Standard event to notify QuestSystem/UI objective is done."
+      }
     }
   ]
 }

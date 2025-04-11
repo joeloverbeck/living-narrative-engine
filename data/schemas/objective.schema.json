@@ -46,7 +46,7 @@
       "type": "array",
       "description": "Optional list of events to dispatch via the EventBus when this objective's state changes to completed.",
       "items": {
-        "$ref": "#/definitions/EventDefinition"
+        "$ref": "common.schema.json#/definitions/eventDefinition"
       },
       "default": []
     }
@@ -167,39 +167,6 @@
             "core:state_defeated",
             "custom:state_activated"
           ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "EventDefinition": {
-      "type": "object",
-      "description": "Defines an event to be dispatched via the EventBus.",
-      "required": [
-        "eventName"
-      ],
-      "properties": {
-        "eventName": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "The name of the event to fire (e.g., 'objective:completed', 'story:flag_set')."
-        },
-        "eventData": {
-          "type": "object",
-          "description": "Optional payload data to include with the fired event. Structure depends on the event.",
-          "additionalProperties": true,
-          "examples": [
-            {
-              "objectiveId": "story_a:obj_find_key",
-              "questId": "story_a:quest_01"
-            },
-            {
-              "flagName": "met_the_wizard",
-              "value": true
-            }
-          ]
-        },
-        "$comment": {
-          "type": "string",
-          "description": "Optional developer comment, ignored by the game."
         }
       },
       "additionalProperties": false

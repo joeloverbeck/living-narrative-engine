@@ -234,7 +234,7 @@
 /**
  * Special Case: Dynamically Named Events Triggered by Items/Effects.
  * The ItemUsageSystem's 'trigger_event' effect allows items to dispatch arbitrary events.
- * The exact event name is defined in the item's effect data (`event_name` parameter).
+ * The exact event name is defined in the item's effect data (`eventName` parameter).
  * The payload structure is consistent but includes data passed from the effect parameters.
  *
  * Fired By: ItemUsageSystem (#handleTriggerEventEffect)

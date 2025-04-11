@@ -14,9 +14,9 @@ import {getDisplayName} from '../../utils/messages.js';
 /**
  * Effect handler function for triggering events.
  * Relies solely on the provided context for dependencies.
- * Aligned with schema expecting parameters: { event_name: string, payload?: object }.
+ * Aligned with schema expecting parameters: { eventName: string, payload?: object }.
  * @param {object | undefined} params - Effect parameters according to schema.
- * @param {string} params.event_name - The name of the event to trigger.
+ * @param {string} params.eventName - The name of the event to trigger.
  * @param {object} [params.payload={}] - Optional event-specific data provided in the item definition.
  * @param {EffectContext} context - The context of the effect execution.
  * @returns {EffectResult} - The result of the effect.
@@ -27,15 +27,15 @@ export function handleTriggerEventEffect(params, context) {
     const {eventBus, userEntity, target, itemName, entityManager, itemInstanceId, itemDefinitionId} = context;
 
     // 1. Validate and Extract Parameters according to the NEW SCHEMA
-    if (!params || typeof params.event_name !== 'string' || params.event_name.trim() === '') {
-        console.error(`EffectExecutionService: Invalid or missing 'event_name' parameter for 'trigger_event' effect in item ${itemName}. Params:`, params);
+    if (!params || typeof params.eventName !== 'string' || params.eventName.trim() === '') {
+        console.error(`EffectExecutionService: Invalid or missing 'eventName' parameter for 'trigger_event' effect in item ${itemName}. Params:`, params);
         messages.push({
-            text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing/invalid event_name).`,
+            text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing/invalid eventName).`,
             type: 'error'
         });
         return {success: false, messages: messages, stopPropagation: true};
     }
-    const event_name = params.event_name;
+    const eventName = params.eventName;
 
     if (params.payload !== undefined && (typeof params.payload !== 'object' || params.payload === null)) {
         console.error(`EffectExecutionService: Invalid 'payload' parameter (must be an object or undefined) for 'trigger_event' effect in item ${itemName}. Params:`, params);
@@ -50,7 +50,7 @@ export function handleTriggerEventEffect(params, context) {
     const providedPayload = params.payload || {};
 
     messages.push({
-        text: `Handling trigger_event: '${event_name}'. Provided payload: ${JSON.stringify(providedPayload)}`,
+        text: `Handling trigger_event: '${eventName}'. Provided payload: ${JSON.stringify(providedPayload)}`,
         type: 'internal'
     });
 
@@ -87,12 +87,12 @@ export function handleTriggerEventEffect(params, context) {
 
 
     // 4. Specific Handling/Enrichment for Certain Events (Example: connection_unlock_attempt)
-    if (event_name === 'event:connection_unlock_attempt') {
+    if (eventName === 'event:connection_unlock_attempt') {
         // Ensure locationId is present (derived from user's context)
         const PositionComponent = entityManager.componentRegistry.get('Position');
         if (!PositionComponent) {
             console.error("EffectExecutionService: Position component class not registered. Cannot get locationId.");
-            messages.push({text: `CRITICAL: Cannot get locationId for ${event_name}.`, type: 'error'});
+            messages.push({text: `CRITICAL: Cannot get locationId for ${eventName}.`, type: 'error'});
             // Decide if this is fatal - perhaps set to null or fail? Let's set to null.
             finalEventPayload.locationId = null;
         } else {
@@ -101,16 +101,16 @@ export function handleTriggerEventEffect(params, context) {
             if (finalEventPayload.locationId === undefined && positionComponent?.locationId) {
                 finalEventPayload.locationId = positionComponent.locationId;
                 messages.push({
-                    text: `Added locationId (${finalEventPayload.locationId}) from context for ${event_name}.`,
+                    text: `Added locationId (${finalEventPayload.locationId}) from context for ${eventName}.`,
                     type: 'internal'
                 });
             } else if (finalEventPayload.locationId === undefined) {
-                console.warn(`EffectExecutionService: User ${userEntity.id} lacks PositionComponent or locationId when triggering ${event_name}. LocationId will be missing/null unless provided in payload.`);
-                messages.push({text: `User ${userEntity.id} missing locationId for ${event_name}.`, type: 'warning'});
+                console.warn(`EffectExecutionService: User ${userEntity.id} lacks PositionComponent or locationId when triggering ${eventName}. LocationId will be missing/null unless provided in payload.`);
+                messages.push({text: `User ${userEntity.id} missing locationId for ${eventName}.`, type: 'warning'});
                 finalEventPayload.locationId = null; // Ensure it's null if undefined
             } else {
                 messages.push({
-                    text: `Using locationId (${finalEventPayload.locationId}) provided in payload for ${event_name}.`,
+                    text: `Using locationId (${finalEventPayload.locationId}) provided in payload for ${eventName}.`,
                     type: 'internal'
                 });
             }
@@ -124,9 +124,9 @@ export function handleTriggerEventEffect(params, context) {
             });
             finalEventPayload.connectionId = finalEventPayload.targetConnectionId;
         } else if (!finalEventPayload.connectionId) {
-            console.error(`EffectExecutionService: Missing 'connectionId' in payload and target context for ${event_name} triggered by ${itemName}. Target:`, target);
+            console.error(`EffectExecutionService: Missing 'connectionId' in payload and target context for ${eventName} triggered by ${itemName}. Target:`, target);
             messages.push({
-                text: `CRITICAL: Missing connectionId for ${event_name}. Target was type ${targetType}.`,
+                text: `CRITICAL: Missing connectionId for ${eventName}. Target was type ${targetType}.`,
                 type: 'error'
             });
             return {success: false, messages: messages, stopPropagation: true}; // Fail if essential payload data is missing
@@ -151,11 +151,11 @@ export function handleTriggerEventEffect(params, context) {
 
     // 5. Dispatch Event via context.eventBus
     try {
-        console.debug(`EffectExecutionService: Dispatching event '${event_name}' via EventBus for item ${itemName}. Final Payload:`, finalEventPayload);
-        eventBus.dispatch(event_name, finalEventPayload);
-        messages.push({text: `Dispatched event '${event_name}' for ${itemName}.`, type: 'internal'});
+        console.debug(`EffectExecutionService: Dispatching event '${eventName}' via EventBus for item ${itemName}. Final Payload:`, finalEventPayload);
+        eventBus.dispatch(eventName, finalEventPayload);
+        messages.push({text: `Dispatched event '${eventName}' for ${itemName}.`, type: 'internal'});
     } catch (error) {
-        const errorMsg = `Error dispatching event '${event_name}' for item ${itemName}: ${error.message}`;
+        const errorMsg = `Error dispatching event '${eventName}' for item ${itemName}: ${error.message}`;
         console.error(`EffectExecutionService: ${errorMsg}`, error);
         messages.push({text: `Internal Error: Failed to dispatch event for ${itemName}.`, type: 'error'});
         eventBus.dispatch('ui:message_display', {
