@@ -11,7 +11,7 @@ import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {TARGET_MESSAGES} from '../../utils/messages.js'; // getDisplayName removed
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 import {ItemComponent} from "../../components/itemComponent.js";
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
  * Handles the 'drop' action ('core:action_drop'). Allows the player to attempt
@@ -37,7 +37,7 @@ export function executeDrop(context) {
     });
 
     // --- Validate required targets ---
-    if (!validateRequiredTargets(context, 'drop')) {
+    if (!validateRequiredCommandPart(context, 'drop', 'directObjectPhrase')) { // [cite: file:handlers/dropActionHandler.js]
         // Validation failed, message dispatched by utility
         // Message already added by utility, return empty messages here or specific validation message if needed
         return {success: false, messages: [], newState: undefined};

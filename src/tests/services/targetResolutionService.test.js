@@ -1,15 +1,15 @@
-// src/tests/targetResolutionService.test.js
+// src/tests/services/targetResolutionService.test.js
 
 import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 import {
     TargetResolutionService,
-} from '../services/targetResolutionService.js';
-import Entity from '../entities/entity.js'; // Assuming Entity is default export
-import {NameComponent} from '../components/nameComponent.js';
-import {HealthComponent} from '../components/healthComponent.js'; // Assuming exists
-import {PositionComponent} from '../components/positionComponent.js';
-import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Import ConnectionComponent
-import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
+} from '../../services/targetResolutionService.js';
+import Entity from '../../entities/entity.js'; // Assuming Entity is default export
+import {NameComponent} from '../../components/nameComponent.js';
+import {HealthComponent} from '../../components/healthComponent.js'; // Assuming exists
+import {PositionComponent} from '../../components/positionComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Import ConnectionComponent
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 
 // --- Mocks ---
 const mockDispatch = jest.fn(); // General dispatch mock for resolveTargetEntity/Connection context

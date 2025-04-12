@@ -82,7 +82,8 @@ export const TARGET_MESSAGES = {
      */
     AMBIGUOUS_PROMPT: (actionVerb, targetTypeName, matches) => {
         const names = matches.map(e => getDisplayName(e)).join(', ');
-        return `Which ${targetTypeName} do you want to ${actionVerb}: ${names}?`;
+        // VVV THIS IS THE CORRECTED LINE VVV
+        return `Which '${targetTypeName}' do you want to ${actionVerb}: ${names}?`;
     },
 
     /**

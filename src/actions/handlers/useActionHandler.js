@@ -18,7 +18,7 @@ import {ItemComponent} from '../../components/itemComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 // Import the new connection resolver
 import {resolveTargetEntity, resolveTargetConnection} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
  * Handles the 'core:action_use' action.
@@ -34,7 +34,9 @@ export function executeUse(context) {
     const messages = [];
 
     // --- 1. Validate basic target presence & Get Full String ---
-    if (!validateRequiredTargets(context, 'use')) {
+    // Note: 'use' often needs a direct object (the item), even if 'use item on target' splits later.
+    // The initial validation ensures *something* was typed after 'use'.
+    if (!validateRequiredCommandPart(context, 'use', 'directObjectPhrase')) { // [cite: file:handlers/useActionHandler.js]
         return {success: false, messages: [], newState: undefined}; // Validation failed, semantic event dispatched
     }
     const fullTargetString = targets.join(' ').trim();

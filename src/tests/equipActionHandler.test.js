@@ -15,7 +15,7 @@ jest.mock('../services/targetResolutionService.js'); // Mock the service
 jest.mock('../utils/actionValidationUtils.js'); // Mock validation
 
 import {resolveTargetEntity} from '../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../utils/actionValidationUtils.js';
 
 // --- Mocks Setup ---
 const mockDispatch = jest.fn();
@@ -89,7 +89,7 @@ describe('executeEquip', () => {
         };
 
         // Default mock implementations
-        validateRequiredTargets.mockReturnValue(true); // Assume validation passes by default
+        validateRequiredCommandPart.mockReturnValue(true); // Assume validation passes by default
 
         // Default resolveTargetEntity mock (can be overridden in tests)
         // This setup handles the two calls made by executeEquip

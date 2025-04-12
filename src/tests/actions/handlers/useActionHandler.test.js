@@ -1,20 +1,23 @@
+// src/tests/actions/handlers/useActionHandler.test.js
+
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 
 // --- Mock Dependencies FIRST ---
 
 // Mock the entire targetResolutionService module - Define mocks inline
-jest.mock('../services/targetResolutionService.js', () => ({
+jest.mock('../../../services/targetResolutionService.js', () => ({
     resolveTargetEntity: jest.fn(), // Define directly here
     resolveTargetConnection: jest.fn(), // Define directly here
 }));
 
-// Mock action validation utils - Define mock inline
-jest.mock('../utils/actionValidationUtils.js', () => ({
-    validateRequiredTargets: jest.fn(() => true), // Define directly here
+// Mock action validation utils - Define mock inline, mocking the NEW function name
+jest.mock('../../../utils/actionValidationUtils.js', () => ({
+    // Mock the new function validateRequiredCommandPart
+    validateRequiredCommandPart: jest.fn(() => true), // Default mock returns true
 }));
 
 // Mock messages utils (This pattern was already correct)
-jest.mock('../utils/messages.js', () => ({
+jest.mock('../../../utils/messages.js', () => ({
     getDisplayName: jest.fn((entity) => entity?.mockName || entity?.id || 'Unknown'),
     TARGET_MESSAGES: {
         INTERNAL_ERROR_COMPONENT: (comp) => `Internal Error: Missing ${comp} Component.`,
@@ -28,15 +31,15 @@ jest.mock('../utils/messages.js', () => ({
 const {
     resolveTargetEntity: mockResolveTargetEntity,
     resolveTargetConnection: mockResolveTargetConnection
-} = require('../services/targetResolutionService.js');
-const {validateRequiredTargets: mockValidateRequiredTargets} = require('../utils/actionValidationUtils.js');
+} = require('../../../services/targetResolutionService.js');
+const {validateRequiredCommandPart: mockValidateRequiredCommandPart} = require('../../../utils/actionValidationUtils.js');
 // If you need getDisplayName mock reference often, get it too:
 // const { getDisplayName: mockGetDisplayName } = require('../utils/messages.js');
 
 // --- Import the System Under Test AFTER mocks ---
 // Note: The exact path might depend on your folder structure (e.g., src/actions vs src/tests)
 // Assuming the test file is in src/tests and the handler is in src/actions
-import {executeUse} from '../actions/handlers/useActionHandler.js';
+import {executeUse} from '../../../actions/handlers/useActionHandler.js';
 
 // --- Import Components (or use simple mock objects) ---
 // Using simple objects for mocks to avoid component class dependencies
@@ -78,21 +81,19 @@ describe('Action Handler: executeUse', () => {
     let mockEventBus;
     let mockDispatch;
     let baseActionContext;
+    const USE_REQUIRED_PART = 'directObjectPhrase'; // Assuming 'use' always requires the item (DO)
+
 
     // --- Test Setup ---
     beforeEach(() => {
-        // Clear mocks using the references obtained via require
-        // jest.clearAllMocks() might also work, but being explicit is safer here
+        // *** CHANGE POINT 2: Use the corrected mock variable name for clearing/resetting ***
         mockResolveTargetEntity.mockClear();
         mockResolveTargetConnection.mockClear();
-        mockValidateRequiredTargets.mockClear();
-        // Also clear implementations if they are set in tests
-        mockResolveTargetEntity.mockReset(); // Use mockReset if you want to clear impls too
+        mockValidateRequiredCommandPart.mockClear(); // Use correct name
+        mockResolveTargetEntity.mockReset();
         mockResolveTargetConnection.mockReset();
-        // Reset validateRequiredTargets back to its default mock state if needed
-        mockValidateRequiredTargets.mockImplementation(() => true);
-        // Reset getDisplayName if you manipulate it:
-        // mockGetDisplayName.mockClear(); or mockGetDisplayName.mockReset();
+        mockValidateRequiredCommandPart.mockReset(); // Use correct name
+        mockValidateRequiredCommandPart.mockImplementation(() => true); // Use correct name
 
 
         // --- Mock Entities and Objects ---
@@ -247,7 +248,11 @@ describe('Action Handler: executeUse', () => {
 
         // Assert
         expect(result.success).toBe(true);
-        expect(mockValidateRequiredTargets).toHaveBeenCalledWith(actionContext, 'use');
+        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
+            actionContext,       // 1. Context (handler passes it through)
+            'use',               // 2. Action Verb
+            USE_REQUIRED_PART    // 3. Required Part ('directObjectPhrase')
+        );
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Only for the item
         expect(mockResolveTargetEntity).toHaveBeenCalledWith(
             actionContext,
@@ -325,7 +330,11 @@ describe('Action Handler: executeUse', () => {
 
         // Assert
         expect(result.success).toBe(true);
-        expect(mockValidateRequiredTargets).toHaveBeenCalledWith(actionContext, 'use');
+        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
+            actionContext,
+            'use',
+            USE_REQUIRED_PART
+        );
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Once for item, once for target entity
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Called once for item, once for target
 
@@ -404,7 +413,11 @@ describe('Action Handler: executeUse', () => {
 
         // Assert
         expect(result.success).toBe(true);
-        expect(mockValidateRequiredTargets).toHaveBeenCalledWith(actionContext, 'use');
+        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
+            actionContext,
+            'use',
+            USE_REQUIRED_PART
+        );
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Only for item
         expect(mockResolveTargetEntity).toHaveBeenCalledWith(
             actionContext,
@@ -456,7 +469,11 @@ describe('Action Handler: executeUse', () => {
 
         // Assert
         expect(result.success).toBe(false);
-        expect(mockValidateRequiredTargets).toHaveBeenCalled();
+        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
+            actionContext,
+            'use',
+            USE_REQUIRED_PART
+        );
         // *** The original assertion should now pass ***
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1);
         expect(mockResolveTargetEntity).toHaveBeenCalledWith(
@@ -506,7 +523,11 @@ describe('Action Handler: executeUse', () => {
 
         // Assert
         expect(result.success).toBe(false);
-        expect(mockValidateRequiredTargets).toHaveBeenCalled();
+        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
+            actionContext,
+            'use',
+            USE_REQUIRED_PART
+        );
         expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Item (success), Target Entity (fail)
         expect(mockResolveTargetConnection).toHaveBeenCalledTimes(1); // Target Connection (fail)
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.anything());

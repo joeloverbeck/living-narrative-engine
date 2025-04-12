@@ -7,7 +7,7 @@
 import {getDisplayName} from "../../utils/messages.js";
 import {ItemComponent} from "../../components/itemComponent.js";
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
  * Handles the 'take' action ('core:action_take'). Allows the player to pick up items
@@ -43,20 +43,8 @@ export function executeTake(context) {
     // NOTE: Assumes validateRequiredTargets *either* doesn't dispatch UI messages
     //       or is acceptable for now. Ideally, it would return a validation result.
     //       If it *does* dispatch UI messages, they need to be removed there too.
-    if (!validateRequiredTargets(context, 'take')) {
-        // If validation fails AND dispatches its own UI message, that breaks the pattern.
-        // Assuming here it *doesn't* dispatch UI, or we accept it for now.
-        // If it *doesn't* dispatch, we should dispatch a semantic failure here:
-        /*
-        dispatch('action:take_failed', {
-            actorId: actorId,
-            targetName: targetName,
-            reasonCode: 'VALIDATION_FAILED',
-            locationId: locationId
-        });
-        messages.push({ text: `Validation failed for taking '${targetName}'`, type: 'internal' });
-        */
-        // For now, align with original code's assumption that the utility handles messaging
+    if (!validateRequiredCommandPart(context, 'take', 'directObjectPhrase')) { // [cite: file:handlers/takeActionHandler.js]
+        // Assuming the utility handles dispatching the semantic failure event now.
         return {success: false, messages: [], newState: undefined};
     }
 

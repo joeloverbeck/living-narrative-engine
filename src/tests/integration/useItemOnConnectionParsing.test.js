@@ -52,7 +52,7 @@ import {executeUse} from '../../actions/handlers/useActionHandler.js';
 // --- Services & Utilities Used by SUT ---
 // Import REAL services/utils - they will use mocked managers/entities provided in context
 import {resolveTargetEntity, resolveTargetConnection} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
 
 // --- Components Used ---
@@ -395,7 +395,7 @@ describe('Integration Test: Use Action Parsing with Connection Target', () => {
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.any(Object));
         // Expect a UI message indicating ambiguity
         expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', expect.objectContaining({
-            text: expect.stringMatching(/Which key do you want/i), // Match TARGET_MESSAGES.AMBIGUOUS_PROMPT or similar
+            text: expect.stringMatching(/Which 'key' do you want/i), // Match TARGET_MESSAGES.AMBIGUOUS_PROMPT or similar
             type: 'warning'
         }));
     });

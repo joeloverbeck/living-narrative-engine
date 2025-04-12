@@ -2,7 +2,7 @@
 
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {PositionComponent} from '../../components/positionComponent.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
@@ -36,10 +36,10 @@ export function executeMove(context) {
     }
 
     // --- Validate required target (direction) ---
-    // Relies on validateRequiredTargets to dispatch its own semantic event if needed.
-    if (!validateRequiredTargets(context, 'move')) {
+    // Note: As per ticket, using 'directObjectPhrase' as the parser puts direction here without a preposition.
+    if (!validateRequiredCommandPart(context, 'move', 'directObjectPhrase')) { // [cite: file:handlers/moveActionHandler.js]
         // validateRequiredTargets now handles the semantic event dispatch for missing target
-        return {success: false}; // Keep success as false, no messages array needed
+        return {success: false};
     }
 
     // --- 2. Get Player's Position Component ---

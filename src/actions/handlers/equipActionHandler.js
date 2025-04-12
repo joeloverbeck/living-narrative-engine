@@ -6,7 +6,7 @@ import {EquippableComponent} from '../../components/equippableComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
@@ -18,7 +18,7 @@ export function executeEquip(context) {
     const messages = []; // Primarily for internal/debug logging now
 
     // --- Validate required targets ---
-    if (!validateRequiredTargets(context, 'equip')) {
+    if (!validateRequiredCommandPart(context, 'equip', 'directObjectPhrase')) { // [cite: file:handlers/equipActionHandler.js]
         // Message already dispatched by utility
         return {success: false, messages: [], newState: undefined};
     }

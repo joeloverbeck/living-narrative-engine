@@ -4,7 +4,7 @@ import {HealthComponent} from '../../components/healthComponent.js';
 import {AttackComponent} from '../../components/attackComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js"; // Corrected path assumption
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
@@ -23,7 +23,7 @@ export function executeAttack(context) {
     const messages = []; // Keep for internal logs if needed
 
     // --- 1. Validate required targets ---
-    if (!validateRequiredTargets(context, 'attack')) {
+    if (!validateRequiredCommandPart(context, 'attack', 'directObjectPhrase')) { // [cite: file:handlers/attackActionHandler.js]
         return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 

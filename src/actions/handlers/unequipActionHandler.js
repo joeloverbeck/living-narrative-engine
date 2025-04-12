@@ -4,7 +4,7 @@ import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
-import {validateRequiredTargets} from '../../utils/actionValidationUtils.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
@@ -16,7 +16,7 @@ export function executeUnequip(context) {
     const messages = []; // For internal/debug messages returned by the handler
 
     // --- Validate required targets ---
-    if (!validateRequiredTargets(context, 'unequip')) {
+    if (!validateRequiredCommandPart(context, 'unequip', 'directObjectPhrase')) { // [cite: file:handlers/unequipActionHandler.js]
         return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 
