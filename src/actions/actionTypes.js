@@ -4,6 +4,8 @@
 /** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
+// Added EventBus based on its use in ActionContext
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 
 
 /**
@@ -25,18 +27,19 @@
 
 
 /**
- * The context object provided to action handlers, containing all necessary
- * game state and dependencies for the handler to perform its work.
- * Handlers should rely *solely* on this context.
+ * The context object provided to action handlers. It contains the structured
+ * command input (`parsedCommand`) and all necessary game state references
+ * and dependencies (player, location, managers, event dispatcher) required
+ * for the handler to perform its work. Handlers should rely *solely* on this context.
  *
  * @typedef {object} ActionContext
- * @property {import('../entities/entity.js').default} playerEntity - The entity instance representing the player.
- * @property {import('../entities/entity.js').default} currentLocation - The entity instance representing the player's current location.
- * @property {string[]} targets - An array of strings representing the targets/arguments derived from the parsed command. **NOTE:** This will likely change or be supplemented/replaced when the parser uses the new `ParsedCommand` structure.
- * @property {import('../core/dataManager.js').default} dataManager - The central manager for game data definitions.
- * @property {import('../entities/entityManager.js').default} entityManager - The manager for creating and tracking entity instances.
+ * @property {Entity} playerEntity - The entity instance representing the player.
+ * @property {Entity} currentLocation - The entity instance representing the player's current location.
+ * @property {ParsedCommand} parsedCommand - The structured output from the command parser, containing the identified action, objects, preposition, and original input.
+ * @property {DataManager} dataManager - The central manager for game data definitions.
+ * @property {EntityManager} entityManager - The manager for creating and tracking entity instances.
  * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events (via EventBus).
- * @property {import('../core/eventBus.js').default} eventBus - The event bus instance for dispatching events. // Added based on GameLoop context construction
+ * @property {EventBus} eventBus - The event bus instance for dispatching events.
  * // Add other relevant state here if needed in the future (e.g., gameTime, weather)
  */
 
@@ -68,7 +71,6 @@
  * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For handlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
  * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., 'ui:message_display', 'action:move_failed'). **NOTE:** Usage varies; some handlers still return messages. This might be refined later.
  * @property {ActionNewState} [newState] - An optional object signaling required changes to GameLoop-managed state (like changing location). If omitted, no core state change is requested.
- * // @property {GameEvent[]} [eventsToDispatch] - Placeholder for future event system integration. (Commented out as events are dispatched via context.dispatch)
  */
 
 // ---- Placeholder Export ----

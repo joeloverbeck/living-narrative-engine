@@ -1,16 +1,15 @@
-// GameLoop.js
+// src/core/GameLoop.js
 
-// ... import other necessary components ...
-
+// --- Existing imports ---
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */
+/** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */ // Added for type hinting
 /** @typedef {import('./dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./inputHandler.js').default} InputHandler */
 /** @typedef {import('./commandParser.js').default} CommandParser */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
-
 /** @typedef {import('./eventBus.js').default} EventBus */
 
 // --- Define the options object structure ---
@@ -47,7 +46,6 @@ class GameLoop {
      */
     constructor(options) {
         // --- Destructure and Validate constructor arguments ---
-        // (Constructor logic remains the same - dependencies are still needed for execution)
         const {
             dataManager,
             entityManager,
@@ -142,11 +140,24 @@ class GameLoop {
             const errorMsg = "Critical Error: GameLoop cannot start because initial game state (player/location) is missing!";
             console.error("GameLoop:", errorMsg);
             this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: "error"});
-            // Attempt to stop cleanly even though it didn't start properly
-            this.stop();
-            return;
+
+            // --- Perform necessary "stop-like" cleanup directly ---
+            // Ensure isRunning remains false (it is already, but for clarity)
+            this.#isRunning = false; // Should already be false, but ensures consistency
+            const stopMessage = "Game stopped."; // Use a consistent message if needed by UI
+
+            // Mimic essential stop() cleanup actions needed when start fails:
+            // We need to ensure input is disabled if start fails before enabling it.
+            this.#inputHandler.disable();
+            // Notify UI that input should be disabled (matching stop behavior)
+            this.#eventBus.dispatch('ui:disable_input', {message: stopMessage});
+            // Optionally, notify user game stopped here too, like in stop()
+            this.#eventBus.dispatch('ui:message_display', {text: stopMessage, type: 'info'});
+
+            return; // Exit start method
         }
 
+        // --- If checks pass, proceed with starting ---
         this.#isRunning = true;
         console.log("GameLoop: Started.");
 
@@ -156,77 +167,109 @@ class GameLoop {
 
 
     /**
-     * Processes a command string submitted by the input handler.
-     * Parses the command, executes the corresponding action, and prompts for the next input.
+     * Processes a command string submitted by the input handler or event bus.
+     * Parses the command, handles parsing errors, executes the corresponding action
+     * if valid, and prompts for the next input.
      * @param {string} command - The raw command string from the input.
      */
     processSubmittedCommand(command) {
-        if (!this.#isRunning) return;
+        if (!this.#isRunning) return; // Don't process if not running
 
+        // AC1: Retrieve the full ParsedCommand object
         const parsedCommand = this.#commandParser.parse(command);
-        const {actionId, targets, originalInput} = parsedCommand;
 
-        if (!actionId) {
-            if (originalInput.trim().length > 0) {
-                // Dispatch unknown command message via EventBus
-                this.#eventBus.dispatch('ui:message_display', {
-                    text: "Unknown command. Try 'move [direction]', 'look', 'inventory', etc.",
-                    type: "error"
-                });
-            }
-            // Still prompt for input even if command was unknown/empty
-        } else {
-            if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
-                console.error("GameLoop Error: Attempted to execute action but game state is missing!");
-                // Dispatch internal error message via EventBus
-                this.#eventBus.dispatch('ui:message_display', {
-                    text: "Internal Error: Game state not fully initialized.",
-                    type: "error"
-                });
-            } else {
-                this.executeAction(actionId, targets); // State confirmed available
-            }
-        }
-
-        // Prompt for next command IF still running
-        if (this.#isRunning) {
+        // AC2: Check for parsing errors reported by the parser
+        if (parsedCommand.error) {
+            this.#eventBus.dispatch('ui:message_display', {
+                text: parsedCommand.error, // Use the specific error from the parser
+                type: "error"
+            });
+            // Prompt for next command and stop processing this one
             this.promptInput();
+            return;
         }
+
+        // AC3: Handle cases where parsing didn't find an action but didn't set a specific error
+        // (e.g., unknown command, or just whitespace entered which results in null actionId)
+        if (!parsedCommand.actionId) {
+            // Only show "Unknown command" if the user actually typed something
+            if (parsedCommand.originalInput.trim().length > 0) {
+                this.#eventBus.dispatch('ui:message_display', {
+                    text: "Unknown command. Try 'help'.", // Generic unknown command message
+                    type: "error"
+                });
+            }
+            // Prompt for next command and stop processing this one
+            this.promptInput();
+            return;
+        }
+
+        // --- If we reach here, parsing was successful and we have a valid actionId ---
+
+        // AC4: Use parsedCommand.actionId (implicit in passing it to executeAction)
+
+        // Check game state consistency before execution
+        if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
+            console.error("GameLoop Error: Attempted to execute action but game state is missing!");
+            this.#eventBus.dispatch('ui:message_display', {
+                text: "Internal Error: Game state not fully initialized.",
+                type: "error"
+            });
+            // Prompt for next command even after internal error
+            this.promptInput();
+            return;
+        }
+
+        // AC5: Pass the entire parsedCommand object to executeAction
+        this.executeAction(parsedCommand.actionId, parsedCommand); // State confirmed available
+
+        // AC8: Prompt for next command IF still running (promptInput checks #isRunning internally)
+        // This is called *after* executeAction has finished
+        this.promptInput();
     }
 
     /**
-     * Prepares context, delegates action execution.
-     * The automatic 'look' after movement is now handled by an event listener (e.g., in TriggerSystem).
-     * @param {string} actionId - The ID of the action to execute.
-     * @param {string[]} targets - The target identifiers from the parser.
+     * Prepares context and delegates action execution to the ActionExecutor.
      * @private
+     * @param {string} actionId - The ID of the action to execute.
+     * @param {ParsedCommand} parsedCommand - The full parsed command object from the parser.
      */
-    executeAction(actionId, targets) {
+    executeAction(actionId, parsedCommand) { // AC5: Signature updated
         const currentPlayer = this.#gameStateManager.getPlayer();
         const currentLocationBeforeAction = this.#gameStateManager.getCurrentLocation();
 
+        // This state check is slightly redundant due to the check in processSubmittedCommand,
+        // but provides an extra layer of safety.
         if (!currentPlayer || !currentLocationBeforeAction) {
             console.error("GameLoop executeAction called but state missing from GameStateManager.");
             this.#eventBus.dispatch('ui:message_display', {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });
-            return;
+            return; // Don't proceed if state is missing here
         }
 
         /** @type {ActionContext} */
         const context = {
             playerEntity: currentPlayer,
             currentLocation: currentLocationBeforeAction,
-            targets: targets,
+            // targets: targets, // AC7: Removed obsolete targets array
+            parsedCommand: parsedCommand, // AC6: Added the full parsedCommand object
             dataManager: this.#dataManager,
             entityManager: this.#entityManager,
             dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
             eventBus: this.#eventBus
+            // Note: The ActionContext type definition (Ticket 4.1) must match this structure
         };
 
+        // Execute the action via the ActionExecutor
+        // We don't directly use the ActionResult here in GameLoop anymore,
+        // as state changes (like location) and messages are primarily handled via events.
         /** @type {ActionResult} */
         this.#actionExecutor.executeAction(actionId, context);
+
+        // Potential future use: Process ActionResult if needed for things not handled by events.
+        // For now, action results primarily signal success/failure internally or trigger events.
     }
 
     /**
@@ -243,13 +286,18 @@ class GameLoop {
      * Stops the game loop, disables input handler, and dispatches events for UI updates.
      */
     stop() {
-        if (!this.#isRunning) return;
+        // Only perform stop actions if the loop IS currently running
+        if (!this.#isRunning) {
+            // console.log("GameLoop: stop() called but loop was not running."); // Optional logging
+            return;
+        }
+
+        // If we reach here, the loop WAS running. Mark it as stopped NOW.
         this.#isRunning = false;
         const stopMessage = "Game stopped.";
 
+        // Perform ALL cleanup actions associated with stopping.
         this.#inputHandler.disable(); // Logically disable input capture
-
-        // Dispatch events for UI updates
         this.#eventBus.dispatch('ui:disable_input', {message: stopMessage});
         this.#eventBus.dispatch('ui:message_display', {text: stopMessage, type: 'info'});
 
