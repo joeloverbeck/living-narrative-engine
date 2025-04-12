@@ -129,10 +129,18 @@ class TriggerSystem {
             const lookContext = {
                 playerEntity: playerEntity,
                 currentLocation: newLocation,
-                targets: [],
+                parsedCommand: {
+                    actionId: 'core:action_look',
+                    directObjectPhrase: null, // No specific target for automatic look
+                    preposition: null,
+                    indirectObjectPhrase: null,
+                    originalInput: '[AUTO_LOOK_INITIAL]', // Indicate it's not from player
+                    error: null
+                },
                 dataManager: this.#dataManager,
                 entityManager: this.#entityManager,
-                dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
+                dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
+                eventBus: this.#eventBus // Add eventBus if needed by handlers/resolvers called by look
             };
 
             try {
@@ -190,11 +198,19 @@ class TriggerSystem {
         /** @type {ActionContext} */
         const lookContext = {
             playerEntity: player,
-            currentLocation: newLocationEntity, // Use the guaranteed valid entity instance
-            targets: [],
+            currentLocation: newLocationEntity,
+            parsedCommand: {
+                actionId: 'core:action_look',
+                directObjectPhrase: null, // No specific target for automatic look
+                preposition: null,
+                indirectObjectPhrase: null,
+                originalInput: '[AUTO_LOOK_MOVE]', // Indicate it's not from player
+                error: null
+            },
             dataManager: this.#dataManager,
             entityManager: this.#entityManager,
-            dispatch: this.#eventBus.dispatch.bind(this.#eventBus)
+            dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
+            eventBus: this.#eventBus // Add eventBus if needed by handlers/resolvers called by look
         };
 
         try {

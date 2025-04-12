@@ -18,7 +18,8 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
  * @returns {ActionResult} The result of the action.
  */
 export function executeTake(context) {
-    const {playerEntity, currentLocation, targets, dispatch} = context;
+    // Destructure context, including parsedCommand. Note: 'targets' is no longer needed here.
+    const {playerEntity, currentLocation, dispatch, parsedCommand} = context;
     const messages = []; // Still useful for internal logging
 
     // Basic validation
@@ -27,7 +28,8 @@ export function executeTake(context) {
         // Dispatch semantic failure event instead of UI message
         dispatch('action:take_failed', {
             actorId: playerEntity?.id || 'unknown', // Include actor if possible
-            targetName: targets.join(' '),
+            // Use parsed phrase if available, otherwise indicate missing target
+            targetName: parsedCommand?.directObjectPhrase || '(missing target)',
             reasonCode: 'SETUP_ERROR',
             locationId: currentLocation?.id || 'unknown'
         });
@@ -37,16 +39,22 @@ export function executeTake(context) {
 
     const actorId = playerEntity.id;
     const locationId = currentLocation.id;
-    const targetName = targets.join(' ');
 
-    // --- Validate required targets ---
-    // NOTE: Assumes validateRequiredTargets *either* doesn't dispatch UI messages
-    //       or is acceptable for now. Ideally, it would return a validation result.
-    //       If it *does* dispatch UI messages, they need to be removed there too.
+    // --- Validate required command part (direct object) using parsedCommand ---
+    // This call fulfills AC1.
     if (!validateRequiredCommandPart(context, 'take', 'directObjectPhrase')) { // [cite: file:handlers/takeActionHandler.js]
         // Assuming the utility handles dispatching the semantic failure event now.
         return {success: false, messages: [], newState: undefined};
     }
+
+    // --- Get target name directly from parsedCommand ---
+    // This line fulfills AC2 and AC3 (by replacing the old targets.join(' ') logic).
+    const targetName = parsedCommand.directObjectPhrase;
+
+    messages.push({
+        text: `Intent: Player ${actorId} attempting to take '${targetName}' in ${locationId}`,
+        type: 'internal'
+    });
 
 
     // --- 1. Resolve Target Item using Service ---
@@ -57,6 +65,7 @@ export function executeTake(context) {
         scope: 'location_items',
         requiredComponents: [ItemComponent],
         actionVerb: 'take',
+        // Use the targetName derived from parsedCommand.directObjectPhrase. This fulfills AC4.
         targetName: targetName,
         // Pass flags to suppress direct UI messages if the service supports it
         suppressUIMessages: true, // <--- Hypothetical flag
@@ -81,7 +90,7 @@ export function executeTake(context) {
 
         dispatch('action:take_failed', {
             actorId: actorId,
-            targetName: targetName,
+            targetName: targetName, // Use the name from parsedCommand
             reasonCode: reasonCode, // e.g., 'TARGET_NOT_FOUND' or 'SCOPE_EMPTY'
             locationId: locationId
         });

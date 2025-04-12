@@ -19,22 +19,25 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
  * @returns {ActionResult}
  */
 export function executeAttack(context) {
-    const {playerEntity, targets, dispatch, entityManager} = context; // Added entityManager back as it might be needed indirectly or by future logic, though resolver handles direct usage. Consider if strictly needed.
+    // Destructure context, adding parsedCommand and removing targets
+    const {playerEntity, dispatch, entityManager, parsedCommand} = context;
     const messages = []; // Keep for internal logs if needed
 
-    // --- 1. Validate required targets ---
+    // --- 1. Validate required targets using parsedCommand ---
+    // The validation utility now implicitly uses parsedCommand.directObjectPhrase
     if (!validateRequiredCommandPart(context, 'attack', 'directObjectPhrase')) { // [cite: file:handlers/attackActionHandler.js]
         return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 
-    const targetName = targets.join(' ');
+    // Get target name from parsedCommand instead of targets array
+    const targetName = parsedCommand.directObjectPhrase; // *** Ticket 9.1.1 Change ***
 
     // --- 2. Resolve Target Entity using Service ---
     const targetEntity = resolveTargetEntity(context, {
         scope: 'location_non_items',
         requiredComponents: [HealthComponent], // Must have health to be attackable
         actionVerb: 'attack',
-        targetName: targetName,
+        targetName: targetName, // Use the targetName from parsedCommand *** Ticket 9.1.1 Change *** [cite: file:handlers/attackActionHandler.js]
         notFoundMessageKey: 'NOT_FOUND_ATTACKABLE', // Explicitly use the key from TARGET_MESSAGES
     });
 
