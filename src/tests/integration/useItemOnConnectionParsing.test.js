@@ -294,9 +294,6 @@ describe('Integration Test: Use Action Parsing with Connection Target', () => {
                     explicitTargetConnectionId: 'demo:exit_north_door' // The ID of the resolved connection
                 })
             );
-
-            // Optional: Check for UI messages ONLY if parsing FAILED (should not happen here)
-            // expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.any(Object));
         });
 
     it('should fail parsing if the specific item is not in inventory (but inventory is not empty)', () => {
