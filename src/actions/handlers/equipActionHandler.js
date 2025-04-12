@@ -14,16 +14,19 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 export function executeEquip(context) {
-    const {playerEntity, targets, entityManager, dispatch} = context;
+    // Task 1: Update Context Destructuring - removed targets, added parsedCommand
+    const {playerEntity, entityManager, dispatch, parsedCommand} = context;
     const messages = []; // Primarily for internal/debug logging now
 
     // --- Validate required targets ---
+    // This utility now uses parsedCommand implicitly
     if (!validateRequiredCommandPart(context, 'equip', 'directObjectPhrase')) { // [cite: file:handlers/equipActionHandler.js]
         // Message already dispatched by utility
         return {success: false, messages: [], newState: undefined};
     }
 
-    const targetItemName = targets.join(' ');
+    // Task 2: Assign Target Name from Parsed Command
+    const targetItemName = parsedCommand.directObjectPhrase; // [cite: file:handlers/equipActionHandler.js]
 
     const playerInventory = playerEntity.getComponent(InventoryComponent);
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
@@ -37,22 +40,24 @@ export function executeEquip(context) {
     }
 
     // --- 1. Resolve Target Item ---
+    // Task 3: Verify resolveTargetEntity calls (targetName uses the updated targetItemName variable)
     const itemInstanceToEquip = resolveTargetEntity(context, {
         scope: 'inventory',
         requiredComponents: [ItemComponent, EquippableComponent],
         actionVerb: 'equip',
-        targetName: targetItemName,
+        targetName: targetItemName, // Verified: Uses targetItemName from parsedCommand [cite: file:handlers/equipActionHandler.js]
         notFoundMessageKey: null, // Let handler manage message
     });
 
     // --- 2. Handle Resolver Result & Validate Equippability ---
     if (!itemInstanceToEquip) {
         // Check if the item exists but isn't equippable, OR if it doesn't exist at all.
+        // Task 3: Verify resolveTargetEntity calls (targetName uses the updated targetItemName variable)
         const tempItemInstance = resolveTargetEntity(context, {
             scope: 'inventory',
             requiredComponents: [ItemComponent],
             actionVerb: 'equip',
-            targetName: targetItemName,
+            targetName: targetItemName, // Verified: Uses targetItemName from parsedCommand [cite: file:handlers/equipActionHandler.js]
             notFoundMessageKey: null,
         });
 
@@ -63,6 +68,7 @@ export function executeEquip(context) {
             return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
         } else {
             // Item not found in inventory at all
+            // Use the targetItemName derived from parsedCommand for the message
             const errorMsg = TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE(targetItemName);
             dispatch('ui:message_display', {text: errorMsg, type: 'info'});
             return {success: false, messages: [{text: errorMsg, type: 'info'}], newState: undefined};

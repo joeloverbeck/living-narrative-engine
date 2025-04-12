@@ -1,21 +1,21 @@
 // src/tests/equipActionHandler.test.js
 
 import {jest, describe, it, expect, beforeEach} from '@jest/globals';
-import {executeEquip} from '../actions/handlers/equipActionHandler.js'; // Adjust path
-import Entity from '../entities/entity.js'; // Adjust path
-import {InventoryComponent} from '../components/inventoryComponent.js';
-import {EquipmentComponent} from '../components/equipmentComponent.js';
-import {EquippableComponent} from '../components/equippableComponent.js';
-import {ItemComponent} from '../components/itemComponent.js';
-import {NameComponent} from '../components/nameComponent.js';
-import {TARGET_MESSAGES} from '../utils/messages.js'; // Adjust path
+import {executeEquip} from '../../../actions/handlers/equipActionHandler.js'; // Adjust path
+import Entity from '../../../entities/entity.js'; // Adjust path
+import {InventoryComponent} from '../../../components/inventoryComponent.js';
+import {EquipmentComponent} from '../../../components/equipmentComponent.js';
+import {EquippableComponent} from '../../../components/equippableComponent.js';
+import {ItemComponent} from '../../../components/itemComponent.js';
+import {NameComponent} from '../../../components/nameComponent.js';
+import {TARGET_MESSAGES} from '../../../utils/messages.js'; // Adjust path
 
 // Mock dependencies
-jest.mock('../services/targetResolutionService.js'); // Mock the service
-jest.mock('../utils/actionValidationUtils.js'); // Mock validation
+jest.mock('../../../services/targetResolutionService.js'); // Mock the service
+jest.mock('../../../utils/actionValidationUtils.js'); // Mock validation
 
-import {resolveTargetEntity} from '../services/targetResolutionService.js';
-import {validateRequiredCommandPart} from '../utils/actionValidationUtils.js';
+import {resolveTargetEntity} from '../../../services/targetResolutionService.js';
+import {validateRequiredCommandPart} from '../../../utils/actionValidationUtils.js';
 
 // --- Mocks Setup ---
 const mockDispatch = jest.fn();
@@ -83,7 +83,8 @@ describe('executeEquip', () => {
             playerEntity,
             entityManager: mockEntityManager,
             dispatch: mockDispatch,
-            targets: [], // Will be set per test
+            // targets property removed
+            parsedCommand: {}, // Will be set per test
             dataManager: {}, // Mock if needed
             currentLocation: null, // Not directly used by equip scope='inventory'
         };
@@ -92,9 +93,12 @@ describe('executeEquip', () => {
         validateRequiredCommandPart.mockReturnValue(true); // Assume validation passes by default
 
         // Default resolveTargetEntity mock (can be overridden in tests)
-        // This setup handles the two calls made by executeEquip
+        // *** This mock needs to be updated to use context.parsedCommand.directObjectPhrase ***
         resolveTargetEntity.mockImplementation((context, config) => {
-            const targetName = config.targetName.toLowerCase();
+            // Use parsedCommand.directObjectPhrase instead of config.targetName
+            const targetName = context.parsedCommand?.directObjectPhrase?.toLowerCase();
+            if (!targetName) return null; // No target provided in command
+
             const inv = context.playerEntity.getComponent(InventoryComponent);
             let found = null;
 
@@ -118,9 +122,6 @@ describe('executeEquip', () => {
                     }
                 }
             }
-            // Simulate the original behavior slightly differently:
-            // Return the found item or null. executeEquip now handles dispatching.
-            // The old behavior of resolveTargetEntity dispatching is no longer needed here.
             return found;
         });
     });
@@ -128,12 +129,14 @@ describe('executeEquip', () => {
     // --- THE CRITICAL TEST ---
     it('should display ONE message when trying to equip an item NOT in inventory', () => {
         addToInventory(leatherVest, playerEntity); // Player has *something* equippable
-        mockContext.targets = ['rusty']; // Trying to equip 'rusty', which they don't have
+        // mockContext.targets removed
+        mockContext.parsedCommand = {directObjectPhrase: 'rusty'}; // Using parsedCommand
 
         const result = executeEquip(mockContext);
 
         expect(result.success).toBe(false);
         // Ensure the specific message was dispatched ONLY ONCE
+        // Note: The message generation inside executeEquip now uses parsedCommand.directObjectPhrase
         const expectedMsg = TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE('rusty');
         const calls = mockDispatch.mock.calls.filter(call =>
             call[0] === 'ui:message_display' && call[1].text === expectedMsg
@@ -152,7 +155,8 @@ describe('executeEquip', () => {
 
     it('should display correct message when trying to equip an item that exists but is not equippable', () => {
         addToInventory(rock, playerEntity); // Player has a rock (Item, not Equippable)
-        mockContext.targets = ['rock'];
+        // mockContext.targets removed
+        mockContext.parsedCommand = {directObjectPhrase: 'rock'}; // Using parsedCommand
 
         const result = executeEquip(mockContext);
 
@@ -160,7 +164,7 @@ describe('executeEquip', () => {
         // Check for the specific "cannot equip" message
         expect(mockDispatch).toHaveBeenCalledTimes(1); // Ensure only one message total
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: TARGET_MESSAGES.EQUIP_CANNOT('Rock'),
+            text: TARGET_MESSAGES.EQUIP_CANNOT('Rock'), // Message depends on getDisplayName
             type: 'warning',
         });
         expect(playerEntity.getComponent(InventoryComponent).hasItem(rock.id)).toBe(true); // Still has rock
@@ -174,14 +178,15 @@ describe('executeEquip', () => {
         playerEntity.getComponent(InventoryComponent).removeItem(oldVest.id); // Remove from inv
         playerEntity.getComponent(EquipmentComponent).equipItem('core:slot_body', oldVest.id); // Equip it
 
-        mockContext.targets = ['leather', 'vest'];
+        // mockContext.targets removed
+        mockContext.parsedCommand = {directObjectPhrase: 'leather vest'}; // Using parsedCommand
 
         const result = executeEquip(mockContext);
 
         expect(result.success).toBe(false);
         expect(mockDispatch).toHaveBeenCalledTimes(1);
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: TARGET_MESSAGES.EQUIP_SLOT_FULL('Old Vest', 'body'),
+            text: TARGET_MESSAGES.EQUIP_SLOT_FULL('Old Vest', 'body'), // Message depends on getDisplayName and slot processing
             type: 'warning',
         });
         // Ensure the leather vest wasn't removed from inventory
@@ -195,17 +200,17 @@ describe('executeEquip', () => {
         // Intentionally remove the main_hand slot from the player's equipment for this test
         delete playerEntity.getComponent(EquipmentComponent).slots['core:slot_main_hand'];
 
-        mockContext.targets = ['rusty', 'sword'];
+        // mockContext.targets removed
+        mockContext.parsedCommand = {directObjectPhrase: 'rusty sword'}; // Using parsedCommand
 
         const result = executeEquip(mockContext);
 
         expect(result.success).toBe(false);
         expect(mockDispatch).toHaveBeenCalledTimes(1);
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: TARGET_MESSAGES.EQUIP_NO_SLOT('Rusty Sword', 'core:slot_main_hand'),
+            text: TARGET_MESSAGES.EQUIP_NO_SLOT('Rusty Sword', 'core:slot_main_hand'), // Message depends on getDisplayName
             type: 'error',
         });
         expect(playerEntity.getComponent(InventoryComponent).hasItem(rustySword.id)).toBe(true); // Still in inventory
     });
 });
-

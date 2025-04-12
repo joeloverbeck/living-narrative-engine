@@ -2,25 +2,30 @@
 
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
-import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
+import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
 import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
-/** @typedef {import('../../entities/entity.js').default} Entity */ // Corrected path assumption
+/** @typedef {import('../../entities/entity.js').default} Entity */
 
 export function executeUnequip(context) {
-    const {playerEntity, targets, entityManager, dispatch} = context;
+    // --- Refactor: Destructure parsedCommand, remove targets ---
+    const {playerEntity, entityManager, dispatch, parsedCommand} = context;
     const messages = []; // For internal/debug messages returned by the handler
 
-    // --- Validate required targets ---
+    // --- Validate required command part (uses parsedCommand.directObjectPhrase implicitly) ---
+    // Acceptance Criterion 1: validateRequiredCommandPart uses 'directObjectPhrase'
     if (!validateRequiredCommandPart(context, 'unequip', 'directObjectPhrase')) { // [cite: file:handlers/unequipActionHandler.js]
         return {success: false, messages: [], newState: undefined}; // Validation failed, message dispatched by utility
     }
 
-    const targetName = targets.join(' '); // Could be slot name or item name
+    // --- Refactor: Get target name from parsedCommand ---
+    // Acceptance Criterion 2: Variable assigned from context.parsedCommand.directObjectPhrase
+    // Acceptance Criterion 4: Code no longer accesses context.targets
+    const targetName = parsedCommand.directObjectPhrase; // Could be slot name or item name
 
     const playerInventory = playerEntity.getComponent(InventoryComponent);
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
@@ -39,6 +44,7 @@ export function executeUnequip(context) {
     // --- Strategy: Check slot name first, then resolve by item name ---
 
     // 1. Try matching slot name
+    // Acceptance Criterion 3: Subsequent logic uses the new targetName variable
     const potentialSlotId = `core:slot_${targetName.toLowerCase().replace(/\s+/g, '_')}`;
     if (playerEquipment.hasSlot(potentialSlotId)) {
         const itemIdInSlot = playerEquipment.getEquippedItem(potentialSlotId);
@@ -56,19 +62,22 @@ export function executeUnequip(context) {
             console.debug(`unequipActionHandler: Matched slot name '${targetName}' to slot ${slotIdToUnequip}`);
         } else {
             // --- Validation Error: Slot is Empty ---
+            // Acceptance Criterion 3: Subsequent logic uses the new targetName variable
             const errorMsg = TARGET_MESSAGES.UNEQUIP_SLOT_EMPTY(targetName); // Pass the user-provided slot name
             dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
             return {success: false, messages: [{text: errorMsg, type: 'warning'}], newState: undefined};
         }
     } else {
         // --- 2. If not a slot name, Resolve Target Item by Name using Service ---
+        // Acceptance Criterion 3: Subsequent logic uses the new targetName variable
         console.debug(`unequipActionHandler: '${targetName}' not a direct slot match, resolving equipped item name.`);
 
+        // Acceptance Criterion 3: Subsequent logic uses the new targetName variable
         itemInstanceToUnequip = resolveTargetEntity(context, {
             scope: 'equipment',
             requiredComponents: [],
             actionVerb: 'unequip',
-            targetName: targetName,
+            targetName: targetName, // Use the name from parsedCommand
             notFoundMessageKey: 'NOT_FOUND_UNEQUIPPABLE',
         });
 
@@ -90,6 +99,7 @@ export function executeUnequip(context) {
             dispatch('ui:message_display', {text: errorMsg, type: 'error'});
             return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
         }
+        // Acceptance Criterion 3: Subsequent logic uses the new targetName variable
         console.debug(`unequipActionHandler: Matched item name '${targetName}' to item ${itemInstanceToUnequip.id} in slot ${slotIdToUnequip}`);
     }
 

@@ -17,11 +17,13 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
  * Handles the 'drop' action ('core:action_drop'). Allows the player to attempt
  * to drop items from their inventory into the current location by dispatching
  * an event for a system to handle the actual state changes.
+ * Refactored to use parsedCommand based on Ticket 9.3.1.
  * @param {ActionContext} context - The context for the action.
  * @returns {ActionResult} The result of the action attempt.
  */
 export function executeDrop(context) {
-    const {playerEntity, currentLocation, targets, dispatch} = context; // entityManager removed from direct use
+    // Ticket 9.3.1: Remove 'targets', add 'parsedCommand'
+    const {playerEntity, currentLocation, dispatch, parsedCommand} = context; // entityManager removed from direct use
     const messages = [];
     const internalErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
 
@@ -36,15 +38,18 @@ export function executeDrop(context) {
         type: 'internal'
     });
 
-    // --- Validate required targets ---
+    // --- Validate required command part ---
+    // Ticket 9.3.1: Ensure this validation uses 'directObjectPhrase'
     if (!validateRequiredCommandPart(context, 'drop', 'directObjectPhrase')) { // [cite: file:handlers/dropActionHandler.js]
         // Validation failed, message dispatched by utility
-        // Message already added by utility, return empty messages here or specific validation message if needed
         return {success: false, messages: [], newState: undefined};
     }
-    messages.push({text: `Required targets validated for 'drop'.`, type: 'internal'});
+    messages.push({text: `Required command part validated for 'drop'.`, type: 'internal'});
 
-    const targetName = targets.join(' ');
+    // Ticket 9.3.1: Assign targetName from parsedCommand, remove targets.join(' ')
+    const targetName = parsedCommand.directObjectPhrase;
+    messages.push({text: `Target name from parsed command: '${targetName}'.`, type: 'internal'});
+
 
     // --- Get Player Inventory ---
     const playerInventory = playerEntity.getComponent(InventoryComponent);
@@ -57,11 +62,12 @@ export function executeDrop(context) {
     messages.push({text: `Player inventory component found.`, type: 'internal'});
 
     // --- 1. Resolve Target Item using Service ---
+    // Ticket 9.3.1: Ensure resolved target uses targetName from parsedCommand
     const targetItemEntity = resolveTargetEntity(context, {
         scope: 'inventory',
         requiredComponents: [ItemComponent],
         actionVerb: 'drop',
-        targetName: targetName,
+        targetName: targetName, // Pass the name derived from parsedCommand [cite: file:handlers/dropActionHandler.js]
         notFoundMessageKey: 'NOT_FOUND_INVENTORY'
     });
 
