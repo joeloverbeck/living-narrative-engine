@@ -1,0 +1,20 @@
+{
+  "id": "core:action_lock",
+  "name": "Lock",
+  "description": "Lock an unlocked, closed object. May require a key (checked by game logic).",
+  "commands": [
+    "lock"
+  ],
+  "target_type": "entity_in_room",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "LockableComponent",
+      "OpenableComponent"
+    ],
+    "requires_target_state": {
+      "LockableComponent.isLocked": false,
+      "OpenableComponent.isOpen": false
+    }
+  }
+}

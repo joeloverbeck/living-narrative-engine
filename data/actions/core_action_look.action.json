@@ -9,5 +9,6 @@
     "look at"
   ],
   "requires_target": false,
-  "target_type": "none"
+  "target_type": "none",
+  "applicability": {}
 }

@@ -14,15 +14,16 @@
       "type": "object",
       "description": "Components defining the item's properties. Must include Name and Item components. Inherits other components.",
       "required": [
-        "Name",
-        "Item"
+        "Name"
       ],
       "properties": {
         "Name": {
-          "$ref": "common.schema.json#/definitions/NameComponent"
+          "$ref": "common.schema.json#/definitions/NameComponent",
+          "description": "The display name of the item. Definition imported from common schema."
         },
         "Description": {
-          "$ref": "common.schema.json#/definitions/DescriptionComponent"
+          "$ref": "common.schema.json#/definitions/DescriptionComponent",
+          "description": "(Optional) Static text description of the item. Definition imported from common schema."
         },
         "Item": {
           "$ref": "#/definitions/ItemComponent",
@@ -35,6 +36,34 @@
         "Equippable": {
           "$ref": "#/definitions/EquippableComponent",
           "description": "Optional component defining if and how the item can be equipped."
+        },
+        "Position": {
+          "$ref": "./common.schema.json#/definitions/PositionComponent",
+          "description": "(Optional) Component for items whose location is relevant (e.g., placed in world). Definition imported from common schema."
+        },
+        "Openable": {
+          "$ref": "./common.schema.json#/definitions/OpenableComponent",
+          "description": "(Optional) Component for items that can be opened/closed (e.g., a box). Definition imported from common schema."
+        },
+        "Lockable": {
+          "$ref": "./common.schema.json#/definitions/LockableComponent",
+          "description": "(Optional) Component for items that can be locked/unlocked (e.g., a chest). Definition imported from common schema."
+        },
+        "Container": {
+          "$ref": "./common.schema.json#/definitions/ContainerComponent",
+          "description": "(Optional) Component for items that can hold other items (e.g., a bag, box). Definition imported from common schema."
+        },
+        "Edible": {
+          "$ref": "./common.schema.json#/definitions/EdibleComponent",
+          "description": "(Optional) Marker component indicating an item can be eaten. Definition imported from common schema."
+        },
+        "LiquidContainer": {
+          "$ref": "./common.schema.json#/definitions/LiquidContainerComponent",
+          "description": "(Optional) Component for items that can contain liquids (e.g., a bottle, waterskin). Definition imported from common schema."
+        },
+        "Pushable": {
+          "$ref": "./common.schema.json#/definitions/PushableComponent",
+          "description": "(Optional) Component for items that can be pushed (e.g., a heavy crate item). Definition imported from common schema."
         }
       },
       "additionalProperties": true

@@ -340,6 +340,24 @@
         }
       },
       "additionalProperties": false
+    },
+    "OpenableComponent": {
+      "$ref": "./openable.schema.json"
+    },
+    "LockableComponent": {
+      "$ref": "./lockable.schema.json"
+    },
+    "ContainerComponent": {
+      "$ref": "./container.schema.json"
+    },
+    "EdibleComponent": {
+      "$ref": "./edible.schema.json"
+    },
+    "LiquidContainerComponent": {
+      "$ref": "./liquid-container.schema.json"
+    },
+    "PushableComponent": {
+      "$ref": "./pushable.schema.json"
     }
   }
 }

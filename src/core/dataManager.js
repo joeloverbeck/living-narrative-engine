@@ -11,14 +11,19 @@ const SCHEMA_FILES = [
     'common.schema.json',
     'action.schema.json',
     'entity.schema.json',
-    'interactable-component.schema.json',
     'event-trigger.schema.json',
     'interaction-test.schema.json',
     'item.schema.json',
     'location.schema.json',
     'quest.schema.json',
     'objective.schema.json',
-    'world-manifest.schema.json'
+    'world-manifest.schema.json',
+    'container.schema.json',
+    'lockable.schema.json',
+    'openable.schema.json',
+    'edible.schema.json',
+    'pushable.schema.json',
+    'liquid-container.schema.json'
 ];
 
 // Mapping of content types (keys from manifest) to their schema $ids
@@ -27,14 +32,19 @@ const CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
-    interactableComponents: 'http://example.com/schemas/interactable-component.schema.json',
     items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
     triggers: 'http://example.com/schemas/event-trigger.schema.json', // For triggers listed under "triggers" (array)
     objectives: 'http://example.com/schemas/objective.schema.json', // For objectives listed under "objectives"
     quests: 'http://example.com/schemas/quest.schema.json', // For quests listed under "quests"
     interactionTests: 'http://example.com/schemas/interaction-test.schema.json', // For tests listed under "interactionTests"
-    manifest: 'http://example.com/schemas/world-manifest.schema.json' // Schema for the manifest itself
+    manifest: 'http://example.com/schemas/world-manifest.schema.json', // Schema for the manifest itself
+    containers: 'http://example.com/schemas/container.schema.json',
+    lockables: 'http://example.com/schemas/lockable.schema.json',
+    openables: 'http://example.com/schemas/openable.schema.json',
+    edibles: 'http://example.com/schemas/edible.schema.json',
+    pushables: 'http://example.com/schemas/pushable.schema.json',
+    liquidContainers: 'http://example.com/schemas/liquid-container.schema.json',
 };
 
 // -----------------------------------------

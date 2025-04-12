@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/action.schema.json",
   "title": "Action Definition Schema",
-  "description": "Defines the structure for a basic player or entity action within the game engine.",
+  "description": "Defines the structure for a basic player or entity action within the game engine, including optional applicability criteria.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -52,16 +52,165 @@
       "type": "boolean",
       "description": "Indicates if the player must specify a target/parameter when invoking the action (e.g., 'move NORTH', 'take KEY'). Actions like 'look' (around) or 'inventory' might have this set to false.",
       "default": true
+    },
+    "applicability": {
+      "type": "object",
+      "description": "Optional criteria that determine if this action is applicable in a given context based on actor and target states/components.",
+      "additionalProperties": false,
+      "properties": {
+        "requires_components": {
+          "type": "array",
+          "description": "Target entity must possess ALL of these components for the action to be applicable.",
+          "items": {
+            "type": "string",
+            "description": "Component type name (e.g., 'LockableComponent')."
+          },
+          "examples": [
+            [
+              "LockableComponent",
+              "HealthComponent"
+            ]
+          ],
+          "default": []
+        },
+        "requires_tags": {
+          "type": "array",
+          "description": "Target entity must possess ALL of these tags (e.g., in ItemComponent or TagsComponent) for the action to be applicable.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-]+$",
+            "description": "Tag name (e.g., 'key', 'metal')."
+          },
+          "examples": [
+            [
+              "key",
+              "metal"
+            ]
+          ],
+          "default": []
+        },
+        "requires_target_state": {
+          "type": "object",
+          "description": "Target entity must match ALL these state conditions for the action to be applicable. Uses 'ComponentName.propertyName': value format.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "examples": [
+            {
+              "LockableComponent.state": "locked",
+              "OpenableComponent.isOpen": false
+            }
+          ],
+          "default": {}
+        },
+        "requires_actor_state": {
+          "type": "object",
+          "description": "Acting entity (e.g., player) must match ALL these state conditions for the action to be applicable.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "examples": [
+            {
+              "StatsComponent.stamina": 10
+            }
+          ],
+          "default": {}
+        },
+        "excluded_components": {
+          "type": "array",
+          "description": "Action is NOT applicable if the target entity possesses ANY of these components.",
+          "items": {
+            "type": "string",
+            "description": "Component type name."
+          },
+          "examples": [
+            [
+              "IntangibleComponent"
+            ]
+          ],
+          "default": []
+        },
+        "excluded_tags": {
+          "type": "array",
+          "description": "Action is NOT applicable if the target entity possesses ANY of these tags.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-]+$",
+            "description": "Tag name."
+          },
+          "examples": [
+            [
+              "invulnerable"
+            ]
+          ],
+          "default": []
+        },
+        "excluded_target_state": {
+          "type": "object",
+          "description": "Action is NOT applicable if the target entity matches ANY of these state conditions.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "examples": [
+            {
+              "StateComponent.phase": "ethereal"
+            }
+          ],
+          "default": {}
+        },
+        "excluded_actor_state": {
+          "type": "object",
+          "description": "Action is NOT applicable if the acting entity matches ANY of these state conditions.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "examples": [
+            {
+              "StateComponent.status": "stunned"
+            }
+          ],
+          "default": {}
+        }
+      },
+      "default": {}
     }
   },
   "if": {
-    "properties": { "requires_target": { "const": true } }
+    "properties": {
+      "requires_target": {
+        "const": true
+      }
+    }
   },
   "then": {
-    "required": ["target_type"],
+    "required": [
+      "target_type"
+    ],
     "properties": {
       "target_type": {
-        "not": { "const": "none" },
+        "not": {
+          "const": "none"
+        },
         "description": "Required and cannot be 'none' if 'requires_target' is true. Specifies the kind of target needed."
       }
     }

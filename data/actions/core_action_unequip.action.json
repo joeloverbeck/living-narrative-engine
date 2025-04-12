@@ -7,5 +7,10 @@
     "remove"
   ],
   "target_type": "item_in_equipment",
-  "requires_target": true
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "EquippableComponent"
+    ]
+  }
 }

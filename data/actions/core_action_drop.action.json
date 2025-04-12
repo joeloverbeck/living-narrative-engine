@@ -6,5 +6,6 @@
     "drop"
   ],
   "target_type": "item_in_inventory",
-  "requires_target": true
+  "requires_target": true,
+  "applicability": {}
 }

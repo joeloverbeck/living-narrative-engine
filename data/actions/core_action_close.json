@@ -1,0 +1,19 @@
+{
+  "id": "core:action_close",
+  "name": "Close",
+  "description": "Close an open object.",
+  "commands": [
+    "close",
+    "shut"
+  ],
+  "target_type": "entity_in_room",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "OpenableComponent"
+    ],
+    "requires_target_state": {
+      "OpenableComponent.isOpen": true
+    }
+  }
+}

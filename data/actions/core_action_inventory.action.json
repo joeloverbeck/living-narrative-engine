@@ -7,5 +7,6 @@
     "inv",
     "i"
   ],
-  "requires_target": false
+  "requires_target": false,
+  "applicability": {}
 }

@@ -9,5 +9,10 @@
     "strike"
   ],
   "target_type": "entity_in_room",
-  "requires_target": true
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "HealthComponent"
+    ]
+  }
 }
