@@ -1,115 +1,168 @@
-// commandParser.js
+// src/core/commandParser.js
+
+// Import DataManager for type hinting in constructor
+/** @typedef {import('./dataManager.js').default} DataManager */
+
+// Import ParsedCommand definition for return type hinting
+/** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
+
+// Assume ActionDefinition type exists
+/** @typedef {object} ActionDefinition @property {string} id @property {string[]} commands */
 
 /**
- * Represents the structured output of the command parser.
- * @typedef {object} ParsedCommand
- * @property {string | null} actionId - The identified action (e.g., 'core:action_move') or null if parsing failed or no action identified.
- * @property {string[]} targets - An array of strings representing the targets/arguments of the command.
- * @property {string} originalInput - The original, unmodified command string entered by the user.
- * @property {string | null} error - An optional error message if parsing failed in a specific way (e.g., "Ambiguous command"). Defaults to null.
+ * Defines the list of prepositions recognized by the parser.
+ * Used to help identify V+DO+Prep+IO command structures.
+ * All prepositions must be lowercase.
+ * @type {ReadonlyArray<string>}
  */
+const SUPPORTED_PREPOSITIONS = Object.freeze([
+    "on",
+    "at",
+    "with",
+    "in",
+    "to",
+    ">" // Added '>' as per potential use cases like 'put coin > slot'
+]);
 
 class CommandParser {
-    // Keep the maps internal for now as per the ticket scope
-    static #actionMap = {
-        'move': 'core:action_move',
-        'go': 'core:action_move',
-        'north': 'core:action_move',
-        'south': 'core:action_move',
-        'east': 'core:action_move',
-        'west': 'core:action_move',
-        // Add other directions if needed (up, down, ne, sw, etc.)
-        'n': 'core:action_move',
-        's': 'core:action_move',
-        'e': 'core:action_move',
-        'w': 'core:action_move',
-        'attack': 'core:action_attack',
-        'hit': 'core:action_attack',
-        'take': 'core:action_take',
-        'drop': 'core:action_drop',
-        'get': 'core:action_take',
-        'use': 'core:action_use',
-        'look': 'core:action_look',
-        'l': 'core:action_look',
-        'examine': 'core:action_look',
-        'inventory': 'core:action_inventory',
-        'inv': 'core:action_inventory',
-        'i': 'core:action_inventory',
-        'equip': 'core:action_equip',
-        'wear': 'core:action_equip',
-        'wield': 'core:action_equip',
-        'unequip': 'core:action_unequip',
-        'remove': 'core:action_unequip'
-        // Add other aliases as needed
-    };
+    #dataManager;
 
-    static #directionMap = {
-        n: 'north', s: 'south', e: 'east', w: 'west'
-        // Add other direction aliases if needed
-    };
+    constructor(dataManager) {
+        if (!dataManager) {
+            throw new Error("CommandParser requires a DataManager instance.");
+        }
+        this.#dataManager = dataManager;
+    }
 
-    static #directions = ['north', 'south', 'east', 'west', 'n', 's', 'e', 'w']; // Includes aliases
-
-    /**
-     * Parses the raw command string into an action ID and targets.
-     * VERY basic parser, needs significant improvement later.
-     * @param {string} commandString - The raw input string from the user.
-     * @returns {ParsedCommand} The parsed command structure.
-     */
     parse(commandString) {
-        const originalInput = commandString; // Keep original input
-        const lowerCommand = commandString.trim().toLowerCase();
-        const parts = lowerCommand.split(' ').filter(p => p); // Split and remove empty strings
+        const originalInput = commandString;
+        const actionsMap = this.#dataManager.actions;
 
-        let actionId = null; // Initialize
-        let targets = [];    // Initialize
-        let error = null;   // Initialize error as null
+        const parsedCommand = {
+            actionId: null,
+            directObjectPhrase: null,
+            preposition: null,
+            indirectObjectPhrase: null,
+            originalInput: originalInput,
+            error: null
+        };
 
-        if (parts.length === 0) {
-            // Handle empty input - it's valid input, just results in no action
-            // actionId and targets remain null/[]
-        } else {
-            const verb = parts[0];
-            // Initial target assignment ONLY if there's more than one part
-            targets = parts.length > 1 ? parts.slice(1) : [];
-
-            // Attempt direct verb-to-action mapping
-            actionId = CommandParser.#actionMap[verb] || null;
-
-            // Check if the verb itself is a direction. This takes precedence
-            // for setting the target if it's a single-word command.
-            if (CommandParser.#directions.includes(verb)) {
-                // If the verb is a direction, ensure the action is move
-                // and the target *is* the direction (normalized).
-                actionId = 'core:action_move'; // Ensure/overwrite action is move
-                targets = [CommandParser.#directionMap[verb] || verb]; // Set the target correctly
-            }
-
-            // Handle specific verbs like "look" if they weren't directions
-            else if (verb === 'look') { // Use 'else if' to avoid conflict with directions
-                actionId = 'core:action_look'; // Ensure correct action
-                // Handle "look at [target]" vs simple "look"
-                if (targets.length > 0 && targets[0] === 'at') {
-                    targets = targets.slice(1); // Remove 'at'
-                }
-                // If 'look' was single word, targets is already [], which is correct for 'look' (look around)
-                // If 'look target', targets is already ['target'] from initial assignment.
-            }
-            // Add other 'else if' blocks here for verbs with special target handling
-            // if needed in the future.
-
-            // If actionId is still null after all checks, it's an unknown command
-            // (We can optionally add an error message here later)
-            // if (!actionId) { ... }
+        const inputTrimmedStart = commandString.trimStart();
+        if (inputTrimmedStart === "") {
+            return parsedCommand;
         }
 
-        /** @type {ParsedCommand} */
-        return {
-            actionId: actionId,
-            targets: targets,
-            originalInput: originalInput,
-            error: error
-        };
+        let longestMatchLength = 0;
+        let matchedActionId = null;
+        const lowerInputTrimmedStart = inputTrimmedStart.toLowerCase();
+
+        // Find Command (no changes here)
+        for (const actionDefinition of actionsMap.values()) {
+            if (actionDefinition.commands && Array.isArray(actionDefinition.commands)) {
+                for (const commandOrAlias of actionDefinition.commands) {
+                    if (typeof commandOrAlias === 'string' && commandOrAlias.length > 0) {
+                        const lowerCommandOrAlias = commandOrAlias.toLowerCase();
+                        if (lowerInputTrimmedStart.startsWith(lowerCommandOrAlias)) {
+                            const isEndOfCommand = lowerInputTrimmedStart.length === lowerCommandOrAlias.length;
+                            const charAfterCommandIndex = lowerCommandOrAlias.length;
+                            const isFollowedByWhitespaceOrEnd = isEndOfCommand ||
+                                (lowerInputTrimmedStart.length > charAfterCommandIndex && /\s/.test(lowerInputTrimmedStart[charAfterCommandIndex]));
+
+                            if (isFollowedByWhitespaceOrEnd) {
+                                if (lowerCommandOrAlias.length > longestMatchLength) {
+                                    longestMatchLength = lowerCommandOrAlias.length;
+                                    matchedActionId = actionDefinition.id;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (matchedActionId !== null) {
+            parsedCommand.actionId = matchedActionId;
+            const remainingText = inputTrimmedStart.substring(longestMatchLength);
+            const textAfterCommand = remainingText.trimStart();
+
+            if (textAfterCommand) {
+                // --- REVISED PREPOSITION FINDING LOGIC V3 ---
+                let firstMatchIndex = -1;
+                let firstMatchPrep = null;
+                let firstMatchLength = 0;
+
+                // Split by any whitespace, keeping only non-empty parts (the words)
+                const words = textAfterCommand.split(/\s+/).filter(Boolean);
+
+                // Find the first word that is a supported preposition
+                for (const word of words) {
+                    const lowerWord = word.toLowerCase();
+                    if (SUPPORTED_PREPOSITIONS.includes(lowerWord)) {
+                        // Found the first preposition word. Now find its actual
+                        // starting index in the original textAfterCommand string.
+                        // This handles cases where the word might appear earlier as a substring.
+                        // We need a regex to find the word surrounded by whitespace or start/end.
+                        // Pattern: (^|\s)word(\s|$)
+                        const wordBoundaryPattern = new RegExp(`(?:^|\\s)${word}(?:\\s|$)`, 'i');
+                        const match = wordBoundaryPattern.exec(textAfterCommand);
+
+                        if (match) {
+                            // Find the index of the actual word within the match
+                            // Need to account for potential leading space in the match
+                            const prepStartIndex = match[0].toLowerCase().indexOf(lowerWord) + match.index;
+
+                            firstMatchIndex = prepStartIndex;
+                            firstMatchPrep = lowerWord; // Use the matched lowercase preposition
+                            firstMatchLength = word.length; // Length of the actual word
+                            break; // Found the first valid preposition word separator
+                        }
+                        // If regex didn't find it with boundaries (edge case?), continue loop.
+                        // This shouldn't happen if split worked correctly, but as a fallback.
+                    }
+                }
+                // --- END REVISED PREPOSITION FINDING LOGIC V3 ---
+
+
+                // Check if a valid separating preposition was found
+                if (firstMatchPrep !== null) { // Use firstMatchPrep as the flag
+                    const prepositionIndexInText = firstMatchIndex;
+                    const foundPreposition = firstMatchPrep;
+                    const textBeforePrep = textAfterCommand.substring(0, prepositionIndexInText);
+                    const textAfterPrep = textAfterCommand.substring(prepositionIndexInText + foundPreposition.length); // Use actual length if needed? No, use foundPrep length
+
+                    // Determine structure based on index and textBeforePrep
+                    if (textBeforePrep.trim() !== "") {
+                        // V+DO+P+IO structure
+                        parsedCommand.preposition = foundPreposition; // Already lowercase
+                        parsedCommand.directObjectPhrase = textBeforePrep.trimEnd();
+                        const potentialIO = textAfterPrep.trimStart();
+                        parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
+                    } else {
+                        // V+P+IO structure (Prep found, but only whitespace before)
+                        parsedCommand.preposition = foundPreposition; // Already lowercase
+                        parsedCommand.directObjectPhrase = null;
+                        const potentialIO = textAfterPrep.trimStart();
+                        parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
+                    }
+
+                } else {
+                    // No separating preposition found - Assume V+DO
+                    parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
+                    parsedCommand.preposition = null;
+                    parsedCommand.indirectObjectPhrase = null;
+                }
+            } else {
+                // No text after the command - Pure V command
+            }
+
+        } else {
+            // Unknown command
+            if (commandString.trim() !== "") {
+                parsedCommand.error = "Unknown command.";
+            }
+        }
+
+        return parsedCommand;
     }
 }
 

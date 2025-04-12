@@ -5,6 +5,25 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 
+
+/**
+ * Represents the structured output of the command parser after refactoring.
+ * This structure separates the command into verb (implied by actionId),
+ * direct object, preposition, and indirect object, facilitating more
+ * complex command handling compared to a simple list of targets.
+ * This is the target output for the refactored parser and input for
+ * downstream consumers.
+ *
+ * @typedef {object} ParsedCommand
+ * @property {string | null} actionId - The unique identifier for the matched action (e.g., 'core:action_use', 'core:action_move'). Null if no action could be identified or parsing failed fundamentally.
+ * @property {string | null} directObjectPhrase - The identified noun phrase acting as the direct object of the verb. For commands like 'move north', this would be 'north'. For 'take rusty key', this would be 'rusty key'. Null if no direct object is applicable or identified.
+ * @property {string | null} preposition - The identified preposition (e.g., 'on', 'in', 'with', 'from', 'to') that links the direct object to the indirect object. Null if no preposition is present or applicable (e.g., single-object commands, commands with no objects).
+ * @property {string | null} indirectObjectPhrase - The identified noun phrase acting as the indirect object of the verb, usually following a preposition. For 'put book on table', this would be 'table'. Null if no indirect object is applicable or identified.
+ * @property {string} originalInput - The original, unmodified command string exactly as entered by the user. Useful for logging and debugging.
+ * @property {string | null} error - An optional error message detailing specific parsing failures (e.g., "Ambiguous command", "Command structure unclear", "Verb requires a target"). Null if parsing was successful or no specific error condition was met.
+ */
+
+
 /**
  * The context object provided to action handlers, containing all necessary
  * game state and dependencies for the handler to perform its work.
@@ -13,10 +32,11 @@
  * @typedef {object} ActionContext
  * @property {import('../entities/entity.js').default} playerEntity - The entity instance representing the player.
  * @property {import('../entities/entity.js').default} currentLocation - The entity instance representing the player's current location.
- * @property {string[]} targets - An array of strings representing the targets/arguments derived from the parsed command.
+ * @property {string[]} targets - An array of strings representing the targets/arguments derived from the parsed command. **NOTE:** This will likely change or be supplemented/replaced when the parser uses the new `ParsedCommand` structure.
  * @property {import('../core/dataManager.js').default} dataManager - The central manager for game data definitions.
  * @property {import('../entities/entityManager.js').default} entityManager - The manager for creating and tracking entity instances.
  * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events (via EventBus).
+ * @property {import('../core/eventBus.js').default} eventBus - The event bus instance for dispatching events. // Added based on GameLoop context construction
  * // Add other relevant state here if needed in the future (e.g., gameTime, weather)
  */
 
@@ -25,7 +45,7 @@
  *
  * @typedef {object} ActionMessage
  * @property {string} text - The message content.
- * @property {'info' | 'error' | 'success' | 'warning' | 'command' | string} [type='info'] - The type/style of the message (defaults to 'info').
+ * @property {'info' | 'error' | 'success' | 'warning' | 'command' | 'internal' | string} [type='info'] - The type/style of the message (defaults to 'info'). Added 'internal' based on usage.
  */
 
 /**
@@ -45,10 +65,10 @@
  * required changes to the core game state.
  *
  * @typedef {object} ActionResult
- * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack).
- * @property {ActionMessage[]} messages - An array of messages to be displayed to the player.
+ * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For handlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
+ * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., 'ui:message_display', 'action:move_failed'). **NOTE:** Usage varies; some handlers still return messages. This might be refined later.
  * @property {ActionNewState} [newState] - An optional object signaling required changes to GameLoop-managed state (like changing location). If omitted, no core state change is requested.
- * // @property {GameEvent[]} [eventsToDispatch] - Placeholder for future event system integration.
+ * // @property {GameEvent[]} [eventsToDispatch] - Placeholder for future event system integration. (Commented out as events are dispatched via context.dispatch)
  */
 
 // ---- Placeholder Export ----
