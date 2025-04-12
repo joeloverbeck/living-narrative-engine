@@ -1,617 +1,603 @@
 // src/tests/actions/handlers/useActionHandler.test.js
 
-import {describe, it, expect, jest, beforeEach} from '@jest/globals';
+import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 
-// --- Mock Dependencies FIRST ---
+import {executeUse} from '../../../actions/handlers/useActionHandler.js';
+import {InventoryComponent} from '../../../components/inventoryComponent.js';
+import {ItemComponent} from '../../../components/itemComponent.js';
+import {PositionComponent} from '../../../components/positionComponent.js';
+import {NameComponent} from '../../../components/nameComponent.js';
+// ConnectionsComponent might not be directly used if resolveTargetConnection is fully mocked,
+// but including it for completeness if the mock depends on its types internally.
+import {ConnectionsComponent} from '../../../components/connectionsComponent.js';
+/** @typedef {import('../../../components/connectionsComponent.js').Connection} Connection */
 
-// Mock the entire targetResolutionService module - Define mocks inline
-jest.mock('../../../services/targetResolutionService.js', () => ({
-    resolveTargetEntity: jest.fn(), // Define directly here
-    resolveTargetConnection: jest.fn(), // Define directly here
-}));
 
-// Mock action validation utils - Define mock inline, mocking the NEW function name
+// --- Mock dependencies ---
+import {validateRequiredCommandPart} from '../../../utils/actionValidationUtils.js';
+import {resolveTargetEntity, resolveTargetConnection} from '../../../services/targetResolutionService.js';
+import {getDisplayName, TARGET_MESSAGES} from '../../../utils/messages.js';
+
+// Mock the modules containing the functions we need to control
 jest.mock('../../../utils/actionValidationUtils.js', () => ({
-    // Mock the new function validateRequiredCommandPart
-    validateRequiredCommandPart: jest.fn(() => true), // Default mock returns true
+    validateRequiredCommandPart: jest.fn(),
 }));
 
-// Mock messages utils (This pattern was already correct)
+jest.mock('../../../services/targetResolutionService.js', () => ({
+    resolveTargetEntity: jest.fn(),
+    resolveTargetConnection: jest.fn(),
+}));
+
+// Mock messages lightly
 jest.mock('../../../utils/messages.js', () => ({
-    getDisplayName: jest.fn((entity) => entity?.mockName || entity?.id || 'Unknown'),
-    TARGET_MESSAGES: {
-        INTERNAL_ERROR_COMPONENT: (comp) => `Internal Error: Missing ${comp} Component.`,
-        NOTHING_CARRIED: "You aren't carrying anything.",
-        INTERNAL_ERROR: "An internal error occurred.",
+    getDisplayName: jest.fn((entity) => entity?.mockName || entity?.id || 'mock display name'),
+    TARGET_MESSAGES: { // Provide keys used internally by the handler or resolvers
+        INTERNAL_ERROR_COMPONENT: jest.fn((name) => `Mock Internal Error: Missing ${name}`),
+        NOTHING_CARRIED: 'Mock Nothing Carried',
+        INTERNAL_ERROR: 'Mock Internal Error',
+        // Provide mock implementations for keys potentially used by failed resolvers
+        TARGET_NOT_FOUND_CONTEXT: jest.fn((verb, name) => `Mock Target '${name}' not found for ${verb}`),
+        NOT_FOUND_INVENTORY: jest.fn((name) => `Mock You don't have '${name}'`),
+        SCOPE_EMPTY_GENERIC: jest.fn((verb, scope) => `Mock Scope Empty: ${verb} ${scope}`),
+        TARGET_AMBIGUOUS_CONTEXT: jest.fn((verb, name, matches) => `Mock Ambiguous ${name} for ${verb}`),
+        // Add others if specific failure paths of resolvers need mocking in other tests
     },
 }));
 
-// --- Get References to the Mock Functions AFTER jest.mock ---
-// We need these references to set implementations and clear mocks later
-const {
-    resolveTargetEntity: mockResolveTargetEntity,
-    resolveTargetConnection: mockResolveTargetConnection
-} = require('../../../services/targetResolutionService.js');
-const {validateRequiredCommandPart: mockValidateRequiredCommandPart} = require('../../../utils/actionValidationUtils.js');
-// If you need getDisplayName mock reference often, get it too:
-// const { getDisplayName: mockGetDisplayName } = require('../utils/messages.js');
-
-// --- Import the System Under Test AFTER mocks ---
-// Note: The exact path might depend on your folder structure (e.g., src/actions vs src/tests)
-// Assuming the test file is in src/tests and the handler is in src/actions
-import {executeUse} from '../../../actions/handlers/useActionHandler.js';
-
-// --- Import Components (or use simple mock objects) ---
-// Using simple objects for mocks to avoid component class dependencies
-const mockInventoryComponent = (items = []) => ({
-    items: items,
-    getItems: jest.fn(() => items),
-    hasItem: jest.fn((itemId) => items.includes(itemId)),
-});
-
-const mockPositionComponent = (locationId) => ({
-    locationId: locationId,
-    // Add other properties/methods if executeUse calls them
-});
-
-const mockNameComponent = (value) => ({
-    value: value,
-});
-
-const mockItemComponent = (definitionId = null) => ({
-    definitionId: definitionId,
-});
-
-const mockConnectionsComponent = (connections = []) => ({
-    connections: connections,
-    getConnectionById: jest.fn((connId) => connections.find(c => c.connectionId === connId)),
-    // Add other methods if executeUse calls them
-});
-
 
 // --- Test Suite ---
-describe('Action Handler: executeUse', () => {
-    let mockPlayerEntity;
-    let mockItemEntity;
-    let mockTargetEntity;
-    let mockConnectionObject;
-    let mockCurrentLocation;
-    let mockEntityManager;
-    let mockDataManager;
-    let mockEventBus;
-    let mockDispatch;
-    let baseActionContext;
-    const USE_REQUIRED_PART = 'directObjectPhrase'; // Assuming 'use' always requires the item (DO)
 
+describe('useActionHandler', () => {
+    describe('executeUse', () => {
+        let mockContext;
+        let mockPlayerEntity;
+        let mockItemEntity; // Defined here for use across tests
+        let mockEventBus;
+        let mockDispatch;
+        let mockDataManager;
+        const playerId = 'player-1';
+        const itemId = 'item-instance-key-123';
+        const itemDefId = 'item-def-master-key';
+        const itemPhrase = 'master key'; // Matches parsed command DO
 
-    // --- Test Setup ---
-    beforeEach(() => {
-        // *** CHANGE POINT 2: Use the corrected mock variable name for clearing/resetting ***
-        mockResolveTargetEntity.mockClear();
-        mockResolveTargetConnection.mockClear();
-        mockValidateRequiredCommandPart.mockClear(); // Use correct name
-        mockResolveTargetEntity.mockReset();
-        mockResolveTargetConnection.mockReset();
-        mockValidateRequiredCommandPart.mockReset(); // Use correct name
-        mockValidateRequiredCommandPart.mockImplementation(() => true); // Use correct name
+        const locationId = 'location-lab-1';
 
+        beforeEach(() => {
+            jest.clearAllMocks();
 
-        // --- Mock Entities and Objects ---
-        mockItemEntity = {
-            id: 'item:test_key_instance_123',
-            mockName: 'Test Key', // Used by mockGetDisplayName via the mock impl
-            getComponent: jest.fn((componentClassOrKey) => {
-                // Simplified key matching for test purposes
-                const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-                if (key === 'NameComponent') {
-                    return mockNameComponent('Test Key');
-                }
-                if (key === 'ItemComponent') {
-                    // Allow overriding definitionId if needed per test
-                    return mockItemComponent(mockItemEntity.definitionId || 'item_def:test_key');
-                }
+            // --- Basic Mocks Setup ---
+            mockPlayerEntity = {
+                id: playerId,
+                mockName: 'Player',
+                getComponent: jest.fn(),
+            };
+
+            mockItemEntity = { // Now defined in beforeEach for consistency
+                id: itemId,
+                mockName: itemPhrase,
+                getComponent: jest.fn(),
+            };
+
+            mockEventBus = {
+                dispatch: jest.fn(),
+            };
+
+            mockDispatch = jest.fn();
+
+            mockDataManager = {
+                getEntityDefinition: jest.fn(),
+            };
+
+            // Mock player components
+            const mockInventory = {
+                items: [itemId], // Assume item exists initially unless test overrides
+                getItems: jest.fn(() => [itemId]), // Default: has items
+            };
+            mockPlayerEntity.getComponent.mockImplementation((componentClass) => {
+                if (componentClass === InventoryComponent) return mockInventory;
+                if (componentClass === PositionComponent) return {locationId: locationId, x: 1, y: 1};
+                if (componentClass === NameComponent) return {value: 'Player'};
                 return undefined;
-            }),
-            // Add definitionId property to be accessible within mockItemEntity itself if needed
-            definitionId: 'item_def:test_key',
-        };
+            });
 
-        mockPlayerEntity = {
-            id: 'player:test_player',
-            getComponent: jest.fn((componentClassOrKey) => {
-                const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-                if (key === 'InventoryComponent') {
-                    // Default: player has the item
-                    return mockInventoryComponent([mockItemEntity.id]);
-                }
-                if (key === 'PositionComponent') {
-                    return mockPositionComponent('location:test_room');
-                }
-                if (key === 'NameComponent') {
-                    return mockNameComponent('Test Player');
-                }
+            // Mock item components (used when item *is* resolved)
+            mockItemEntity.getComponent.mockImplementation((componentClass) => {
+                if (componentClass === ItemComponent) return {definitionId: itemDefId};
+                if (componentClass === NameComponent) return {value: itemPhrase};
                 return undefined;
-            }),
-        };
+            });
 
-        mockTargetEntity = {
-            id: 'npc:test_goblin_456',
-            mockName: 'Test Goblin',
-            getComponent: jest.fn((componentClassOrKey) => {
-                const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-                if (key === 'NameComponent') {
-                    return mockNameComponent('Test Goblin');
-                }
-                // Add other components if needed by conditions/effects (though not tested here)
+            // Mock DataManager (used when item *is* resolved)
+            mockDataManager.getEntityDefinition.mockImplementation((defId) => {
+                if (defId === itemDefId) return {id: itemDefId, name: 'Master Key Definition'};
                 return undefined;
-            }),
-        };
+            });
 
-        mockConnectionObject = {
-            connectionId: 'conn:north_door_789',
-            name: 'North Door',
-            direction: 'north',
-            // Add state etc. if needed by conditions (though not tested here)
-        };
+            // Base mock context structure
+            mockContext = {
+                playerEntity: mockPlayerEntity,
+                entityManager: {
+                    getEntityInstance: jest.fn((id) => {
+                        if (id === playerId) return mockPlayerEntity;
+                        // Return item only if needed by successful item resolution path in a test
+                        if (id === itemId) return mockItemEntity;
+                        return undefined;
+                    }),
+                    getEntitiesInLocation: jest.fn().mockReturnValue([playerId]), // Only player by default
+                },
+                dataManager: mockDataManager,
+                dispatch: mockDispatch,
+                eventBus: mockEventBus,
+                currentLocation: {
+                    id: locationId,
+                    getComponent: jest.fn(), // Mock needed if resolveTargetConnection interacts directly
+                },
+                parsedCommand: null, // Set per test
+            };
 
-        mockCurrentLocation = {
-            id: 'location:test_room',
-            getComponent: jest.fn((componentClassOrKey) => {
-                const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-                if (key === 'ConnectionsComponent') {
-                    return mockConnectionsComponent([mockConnectionObject]);
-                }
-                if (key === 'NameComponent') {
-                    return mockNameComponent('Test Room');
-                }
+            // --- Default Mock Implementations ---
+            validateRequiredCommandPart.mockReturnValue(true); // Default to pass validation
+            // *** IMPORTANT: Default resolvers now return null to catch missing setup ***
+            resolveTargetEntity.mockReturnValue(null);
+            resolveTargetConnection.mockReturnValue(null);
+            // Use mock implementation that uses mockName if available
+            getDisplayName.mockImplementation((entity) => entity?.mockName || entity?.id || 'mock display name');
+        });
+
+        // =============================================================
+        // == Test Cases for Sub-Ticket 7.5.6 (Specific Failures) =====
+        // =============================================================
+
+        it('should return success: false and dispatch NOTHING_CARRIED if inventory is empty', () => {
+            // --- AC1: Setup ---
+            // Ensure command itself is valid enough to pass initial checks
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,
+                preposition: null,
+                indirectObjectPhrase: null,
+            };
+            // Mock inventory component specific setup
+            const mockEmptyInventory = {
+                getItems: jest.fn(() => []), // Return empty array
+            };
+            // Override the default playerEntity.getComponent mock for this test
+            mockPlayerEntity.getComponent.mockImplementation((componentClass) => {
+                if (componentClass === InventoryComponent) return mockEmptyInventory; // The crucial part
+                if (componentClass === PositionComponent) return {locationId: locationId, x: 1, y: 1};
+                if (componentClass === NameComponent) return {value: 'Player'};
                 return undefined;
-            }),
-        };
+            });
+            // Ensure initial validation passes
+            validateRequiredCommandPart.mockReturnValue(true);
 
-        // --- Mock Services ---
-        mockEntityManager = {
-            getEntityInstance: jest.fn((entityId) => {
-                if (entityId === mockPlayerEntity.id) return mockPlayerEntity;
-                if (entityId === mockItemEntity.id) return mockItemEntity;
-                if (entityId === mockTargetEntity.id) return mockTargetEntity;
-                if (entityId === mockCurrentLocation.id) return mockCurrentLocation;
-                return undefined;
-            }),
-            // Add other methods if executeUse calls them
-        };
+            // --- Execute ---
+            const result = executeUse(mockContext);
 
-        mockDataManager = {
-            getEntityDefinition: jest.fn((definitionOrInstanceId) => {
-                // This mock needs to return *something* that looks like a definition.
-                // The code uses `itemDefinition?.id`. So, the returned object MUST have an `id` property.
-                // We can make it somewhat realistic based on the test items.
-                if (definitionOrInstanceId === 'item_def:test_key' || definitionOrInstanceId === 'item:test_key_instance_123') {
-                    return {id: 'item_def:test_key', name: 'Test Key Definition'}; // Return the definition ID
+            // --- AC1: Verification ---
+            // Assert validation was checked (it happens before inventory check)
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            // Assert inventory check was done
+            expect(mockEmptyInventory.getItems).toHaveBeenCalled();
+            // Assert correct message dispatched
+            expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+                text: TARGET_MESSAGES.NOTHING_CARRIED,
+                type: 'info'
+            });
+            // Assert resolvers and event bus were NOT called
+            expect(resolveTargetEntity).not.toHaveBeenCalled();
+            expect(resolveTargetConnection).not.toHaveBeenCalled();
+            expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+            // Assert handler returned failure
+            expect(result.success).toBe(false);
+            expect(result.messages).toEqual(expect.arrayContaining([
+                expect.objectContaining({text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'internal'})
+            ]));
+        });
+
+        it('should return success: false early if direct object is missing (validation fails)', () => {
+            // --- AC2: Setup ---
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use`, // Missing DO
+                verbToken: 'use',
+                directObjectPhrase: null, // Explicitly null
+                preposition: null,
+                indirectObjectPhrase: null,
+            };
+            // Mock validation to fail for the direct object
+            validateRequiredCommandPart.mockImplementation((context, actionVerb, part) => {
+                if (actionVerb === 'use' && part === 'directObjectPhrase') {
+                    return false; // Simulate failure
                 }
-                if (definitionOrInstanceId === 'item_def:potion_healing' || definitionOrInstanceId === 'item:potion_1') {
-                    return {id: 'item_def:potion_healing', name: 'Healing Potion Definition'}; // Return the definition ID
+                return true; // Pass other potential checks (none expected here)
+            });
+
+            // --- Execute ---
+            const result = executeUse(mockContext);
+
+            // --- AC2: Verification ---
+            // Assert validation was called correctly
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            // Assert handler returned failure immediately
+            expect(result.success).toBe(false);
+            // Assert inventory check, resolvers, and event bus were NOT called
+            expect(mockPlayerEntity.getComponent).not.toHaveBeenCalledWith(InventoryComponent); // Didn't get to inventory check
+            expect(resolveTargetEntity).not.toHaveBeenCalled();
+            expect(resolveTargetConnection).not.toHaveBeenCalled();
+            expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+            // Optional: Check that the handler itself didn't dispatch redundant messages
+            expect(mockDispatch).not.toHaveBeenCalled(); // Validator handles dispatch
+        });
+
+        it('should return success: false and dispatch INTERNAL_ERROR if eventBus dispatch throws', () => {
+            // --- AC3: Setup ---
+            // Need a valid command and successful item resolution
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,
+                preposition: null,
+                indirectObjectPhrase: null,
+            };
+            // Mock validation passes
+            validateRequiredCommandPart.mockReturnValue(true);
+            // Mock item resolution succeeds
+            resolveTargetEntity.mockImplementation((context, config) => {
+                if (config.scope === 'inventory' && config.targetName === itemPhrase) {
+                    return mockItemEntity;
                 }
-                // Fallback for any other ID passed in tests
-                return {id: definitionOrInstanceId};
-            }),
-            // Add mocks for other dataManager methods if executeUse calls them
-        };
-
-        mockEventBus = {
-            dispatch: jest.fn(),
-        };
-        mockDispatch = mockEventBus.dispatch; // Alias for convenience
-
-        // --- Base Action Context ---
-        baseActionContext = {
-            playerEntity: mockPlayerEntity,
-            entityManager: mockEntityManager,
-            dataManager: mockDataManager,
-            eventBus: mockEventBus,
-            dispatch: mockDispatch,
-            currentLocation: mockCurrentLocation,
-            // targets will be added per test
-        };
-
-        mockDataManager.getEntityDefinition.mockClear();
-    });
-
-    // --- Test Cases (Remain the same as previous version) ---
-
-    it('AC 2.1: should dispatch item_use_attempted for item used on a connection', () => {
-        // Arrange Mocks
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            // Simulate resolving the item from inventory
-            if (config.scope === 'inventory' && config.targetName.includes('key')) {
-                return mockItemEntity;
-            }
-            return null;
-        });
-        mockResolveTargetConnection.mockImplementation((context, targetName) => {
-            // Simulate resolving the connection
-            if (targetName.includes('north door')) {
-                return mockConnectionObject;
-            }
-            return null;
-        });
-
-        mockItemEntity.id = 'item_def:test_key';
-
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['test', 'key', 'on', 'north', 'door'], // Example targets from parser
-        };
-
-        // Act
-        const result = executeUse(actionContext);
-
-        // Assert
-        expect(result.success).toBe(true);
-        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
-            actionContext,       // 1. Context (handler passes it through)
-            'use',               // 2. Action Verb
-            USE_REQUIRED_PART    // 3. Required Part ('directObjectPhrase')
-        );
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Only for the item
-        expect(mockResolveTargetEntity).toHaveBeenCalledWith(
-            actionContext,
-            expect.objectContaining({
-                scope: 'inventory',
-                targetName: 'test key', // <<< CORRECTED targetName
-                actionVerb: 'use', // Add other relevant properties if needed for precision
-                notFoundMessageKey: 'NOT_FOUND_INVENTORY'
-            })
-        );
-        expect(mockResolveTargetConnection).toHaveBeenCalledTimes(1);
-        // The mockGetDisplayName now correctly provides 'Test Key' here
-        expect(mockResolveTargetConnection).toHaveBeenCalledWith(actionContext, 'north door', expect.stringContaining('use Test Key on'));
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'event:item_use_attempted',
-            {
-                userEntityId: mockPlayerEntity.id,
-                itemInstanceId: mockItemEntity.id,
-                itemDefinitionId: mockItemEntity.definitionId, // From mock item setup
-                explicitTargetEntityId: null,
-                explicitTargetConnectionId: mockConnectionObject.connectionId,
-            }
-        );
-
-        // Check if dataManager was called correctly
-        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledTimes(1);
-        // It should be called with the item's definitionId if available, otherwise instanceId
-        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledWith(mockItemEntity.definitionId); // Should be 'item_def:test_key'
-
-        // The event payload should now correctly use the ID from the mocked definition
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'event:item_use_attempted',
-            expect.objectContaining({
-                itemDefinitionId: 'item_def:test_key', // This ID comes from the mockDataManager result
-            })
-        );
-    });
-
-    it('AC 2.2: should dispatch item_use_attempted for item used on an entity', () => {
-        // Arrange Mocks
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            if (config.scope === 'inventory' && config.targetName.includes('potion')) {
-                // Update mock item details for this test
-                mockItemEntity.id = 'item:potion_1';
-                mockItemEntity.mockName = 'Healing Potion';
-                mockItemEntity.definitionId = 'item_def:potion_healing';
-                return mockItemEntity;
-            }
-            if (config.scope === 'location' && config.targetName.includes('goblin')) {
-                return mockTargetEntity;
-            }
-            return null;
-        });
-        mockResolveTargetConnection.mockReturnValue(null); // No connection found
-
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['healing', 'potion', 'on', 'goblin'], // Example targets
-        };
-        // Ensure player has the potion using jest.spyOn to modify the mock for this test
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            if (key === 'InventoryComponent') return mockInventoryComponent(['item:potion_1']);
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player'); // Keep name accessible
-            return undefined;
-        });
-
-
-        // Act
-        const result = executeUse(actionContext);
-
-        // Assert
-        expect(result.success).toBe(true);
-        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
-            actionContext,
-            'use',
-            USE_REQUIRED_PART
-        );
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Once for item, once for target entity
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Called once for item, once for target
-
-// Check the FIRST call (Item from Inventory)
-        expect(mockResolveTargetEntity).toHaveBeenNthCalledWith(
-            1, // First call
-            actionContext,
-            expect.objectContaining({
-                scope: 'inventory',
-                targetName: 'healing potion', // <<< CORRECTED targetName
-                actionVerb: 'use',
-                notFoundMessageKey: 'NOT_FOUND_INVENTORY'
-            })
-        );
-
-// Check the SECOND call (Target Entity in Location)
-        expect(mockResolveTargetEntity).toHaveBeenNthCalledWith(
-            2, // Second call
-            actionContext,
-            expect.objectContaining({
-                scope: 'location',
-                targetName: 'goblin', // <<< This was likely already correct based on received call 2
-                actionVerb: expect.stringContaining('use Healing Potion on'), // Check the contextual verb
-                notFoundMessageKey: 'TARGET_NOT_FOUND_CONTEXT'
-            })
-        );
-        expect(mockResolveTargetEntity).toHaveBeenCalledWith(
-            actionContext,
-            expect.objectContaining({scope: 'location', targetName: 'goblin'}) // Target name extracted after item name
-        );
-        expect(mockResolveTargetConnection).toHaveBeenCalledTimes(1); // Still checks connection first
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'event:item_use_attempted',
-            {
-                userEntityId: mockPlayerEntity.id,
-                itemInstanceId: 'item:potion_1',
-                itemDefinitionId: 'item_def:potion_healing',
-                explicitTargetEntityId: mockTargetEntity.id,
-                explicitTargetConnectionId: null,
-            }
-        );
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
-
-    it('AC 2.3: should dispatch item_use_attempted for item used without explicit target', () => {
-        // Arrange Mocks
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            if (config.scope === 'inventory' && config.targetName === 'healing potion') { // Exact match now
-                mockItemEntity.id = 'item:potion_1';
-                mockItemEntity.mockName = 'Healing Potion';
-                mockItemEntity.definitionId = 'item_def:potion_healing';
-                return mockItemEntity;
-            }
-            return null;
-        });
-        // No connection or entity target should be resolved
-
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['healing', 'potion'], // Just the item
-        };
-        // Ensure player has the potion using jest.spyOn
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            if (key === 'InventoryComponent') return mockInventoryComponent(['item:potion_1']);
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player');
-            return undefined;
-        });
-
-        // Act
-        const result = executeUse(actionContext);
-
-        // Assert
-        expect(result.success).toBe(true);
-        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
-            actionContext,
-            'use',
-            USE_REQUIRED_PART
-        );
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Only for item
-        expect(mockResolveTargetEntity).toHaveBeenCalledWith(
-            actionContext,
-            expect.objectContaining({scope: 'inventory', targetName: 'healing potion'})
-        );
-        expect(mockResolveTargetConnection).not.toHaveBeenCalled(); // Not called if no remaining target string
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'event:item_use_attempted',
-            {
-                userEntityId: mockPlayerEntity.id,
-                itemInstanceId: 'item:potion_1',
-                itemDefinitionId: 'item_def:potion_healing',
-                explicitTargetEntityId: null,
-                explicitTargetConnectionId: null,
-            }
-        );
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
-
-    it('should fail if the specific item is not found in inventory', () => { // Renamed for clarity
-        // Arrange Mocks
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            if (config.scope === 'inventory') {
-                // Simulate resolver NOT finding the 'nonexistent item'
                 return null;
-            }
-            return null; // Default null for other scopes if any
+            });
+            // Mock eventBus dispatch to throw an error
+            const dispatchError = new Error('Simulated dispatch failure');
+            mockEventBus.dispatch.mockImplementation(() => {
+                throw dispatchError;
+            });
+
+            // --- Execute ---
+            const result = executeUse(mockContext);
+
+            // --- AC3: Verification ---
+            // Assert validation was checked
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            // Assert item resolution was attempted and succeeded (implicitly)
+            expect(resolveTargetEntity).toHaveBeenCalledWith(mockContext, expect.objectContaining({
+                scope: 'inventory',
+                targetName: itemPhrase
+            }));
+            // Assert event dispatch WAS called (even though it threw)
+            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                'event:item_use_attempted',
+                expect.objectContaining({ // Check key parts of payload
+                    userEntityId: playerId,
+                    itemInstanceId: itemId,
+                    itemDefinitionId: itemDefId,
+                    explicitTargetEntityId: null,
+                    explicitTargetConnectionId: null,
+                })
+            );
+            // Assert the catch block dispatched the internal error message
+            expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+                text: TARGET_MESSAGES.INTERNAL_ERROR,
+                type: 'error'
+            });
+            // Assert handler returned failure
+            expect(result.success).toBe(false);
+            expect(result.messages).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    text: expect.stringContaining('Intent Failed: Error dispatching event.'),
+                    type: 'error'
+                })
+            ]));
         });
 
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['nonexistent', 'item'],
-        };
-        // Ensure player inventory is NOT empty, but doesn't contain the target
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            // *** FIX: Give the player SOME other item ***
-            if (key === 'InventoryComponent') return mockInventoryComponent(['item:some_other_thing']);
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player');
-            return undefined;
+        // ==================================================================
+        // == Existing Tests (Failures from Ticket 7.5.5 + Success Cases) ===
+        // ==================================================================
+
+        it('should return success: false and not dispatch event if item cannot be resolved', () => {
+            // --- AC1: Setup ---
+            const nonExistentItemPhrase = 'glowing orb';
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${nonExistentItemPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: nonExistentItemPhrase, // Item player doesn't have
+                preposition: null,
+                indirectObjectPhrase: null,
+            };
+            validateRequiredCommandPart.mockReturnValue(true); // Validation passes
+            // resolveTargetEntity already defaults to null in beforeEach
+
+            // --- Execute ---
+            const result = executeUse(mockContext);
+
+            // --- AC1: Verification ---
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            expect(resolveTargetEntity).toHaveBeenCalledTimes(1);
+            expect(resolveTargetEntity).toHaveBeenCalledWith(mockContext, expect.objectContaining({
+                scope: 'inventory',
+                targetName: nonExistentItemPhrase,
+                notFoundMessageKey: 'NOT_FOUND_INVENTORY',
+            }));
+            expect(resolveTargetConnection).not.toHaveBeenCalled();
+            expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+            expect(result.success).toBe(false);
+            expect(result.messages).toEqual(expect.any(Array));
+            // Resolver should dispatch the user message (e.g., NOT_FOUND_INVENTORY)
+            // Verify handler didn't dispatch its *own* INTERNAL_ERROR
+            expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({
+                text: TARGET_MESSAGES.INTERNAL_ERROR
+            }));
         });
 
-        // Act
-        const result = executeUse(actionContext);
+        it('should return success: false and not dispatch event if item is found but target cannot be resolved', () => {
+            // --- AC2: Setup ---
+            const targetPhrase = 'locked console'; // Target that won't be found
+            const mockPreposition = 'on';
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase} ${mockPreposition} ${targetPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,         // Item exists
+                preposition: mockPreposition,
+                indirectObjectPhrase: targetPhrase,      // Target doesn't exist
+            };
+            validateRequiredCommandPart.mockReturnValue(true); // Validation passes
 
-        // Assert
-        expect(result.success).toBe(false);
-        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
-            actionContext,
-            'use',
-            USE_REQUIRED_PART
-        );
-        // *** The original assertion should now pass ***
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1);
-        expect(mockResolveTargetEntity).toHaveBeenCalledWith(
-            actionContext,
-            expect.objectContaining({scope: 'inventory', targetName: 'nonexistent item'})
-        );
-        expect(mockResolveTargetConnection).not.toHaveBeenCalled();
-        expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.anything());
-        // Add assertion check that resolveTargetEntity (or a utility it calls) dispatched the 'NOT_FOUND_INVENTORY' message
+            // Mock resolveTargetEntity: Succeeds for item, fails for target (default)
+            resolveTargetEntity.mockImplementation((context, config) => {
+                if (config.scope === 'inventory' && config.targetName === itemPhrase) {
+                    return mockItemEntity; // Find item
+                }
+                return null; // Fail target lookup (or any other)
+            });
+            // resolveTargetConnection defaults to null (fails target lookup)
 
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
+            // --- Execute ---
+            const result = executeUse(mockContext);
 
-    it('should fail if explicit target (connection/entity) is not found', () => {
-        // Arrange Mocks
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            // Found item
-            if (config.scope === 'inventory' && config.targetName.includes('key')) {
-                return mockItemEntity;
-            }
-            // Did NOT find target entity
-            if (config.scope === 'location') {
+            // --- AC2: Verification ---
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            const expectedContextString = `use ${itemPhrase} ${mockPreposition}`;
+
+            expect(resolveTargetEntity).toHaveBeenNthCalledWith(1, mockContext, expect.objectContaining({
+                scope: 'inventory', targetName: itemPhrase,
+            })); // Item lookup
+            expect(resolveTargetConnection).toHaveBeenNthCalledWith(1, mockContext,
+                targetPhrase, expectedContextString
+            ); // Connection target lookup (fails)
+            expect(resolveTargetEntity).toHaveBeenNthCalledWith(2, mockContext, expect.objectContaining({
+                scope: 'location', targetName: targetPhrase, actionVerb: expectedContextString
+            })); // Entity target lookup (fails)
+
+            expect(resolveTargetEntity).toHaveBeenCalledTimes(2);
+            expect(resolveTargetConnection).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+            expect(result.success).toBe(false);
+            expect(result.messages).toEqual(expect.any(Array));
+            // Resolver should dispatch the user message (e.g., TARGET_NOT_FOUND_CONTEXT)
+            // Verify handler didn't dispatch its *own* INTERNAL_ERROR
+            expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({
+                text: TARGET_MESSAGES.INTERNAL_ERROR
+            }));
+        });
+
+
+        // --- Existing SUCCESS Test Cases (Keep them) ---
+
+        it('should handle successful item use on a connection target (DO+P+IO)', () => {
+            // --- AC1: Context Simulation ---
+            const targetConnectionPhrase = 'north passage';
+            const targetConnectionId = 'conn-north-passage-01';
+            const targetConnectionName = 'North Passage';
+            const targetConnectionDirection = 'north';
+            const targetConnectionDestination = 'location-hallway-5';
+            const mockPreposition = 'on';
+
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase} ${mockPreposition} ${targetConnectionPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,
+                preposition: mockPreposition,
+                indirectObjectPhrase: targetConnectionPhrase, // The connection target phrase
+            };
+
+            // --- AC2: Mock Setup - Validation & Item Resolution ---
+            validateRequiredCommandPart.mockReturnValue(true);
+
+            // Configure resolveTargetEntity to find the ITEM
+            resolveTargetEntity.mockImplementation((context, config) => {
+                if (config.scope === 'inventory' && config.targetName === itemPhrase) {
+                    return mockItemEntity;
+                }
+                return null; // Only find the item for this path
+            });
+
+            // --- AC3: Mock Setup - Connection Resolution ---
+            /** @type {Connection} */
+            const mockConnectionObject = {
+                connectionId: targetConnectionId,
+                name: targetConnectionName,
+                direction: targetConnectionDirection,
+                target: targetConnectionDestination,
+                state: 'locked',
+            };
+
+            // Configure resolveTargetConnection to find the CONNECTION
+            resolveTargetConnection.mockImplementation((context, connectionTargetName, actionVerb) => {
+                if (connectionTargetName === targetConnectionPhrase) {
+                    return mockConnectionObject;
+                }
                 return null;
-            }
-            return null;
-        });
-        mockResolveTargetConnection.mockReturnValue(null); // Did NOT find target connection
+            });
 
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['test', 'key', 'on', 'nonexistent'], // Target 'nonexistent'
-        };
-        // Ensure player has the key
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            if (key === 'InventoryComponent') return mockInventoryComponent([mockItemEntity.id]);
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player');
-            return undefined;
-        });
+            // --- Execute ---
+            const result = executeUse(mockContext);
 
+            // --- AC4: Assertion: Resolver Call Sequence & Arguments ---
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            expect(resolveTargetEntity).toHaveBeenNthCalledWith(1,
+                mockContext,
+                expect.objectContaining({scope: 'inventory', targetName: itemPhrase})
+            );
+            const expectedContextString = `use ${itemPhrase} ${mockPreposition}`;
+            expect(resolveTargetConnection).toHaveBeenNthCalledWith(1,
+                mockContext,
+                targetConnectionPhrase,
+                expectedContextString
+            );
 
-        // Act
-        const result = executeUse(actionContext);
+            // --- AC5: Assertion: No Entity Target Resolution Attempt ---
+            expect(resolveTargetEntity).toHaveBeenCalledTimes(1); // Only for item
+            expect(resolveTargetConnection).toHaveBeenCalledTimes(1);
 
-        // Assert
-        expect(result.success).toBe(false);
-        expect(mockValidateRequiredCommandPart).toHaveBeenCalledWith(
-            actionContext,
-            'use',
-            USE_REQUIRED_PART
-        );
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(2); // Item (success), Target Entity (fail)
-        expect(mockResolveTargetConnection).toHaveBeenCalledTimes(1); // Target Connection (fail)
-        expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.anything());
-        // We expect resolveTargetConnection or resolveTargetEntity to dispatch the failure message
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
+            // --- AC6: Assertion: Event Dispatch ---
+            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                'event:item_use_attempted',
+                {
+                    userEntityId: playerId,
+                    itemInstanceId: itemId,
+                    itemDefinitionId: itemDefId,
+                    explicitTargetEntityId: null,
+                    explicitTargetConnectionId: targetConnectionId,
+                }
+            );
 
-    it('should fail if player is missing InventoryComponent', () => {
-        // Arrange Mocks using jest.spyOn
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            if (key === 'InventoryComponent') return null; // Missing inventory!
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player');
-            return undefined;
+            // --- AC7: Assertion: Return Value & No Errors ---
+            expect(result.success).toBe(true);
+            expect(result.messages).toEqual(expect.any(Array));
+            expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({type: 'error'}));
         });
 
-        // Arrange Context
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['test', 'key'],
-        };
+        it('should handle successful item use with no explicit target', () => {
+            // --- Test-Specific Mock Config ---
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,
+                preposition: null,
+                indirectObjectPhrase: null,
+            };
+            validateRequiredCommandPart.mockReturnValue(true);
+            // Configure resolveTargetEntity specifically for the item ONLY
+            resolveTargetEntity.mockImplementation((context, config) => {
+                if (config.scope === 'inventory' && config.targetName === itemPhrase) {
+                    return mockItemEntity;
+                }
+                return null;
+            });
+            // resolveTargetConnection default mock returns null, correct here
 
-        // Act
-        const result = executeUse(actionContext);
+            // --- Execute ---
+            const result = executeUse(mockContext);
 
-        // Assert
-        expect(result.success).toBe(false);
-        // executeUse checks inventory *before* validateRequiredTargets
-        // expect(mockValidateRequiredTargets).toHaveBeenCalled(); // This might not be called if inventory check fails first
-        expect(mockResolveTargetEntity).not.toHaveBeenCalled(); // Should fail before resolving
-        expect(mockResolveTargetConnection).not.toHaveBeenCalled();
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-            'ui:message_display',
-            expect.objectContaining({type: 'error', text: expect.stringContaining('Inventory')})
-        );
-        expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.anything());
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
-
-    it('should fail gracefully if EventBus is missing in context', () => {
-        // Arrange Mocks - resolve item successfully
-        mockResolveTargetEntity.mockImplementation((context, config) => {
-            // Simple item match based on the 'test key' target in context
-            if (config.scope === 'inventory' && config.targetName === 'test key') {
-                return mockItemEntity;
-            }
-            return null;
+            // --- Assertions ---
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            expect(resolveTargetEntity).toHaveBeenCalledTimes(1);
+            expect(resolveTargetEntity).toHaveBeenCalledWith(mockContext, expect.objectContaining({
+                scope: 'inventory',
+                targetName: itemPhrase
+            }));
+            expect(resolveTargetConnection).not.toHaveBeenCalled(); // Correctly NOT called
+            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:item_use_attempted', {
+                userEntityId: playerId,
+                itemInstanceId: itemId,
+                itemDefinitionId: itemDefId,
+                explicitTargetEntityId: null,
+                explicitTargetConnectionId: null,
+            });
+            expect(result.success).toBe(true);
+            expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({type: 'error'}));
         });
-        // Ensure player has the key
-        const inventorySpy = jest.spyOn(mockPlayerEntity, 'getComponent');
-        inventorySpy.mockImplementation((componentClassOrKey) => {
-            const key = typeof componentClassOrKey === 'string' ? componentClassOrKey : componentClassOrKey?.name;
-            if (key === 'InventoryComponent') return mockInventoryComponent([mockItemEntity.id]);
-            if (key === 'PositionComponent') return mockPositionComponent('location:test_room');
-            if (key === 'NameComponent') return mockNameComponent('Test Player');
-            return undefined;
+
+        it('should handle successful item use on an entity target', () => {
+            // --- Setup ---
+            const targetEntityId = 'entity-target-door-789';
+            const targetPhrase = 'rusty door';
+            const mockTargetEntity = {
+                id: targetEntityId,
+                mockName: targetPhrase,
+                getComponent: jest.fn(),
+            };
+            mockTargetEntity.getComponent.mockImplementation((componentClass) => {
+                if (componentClass === NameComponent) return {value: targetPhrase};
+                if (componentClass === PositionComponent) return {locationId: locationId, x: 5, y: 5};
+                return undefined;
+            });
+            mockContext.entityManager.getEntityInstance.mockImplementation((id) => {
+                if (id === playerId) return mockPlayerEntity;
+                if (id === itemId) return mockItemEntity;
+                if (id === targetEntityId) return mockTargetEntity;
+                return undefined;
+            });
+            mockContext.entityManager.getEntitiesInLocation.mockImplementation((locId) => {
+                if (locId === locationId) return [playerId, targetEntityId]; // Target is in location
+                return [];
+            });
+
+            mockContext.parsedCommand = {
+                actionId: 'core:action_use',
+                originalInput: `use ${itemPhrase} on ${targetPhrase}`,
+                verbToken: 'use',
+                directObjectPhrase: itemPhrase,
+                preposition: 'on',
+                indirectObjectPhrase: targetPhrase,
+            };
+            validateRequiredCommandPart.mockReturnValue(true);
+
+            // Configure resolvers for ITEM(ok) -> CONNECTION(fail) -> ENTITY(ok)
+            resolveTargetEntity.mockImplementation((context, config) => {
+                if (config.scope === 'inventory' && config.targetName === itemPhrase) {
+                    return mockItemEntity; // 1. Find Item
+                }
+                if (config.scope === 'location' && config.targetName === targetPhrase) {
+                    return mockTargetEntity; // 3. Find Target Entity
+                }
+                return null;
+            });
+            resolveTargetConnection.mockReturnValue(null); // 2. Connection check fails
+
+            // --- Execute ---
+            const result = executeUse(mockContext);
+
+            // --- Assertions ---
+            const expectedContextString = `use ${itemPhrase} on`;
+            expect(validateRequiredCommandPart).toHaveBeenCalledWith(mockContext, 'use', 'directObjectPhrase');
+            expect(resolveTargetEntity).toHaveBeenNthCalledWith(1, mockContext, expect.objectContaining({
+                scope: 'inventory', targetName: itemPhrase,
+            }));
+            expect(resolveTargetConnection).toHaveBeenNthCalledWith(1, mockContext,
+                targetPhrase, expectedContextString
+            );
+            expect(resolveTargetEntity).toHaveBeenNthCalledWith(2, mockContext, expect.objectContaining({
+                scope: 'location', targetName: targetPhrase,
+            }));
+            expect(resolveTargetEntity).toHaveBeenCalledTimes(2);
+            expect(resolveTargetConnection).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                'event:item_use_attempted',
+                {
+                    userEntityId: playerId,
+                    itemInstanceId: itemId,
+                    itemDefinitionId: itemDefId,
+                    explicitTargetEntityId: targetEntityId, // Correct: Entity ID
+                    explicitTargetConnectionId: null        // Correct: Connection ID null
+                }
+            );
+            expect(result.success).toBe(true);
+            expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({type: 'error'}));
         });
 
-
-        // Arrange Context - Remove eventBus!
-        const actionContext = {
-            ...baseActionContext,
-            targets: ['test', 'key'],
-            eventBus: undefined, // Critical part of this test
-            // Keep context.dispatch pointing to the mockDispatch for the error message
-        };
-
-        // Act
-        const result = executeUse(actionContext);
-
-        // Assert
-        expect(result.success).toBe(false);
-        expect(mockResolveTargetEntity).toHaveBeenCalledTimes(1); // Should still resolve item
-        // It tries to dispatch the internal error message via context.dispatch
-        expect(mockDispatch).toHaveBeenCalledTimes(1);
-        expect(mockDispatch).toHaveBeenCalledWith(
-            'ui:message_display',
-            expect.objectContaining({type: 'error', text: expect.stringContaining('internal error')})
-        );
-        // It should not have tried to dispatch the success event via the (missing) eventBus
-        // Since eventBus is undefined, the final dispatch will fail internally
-        expect(mockDispatch).not.toHaveBeenCalledWith('event:item_use_attempted', expect.anything());
-        inventorySpy.mockRestore(); // Clean up the spy
-    });
-});
+    }); // end describe executeUse
+}); // end describe useActionHandler

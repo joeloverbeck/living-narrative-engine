@@ -4,6 +4,16 @@ import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {PositionComponent} from '../../components/positionComponent.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
+const DIRECTION_ALIASES = {
+    'n': 'north', 's': 'south', 'e': 'east', 'w': 'west',
+    'ne': 'northeast', 'nw': 'northwest', 'se': 'southeast', 'sw': 'southwest',
+    'u': 'up', 'd': 'down',
+    // Include canonical directions mapping to themselves for simplicity
+    'north': 'north', 'south': 'south', 'east': 'east', 'west': 'west',
+    'northeast': 'northeast', 'northwest': 'northwest', 'southeast': 'southeast', 'southwest': 'southwest',
+    'up': 'up', 'down': 'down'
+};
+
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
@@ -18,8 +28,8 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
  * @returns {ActionResult} - The result of the action validation (success/fail). Messages array is removed.
  */
 export function executeMove(context) {
-    // Destructure context, including dispatch
-    const {playerEntity, currentLocation, targets, dataManager, entityManager, dispatch} = context;
+    // Destructure context, including dispatch and parsedCommand
+    const {playerEntity, currentLocation, dataManager, entityManager, dispatch, parsedCommand} = context; // Added parsedCommand, removed targets
     let success = false; // Assume failure until event:move_attempted is dispatched
 
     // --- 1. Initial Validations ---
@@ -27,29 +37,30 @@ export function executeMove(context) {
         const reasonCode = 'SETUP_ERROR';
         const details = 'Current location unknown';
         dispatch('action:move_failed', {
-            actorId: playerEntity?.id || 'unknown', // Include actorId if possible
+            actorId: playerEntity?.id || 'unknown',
             reasonCode: reasonCode,
             details: details
         });
         console.error("executeMove handler called with invalid currentLocation in context.");
-        return {success: success}; // Return immediately on fundamental setup error
+        return {success: success};
     }
 
-    // --- Validate required target (direction) ---
-    // Note: As per ticket, using 'directObjectPhrase' as the parser puts direction here without a preposition.
+    // --- Validate required target (direction) using parsedCommand ---
+    // Ticket 8: Use parsedCommand.directObjectPhrase
     if (!validateRequiredCommandPart(context, 'move', 'directObjectPhrase')) { // [cite: file:handlers/moveActionHandler.js]
-        // validateRequiredTargets now handles the semantic event dispatch for missing target
+        // validateRequiredCommandPart now handles the semantic event dispatch for missing target
         return {success: false};
     }
 
     // --- 2. Get Player's Position Component ---
+    // (No changes needed in this section)
     const playerPositionComp = playerEntity.getComponent(PositionComponent);
     if (!playerPositionComp) {
         const reasonCode = 'SETUP_ERROR';
         const details = 'Player position unknown';
         dispatch('action:move_failed', {
             actorId: playerEntity.id,
-            locationId: currentLocation.id, // Add location context if available
+            locationId: currentLocation.id,
             reasonCode: reasonCode,
             details: details
         });
@@ -63,7 +74,10 @@ export function executeMove(context) {
     }
 
     // --- 3. Process Direction and Connection ---
-    const direction = targets[0].toLowerCase();
+    // Ticket 8: Use parsedCommand.directObjectPhrase for direction
+    const rawDirection = parsedCommand.directObjectPhrase.toLowerCase(); // Get the parsed phrase
+    
+    const direction = DIRECTION_ALIASES[rawDirection] || rawDirection;
 
     const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComp || !Array.isArray(connectionsComp.connections) || connectionsComp.connections.length === 0) {
@@ -71,15 +85,17 @@ export function executeMove(context) {
         dispatch('action:move_failed', {
             actorId: playerEntity.id,
             locationId: currentLocation.id,
-            direction: direction, // Direction attempted is still relevant
+            direction: direction,
             reasonCode: reasonCode
         });
-        return {success: success}; // Not a failure in the sense of error, but move did not succeed.
+        return {success: success};
     }
 
-    const connection = connectionsComp.getConnectionByDirection(direction);
+    // Use the appropriate method from ConnectionsComponent
+    const connection = connectionsComp.getConnectionByDirection(direction); // Assuming this method exists and works
 
     // --- 4. Handle Connection Result and Validation ---
+    // (No changes needed in this section regarding parsedCommand)
     if (connection) {
         const currentState = connection.state ?? connection.initial_state;
         if (currentState === 'locked') {
@@ -89,10 +105,9 @@ export function executeMove(context) {
                 locationId: currentLocation.id,
                 direction: direction,
                 reasonCode: reasonCode,
-                // Pass optional override message hint for NotificationUISystem
                 lockMessageOverride: connection.description_override
             });
-            return {success: success}; // Move did not succeed.
+            return {success: success};
         }
 
         const targetLocationId = connection.target;
@@ -120,22 +135,20 @@ export function executeMove(context) {
                     direction: direction,
                     previousLocationId: previousLocationId
                 };
-                // Dispatch the core semantic event indicating a valid move attempt
                 dispatch('event:move_attempted', moveAttemptPayload);
-                success = true; // Mark as successful *dispatch* of the attempt
+                success = true;
             } catch (error) {
-                // Handle internal errors during the *dispatch* process itself
                 const reasonCode = 'INTERNAL_DISPATCH_ERROR';
                 dispatch('action:move_failed', {
                     actorId: playerEntity.id,
                     locationId: currentLocation.id,
-                    direction: direction, // Context is helpful
+                    direction: direction,
                     targetLocationId: targetLocationId,
                     reasonCode: reasonCode,
                     details: `Error during dispatch of event:move_attempted: ${error.message}`
                 });
                 console.error(`executeMove: Failed to dispatch move attempt event for ${playerEntity.id} moving to ${targetLocationId}`, error);
-                success = false; // Ensure success is false if dispatch failed
+                success = false;
             }
 
         } else {
@@ -145,12 +158,11 @@ export function executeMove(context) {
                 actorId: playerEntity.id,
                 locationId: currentLocation.id,
                 direction: direction,
-                targetLocationId: targetLocationId, // Include the problematic ID
+                targetLocationId: targetLocationId,
                 reasonCode: reasonCode,
                 details: details
             });
             console.error(`Move handler validation failed: Target location definition not found via dataManager for ID: ${targetLocationId}`);
-            // success remains false
         }
     } else {
         // No connection found for the specified direction
@@ -161,10 +173,8 @@ export function executeMove(context) {
             direction: direction,
             reasonCode: reasonCode
         });
-        // success remains false
     }
 
     // --- 5. Return Result ---
-    // Return only success status. Messages are handled via semantic events.
     return {success: success};
 }

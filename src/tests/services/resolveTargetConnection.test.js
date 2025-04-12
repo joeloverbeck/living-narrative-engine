@@ -93,6 +93,11 @@ beforeEach(() => {
 // ========================================================================
 // == Tests for resolveTargetConnection Utility Function ==================
 // ========================================================================
+
+// Note: The extensive Analysis Summary comment block previously here
+// has been moved to the Jira ticket description (CHILD-TICKET-2.2.2)
+// or related documentation for better code readability, as suggested.
+
 describe('resolveTargetConnection', () => {
     let locationEntity;
     let northConn, southConn, eastDoorConn, westAmbiguousConn1, westAmbiguousConn2;
@@ -101,7 +106,7 @@ describe('resolveTargetConnection', () => {
         // Use the global mock context (player, location already set up)
         locationEntity = mockCurrentLocation;
 
-        // Setup connections
+        // Setup connections (Keep existing ones)
         northConn = {connectionId: 'c-n', direction: 'north', targetLocationId: 'loc-n', name: 'archway'};
         southConn = {connectionId: 'c-s', direction: 'south', targetLocationId: 'loc-s', name: 'gap in the wall'};
         eastDoorConn = {connectionId: 'c-e', direction: 'east', targetLocationId: 'loc-e', name: 'heavy wooden door'};
@@ -118,6 +123,7 @@ describe('resolveTargetConnection', () => {
         locationEntity.addComponent(connectionsComp);
     });
 
+    // --- Input Validation ---
     test('should return null if connectionTargetName is empty or whitespace', () => {
         const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
         });
@@ -149,7 +155,7 @@ describe('resolveTargetConnection', () => {
         });
     });
 
-    // --- Matching Logic ---
+    // --- Basic Matching Logic ---
     test('should find unique connection by exact direction (case-insensitive)', () => {
         expect(resolveTargetConnection(mockContext, 'north')).toBe(northConn);
         expect(resolveTargetConnection(mockContext, 'SOUTH')).toBe(southConn);
@@ -159,7 +165,7 @@ describe('resolveTargetConnection', () => {
     test('should find unique connection by partial name (case-insensitive)', () => {
         expect(resolveTargetConnection(mockContext, 'arch')).toBe(northConn);
         expect(resolveTargetConnection(mockContext, 'GAP')).toBe(southConn);
-        expect(resolveTargetConnection(mockContext, 'wooden door')).toBe(eastDoorConn);
+        expect(resolveTargetConnection(mockContext, 'wooden door')).toBe(eastDoorConn); // Matches 'heavy wooden door'
         expect(mockDispatch).not.toHaveBeenCalled();
     });
 
@@ -167,7 +173,6 @@ describe('resolveTargetConnection', () => {
         expect(resolveTargetConnection(mockContext, 'heavy wooden door')).toBe(eastDoorConn);
         expect(mockDispatch).not.toHaveBeenCalled();
     });
-
 
     test('should return null and dispatch NOT_FOUND if no connection matches', () => {
         const targetName = 'teleporter';
@@ -203,6 +208,7 @@ describe('resolveTargetConnection', () => {
         });
     });
 
+    // --- Priority ---
     test('should prioritize direction match over name match if unique by direction', () => {
         // Add a connection that might match 'east' by name but not direction
         const sneakyConn = {
@@ -216,6 +222,57 @@ describe('resolveTargetConnection', () => {
         // Searching for 'east' should uniquely find the one with direction 'east'
         expect(resolveTargetConnection(mockContext, 'east')).toBe(eastDoorConn);
         expect(mockDispatch).not.toHaveBeenCalled();
+    });
+
+    // --- Whitespace and Punctuation Edge Case Tests (CHILD-TICKET-2.2.2) ---
+
+    // AC1: Internal Whitespace - Name (No Match)
+    test('should return null for input name with extra internal spaces not matching target name', () => {
+        const targetNameInput = 'heavy   wooden  door'; // Input with extra spaces
+        // Target connection `eastDoorConn` has name: 'heavy wooden door'
+        expect(resolveTargetConnection(mockContext, targetNameInput)).toBeNull();
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetNameInput.trim()), // trim() happens before message
+            type: 'info',
+        });
+    });
+
+    // AC2: Trailing Punctuation - Name Match
+    test('should find connection when input name with trailing punctuation matches target name punctuation', () => {
+        // Add a specific connection for this test case
+        const signConn = {
+            connectionId: 'c-sign',
+            direction: 'portal',
+            targetLocationId: 'loc-sign',
+            name: 'Exit sign.'
+        };
+        locationEntity.getComponent(ConnectionsComponent).addConnection(signConn);
+
+        const targetNameInput = 'sign.'; // Input with trailing period
+        expect(resolveTargetConnection(mockContext, targetNameInput)).toBe(signConn);
+        expect(mockDispatch).not.toHaveBeenCalled(); // Successful unique match
+    });
+
+    // AC3: Trailing Punctuation - Name No Match
+    test('should return null when input name with trailing punctuation does not match target name', () => {
+        const targetNameInput = 'archway.'; // Input with trailing period
+        // Target connection `northConn` has name: 'archway'
+        expect(resolveTargetConnection(mockContext, targetNameInput)).toBeNull();
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetNameInput.trim()), // trim() happens before message
+            type: 'info',
+        });
+    });
+
+    // AC4: Trailing Punctuation - Direction No Match
+    test('should return null when input direction with trailing punctuation does not match target direction', () => {
+        const targetDirectionInput = 'north.'; // Input with trailing period
+        // Target connection `northConn` has direction: 'north'
+        expect(resolveTargetConnection(mockContext, targetDirectionInput)).toBeNull();
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetDirectionInput.trim()), // trim() happens before message
+            type: 'info',
+        });
     });
 
 

@@ -82,6 +82,23 @@ class CommandParser {
 
         if (matchedActionId !== null) {
             parsedCommand.actionId = matchedActionId;
+            // Find the actual command/alias string that caused the match
+            // This requires finding which lowerCommandOrAlias led to matchedActionId
+            let matchedAlias = '';
+            for (const actionDefinition of actionsMap.values()) {
+                if (actionDefinition.id === matchedActionId && actionDefinition.commands) {
+                    for (const commandOrAlias of actionDefinition.commands) {
+                        const lowerCommandOrAlias = commandOrAlias.toLowerCase();
+                        if (lowerInputTrimmedStart.startsWith(lowerCommandOrAlias) && lowerCommandOrAlias.length === longestMatchLength) {
+                            matchedAlias = lowerCommandOrAlias;
+                            break; // Found the specific alias that matched
+                        }
+                    }
+                }
+                if (matchedAlias) break;
+            }
+
+
             const remainingText = inputTrimmedStart.substring(longestMatchLength);
             const textAfterCommand = remainingText.trimStart();
 
@@ -144,7 +161,7 @@ class CommandParser {
                         const potentialIO = textAfterPrep.trimStart();
                         parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
                     }
-
+                    
                 } else {
                     // No separating preposition found - Assume V+DO
                     parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
@@ -152,7 +169,21 @@ class CommandParser {
                     parsedCommand.indirectObjectPhrase = null;
                 }
             } else {
-                // No text after the command - Pure V command
+                // --- NEW LOGIC FOR ALIAS-AS-OBJECT ---
+                // No text after the command - Pure V command OR Alias acting as object.
+                // Check if the matched alias IS the intended direct object (e.g., 'north')
+                // You might need a better way to determine this, e.g., checking if
+                // matchedActionId is 'core:action_move' and matchedAlias is a direction.
+                // Simple approach: If action is move, and alias isn't 'move' or 'go', assume it's the direction.
+                const moveActionVerbs = ['move', 'go']; // Define primary verbs
+                if (matchedActionId === 'core:action_move' && matchedAlias && !moveActionVerbs.includes(matchedAlias)) {
+                    parsedCommand.directObjectPhrase = matchedAlias; // Use the matched alias itself (already lowercase)
+                } else {
+                    // It's likely just a pure verb command (like 'look', 'inventory')
+                    parsedCommand.directObjectPhrase = null;
+                }
+                parsedCommand.preposition = null;
+                parsedCommand.indirectObjectPhrase = null;
             }
 
         } else {

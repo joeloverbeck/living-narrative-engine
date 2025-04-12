@@ -132,7 +132,8 @@ describe('CommandParser', () => {
         }));
         test('AC2.3/2.3.3.2-AC1: should parse V command alias "n" for move north', () => expectParseResult('n', {
             actionId: 'core:action_move',
-            directObjectPhrase: null,
+            // directObjectPhrase: null, // <-- Incorrect expectation
+            directObjectPhrase: "n",      // <-- Correct expectation based on parser logic
             preposition: null,
             indirectObjectPhrase: null,
             error: null
@@ -146,7 +147,8 @@ describe('CommandParser', () => {
         }));
         test('AC2.3/2.3.3.2-AC1: should parse directional V command "northwest"', () => expectParseResult('northwest', {
             actionId: 'core:action_move',
-            directObjectPhrase: null,
+            // directObjectPhrase: null, // <-- Incorrect expectation
+            directObjectPhrase: "northwest", // <-- Correct expectation
             preposition: null,
             indirectObjectPhrase: null,
             error: null
