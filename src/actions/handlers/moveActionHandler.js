@@ -19,7 +19,7 @@ const DIRECTION_ALIASES = {
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 
 /**
- * Handles the 'core:action_move' action.
+ * Handles the 'core:move' action.
  * Validates the player's intent to move and emits 'event:move_attempted' if valid.
  * If validation fails or errors occur, emits 'action:move_failed'.
  * Does NOT modify player position directly. Relies on a MovementSystem to handle the event.

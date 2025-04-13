@@ -1,0 +1,16 @@
+{
+  "id": "core:push",
+  "name": "Push",
+  "description": "Push a pushable object or entity.",
+  "commands": [
+    "push",
+    "shove"
+  ],
+  "target_type": "entity_in_room",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "PushableComponent"
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "id": "core:action_take",
+  "id": "core:take",
   "name": "Take",
   "description": "Pick up an item from the current location.",
   "commands": [

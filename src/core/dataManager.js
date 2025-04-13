@@ -375,8 +375,8 @@ class DataManager {
         }
 
         const filePromises = filenames.map(async (filename) => {
-            // Assumes filenames in manifest are like 'core_action_attack.action.json'
-            // And files are located like 'data/actions/core_action_attack.action.json'
+            // Assumes filenames in manifest are like 'core_ttack.action.json'
+            // And files are located like 'data/actions/core_attack.action.json'
             if (filename.includes('/') || filename.includes('\\')) {
                 console.warn(`DataManager: Filename '${filename}' for type '${typeName}' contains path separators. Ensure this is intended and paths in manifest are correct relative filenames only.`);
                 // Assuming the filename IS the relative path needed within the type directory.

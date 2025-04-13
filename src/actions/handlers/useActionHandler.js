@@ -22,7 +22,7 @@ import {resolveTargetEntity, resolveTargetConnection} from '../../services/targe
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
- * Handles the 'core:action_use' action.
+ * Handles the 'core:use' action.
  * Attempts to parse the input into an item (from inventory) and an optional target
  * (connection or entity nearby), then fires 'event:item_use_attempted'.
  *

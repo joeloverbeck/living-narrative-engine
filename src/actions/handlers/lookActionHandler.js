@@ -15,7 +15,7 @@ import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 /** @typedef {import('../../types').LocationRenderData} LocationRenderData */
 
 /**
- * Handles the 'core:action_look' action. Dispatches messages directly via context.dispatch.
+ * Handles the 'core:look' action. Dispatches messages directly via context.dispatch.
  * Uses TargetResolutionService for looking at specific targets (nearby scope).
  * @param {ActionContext} context
  * @returns {ActionResult}

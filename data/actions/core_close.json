@@ -1,5 +1,5 @@
 {
-  "id": "core:action_close",
+  "id": "core:close",
   "name": "Close",
   "description": "Close an open object.",
   "commands": [

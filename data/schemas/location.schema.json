@@ -147,7 +147,7 @@
                   "properties": {
                     "action_id": {
                       "$ref": "./common.schema.json#/definitions/namespacedId",
-                      "description": "The ID of the action that triggers this interaction (e.g., 'core:action_force_open')."
+                      "description": "The ID of the action that triggers this interaction (e.g., 'core:force_open')."
                     },
                     "requires_state": {
                       "type": "string",

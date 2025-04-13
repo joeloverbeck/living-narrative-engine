@@ -130,7 +130,7 @@ class TriggerSystem {
                 playerEntity: playerEntity,
                 currentLocation: newLocation,
                 parsedCommand: {
-                    actionId: 'core:action_look',
+                    actionId: 'core:look',
                     directObjectPhrase: null, // No specific target for automatic look
                     preposition: null,
                     indirectObjectPhrase: null,
@@ -144,14 +144,14 @@ class TriggerSystem {
             };
 
             try {
-                const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
+                const lookResult = this.#actionExecutor.executeAction('core:look', lookContext);
                 if (!lookResult.success) {
-                    console.warn(`TriggerSystem: Initial 'core:action_look' execution reported failure. Messages:`, lookResult.messages);
+                    console.warn(`TriggerSystem: Initial 'core:look' execution reported failure. Messages:`, lookResult.messages);
                 } else {
-                    console.log(`TriggerSystem: Initial 'core:action_look' executed successfully.`);
+                    console.log(`TriggerSystem: Initial 'core:look' executed successfully.`);
                 }
             } catch (error) {
-                console.error("TriggerSystem: Uncaught error executing initial 'core:action_look':", error);
+                console.error("TriggerSystem: Uncaught error executing initial 'core:look':", error);
                 this.#eventBus.dispatch('ui:message_display', {
                     text: "Internal Error: Failed to perform initial look.",
                     type: 'error'
@@ -200,7 +200,7 @@ class TriggerSystem {
             playerEntity: player,
             currentLocation: newLocationEntity,
             parsedCommand: {
-                actionId: 'core:action_look',
+                actionId: 'core:look',
                 directObjectPhrase: null, // No specific target for automatic look
                 preposition: null,
                 indirectObjectPhrase: null,
@@ -214,14 +214,14 @@ class TriggerSystem {
         };
 
         try {
-            const lookResult = this.#actionExecutor.executeAction('core:action_look', lookContext);
+            const lookResult = this.#actionExecutor.executeAction('core:look', lookContext);
             if (!lookResult.success) {
-                console.warn(`TriggerSystem: Automatic 'core:action_look' after move reported failure. Messages:`, lookResult.messages);
+                console.warn(`TriggerSystem: Automatic 'core:look' after move reported failure. Messages:`, lookResult.messages);
             } else {
-                console.log(`TriggerSystem: Automatic 'core:action_look' after move executed successfully.`);
+                console.log(`TriggerSystem: Automatic 'core:look' after move executed successfully.`);
             }
         } catch (error) {
-            console.error("TriggerSystem: Uncaught error executing automatic 'core:action_look' after move:", error);
+            console.error("TriggerSystem: Uncaught error executing automatic 'core:look' after move:", error);
             this.#eventBus.dispatch('ui:message_display', {
                 text: "Internal Error: Failed to perform automatic look after moving.",
                 type: 'error'

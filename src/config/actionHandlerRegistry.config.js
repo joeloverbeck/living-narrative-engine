@@ -20,18 +20,18 @@ import { executeUnequip } from '../actions/handlers/unequipActionHandler.js';
 // Define and export the registry configuration as a Map
 export const actionHandlerRegistryConfig = new Map([
     // Core Actions
-    ['core:action_move', executeMove],
-    ['core:action_look', executeLook],
-    ['core:action_take', executeTake],
-    ['core:action_drop', executeDrop],
-    ['core:action_inventory', executeInventory],
-    ['core:action_attack', executeAttack],
-    ['core:action_use', executeUse],
-    ['core:action_equip', executeEquip],
-    ['core:action_unequip', executeUnequip],
+    ['core:move', executeMove],
+    ['core:look', executeLook],
+    ['core:take', executeTake],
+    ['core:drop', executeDrop],
+    ['core:inventory', executeInventory],
+    ['core:attack', executeAttack],
+    ['core:use', executeUse],
+    ['core:equip', executeEquip],
+    ['core:unequip', executeUnequip],
 
     // Add mappings for new actions here as they are created
-    // Example: ['custom:action_special', executeSpecialAction],
+    // Example: ['custom:special', executeSpecialAction],
 ]);
 
 console.log(`Action Handler Registry Config: Loaded ${actionHandlerRegistryConfig.size} handler mappings.`);

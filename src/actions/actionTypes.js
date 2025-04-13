@@ -17,7 +17,7 @@
  * downstream consumers.
  *
  * @typedef {object} ParsedCommand
- * @property {string | null} actionId - The unique identifier for the matched action (e.g., 'core:action_use', 'core:action_move'). Null if no action could be identified or parsing failed fundamentally.
+ * @property {string | null} actionId - The unique identifier for the matched action (e.g., 'core:use', 'core:move'). Null if no action could be identified or parsing failed fundamentally.
  * @property {string | null} directObjectPhrase - The identified noun phrase acting as the direct object of the verb. For commands like 'move north', this would be 'north'. For 'take rusty key', this would be 'rusty key'. Null if no direct object is applicable or identified.
  * @property {string | null} preposition - The identified preposition (e.g., 'on', 'in', 'with', 'from', 'to') that links the direct object to the indirect object. Null if no preposition is present or applicable (e.g., single-object commands, commands with no objects).
  * @property {string | null} indirectObjectPhrase - The identified noun phrase acting as the indirect object of the verb, usually following a preposition. For 'put book on table', this would be 'table'. Null if no indirect object is applicable or identified.

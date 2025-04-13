@@ -1,0 +1,12 @@
+{
+  "id": "core:look",
+  "name": "Look",
+  "description": "Examine the general surroundings of your current location.",
+  "commands": [
+    "look",
+    "l"
+  ],
+  "requires_target": false,
+  "target_type": "none",
+  "applicability": {}
+}

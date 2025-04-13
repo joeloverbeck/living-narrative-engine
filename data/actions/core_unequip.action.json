@@ -1,5 +1,5 @@
 {
-  "id": "core:action_unequip",
+  "id": "core:unequip",
   "name": "Unequip",
   "description": "Unequip an item you are wearing or wielding.",
   "commands": [

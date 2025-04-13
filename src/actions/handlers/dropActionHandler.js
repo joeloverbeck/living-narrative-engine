@@ -14,7 +14,7 @@ import {ItemComponent} from "../../components/itemComponent.js";
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
- * Handles the 'drop' action ('core:action_drop'). Allows the player to attempt
+ * Handles the 'drop' action ('core:drop'). Allows the player to attempt
  * to drop items from their inventory into the current location by dispatching
  * an event for a system to handle the actual state changes.
  * Refactored to use parsedCommand based on Ticket 9.3.1.

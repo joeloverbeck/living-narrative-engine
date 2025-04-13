@@ -10,7 +10,7 @@ import {resolveTargetEntity} from '../../services/targetResolutionService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**
- * Handles the 'take' action ('core:action_take'). Allows the player to pick up items
+ * Handles the 'take' action ('core:take'). Allows the player to pick up items
  * from the current location using TargetResolutionService.
  * Dispatches semantic events (e.g., 'action:take_succeeded', 'action:take_failed')
  * instead of directly dispatching UI messages.

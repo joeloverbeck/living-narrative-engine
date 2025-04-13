@@ -1,0 +1,15 @@
+{
+  "id": "core:drink",
+  "name": "Drink",
+  "description": "Consume a drinkable liquid from an item in inventory.",
+  "commands": [
+    "drink"
+  ],
+  "target_type": "item_in_inventory",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "LiquidContainerComponent"
+    ]
+  }
+}

@@ -152,7 +152,7 @@ describe('useActionHandler', () => {
             // --- AC1: Setup ---
             // Ensure command itself is valid enough to pass initial checks
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,
@@ -200,7 +200,7 @@ describe('useActionHandler', () => {
         it('should return success: false early if direct object is missing (validation fails)', () => {
             // --- AC2: Setup ---
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use`, // Missing DO
                 verbToken: 'use',
                 directObjectPhrase: null, // Explicitly null
@@ -236,7 +236,7 @@ describe('useActionHandler', () => {
             // --- AC3: Setup ---
             // Need a valid command and successful item resolution
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,
@@ -304,7 +304,7 @@ describe('useActionHandler', () => {
             // --- AC1: Setup ---
             const nonExistentItemPhrase = 'glowing orb';
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${nonExistentItemPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: nonExistentItemPhrase, // Item player doesn't have
@@ -341,7 +341,7 @@ describe('useActionHandler', () => {
             const targetPhrase = 'locked console'; // Target that won't be found
             const mockPreposition = 'on';
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase} ${mockPreposition} ${targetPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,         // Item exists
@@ -401,7 +401,7 @@ describe('useActionHandler', () => {
             const mockPreposition = 'on';
 
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase} ${mockPreposition} ${targetConnectionPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,
@@ -480,7 +480,7 @@ describe('useActionHandler', () => {
         it('should handle successful item use with no explicit target', () => {
             // --- Test-Specific Mock Config ---
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,
@@ -546,7 +546,7 @@ describe('useActionHandler', () => {
             });
 
             mockContext.parsedCommand = {
-                actionId: 'core:action_use',
+                actionId: 'core:use',
                 originalInput: `use ${itemPhrase} on ${targetPhrase}`,
                 verbToken: 'use',
                 directObjectPhrase: itemPhrase,

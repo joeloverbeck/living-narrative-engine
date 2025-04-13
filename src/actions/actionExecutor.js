@@ -17,7 +17,7 @@ class ActionExecutor {
 
     /**
      * Registers an action handler function for a specific action ID.
-     * @param {string} actionId - The unique ID of the action (e.g., 'core:action_move').
+     * @param {string} actionId - The unique ID of the action (e.g., 'core:move').
      * @param {(context: import('./actionTypes.js').ActionContext) => import('./actionTypes.js').ActionResult} handlerFunction - The function that executes the action.
      */
     registerHandler(actionId, handlerFunction) {

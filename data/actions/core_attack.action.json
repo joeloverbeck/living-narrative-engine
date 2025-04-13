@@ -1,5 +1,5 @@
 {
-  "id": "core:action_attack",
+  "id": "core:attack",
   "name": "Attack",
   "description": "Perform a physical attack against a target.",
   "commands": [

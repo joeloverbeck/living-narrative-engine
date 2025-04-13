@@ -14,7 +14,7 @@
   "properties": {
     "id": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
-      "description": "Unique identifier for this action definition (e.g., 'core:action_move', 'mod_combat:action_power_attack'). Must be namespaced."
+      "description": "Unique identifier for this action definition (e.g., 'core:move', 'mod_combat:action_power_attack'). Must be namespaced."
     },
     "name": {
       "type": "string",

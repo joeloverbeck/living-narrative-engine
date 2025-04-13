@@ -1,5 +1,5 @@
 {
-  "id": "core:action_equip",
+  "id": "core:equip",
   "name": "Equip",
   "description": "Equip an item from your inventory.",
   "commands": [

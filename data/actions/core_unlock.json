@@ -1,20 +1,17 @@
 {
-  "id": "core:action_open",
-  "name": "Open",
-  "description": "Open a closed, unlocked object.",
+  "id": "core:unlock",
+  "name": "Unlock",
+  "description": "Unlock a locked object. May require a key or skill (checked by game logic).",
   "commands": [
-    "open"
+    "unlock"
   ],
   "target_type": "entity_in_room",
   "requires_target": true,
   "applicability": {
     "requires_components": [
-      "OpenableComponent"
+      "LockableComponent"
     ],
     "requires_target_state": {
-      "OpenableComponent.isOpen": false
-    },
-    "excluded_target_state": {
       "LockableComponent.isLocked": true
     }
   }

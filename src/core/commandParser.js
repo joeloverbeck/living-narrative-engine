@@ -173,10 +173,10 @@ class CommandParser {
                 // No text after the command - Pure V command OR Alias acting as object.
                 // Check if the matched alias IS the intended direct object (e.g., 'north')
                 // You might need a better way to determine this, e.g., checking if
-                // matchedActionId is 'core:action_move' and matchedAlias is a direction.
+                // matchedActionId is 'core:move' and matchedAlias is a direction.
                 // Simple approach: If action is move, and alias isn't 'move' or 'go', assume it's the direction.
                 const moveActionVerbs = ['move', 'go']; // Define primary verbs
-                if (matchedActionId === 'core:action_move' && matchedAlias && !moveActionVerbs.includes(matchedAlias)) {
+                if (matchedActionId === 'core:move' && matchedAlias && !moveActionVerbs.includes(matchedAlias)) {
                     parsedCommand.directObjectPhrase = matchedAlias; // Use the matched alias itself (already lowercase)
                 } else {
                     // It's likely just a pure verb command (like 'look', 'inventory')

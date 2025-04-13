@@ -1,5 +1,5 @@
 {
-  "id": "core:action_lock",
+  "id": "core:lock",
   "name": "Lock",
   "description": "Lock an unlocked, closed object. May require a key (checked by game logic).",
   "commands": [

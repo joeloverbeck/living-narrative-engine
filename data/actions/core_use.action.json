@@ -1,12 +1,10 @@
 {
-  "id": "core:action_use",
+  "id": "core:use",
   "name": "Use",
-  "description": "Use an item from your inventory.",
+  "description": "Use an item from your inventory for its intended purpose (other than direct eating/drinking).",
   "commands": [
     "use",
     "apply",
-    "drink",
-    "eat",
     "read",
     "activate"
   ],

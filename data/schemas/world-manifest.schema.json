@@ -43,7 +43,7 @@
           "description": "Relative paths to action definition files (JSON).",
           "items": {
             "type": "string",
-            "description": "Path relative to the world's root directory, e.g., 'content/actions/core_actions.json'."
+            "description": "Path relative to the world's root directory, e.g., 'content/actions/core_look.action.json'."
           },
           "default": []
         },

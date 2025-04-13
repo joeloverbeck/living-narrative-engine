@@ -5,15 +5,19 @@
   "startingLocationId": "demo:room_entrance",
   "contentFiles": {
     "actions": [
-      "core_action_attack.action.json",
-      "core_action_move.action.json",
-      "core_action_take.action.json",
-      "core_action_drop.action.json",
-      "core_action_use.action.json",
-      "core_action_look.action.json",
-      "core_action_equip.action.json",
-      "core_action_unequip.action.json",
-      "core_action_inventory.action.json"
+      "core_attack.action.json",
+      "core_move.action.json",
+      "core_take.action.json",
+      "core_drop.action.json",
+      "core_use.action.json",
+      "core_look.action.json",
+      "core_equip.action.json",
+      "core_unequip.action.json",
+      "core_inventory.action.json",
+      "core_eat.action.json",
+      "core_drink.action.json",
+      "core_push.action.json",
+      "core_pull.action.json"
     ],
     "entities": [
       "core_player.entity.json",

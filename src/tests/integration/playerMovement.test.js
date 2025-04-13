@@ -52,7 +52,7 @@ const mockGetDataManager = () => ({
         return null;
     }),
     actions: new Map([
-        ['core:action_move', {id: 'core:action_move', commands: ['move', 'go', 'north', 'n', 'south', 's']}],
+        ['core:move', {id: 'core:move', commands: ['move', 'go', 'north', 'n', 'south', 's']}],
     ])
 });
 
@@ -172,7 +172,7 @@ describe('Integration Test: Player Movement', () => {
     // (testSuccessfulMovement remains the same as previous version)
     const testSuccessfulMovement = (command, expectedDirection = null, parsedDirectObject = null) => {
         const parsedCommand = commandParser.parse(command);
-        expect(parsedCommand.actionId).toBe('core:action_move');
+        expect(parsedCommand.actionId).toBe('core:move');
 
         // Adjust expected directObjectPhrase based on actual parser output
         // If parsedDirectObject is explicitly provided (like 'n' for command 'n'), use it.

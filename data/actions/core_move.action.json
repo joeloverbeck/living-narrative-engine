@@ -1,5 +1,5 @@
 {
-  "id": "core:action_move",
+  "id": "core:move",
   "name": "Move",
   "description": "Travel in a specified direction.",
   "commands": [
