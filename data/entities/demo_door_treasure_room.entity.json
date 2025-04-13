@@ -1,21 +1,21 @@
 {
-  "id": "demo:door_exit_north",
+  "id": "demo:door_treasure_room",
   "components": {
     "Name": {
-      "value": "Heavy Door"
+      "value": "Sturdy Wooden Door"
     },
     "Description": {
-      "text": "A heavy door you can't budge."
+      "text": "A sturdy wooden example door. It looks locked."
     },
     "Position": {
-      "locationId": "demo:room_exit"
+      "locationId": "demo:room_hallway"
     },
     "Openable": {
       "isOpen": false
     },
     "Lockable": {
       "isLocked": true,
-      "keyId": "demo:item_key_rusty"
+      "keyId": null
     }
   }
 }

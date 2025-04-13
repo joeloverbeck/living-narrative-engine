@@ -8,13 +8,15 @@
   },
   "actions": [
     {
-      "type": "set_connection_state",
+      "type": "update_entity_component",
       "target": {
-        "location_id": "demo:room_hallway",
-        "connection_direction": "east"
+        "entity_id": "demo:door_treasure_room"
       },
       "parameters": {
-        "state": "unlocked"
+        "component_name": "Lockable",
+        "component_data": {
+          "isLocked": false
+        }
       }
     }
   ],

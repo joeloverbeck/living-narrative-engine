@@ -22,7 +22,8 @@
     "entities": [
       "core_player.entity.json",
       "demo_enemy_goblin.entity.json",
-      "demo_door_exit_north.entity.json"
+      "demo_door_exit_north.entity.json",
+      "demo_door_treasure_room.entity.json"
     ],
     "items": [
       "demo_item_key.item.json",

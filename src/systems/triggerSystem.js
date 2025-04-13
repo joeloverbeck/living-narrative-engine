@@ -265,6 +265,9 @@ class TriggerSystem {
                     case 'set_connection_state':
                         result = this._executeSetConnectionState(action.target, action.parameters);
                         break;
+                    case 'update_entity_component':
+                        result = this._executeUpdateEntityComponent(action.target, action.parameters);
+                        break;
                     // Add cases for other trigger action types here...
                     default:
                         console.warn(`TriggerSystem: Unknown trigger action type '${action.type}' in trigger ${triggerDef.id}`);
@@ -495,6 +498,123 @@ class TriggerSystem {
                 });
             }
         }
+        return {success, messages};
+    }
+
+    /**
+     * Executes the 'update_entity_component' trigger action.
+     * Modifies data within a specified component on a target entity.
+     * @private
+     * @param {{entity_id: string}} target
+     * @param {{component_name: string, component_data: object, merge_strategy?: string}} parameters
+     * @returns {{ success: boolean, messages: ActionMessage[] }} Result object.
+     */
+    _executeUpdateEntityComponent(target, parameters) {
+        const messages = [];
+        let success = false;
+        const {entity_id} = target || {};
+        const {component_name, component_data, merge_strategy = 'merge_shallow'} = parameters || {}; // Default merge strategy
+
+        // --- Basic validation ---
+        if (!entity_id || !component_name || typeof component_data !== 'object') {
+            messages.push({
+                text: `Trigger Action Error: Invalid target or parameters for update_entity_component.`,
+                type: 'error'
+            });
+            console.error("[DEBUG] TriggerSystem _executeUpdateEntityComponent: Invalid target/parameters.", target, parameters);
+            return {success: false, messages};
+        }
+
+        // --- Get Entity and Component ---
+        const targetEntity = this.#entityManager.getEntityInstance(entity_id);
+        if (!targetEntity) {
+            messages.push({
+                text: `Trigger Action Error: Target entity '${entity_id}' not found for update_entity_component.`,
+                type: 'error'
+            });
+            console.error(`[DEBUG] TriggerSystem _executeUpdateEntityComponent: Target entity '${entity_id}' not found.`);
+            return {success: false, messages};
+        }
+
+        // --- Get the actual Component Class/Name ---
+        // We need the component instance, not just the name string.
+        // Assuming componentRegistry maps names to classes and getComponent takes class.
+        // If getComponent takes name string, adjust accordingly.
+        const ComponentClass = this.#entityManager.componentRegistry.get(component_name);
+        if (!ComponentClass) {
+            messages.push({
+                text: `Trigger Action Error: Component type '${component_name}' not registered or found.`,
+                type: 'error'
+            });
+            console.error(`[DEBUG] TriggerSystem _executeUpdateEntityComponent: Component type '${component_name}' not registered.`);
+            return {success: false, messages};
+        }
+
+
+        const componentInstance = targetEntity.getComponent(ComponentClass);
+        if (!componentInstance) {
+            messages.push({
+                text: `Trigger Action Error: Entity '${entity_id}' does not have component '${component_name}'.`,
+                type: 'error'
+            });
+            console.error(`[DEBUG] TriggerSystem _executeUpdateEntityComponent: Entity '${entity_id}' lacks component '${component_name}'.`);
+            return {success: false, messages};
+        }
+
+        // --- Update Component Data ---
+        try {
+            // Special handling for LockableComponent to use its methods if possible
+            if (component_name === 'Lockable' && component_data.hasOwnProperty('isLocked')) {
+                // Assuming LockableComponent might have unlock/lock methods or a setState
+                if (component_data.isLocked === false && typeof componentInstance.unlock === 'function') {
+                    componentInstance.unlock(); // Use specific method if available
+                    console.log(`[DEBUG] Trigger Action (via TriggerSystem): Called unlock() on ${component_name} for entity '${entity_id}'.`);
+                    success = true;
+                } else if (component_data.isLocked === true && typeof componentInstance.lock === 'function') {
+                    componentInstance.lock(); // Use specific method if available
+                    console.log(`[DEBUG] Trigger Action (via TriggerSystem): Called lock() on ${component_name} for entity '${entity_id}'.`);
+                    success = true;
+                } else if (typeof componentInstance.setState === 'function') {
+                    componentInstance.setState(component_data.isLocked); // Use generic setState if available
+                    console.log(`[DEBUG] Trigger Action (via TriggerSystem): Called setState(${component_data.isLocked}) on ${component_name} for entity '${entity_id}'.`);
+                    success = true;
+                } else {
+                    // Fallback: Directly modify property (use with caution)
+                    componentInstance.isLocked = component_data.isLocked;
+                    console.log(`[DEBUG] Trigger Action (via TriggerSystem): Directly set isLocked=${component_data.isLocked} on ${component_name} for entity '${entity_id}'.`);
+                    success = true;
+                }
+            } else {
+                // Generic component update logic (simple merge for now)
+                // TODO: Implement proper merge strategies ('replace', 'merge_deep') if needed
+                for (const key in component_data) {
+                    if (componentInstance.hasOwnProperty(key)) {
+                        componentInstance[key] = component_data[key];
+                    } else {
+                        console.warn(`[DEBUG] TriggerSystem _executeUpdateEntityComponent: Property '${key}' not found on component '${component_name}' for entity '${entity_id}'. Skipping.`);
+                    }
+                }
+                console.log(`[DEBUG] Trigger Action (via TriggerSystem): Updated properties on ${component_name} for entity '${entity_id}' with data:`, component_data);
+                success = true; // Assume success if no errors during property setting
+            }
+
+            // Optionally: Fire an event indicating the component was updated
+            this.#eventBus.dispatch('system:entity_component_updated', {
+                entityId: entity_id,
+                componentName: component_name,
+                updatedData: component_data,
+                triggerId: target?.parentTriggerId // Pass trigger ID if available in context
+            });
+
+        } catch (updateError) {
+            console.error(`[DEBUG] TriggerSystem _executeUpdateEntityComponent: Error updating component '${component_name}' for entity '${entity_id}':`, updateError);
+            messages.push({
+                text: `Trigger Action Error: Failed internally to update component '${component_name}' for '${entity_id}'.`,
+                type: 'error'
+            });
+            success = false;
+        }
+
         return {success, messages};
     }
 }
