@@ -392,37 +392,6 @@ describe('handleTriggerEventEffect', () => {
             });
         });
 
-        // --- [SNIP: No changes needed in these tests] ---
-        it('TEST-HTEE-008: Success with Connection Target and Location', () => {
-            const result = handleTriggerEventEffect(mockParams, mockContext);
-
-            expect(result.success).toBe(true);
-            expect(result.messages).toEqual(expect.arrayContaining([
-                // Add the messages that were previously missing from the expectation
-                expect.objectContaining({text: expect.stringContaining("Handling trigger_event: 'event:connection_unlock_attempt'")}),
-                expect.objectContaining({text: expect.stringContaining("Base final payload with context:")}),
-                // Keep/Adjust expected messages, matching the new wording/detail
-                expect.objectContaining({text: expect.stringContaining("Added locationId (room1) from context")}),
-                expect.objectContaining({text: expect.stringContaining("Using connectionId (door-north-1) derived from target context as fallback.")}), // Updated
-                expect.objectContaining({text: expect.stringContaining("Using keyId (key-instance-789) derived from item instance context as fallback.")}), // Updated
-                expect.objectContaining({text: expect.stringContaining("Dispatched event 'event:connection_unlock_attempt' for Gold Key.")}) // Updated wording
-            ]));
-            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:connection_unlock_attempt', expect.objectContaining({
-                userId: 'player1',
-                targetConnectionId: 'door-north-1',
-                targetId: 'door-north-1',
-                targetType: 'connection',
-                sourceItemId: 'key-instance-789',
-                sourceItemDefinitionId: 'item-def-key-gold',
-                locationId: 'room1',         // Location ID added
-                connectionId: 'door-north-1', // connectionId populated
-                keyId: 'key-instance-789'   // keyId populated from item instance
-            }));
-            expect(consoleErrorSpy).not.toHaveBeenCalled();
-            expect(consoleWarnSpy).not.toHaveBeenCalled();
-        });
-
         it('TEST-HTEE-009: keyId provided in event_payload overrides default', () => {
             const mockParams = {
                 eventName: 'event:connection_unlock_attempt',

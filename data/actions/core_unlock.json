@@ -9,10 +9,10 @@
   "requires_target": true,
   "applicability": {
     "requires_components": [
-      "LockableComponent"
+      "Lockable"
     ],
     "requires_target_state": {
-      "LockableComponent.isLocked": true
+      "Lockable.isLocked": true
     }
   }
 }

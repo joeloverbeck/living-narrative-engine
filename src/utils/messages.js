@@ -204,6 +204,35 @@ export const TARGET_MESSAGES = {
     MOVE_CANNOT_GO_WAY: "You can't go that way.",
     // Note: `executeMove` also has a specific message if the player's location is unknown ("Cannot move: your current location is unknown.")
 
+    // ================================
+    // --> NEW: Movement Blocking <--
+    // ================================
+
+    /**
+     * Feedback when movement is blocked because the blocking entity is locked.
+     * Corresponds to BlockerSystem reasonCode 'DIRECTION_LOCKED'.
+     * @param {string} blockerName - The display name of the blocking entity.
+     * @returns {string}
+     */
+    MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // AC 1: Added
+
+    /**
+     * Generic feedback when movement is blocked by an entity (e.g., closed door, intact obstacle).
+     * Corresponds to BlockerSystem reasonCode 'DIRECTION_BLOCKED'.
+     * @param {string} blockerName - The display name of the blocking entity.
+     * @returns {string}
+     */
+    MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`, // AC 2: Added
+
+    /**
+     * Feedback when movement is blocked because the referenced blocker entity could not be found.
+     * Corresponds to BlockerSystem reasonCode 'BLOCKER_NOT_FOUND'. Provides a default message; handlers
+     * might use more specific details from the event payload if available.
+     * @returns {string}
+     */
+    MOVE_BLOCKER_NOT_FOUND: () => "The way seems blocked by something that isn't there anymore.", // AC 3: Added
+
+    // ================================
     // --- Take ---
     // (Covered by NOT_FOUND_TAKEABLE and TAKE_EMPTY_LOCATION)
 

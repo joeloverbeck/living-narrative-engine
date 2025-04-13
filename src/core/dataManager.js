@@ -23,7 +23,8 @@ const SCHEMA_FILES = [
     'openable.schema.json',
     'edible.schema.json',
     'pushable.schema.json',
-    'liquid-container.schema.json'
+    'liquid-container.schema.json',
+    'breakable.schema.json'
 ];
 
 // Mapping of content types (keys from manifest) to their schema $ids

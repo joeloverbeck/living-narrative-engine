@@ -37,7 +37,7 @@ class GameEngine {
      * @param {object} options
      * @param {AppContainer} options.container - The application's dependency container.
      */
-    constructor({ container }) {
+    constructor({container}) {
         if (!container) {
             throw new Error("GameEngine requires a valid AppContainer instance.");
         }
@@ -66,19 +66,25 @@ class GameEngine {
             this.#container.resolve('DomRenderer'); // Resolve early for UI updates
             console.log("GameEngine: DomRenderer resolved.");
 
-            this.#eventBus.dispatch('ui:set_title', { text: "Initializing Engine..." });
-            this.#eventBus.dispatch('ui:message_display', { text: "Initializing data manager...", type: 'info' });
+            this.#eventBus.dispatch('ui:set_title', {text: "Initializing Engine..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Initializing data manager...", type: 'info'});
 
             // --- Load Data ---
-            this.#eventBus.dispatch('ui:set_title', { text: `Loading Game Data for ${worldName}...` });
-            this.#eventBus.dispatch('ui:message_display', { text: `Loading data for world: ${worldName}...`, type: 'info' });
+            this.#eventBus.dispatch('ui:set_title', {text: `Loading Game Data for ${worldName}...`});
+            this.#eventBus.dispatch('ui:message_display', {
+                text: `Loading data for world: ${worldName}...`,
+                type: 'info'
+            });
             const dataManager = this.#container.resolve('DataManager');
             await dataManager.loadAllData(worldName); // <<< CHANGE: Pass worldName
             console.log(`GameEngine: DataManager resolved and data loaded for world: ${worldName}.`);
-            this.#eventBus.dispatch('ui:message_display', { text: `Game data for '${dataManager.getWorldName() || worldName}' loaded.`, type: 'info' });
+            this.#eventBus.dispatch('ui:message_display', {
+                text: `Game data for '${dataManager.getWorldName() || worldName}' loaded.`,
+                type: 'info'
+            });
 
             // --- Resolve Managers needed for setup ---
-            this.#eventBus.dispatch('ui:set_title', { text: "Initializing Systems..." });
+            this.#eventBus.dispatch('ui:set_title', {text: "Initializing Systems..."});
             const entityManager = this.#container.resolve('EntityManager');
             const actionExecutor = this.#container.resolve('ActionExecutor');
             console.log("GameEngine: EntityManager, and ActionExecutor resolved.");
@@ -93,7 +99,7 @@ class GameEngine {
             const systemsToInitialize = [
                 'TriggerSystem', 'EquipmentSystem', 'InventorySystem', 'CombatSystem',
                 'DeathSystem', 'MovementSystem', 'WorldInteractionSystem', 'ItemUsageSystem',
-                'DoorSystem', 'QuestSystem', 'QuestStartTriggerSystem', 'NotificationUISystem'
+                'DoorSystem', 'BlockerSystem', 'QuestSystem', 'QuestStartTriggerSystem', 'NotificationUISystem'
             ];
             for (const key of systemsToInitialize) {
                 const system = this.#container.resolve(key);
@@ -108,8 +114,8 @@ class GameEngine {
 
 
             // --- Core Game Setup (Player & Starting Location via Service) ---
-            this.#eventBus.dispatch('ui:set_title', { text: "Setting Initial Game State..." });
-            this.#eventBus.dispatch('ui:message_display', { text: "Setting initial game state...", type: 'info' });
+            this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Setting initial game state...", type: 'info'});
             const gameStateInitializer = this.#container.resolve('GameStateInitializer');
             const setupSuccess = gameStateInitializer.setupInitialState(); // No longer needs IDs passed
             if (!setupSuccess) {
@@ -119,8 +125,8 @@ class GameEngine {
             console.log("GameEngine: Initial game state setup completed via GameStateInitializer.");
 
             // --- Instantiate Other Initial Entities & Build Spatial Index ---
-            this.#eventBus.dispatch('ui:set_title', { text: "Initializing World Entities..." });
-            this.#eventBus.dispatch('ui:message_display', { text: "Instantiating world entities...", type: 'info' });
+            this.#eventBus.dispatch('ui:set_title', {text: "Initializing World Entities..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Instantiating world entities...", type: 'info'});
             const worldInitializer = this.#container.resolve('WorldInitializer');
             const worldInitSuccess = worldInitializer.initializeWorldEntities(); // Throws on error
             if (!worldInitSuccess) { // Should not be reachable if it throws, but safety check
@@ -131,12 +137,12 @@ class GameEngine {
             // --- Configure Input Handler ---
             const inputHandler = this.#container.resolve('InputHandler');
             const processInputCommand = (command) => {
-                if (this.#eventBus) this.#eventBus.dispatch('ui:command_echo', { command });
+                if (this.#eventBus) this.#eventBus.dispatch('ui:command_echo', {command});
                 if (this.#gameLoop && this.#gameLoop.isRunning) {
                     this.#gameLoop.processSubmittedCommand(command);
                 } else {
                     console.warn("GameEngine: Input received, but GameLoop is not ready/running.");
-                    if (this.#eventBus) this.#eventBus.dispatch('ui:disable_input', { message: "Game not running." });
+                    if (this.#eventBus) this.#eventBus.dispatch('ui:disable_input', {message: "Game not running."});
                 }
             };
             inputHandler.setCommandCallback(processInputCommand);
@@ -151,8 +157,8 @@ class GameEngine {
             // --- Initialization Complete ---
             this.#isInitialized = true;
             console.log(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
-            this.#eventBus.dispatch('ui:set_title', { text: "Initialization Complete. Starting..." });
-            this.#eventBus.dispatch('ui:message_display', { text: "Initialization complete.", type: 'success' });
+            this.#eventBus.dispatch('ui:set_title', {text: "Initialization Complete. Starting..."});
+            this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'});
 
             return true;
 
@@ -163,9 +169,9 @@ class GameEngine {
             // Attempt to use EventBus first if available
             if (this.#eventBus) {
                 try {
-                    this.#eventBus.dispatch('ui:set_title', { text: "Fatal Initialization Error!" });
-                    this.#eventBus.dispatch('ui:message_display', { text: errorMsg, type: 'error' });
-                    this.#eventBus.dispatch('ui:disable_input', { message: "Error during startup." });
+                    this.#eventBus.dispatch('ui:set_title', {text: "Fatal Initialization Error!"});
+                    this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                    this.#eventBus.dispatch('ui:disable_input', {message: "Error during startup."});
                 } catch (eventBusError) {
                     console.error("GameEngine: Failed to dispatch error messages via EventBus during initialization failure:", eventBusError);
                 }
@@ -182,7 +188,7 @@ class GameEngine {
                 // Also try disabling the element directly via container resolution
                 const inputElement = this.#container.resolve('inputElement');
                 if (inputElement) inputElement.disabled = true;
-            } catch(disableError) {
+            } catch (disableError) {
                 console.error("GameEngine: Could not resolve InputHandler or inputElement to disable on error during initialization failure.", disableError);
             }
 
@@ -208,7 +214,8 @@ class GameEngine {
                 if (inputElement) inputElement.disabled = true;
                 const titleElement = this.#container.resolve('titleElement');
                 if (titleElement) titleElement.textContent = "Fatal Error!";
-            } catch (e) { /* ignore */ }
+            } catch (e) { /* ignore */
+            }
             // Throw an error to prevent further execution and ensure it's caught by the caller in main.js
             throw new Error("GameEngine.start requires a worldName argument.");
         }
@@ -220,8 +227,8 @@ class GameEngine {
                 console.log("GameEngine: Initialization successful. Starting GameLoop...");
                 const dataManager = this.#container.resolve('DataManager');
                 const loadedWorldName = dataManager.getWorldName() || worldName; // Get name from manifest if possible
-                this.#eventBus.dispatch('ui:set_title', { text: loadedWorldName }); // Use loaded name
-                this.#eventBus.dispatch('ui:message_display', { text: `Welcome to ${loadedWorldName}!`, type: "info" });
+                this.#eventBus.dispatch('ui:set_title', {text: loadedWorldName}); // Use loaded name
+                this.#eventBus.dispatch('ui:message_display', {text: `Welcome to ${loadedWorldName}!`, type: "info"});
 
                 const gameStateManager = this.#container.resolve('GameStateManager');
                 const player = gameStateManager.getPlayer();
@@ -241,7 +248,7 @@ class GameEngine {
 
                 this.#gameLoop.start();
                 console.log("GameEngine: GameLoop started.");
-                this.#eventBus.dispatch('ui:message_display', { text: "Game loop started. Good luck!", type: 'info' });
+                this.#eventBus.dispatch('ui:message_display', {text: "Game loop started. Good luck!", type: 'info'});
             } else {
                 console.error("GameEngine: Initialization reported success but essential components missing or state invalid. Cannot start GameLoop.");
                 throw new Error("Inconsistent engine state after initialization. Cannot start.");

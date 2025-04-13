@@ -3,15 +3,15 @@
 import {jest, describe, it, expect, beforeEach, afterEach, test} from '@jest/globals';
 
 // Class under test
-import DoorSystem from '../systems/doorSystem.js'; // Adjust path if needed - Assuming relative path from test file
+import DoorSystem from '../../systems/doorSystem.js'; // Adjust path if needed - Assuming relative path from test file
 
 // Dependencies to mock
 // Note: Real EventBus/EntityManager/Entity/Components are not imported, only their mocks are used.
-import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Adjust path - Needed for 'instanceof' checks or class reference
-import EventBus from '../core/eventBus.js'; // Adjust path - Mocked below
-import EntityManager from '../entities/entityManager.js'; // Adjust path - Mocked below
-import Entity from '../entities/entity.js'; // Adjust path - Mocked below
-import {getDisplayName} from '../utils/messages.js'; // Adjust path - Mocked below
+import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Adjust path - Needed for 'instanceof' checks or class reference
+import EventBus from '../../core/eventBus.js'; // Adjust path - Mocked below
+import EntityManager from '../../entities/entityManager.js'; // Adjust path - Mocked below
+import Entity from '../../entities/entity.js'; // Adjust path - Mocked below
+import {getDisplayName} from '../../utils/messages.js'; // Adjust path - Mocked below
 
 
 // --- Mock Dependencies ---
@@ -80,7 +80,7 @@ const mockLocationEntity = {
 
 // Mock Utility
 // We don't need the real implementation, just need it not to crash and provide a basic name
-jest.mock('../utils/messages.js', () => ({ // Adjusted path relative to systems/
+jest.mock('../../utils/messages.js', () => ({ // Adjusted path relative to systems/
     getDisplayName: jest.fn((entity) => entity?.id || 'Unknown Entity'),
 }));
 

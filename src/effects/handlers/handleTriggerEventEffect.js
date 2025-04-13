@@ -47,7 +47,7 @@ export function handleTriggerEventEffect(params, context) {
     }
 
     // Use the nested 'payload' object from the schema, default to empty object if missing
-    const providedPayload = params.payload || {};
+    const providedPayload = params.payload || {}; // e.g., { keyItemId: "demo:item_key_rusty" }
 
     messages.push({
         text: `Handling trigger_event: '${eventName}'. Provided payload: ${JSON.stringify(providedPayload)}`,
@@ -71,19 +71,43 @@ export function handleTriggerEventEffect(params, context) {
     }
 
     // 3. Construct Final Event Payload - Merge provided payload with context
-    // Start with the payload defined in the item schema
+    // Start with the context information
     const finalEventPayload = {
-        ...providedPayload, // Spread the payload from params.payload FIRST
-        // Add/Overwrite with standard context information
         userId: userEntity.id,
-        targetEntityId: resolvedTargetEntityId,   // Specific entity ID from context (null if not entity)
-        targetConnectionId: resolvedTargetConnectionId, // Specific connection ID from context (null if not connection)
-        targetId: targetId,       // Generic target ID from context
-        targetType: targetType,   // Target type from context
-        sourceItemId: itemInstanceId,     // Instance ID of the item triggering event (from context)
-        sourceItemDefinitionId: itemDefinitionId, // Definition ID of the item (from context)
+        targetEntityId: resolvedTargetEntityId,
+        targetConnectionId: resolvedTargetConnectionId,
+        targetId: targetId,
+        targetType: targetType,
+        sourceItemId: itemInstanceId,           // Keep source info
+        sourceItemDefinitionId: itemDefinitionId, // Keep source info
+        // NOW, carefully merge the payload from the item definition,
+        // allowing it to potentially override context if necessary,
+        // but ensuring keys like 'keyItemId' are preserved.
+        ...providedPayload, // Spread the specific payload last!
     };
-    messages.push({text: `Base final payload with context: ${JSON.stringify(finalEventPayload)}`, type: 'internal'});
+    messages.push({text: `Constructed final payload: ${JSON.stringify(finalEventPayload)}`, type: 'internal'});
+
+    // 4. Specific Handling/Enrichment for Certain Events
+    // Ensure the correct key identifier is passed for unlock attempts
+    if (eventName === 'event:unlock_entity_attempt' || eventName === 'event:connection_unlock_attempt') {
+        // If the payload from the item definition *didn't* already provide a keyItemId,
+        // use the source item's definition ID as the keyItemId.
+        // Locks usually check against the *type* of key, not the specific instance.
+        if (finalEventPayload.keyItemId === undefined && finalEventPayload.sourceItemDefinitionId) {
+            finalEventPayload.keyItemId = finalEventPayload.sourceItemDefinitionId;
+            messages.push({
+                text: `Mapped sourceItemDefinitionId (${finalEventPayload.keyItemId}) to keyItemId for ${eventName}.`,
+                type: 'internal'
+            });
+        } else if (finalEventPayload.keyItemId !== undefined) {
+            messages.push({
+                text: `Using keyItemId (${finalEventPayload.keyItemId}) provided directly in payload for ${eventName}.`,
+                type: 'internal'
+            });
+        }
+        // You might also need similar logic for connectionId if handling connection unlocks here
+        // (Your existing connection_unlock_attempt logic might need slight adjustment/review based on this)
+    }
 
 
     // 4. Specific Handling/Enrichment for Certain Events (Example: connection_unlock_attempt)
@@ -151,6 +175,7 @@ export function handleTriggerEventEffect(params, context) {
 
     // 5. Dispatch Event via context.eventBus
     try {
+        // Now the finalEventPayload should contain 'keyItemId' when eventName is 'event:unlock_entity_attempt'
         console.debug(`EffectExecutionService: Dispatching event '${eventName}' via EventBus for item ${itemName}. Final Payload:`, finalEventPayload);
         eventBus.dispatch(eventName, finalEventPayload);
         messages.push({text: `Dispatched event '${eventName}' for ${itemName}.`, type: 'internal'});

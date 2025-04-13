@@ -88,6 +88,10 @@
         "Pushable": {
           "$ref": "./common.schema.json#/definitions/PushableComponent",
           "description": "(Optional) Component for entities that can be pushed. Definition imported from common schema."
+        },
+        "Breakable": {
+          "$ref": "./common.schema.json#/definitions/BreakableComponent",
+          "description": "(Optional) Component for entities that can be damaged and potentially destroyed. Definition imported from common schema."
         }
       },
       "minProperties": 1,

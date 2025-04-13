@@ -4,15 +4,8 @@
  * A simple Event Bus for decoupled communication between systems using a publish/subscribe pattern.
  */
 class EventBus {
-    // Use a Map where keys are event names (string) and values are Sets of listener functions.
-    // Using a Set prevents duplicate listeners for the same event.
     #listeners = new Map();
 
-    /**
-     * Subscribes a listener function to a specific event name.
-     * @param {string} eventName - The name of the event to subscribe to.
-     * @param {Function} listener - The callback function to execute when the event is dispatched.
-     */
     subscribe(eventName, listener) {
         if (typeof eventName !== 'string' || !eventName) {
             console.error("EventBus: Invalid event name provided for subscription.", eventName);
@@ -27,14 +20,8 @@ class EventBus {
             this.#listeners.set(eventName, new Set());
         }
         this.#listeners.get(eventName).add(listener);
-        // console.debug(`EventBus: Listener subscribed to "${eventName}"`); // Keep debug logs minimal unless needed
     }
 
-    /**
-     * Unsubscribes a specific listener function from an event name.
-     * @param {string} eventName - The name of the event to unsubscribe from.
-     * @param {Function} listener - The specific listener function to remove.
-     */
     unsubscribe(eventName, listener) {
         if (typeof eventName !== 'string' || !eventName) {
             console.error("EventBus: Invalid event name provided for unsubscription.", eventName);
@@ -47,48 +34,41 @@ class EventBus {
 
         if (this.#listeners.has(eventName)) {
             const eventListeners = this.#listeners.get(eventName);
-            const deleted = eventListeners.delete(listener); // delete returns true if successful
-            if (deleted) {
-                // console.debug(`EventBus: Listener unsubscribed from "${eventName}"`);
-            }
-
-            // Clean up the Set and Map entry if no listeners remain for this event
+            const deleted = eventListeners.delete(listener);
             if (eventListeners.size === 0) {
                 this.#listeners.delete(eventName);
-                // console.debug(`EventBus: Removed event entry "${eventName}" as no listeners remain.`);
             }
-        } else {
-            // console.debug(`EventBus: No listeners found for event "${eventName}" to unsubscribe from.`);
         }
     }
 
     /**
-     * Dispatches an event, calling all subscribed listeners for that event name.
+     * Dispatches an event, ASYNCHRONOUSLY calling all subscribed listeners for that event name.
+     * Waits for all listener promises to settle.
      * @param {string} eventName - The name of the event to dispatch.
      * @param {object} eventData - The data payload associated with the event.
+     * @returns {Promise<void>} A promise that resolves when all listeners have been processed.
      */
-    dispatch(eventName, eventData) {
+    async dispatch(eventName, eventData) { // <<< Make dispatch async >>>
         if (typeof eventName !== 'string' || !eventName) {
             console.error("EventBus: Invalid event name provided for dispatch.", eventName);
             return;
         }
 
-        console.log(`EventBus: Dispatching event "${eventName}"`, eventData); // Log dispatched events
+        // console.log(`EventBus: Dispatching event "${eventName}"`, eventData); // Keep or remove logging as needed
         if (this.#listeners.has(eventName)) {
-            // Iterate over a *copy* of the Set to prevent issues if a listener
-            // unsubscribes itself or another listener during the dispatch.
-            const listenersToNotify = new Set(this.#listeners.get(eventName));
+            const listenersToNotify = Array.from(this.#listeners.get(eventName)); // Get listeners as an array
 
-            listenersToNotify.forEach(listener => {
+            // Use Promise.all to execute all listeners concurrently and wait for them
+            // This correctly handles both sync and async listeners.
+            await Promise.all(listenersToNotify.map(async (listener) => { // <<< map with async and await Promise.all >>>
                 try {
-                    // Pass only the event data. The listener's closure/context
-                    // should know which event it's handling if needed.
-                    listener(eventData);
+                    // Await the listener in case it's async. If it's sync, await has no effect.
+                    await listener(eventData);
                 } catch (error) {
                     console.error(`EventBus: Error executing listener for event "${eventName}":`, error);
-                    // Continue notifying other listeners
+                    // Continue notifying other listeners even if one fails
                 }
-            });
+            }));
         } else {
             // console.debug(`EventBus: No listeners registered for event "${eventName}".`);
         }

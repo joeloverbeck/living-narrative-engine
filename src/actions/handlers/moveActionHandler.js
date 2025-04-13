@@ -76,7 +76,7 @@ export function executeMove(context) {
     // --- 3. Process Direction and Connection ---
     // Ticket 8: Use parsedCommand.directObjectPhrase for direction
     const rawDirection = parsedCommand.directObjectPhrase.toLowerCase(); // Get the parsed phrase
-    
+
     const direction = DIRECTION_ALIASES[rawDirection] || rawDirection;
 
     const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
@@ -97,19 +97,7 @@ export function executeMove(context) {
     // --- 4. Handle Connection Result and Validation ---
     // (No changes needed in this section regarding parsedCommand)
     if (connection) {
-        const currentState = connection.state ?? connection.initial_state;
-        if (currentState === 'locked') {
-            const reasonCode = 'DIRECTION_LOCKED';
-            dispatch('action:move_failed', {
-                actorId: playerEntity.id,
-                locationId: currentLocation.id,
-                direction: direction,
-                reasonCode: reasonCode,
-                lockMessageOverride: connection.description_override
-            });
-            return {success: success};
-        }
-
+        // Check if the connection leads anywhere
         const targetLocationId = connection.target;
         if (!targetLocationId) {
             const reasonCode = 'DATA_ERROR';
@@ -125,18 +113,34 @@ export function executeMove(context) {
             return {success: success};
         }
 
+        // Check if the target location definition exists
         const targetDefinition = dataManager.getEntityDefinition(targetLocationId);
         if (targetDefinition) {
             // --- Validation Passed - Dispatch Event ---
+            // Movement blocking logic (e.g., checking for blocker entities like doors)
+            // will be handled by systems listening to 'event:move_attempted' (Ticket 5.4)
             try {
+                // --- Start: AC Locate Dispatch - Payload Creation ---
                 const moveAttemptPayload = {
                     entityId: playerEntity.id,
                     targetLocationId: targetLocationId,
                     direction: direction,
                     previousLocationId: previousLocationId
                 };
+                // --- End: AC Locate Dispatch - Payload Creation ---
+
+                // --- Start: AC Check Blocker ID & AC Add to Payload ---
+                // If the connection data includes an ID for a potential blocker (e.g., a door entity),
+                // add it to the payload for downstream systems (like BlockerSystem).
+                if (connection.blockerEntityId) { // AC: Check Blocker ID (truthiness check)
+                    moveAttemptPayload.blockerEntityId = connection.blockerEntityId; // AC: Add to Payload
+                }
+                // --- End: AC Check Blocker ID & AC Add to Payload ---
+
+                // --- Start: AC Locate Dispatch - Dispatch Call ---
                 dispatch('event:move_attempted', moveAttemptPayload);
-                success = true;
+                // --- End: AC Locate Dispatch - Dispatch Call ---
+                success = true; // Mark success *after* dispatching the attempt event
             } catch (error) {
                 const reasonCode = 'INTERNAL_DISPATCH_ERROR';
                 dispatch('action:move_failed', {
@@ -148,10 +152,11 @@ export function executeMove(context) {
                     details: `Error during dispatch of event:move_attempted: ${error.message}`
                 });
                 console.error(`executeMove: Failed to dispatch move attempt event for ${playerEntity.id} moving to ${targetLocationId}`, error);
-                success = false;
+                success = false; // Ensure success is false if dispatch fails
             }
 
         } else {
+            // Target location definition not found
             const reasonCode = 'DATA_ERROR';
             const details = 'Target location definition not found';
             dispatch('action:move_failed', {
@@ -163,6 +168,7 @@ export function executeMove(context) {
                 details: details
             });
             console.error(`Move handler validation failed: Target location definition not found via dataManager for ID: ${targetLocationId}`);
+            // success remains false
         }
     } else {
         // No connection found for the specified direction
@@ -173,8 +179,11 @@ export function executeMove(context) {
             direction: direction,
             reasonCode: reasonCode
         });
+        // success remains false
     }
 
     // --- 5. Return Result ---
+    // The result indicates if the *initial validation and dispatch attempt* succeeded,
+    // not whether the move itself will ultimately be successful (that depends on listeners).
     return {success: success};
 }

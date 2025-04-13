@@ -1,5 +1,5 @@
 {
-  "id": "demo:example_door",
+  "id": "demo:door_exit_north",
   "components": {
     "Name": {
       "value": "Example Door"
@@ -12,7 +12,7 @@
     },
     "Lockable": {
       "isLocked": true,
-      "keyId": "demo:key_rusty"
+      "keyId": "demo:item_key_rusty"
     }
   }
 }

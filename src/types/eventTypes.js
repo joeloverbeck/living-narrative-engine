@@ -92,19 +92,21 @@
 /**
  * Defines the payload structure for the event:move_attempted event.
  * Signals that an entity has validated its intent to move in a specific direction from its current location.
- * Validation checks for valid exits and basic conditions like locked doors.
+ * Validation checks for valid exits. Blocking logic (e.g., locked doors, blocker entities)
+ * is handled by systems listening to this event.
  *
  * Fired By: moveActionHandler
- * Consumed By: MovementSystem
+ * Consumed By: MovementSystem, BlockerSystem (hypothetical)
  *
  * @typedef {object} MoveAttemptedEventPayload
  * @property {string} entityId The unique identifier of the entity attempting to move.
  * @property {string} targetLocationId The unique identifier of the location entity the entity intends to move to.
  * @property {string} direction The direction the entity attempted to move (e.g., 'north', 'south').
  * @property {string} previousLocationId The unique identifier of the location entity the entity is currently in.
- */
+ * @property {string} [blockerEntityId] Optional. The unique identifier of an entity that
+ * might block this connection (e.g., a door), if specified in the connection data.
 
-/**
+ /**
  * Defines the payload structure for the event:item_picked_up event.
  * Signals that an entity has successfully taken an item from a location. The UI message has already been dispatched.
  * This event triggers the necessary state changes in inventory and world state.
@@ -229,6 +231,64 @@
  * @property {string} playerId The unique identifier of the player who dropped the item.
  * @property {string} itemId The unique identifier of the item instance that was dropped.
  * @property {string} locationId The unique identifier of the location where the item was dropped.
+ */
+
+/**
+ * Defines the payload structure for the event:unlock_entity_attempt event.
+ * Signals that an entity is attempting to unlock another entity (e.g., a door, a chest, a mechanism).
+ * This event is typically fired *before* validation or state changes occur.
+ *
+ * Fired By: InteractionSystem, ItemUsageSystem (via 'trigger_event' effect)
+ * Consumed By: LockingSystem, potentially specific entity interaction handlers.
+ *
+ * @typedef {object} UnlockEntityAttemptEventPayload
+ * @property {string} userId The unique identifier of the entity attempting the unlock action.
+ * @property {string} targetEntityId The unique identifier of the entity being targeted for unlocking.
+ * @property {string | null} keyItemId The unique identifier of the item instance being used for the attempt, if any.
+ * Null if the unlock attempt doesn't involve a specific item (e.g., a puzzle interaction).
+ */
+
+/**
+ * Defines the payload structure for the event:lock_entity_attempt event.
+ * Signals that an entity is attempting to lock another entity (e.g., a door, a chest).
+ * This event is typically fired *before* validation or state changes occur.
+ *
+ * Fired By: InteractionSystem, ItemUsageSystem (via 'trigger_event' effect)
+ * Consumed By: LockingSystem, potentially specific entity interaction handlers.
+ *
+ * @typedef {object} LockEntityAttemptEventPayload
+ * @property {string} userId The unique identifier of the entity attempting the lock action.
+ * @property {string} targetEntityId The unique identifier of the entity being targeted for locking.
+ * @property {string | null} keyItemId The unique identifier of the item instance being used for the attempt, if any (e.g., using chains).
+ * Null if the lock attempt doesn't involve a specific item.
+ */
+
+/**
+ * Defines the payload structure for the event:entity_unlocked event.
+ * Signals that an entity has been successfully unlocked.
+ * This event is fired *after* the entity's state has been updated.
+ *
+ * Fired By: LockingSystem (after successful unlock attempt validation)
+ * Consumed By: QuestSystem, TriggerSystem, LoggingSystem, systems reacting to state changes.
+ *
+ * @typedef {object} EntityUnlockedEventPayload
+ * @property {string} userId The unique identifier of the entity who performed the action leading to the unlock.
+ * @property {string} targetEntityId The unique identifier of the entity that was unlocked.
+ * @property {string | null} keyItemId The unique identifier of the item instance used to unlock the entity, if applicable.
+ */
+
+/**
+ * Defines the payload structure for the event:entity_locked event.
+ * Signals that an entity has been successfully locked.
+ * This event is fired *after* the entity's state has been updated.
+ *
+ * Fired By: LockingSystem (after successful lock attempt validation)
+ * Consumed By: QuestSystem, TriggerSystem, LoggingSystem, systems reacting to state changes.
+ *
+ * @typedef {object} EntityLockedEventPayload
+ * @property {string} userId The unique identifier of the entity who performed the action leading to the lock.
+ * @property {string} targetEntityId The unique identifier of the entity that was locked.
+ * @property {string | null} keyItemId The unique identifier of the item instance used to lock the entity, if applicable.
  */
 
 /**

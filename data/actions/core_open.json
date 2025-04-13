@@ -9,13 +9,13 @@
   "requires_target": true,
   "applicability": {
     "requires_components": [
-      "OpenableComponent"
+      "Openable"
     ],
     "requires_target_state": {
-      "OpenableComponent.isOpen": false
+      "Openable.isOpen": false
     },
     "excluded_target_state": {
-      "LockableComponent.isLocked": true
+      "Lockable.isLocked": true
     }
   }
 }

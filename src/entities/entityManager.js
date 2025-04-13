@@ -38,7 +38,6 @@ class EntityManager {
      * @param {Function} componentClass - The component class constructor (e.g., HealthComponent imported from its file).
      */
     registerComponent(jsonKey, componentClass) {
-        // ... (registration logic remains the same)
         if (typeof jsonKey !== 'string' || !jsonKey) {
             throw new Error("Invalid jsonKey provided for component registration.");
         }

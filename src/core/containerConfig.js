@@ -24,6 +24,7 @@ import DoorSystem from '../systems/doorSystem.js';
 import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import {QuestStartTriggerSystem} from "../systems/questStartTriggerSystem.js";
+import BlockerSystem from '../systems/blockerSystem.js';
 
 // Services
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
@@ -199,6 +200,11 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
+
+    container.register('BlockerSystem', (c) => new BlockerSystem({
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager')
+    }), {lifecycle: 'singleton'}); // Ensure singleton lifecycle
 
     container.register('QuestSystem', (c) => new QuestSystem({
         dataManager: c.resolve('DataManager'),

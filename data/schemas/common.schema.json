@@ -358,6 +358,9 @@
     },
     "PushableComponent": {
       "$ref": "./pushable.schema.json"
+    },
+    "BreakableComponent": {
+      "$ref": "./breakable.schema.json"
     }
   }
 }

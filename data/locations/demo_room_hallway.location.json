@@ -26,9 +26,8 @@
           "direction": "east",
           "target": "demo:room_treasure",
           "description_override": "A sturdy door. The goblin blocks it.",
-          "type": "door",
           "connectionId": "demo:treasure_room_door",
-          "initial_state": "locked"
+          "blockerEntityId": "demo:door_treasure_room"
         }
       ]
     }

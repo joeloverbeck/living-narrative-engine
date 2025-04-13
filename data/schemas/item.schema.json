@@ -266,7 +266,9 @@
             "modify_stat",
             "teleport",
             "change_state",
-            "execute_script"
+            "execute_script",
+            "attempt_lock",
+            "attempt_unlock"
           ]
         }
       },
@@ -625,6 +627,32 @@
                 "^\\$.*": {}
               },
               "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "attempt_lock"
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Parameters are minimal; logic uses context. May add flags later if needed (e.g., force_lock).",
+              "additionalProperties": false,
+              "properties": {}
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "attempt_unlock"
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Parameters are minimal; logic uses context. May add flags later if needed.",
+              "additionalProperties": false,
+              "properties": {}
             }
           }
         }

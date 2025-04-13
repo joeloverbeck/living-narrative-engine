@@ -16,6 +16,9 @@ import {SkillComponent} from '../components/skillComponent.js';
 import {StatsComponent} from '../components/statsComponent.js';
 import {UsableComponent} from '../components/usableComponent.js';
 import {QuestLogComponent} from "../components/questLogComponent.js";
+import BreakableComponent from "../components/breakableComponent.js";
+import OpenableComponent from "../components/openableComponent.js";
+import LockableComponent from "../components/lockableComponent.js";
 
 /**
  * Configuration mapping for component registration.
@@ -27,6 +30,7 @@ import {QuestLogComponent} from "../components/questLogComponent.js";
 export const componentRegistryConfig = new Map([
     // Key (string from JSON) -> Value (Imported Class Constructor)
     ['Attack', AttackComponent],
+    ['Breakable', BreakableComponent],
     ['Connections', ConnectionsComponent],
     ['Description', DescriptionComponent],
     ['Equipment', EquipmentComponent],
@@ -34,14 +38,16 @@ export const componentRegistryConfig = new Map([
     ['Health', HealthComponent],
     ['Inventory', InventoryComponent],
     ['Item', ItemComponent],
+    ['Lockable', LockableComponent],
     ['MetaDescription', MetaDescriptionComponent],
     ['Name', NameComponent],
+    ['Openable', OpenableComponent],
     ['Position', PositionComponent],
+    ['QuestLog', QuestLogComponent],
     ['Skill', SkillComponent],
     ['Stats', StatsComponent],
     ['Usable', UsableComponent],
-    ['QuestLog', QuestLogComponent]
-    // Add any future components here
+    // Add any future components here (alphabetical order is nice but not required)
 ]);
 
 // Usage:

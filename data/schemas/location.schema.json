@@ -78,6 +78,10 @@
             ],
             "additionalProperties": false,
             "properties": {
+              "$comment": {
+                "type": "string",
+                "description": "Optional developer comment for this specific connection."
+              },
               "connectionId": {
                 "$ref": "./common.schema.json#/definitions/namespacedId",
                 "description": "Unique identifier for this specific connection within the location. Used for targeting specific connections (e.g., a specific door). Must be unique within the 'connections' array."
@@ -107,33 +111,19 @@
                 "type": "string",
                 "description": "Optional text describing this specific exit (e.g., 'A heavy iron door stands to the north.', 'Sunlight streams down the path leading west.'). If omitted, a generic description might be used."
               },
-              "type": {
-                "type": "string",
-                "description": "Optional type of connection (e.g., 'door', 'path', 'portal', 'ladder'). Can influence travel time, description, or required actions.",
-                "examples": [
-                  "door",
-                  "archway",
-                  "path",
-                  "stairs",
-                  "ladder",
-                  "hatch",
-                  "teleporter"
-                ]
-              },
               "hidden": {
                 "type": "boolean",
                 "description": "Optional flag indicating if the connection is initially hidden and must be discovered.",
                 "default": false
               },
-              "initial_state": {
-                "type": "string",
-                "description": "Optional state the connection starts in when the location is loaded (e.g., 'locked', 'hidden', 'blocked'). If omitted, assumed to be 'unlocked' or determined by 'hidden' property. Triggers/events modify the runtime state.",
-                "examples": [
-                  "locked",
-                  "hidden",
-                  "blocked",
-                  "unlocked"
-                ]
+              "blockerEntityId": {
+                "$ref": "./common.schema.json#/definitions/nullableNamespacedId",
+                "description": "Optional ID of an entity (e.g., a door, barrier) that blocks this connection. The state of the blocker entity (e.g., Locked, Broken) determines passage."
+              },
+              "blockable": {
+                "type": "boolean",
+                "default": false,
+                "description": "Indicates if this connection's passage can be dynamically blocked or unblocked by game logic or linked entities, even without a specific blockerEntityId."
               },
               "interactions": {
                 "type": "array",

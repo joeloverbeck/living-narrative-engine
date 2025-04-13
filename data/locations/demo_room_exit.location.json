@@ -26,9 +26,8 @@
           "direction": "north",
           "target": "demo:room_outside",
           "description_override": "A heavy door. It's locked.",
-          "type": "door",
           "connectionId": "demo:exit_north_door",
-          "initial_state": "locked"
+          "blockerEntityId": "demo:door_exit_north"
         }
       ]
     }

@@ -5,7 +5,8 @@
 // Optional: Import Localization Service if you have one
 // /** @typedef {import('../../services/localizationService.js').default} LocalizationService */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
-import {TARGET_MESSAGES} from '../utils/messages.js'; // Import for standard messages
+// Ensure TARGET_MESSAGES is imported (already present in provided code)
+import {TARGET_MESSAGES} from '../utils/messages.js';
 
 /**
  * Listens for semantic game events (quests, actions, etc.)
@@ -56,7 +57,7 @@ class NotificationUISystem {
 
         // Action Success/Attempt Events (that generate immediate feedback)
         this.eventBus.subscribe('action:take_succeeded', this._handleTakeSucceeded.bind(this));
-        this.eventBus.subscribe('event:move_attempted', this._handleMoveAttempted.bind(this));
+        this.eventBus.subscribe('event:move_attempted', this._handleMoveAttempted.bind(this)); // Listens to attempt, might display "You move..."
         // Add subscriptions for other action successes here...
 
         console.log("NotificationUISystem: Initialization complete.");
@@ -213,6 +214,9 @@ class NotificationUISystem {
 
     /**
      * Handles 'event:move_attempted' event for initial feedback.
+     * NOTE: This might be redundant if the move succeeds, as the UI might update location anyway.
+     * It's primarily useful for immediate feedback before potential failure messages.
+     * Consider if this is needed alongside the location display update.
      * @param {object} payload
      * @param {string} payload.entityId - ID of the entity moving
      * @param {string} payload.direction - Direction of movement
@@ -220,29 +224,49 @@ class NotificationUISystem {
      */
     _handleMoveAttempted({entityId, direction}) {
         // TODO: Check if the entityId is the player before displaying
-        this.eventBus.dispatch('ui:message_display', {
-            text: `You move ${direction}.`, // The simple confirmation
-            type: 'info'
-        });
+        // This message might conflict with failure messages if the move attempt
+        // is immediately followed by an action:move_failed.
+        // Let's comment it out for now, as the failure handler provides more specific feedback.
+        // this.eventBus.dispatch('ui:message_display', {
+        //     text: `You attempt to move ${direction}.`,
+        //     type: 'info'
+        // });
     }
 
     /**
      * Handles 'action:move_failed' event.
-     * @param {object} payload
-     * @param {string} payload.actorId - ID of the entity attempting to move
-     * @param {string} payload.reasonCode - Why the move failed
-     * @param {string} [payload.direction] - Direction attempted (if relevant)
-     * @param {string} [payload.locationId] - Location where it happened (if relevant)
-     * @param {string} [payload.details] - Optional extra info
-     * @param {string} [payload.lockMessageOverride] - Optional override message for locked exits
+     * @param {object} payload - The event payload.
+     * @param {string} payload.actorId - ID of the entity attempting to move.
+     * @param {string} payload.reasonCode - Why the move failed (e.g., 'DIRECTION_LOCKED', 'NO_EXITS').
+     * @param {string} [payload.direction] - Direction attempted (if relevant).
+     * @param {string} [payload.locationId] - Location where it happened (if relevant).
+     * @param {string} [payload.details] - Optional extra info for some reason codes.
+     * @param {string} [payload.blockerDisplayName] - The display name of the blocking entity, if applicable (provided by BlockerSystem).
+     * @param {string} [payload.blockerEntityId] - The ID of the blocking entity, if applicable (provided by BlockerSystem).
+     * @param {string} [payload.lockMessageOverride] - Obsolete? (Original code had this for connection-based locks).
      * @private
      */
-    _handleMoveFailed({actorId, reasonCode, direction, locationId, details, lockMessageOverride}) {
-        // TODO: Check if the actor is the player before displaying
-        let messageText = "You cannot move."; // Generic fallback
-        let messageType = 'warning'; // Default type for failure
+    _handleMoveFailed(payload) {
+        // Destructure relevant properties from the payload
+        const {
+            actorId,
+            reasonCode,
+            direction,
+            locationId,
+            details,
+            blockerDisplayName,
+            blockerEntityId /*, lockMessageOverride - likely obsolete */
+        } = payload;
 
+        // TODO: Check if the actor is the player before displaying message
+        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
+
+        let messageText = "You cannot move."; // Generic fallback message
+        let messageType = 'warning';      // Default type for failure
+
+        // AC 5.5.2.3 #1: Locate Switch: Located the switch statement
         switch (reasonCode) {
+            // -- Standard Move System Reason Codes --
             case 'SETUP_ERROR':
                 messageText = details === 'Player position unknown'
                     ? TARGET_MESSAGES.MOVE_POSITION_UNKNOWN
@@ -254,9 +278,9 @@ class NotificationUISystem {
                 messageText = TARGET_MESSAGES.MOVE_NO_EXITS;
                 messageType = 'info'; // It's informational, not an error
                 break;
-            case 'DIRECTION_LOCKED':
-                messageText = lockMessageOverride || TARGET_MESSAGES.MOVE_LOCKED(direction || 'that way');
-                messageType = 'info'; // Locked isn't necessarily an error state
+            case 'INVALID_DIRECTION':
+                messageText = TARGET_MESSAGES.MOVE_CANNOT_GO_WAY;
+                messageType = 'info'; // Standard feedback for wrong direction
                 break;
             case 'DATA_ERROR':
                 messageText = details === 'Invalid connection: missing target'
@@ -270,16 +294,66 @@ class NotificationUISystem {
                 messageType = 'error';
                 console.error(`NotificationUISystem: Internal move dispatch error for actor ${actorId} - Reason: ${reasonCode}, Details: ${details}`);
                 break;
-            case 'INVALID_DIRECTION':
-                messageText = TARGET_MESSAGES.MOVE_CANNOT_GO_WAY;
-                messageType = 'info'; // Standard feedback for wrong direction
+
+            // -- Blocker System Reason Codes --
+
+            case 'DIRECTION_LOCKED': // From Ticket 5.5.2.1
+                // Check Blocker Name: Verify payload.blockerDisplayName exists and is non-empty
+                if (blockerDisplayName && blockerDisplayName.trim() !== '') {
+                    // Dispatch Specific Message: Use the template with the blocker name
+                    messageText = TARGET_MESSAGES.MOVE_BLOCKED_LOCKED(blockerDisplayName);
+                } else {
+                    // Dispatch Fallback Message: Use the generic fallback
+                    messageText = "Something blocks the way.";
+                    // Log a warning because BlockerSystem should ideally provide the name
+                    console.warn(`NotificationUISystem: Received 'DIRECTION_LOCKED' for actor ${actorId} without a valid blockerDisplayName.`);
+                }
+                messageType = 'info'; // Being blocked is usually informational
+                // Terminate Case: Ensure the case ends with break
                 break;
+
+            case 'DIRECTION_BLOCKED': // Generic block by an entity (closed door, obstacle)
+                // Check Blocker Name: Verify payload.blockerDisplayName exists and is non-empty
+                if (blockerDisplayName && blockerDisplayName.trim() !== '') {
+                    // Dispatch Specific Message: Use the template with the blocker name
+                    messageText = TARGET_MESSAGES.MOVE_BLOCKED_GENERIC(blockerDisplayName);
+                } else {
+                    // Dispatch Fallback Message: Use the generic fallback
+                    messageText = "Something blocks the way."; // Fallback
+                    // Log a warning for missing display name
+                    console.warn(`NotificationUISystem: Received 'DIRECTION_BLOCKED' for actor ${actorId} without a valid blockerDisplayName.`);
+                }
+                messageType = 'info'; // Being blocked is usually informational
+                break;
+
+            // AC 5.5.2.3 #2: Add Case: Added (modified existing) case 'BLOCKER_NOT_FOUND'
+            case 'BLOCKER_NOT_FOUND': // Blocker entity referenced in connection data was missing
+                messageType = 'warning'; // Indicates a potential data inconsistency
+
+                // AC 5.5.2.3 #3: Check Details: Check if payload.details exists and is non-empty
+                if (details && typeof details === 'string' && details.trim() !== '') {
+                    // AC 5.5.2.3 #4: Dispatch Details Message: Use details if valid
+                    messageText = details;
+                    // Note: The event dispatch happens after the switch using messageText and messageType
+                } else {
+                    // AC 5.5.2.3 #5: Dispatch Fallback Message: Use fallback if details missing/empty
+                    messageText = TARGET_MESSAGES.MOVE_BLOCKER_NOT_FOUND();
+                    // Note: The event dispatch happens after the switch using messageText and messageType
+                }
+
+                // Keep the existing helpful console error log
+                console.error(`NotificationUISystem: Echoing BlockerSystem error - Blocker entity ID "${blockerEntityId}" not found for actor ${actorId} at location ${locationId}.`);
+                // AC 5.5.2.3 #6: Terminate Case: Ensure break; is present
+                break;
+
+            // -- Default Case for Unhandled Reasons --
             default:
-                messageText = `You failed to move. (${reasonCode})`; // Generic fallback with reason code
+                messageText = `You failed to move. (${reasonCode})`; // Generic fallback including the reason code
                 messageType = 'warning';
-                console.warn(`NotificationUISystem: Unhandled move failure reasonCode: ${reasonCode}`);
+                console.warn(`NotificationUISystem: Unhandled move failure reasonCode: ${reasonCode} for actor ${actorId}`);
         }
 
+        // Dispatch the final UI message (handled consistently for all cases)
         this.eventBus.dispatch('ui:message_display', {
             text: messageText,
             type: messageType
@@ -327,10 +401,6 @@ class NotificationUISystem {
                 console.error(`NotificationUISystem: Internal take error - Reason: ${reasonCode}, Target: ${targetName}, Details:`, details);
                 break;
             // Note: MISSING_TARGET is handled by _handleValidationFailed now
-            // case 'VALIDATION_FAILED':
-            //     messageText = `You can't take that right now.`;
-            //     messageType = 'notice';
-            //     break;
             case 'TARGET_NOT_FOUND':
                 messageText = TARGET_MESSAGES.NOT_FOUND_TAKEABLE(targetName || 'that');
                 messageType = 'notice';
@@ -344,7 +414,7 @@ class NotificationUISystem {
                 messageType = 'notice';
                 break;
             default:
-                messageText = `You failed to take the ${targetName || 'item'}.`; // Generic fallback
+                messageText = `You failed to take the ${targetName || 'item'}. (${reasonCode})`; // Generic fallback with reason code
                 messageType = 'warning';
                 console.warn(`NotificationUISystem: Unhandled take failure reasonCode: ${reasonCode}`);
         }
@@ -364,7 +434,7 @@ class NotificationUISystem {
      */
     _handleItemUseConditionFailed({actorId, failureMessage}) {
         // TODO: Check if the actor is the player before displaying, if necessary
-        // e.g., if (actorId !== playerEntityId) return;
+        // e.g., if (actorId !== this.dataManager.getPlayerId()) return;
 
         // Directly use the failure message provided by the ItemUsageSystem/ConditionEvaluationService
         this.eventBus.dispatch('ui:message_display', {

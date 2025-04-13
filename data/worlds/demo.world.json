@@ -21,16 +21,17 @@
     ],
     "entities": [
       "core_player.entity.json",
-      "demo_enemy_goblin.entity.json"
+      "demo_enemy_goblin.entity.json",
+      "demo_door_exit_north.entity.json"
     ],
     "items": [
       "demo_item_key.item.json",
+      "demo_item_key_rusty.item.json",
       "demo_item_potion_heal_minor.item.json",
       "demo_item_sword.item.json",
       "demo_item_leather_vest.item.json",
       "example_apple.json",
-      "example_chest.json",
-      "example_door.json"
+      "example_chest.json"
     ],
     "locations": [
       "demo_room_entrance.location.json",

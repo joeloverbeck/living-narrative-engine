@@ -1,6 +1,6 @@
-// src/utils/geometryUtils.test.js (Conceptual Example using Jest syntax)
+// src/tests/utils/geometryUtils.test.js (Conceptual Example using Jest syntax)
 
-import {calculateDistanceSquaredCoords, calculateDistanceSquared} from '../utils/geometryUtils.js';
+import {calculateDistanceSquaredCoords, calculateDistanceSquared} from '../../utils/geometryUtils.js';
 import {describe, expect, test} from "@jest/globals";
 
 describe('geometryUtils', () => {

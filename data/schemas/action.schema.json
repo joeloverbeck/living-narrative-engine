@@ -63,12 +63,12 @@
           "description": "Target entity must possess ALL of these components for the action to be applicable.",
           "items": {
             "type": "string",
-            "description": "Component type name (e.g., 'LockableComponent')."
+            "description": "Component type name (e.g., 'Lockable')."
           },
           "examples": [
             [
-              "LockableComponent",
-              "HealthComponent"
+              "Lockable",
+              "Health"
             ]
           ],
           "default": []
@@ -102,8 +102,8 @@
           },
           "examples": [
             {
-              "LockableComponent.state": "locked",
-              "OpenableComponent.isOpen": false
+              "Lockable.state": "locked",
+              "Openable.isOpen": false
             }
           ],
           "default": {}
@@ -121,7 +121,7 @@
           },
           "examples": [
             {
-              "StatsComponent.stamina": 10
+              "Stats.stamina": 10
             }
           ],
           "default": {}
@@ -135,7 +135,7 @@
           },
           "examples": [
             [
-              "IntangibleComponent"
+              "Intangible"
             ]
           ],
           "default": []
