@@ -98,7 +98,7 @@ class GameEngine {
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
                 'TriggerSystem', 'EquipmentSystem', 'InventorySystem', 'CombatSystem',
-                'DeathSystem', 'MovementSystem', 'WorldInteractionSystem', 'ItemUsageSystem',
+                'DeathSystem', 'MovementSystem', 'WorldPresenceSystem', 'ItemUsageSystem',
                 'DoorSystem', 'BlockerSystem', 'QuestSystem', 'QuestStartTriggerSystem', 'NotificationUISystem'
             ];
             for (const key of systemsToInitialize) {
@@ -290,7 +290,7 @@ class GameEngine {
         }
 
         try {
-            const systemsWithShutdown = ['WorldInteractionSystem', 'DoorSystem'];
+            const systemsWithShutdown = ['WorldPresenceSystem', 'DoorSystem'];
             for (const key of systemsWithShutdown) {
                 const system = this.#container.resolve(key);
                 if (system && typeof system.shutdown === 'function') {

@@ -66,7 +66,7 @@
  * into their current location.
  *
  * Fired By: dropActionHandler
- * Consumed By: InventorySystem, WorldInteractionSystem
+ * Consumed By: InventorySystem, WorldPresenceSystem
  *
  * @typedef {object} ItemDropAttemptedEventPayload
  * @property {string} playerId The unique identifier of the player entity attempting to drop the item.
@@ -112,7 +112,7 @@
  * This event triggers the necessary state changes in inventory and world state.
  *
  * Fired By: takeActionHandler
- * Consumed By: InventorySystem, WorldInteractionSystem
+ * Consumed By: InventorySystem, WorldPresenceSystem
  *
  * @typedef {object} ItemPickedUpEventPayload
  * @property {string} pickerId The unique identifier of the entity that picked up the item.
@@ -224,7 +224,7 @@
  * Signals that an item has been successfully removed from a player's inventory and placed into a location.
  * This is fired *after* the state change (inventory removal, world placement) is complete.
  *
- * Fired By: WorldInteractionSystem (handleItemDropAttempted)
+ * Fired By: WorldPresenceSystem (handleItemDropAttempted)
  * Consumed By: Potentially systems logging actions or triggering location-based events on item presence.
  *
  * @typedef {object} ItemDroppedEventPayload

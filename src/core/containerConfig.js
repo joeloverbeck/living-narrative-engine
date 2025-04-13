@@ -18,7 +18,7 @@ import InventorySystem from '../systems/inventorySystem.js';
 import CombatSystem from '../systems/combatSystem.js';
 import DeathSystem from "../systems/deathSystem.js";
 import MovementSystem from "../systems/movementSystem.js";
-import WorldInteractionSystem from "../systems/worldInteractionSystem.js";
+import WorldPresenceSystem from "../systems/worldPresenceSystem.js";
 import ItemUsageSystem from "../systems/itemUsageSystem.js";
 import DoorSystem from '../systems/doorSystem.js';
 import QuestSystem from '../systems/questSystem.js';
@@ -182,7 +182,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager'),
     }), {lifecycle: 'singleton'});
 
-    container.register('WorldInteractionSystem', (c) => new WorldInteractionSystem({
+    container.register('WorldPresenceSystem', (c) => new WorldPresenceSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
