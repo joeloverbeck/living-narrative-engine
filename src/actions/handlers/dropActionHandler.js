@@ -9,7 +9,7 @@ import {InventoryComponent} from '../../components/inventoryComponent.js';
 // PositionComponent and notifyPositionChange are removed from direct use here
 // import {PositionComponent} from '../../components/positionComponent.js';
 import {TARGET_MESSAGES} from '../../utils/messages.js'; // getDisplayName removed
-import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {ItemComponent} from "../../components/itemComponent.js";
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 

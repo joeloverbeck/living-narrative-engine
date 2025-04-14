@@ -5,7 +5,7 @@ import {DescriptionComponent} from '../../components/descriptionComponent.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
-import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */

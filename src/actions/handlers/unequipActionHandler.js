@@ -3,7 +3,7 @@
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
-import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */

@@ -11,10 +11,10 @@ import {NameComponent} from '../../../components/nameComponent.js';
 import {TARGET_MESSAGES} from '../../../utils/messages.js'; // Adjust path
 
 // Mock dependencies
-jest.mock('../../../services/targetResolutionService.js'); // Mock the service
+jest.mock('../../../services/entityFinderService.js'); // Mock the service
 jest.mock('../../../utils/actionValidationUtils.js'); // Mock validation
 
-import {resolveTargetEntity} from '../../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../../utils/actionValidationUtils.js';
 
 // --- Mocks Setup ---

@@ -1,21 +1,17 @@
 // src/tests/resolveTargetConnection.test.js
 
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 
 import Entity from '../../entities/entity.js'; // Assuming Entity is default export
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
-import { ConnectionsComponent } from '../../components/connectionsComponent.js'; // Import ConnectionsComponent
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Import ConnectionsComponent
 import {
     resolveTargetConnection,
     // Import findPotentialConnectionMatches if needed for mocking/spying
-} from '../../services/targetResolutionService.js';
+} from '../../services/connectionResolver.js';
 // Import necessary for helper functions, even if not directly tested here yet
-import { getDisplayName, TARGET_MESSAGES } from '../../utils/messages.js'; // Import TARGET_MESSAGES
-
-// Import the module to spy on its methods if necessary (for AC1)
-import * as TargetResolutionServiceModule from '../../services/targetResolutionService.js';
-import { findPotentialConnectionMatches as originalFindPotentialConnectionMatches } from '../../services/targetResolutionService.js';
+import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js'; // Import TARGET_MESSAGES
 
 
 // ========================================================================
@@ -62,7 +58,7 @@ const mockContext = {
  */
 const createMockEntity = (id, name, components = []) => {
     const entity = new Entity(id);
-    entity.addComponent(new NameComponent({ value: name }));
+    entity.addComponent(new NameComponent({value: name}));
     components.forEach(comp => entity.addComponent(comp));
     mockEntityManager.entities.set(id, entity); // Store in mock manager
     return entity;
@@ -86,7 +82,7 @@ const placeInLocation = (entityId, locationId) => {
     if (entity) {
         let posComp = entity.getComponent(PositionComponent);
         if (!posComp) {
-            posComp = new PositionComponent({ locationId: locationId });
+            posComp = new PositionComponent({locationId: locationId});
             entity.addComponent(posComp);
         } else {
             posComp.setLocation(locationId); // Assuming PositionComponent has a setLocation method
@@ -247,8 +243,8 @@ describe('resolveTargetConnection', () => {
                 mockFindPotentialMatchesFn = jest.fn();
                 mockFindPotentialMatchesFn.mockReturnValue({
                     directionMatches: [
-                        { direction: 'west', connectionEntity: mockWestGateEntity },
-                        { direction: 'west', connectionEntity: mockWestArchEntity }
+                        {direction: 'west', connectionEntity: mockWestGateEntity},
+                        {direction: 'west', connectionEntity: mockWestArchEntity}
                     ],
                     nameMatches: [],
                 });

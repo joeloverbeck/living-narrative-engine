@@ -3,7 +3,7 @@
 import {HealthComponent} from '../../components/healthComponent.js';
 import {AttackComponent} from '../../components/attackComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js"; // Corrected path assumption
-import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */

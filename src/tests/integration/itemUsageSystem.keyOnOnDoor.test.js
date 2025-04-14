@@ -96,7 +96,6 @@ class MockEntity {
 
 // --- Real Services (Dependencies for ItemUsageSystem) ---
 import ConditionEvaluationService from '../../services/conditionEvaluationService.js'; // Assuming path
-// REMOVED: import {TargetResolutionService} from '../../services/targetResolutionService.js'; // No longer needed
 
 // --- Mock Services ---
 let mockEffectExecutionService; // Mock for EffectExecutionService

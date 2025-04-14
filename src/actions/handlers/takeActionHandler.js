@@ -6,7 +6,7 @@
 
 import {getDisplayName} from "../../utils/messages.js";
 import {ItemComponent} from "../../components/itemComponent.js";
-import {resolveTargetEntity} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**

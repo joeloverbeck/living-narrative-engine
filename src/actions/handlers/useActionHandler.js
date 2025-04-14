@@ -18,7 +18,8 @@ import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 // Import the new connection resolver
-import {resolveTargetEntity, resolveTargetConnection} from '../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
+import {resolveTargetConnection} from '../../services/connectionResolver.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 
 /**

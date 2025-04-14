@@ -4,7 +4,7 @@
 import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 import {
     resolveTargetEntity,
-} from '../../services/targetResolutionService.js';
+} from '../../services/entityFinderService.js';
 import Entity from '../../entities/entity.js'; // Assuming Entity is default export
 import {NameComponent} from '../../components/nameComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
@@ -491,7 +491,7 @@ describe('resolveTargetEntity', () => {
         expect(result).toBeNull();
         const expectedNames = [goblin, goblin2].map(e => getDisplayName(e)).join(', ');
         expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-            text: `Which 'goblin' did you want to use Potion on? (${expectedNames})`,
+            text: `Which 'goblin' did you want to use Potion on: ${expectedNames}?`,
             type: 'warning',
         });
     });

@@ -15,7 +15,8 @@ import {ConnectionsComponent} from '../../../components/connectionsComponent.js'
 
 // --- Mock dependencies ---
 import {validateRequiredCommandPart} from '../../../utils/actionValidationUtils.js';
-import {resolveTargetEntity, resolveTargetConnection} from '../../../services/targetResolutionService.js';
+import {resolveTargetEntity} from '../../../services/entityFinderService.js';
+import {resolveTargetConnection} from "../../../services/connectionResolver.js";
 import {getDisplayName, TARGET_MESSAGES} from '../../../utils/messages.js';
 
 // Mock the modules containing the functions we need to control
@@ -23,8 +24,12 @@ jest.mock('../../../utils/actionValidationUtils.js', () => ({
     validateRequiredCommandPart: jest.fn(),
 }));
 
-jest.mock('../../../services/targetResolutionService.js', () => ({
+jest.mock('../../../services/entityFinderService.js', () => ({
     resolveTargetEntity: jest.fn(),
+}));
+
+// Add a new mock for the new service:
+jest.mock('../../../services/connectionResolver.js', () => ({ // <<< ADD (adjust path)
     resolveTargetConnection: jest.fn(),
 }));
 
