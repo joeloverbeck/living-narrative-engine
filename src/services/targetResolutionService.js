@@ -9,6 +9,9 @@ import {EquipmentComponent} from '../components/equipmentComponent.js';
 import {ItemComponent} from '../components/itemComponent.js';
 
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
+// NOTE: PositionComponent is still needed by resolveTargetEntity (indirectly via entityManager.getEntitiesInLocation)
+// and potentially by logic within connection resolution if spatial aspects were added later.
+// The test setup also uses it via placeInLocation. Keeping it for now.
 import {PositionComponent} from "../components/positionComponent.js";
 // Import other components if needed
 
@@ -23,11 +26,9 @@ import {findPotentialConnectionMatches as internalFindPotentialConnectionMatches
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */ // Assuming Connection type exists
 /** @typedef {import('../components/connectionsComponent.js').ConnectionMapping} ConnectionMapping */
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
-/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */
-/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
-/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationOptions} ConditionEvaluationOptions */
-/** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
+// ** REMOVED UsableComponentData import/typedef - No longer used here **
+// ** REMOVED ConditionEvaluationService and related types - No longer used here **
+// ** REMOVED ActionMessage - No longer used here **
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../components/baseComponent.js').ComponentConstructor} ComponentConstructor */
 
@@ -57,296 +58,20 @@ import {findPotentialConnectionMatches as internalFindPotentialConnectionMatches
  * @property {string} [emptyScopeMessage] - Optional override for the message dispatched when the initial scope yields no suitable entities (e.g., use TARGET_MESSAGES.TAKE_EMPTY_LOCATION).
  */
 
-// ========================================================================
-// == TargetResolutionService Core Logic =======================
-// ========================================================================
-
-/**
- * @typedef {object} ResolveItemTargetResult
- * @property {boolean} success - True if target resolution (and validation) succeeded or if no target was required.
- * @property {Entity | Connection | null} target - The validated target object, or null if no target was required or found/validated.
- * @property {'entity' | 'connection' | 'none'} targetType - The type of the resolved target.
- * @property {ActionMessage[]} messages - Array of internal/debugging messages generated during resolution.
- */
-
-/**
- * Provides methods for resolving action targets based on different criteria.
- */
-export class TargetResolutionService {
-    // No constructor needed if dependencies are passed to methods.
-
-    /**
-     * Resolves the target for an item usage action based on explicit IDs and validates it.
-     * [Function implementation updated for CONN-5.2.1, CONN-5.2.2, CONN-5.2.3, and CONN-5.2.4]
-     * @param {object} params - The parameters for target resolution.
-     * @param {Entity} params.userEntity - The entity using the item.
-     * @param {UsableComponentData} params.usableComponentData - The item's Usable component data.
-     * @param {string | null | undefined} params.explicitTargetEntityId - Optional entity ID provided by the event.
-     * @param {string | null | undefined} params.explicitTargetConnectionEntityId - Optional connection *entity* ID provided by the event. // <-- RENAMED PARAMETER (AC1)
-     * @param {string} params.itemName - The display name of the item being used (for messages).
-     * @param {object} dependencies - Required service dependencies.
-     * @param {EntityManager} dependencies.entityManager - For looking up entities and components.
-     * @param {EventBus} dependencies.eventBus - For dispatching UI messages.
-     * @param {ConditionEvaluationService} dependencies.conditionEvaluationService - For validating target conditions.
-     *
-     * @returns {Promise<ResolveItemTargetResult>} - A promise resolving to the outcome of the target resolution.
-     */
-    async resolveItemTarget(
-        {userEntity, usableComponentData, explicitTargetEntityId, explicitTargetConnectionEntityId, itemName},
-        {entityManager, eventBus, conditionEvaluationService}
-    ) {
-        /** @type {ActionMessage[]} */
-        const messages = [];
-        const log = (text, type = 'internal') => messages.push({text, type});
-
-        log(`Starting resolveItemTarget for item: ${itemName}`);
-
-        // --- 1. Check if Target is Required ---
-        if (!usableComponentData.target_required) {
-            log(`Target not required for ${itemName}.`);
-            return {success: true, target: null, targetType: 'none', messages};
-        }
-
-        log(`Target required. Explicit Entity ID: ${explicitTargetEntityId}, Connection Entity ID: ${explicitTargetConnectionEntityId}`);
-
-        // --- 2. Resolve Potential Target from Explicit IDs ---
-        let potentialTarget = null;
-        let targetType = 'none'; // 'entity', 'connection', or 'none'
-        let targetEntityContext = null;
-        let targetConnectionContext = null;
-
-        // --- 2a. BLOCK UPDATED FOR CONN-5.2.2, CONN-5.2.3 & CONN-5.2.4: PRIORITIZE Explicit Connection Entity Target ---
-        if (explicitTargetConnectionEntityId) {
-            log(`Attempting to resolve explicit connection target: ${explicitTargetConnectionEntityId}`);
-
-            // --- CONN-5.2.2: Fetch the Connection Entity Instance ---
-            const connectionEntity = entityManager.getEntityInstance(explicitTargetConnectionEntityId);
-
-            // --- CONN-5.2.2: Handle Fetch Failure ---
-            if (!connectionEntity) {
-                log(`Failed to fetch Connection Entity instance with ID: ${explicitTargetConnectionEntityId}`, 'error');
-                const failureMsg = TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId);
-                eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
-                console.log("DEBUG: RETURNING because !connectionEntity");
-                return {success: false, target: null, targetType: 'none', messages};
-            } else {
-                // --- CONN-5.2.2: Handle Fetch Success ---
-                log(`Successfully fetched Connection Entity: ${getDisplayName(connectionEntity)} (${connectionEntity.id})`);
-
-                // ***** START: CONN-5.2.3 / CONN-5.2.4 VALIDATION LOGIC *****
-                log("Starting validation: Is connection a valid exit from user's location?");
-
-                // 1. Get user's PositionComponent and locationId
-                const userPosComp = userEntity.getComponent(PositionComponent); // AC1 (Get Component)
-                if (!userPosComp) {
-                    // --- CONN-5.2.4 FAILURE HANDLING (AC1) ---
-                    log("CONN-5.2.4 Failure: User missing PositionComponent.", 'error');
-                    eventBus.dispatch('ui:message_display', {
-                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
-                        type: 'warning'
-                    });
-                    return {success: false, target: null, targetType: 'none', messages};
-                }
-
-                const userLocationId = userPosComp.locationId; // AC1 (Get locationId)
-                if (!userLocationId) {
-                    // --- CONN-5.2.4 FAILURE HANDLING (AC1) ---
-                    log("CONN-5.2.4 Failure: User PositionComponent missing locationId.", 'error');
-                    eventBus.dispatch('ui:message_display', {
-                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
-                        type: 'warning'
-                    });
-                    console.log("DEBUG: RETURNING because !userLocation");
-                    return {success: false, target: null, targetType: 'none', messages};
-                }
-                log(`User location ID: ${userLocationId}`);
-
-                // 2. Fetch user's location entity
-                const userLocation = entityManager.getEntityInstance(userLocationId); // AC2
-                if (!userLocation) {
-                    // --- CONN-5.2.4 FAILURE HANDLING (AC2) ---
-                    log(`CONN-5.2.4 Failure: Could not fetch user location entity: ${userLocationId}`, 'error');
-                    eventBus.dispatch('ui:message_display', {
-                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
-                        type: 'warning'
-                    });
-                    return {success: false, target: null, targetType: 'none', messages};
-                }
-                log(`Workspaceed user location entity: ${getDisplayName(userLocation)} (${userLocation.id})`);
-
-                // 3. Get ConnectionsComponent from userLocation
-                const connectionsComp = userLocation.getComponent(ConnectionsComponent); // AC3
-                if (!connectionsComp) {
-                    // --- CONN-5.2.4 FAILURE HANDLING (AC3) ---
-                    log(`CONN-5.2.4 Failure: User location ${userLocation.id} missing ConnectionsComponent.`, 'error');
-                    eventBus.dispatch('ui:message_display', {
-                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
-                        type: 'warning'
-                    });
-                    return {success: false, target: null, targetType: 'none', messages};
-                }
-                log("Fetched ConnectionsComponent from user location.");
-
-                // 4. Get the list of current exits
-                const currentExits = connectionsComp.getAllConnections(); // AC4
-
-                // 5. Perform the check
-                log("Checking fetched connection against current location's exits.");
-                const isValidExit = currentExits.some(exit => exit.connectionEntityId === connectionEntity.id); // AC5
-                log(`isValidExit result: ${isValidExit}`);
-
-                if (isValidExit) {
-                    log(`Validation successful. Connection ${connectionEntity.id} is a valid exit.`);
-                    // Mark the connection entity as the potential target
-                    potentialTarget = connectionEntity;
-                    targetType = 'connection';
-                    // Prepare context for later condition evaluation
-                    const matchingExit = currentExits.find(exit => exit.connectionEntityId === connectionEntity.id);
-                    targetConnectionContext = {
-                        connectionEntity: connectionEntity,
-                        direction: matchingExit?.direction // Add direction if found
-                    };
-                    log(`Potential target confirmed as CONNECTION ${getDisplayName(potentialTarget)} (${potentialTarget.id}). Proceeding to condition checks.`);
-                } else {
-                    // --- CONN-5.2.4 FAILURE HANDLING (AC4) ---
-                    log(`CONN-5.2.4 Failure: Connection Entity ${connectionEntity.id} is NOT a valid exit from ${userLocation.id}.`, 'error'); // Changed log to error
-                    eventBus.dispatch('ui:message_display', {
-                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
-                        type: 'warning'
-                    });
-                    return {success: false, target: null, targetType: 'none', messages};
-                    // NOTE: No need to reset potentialTarget = null as we are returning.
-                }
-                // ***** END: CONN-5.2.3 / CONN-5.2.4 VALIDATION LOGIC *****
-            }
-            // --- End of CONN-5.2.2 / CONN-5.2.3 / CONN-5.2.4 Implementation for Connection Target ---
-
-        } // --- End of explicit connection entity ID block ---
-
-        // --- 2b. Attempt Explicit Entity Target ONLY IF No Valid Connection Target was Found/Specified/Validated ---
-        // This block now runs only if:
-        // - explicitTargetConnectionEntityId was NOT provided, OR
-        // - it WAS provided but the initial fetch failed (returned earlier), OR
-        // - it WAS provided, fetch succeeded, but CONN-5.2.3/5.2.4 validation failed (returned earlier).
-        // Therefore, if we reach here *without* a potentialTarget, we can proceed to check explicitTargetEntityId.
-        if (!potentialTarget && explicitTargetEntityId) {
-            log(`Attempting to resolve explicit entity target: ${explicitTargetEntityId}`);
-            potentialTarget = entityManager.getEntityInstance(explicitTargetEntityId);
-            if (potentialTarget) {
-                targetType = 'entity';
-                targetEntityContext = potentialTarget;
-                log(`Found potential explicit target: ENTITY ${getDisplayName(potentialTarget)} (${potentialTarget.id})`);
-            } else {
-                log(`Explicit entity target ID ${explicitTargetEntityId} not found.`, 'warning');
-                // Use the specific message for entity not found
-                const failureMsg = TARGET_MESSAGES.USE_INVALID_TARGET_ENTITY(explicitTargetEntityId);
-                eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
-                log(`Failure: Explicit entity ${explicitTargetEntityId} not found.`, 'error');
-                return {success: false, target: null, targetType: 'none', messages};
-            }
-        }
-
-        // --- 3. Handle Target Required But Not Found/Specified/Validated ---
-        // This check covers cases where:
-        // - Neither ID was provided.
-        // - Connection ID was provided but fetch/validation failed (returned earlier).
-        // - Entity ID was provided but fetch failed (returned earlier).
-        if (!potentialTarget) {
-            // If we got here, it means target_required was true, but neither a valid connection
-            // nor a valid entity target was resolved successfully.
-            log(`Target required, but no valid explicit target entity OR connection entity ID was provided or resolved/validated.`, 'error');
-            // Use the generic 'target required' message, as the specific connection/entity failures
-            // would have dispatched their own messages already.
-            const failureMsg = usableComponentData.failure_message_target_required || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
-            eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
-            console.log("DEBUG: RETURNING because !potentialTarget");
-            return {success: false, target: null, targetType: 'none', messages};
-        }
-
-        // --- 4. Validate the Found Potential Target Against Conditions ---
-        // This section should only run if potentialTarget is *not* null (meaning fetch & validation succeeded)
-        let targetName;
-        // Note: targetConnectionContext is only populated if targetType === 'connection' and validation passed
-        if (targetType === 'connection' && targetConnectionContext) {
-            targetName = getDisplayName(targetConnectionContext.connectionEntity) || `Connection (${targetConnectionContext.connectionEntity.id})`;
-        } else if (targetType === 'entity' && targetEntityContext) {
-            targetName = getDisplayName(targetEntityContext);
-        } else {
-            // This case should ideally not be reachable if the logic above is correct
-            // because potentialTarget would be null if context isn't set.
-            targetName = getDisplayName(/** @type {Entity} */ (potentialTarget));
-            log('Warning: potentialTarget exists but specific context (entity/connection) is missing or incomplete.', 'warning');
-        }
-        log(`Validating potential target ('${targetName}') against target_conditions.`);
-
-
-        if (usableComponentData.target_conditions && usableComponentData.target_conditions.length > 0) {
-            /** @type {ConditionEvaluationContext} */
-            const targetCheckContext = {
-                userEntity: userEntity,
-                targetEntityContext: targetEntityContext, // Is the Entity instance or null
-                targetConnectionContext: targetConnectionContext // Contains { connectionEntity, direction? } or null
-            };
-            /** @type {ConditionEvaluationOptions} */
-            const targetOptions = {
-                itemName: itemName,
-                checkType: 'Target',
-                fallbackMessages: {
-                    target: usableComponentData.failure_message_invalid_target || TARGET_MESSAGES.USE_INVALID_TARGET(itemName),
-                    default: TARGET_MESSAGES.USE_INVALID_TARGET(itemName)
-                }
-            };
-
-            // The subject of the condition check is the actual target (Entity or Connection Entity)
-            const conditionSubject = potentialTarget;
-
-            const targetCheckResult = await conditionEvaluationService.evaluateConditions(
-                conditionSubject,
-                targetCheckContext,
-                usableComponentData.target_conditions,
-                targetOptions
-            );
-
-            messages.push(...targetCheckResult.messages);
-
-            if (!targetCheckResult.success) {
-                log(`Target conditions failed for target '${targetName}'.`, 'warning');
-                // Condition evaluation service should dispatch its own failure message based on targetOptions
-                if (targetCheckResult.failureMessage) {
-                    eventBus.dispatch('ui:message_display', {text: targetCheckResult.failureMessage, type: 'warning'});
-                } else {
-                    // Fallback if condition service somehow didn't provide a message
-                    const fallbackMsg = usableComponentData.failure_message_invalid_target || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
-                    eventBus.dispatch('ui:message_display', {text: fallbackMsg, type: 'warning'});
-                }
-                return {success: false, target: null, targetType: 'none', messages};
-            } else {
-                log(`Target '${targetName}' passed validation conditions.`);
-            }
-        } else {
-            log(`No target_conditions defined for ${itemName}. Target considered valid.`);
-        }
-
-        // --- 5. Target Found and Validated ---
-        log(`Target resolution successful. Validated Target: ${targetType} '${targetName}'.`);
-        return {success: true, target: potentialTarget, targetType: targetType, messages};
-    } // End resolveItemTarget
-} // End TargetResolutionService Class
-
 
 // ========================================================================
-// == Utility Functions (Unchanged by CONN-5.2.1) ========================
+// == Utility Functions (Unchanged by this refactoring) ==================
 // ========================================================================
 
 /**
  * Centralized utility function to find a target entity based on name, scope, and required components.
- * [Function implementation remains unchanged - Not relevant to CONN-5.2.1]
+ * [Function implementation remains unchanged]
  * @param {ActionContext} context - The action context.
  * @param {TargetResolverConfig} config - Configuration for the target resolution.
  * @returns {Entity | null} The found Entity or null. Dispatches UI messages on failure.
  */
 export function resolveTargetEntity(context, config) {
-    // --- Implementation as provided in the prompt ---
+    // --- Implementation as provided in the prompt (unchanged) ---
     const {playerEntity, currentLocation, entityManager, dispatch} = context;
 
     // --- 1. Validate Inputs ---
@@ -509,7 +234,7 @@ export function resolveTargetEntity(context, config) {
                 let errorMsg;
                 // Use specific ambiguity messages if available
                 const targetEntities = findResult.matches;
-                if (config.actionVerb.includes(' on') || config.actionVerb.includes(' >') || TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT) {
+                if (config.actionVerb.includes(' on') || config.actionVerb.includes(' >')) {
                     errorMsg = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(config.actionVerb, config.targetName, targetEntities);
                 } else if (TARGET_MESSAGES.AMBIGUOUS_PROMPT) {
                     errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, config.targetName, targetEntities);
@@ -543,14 +268,13 @@ export function resolveTargetEntity(context, config) {
 
 /**
  * **CONN-5.1.2 Implementation:** Finds potential Connection entities based on direction and name matching.
- * [Function implementation remains unchanged - Not relevant to CONN-5.2.1]
+ * [Function implementation remains unchanged]
  * @param {ActionContext} context - The action context.
  * @param {string} connectionTargetName - The name or direction string provided by the user (non-empty).
  * @returns {PotentialConnectionMatches} An object containing arrays of direction and name matches.
  */
 export function findPotentialConnectionMatches(context, connectionTargetName) {
-    // --- Implementation as provided in the prompt ---
-    const {currentLocation, entityManager} = context; // Removed playerEntity, dispatch as they aren't needed for matching itself
+    const {currentLocation, entityManager} = context;
 
     /** @type {PotentialConnectionMatches} */
     const results = {
@@ -558,66 +282,61 @@ export function findPotentialConnectionMatches(context, connectionTargetName) {
         nameMatches: [],
     };
 
-    // --- Pre-computation Checks (Moved from original resolveTargetConnection) ---
+    // --- Pre-computation Checks ---
     if (!currentLocation) {
         console.warn("findPotentialConnectionMatches: Missing currentLocation in context.");
-        return results; // Return empty results if no location context
+        return results;
     }
     if (!entityManager) {
         console.error("findPotentialConnectionMatches: Missing entityManager in context.");
-        return results; // Return empty results if no entity manager
+        return results;
     }
-
     const connectionsComponent = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComponent) {
         console.warn(`findPotentialConnectionMatches: ConnectionsComponent not found on location '${currentLocation.id}'`);
-        return results; // Return empty results if component missing
+        return results;
     }
-
     const connectionMappings = connectionsComponent.getAllConnections();
     if (connectionMappings.length === 0) {
-        // No connections defined in this location.
-        return results; // Return empty results
+        return results;
     }
 
     // --- Fetch Connection Entities ---
     /** @type {FetchedConnectionData[]} */
     const fetchedConnectionsData = [];
-    const fetchedEntityIds = new Set(); // To track successfully fetched entities for name matching de-duplication
-
     for (const mapping of connectionMappings) {
         const {direction, connectionEntityId} = mapping;
         const connectionEntity = entityManager.getEntityInstance(connectionEntityId);
 
         if (connectionEntity) {
             fetchedConnectionsData.push({direction, connectionEntity});
-            fetchedEntityIds.add(connectionEntity.id); // Track successful fetches
         } else {
             console.warn(`findPotentialConnectionMatches: Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}'`);
         }
     }
-
     if (fetchedConnectionsData.length === 0) {
         console.warn(`findPotentialConnectionMatches: Location '${currentLocation.id}' has connection mappings, but failed to fetch any corresponding Connection entities.`);
-        return results; // Return empty results if fetching failed for all
+        return results;
     }
 
-    // --- Step 7 (Ticket CONN-5.1.2 Core): Find Matching Connections ---
+    // --- Step 7: Find Matching Connections (Revised Logic) ---
     const lowerCaseTarget = connectionTargetName.trim().toLowerCase(); // AC1
-
-    // Use a Set to keep track of entity IDs added to nameMatches to ensure uniqueness
-    const nameMatchEntityIds = new Set();
+    const nameMatchEntityIds = new Set(); // To track unique entities added to nameMatches
 
     for (const item of fetchedConnectionsData) {
+        let isDirectionMatch = false; // Flag to track if this item matched by direction
+
         // AC2: Direction Matching (Exact, Case-Insensitive)
-        // Direction keys are already stored lowercase/trimmed in ConnectionsComponent
         if (item.direction === lowerCaseTarget) {
             results.directionMatches.push(item);
+            isDirectionMatch = true; // Mark it as a direction match
         }
 
         // AC3: Name Matching (Substring, Case-Insensitive)
         const entityName = getDisplayName(item.connectionEntity)?.toLowerCase();
-        if (entityName && entityName.includes(lowerCaseTarget)) {
+
+        // *** CHANGE HERE: Only consider for name match if NOT already a direction match ***
+        if (!isDirectionMatch && entityName && entityName.includes(lowerCaseTarget)) {
             // Ensure we only add each unique *entity* once to nameMatches,
             // even if it's reachable via multiple directions whose names match.
             if (!nameMatchEntityIds.has(item.connectionEntity.id)) {
@@ -632,16 +351,25 @@ export function findPotentialConnectionMatches(context, connectionTargetName) {
 }
 
 
+/**
+ * Resolves a target Connection entity based on user input (direction or name).
+ * Uses findPotentialConnectionMatches internally or via injection.
+ * Handles ambiguity and dispatches appropriate messages.
+ * [Function implementation remains unchanged]
+ * @param {ActionContext} context - The action context, requires `dispatch`.
+ * @param {string} connectionTargetName - The raw target string from the user.
+ * @param {string} [actionVerb='go'] - The verb used in ambiguity messages.
+ * @param {(context: ActionContext, targetName: string) => PotentialConnectionMatches} [findMatchesFn=internalFindPotentialConnectionMatches] - The function to use for finding matches.
+ * @returns {Entity | null} The resolved Connection entity or null if not found/ambiguous.
+ */
 export function resolveTargetConnection(
     context,
     connectionTargetName,
     actionVerb = 'go',
-    // **** ADDED PARAMETER ****
-    // Allow passing in the matching function. Defaulting here can be complex,
-    // so often real code might still call the internal one, but tests override.
-    // Or make it required if preferred design. For the test, we just need the parameter slot.
-    findMatchesFn = internalFindPotentialConnectionMatches // Use the imported function as default
+    // **** Uses the imported function as default ****
+    findMatchesFn = internalFindPotentialConnectionMatches
 ) {
+    // --- Implementation as provided in the prompt (unchanged) ---
     const {dispatch} = context;
 
     // --- Step 1: Validate Inputs ---

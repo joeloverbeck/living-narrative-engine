@@ -16,21 +16,20 @@ import EquipmentSystem from '../systems/equipmentSystem.js';
 import InventorySystem from '../systems/inventorySystem.js';
 import CombatSystem from '../systems/combatSystem.js';
 import DeathSystem from "../systems/deathSystem.js";
-import MovementSystem from "../systems/movementSystem.js"; // Dependency
+import MovementSystem from "../systems/movementSystem.js";
 import WorldPresenceSystem from "../systems/worldPresenceSystem.js";
 import ItemUsageSystem from "../systems/itemUsageSystem.js";
 import DoorSystem from '../systems/doorSystem.js';
 import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import {QuestStartTriggerSystem} from "../systems/questStartTriggerSystem.js";
-import BlockerSystem from '../systems/blockerSystem.js'; // Dependency
+import BlockerSystem from '../systems/blockerSystem.js';
 import GenericTriggerSystem from "../systems/genericTriggerSystem.js";
 import GameRuleSystem from "../systems/gameRuleSystem.js";
-import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js'; // <<< ADDED IMPORT (TRG-9 AC1)
+import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js';
 
 // Services
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
-import {TargetResolutionService} from "../services/targetResolutionService.js";
 import EffectExecutionService from "../services/effectExecutionService.js";
 import {QuestPrerequisiteService} from '../services/questPrerequisiteService.js';
 import {QuestRewardService} from '../services/questRewardService.js';
@@ -38,6 +37,7 @@ import {ObjectiveEventListenerService} from '../services/objectiveEventListenerS
 import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
 import GameStateInitializer from './gameStateInitializer.js';
 import WorldInitializer from './worldInitializer.js';
+import {ItemTargetResolverService} from '../services/itemTargetResolver.js'; // Adjust path if necessary
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -86,7 +86,16 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
 
-    container.register('TargetResolutionService', () => new TargetResolutionService(), {lifecycle: 'singleton'});
+    // REMOVED (Cleanup Step 6): Old TargetResolutionService Registration
+    // container.register('TargetResolutionService', () => new TargetResolutionService(), {lifecycle: 'singleton'});
+
+    // ADDED: Register New Service (Task 3)
+    container.register('ItemTargetResolverService', (c) => new ItemTargetResolverService({
+        entityManager: c.resolve('EntityManager'),
+        eventBus: c.resolve('EventBus'),
+        conditionEvaluationService: c.resolve('ConditionEvaluationService')
+    }), {lifecycle: 'singleton'});
+
 
     container.register('EffectExecutionService', () => new EffectExecutionService(), {lifecycle: 'singleton'});
 
@@ -190,12 +199,13 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
 
+    // UPDATED: ItemUsageSystem Registration (Task 4)
     container.register('ItemUsageSystem', (c) => new ItemUsageSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         dataManager: c.resolve('DataManager'),
         conditionEvaluationService: c.resolve('ConditionEvaluationService'),
-        targetResolutionService: c.resolve('TargetResolutionService'),
+        itemTargetResolverService: c.resolve('ItemTargetResolverService'),
         effectExecutionService: c.resolve('EffectExecutionService')
     }), {lifecycle: 'singleton'});
 
@@ -220,7 +230,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager'),
         blockerSystem: c.resolve('BlockerSystem'),
         movementSystem: c.resolve('MovementSystem')
-    }), { lifecycle: 'singleton' });
+    }), {lifecycle: 'singleton'});
 
     // Quest Systems
     container.register('QuestSystem', (c) => new QuestSystem({

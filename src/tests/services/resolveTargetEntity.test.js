@@ -841,7 +841,7 @@ describe('resolveTargetEntity', () => {
             const expectedNames = [warningSign, stopSign].map(e => getDisplayName(e)).join(', ');
             // Assuming AMBIGUOUS_PROMPT is used for non-contextual ambiguity
             expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: `Which 'Sign.' do you want to examine: ${expectedNames}?`, // Adjust format based on actual TARGET_MESSAGES.AMBIGUOUS_PROMPT
+                text: `Which 'Sign.' did you want to examine: ${expectedNames}?`, // Adjust format based on actual TARGET_MESSAGES.AMBIGUOUS_PROMPT
                 type: 'warning',
             });
         });
@@ -858,7 +858,7 @@ describe('resolveTargetEntity', () => {
             // Expect dispatch with both sign names
             const expectedNames = [warningSign, stopSign].map(e => getDisplayName(e)).join(', ');
             expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: `Which 'Sign' do you want to examine: ${expectedNames}?`, // Adjust format based on actual TARGET_MESSAGES.AMBIGUOUS_PROMPT
+                text: `Which 'Sign' did you want to examine: ${expectedNames}?`, // Adjust format based on actual TARGET_MESSAGES.AMBIGUOUS_PROMPT
                 type: 'warning',
             });
         });
