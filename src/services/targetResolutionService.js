@@ -1,21 +1,21 @@
 // src/services/targetResolutionService.js
 
-import { findTarget } from '../utils/targetFinder.js';
+import {findTarget} from '../utils/targetFinder.js';
 // Assuming TARGET_MESSAGES includes functions for ambiguity now
-import { getDisplayName, TARGET_MESSAGES } from '../utils/messages.js';
-import { NameComponent } from '../components/nameComponent.js';
-import { InventoryComponent } from '../components/inventoryComponent.js';
-import { EquipmentComponent } from '../components/equipmentComponent.js';
-import { ItemComponent } from '../components/itemComponent.js';
+import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
+import {NameComponent} from '../components/nameComponent.js';
+import {InventoryComponent} from '../components/inventoryComponent.js';
+import {EquipmentComponent} from '../components/equipmentComponent.js';
+import {ItemComponent} from '../components/itemComponent.js';
 
-import { ConnectionsComponent } from '../components/connectionsComponent.js';
-import { PositionComponent } from "../components/positionComponent.js";
+import {ConnectionsComponent} from '../components/connectionsComponent.js';
+import {PositionComponent} from "../components/positionComponent.js";
 // Import other components if needed
 
 // Import the function itself to potentially use as a default (if needed outside testing)
 // NOTE: Be cautious with self-importing for defaults; might need careful handling.
 // For the test, we primarily care about passing our mock explicitly.
-import { findPotentialConnectionMatches as internalFindPotentialConnectionMatches } from './targetResolutionService.js';
+import {findPotentialConnectionMatches as internalFindPotentialConnectionMatches} from './targetResolutionService.js';
 
 // Import type definitions (make sure paths are correct)
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -127,7 +127,8 @@ export class TargetResolutionService {
                 log(`Failed to fetch Connection Entity instance with ID: ${explicitTargetConnectionEntityId}`, 'error');
                 const failureMsg = TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId);
                 eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
-                return { success: false, target: null, targetType: 'none', messages };
+                console.log("DEBUG: RETURNING because !connectionEntity");
+                return {success: false, target: null, targetType: 'none', messages};
             } else {
                 // --- CONN-5.2.2: Handle Fetch Success ---
                 log(`Successfully fetched Connection Entity: ${getDisplayName(connectionEntity)} (${connectionEntity.id})`);
@@ -140,16 +141,23 @@ export class TargetResolutionService {
                 if (!userPosComp) {
                     // --- CONN-5.2.4 FAILURE HANDLING (AC1) ---
                     log("CONN-5.2.4 Failure: User missing PositionComponent.", 'error');
-                    eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId), type: 'warning' });
-                    return { success: false, target: null, targetType: 'none', messages };
+                    eventBus.dispatch('ui:message_display', {
+                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
+                        type: 'warning'
+                    });
+                    return {success: false, target: null, targetType: 'none', messages};
                 }
 
                 const userLocationId = userPosComp.locationId; // AC1 (Get locationId)
                 if (!userLocationId) {
                     // --- CONN-5.2.4 FAILURE HANDLING (AC1) ---
                     log("CONN-5.2.4 Failure: User PositionComponent missing locationId.", 'error');
-                    eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId), type: 'warning' });
-                    return { success: false, target: null, targetType: 'none', messages };
+                    eventBus.dispatch('ui:message_display', {
+                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
+                        type: 'warning'
+                    });
+                    console.log("DEBUG: RETURNING because !userLocation");
+                    return {success: false, target: null, targetType: 'none', messages};
                 }
                 log(`User location ID: ${userLocationId}`);
 
@@ -158,8 +166,11 @@ export class TargetResolutionService {
                 if (!userLocation) {
                     // --- CONN-5.2.4 FAILURE HANDLING (AC2) ---
                     log(`CONN-5.2.4 Failure: Could not fetch user location entity: ${userLocationId}`, 'error');
-                    eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId), type: 'warning' });
-                    return { success: false, target: null, targetType: 'none', messages };
+                    eventBus.dispatch('ui:message_display', {
+                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
+                        type: 'warning'
+                    });
+                    return {success: false, target: null, targetType: 'none', messages};
                 }
                 log(`Workspaceed user location entity: ${getDisplayName(userLocation)} (${userLocation.id})`);
 
@@ -168,8 +179,11 @@ export class TargetResolutionService {
                 if (!connectionsComp) {
                     // --- CONN-5.2.4 FAILURE HANDLING (AC3) ---
                     log(`CONN-5.2.4 Failure: User location ${userLocation.id} missing ConnectionsComponent.`, 'error');
-                    eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId), type: 'warning' });
-                    return { success: false, target: null, targetType: 'none', messages };
+                    eventBus.dispatch('ui:message_display', {
+                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
+                        type: 'warning'
+                    });
+                    return {success: false, target: null, targetType: 'none', messages};
                 }
                 log("Fetched ConnectionsComponent from user location.");
 
@@ -196,8 +210,11 @@ export class TargetResolutionService {
                 } else {
                     // --- CONN-5.2.4 FAILURE HANDLING (AC4) ---
                     log(`CONN-5.2.4 Failure: Connection Entity ${connectionEntity.id} is NOT a valid exit from ${userLocation.id}.`, 'error'); // Changed log to error
-                    eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId), type: 'warning' });
-                    return { success: false, target: null, targetType: 'none', messages };
+                    eventBus.dispatch('ui:message_display', {
+                        text: TARGET_MESSAGES.USE_INVALID_TARGET_CONNECTION(explicitTargetConnectionEntityId),
+                        type: 'warning'
+                    });
+                    return {success: false, target: null, targetType: 'none', messages};
                     // NOTE: No need to reset potentialTarget = null as we are returning.
                 }
                 // ***** END: CONN-5.2.3 / CONN-5.2.4 VALIDATION LOGIC *****
@@ -242,6 +259,7 @@ export class TargetResolutionService {
             // would have dispatched their own messages already.
             const failureMsg = usableComponentData.failure_message_target_required || TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
             eventBus.dispatch('ui:message_display', {text: failureMsg, type: 'warning'});
+            console.log("DEBUG: RETURNING because !potentialTarget");
             return {success: false, target: null, targetType: 'none', messages};
         }
 
@@ -295,11 +313,11 @@ export class TargetResolutionService {
                 log(`Target conditions failed for target '${targetName}'.`, 'warning');
                 // Condition evaluation service should dispatch its own failure message based on targetOptions
                 if (targetCheckResult.failureMessage) {
-                    eventBus.dispatch('ui:message_display', { text: targetCheckResult.failureMessage, type: 'warning' });
+                    eventBus.dispatch('ui:message_display', {text: targetCheckResult.failureMessage, type: 'warning'});
                 } else {
                     // Fallback if condition service somehow didn't provide a message
                     const fallbackMsg = usableComponentData.failure_message_invalid_target || TARGET_MESSAGES.USE_INVALID_TARGET(itemName);
-                    eventBus.dispatch('ui:message_display', { text: fallbackMsg, type: 'warning' });
+                    eventBus.dispatch('ui:message_display', {text: fallbackMsg, type: 'warning'});
                 }
                 return {success: false, target: null, targetType: 'none', messages};
             } else {
@@ -511,7 +529,10 @@ export function resolveTargetEntity(context, config) {
                 const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_RESOLUTION(findResult.status || 'unknown');
                 dispatch('ui:message_display', {text: errorMsg, type: 'error'});
             } else {
-                dispatch('ui:message_display', {text: 'An internal error occurred during target resolution.', type: 'error'});
+                dispatch('ui:message_display', {
+                    text: 'An internal error occurred during target resolution.',
+                    type: 'error'
+                });
             }
             console.error(`resolveTargetEntity: Internal error - Unexpected findTarget status: ${findResult.status}`);
             return null;
@@ -529,7 +550,7 @@ export function resolveTargetEntity(context, config) {
  */
 export function findPotentialConnectionMatches(context, connectionTargetName) {
     // --- Implementation as provided in the prompt ---
-    const { currentLocation, entityManager } = context; // Removed playerEntity, dispatch as they aren't needed for matching itself
+    const {currentLocation, entityManager} = context; // Removed playerEntity, dispatch as they aren't needed for matching itself
 
     /** @type {PotentialConnectionMatches} */
     const results = {
@@ -565,11 +586,11 @@ export function findPotentialConnectionMatches(context, connectionTargetName) {
     const fetchedEntityIds = new Set(); // To track successfully fetched entities for name matching de-duplication
 
     for (const mapping of connectionMappings) {
-        const { direction, connectionEntityId } = mapping;
+        const {direction, connectionEntityId} = mapping;
         const connectionEntity = entityManager.getEntityInstance(connectionEntityId);
 
         if (connectionEntity) {
-            fetchedConnectionsData.push({ direction, connectionEntity });
+            fetchedConnectionsData.push({direction, connectionEntity});
             fetchedEntityIds.add(connectionEntity.id); // Track successful fetches
         } else {
             console.warn(`findPotentialConnectionMatches: Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}'`);
@@ -621,7 +642,7 @@ export function resolveTargetConnection(
     // Or make it required if preferred design. For the test, we just need the parameter slot.
     findMatchesFn = internalFindPotentialConnectionMatches // Use the imported function as default
 ) {
-    const { dispatch } = context;
+    const {dispatch} = context;
 
     // --- Step 1: Validate Inputs ---
     if (!context || !context.dispatch) { // Ensure dispatch is available
@@ -637,7 +658,7 @@ export function resolveTargetConnection(
     }
 
     // --- Step 2: Find Potential Matches (CONN-5.1.2) ---
-    const { directionMatches, nameMatches } = findMatchesFn(context, trimmedTargetName);
+    const {directionMatches, nameMatches} = findMatchesFn(context, trimmedTargetName);
     console.log(`resolveTargetConnection: Matches for '${trimmedTargetName}': Directions=${directionMatches.length}, Names=${nameMatches.length}`);
 
     // ================================================================
@@ -664,7 +685,7 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `There are multiple ways to go '${trimmedTargetName}'. Which one did you mean? (${displayNames.join(', ')})`;
         }
-        dispatch('ui:message_display', { text: ambiguousMsg, type: 'warning' });
+        dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null; // Return null due to ambiguity
     }
 
@@ -690,7 +711,7 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `Which '${trimmedTargetName}' did you want to ${actionVerb}? (${displayNames.join(', ')})`;
         }
-        dispatch('ui:message_display', { text: ambiguousMsg, type: 'warning' });
+        dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null; // Return null due to ambiguity
     }
 
@@ -698,6 +719,6 @@ export function resolveTargetConnection(
     console.log(`resolveTargetConnection: No direction or name matches found for '${trimmedTargetName}'.`);
     // Use the specified TARGET_MESSAGES function
     const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(trimmedTargetName);
-    dispatch('ui:message_display', { text: notFoundMsg, type: 'info' });
+    dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
     return null; // Return null as target was not found
 }
