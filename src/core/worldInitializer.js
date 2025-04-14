@@ -7,7 +7,7 @@
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */ // Keep for type checking if needed
 
 // --- Component Class Imports (needed for getComponent checks) ---
-import { PositionComponent } from '../components/positionComponent.js';
+import {PositionComponent} from '../components/positionComponent.js';
 
 /**
  * Service responsible for instantiating non-player/location entities defined
@@ -29,7 +29,7 @@ class WorldInitializer {
      * @param {GameStateManager} dependencies.gameStateManager
      * @param {DataManager} dependencies.dataManager
      */
-    constructor({ entityManager, gameStateManager, dataManager }) {
+    constructor({entityManager, gameStateManager, dataManager}) {
         if (!entityManager) throw new Error("WorldInitializer requires an EntityManager.");
         if (!gameStateManager) throw new Error("WorldInitializer requires a GameStateManager.");
         if (!dataManager) throw new Error("WorldInitializer requires a DataManager.");
@@ -69,33 +69,29 @@ class WorldInitializer {
                     continue;
                 }
 
-                // Check if the definition includes a 'Position' component, indicating it should be placed in the world initially.
-                // Assumes 'Position' is the registered key for PositionComponent.
-                if (entityDef.components && entityDef.components.Position) {
-                    // Check if an entity with this ID somehow already exists (e.g., from a previous failed run or bug)
-                    if (this.#entityManager.activeEntities.has(entityDef.id)) {
-                        console.warn(`WorldInitializer: Entity ${entityDef.id} requested for initial instantiation but already exists in EntityManager. Skipping.`);
-                        continue;
-                    }
+                // Check if an entity with this ID somehow already exists (e.g., from a previous failed run or bug)
+                if (this.#entityManager.activeEntities.has(entityDef.id)) {
+                    console.warn(`WorldInitializer: Entity ${entityDef.id} requested for initial instantiation but already exists in EntityManager. Skipping.`);
+                    continue;
+                }
 
-                    // Create the entity instance using EntityManager
-                    const instance = this.#entityManager.createEntityInstance(entityDef.id);
+                // Create the entity instance using EntityManager
+                const instance = this.#entityManager.createEntityInstance(entityDef.id);
 
-                    if (instance) {
-                        // Sanity check: Ensure the instantiated entity actually has the PositionComponent
-                        // This guards against definition errors or component registration issues.
-                        if (!instance.hasComponent(PositionComponent)) {
-                            console.error(`WorldInitializer: CRITICAL - Instantiated ${instance.id} but it lacks the expected PositionComponent! Check component registration/definition.`);
-                            // Depending on game requirements, this might be a recoverable warning or a fatal error.
-                            // For now, log critically but continue. Consider throwing if this state is unacceptable.
-                        }
-                        initialEntityCount++;
-                    } else {
-                        // createEntityInstance logs its own errors, but we add context here.
-                        console.warn(`WorldInitializer: Failed to instantiate initial entity from definition: ${entityDef.id}. See previous EntityManager errors.`);
-                        // Decide if failure to instantiate *any* initial entity is critical. Throw if needed.
-                        // throw new Error(`Failed to instantiate critical initial entity: ${entityDef.id}`);
+                if (instance) {
+                    // Sanity check: Ensure the instantiated entity actually has the PositionComponent
+                    // This guards against definition errors or component registration issues.
+                    if (!instance.hasComponent(PositionComponent)) {
+                        console.error(`WorldInitializer: CRITICAL - Instantiated ${instance.id} but it lacks the expected PositionComponent! Check component registration/definition.`);
+                        // Depending on game requirements, this might be a recoverable warning or a fatal error.
+                        // For now, log critically but continue. Consider throwing if this state is unacceptable.
                     }
+                    initialEntityCount++;
+                } else {
+                    // createEntityInstance logs its own errors, but we add context here.
+                    console.warn(`WorldInitializer: Failed to instantiate initial entity from definition: ${entityDef.id}. See previous EntityManager errors.`);
+                    // Decide if failure to instantiate *any* initial entity is critical. Throw if needed.
+                    // throw new Error(`Failed to instantiate critical initial entity: ${entityDef.id}`);
                 }
             }
             console.log(`WorldInitializer: Instantiated ${initialEntityCount} additional initial world entities.`);

@@ -12,7 +12,6 @@ import InputHandler from './inputHandler.js';
 import GameLoop from './gameLoop.js';
 
 // Systems
-import TriggerSystem from '../systems/triggerSystem.js';
 import EquipmentSystem from '../systems/equipmentSystem.js';
 import InventorySystem from '../systems/inventorySystem.js';
 import CombatSystem from '../systems/combatSystem.js';
@@ -36,6 +35,8 @@ import {ObjectiveEventListenerService} from '../services/objectiveEventListenerS
 import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
 import GameStateInitializer from './gameStateInitializer.js'; // <<< CHANGED: No longer needs specific IDs here
 import WorldInitializer from './worldInitializer.js';
+import GenericTriggerSystem from "../systems/genericTriggerSystem.js";
+import GameRuleSystem from "../systems/gameRuleSystem.js";
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
 
@@ -145,12 +146,18 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }), {lifecycle: 'singleton'});
 
     // --- 9. Core Systems ---
-    container.register('TriggerSystem', (c) => new TriggerSystem({
+    container.register('GenericTriggerSystem', (c) => new GenericTriggerSystem({
         eventBus: c.resolve('EventBus'),
         dataManager: c.resolve('DataManager'),
         entityManager: c.resolve('EntityManager'),
+    }), {lifecycle: 'singleton'});
+
+    container.register('GameRuleSystem', (c) => new GameRuleSystem({
+        eventBus: c.resolve('EventBus'),
         gameStateManager: c.resolve('GameStateManager'),
-        actionExecutor: c.resolve('ActionExecutor')
+        actionExecutor: c.resolve('ActionExecutor'),
+        entityManager: c.resolve('EntityManager'),
+        dataManager: c.resolve('DataManager')
     }), {lifecycle: 'singleton'});
 
     container.register('EquipmentSystem', (c) => new EquipmentSystem({

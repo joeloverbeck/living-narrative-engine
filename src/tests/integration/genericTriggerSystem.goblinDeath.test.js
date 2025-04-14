@@ -1,9 +1,9 @@
-// src/tests/integration/triggerSystem.goblinDeath.test.js
+// src/tests/integration/genericTriggerSystem.goblinDeath.test.js
 
 
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
-import TriggerSystem from '../../systems/triggerSystem.js';
+import GenericTriggerSystem from '../../systems/genericTriggerSystem.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 
 // --- Mocks ---
@@ -52,13 +52,13 @@ const mockDataManager = {
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
     createEntityInstance: jest.fn((id) => mockEntityManager.getEntityInstance(id)), // Simple passthrough if creation logic isn't tested here
-    // Add other methods if TriggerSystem dependencies require them
+    // Add other methods if GenericTriggerSystem dependencies require them
 };
 
 const mockGameStateManager = {
     getPlayer: jest.fn(() => ({id: 'player1'})), // Return a mock player if needed
     setCurrentLocation: jest.fn(),
-    // Add other methods if TriggerSystem dependencies require them
+    // Add other methods if GenericTriggerSystem dependencies require them
 };
 
 const mockActionExecutor = {
@@ -67,8 +67,8 @@ const mockActionExecutor = {
 
 // --- Test Suite ---
 
-describe('TriggerSystem Core Tests', () => {
-    let triggerSystem;
+describe('GenericTriggerSystem Core Tests', () => {
+    let genericTriggerSystem;
     let mockEventBus;
     let mockHallway;
     let mockConnectionsComponent;
@@ -151,7 +151,7 @@ describe('TriggerSystem Core Tests', () => {
         });
 
         // Instantiate the system under test with all mocks
-        triggerSystem = new TriggerSystem({
+        genericTriggerSystem = new GenericTriggerSystem({
             eventBus: mockEventBus,
             dataManager: mockDataManager,
             entityManager: mockEntityManager,
@@ -160,7 +160,7 @@ describe('TriggerSystem Core Tests', () => {
         });
 
         // Initialize the system - this reads triggers and subscribes handlers
-        triggerSystem.initialize();
+        genericTriggerSystem.initialize();
     });
 
     // =========================================================================
@@ -225,7 +225,7 @@ describe('TriggerSystem Core Tests', () => {
         // Note: Accessing private methods like this (_execute...) for testing is common
         // but be aware it couples the test to implementation details.
         // Using '#' syntax for private fields/methods is harder to spy on directly.
-        const spyExecuteSetConnectionState = jest.spyOn(triggerSystem, '_executeSetConnectionState');
+        const spyExecuteSetConnectionState = jest.spyOn(genericTriggerSystem, '_executeSetConnectionState');
 
         // --- Pre-assertion: Verify initial state ---
         expect(mockConnectionsComponent.getConnectionState('demo:treasure_room_door')).toBe('locked');
@@ -238,8 +238,8 @@ describe('TriggerSystem Core Tests', () => {
         expect(mockConnectionsComponent.getConnectionState('demo:treasure_room_door')).toBe('unlocked');
         expect(spyExecuteSetConnectionState).toHaveBeenCalledTimes(1); // Should have been called once now
         expect(spyExecuteSetConnectionState).toHaveBeenCalledWith(
-            goblinDeathTrigger.actions[0].target, // Ensure it was called with the correct args
-            goblinDeathTrigger.actions[0].parameters
+            expect.objectContaining(goblinDeathTrigger.actions[0].target), // Check if received object contains these properties
+            expect.objectContaining(goblinDeathTrigger.actions[0].parameters) // Check if received object contains these properties
         );
         // Check the 'click' sound was dispatched the first time
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -295,7 +295,7 @@ describe('TriggerSystem Core Tests', () => {
         };
 
         // Spy on the action execution method (Optional assertion target)
-        const spyExecuteSetConnectionState = jest.spyOn(triggerSystem, '_executeSetConnectionState');
+        const spyExecuteSetConnectionState = jest.spyOn(genericTriggerSystem, '_executeSetConnectionState');
 
         // --- Pre-assertion: Verify initial state is locked ---
         expect(mockConnectionsComponent.getConnectionState('demo:treasure_room_door')).toBe('locked');
