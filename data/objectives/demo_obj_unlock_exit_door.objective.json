@@ -1,0 +1,25 @@
+{
+  "id": "demo:obj_unlock_exit_door",
+  "descriptionId": "obj_desc_unlock_exit_door",
+  "isHidden": false,
+  "completionConditions": {
+    "allOf": [
+      {
+        "type": "event_listener",
+        "eventName": "event:door_unlocked",
+        "filters": {
+          "connectionId": "demo:exit_north_door"
+        }
+      }
+    ]
+  },
+  "eventsToFireOnCompletion": [
+    {
+      "eventName": "objective:completed",
+      "eventData": {
+        "objectiveId": "demo:obj_unlock_exit_door",
+        "questId": "demo:quest_exit_dungeon"
+      }
+    }
+  ]
+}

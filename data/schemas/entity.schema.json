@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/entity.schema.json",
+  "title": "Game Entity Schema",
+  "description": "Schema for a game entity (player, NPC, item, location, etc.) composed of modular components. Each entity is defined by a unique id and a collection of components determining its attributes and behavior.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this entity. Typically includes a module prefix and specific name (e.g., 'core:player', 'demo:item_key', 'demo:room_hall')."
+    },
+    "components": {
+      "type": "object",
+      "description": "Object containing the components that make up this entity. Each key is a component type name (string) and its value is the component data object.",
+      "properties": {
+        "Name": {
+          "$ref": "./common.schema.json#/definitions/NameComponent",
+          "description": "(Recommended) The display name of the entity. Definition imported from common schema."
+        },
+        "Description": {
+          "$ref": "./common.schema.json#/definitions/DescriptionComponent",
+          "description": "(Optional) Static text description of the entity. Definition imported from common schema."
+        },
+        "MetaDescription": {
+          "$ref": "./common.schema.json#/definitions/MetaDescriptionComponent",
+          "description": "(Optional) Data used for LLM-generated descriptions. Definition imported from common schema."
+        },
+        "Position": {
+          "$ref": "./common.schema.json#/definitions/PositionComponent",
+          "description": "(Optional) Component for entities whose location is relevant. Definition imported from common schema."
+        },
+        "Health": {
+          "$ref": "./common.schema.json#/definitions/HealthComponent",
+          "description": "(Optional) Component for entities that have health points. Definition imported from common schema."
+        },
+        "Inventory": {
+          "$ref": "./common.schema.json#/definitions/InventoryComponent",
+          "description": "(Optional) Component for entities that can carry items. Definition imported from common schema."
+        },
+        "Attack": {
+          "$ref": "./common.schema.json#/definitions/AttackComponent",
+          "description": "(Optional) Component for entities that can perform basic attacks. Definition imported from common schema."
+        },
+        "Skills": {
+          "$ref": "./common.schema.json#/definitions/SkillComponent",
+          "description": "(Optional) Component tracking entity skill levels. Definition imported from common schema."
+        },
+        "Stats": {
+          "$ref": "./common.schema.json#/definitions/StatsComponent",
+          "description": "(Optional) Component tracking entity core attributes (Strength, Agility etc.). Definition imported from common schema."
+        },
+        "EntitiesPresent": {
+          "$ref": "./common.schema.json#/definitions/EntitiesPresentComponent",
+          "description": "(Optional, usually for locations/containers) Lists IDs of entities within. Definition imported from common schema."
+        },
+        "Connections": {
+          "$ref": "./common.schema.json#/definitions/ConnectionsComponent",
+          "description": "(Optional, primarily for locations) Defines simple exits to other locations. See location.schema.json for a more detailed structure used by locations. Definition imported from common schema."
+        },
+        "Equipment": {
+          "$ref": "./common.schema.json#/definitions/EquipmentComponent",
+          "description": "(Optional) Component for entities that can equip items. Definition imported from common schema."
+        },
+        "QuestLog": {
+          "$ref": "./common.schema.json#/definitions/QuestLogComponent",
+          "description": "(Optional) Allows the entity (typically player) to track quest status and objectives. Definition imported from common schema."
+        },
+        "Openable": {
+          "$ref": "./common.schema.json#/definitions/OpenableComponent",
+          "description": "(Optional) Component for entities that can be opened/closed. Definition imported from common schema."
+        },
+        "Lockable": {
+          "$ref": "./common.schema.json#/definitions/LockableComponent",
+          "description": "(Optional) Component for entities that can be locked/unlocked. Definition imported from common schema."
+        },
+        "Container": {
+          "$ref": "./common.schema.json#/definitions/ContainerComponent",
+          "description": "(Optional) Component for entities that can hold items. Definition imported from common schema."
+        },
+        "Edible": {
+          "$ref": "./common.schema.json#/definitions/EdibleComponent",
+          "description": "(Optional) Marker component indicating an entity can be eaten. Definition imported from common schema."
+        },
+        "LiquidContainer": {
+          "$ref": "./common.schema.json#/definitions/LiquidContainerComponent",
+          "description": "(Optional) Component for entities that can contain liquids. Definition imported from common schema."
+        },
+        "Pushable": {
+          "$ref": "./common.schema.json#/definitions/PushableComponent",
+          "description": "(Optional) Component for entities that can be pushed. Definition imported from common schema."
+        },
+        "Breakable": {
+          "$ref": "./common.schema.json#/definitions/BreakableComponent",
+          "description": "(Optional) Component for entities that can be damaged and potentially destroyed. Definition imported from common schema."
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": true,
+      "$comment": "Allowing additional properties enables custom components defined by mods or specific game logic."
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+  }
+}

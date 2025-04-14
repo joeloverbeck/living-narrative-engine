@@ -1,0 +1,18 @@
+{
+  "id": "core:examine",
+  "name": "Examine Entity/Object",
+  "description": "Examine a specific entity or object in your location more closely.",
+  "commands": [
+    "examine",
+    "x",
+    "look at",
+    "inspect"
+  ],
+  "requires_target": true,
+  "target_type": "entity_in_room",
+  "applicability": {
+    "requires_components": [
+      "DescriptionComponent"
+    ]
+  }
+}
