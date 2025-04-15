@@ -14,7 +14,7 @@
  * Defines the payload structure for the event:item_use_attempted event.
  * This event signifies that a user has successfully indicated an intent
  * to use a specific item from their inventory, potentially targeting another entity
- * OR a connection within the current location.
+ * within the current location.
  * It is typically fired after basic command parsing and unique item identification
  * within the user's inventory, but before system-level validation (like usability
  * conditions or target validity checks).
@@ -37,12 +37,6 @@
  * that the user explicitly targeted with the command (e.g., the ID resolved from
  * "use potion *on goblin*"). This is mutually exclusive with `explicitTargetConnectionId`.
  * It is `null` if the use command did not specify an explicit target or targeted a connection.
- * @property {string | null} explicitTargetConnectionId The unique identifier (`connectionId`) of the *connection*
- * within the current location that the user explicitly targeted (e.g., the ID resolved from
- * "use key *on north door*"). This is mutually exclusive with `explicitTargetEntityId`.
- * It is `null` if the use command did not specify an explicit target or targeted an entity.
- * // Note: We could pass the whole connection object, but ID might be simpler for event payload.
- * // The ItemUsageSystem can retrieve the object using the ID and location if needed.
  */
 
 /**
@@ -126,7 +120,7 @@
  * @property {string | null} [blockerEntityId] The unique identifier of the entity that blocked the movement, if applicable (present if failure was due to a blocker).
  */
 
- /**
+/**
  * Defines the payload structure for the event:item_picked_up event.
  * Signals that an entity has successfully taken an item from a location. The UI message has already been dispatched.
  * This event triggers the necessary state changes in inventory and world state.

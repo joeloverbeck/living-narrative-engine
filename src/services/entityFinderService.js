@@ -21,14 +21,23 @@ import {getEntityIdsForScopes} from './entityScopeService.js';
 // --- NEW: JSDoc Type Definitions for Resolution Outcome ---
 
 /**
- * Represents the status of the entity resolution attempt.
- * - 'FOUND_UNIQUE': Exactly one matching entity was found.
- * - 'NOT_FOUND': No entities matched the target name after filtering.
- * - 'AMBIGUOUS': Multiple entities matched the target name after filtering.
- * - 'FILTER_EMPTY': No entities met the required component/scope/filter criteria (list was empty before name matching).
- * - 'INVALID_INPUT': The provided context, config, or targetName was invalid for processing.
- * @typedef {'FOUND_UNIQUE' | 'NOT_FOUND' | 'AMBIGUOUS' | 'FILTER_EMPTY' | 'INVALID_INPUT'} ResolutionStatus
+ * @typedef {'FOUND_UNIQUE' | 'NOT_FOUND' | 'AMBIGUOUS' | 'FILTER_EMPTY' | 'INVALID_INPUT'} ResolutionStatusValue
+ * Note: Renamed typedef slightly to avoid naming collision with the constant object below.
+ * Or, you could just remove the @typedef if the exported object serves the purpose.
  */
+
+/**
+ * Represents the status of the entity resolution attempt.
+ * Use this object for comparisons in consuming code.
+ * @enum {ResolutionStatusValue} // You can still link it to the JSDoc type if desired
+ */
+export const ResolutionStatus = Object.freeze({
+    FOUND_UNIQUE: 'FOUND_UNIQUE',
+    NOT_FOUND: 'NOT_FOUND',
+    AMBIGUOUS: 'AMBIGUOUS',
+    FILTER_EMPTY: 'FILTER_EMPTY',
+    INVALID_INPUT: 'INVALID_INPUT',
+});
 
 /**
  * Structure containing the result of an entity resolution attempt.
@@ -147,7 +156,7 @@ function resolveTargetEntity(context, config) {
         // REMOVED: All message determination and dispatch logic.
         // Return FILTER_EMPTY status
         return {
-            status: 'FILTER_EMPTY',
+            status: ResolutionStatus.FILTER_EMPTY,
             entity: null,
             candidates: null,
         };
@@ -163,7 +172,7 @@ function resolveTargetEntity(context, config) {
         case 'NOT_FOUND': {
             // Return NOT_FOUND status
             return {
-                status: 'NOT_FOUND',
+                status: ResolutionStatus.NOT_FOUND,
                 entity: null,
                 candidates: null,
             };
@@ -171,7 +180,7 @@ function resolveTargetEntity(context, config) {
         case 'FOUND_AMBIGUOUS': {
             // Return AMBIGUOUS status with the candidates
             return {
-                status: 'AMBIGUOUS',
+                status: ResolutionStatus.AMBIGUOUS,
                 entity: null,
                 candidates: findResult.matches,
             };
@@ -179,7 +188,7 @@ function resolveTargetEntity(context, config) {
         case 'FOUND_UNIQUE': {
             // Return FOUND_UNIQUE status with the single entity
             return {
-                status: 'FOUND_UNIQUE',
+                status: ResolutionStatus.FOUND_UNIQUE,
                 entity: findResult.matches[0],
                 candidates: null,
             };
@@ -194,7 +203,7 @@ function resolveTargetEntity(context, config) {
             );
             // REMOVED: Dispatch call for internal error.
             return {
-                status: 'NOT_FOUND', // Or potentially introduce an 'INTERNAL_ERROR' status if deemed necessary later.
+                status: ResolutionStatus.NOT_FOUND, // Or potentially introduce an 'INTERNAL_ERROR' status if deemed necessary later.
                 entity: null,
                 candidates: null,
             };

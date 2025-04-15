@@ -45,7 +45,7 @@
         {
           "type": "trigger_event",
           "parameters": {
-            "eventName": "event:connection_unlock_attempt",
+            "eventName": "event:unlock_attempt",
             "payload": {}
           }
         }
