@@ -240,7 +240,7 @@
         },
         {
           "condition_type": "target_has_property",
-          "property_path": "state",
+          "property_path": "PassageDetails.state",
           "expected_value": "locked",
           "failure_message": "It is already unlocked."
         }

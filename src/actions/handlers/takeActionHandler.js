@@ -4,51 +4,44 @@
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
-import {getDisplayName} from "../../utils/messages.js";
+// --- Standard Imports ---
 import {ItemComponent} from "../../components/itemComponent.js";
 import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
+// --- Refactored Imports ---
+import {TARGET_MESSAGES, getDisplayName} from "../../utils/messages.js"; // Import TARGET_MESSAGES and getDisplayName
 
 /**
  * Handles the 'take' action ('core:take'). Allows the player to pick up items
- * from the current location using TargetResolutionService.
- * Dispatches semantic events (e.g., 'action:take_succeeded', 'action:take_failed')
- * instead of directly dispatching UI messages.
+ * from the current location. Uses the updated resolveTargetEntity service.
+ * Dispatches UI messages based on resolution status and semantic events on success/failure.
  * @param {ActionContext} context - The context for the action.
- * @returns {ActionResult} The result of the action.
+ * @returns {ActionResult} The result of the action attempt.
  */
 export function executeTake(context) {
-    // Destructure context, including parsedCommand. Note: 'targets' is no longer needed here.
+    // Destructure context, including parsedCommand.
     const {playerEntity, currentLocation, dispatch, parsedCommand} = context;
     const messages = []; // Still useful for internal logging
 
     // Basic validation
     if (!playerEntity || !currentLocation) {
         console.error("executeTake: Missing player or location in context.");
-        // Dispatch semantic failure event instead of UI message
-        dispatch('action:take_failed', {
-            actorId: playerEntity?.id || 'unknown', // Include actor if possible
-            // Use parsed phrase if available, otherwise indicate missing target
-            targetName: parsedCommand?.directObjectPhrase || '(missing target)',
-            reasonCode: 'SETUP_ERROR',
-            locationId: currentLocation?.id || 'unknown'
-        });
+        // Dispatch UI message for this critical setup error
+        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         messages.push({text: "Setup error: Missing player or location.", type: 'internal_error'});
-        return {success: false, messages: messages}; // Keep internal messages
+        return {success: false, messages: messages};
     }
 
     const actorId = playerEntity.id;
     const locationId = currentLocation.id;
 
     // --- Validate required command part (direct object) using parsedCommand ---
-    // This call fulfills AC1.
-    if (!validateRequiredCommandPart(context, 'take', 'directObjectPhrase')) { // [cite: file:handlers/takeActionHandler.js]
-        // Assuming the utility handles dispatching the semantic failure event now.
+    if (!validateRequiredCommandPart(context, 'take', 'directObjectPhrase')) {
+        // validateRequiredCommandPart should dispatch its own feedback (e.g., PROMPT_WHAT)
         return {success: false, messages: [], newState: undefined};
     }
 
     // --- Get target name directly from parsedCommand ---
-    // This line fulfills AC2 and AC3 (by replacing the old targets.join(' ') logic).
     const targetName = parsedCommand.directObjectPhrase;
 
     messages.push({
@@ -56,94 +49,110 @@ export function executeTake(context) {
         type: 'internal'
     });
 
-
     // --- 1. Resolve Target Item using Service ---
-    // NOTE: Assumes resolveTargetEntity *might* dispatch UI messages directly for
-    //       'not found' or 'empty scope'. Ideally, it would return null/error
-    //       and we dispatch the semantic event here.
-    const targetItemEntity = resolveTargetEntity(context, {
+    // Removed message override configs (notFoundMessageKey, emptyScopeMessage)
+    const resolution = resolveTargetEntity(context, {
         scope: 'location_items',
         requiredComponents: [ItemComponent],
-        actionVerb: 'take',
-        // Use the targetName derived from parsedCommand.directObjectPhrase. This fulfills AC4.
+        // actionVerb: 'take', // Kept for potential future message construction if needed
         targetName: targetName,
-        // Pass flags to suppress direct UI messages if the service supports it
-        suppressUIMessages: true, // <--- Hypothetical flag
-        // The following messages are now potentially handled by NotificationUISystem
-        notFoundMessageKey: 'NOT_FOUND_TAKEABLE', // We might use this key in the semantic event
-        emptyScopeMessage: "There's nothing here to take.", // Or this info
     });
 
     // --- 2. Handle Resolver Result ---
-    if (!targetItemEntity) {
-        // If resolveTargetEntity didn't find the item (and didn't dispatch UI message)
-        // dispatch the semantic failure event here.
-        // We need to know *why* it failed (not found vs empty scope).
-        // This requires resolveTargetEntity to provide more info than just null.
-        // Let's assume for now it returns null for 'not found' and we infer.
-        // A better approach is the resolver returning an error object/code.
+    switch (resolution.status) {
+        case 'FOUND_UNIQUE': {
+            const targetItemEntity = resolution.entity; // Get the resolved entity
+            const targetItemId = targetItemEntity.id;
+            const itemName = getDisplayName(targetItemEntity);
 
-        // Infer reason (example - needs refinement based on resolveTargetEntity behavior)
-        // Use the correct method name and check the size of the returned Set
-        const entityIdsInLocation = context.entityManager.getEntitiesInLocation(locationId);
-        const reasonCode = entityIdsInLocation.size === 0 ? 'SCOPE_EMPTY' : 'TARGET_NOT_FOUND';
+            // --- 3. Perform the Take Action (Dispatch Events) ---
+            let success = false; // Default false
+            try {
+                // Dispatch internal game event FIRST
+                dispatch('event:item_picked_up', {
+                    pickerId: actorId,
+                    itemId: targetItemId,
+                    locationId: locationId
+                });
+                success = true; // Set success only if dispatch works
 
-        dispatch('action:take_failed', {
-            actorId: actorId,
-            targetName: targetName, // Use the name from parsedCommand
-            reasonCode: reasonCode, // e.g., 'TARGET_NOT_FOUND' or 'SCOPE_EMPTY'
-            locationId: locationId
-        });
-        messages.push({text: `Target resolution failed for '${targetName}', reason: ${reasonCode}`, type: 'internal'});
-        // Return success: false, as the action didn't complete.
-        return {success: false, messages};
+                // Dispatch semantic SUCCESS event (could also be handled by a system listening to item_picked_up)
+                // For now, keeping it here for direct feedback loop example.
+                dispatch('action:take_succeeded', {
+                    actorId: actorId,
+                    itemId: targetItemId,
+                    itemName: itemName,
+                    locationId: locationId
+                });
+                messages.push({
+                    text: `Dispatched action:take_succeeded for ${itemName} (${targetItemId})`,
+                    type: 'internal'
+                });
+
+            } catch (dispatchError) {
+                // Log internal error
+                const internalLogMsg = `Internal error occurred during item pick up event dispatch for ${itemName}.`;
+                messages.push({text: internalLogMsg, type: 'error'});
+                console.error(`Take Handler: Failed to dispatch event:item_picked_up for ${itemName} (${targetItemId}):`, dispatchError);
+
+                // Dispatch semantic FAILURE event
+                dispatch('action:take_failed', {
+                    actorId: actorId,
+                    targetName: itemName,
+                    reasonCode: 'INTERNAL_PICKUP_ERROR',
+                    locationId: locationId,
+                    details: dispatchError
+                });
+                messages.push({
+                    text: `Dispatched action:take_failed for ${itemName} due to pickup error`,
+                    type: 'internal'
+                });
+                // success remains false
+
+                // Also dispatch generic UI error since the event failed
+                dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            }
+
+            return {success, messages, newState: undefined};
+        }
+
+        case 'NOT_FOUND':
+            // Dispatch UI message based on status
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOT_FOUND_TAKEABLE(targetName), type: 'info'});
+            messages.push({text: `Target resolution failed for '${targetName}', reason: NOT_FOUND`, type: 'internal'});
+            return {success: false, messages};
+
+        case 'AMBIGUOUS':
+            // Dispatch UI message based on status
+            const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('take', targetName, resolution.candidates);
+            dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+            messages.push({text: `Target resolution failed for '${targetName}', reason: AMBIGUOUS`, type: 'internal'});
+            return {success: false, messages};
+
+        case 'FILTER_EMPTY':
+            // Dispatch UI message based on status
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.TAKE_EMPTY_LOCATION, type: 'info'});
+            messages.push({
+                text: `Target resolution failed for '${targetName}', reason: FILTER_EMPTY (Location has no items)`,
+                type: 'internal'
+            });
+            return {success: false, messages};
+
+        case 'INVALID_INPUT':
+            // Dispatch UI message based on status
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            messages.push({
+                text: `Target resolution failed for '${targetName}', reason: INVALID_INPUT`,
+                type: 'internal_error'
+            });
+            console.error(`executeTake: resolveTargetEntity returned INVALID_INPUT for target '${targetName}'. Context/Config issue?`);
+            return {success: false, messages};
+
+        default:
+            // Should not happen
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            console.error(`executeTake: Unhandled resolution status: ${resolution.status}`);
+            messages.push({text: `Unhandled status: ${resolution.status}`, type: 'internal_error'});
+            return {success: false, messages};
     }
-
-    // --- 3. Perform the Take Action ---
-    const targetItemId = targetItemEntity.id;
-    const itemName = getDisplayName(targetItemEntity);
-
-    // Dispatch the internal game event FIRST to trigger state changes
-    let success = false; // Default false
-    try {
-        dispatch('event:item_picked_up', {
-            pickerId: actorId, // Use actorId consistently
-            itemId: targetItemId,
-            locationId: locationId
-        });
-        success = true; // Set success only if dispatch works
-
-        // Dispatch semantic SUCCESS event
-        dispatch('action:take_succeeded', {
-            actorId: actorId,
-            itemId: targetItemId,
-            itemName: itemName,
-            locationId: locationId
-        });
-        messages.push({text: `Dispatched action:take_succeeded for ${itemName} (${targetItemId})`, type: 'internal'});
-
-    } catch (dispatchError) {
-        // Log internal error
-        const internalLogMsg = `Internal error occurred during item pick up event dispatch for ${itemName}.`;
-        messages.push({text: internalLogMsg, type: 'error'}); // Keep internal log specific
-        console.error(`Take Handler: Failed to dispatch event:item_picked_up for ${itemName} (${targetItemId}):`, dispatchError);
-
-        // Dispatch semantic FAILURE event
-        dispatch('action:take_failed', {
-            actorId: actorId,
-            targetName: itemName, // We know the item name at this point
-            reasonCode: 'INTERNAL_PICKUP_ERROR',
-            locationId: locationId,
-            details: dispatchError // Optionally pass error details
-        });
-        messages.push({text: `Dispatched action:take_failed for ${itemName} due to pickup error`, type: 'internal'});
-        // success remains false
-    }
-
-    // Return result
-    return {
-        success,
-        messages, // Contains only internal messages now
-        newState: undefined
-    };
 }

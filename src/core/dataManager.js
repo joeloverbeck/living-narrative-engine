@@ -15,6 +15,7 @@ const SCHEMA_FILES = [
     'interaction-test.schema.json',
     'item.schema.json',
     'location.schema.json',
+    'connection.schema.json',
     'quest.schema.json',
     'objective.schema.json',
     'world-manifest.schema.json',
@@ -36,6 +37,7 @@ const CONTENT_TYPE_SCHEMAS = {
     entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
     items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
+    connections: 'http://example.com/schemas/connection.schema.json',
     triggers: 'http://example.com/schemas/event-trigger.schema.json', // For triggers listed under "triggers" (array)
     objectives: 'http://example.com/schemas/objective.schema.json', // For objectives listed under "objectives"
     quests: 'http://example.com/schemas/quest.schema.json', // For quests listed under "quests"
@@ -63,6 +65,7 @@ class DataManager {
     entities = new Map();
     items = new Map();
     locations = new Map();
+    connections = new Map();
     triggers = new Map();
     quests = new Map();
     objectives = new Map();
@@ -118,6 +121,7 @@ class DataManager {
         this.entities.clear();
         this.items.clear();
         this.locations.clear();
+        this.connections.clear();
         this.triggers.clear();
         this.quests.clear();
         this.objectives.clear();
@@ -215,7 +219,8 @@ class DataManager {
             CONTENT_TYPE_SCHEMAS.manifest,
             CONTENT_TYPE_SCHEMAS.entities,
             CONTENT_TYPE_SCHEMAS.items,
-            CONTENT_TYPE_SCHEMAS.locations
+            CONTENT_TYPE_SCHEMAS.locations,
+            CONTENT_TYPE_SCHEMAS.connections
             // Add other essential schemas if needed
         ];
         for (const id of requiredSchemaIds) {
@@ -322,6 +327,7 @@ class DataManager {
                     case 'entities':
                     case 'items':
                     case 'locations':
+                    case 'connections':
                         // Use the dedicated entity loader which handles unified map storage
                         // Pass the typeName so it knows the subdirectory and schema
                         loadingPromises.push(this.#loadAndValidateEntityTypes(typeName, filenames, schemaId));
@@ -561,7 +567,7 @@ class DataManager {
         console.log(`  - World Loaded: ${this.getWorldName() || 'None'}`);
         console.log(`  - Schemas Parsed: ${this.schemas.size}`);
         console.log(`  - Actions: ${this.actions.size}`);
-        console.log(`  - Entities/Items/Locations (Unified): ${this.entities.size}`);
+        console.log(`  - Entities/Items/Locations/Connections (Unified): ${this.entities.size}`);
         console.log(`  - Triggers: ${this.triggers.size}`);
         console.log(`  - Quests: ${this.quests.size}`);
         console.log(`  - Objectives: ${this.objectives.size}`);

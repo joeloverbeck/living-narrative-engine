@@ -30,13 +30,13 @@
       "target_conditions": [
         {
           "condition_type": "target_has_property",
-          "property_path": "connectionId",
+          "property_path": "id",
           "expected_value": "demo:exit_north_door",
           "failure_message": "This key doesn't seem to fit this lock."
         },
         {
           "condition_type": "target_has_property",
-          "property_path": "state",
+          "property_path": "PassageDetails.state",
           "expected_value": "locked",
           "failure_message": "The door is already unlocked."
         }

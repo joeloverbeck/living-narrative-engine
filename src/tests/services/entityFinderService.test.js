@@ -3,7 +3,7 @@
 import {beforeEach, afterEach, describe, expect, jest, test} from '@jest/globals';
 
 // *** Import the function under test ***
-import {resolveTargetEntity} from '../../services/entityFinderService.js'; // Adjusted import path assuming tests dir is sibling to src
+import {resolveTargetEntity} from '../../services/entityFinderService.js'; // Adjusted import path
 
 // *** Import Core classes and Components used in tests ***
 import Entity from '../../entities/entity.js';
@@ -14,13 +14,17 @@ import {HealthComponent} from '../../components/healthComponent.js'; // Assuming
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
 import {PositionComponent} from '../../components/positionComponent.js';
-import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+// REMOVED: TARGET_MESSAGES and getDisplayName are no longer needed here as the service doesn't dispatch messages
+// import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 
 // *** Import Utilities needed for mocking/spying ***
 // Import the entire module to spy on the exported function
 import * as TargetFinderModule from '../../utils/targetFinder.js';
+// Import the scope service to potentially spy/verify calls if needed (though not strictly required by current tests)
+import * as EntityScopeServiceModule from '../../services/entityScopeService.js';
 
 // --- Mocks ---
+// mockDispatch remains useful for testing the CALLER's logic elsewhere, but we REMOVE assertions against it here.
 const mockDispatch = jest.fn();
 const mockEntityManager = {
     getEntityInstance: jest.fn((id) => mockEntityManager.entities.get(id)),
@@ -34,6 +38,8 @@ let mockPlayerEntity;
 let mockCurrentLocation;
 
 // --- Test Context ---
+// dispatch is kept in context in case other services called *by* entityFinderService used it,
+// although resolveTargetEntity itself should not call it.
 const mockContext = {
     playerEntity: null, // Will be set in beforeEach
     currentLocation: null, // Will be set in beforeEach
@@ -110,6 +116,7 @@ const equipItem = (itemId, slotId, ownerEntity) => {
 let consoleErrorSpy;
 let consoleWarnSpy;
 let findTargetSpy;
+let getEntityIdsForScopesSpy; // Spy on the scope service
 
 beforeEach(() => {
     // Clear mocks and spies
@@ -129,8 +136,12 @@ beforeEach(() => {
     }); // Suppress console noise
     // Re-establish spy on findTarget utility
     findTargetSpy = jest.spyOn(TargetFinderModule, 'findTarget');
-    // Give findTarget a default behavior to avoid interfering with tests not focused on its return value
+    // Give findTarget a default behavior (important for tests not focused on its return)
     findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
+    // Spy on the scope service function
+    getEntityIdsForScopesSpy = jest.spyOn(EntityScopeServiceModule, 'getEntityIdsForScopes');
+    // Give it a default implementation that returns an empty set
+    getEntityIdsForScopesSpy.mockReturnValue(new Set());
 
 
     // Create fresh base entities for context
@@ -148,7 +159,8 @@ afterEach(() => {
     // Restore original console functions and other spies
     consoleErrorSpy.mockRestore();
     consoleWarnSpy.mockRestore();
-    findTargetSpy.mockRestore(); // Ensure findTarget spy is restored
+    findTargetSpy.mockRestore();
+    getEntityIdsForScopesSpy.mockRestore();
 });
 
 
@@ -205,6 +217,7 @@ describe('resolveTargetEntity', () => {
 
         // Entities specifically for filtering tests
         itemOnlyEntity = createMockEntity('item-only', 'item thing', [new ItemComponent()]);
+        // Create equipOnlyEntity with a name now, as NameComponent is implicitly required
         equipOnlyEntity = createMockEntity('equip-only', 'equip thing', [new EquippableComponent({slotId: 'core:slot_main_hand'})]);
         itemAndEquipEntity = createMockEntity('item-equip', 'item equip thing', [new ItemComponent(), new EquippableComponent({slotId: 'core:slot_main_hand'})]);
 
@@ -228,89 +241,190 @@ describe('resolveTargetEntity', () => {
 
         // Add filtering-specific entities to inventory as well for ease of testing
         addToInventory(itemOnlyEntity.id, mockPlayerEntity);
-        // Note: Adding equipOnlyEntity (which has Equippable) might interfere with some simple ItemComponent tests if not careful
-        // addToInventory(equipOnlyEntity.id, mockPlayerEntity);
+        addToInventory(equipOnlyEntity.id, mockPlayerEntity); // Add equipOnlyEntity (it has Name now)
         addToInventory(itemAndEquipEntity.id, mockPlayerEntity); // Has both Item and Equippable
 
         // Equip one item for equipment scope tests
         equipItem(shield.id, 'core:slot_off_hand', mockPlayerEntity);
+
+        // *** MOCK getEntityIdsForScopes behavior AFTER data is set up ***
+        // Make the spy call the actual implementation by default for most tests
+        // Tests specifically targeting scope service errors/warnings will override this mock locally.
+        getEntityIdsForScopesSpy.mockImplementation((scopes, context) => {
+            // Call the *real* implementation (or a simplified test version if preferred)
+            // Using a simplified version here to avoid full dependency:
+            const entityIds = new Set();
+            const playerInv = context.playerEntity?.getComponent(InventoryComponent);
+            const playerEq = context.playerEntity?.getComponent(EquipmentComponent);
+            const locId = context.currentLocation?.id;
+            const locEntities = locId ? mockEntityManager.locations.get(locId) || new Set() : new Set();
+
+            const scopeArray = Array.isArray(scopes) ? scopes : [scopes];
+
+            for (const scope of scopeArray) {
+                switch (scope) {
+                    case 'inventory':
+                        if (playerInv) {
+                            playerInv.getItems().forEach(id => entityIds.add(id));
+                        } else {
+                            // Simulate warning if component missing
+                            // console.warn(`entityScopeService._handleInventory: Scope 'inventory' requested but player ${context.playerEntity?.id} lacks InventoryComponent.`);
+                        }
+                        break;
+                    case 'equipment':
+                        if (playerEq) {
+                            // --- FIX IS HERE ---
+                            // Use getAllEquipped() and extract non-null item IDs
+                            const allSlots = playerEq.getAllEquipped();
+                            Object.values(allSlots).forEach(itemId => {
+                                if (itemId !== null) { // Only add actual item IDs
+                                    entityIds.add(itemId);
+                                }
+                            });
+                            // --- END FIX ---
+                        } else {
+                            // Simulate warning if component missing
+                            // console.warn(`entityScopeService._handleEquipment: Scope 'equipment' requested but player ${context.playerEntity?.id} lacks EquipmentComponent.`);
+                        }
+                        break;
+                    case 'location':
+                    case 'location_items':
+                    case 'location_non_items':
+                        if (locId) {
+                            locEntities.forEach(id => {
+                                if (id === context.playerEntity?.id) return; // Exclude player
+                                const entity = mockEntityManager.getEntityInstance(id);
+                                if (!entity) {
+                                    // Simulate warning for dangling ID
+                                    // console.warn(`entityScopeService._handleLocation: Entity ID ${id} listed in location ${locId} but instance not found (dangling ID). Skipping.`);
+                                    return;
+                                }
+                                const isItem = entity.hasComponent(ItemComponent);
+                                if (scope === 'location' || (scope === 'location_items' && isItem) || (scope === 'location_non_items' && !isItem)) {
+                                    entityIds.add(id);
+                                }
+                            });
+                        } else {
+                            // Simulate warning if location missing
+                            // console.warn("entityScopeService._handleLocation: Scope 'location' (or derived) requested but currentLocation is null.");
+                        }
+                        break;
+                    case 'nearby':
+                        // Simulate combining inventory and location
+                        if (playerInv) playerInv.getItems().forEach(id => entityIds.add(id));
+                        if (locId) {
+                            locEntities.forEach(id => {
+                                if (id !== context.playerEntity?.id) { // Exclude player
+                                    const entity = mockEntityManager.getEntityInstance(id);
+                                    if (entity) entityIds.add(id);
+                                }
+                            });
+                        }
+                        break;
+                    // default:
+                    // Simulate warning for unknown scope
+                    // console.warn(`getEntityIdsForScopes: Unknown scope requested: '${scope}'. Skipping.`);
+                }
+            }
+            return entityIds;
+        });
     };
 
     // ========================================================================
-    // == Sub-suite: Input Validation and Basic Setup (RTE-STORY-1) =========
+    // == Sub-suite: Input Validation and Basic Setup ========================
     // ========================================================================
-    describe('Input Validation and Setup (RTE-STORY-1)', () => {
-        // [... KEEP ALL EXISTING TESTS FOR RTE-STORY-1 ...]
-        // --- RTE-TASK-1.1: Null/Undefined Context ---
+    describe('Input Validation and Setup', () => {
+        // --- Null/Undefined Context ---
         test.each([
             [null],
             [undefined],
-        ])('RTE-TASK-1.1: should return null and log error if context is %s', (invalidContext) => {
-            const config = {scope: 'inventory', requiredComponents: [], actionVerb: 'get', targetName: 'thing'}; // Valid config
+        ])('should return INVALID_INPUT status and log error if context is %s', (invalidContext) => {
+            const config = {
+                scope: 'inventory',
+                requiredComponents: [], /* actionVerb: 'get', REMOVED INTERNAL USAGE */
+                targetName: 'thing'
+            }; // Valid config
             const result = resolveTargetEntity(invalidContext, config);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({
+                status: 'INVALID_INPUT',
+                entity: null,
+                candidates: null,
+            });
             expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 "resolveTargetEntity: Invalid context or configuration provided.",
                 expect.objectContaining({context: invalidContext, config})
             );
-            expect(mockDispatch).not.toHaveBeenCalled();
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
         });
 
-        // --- RTE-TASK-1.2: Null/Undefined Config ---
+        // --- Null/Undefined Config ---
         test.each([
             [null],
             [undefined],
-        ])('RTE-TASK-1.2: should return null and log error if config is %s', (invalidConfig) => {
-            // mockContext is valid from beforeEach
+        ])('should return INVALID_INPUT status and log error if config is %s', (invalidConfig) => {
             const result = resolveTargetEntity(mockContext, invalidConfig);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({
+                status: 'INVALID_INPUT',
+                entity: null,
+                candidates: null,
+            });
             expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 "resolveTargetEntity: Invalid context or configuration provided.",
                 expect.objectContaining({context: mockContext, config: invalidConfig})
             );
-            expect(mockDispatch).not.toHaveBeenCalled();
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
         });
 
-        // --- RTE-TASK-1.3: Missing Required Config Properties ---
+        // --- Missing Required Config Properties ---
         test.each([
-            ['scope', {requiredComponents: [], actionVerb: 'get', targetName: 'thing'}],
-            ['requiredComponents', {scope: 'inventory', actionVerb: 'get', targetName: 'thing'}],
-            ['actionVerb', {scope: 'inventory', requiredComponents: [], targetName: 'thing'}],
-            ['targetName', {scope: 'inventory', requiredComponents: [], actionVerb: 'get'}],
-        ])('RTE-TASK-1.3: should return null and log error if config is missing "%s"', (missingProp, invalidConfig) => {
+            ['scope', {requiredComponents: [], targetName: 'thing'}],
+            ['requiredComponents', {scope: 'inventory', targetName: 'thing'}],
+            // ['actionVerb', {scope: 'inventory', requiredComponents: [], targetName: 'thing'}], // No longer required internally
+            ['targetName', {scope: 'inventory', requiredComponents: []}],
+            // Test case where targetName is not a string
+            ['targetName (not string)', {scope: 'inventory', requiredComponents: [], targetName: 123}],
+        ])('should return INVALID_INPUT status and log error if config is missing/invalid "%s"', (desc, invalidConfig) => {
             const result = resolveTargetEntity(mockContext, invalidConfig);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({
+                status: 'INVALID_INPUT',
+                entity: null,
+                candidates: null,
+            });
             expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 "resolveTargetEntity: Invalid context or configuration provided.",
                 expect.objectContaining({context: mockContext, config: invalidConfig})
             );
-            expect(mockDispatch).not.toHaveBeenCalled();
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
         });
 
-        // --- RTE-TASK-1.4: Empty/Whitespace targetName ---
+        // --- Empty/Whitespace targetName ---
         test.each([
             ['empty string', ''],
             ['whitespace', '   '],
-        ])('RTE-TASK-1.4: should return null and log warning for %s targetName', (desc, invalidName) => {
-            const config = {scope: 'inventory', requiredComponents: [], actionVerb: 'get', targetName: invalidName};
+        ])('should return INVALID_INPUT status and log warning for %s targetName', (desc, invalidName) => {
+            const config = {scope: 'inventory', requiredComponents: [], targetName: invalidName};
             const result = resolveTargetEntity(mockContext, config);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({
+                status: 'INVALID_INPUT',
+                entity: null,
+                candidates: null,
+            });
             expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 "resolveTargetEntity: Received empty targetName. Resolution cannot proceed."
             );
-            expect(mockDispatch).not.toHaveBeenCalled();
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
         });
 
-        // --- RTE-TASK-1.5: Implicit NameComponent Requirement ---
-        describe('RTE-TASK-1.5: Implicit NameComponent Requirement', () => {
+        // --- Implicit NameComponent Requirement ---
+        describe('Implicit NameComponent Requirement', () => {
             let entityWithNameAndItem;
             let entityWithOnlyItem; // No NameComponent
             let entityWithOnlyName;
@@ -332,7 +446,12 @@ describe('resolveTargetEntity', () => {
                 addToInventory(entityWithOnlyName.id, mockPlayerEntity);
                 addToInventory(entityWithNeither.id, mockPlayerEntity);
 
-                // Ensure findTarget returns something predictable if called, but we check the input array
+                // Mock scope service to return all these items
+                getEntityIdsForScopesSpy.mockReturnValue(new Set([
+                    entityWithNameAndItem.id, entityWithOnlyItem.id,
+                    entityWithOnlyName.id, entityWithNeither.id
+                ]));
+                // Ensure findTarget returns NOT_FOUND for these tests focused on filtering *before* findTarget
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
             });
 
@@ -340,12 +459,10 @@ describe('resolveTargetEntity', () => {
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent], // Only require ItemComponent explicitly
-                    actionVerb: 'examine',
                     targetName: 'item', // Target name doesn't matter much here
-                    notFoundMessageKey: null, // Suppress messages for cleaner test
                 };
 
-                resolveTargetEntity(mockContext, config);
+                const result = resolveTargetEntity(mockContext, config);
 
                 // Verify findTarget was called (or would have been called if potential matches existed)
                 // and inspect the array passed to it (the second argument)
@@ -354,26 +471,24 @@ describe('resolveTargetEntity', () => {
 
                 // Assert: Only the entity with BOTH NameComponent and ItemComponent should be passed
                 expect(entitiesPassedToFindTarget).toEqual(expect.arrayContaining([entityWithNameAndItem]));
-                // Check length carefully based on test setup
-                // Assuming setupResolveEntityTestData was NOT run here, only the entities created in this block
-                // If setupResolveEntityTestData WAS run, adjust length accordingly
-                // Based on the current test setup, it should be just entityWithNameAndItem
                 expect(entitiesPassedToFindTarget.length).toBe(1); // Verify length based on local setup
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithOnlyItem);
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithOnlyName); // Filtered by missing ItemComponent
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithNeither);
+
+                // Assert final result status (based on findTarget mock)
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
             test('should handle NameComponent correctly when it IS explicitly required (no duplication)', () => {
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [NameComponent, ItemComponent], // Explicitly require both
-                    actionVerb: 'examine',
                     targetName: 'item',
-                    notFoundMessageKey: null,
                 };
 
-                resolveTargetEntity(mockContext, config);
+                const result = resolveTargetEntity(mockContext, config);
 
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
@@ -384,21 +499,20 @@ describe('resolveTargetEntity', () => {
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithOnlyItem);
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithOnlyName);
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithNeither);
+
+                // Assert final result status
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
             test('should filter correctly when only NameComponent is implicitly required', () => {
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [], // Require nothing explicitly (so only Name implicitly)
-                    actionVerb: 'examine',
                     targetName: 'item',
-                    notFoundMessageKey: null,
                 };
 
-                // No need to re-run setup - entities from outer beforeEach are used
-                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []}); // Reset mock return
-
-                resolveTargetEntity(mockContext, config);
+                const result = resolveTargetEntity(mockContext, config);
 
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
@@ -408,673 +522,569 @@ describe('resolveTargetEntity', () => {
                 expect(entitiesPassedToFindTarget.length).toBe(2); // entityWithNameAndItem, entityWithOnlyName
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithOnlyItem);
                 expect(entitiesPassedToFindTarget).not.toContain(entityWithNeither);
+
+                // Assert final result status
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
-        }); // End RTE-TASK-1.5 describe
+        }); // End Implicit NameComponent describe
 
-    }); // End describe 'Input Validation and Setup (RTE-STORY-1)'
+    }); // End describe 'Input Validation and Setup'
 
 
     // ========================================================================
-    // == Sub-suite: Scope Processing Logic (RTE-STORY-2) =====================
+    // == Sub-suite: Scope Processing Logic ===================================
     // ========================================================================
-    describe('Scope Processing Logic (RTE-STORY-2)', () => {
-        // [... KEEP ALL EXISTING TESTS FOR RTE-STORY-2 ...]
-        // --- RTE-TASK-2.1: Scope 'inventory' ---
-        describe("RTE-TASK-2.1: Scope 'inventory'", () => {
-            test('AC Success: should find unique item in inventory', () => {
+    describe('Scope Processing Logic', () => {
+        // Note: These tests rely on setupResolveEntityTestData mocking getEntityIdsForScopes correctly.
+        // The focus is on how resolveTargetEntity uses the result of getEntityIdsForScopes.
+
+        // --- Scope 'inventory' ---
+        describe("Scope 'inventory'", () => {
+            test('AC Success: should return FOUND_UNIQUE status for unique item in inventory', () => {
                 setupResolveEntityTestData(); // Player gets InventoryComponent and items
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [sword]}); // Assume findTarget finds it
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent], // Implicitly NameComponent too
-                    actionVerb: 'drop',
                     targetName: 'sword',
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(sword); // Found sword
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['inventory'], mockContext);
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([sword])); // Verify findTarget was called with potential matches
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: sword, candidates: null}); // Found sword
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC Failure: should handle missing InventoryComponent', () => {
-                setupResolveEntityTestData(); // Run setup first to get items etc.
+            test('AC Failure: should return FILTER_EMPTY status if InventoryComponent is missing (scope yields empty)', () => {
+                setupResolveEntityTestData(); // Run setup first
                 mockPlayerEntity.removeComponent(InventoryComponent); // Explicitly remove for test
+                // Mock scope service to return empty set specifically for this case
+                getEntityIdsForScopesSpy.mockReturnValue(new Set());
 
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'drop',
-                    targetName: 'sword', // Doesn't matter, component is missing
+                    targetName: 'sword', // Doesn't matter, scope is empty
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull(); // Fails because component is missing
-                expect(consoleWarnSpy).toHaveBeenCalledWith(
-                    `resolveTargetEntity: Scope 'inventory' requested but player ${mockPlayerEntity.id} lacks InventoryComponent.`
-                );
-                // Check dispatch (assuming suppression is off by default)
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('drop'),
-                    type: 'info',
-                });
-            });
-        }); // End RTE-TASK-2.1
 
-        // --- RTE-TASK-2.2: Scopes 'location', 'location_items', 'location_non_items' ---
-        describe("RTE-TASK-2.2: Scopes 'location', 'location_items', 'location_non_items'", () => {
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['inventory'], mockContext);
+                // Warning comes from scope service, not tested here directly unless we want to refine the spy mock.
+                // expect(consoleWarnSpy).toHaveBeenCalledWith(...);
+                expect(findTargetSpy).not.toHaveBeenCalled(); // Should not be called if scope is empty
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
+            });
+        }); // End Scope 'inventory'
+
+        // --- Scopes 'location', 'location_items', 'location_non_items' ---
+        describe("Scopes 'location', 'location_items', 'location_non_items'", () => {
             beforeEach(() => {
-                // Ensure test data is set up for location tests
-                setupResolveEntityTestData();
+                setupResolveEntityTestData(); // Sets up entities in loc-1
             });
 
-            test('AC `location`: should find an item in location', () => {
+            test('AC `location`: should return FOUND_UNIQUE status for an item in location', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
                 const config = {
                     scope: 'location',
-                    requiredComponents: [ItemComponent],
-                    actionVerb: 'take',
+                    requiredComponents: [ItemComponent], // Still require ItemComponent for 'take' context
                     targetName: 'rusty key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rustyKey);
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location'], mockContext);
+                // --- FIX IS HERE ---
+                // Only entities in location WITH NameComponent AND ItemComponent should be passed to findTarget
+                const expectedFilteredEntities = [rustyKey];
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expectedFilteredEntities);
+                // --- END FIX ---
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rustyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location`: should find a non-item in location', () => {
+            test('AC `location`: should return FOUND_UNIQUE status for a non-item in location', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rock]});
-                const config = {scope: 'location', requiredComponents: [], actionVerb: 'look', targetName: 'rock'};
+                const config = {scope: 'location', requiredComponents: [], targetName: 'rock'};
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rock); // Rock is not an item, should be found in 'location' scope
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location'], mockContext);
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([rock]));
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rock, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location`: should exclude the player entity', () => {
-                // Player entity 'player' is placed in 'loc-1' by default setup
+            test('AC `location`: should return NOT_FOUND status when targeting player (player excluded from scope)', () => {
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []}); // findTarget won't find 'Player' in the filtered list
-                const config = {scope: 'location', requiredComponents: [], actionVerb: 'look', targetName: 'Player'};
+                const config = {scope: 'location', requiredComponents: [], targetName: 'Player'};
                 const result = resolveTargetEntity(mockContext, config);
-                // Even though 'Player' entity is in the location, it should be excluded from scope 'location' search results
-                expect(result).toBeNull();
-                // Expect a NOT_FOUND message because 'Player' wasn't included in the search scope passed to findTarget
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.NOT_FOUND_LOCATION('Player'),
-                    type: 'info',
-                });
-                // Also verify findTarget didn't receive the player
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location'], mockContext);
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassedToFindTarget).not.toContain(mockPlayerEntity);
+                // Verify player entity was NOT passed to findTarget
+                expect(entitiesPassedToFindTarget).not.toEqual(expect.arrayContaining([mockPlayerEntity]));
+
+                // Expect NOT_FOUND because 'Player' wasn't included in the search scope passed to findTarget
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location_items`: should find unique item', () => {
+            test('AC `location_items`: should return FOUND_UNIQUE status for unique item', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
                 const config = {
                     scope: 'location_items',
-                    requiredComponents: [ItemComponent],
-                    actionVerb: 'take',
+                    requiredComponents: [ItemComponent], // Implicitly NameComponent too
                     targetName: 'rusty key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rustyKey);
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location_items'], mockContext);
+                // Scope service should only return items (rustyKey)
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([rustyKey]));
+                expect(findTargetSpy.mock.calls[0][1]).not.toEqual(expect.arrayContaining([rock, door])); // Ensure non-items were filtered by scope service
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rustyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location_items`: should NOT find non-item', () => {
+            test('AC `location_items`: should return NOT_FOUND status when targeting non-item (filtered by scope)', () => {
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []}); // findTarget receives filtered list (no rock), finds nothing for 'rock'
                 const config = {
                     scope: 'location_items',
-                    requiredComponents: [],
-                    actionVerb: 'take',
+                    requiredComponents: [], // No extra requirements beyond scope filtering
                     targetName: 'rock',
-                    notFoundMessageKey: null
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                // Rock has NameComponent but not ItemComponent, should be filtered out by 'location_items' scope build
-                expect(result).toBeNull();
-                // Verify findTarget received a list excluding the rock
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location_items'], mockContext);
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassedToFindTarget).not.toContain(rock);
-                // Dispatch should not happen due to suppression
+                // Verify findTarget received a list excluding the rock due to scope filter
+                expect(entitiesPassedToFindTarget).not.toEqual(expect.arrayContaining([rock]));
+
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location_non_items`: should find unique non-item', () => {
+            test('AC `location_non_items`: should return FOUND_UNIQUE status for unique non-item', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rock]});
                 const config = {
                     scope: 'location_non_items',
                     requiredComponents: [],
-                    actionVerb: 'look',
                     targetName: 'rock'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rock);
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location_non_items'], mockContext);
+                // Scope service should return non-items (rock, door, goblins, signs)
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([rock]));
+                expect(findTargetSpy.mock.calls[0][1]).not.toEqual(expect.arrayContaining([rustyKey])); // Ensure items filtered by scope
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rock, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC `location_non_items`: should NOT find item', () => {
+            test('AC `location_non_items`: should return NOT_FOUND status for item (filtered by scope)', () => {
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
                 const config = {
                     scope: 'location_non_items',
                     requiredComponents: [],
-                    actionVerb: 'look',
                     targetName: 'rusty key',
-                    notFoundMessageKey: null
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                // Rusty key has ItemComponent, should be filtered out by 'location_non_items' scope build
-                expect(result).toBeNull();
-                // Verify findTarget received a list excluding the rusty key
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location_non_items'], mockContext);
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassedToFindTarget).not.toContain(rustyKey);
+                // Verify findTarget received a list excluding the rusty key due to scope filter
+                expect(entitiesPassedToFindTarget).not.toEqual(expect.arrayContaining([rustyKey]));
+
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC Failure: should handle missing location context', () => {
+            test('AC Failure: should return FILTER_EMPTY status if location context is missing (scope yields empty)', () => {
                 mockContext.currentLocation = null; // Remove location from context
+                // Mock scope service to return empty set specifically for this case
+                getEntityIdsForScopesSpy.mockReturnValue(new Set());
 
-                const config = {scope: 'location', requiredComponents: [], actionVerb: 'look', targetName: 'rock'};
+                const config = {scope: 'location', requiredComponents: [], targetName: 'rock'};
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull();
-                expect(consoleWarnSpy).toHaveBeenCalledWith("resolveTargetEntity: Scope 'location' requested but currentLocation is null.");
-                // Check dispatch (assuming suppression is off by default)
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_GENERIC('look', 'here'),
-                    type: 'info',
-                });
-            });
-        }); // End RTE-TASK-2.2
 
-        // --- RTE-TASK-2.3: Scope 'equipment' ---
-        describe("RTE-TASK-2.3: Scope 'equipment'", () => {
-            test('AC Success: should find unique equipped item', () => {
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location'], mockContext);
+                // Warning comes from scope service, not checked here directly.
+                // expect(consoleWarnSpy).toHaveBeenCalledWith(...);
+                expect(findTargetSpy).not.toHaveBeenCalled(); // Should not be called if scope is empty
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
+            });
+        }); // End Scopes 'location', 'location_items', 'location_non_items'
+
+        // --- Scope 'equipment' ---
+        describe("Scope 'equipment'", () => {
+            test('AC Success: should return FOUND_UNIQUE status for unique equipped item', () => {
                 setupResolveEntityTestData(); // shield is equipped in setup
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [shield]});
                 const config = {
                     scope: 'equipment',
                     requiredComponents: [ItemComponent], // Implicitly NameComponent too
-                    actionVerb: 'unequip',
                     targetName: 'shield',
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(shield);
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['equipment'], mockContext);
+                // Scope service should return only equipped items (shield)
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, [shield]);
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: shield, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC Failure: should handle missing EquipmentComponent', () => {
-                setupResolveEntityTestData(); // Setup data (player might get default empty EquipComp here)
+            test('AC Failure: should return FILTER_EMPTY status if EquipmentComponent is missing (scope yields empty)', () => {
+                setupResolveEntityTestData(); // Setup data
                 mockPlayerEntity.removeComponent(EquipmentComponent); // Ensure it's removed
+                // Mock scope service to return empty set specifically for this case
+                getEntityIdsForScopesSpy.mockReturnValue(new Set());
 
                 const config = {
                     scope: 'equipment',
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'unequip',
-                    targetName: 'shield', // Doesn't matter, component is missing
+                    targetName: 'shield', // Doesn't matter, scope is empty
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull();
-                expect(consoleWarnSpy).toHaveBeenCalledWith(
-                    `resolveTargetEntity: Scope 'equipment' requested but player ${mockPlayerEntity.id} lacks EquipmentComponent.`
-                );
-                // Check dispatch (assuming suppression is off by default)
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('unequip'),
-                    type: 'info',
-                });
-            });
-        }); // End RTE-TASK-2.3
 
-        // --- RTE-TASK-2.4: Scope 'nearby' ---
-        describe("RTE-TASK-2.4: Scope 'nearby'", () => {
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['equipment'], mockContext);
+                // Warning comes from scope service.
+                // expect(consoleWarnSpy).toHaveBeenCalledWith(...);
+                expect(findTargetSpy).not.toHaveBeenCalled();
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
+            });
+        }); // End Scope 'equipment'
+
+        // --- Scope 'nearby' ---
+        describe("Scope 'nearby'", () => {
             beforeEach(() => {
                 setupResolveEntityTestData(); // Sets up items in inv and loc, player in loc
             });
 
-            test('AC: should find unique item from inventory', () => {
+            test('AC: should return FOUND_UNIQUE status for unique item from inventory', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [shinyKey]});
                 const config = {
                     scope: 'nearby',
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'use',
                     targetName: 'shiny key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(shinyKey); // Shiny key is only in inventory
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['nearby'], mockContext);
+                // --- FIX IS HERE ---
+                // Entities from inventory OR location WITH NameComponent AND ItemComponent
+                const expectedFilteredEntities = [
+                    sword, potion, shinyKey, helmet, axe, itemOnlyEntity, itemAndEquipEntity, // Inventory with ItemComponent
+                    rustyKey // Location with ItemComponent
+                ].filter(Boolean); // Filter out any potentially undefined if setup changes
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining(expectedFilteredEntities));
+                // Optionally add a length check for stricter assertion:
+                expect(findTargetSpy.mock.calls[0][1].length).toBe(expectedFilteredEntities.length);
+                // --- END FIX ---
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: shinyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC: should find unique entity from location (non-item)', () => {
+            test('AC: should return FOUND_UNIQUE status for unique entity from location (non-item)', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [door]});
-                const config = {scope: 'nearby', requiredComponents: [], actionVerb: 'look', targetName: 'door'};
+                const config = {scope: 'nearby', requiredComponents: [], targetName: 'door'};
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(door); // Door is only in location
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['nearby'], mockContext);
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([door]));
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: door, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC: should find unique entity from location (item)', () => {
+            test('AC: should return FOUND_UNIQUE status for unique entity from location (item)', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
                 const config = {
                     scope: 'nearby',
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'examine',
                     targetName: 'rusty key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rustyKey); // Rusty key is only in location
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['nearby'], mockContext);
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([rustyKey]));
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rustyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC: should exclude the player entity even if in location', () => {
+            test('AC: should return NOT_FOUND status when targeting player (excluded from scope)', () => {
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
-                const config = {scope: 'nearby', requiredComponents: [], actionVerb: 'look', targetName: 'Player'};
+                const config = {scope: 'nearby', requiredComponents: [], targetName: 'Player'};
                 const result = resolveTargetEntity(mockContext, config);
-                // Player should be excluded from the location part of 'nearby' search
-                expect(result).toBeNull();
-                // Verify findTarget didn't receive the player
-                expect(findTargetSpy).toHaveBeenCalled();
-                const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassedToFindTarget).not.toContain(mockPlayerEntity);
-                // Expect NOT_FOUND because player wasn't included in the search list passed to findTarget
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.NOT_FOUND_LOCATION('Player'), // Default msg logic picks location if nearby
-                    type: 'info',
-                });
-            });
-        }); // End RTE-TASK-2.4
 
-        // --- RTE-TASK-2.5: Multiple Scopes ---
-        describe("RTE-TASK-2.5: Multiple Scopes", () => {
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['nearby'], mockContext);
+                expect(findTargetSpy).toHaveBeenCalled();
+                // Verify player entity was NOT passed to findTarget
+                const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
+                expect(entitiesPassedToFindTarget).not.toEqual(expect.arrayContaining([mockPlayerEntity]));
+
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
+            });
+        }); // End Scope 'nearby'
+
+        // --- Multiple Scopes ---
+        describe("Multiple Scopes", () => {
             beforeEach(() => {
                 setupResolveEntityTestData(); // Sets up items in inv and loc
             });
 
-            test('AC: should find unique item using combined scope (match in first scope - inventory)', () => {
+            test('AC: should return FOUND_UNIQUE status with combined scope (match in first scope - inventory)', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [potion]});
                 const config = {
                     scope: ['inventory', 'location_items'],
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'examine',
                     targetName: 'potion'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(potion); // Potion only in inventory
-                expect(mockDispatch).not.toHaveBeenCalled();
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['inventory', 'location_items'], mockContext);
+                // Combined scope should contain inventory items + location items
+                const expectedCombinedAfterFilter = [
+                    sword, potion, shinyKey, helmet, axe, itemOnlyEntity, /* REMOVED: equipOnlyEntity, */ itemAndEquipEntity, // Inventory passing Name+Item
+                    rustyKey // Location Items passing Name+Item
+                ].filter(Boolean); // Keep .filter(Boolean) in case setup changes yield undefined
+                // Use the corrected list in the assertion
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining(expectedCombinedAfterFilter));
+                // ALSO, it's good practice to check the length for exactness if possible/reliable:
+                expect(findTargetSpy.mock.calls[0][1].length).toBe(expectedCombinedAfterFilter.length);
             });
 
-            test('AC: should find unique item using combined scope (match in second scope - location)', () => {
+            test('AC: should return FOUND_UNIQUE status with combined scope (match in second scope - location)', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
                 const config = {
                     scope: ['inventory', 'location_items'],
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'examine',
                     targetName: 'rusty key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rustyKey); // Rusty key only in location_items
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['inventory', 'location_items'], mockContext);
+                // --- CORRECTION START ---
+                // Define the expected entities AFTER component filtering (Name + Item required)
+                const expectedCombinedAfterFilter = [
+                    sword, potion, shinyKey, helmet, axe, itemOnlyEntity, /* REMOVED: equipOnlyEntity, */ itemAndEquipEntity, // Inventory passing filter
+                    rustyKey // Location Items passing filter
+                ].filter(Boolean); // Keep filter for safety
+
+                // Assert findTargetSpy was called with the CORRECTLY filtered list
+                expect(findTargetSpy).toHaveBeenCalledWith(
+                    config.targetName, // "rusty key"
+                    expect.arrayContaining(expectedCombinedAfterFilter)
+                );
+                // Optional but recommended: check exact length
+                expect(findTargetSpy.mock.calls[0][1].length).toBe(expectedCombinedAfterFilter.length);
+                // --- CORRECTION END ---
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rustyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            test('AC: should find unique item using combined scope (order reversed, match in first - location)', () => {
+            test('AC: should return FOUND_UNIQUE status with combined scope (order reversed, match in first - location)', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
                 const config = {
-                    scope: ['location_items', 'inventory'],
+                    scope: ['location_items', 'inventory'], // Order reversed
                     requiredComponents: [ItemComponent],
-                    actionVerb: 'examine',
                     targetName: 'rusty key'
                 };
                 const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(rustyKey); // Rusty key only in location_items
+
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['location_items', 'inventory'], mockContext);
+                // --- CORRECTION START ---
+                // Define the expected entities AFTER component filtering (Name + Item required)
+                // The actual order from getEntityIdsForScopes might vary, but the content should be the same set.
+                const expectedCombinedAfterFilter = [
+                    rustyKey, // Location Items passing filter
+                    sword, potion, shinyKey, helmet, axe, itemOnlyEntity, /* REMOVED: equipOnlyEntity, */ itemAndEquipEntity // Inventory passing filter
+                ].filter(Boolean); // Keep filter for safety
+
+                // Assert findTargetSpy was called with the CORRECTLY filtered list
+                expect(findTargetSpy).toHaveBeenCalledWith(
+                    config.targetName, // "rusty key"
+                    expect.arrayContaining(expectedCombinedAfterFilter) // expect.arrayContaining handles order difference
+                );
+                // Optional but recommended: check exact length
+                expect(findTargetSpy.mock.calls[0][1].length).toBe(expectedCombinedAfterFilter.length);
+                // --- CORRECTION END ---
+
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: rustyKey, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
-        }); // End RTE-TASK-2.5
+        }); // End Multiple Scopes
 
-        // --- RTE-TASK-2.6, 2.7, 2.8: Robustness and Error Handling ---
-        describe("Robustness and Error Handling (RTE-TASK-2.6, 2.7, 2.8)", () => {
-            // ** NEW TESTS ** for RTE-TASK-2.6 (Keep as is)
-            describe("RTE-TASK-2.6: Unsupported Scope String", () => {
-                beforeEach(() => {
-                    setupResolveEntityTestData();
-                });
+        // --- Robustness and Error Handling (from scope service perspective) ---
+        describe("Robustness and Error Handling (Scope Service Interaction)", () => {
+            // These tests verify resolveTargetEntity handles empty/partial results from the scope service.
+            // Direct testing of scope service warnings/errors should be in entityScopeService.test.js.
 
-                test('AC: should log warning and return null for only unsupported scope', () => {
-                    const config = {
-                        scope: 'invalid_scope',
-                        requiredComponents: [],
-                        actionVerb: 'do',
-                        targetName: 'thing',
-                        notFoundMessageKey: null // Keep suppression if intended for this test
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
+            test('should return FILTER_EMPTY status if scope service returns empty set (e.g., unsupported scope)', () => {
+                setupResolveEntityTestData();
+                // Mock scope service to simulate it returning nothing (e.g., due to invalid scope)
+                getEntityIdsForScopesSpy.mockReturnValue(new Set());
 
-                    // --- Assertions ---
-                    expect(result).toBeNull(); // Should return null
-                    expect(consoleWarnSpy).toHaveBeenCalledWith("resolveTargetEntity: Unsupported scope specified: 'invalid_scope'. Skipping."); // Should log warning
-                    expect(findTargetSpy).not.toHaveBeenCalled(); // findTarget should NOT be called
-                    // Message dispatch depends on whether scope filtering results in empty AND suppression
-                    // Since the scope processing for 'invalid_scope' does nothing, the entity list remains empty *before* filtering.
-                    // The 'Empty Filtered Scope' logic runs. Since suppression is on, no message is dispatched.
-                    expect(mockDispatch).not.toHaveBeenCalled();
-                });
+                const config = {
+                    scope: 'invalid_scope', // Use an example invalid scope
+                    requiredComponents: [],
+                    targetName: 'thing',
+                };
+                const result = resolveTargetEntity(mockContext, config);
 
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(['invalid_scope'], mockContext);
+                // Scope service handles logging the warning for 'invalid_scope'
+                expect(findTargetSpy).not.toHaveBeenCalled(); // findTarget not called because list is empty
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null}); // Correct status
+                expect(mockDispatch).not.toHaveBeenCalled();
+            });
 
-                test('AC: should log warning for unsupported scope but process valid ones', () => {
-                    findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [sword]});
-                    const config = {
-                        scope: ['inventory', 'invalid_scope', 'equipment'],
-                        requiredComponents: [ItemComponent],
-                        actionVerb: 'examine',
-                        targetName: 'sword'
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
+            test('should process valid scopes even if others yield empty/invalid results', () => {
+                setupResolveEntityTestData();
+                // Mock scope service to return only results for 'inventory'
+                const inventoryIds = new Set();
+                mockPlayerEntity.getComponent(InventoryComponent)?.getItems().forEach(id => inventoryIds.add(id));
+                getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
 
-                    expect(consoleWarnSpy).toHaveBeenCalledWith("resolveTargetEntity: Unsupported scope specified: 'invalid_scope'. Skipping.");
-                    expect(result).toBe(sword);
-                    expect(findTargetSpy).toHaveBeenCalled(); // Called because valid scopes existed
-                    expect(mockDispatch).not.toHaveBeenCalled();
-                });
+                findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [sword]});
+                const config = {
+                    scope: ['inventory', 'invalid_scope', 'equipment_error_scope'], // Mix valid and potentially problematic
+                    requiredComponents: [ItemComponent],
+                    targetName: 'sword'
+                };
+                const result = resolveTargetEntity(mockContext, config);
 
-                test('AC: should log warning for multiple unsupported scopes', () => {
-                    findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rock]});
-                    const config = {
-                        scope: ['location', 'bad_scope_1', 'inventory', 'bad_scope_2'],
-                        requiredComponents: [],
-                        actionVerb: 'look',
-                        targetName: 'rock',
-                        notFoundMessageKey: null
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith(config.scope, mockContext);
+                // Scope service handles warnings/errors for other scopes.
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining([sword])); // Called because 'inventory' yielded results
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: sword, candidates: null}); // Found in valid scope
+                expect(mockDispatch).not.toHaveBeenCalled();
+            });
 
-                    expect(consoleWarnSpy).toHaveBeenCalledWith("resolveTargetEntity: Unsupported scope specified: 'bad_scope_1'. Skipping.");
-                    expect(consoleWarnSpy).toHaveBeenCalledWith("resolveTargetEntity: Unsupported scope specified: 'bad_scope_2'. Skipping.");
-                    expect(result).toBe(rock); // Found in valid 'location' scope
-                    expect(findTargetSpy).toHaveBeenCalled(); // Called because valid scopes existed
-                    expect(mockDispatch).not.toHaveBeenCalled();
-                });
-            }); // End RTE-TASK-2.6
-
-            // ** NEW TESTS ** for RTE-TASK-2.7 (Keep as is)
-            describe("RTE-TASK-2.7: Errors During Scope Processing", () => {
-                beforeEach(() => {
-                    setupResolveEntityTestData();
-                });
-
-                test('AC: should log error and return null if inventory access throws', () => {
-                    // Mock getComponent or getItems to throw
-                    const errorMsg = "Inventory access failed!";
-                    const inventorySpy = jest.spyOn(mockPlayerEntity.getComponent(InventoryComponent), 'getItems').mockImplementation(() => {
-                        throw new Error(errorMsg);
-                    });
-
-                    const config = {
-                        scope: 'inventory', // Only scope is inventory
-                        requiredComponents: [ItemComponent],
-                        actionVerb: 'drop',
-                        targetName: 'sword',
-                        notFoundMessageKey: null // Keep suppression if intended
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
-
-                    // --- Assertions ---
-                    expect(result).toBeNull(); // Should return null
-                    expect(consoleErrorSpy).toHaveBeenCalledWith(
-                        "resolveTargetEntity: Error processing scope 'inventory':",
-                        expect.objectContaining({message: errorMsg}) // Check the error was logged
-                    );
-                    expect(inventorySpy).toHaveBeenCalled(); // Ensure the mock causing the error was called
-                    // Since scope processing failed, the entity list is empty *before* filtering/findTarget
-                    expect(findTargetSpy).not.toHaveBeenCalled(); // findTarget should NOT be called
-                    // Message dispatch depends on empty scope check + suppression. Error occurs, list is empty, suppressed.
-                    expect(mockDispatch).not.toHaveBeenCalled();
-
-                    inventorySpy.mockRestore(); // Clean up spy
+            test('should return FILTER_EMPTY status if scope service returns only dangling IDs (filtered out)', () => {
+                setupResolveEntityTestData();
+                const danglingId = 'item-dangling-loc';
+                // Mock scope service returning only a dangling ID
+                getEntityIdsForScopesSpy.mockReturnValue(new Set([danglingId]));
+                // Ensure getEntityInstance returns null for the dangling ID
+                const originalGetEntityInstance = mockEntityManager.getEntityInstance;
+                mockEntityManager.getEntityInstance = jest.fn((id) => {
+                    if (id === danglingId) return null;
+                    return originalGetEntityInstance.call(mockEntityManager, id);
                 });
 
 
-                test('AC: should log error for one scope but proceed with others', () => {
-                    const errorMsg = "Location access failed!";
-                    const locationSpy = jest.spyOn(mockEntityManager, 'getEntitiesInLocation').mockImplementation((locId) => {
-                        if (locId === mockCurrentLocation.id) {
-                            throw new Error(errorMsg);
-                        }
-                        // Fallback for other calls if needed, although not strictly necessary for this test setup
-                        return new Set();
-                    });
+                const config = {
+                    scope: 'location_items', // Scope where dangling ID might appear
+                    requiredComponents: [ItemComponent],
+                    targetName: 'anything'
+                };
+                const result = resolveTargetEntity(mockContext, config);
 
-                    findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [sword]});
-                    const config = {
-                        scope: ['location_items', 'inventory'], // location_items will fail
-                        requiredComponents: [ItemComponent],
-                        actionVerb: 'examine',
-                        targetName: 'sword' // Target item in inventory
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
+                expect(getEntityIdsForScopesSpy).toHaveBeenCalledWith([config.scope], mockContext);
+                // The filtering step (Array.from(entityIdSet).map(...).filter(Boolean)) will remove the null entity.
+                expect(findTargetSpy).not.toHaveBeenCalled(); // List becomes empty *before* findTarget
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null}); // Correct status
+                expect(mockDispatch).not.toHaveBeenCalled();
 
-                    expect(consoleErrorSpy).toHaveBeenCalledWith(
-                        "resolveTargetEntity: Error processing scope 'location_items':",
-                        expect.objectContaining({message: errorMsg})
-                    );
-                    expect(result).toBe(sword); // Should still find sword from 'inventory' scope
-                    expect(findTargetSpy).toHaveBeenCalled(); // Called because inventory scope succeeded
-                    const entitiesPassed = findTargetSpy.mock.calls[0][1];
-                    expect(entitiesPassed).toContain(sword);
-                    // Rusty key is in location, which failed processing, so shouldn't be passed
-                    expect(entitiesPassed).not.toContain(rustyKey);
+                // Restore mock
+                mockEntityManager.getEntityInstance = originalGetEntityInstance;
+            });
 
-                    expect(mockDispatch).not.toHaveBeenCalled(); // Found successfully
-
-                    locationSpy.mockRestore();
-                });
-
-                test('AC: should return null if error happens in only scope', () => {
-                    const errorMsg = "Location access failed!";
-                    const locationSpy = jest.spyOn(mockEntityManager, 'getEntitiesInLocation').mockImplementation(() => {
-                        throw new Error(errorMsg);
-                    });
-                    const config = {
-                        scope: 'location', // Only scope is location
-                        requiredComponents: [],
-                        actionVerb: 'look',
-                        targetName: 'rock',
-                        notFoundMessageKey: null // Keep suppression if intended
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
-
-                    // --- Assertions ---
-                    expect(result).toBeNull(); // Should return null
-                    expect(consoleErrorSpy).toHaveBeenCalledWith(
-                        "resolveTargetEntity: Error processing scope 'location':",
-                        expect.objectContaining({message: errorMsg}) // Check error logged
-                    );
-                    // Since scope processing failed, the entity list is empty *before* filtering/findTarget
-                    expect(findTargetSpy).not.toHaveBeenCalled(); // findTarget should NOT be called
-                    // Message dispatch depends on empty scope check + suppression. Error occurs, list is empty, suppressed.
-                    expect(mockDispatch).not.toHaveBeenCalled();
-
-                    locationSpy.mockRestore();
-                });
-            }); // End RTE-TASK-2.7
-
-            // ** NEW TEST ** for RTE-TASK-2.8 (Keep as is)
-            describe("RTE-TASK-2.8: Missing Entity Instance in Location Scope", () => {
-                beforeEach(() => {
-                    setupResolveEntityTestData();
-                });
-
-                test('AC: should log warning and skip entity if getEntityInstance returns null for location ID', () => {
-                    const danglingId = 'item-dangling-loc';
-                    const validItemId = rustyKey.id;
-
-                    mockEntityManager.locations.get(mockCurrentLocation.id)?.add(danglingId);
-
-                    const originalGetEntityInstance = mockEntityManager.getEntityInstance;
-                    mockEntityManager.getEntityInstance = jest.fn((id) => {
-                        if (id === danglingId) return null;
-                        // Use original implementation for others to avoid breaking test setup
-                        return originalGetEntityInstance.call(mockEntityManager, id);
-                    });
-
-
-                    findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [rustyKey]});
-                    const config = {
-                        scope: 'location_items',
-                        requiredComponents: [ItemComponent],
-                        actionVerb: 'take',
-                        targetName: 'rusty key'
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
-
-                    expect(consoleWarnSpy).toHaveBeenCalledWith(
-                        `resolveTargetEntity: Entity ID ${danglingId} listed in location ${mockCurrentLocation.id} but instance not found.`
-                    );
-                    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(danglingId);
-                    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(validItemId);
-                    expect(result).toBe(rustyKey); // Still found valid item
-                    expect(findTargetSpy).toHaveBeenCalled(); // Called because valid items remained
-                    const entitiesPassed = findTargetSpy.mock.calls[0][1];
-                    expect(entitiesPassed).toContain(rustyKey);
-                    // Ensure the dangling one wasn't somehow passed after filtering
-                    expect(entitiesPassed.find(e => e && e.id === danglingId)).toBeUndefined();
-
-
-                    expect(mockDispatch).not.toHaveBeenCalled();
-
-                    // Restore the mock cleanly
-                    mockEntityManager.getEntityInstance = originalGetEntityInstance;
-                });
-
-
-                test('AC: should return null if only dangling IDs are in scope', () => {
-                    const danglingId1 = 'dangle-1';
-                    const danglingId2 = 'dangle-2';
-                    // Ensure location only has player + dangling IDs
-                    mockEntityManager.locations.set(mockCurrentLocation.id, new Set([mockPlayerEntity.id, danglingId1, danglingId2]));
-
-                    const originalGetEntityInstance = mockEntityManager.getEntityInstance;
-                    mockEntityManager.getEntityInstance = jest.fn((id) => {
-                        if (id === danglingId1 || id === danglingId2) return null;
-                        return originalGetEntityInstance.call(mockEntityManager, id); // Handle player correctly
-                    });
-
-                    const config = {
-                        scope: 'location', // Only scope is location
-                        requiredComponents: [],
-                        actionVerb: 'look',
-                        targetName: 'anything',
-                        notFoundMessageKey: null // Keep suppression if intended
-                    };
-                    const result = resolveTargetEntity(mockContext, config);
-
-                    // --- Assertions ---
-                    expect(result).toBeNull(); // Should return null
-                    // Check warnings were logged for both dangling IDs
-                    expect(consoleWarnSpy).toHaveBeenCalledWith(
-                        expect.stringContaining(`Entity ID ${danglingId1} listed in location ${mockCurrentLocation.id} but instance not found.`)
-                    );
-                    expect(consoleWarnSpy).toHaveBeenCalledWith(
-                        expect.stringContaining(`Entity ID ${danglingId2} listed in location ${mockCurrentLocation.id} but instance not found.`)
-                    );
-                    // Scope processing yields an empty list (after skipping player and dangling), before filtering/findTarget
-                    expect(findTargetSpy).not.toHaveBeenCalled(); // findTarget should NOT be called
-                    // Message dispatch depends on empty scope check + suppression. List is empty, suppressed.
-                    expect(mockDispatch).not.toHaveBeenCalled();
-
-                    // Restore the mock cleanly
-                    mockEntityManager.getEntityInstance = originalGetEntityInstance;
-                });
-            }); // End RTE-TASK-2.8
-
-        }); // End describe Robustness
+        }); // End Robustness
 
     }); // End describe Scope Processing Logic
 
 
     // ========================================================================
-    // == Sub-suite: Filtering Logic (RTE-STORY-3) ============================
+    // == Sub-suite: Filtering Logic ==========================================
     // ========================================================================
-    describe('Filtering Logic (RTE-STORY-3)', () => {
+    describe('Filtering Logic', () => {
 
-        // --- RTE-TASK-3.1: Required Components Filtering ---
-        describe('RTE-TASK-3.1: requiredComponents Filtering', () => {
+        // --- requiredComponents Filtering ---
+        describe('requiredComponents Filtering', () => {
             beforeEach(() => {
-                setupResolveEntityTestData(); // Ensures entities like sword, potion, itemAndEquipEntity etc. exist in inventory
-                // Add equipOnlyEntity to inventory for more comprehensive testing here
-                // We need NameComponent, so create it with a name
-                equipOnlyEntity = createMockEntity('equip-only', 'equip thing', [new EquippableComponent({slotId: 'core:slot_main_hand'})]);
-                addToInventory(equipOnlyEntity.id, mockPlayerEntity);
+                setupResolveEntityTestData(); // Ensures entities exist in inventory
+                // Mock scope service to return all inventory items for these component tests
+                const inventoryIds = new Set();
+                mockPlayerEntity.getComponent(InventoryComponent)?.getItems().forEach(id => inventoryIds.add(id));
+                getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
             });
 
             // Covers AC 3.1.1 (Success)
-            test('should find entity when it has all required components', () => {
+            test('should return FOUND_UNIQUE status when entity has all required components', () => {
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [itemAndEquipEntity]}); // Assume findTarget finds it
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent, EquippableComponent], // NameComponent is implicit
-                    actionVerb: 'equip',
                     targetName: 'item equip thing', // Target the entity with both
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
-                // Verify findTarget was called with the correct entity
+                // Verify findTarget was called with the correct entity list AFTER component filtering
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassed = findTargetSpy.mock.calls[0][1];
-                // Let's list expected entities passing [Name, Item, Equippable] from setup
-                const expectedPassed = [itemAndEquipEntity, sword, helmet, axe].filter(Boolean); // Filter potential undefined if setup changes
+                // Entities with Name, Item, AND Equippable in inventory: sword, helmet, axe, itemAndEquipEntity
+                const expectedPassed = [itemAndEquipEntity, sword, helmet, axe].filter(Boolean);
                 expect(entitiesPassed).toEqual(expect.arrayContaining(expectedPassed));
                 expect(entitiesPassed.length).toBe(expectedPassed.length); // Ensure ONLY expected ones passed
 
-                // findTarget should find the specific target 'item equip thing' within this list
-                expect(result).toBe(itemAndEquipEntity); // Function returns the found entity
+                // Assert final result
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: itemAndEquipEntity, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            // Covers AC 3.1.2 (Failure - Filtered Out)
-            test('should return null and NOT_FOUND message when target lacks required components', () => {
-                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []}); // findTarget won't find 'item thing' in the filtered list
+            // Covers AC 3.1.2 (Failure - Filtered Out by Component Check) -> NOT_FOUND from findTarget
+            test('should return NOT_FOUND status when target lacks required components (but others exist)', () => {
+                // Mock findTarget to NOT find 'item thing' in the list *after* component filtering
+                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent, EquippableComponent], // Require both
-                    actionVerb: 'equip', // Relevant for default message
                     targetName: 'item thing', // Target the entity with only ItemComponent (and Name)
-                    // notFoundMessageKey is omitted to test default message
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
                 // Verify the entity lacking the component was filtered out before findTarget
                 expect(findTargetSpy).toHaveBeenCalled();
                 const entitiesPassed = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassed).not.toContain(itemOnlyEntity); // Ensure the target was filtered out
+                expect(entitiesPassed).not.toEqual(expect.arrayContaining([itemOnlyEntity])); // Ensure the target was filtered out
                 // Ensure entities *with* both components were included
-                expect(entitiesPassed).toContain(itemAndEquipEntity);
+                expect(entitiesPassed).toEqual(expect.arrayContaining([itemAndEquipEntity, sword, helmet, axe]));
 
-                expect(result).toBeNull(); // Function returns null as findTarget didn't match
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE('item thing'), // Uses specific message for 'equip' action
-                    type: 'info',
-                });
+                // Assert final result is NOT_FOUND because findTarget didn't match the targetName in the filtered list
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            // Covers AC 3.1.3 (Failure - Scope Empty After Filter)
-            test('should return null and SCOPE_EMPTY message when ALL entities lack required components', () => {
-                // Ensure findTarget gets called with empty array, which is default behavior set in beforeEach
-                // findTargetSpy.mockReturnValue({ status: 'NOT_FOUND', matches: [] });
-
+            // Covers AC 3.1.3 (Failure - Scope Empty After Filter) -> FILTER_EMPTY
+            test('should return FILTER_EMPTY status when ALL entities lack required components', () => {
+                // No need to mock findTarget return value, it shouldn't be called.
                 const config = {
                     scope: 'inventory',
                     // Require a component none of the test items have (e.g., HealthComponent)
                     requiredComponents: [ItemComponent, HealthComponent],
-                    actionVerb: 'do_magic',
                     targetName: 'anything', // Target name doesn't matter here
-                    // notFoundMessageKey is omitted to test default message
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
                 // Verify findTarget was NOT called because component filtering removed everything
                 expect(findTargetSpy).not.toHaveBeenCalled();
 
-                expect(result).toBeNull(); // Function returns null
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('do_magic'), // Uses personal scope message
-                    type: 'info',
-                });
+                // Assert final result is FILTER_EMPTY
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
             // Test edge case: Explicitly requiring NameComponent doesn't break anything
@@ -1083,7 +1093,6 @@ describe('resolveTargetEntity', () => {
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [NameComponent, ItemComponent, EquippableComponent], // Explicit NameComponent
-                    actionVerb: 'equip',
                     targetName: 'item equip thing',
                 };
                 const result = resolveTargetEntity(mockContext, config);
@@ -1095,74 +1104,95 @@ describe('resolveTargetEntity', () => {
                 expect(entitiesPassed).toEqual(expect.arrayContaining(expectedPassed));
                 expect(entitiesPassed.length).toBe(expectedPassed.length);
 
-                expect(result).toBe(itemAndEquipEntity);
+                // Assert final result
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: itemAndEquipEntity, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-        }); // End RTE-TASK-3.1
+        }); // End requiredComponents Filtering
 
-        // --- RTE-TASK-3.2: Custom Filter Application ---
-        describe('RTE-TASK-3.2: customFilter Application', () => {
+        // --- Custom Filter Application ---
+        describe('customFilter Application', () => {
             beforeEach(() => {
-                setupResolveEntityTestData(); // Ensures entities like sword, potion exist in inventory
+                setupResolveEntityTestData();
+                // Mock scope service to return all inventory items
+                const inventoryIds = new Set();
+                mockPlayerEntity.getComponent(InventoryComponent)?.getItems().forEach(id => inventoryIds.add(id));
+                getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
             });
 
             // Covers AC 3.2.1 (Success)
-            test('should find entity when it passes requiredComponents and customFilter', () => {
-                const customFilter = jest.fn((entity) => entity.id === potion.id); // Only allow potion
-                findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [potion]}); // Assume findTarget finds it
+            test('should return FOUND_UNIQUE status when entity passes components and customFilter', () => {
+                // *** CORRECTION: Filter now targets equipOnlyEntity ***
+                const customFilter = jest.fn((entity) => entity.id === equipOnlyEntity.id);
+                // *** CORRECTION: findTarget mock expects equipOnlyEntity ***
+                findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [equipOnlyEntity]});
 
                 const config = {
                     scope: 'inventory',
-                    requiredComponents: [ItemComponent], // Potion, sword, keys, helmet, axe, itemOnly, itemAndEquip pass this
-                    actionVerb: 'use',
-                    targetName: 'potion', // Target the entity allowed by filter
+                    // *** CORRECTION: Require EquippableComponent which equipOnlyEntity has ***
+                    requiredComponents: [EquippableComponent], // NameComponent is implicit
+                    // *** CORRECTION: Target the correct entity name ***
+                    targetName: 'equip thing',
                     customFilter: customFilter,
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
-                // Verify customFilter was called for entities passing component check
-                const expectedComponentPass = [potion, sword, shinyKey, helmet, axe, itemOnlyEntity, itemAndEquipEntity]; // Shield is equipped but has ItemComponent
+                // Verify customFilter was called for entities passing component check (Name + Equippable)
+                // *** CORRECTION: Update list of entities expected to reach the filter ***
+                const expectedComponentPass = [sword, helmet, axe, equipOnlyEntity, itemAndEquipEntity]; // In inventory with Name+Equippable
                 expectedComponentPass.forEach(entity => {
                     if (entity) expect(customFilter).toHaveBeenCalledWith(entity);
                 });
+                // Make sure it wasn't called for entities failing the component check (e.g., potion)
+                expect(customFilter).not.toHaveBeenCalledWith(potion);
+
 
                 // Verify findTarget received only the entity passing the custom filter
-                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, [potion]);
+                // *** CORRECTION: Expect findTarget to be called with only equipOnlyEntity ***
+                expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, [equipOnlyEntity]);
 
-                expect(result).toBe(potion); // Function returns the found entity
+                // Assert final result
+                // *** CORRECTION: Expect the correct entity in the result ***
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: equipOnlyEntity, candidates: null});
                 expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            // Covers AC 3.2.2 (Failure - Scope Empty After Filter)
-            test('should return null and SCOPE_EMPTY when customFilter excludes all entities', () => {
+            // Covers AC 3.2.2 (Failure - Scope Empty After Filter) -> FILTER_EMPTY
+            test('should return FILTER_EMPTY status when customFilter excludes all entities', () => {
                 const customFilter = jest.fn(() => false); // Exclude everything
                 // findTarget will NOT be called as filtered list becomes empty.
 
                 const config = {
                     scope: 'inventory',
-                    requiredComponents: [ItemComponent], // Many items pass this initially
-                    actionVerb: 'use',
-                    targetName: 'anything',
+                    // *** CORRECTION: Require EquippableComponent which equipOnlyEntity has ***
+                    requiredComponents: [EquippableComponent], // NameComponent is implicit
+                    // Target name doesn't matter much here, but align for consistency
+                    targetName: 'equip thing',
                     customFilter: customFilter,
-                    // Omit notFoundMessageKey to check default message
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
-                // Verify customFilter was called for entities passing component check
-                const expectedComponentPass = [potion, sword, shinyKey, helmet, axe, itemOnlyEntity, itemAndEquipEntity];
+                // Verify customFilter was called for entities passing component check (Name + Equippable)
+                // *** CORRECTION: Update list of entities expected to reach the filter ***
+                const expectedComponentPass = [sword, helmet, axe, equipOnlyEntity, itemAndEquipEntity]; // In inventory with Name+Equippable
                 expectedComponentPass.forEach(entity => {
-                    if (entity) expect(customFilter).toHaveBeenCalledWith(entity);
+                    // Check if the entity exists before asserting, setup might change
+                    if (entity) {
+                        // Ensure the filter was actually called with the entity that passed component checks
+                        expect(customFilter).toHaveBeenCalledWith(entity);
+                    }
                 });
+                // Make sure it wasn't called for entities failing the component check (e.g., potion)
+                expect(customFilter).not.toHaveBeenCalledWith(potion);
+
 
                 // Verify findTarget was NOT called
                 expect(findTargetSpy).not.toHaveBeenCalled();
 
-                expect(result).toBeNull(); // Function returns null
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('use'), // Uses personal scope message because scope was 'inventory'
-                    type: 'info',
-                });
+                // Assert final result is FILTER_EMPTY (this remains correct)
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
             // Test custom filter is NOT called for entities failing component check
@@ -1171,21 +1201,22 @@ describe('resolveTargetEntity', () => {
 
                 const config = {
                     scope: 'inventory',
-                    // Require EquippableComponent (potion fails, sword passes)
+                    // Require EquippableComponent (potion, itemOnlyEntity, shinyKey fail this)
                     requiredComponents: [EquippableComponent], // Name is implicit
-                    actionVerb: 'equip',
                     targetName: 'sword',
                     customFilter: customFilter,
                 };
+                // Mock findTarget to return sword from the filtered list
                 findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [sword]});
-                resolveTargetEntity(mockContext, config);
+
+                const result = resolveTargetEntity(mockContext, config);
 
                 // Verify customFilter was called ONLY for entities with Name AND EquippableComponent
-                const expectedToPassComponents = [sword, helmet, axe, itemAndEquipEntity]; // shield is equipped but has component
+                const expectedToPassComponents = [sword, helmet, axe, itemAndEquipEntity, equipOnlyEntity]; // Shield is equipped, not in inv scope
                 expectedToPassComponents.forEach(entity => {
                     if (entity) expect(customFilter).toHaveBeenCalledWith(entity);
                 });
-                // Verify customFilter was NOT called for entities lacking EquippableComponent
+                // Verify customFilter was NOT called for entities lacking EquippableComponent in inventory
                 expect(customFilter).not.toHaveBeenCalledWith(potion);
                 expect(customFilter).not.toHaveBeenCalledWith(shinyKey);
                 expect(customFilter).not.toHaveBeenCalledWith(itemOnlyEntity);
@@ -1195,74 +1226,79 @@ describe('resolveTargetEntity', () => {
                 expect(findTargetSpy).toHaveBeenCalledWith(config.targetName, expect.arrayContaining(expectedToPassComponents));
                 expect(findTargetSpy.mock.calls[0][1].length).toBe(expectedToPassComponents.length);
 
-
+                // Assert final result
+                expect(result).toEqual({status: 'FOUND_UNIQUE', entity: sword, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-        }); // End RTE-TASK-3.2
+        }); // End customFilter Application
 
-        // --- RTE-TASK-3.3: Custom Filter Error Handling ---
-        describe('RTE-TASK-3.3: customFilter Error Handling', () => {
+        // --- Custom Filter Error Handling ---
+        describe('customFilter Error Handling', () => {
             beforeEach(() => {
-                setupResolveEntityTestData(); // Ensures entities like sword, potion exist in inventory
+                setupResolveEntityTestData();
+                // Mock scope service to return all inventory items
+                const inventoryIds = new Set();
+                mockPlayerEntity.getComponent(InventoryComponent)?.getItems().forEach(id => inventoryIds.add(id));
+                getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
             });
 
-            // Covers AC 3.3.1 (Error Handling)
-            test('should log error, exclude entity, and return null when customFilter throws', () => {
+            // Covers AC 3.3.1 (Error Handling) -> NOT_FOUND (if target errored but others remain)
+            test('should log error, exclude entity, and return NOT_FOUND status when customFilter throws for target', () => {
                 const filterError = new Error("Filter boom!");
+                // Keep filter throwing for 'sword', ensure 'sword' passes component check
                 const customFilter = jest.fn((entity) => {
                     if (entity.id === sword.id) {
                         throw filterError;
                     }
                     return true; // Allow others passing component check
                 });
-                // findTarget will receive entities passing ItemComponent AND customFilter (excluding sword)
-                // Searching for 'sword' in that list will result in NOT_FOUND
+                // Mock findTarget: searching for 'sword' in the list *after* sword is excluded yields NOT_FOUND
                 findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
 
                 const config = {
                     scope: 'inventory',
-                    requiredComponents: [ItemComponent], // Sword, potion, shinyKey, itemOnly, itemEquip, helmet, axe, shield pass this
-                    actionVerb: 'examine',
+                    // *** CORRECTION: Require EquippableComponent. Sword AND equipOnlyEntity both have this. ***
+                    requiredComponents: [EquippableComponent],
                     targetName: 'sword', // Target the entity that causes the error
                     customFilter: customFilter,
-                    notFoundMessageKey: null, // Suppress messages for cleaner assertion focus
                 };
 
-                // *** Define the expected entities AFTER filtering ***
                 const result = resolveTargetEntity(mockContext, config);
 
                 // Verify console.error was called ONCE with the specific error for sword-1
-                expect(consoleErrorSpy).toHaveBeenCalledTimes(1); // Make sure it was only called once
+                expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
                 expect(consoleErrorSpy).toHaveBeenCalledWith(
-                    `resolveTargetEntity: Error executing customFilter for entity ${sword.id}:`, // Check for the correct entity ID
-                    filterError // Check for the correct error object
+                    // Check for the correct error message format and entity ID
+                    `resolveTargetEntity: Error executing customFilter for entity ${sword.id}:`,
+                    // *** CORRECTION: Assert the actual error object was logged ***
+                    filterError
                 );
 
-                // Verify findTarget was called with the list EXCLUDING sword-1
-                const expectedEntitiesAfterFilter = [potion, shinyKey, helmet, axe, itemOnlyEntity, itemAndEquipEntity]; // REMOVE shield
+                // Verify findTarget was called with the list EXCLUDING sword-1 but INCLUDING others that passed components+filter
+                // *** CORRECTION: Update the list of entities expected to be passed to findTarget ***
+                // (Entities in inventory with Name+Equippable, excluding sword)
+                const expectedEntitiesPassedToFindTarget = [helmet, axe, equipOnlyEntity, itemAndEquipEntity].filter(Boolean);
                 expect(findTargetSpy).toHaveBeenCalledWith(
                     config.targetName, // "sword"
-                    expect.arrayContaining(expectedEntitiesAfterFilter) // Use the corrected list
+                    // Use expect.arrayContaining because the order might not be guaranteed
+                    expect.arrayContaining(expectedEntitiesPassedToFindTarget)
                 );
-                // Ensure the length matches too
+                // Also check the length for stricter assertion
                 const entitiesPassedToFindTarget = findTargetSpy.mock.calls[0][1];
-                expect(entitiesPassedToFindTarget.length).toBe(expectedEntitiesAfterFilter.length);
+                expect(entitiesPassedToFindTarget.length).toBe(expectedEntitiesPassedToFindTarget.length);
 
 
-                // Verify result is null
-                expect(result).toBeNull();
-
-                // Verify message was suppressed (if applicable)
-                if (config.notFoundMessageKey === null) {
-                    expect(mockDispatch).not.toHaveBeenCalled();
-                }
+                // Verify result status is NOT_FOUND (this remains correct)
+                expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-            // Test case where the *only* candidate entity throws in the custom filter
-            test('should return null and SCOPE_EMPTY message if the only candidate throws in customFilter', () => {
-                // Remove all items except sword from inventory for this test
-                const inv = mockPlayerEntity.getComponent(InventoryComponent);
-                inv.items = new Set([sword.id]); // Only sword in inventory
+            // Test case where the *only* candidate entity throws in the custom filter -> FILTER_EMPTY
+            test('should return FILTER_EMPTY status if the only candidate throws in customFilter', () => {
+                // Isolate sword as the only item in scope for this test
+                const inventoryIds = new Set([sword.id]);
+                getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
 
                 const filterError = new Error("Only item failed!");
                 const customFilter = jest.fn((entity) => {
@@ -1275,10 +1311,8 @@ describe('resolveTargetEntity', () => {
                 const config = {
                     scope: 'inventory',
                     requiredComponents: [ItemComponent], // Sword passes this
-                    actionVerb: 'examine',
                     targetName: 'anything', // Target doesn't matter
                     customFilter: customFilter,
-                    // Omit notFoundMessageKey to check default message
                 };
                 const result = resolveTargetEntity(mockContext, config);
 
@@ -1290,513 +1324,173 @@ describe('resolveTargetEntity', () => {
                 // Verify findTarget was NOT called because filteredEntities became empty due to the error
                 expect(findTargetSpy).not.toHaveBeenCalled();
 
-                // Verify result is null
-                expect(result).toBeNull();
-
-                // Verify the SCOPE_EMPTY message was dispatched because the list was empty *before* findTarget
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('examine'),
-                    type: 'info',
-                });
+                // Verify result status is FILTER_EMPTY
+                expect(result).toEqual({status: 'FILTER_EMPTY', entity: null, candidates: null});
+                expect(mockDispatch).not.toHaveBeenCalled();
             });
 
-        }); // End RTE-TASK-3.3
+        }); // End customFilter Error Handling
 
-    }); // End describe Filtering Logic (RTE-STORY-3)
+    }); // End describe Filtering Logic
 
 
     // ========================================================================
-    // == Sub-suite: Result Handling & Message Dispatching (RTE-STORY-4) ======
+    // == Sub-suite: Result Handling (findTarget outcomes) ====================
     // ========================================================================
-    describe('Result Handling & Message Dispatching (RTE-STORY-4)', () => {
+    describe('Result Handling (findTarget outcomes)', () => {
 
         beforeEach(() => {
-            // Ensure fresh test data for each test in this suite
+            // Ensure fresh test data and mocked scope service
             setupResolveEntityTestData();
+            // Mock scope service to return relevant items (e.g., all inventory) for simplicity
+            const inventoryIds = new Set();
+            mockPlayerEntity.getComponent(InventoryComponent)?.getItems().forEach(id => inventoryIds.add(id));
+            getEntityIdsForScopesSpy.mockReturnValue(inventoryIds);
         });
 
-        // --- RTE-TASK-4.1: Test FOUND_UNIQUE result ---
-        test('RTE-TASK-4.1: should return entity and not dispatch on FOUND_UNIQUE', () => {
+        // --- Test FOUND_UNIQUE result ---
+        test('should return FOUND_UNIQUE status and entity when findTarget finds unique match', () => {
             const expectedEntity = sword;
+            // Mock findTarget to return FOUND_UNIQUE
             findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [expectedEntity]});
             const config = {
                 scope: 'inventory',
                 requiredComponents: [ItemComponent],
-                actionVerb: 'drop',
                 targetName: 'sword',
             };
 
             const result = resolveTargetEntity(mockContext, config);
 
-            expect(result).toBe(expectedEntity);
-            expect(mockDispatch).not.toHaveBeenCalled();
+            expect(result).toEqual({status: 'FOUND_UNIQUE', entity: expectedEntity, candidates: null});
+            expect(mockDispatch).not.toHaveBeenCalled(); // Double-check no dispatch
         });
 
-        // --- RTE-TASK-4.2: Test NOT_FOUND result (Default Messages) ---
-        describe('RTE-TASK-4.2: NOT_FOUND Default Message Dispatch', () => {
+        // --- Test NOT_FOUND result ---
+        test('should return NOT_FOUND status when findTarget finds no match', () => {
             const targetName = 'nonexistent';
-
-            beforeEach(() => {
-                // Ensure findTarget consistently returns NOT_FOUND for these tests
-                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
-            });
-
-            test.each([
-                // Verb Specific
-                ['equip', 'inventory', [ItemComponent], TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE(targetName)],
-                ['unequip', 'equipment', [ItemComponent], TARGET_MESSAGES.NOT_FOUND_UNEQUIPPABLE(targetName)], // Assuming shield is equipped
-                ['attack', 'location', [HealthComponent], TARGET_MESSAGES.NOT_FOUND_ATTACKABLE(targetName)],
-                ['take', 'location_items', [ItemComponent], TARGET_MESSAGES.NOT_FOUND_TAKEABLE(targetName)],
-                // Context Verb
-                ['use potion on', 'location', [HealthComponent], TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetName)],
-                // Scope Specific (when verb doesn't provide a more specific key)
-                ['examine', 'inventory', [ItemComponent], TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName)],
-                ['examine', 'equipment', [ItemComponent], TARGET_MESSAGES.NOT_FOUND_EQUIPPED(targetName)], // Shield is equipped
-                ['examine', 'location', [], TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName)],
-                ['examine', 'nearby', [], TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName)], // Nearby defaults to location message
-                // Fallback (ensure inventory preference if searched)
-                ['examine', ['location', 'inventory'], [ItemComponent], TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName)],
-            ])('should dispatch correct default message for verb "%s", scope "%s"',
-                (actionVerb, scope, requiredComponents, expectedMessage) => {
-
-                    const config = {
-                        scope: scope,
-                        requiredComponents: requiredComponents,
-                        actionVerb: actionVerb,
-                        targetName: targetName,
-                        // Omitting notFoundMessageKey
-                    };
-
-                    const result = resolveTargetEntity(mockContext, config);
-
-                    expect(result).toBeNull();
-                    expect(mockDispatch).toHaveBeenCalledTimes(1);
-                    expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                        text: expectedMessage,
-                        type: 'info',
-                    });
-                });
-
-            test('should use fallback NOT_FOUND_GENERIC if key logic fails (requires manual TARGET_MESSAGES modification for test)', () => {
-                // Temporarily remove a specific message to force fallback
-                const originalNotFoundEquippable = TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE;
-                delete TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE;
-                // Also remove the scope fallback to hit generic
-                const originalNotFoundInventory = TARGET_MESSAGES.NOT_FOUND_INVENTORY;
-                delete TARGET_MESSAGES.NOT_FOUND_INVENTORY;
-
-                // Provide a generic fallback if one isn't already defined
-                const originalGeneric = TARGET_MESSAGES.NOT_FOUND_GENERIC;
-                const genericFallbackText = `Generic fallback for ${targetName}.`;
-                TARGET_MESSAGES.NOT_FOUND_GENERIC = (name) => genericFallbackText;
-
-
-                const config = {
-                    scope: 'inventory', // Should normally trigger inventory message
-                    requiredComponents: [ItemComponent],
-                    actionVerb: 'equip', // Should normally trigger equippable message
-                    targetName: targetName,
-                };
-
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid or missing message key in TARGET_MESSAGES: NOT_FOUND_EQUIPPABLE"));
-                expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Falling back to generic message")); // Warn about fallback
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: genericFallbackText, // Should use the defined generic fallback
-                    type: 'info',
-                });
-
-                // Restore original messages
-                TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE = originalNotFoundEquippable;
-                TARGET_MESSAGES.NOT_FOUND_INVENTORY = originalNotFoundInventory;
-                TARGET_MESSAGES.NOT_FOUND_GENERIC = originalGeneric; // Restore original or remove if it wasn't there
-            });
-        });
-
-        // --- RTE-TASK-4.3: Test FOUND_AMBIGUOUS result (Default Messages) ---
-        describe('RTE-TASK-4.3: FOUND_AMBIGUOUS Default Message Dispatch', () => {
-            test('should dispatch AMBIGUOUS_PROMPT for standard verbs', () => {
-                const targetName = 'key';
-                const ambiguousMatches = [shinyKey, rustyKey]; // Both have ItemComponent
-                findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
-
-                const config = {
-                    scope: ['inventory', 'location'], // Find keys in both places
-                    requiredComponents: [ItemComponent],
-                    actionVerb: 'examine', // Standard verb
-                    targetName: targetName,
-                    // Omit notFoundMessageKey
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, targetName, ambiguousMatches),
-                    type: 'warning',
-                });
-            });
-
-            test('should dispatch TARGET_AMBIGUOUS_CONTEXT for context verbs (e.g., "use X on Y")', () => {
-                const targetName = 'goblin';
-                const ambiguousMatches = [grumpyGoblin, sneakyGoblin]; // Both have HealthComponent
-                findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
-
-                const config = {
-                    scope: 'location',
-                    requiredComponents: [HealthComponent],
-                    actionVerb: 'use Potion on', // Context verb
-                    targetName: targetName,
-                    // Omit notFoundMessageKey
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                // Check if TARGET_AMBIGUOUS_CONTEXT exists, otherwise expect the fallback AMBIGUOUS_PROMPT
-                let expectedMessage;
-                if (TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT) {
-                    expectedMessage = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(config.actionVerb, targetName, ambiguousMatches);
-                } else {
-                    expectedMessage = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, targetName, ambiguousMatches);
-                }
-
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: "Which 'goblin' did you want to use Potion on: grumpy goblin, sneaky goblin?",
-                    type: 'warning',
-                });
-            });
-        });
-
-        // --- RTE-TASK-4.4: Test Empty Filtered Scope (Default Messages) ---
-        describe('RTE-TASK-4.4: Empty Filtered Scope Default Message Dispatch', () => {
-            test('should dispatch SCOPE_EMPTY_PERSONAL for personal scopes (inventory)', () => {
-                const config = {
-                    scope: 'inventory',
-                    requiredComponents: [HealthComponent], // Nothing in inventory has HealthComponent
-                    actionVerb: 'check',
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled(); // Filtered list is empty
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb),
-                    type: 'info',
-                });
-            });
-
-            test('should dispatch SCOPE_EMPTY_PERSONAL for personal scopes (equipment)', () => {
-                const config = {
-                    scope: 'equipment',
-                    requiredComponents: [HealthComponent], // Nothing equipped has HealthComponent
-                    actionVerb: 'check',
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled(); // Filtered list is empty
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb),
-                    type: 'info',
-                });
-            });
-
-            test('should dispatch SCOPE_EMPTY_PERSONAL for combined personal scopes (inventory, equipment)', () => {
-                const config = {
-                    scope: ['inventory', 'equipment'],
-                    requiredComponents: [HealthComponent], // Nothing personal has HealthComponent
-                    actionVerb: 'check',
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled(); // Filtered list is empty
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb),
-                    type: 'info',
-                });
-            });
-
-            test('should dispatch SCOPE_EMPTY_GENERIC for generic scopes (location)', () => {
-                const config = {
-                    scope: 'location',
-                    requiredComponents: [EquippableComponent], // Only ItemComponents in location by default setup
-                    actionVerb: 'activate',
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled();
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, 'here'),
-                    type: 'info',
-                });
-            });
-
-            test('should dispatch SCOPE_EMPTY_GENERIC for generic scopes (nearby)', () => {
-                const config = {
-                    scope: 'nearby',
-                    requiredComponents: [HealthComponent], // Goblins in location have this, but filter might exclude them based on verb context
-                    actionVerb: 'activate', // Assuming this verb isn't meant for HealthComponent entities
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                    // Custom filter to ensure nothing matches
-                    customFilter: () => false,
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled(); // Custom filter ensures empty
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    // Nearby includes location, so context is 'here'
-                    text: TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, 'here'),
-                    type: 'info',
-                });
-            });
-
-            test('should dispatch SCOPE_EMPTY_GENERIC for mixed scopes including generic', () => {
-                const config = {
-                    scope: ['inventory', 'location'], // Includes generic scope 'location'
-                    requiredComponents: [HealthComponent], // Nothing matches this in combined scope
-                    actionVerb: 'check',
-                    targetName: 'anything',
-                    // Omit emptyScopeMessage
-                };
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).toHaveBeenCalled() // Filtered list is empty
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES.NOT_FOUND_INVENTORY('anything'), // Expect this message
-                    type: 'info',
-                });
-            });
-        });
-
-        // --- RTE-TASK-4.5: Test message overrides ---
-        describe('RTE-TASK-4.5: Message Overrides', () => {
-            test('should use config.notFoundMessageKey when findTarget returns NOT_FOUND', () => {
-                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
-                const overrideKey = 'NOT_FOUND_TAKEABLE'; // Use an existing, different key
-                const targetName = 'widget';
-                const config = {
-                    scope: 'inventory', // Would normally give NOT_FOUND_INVENTORY
-                    requiredComponents: [ItemComponent],
-                    actionVerb: 'examine',
-                    targetName: targetName,
-                    notFoundMessageKey: overrideKey,
-                };
-
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: TARGET_MESSAGES[overrideKey](targetName),
-                    type: 'info',
-                });
-            });
-
-            test('should use config.emptyScopeMessage (string) when filtered scope is empty', () => {
-                const customMessage = "Absolutely nothing suitable was found anywhere!";
-                const config = {
-                    scope: 'inventory',
-                    requiredComponents: [HealthComponent], // Ensures empty filtered scope
-                    actionVerb: 'poke',
-                    targetName: 'anything',
-                    emptyScopeMessage: customMessage,
-                };
-
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled();
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: customMessage,
-                    type: 'info',
-                });
-            });
-
-            test('should use config.emptyScopeMessage (TARGET_MESSAGES key lookup) when filtered scope is empty', () => {
-                // Use a specific message from TARGET_MESSAGES as the override
-                const messageFromLookup = TARGET_MESSAGES.TAKE_EMPTY_LOCATION;
-                const config = {
-                    scope: 'location',
-                    // Change requiredComponents to guarantee an empty filtered list:
-                    requiredComponents: [HealthComponent, EquippableComponent], // Goblins have Health, but not Equippable. Others lack Health.
-                    actionVerb: 'take',
-                    targetName: 'anything', // Target name is less relevant now
-                    emptyScopeMessage: messageFromLookup,
-                };
-
-                const result = resolveTargetEntity(mockContext, config);
-
-                expect(result).toBeNull();
-                // Crucially, findTarget should NOT have been called
-                expect(findTargetSpy).not.toHaveBeenCalled();
-                // Now assert the correct dispatch:
-                expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                    text: messageFromLookup, // Expect the overridden message
-                    type: 'info',
-                });
-            });
-        });
-
-        // --- RTE-TASK-4.6: Test message suppression ---
-        describe('RTE-TASK-4.6: Message Suppression (notFoundMessageKey: null)', () => {
-            const configBase = {
-                scope: 'inventory',
-                requiredComponents: [ItemComponent],
-                actionVerb: 'examine',
-                notFoundMessageKey: null, // Suppression is active
-            };
-
-            test('should NOT dispatch on NOT_FOUND', () => {
-                findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
-                const config = {...configBase, targetName: 'nonexistent'};
-
-                const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull();
-                expect(mockDispatch).not.toHaveBeenCalled();
-            });
-
-            test('should NOT dispatch on FOUND_AMBIGUOUS', () => {
-                const ambiguousMatches = [sword, axe]; // Both have ItemComponent
-                findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
-                const config = {...configBase, targetName: 'weapon'}; // Ambiguous target
-
-                const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull();
-                expect(mockDispatch).not.toHaveBeenCalled();
-            });
-
-            test('should NOT dispatch on SCOPE_EMPTY', () => {
-                const config = {
-                    ...configBase,
-                    requiredComponents: [HealthComponent], // Will make scope empty
-                    targetName: 'anything',
-                };
-
-                const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBeNull();
-                expect(findTargetSpy).not.toHaveBeenCalled(); // Empty before findTarget
-                expect(mockDispatch).not.toHaveBeenCalled();
-            });
-
-            test('should NOT dispatch on FOUND_UNIQUE (as normal), suppression has no effect', () => {
-                const expectedEntity = sword;
-                findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [expectedEntity]});
-                const config = {...configBase, targetName: 'sword'};
-
-                const result = resolveTargetEntity(mockContext, config);
-                expect(result).toBe(expectedEntity);
-                expect(mockDispatch).not.toHaveBeenCalled(); // No dispatch on success anyway
-            });
-        });
-
-        // --- RTE-TASK-4.7: Test unexpected findTarget status ---
-        test('RTE-TASK-4.7: should handle unexpected findTarget status', () => {
-            const unexpectedStatus = 'INVALID_FINDER_STATE';
-            findTargetSpy.mockReturnValue({status: unexpectedStatus, matches: []});
+            // Mock findTarget to return NOT_FOUND
+            findTargetSpy.mockReturnValue({status: 'NOT_FOUND', matches: []});
             const config = {
                 scope: 'inventory',
                 requiredComponents: [ItemComponent],
-                actionVerb: 'examine',
-                targetName: 'sword', // Target doesn't matter here
-            };
-
-            const result = resolveTargetEntity(mockContext, config);
-
-            expect(result).toBeNull();
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
-                `resolveTargetEntity: Internal error - Unexpected findTarget status: ${unexpectedStatus}`
-            );
-            expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: TARGET_MESSAGES.INTERNAL_ERROR_RESOLUTION(unexpectedStatus),
-                type: 'error',
-            });
-        });
-
-    }); // End describe Result Handling (RTE-STORY-4)
-
-
-    // ========================================================================
-    // == Other Functional Tests (Messages, Edge Cases, etc.) ====
-    // ========================================================================
-    // [... KEEP REMAINING TESTS for Punctuation etc. ...]
-    // Ensure they rely on findTargetSpy returning appropriate values for their specific scenarios
-
-    // --- Tests for Punctuation Matching Interaction ---
-    describe('Punctuation Matching Interaction', () => {
-        // (Keep existing tests - they verify interaction with findTarget correctly)
-        beforeEach(() => {
-            setupResolveEntityTestData(); // Includes warningSign and stopSign
-        });
-
-        // AC3 Test: Matching with trailing punctuation
-        test('should find entity when targetName includes trailing punctuation (relies on findTarget)', () => {
-            // Mock findTarget to simulate finding the punctuated sign
-            findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [warningSign]});
-            const config = {
-                scope: 'location',
-                requiredComponents: [], // NameComponent implicitly
-                actionVerb: 'examine',
-                targetName: 'Warning Sign.', // Exact match including '.'
-            };
-            const result = resolveTargetEntity(mockContext, config);
-            expect(findTargetSpy).toHaveBeenCalledWith('Warning Sign.', expect.any(Array)); // Verify input to findTarget
-            expect(result).toBe(warningSign);
-            expect(mockDispatch).not.toHaveBeenCalled();
-        });
-
-        test('should find entity when targetName ignores trailing punctuation (relies on findTarget)', () => {
-            // Mock findTarget to simulate finding the sign even without punctuation input
-            findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [warningSign]});
-            const config = {
-                scope: 'location',
-                requiredComponents: [], // NameComponent implicitly
-                actionVerb: 'examine',
-                targetName: 'Warning Sign', // Match without '.'
-            };
-            const result = resolveTargetEntity(mockContext, config);
-            expect(findTargetSpy).toHaveBeenCalledWith('Warning Sign', expect.any(Array));
-            expect(result).toBe(warningSign);
-            expect(mockDispatch).not.toHaveBeenCalled();
-        });
-
-        test('should return null and dispatch ambiguity message for punctuated substring match (relies on findTarget result)', () => {
-            // Mock findTarget returning ambiguous result for the punctuated input
-            const ambiguousMatches = [warningSign, stopSign];
-            findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
-
-            const targetName = 'sign.'; // Ambiguous punctuated substring
-            const actionVerb = 'examine';
-            const config = {
-                scope: 'location',
-                requiredComponents: [], // Name implicitly
-                actionVerb: actionVerb,
                 targetName: targetName,
             };
 
             const result = resolveTargetEntity(mockContext, config);
 
-            expect(findTargetSpy).toHaveBeenCalledWith(targetName, expect.any(Array));
-            expect(result).toBeNull(); // Null result because of ambiguity
-            expect(mockDispatch).toHaveBeenCalledTimes(1);
-            // Expect appropriate ambiguity message using the result from findTarget
-            const expectedMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(actionVerb, targetName, ambiguousMatches);
-            expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
-                text: expectedMsg,
-                type: 'warning',
+            expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
+        });
+
+        // --- Test FOUND_AMBIGUOUS result ---
+        test('should return AMBIGUOUS status and candidates when findTarget finds multiple matches', () => {
+            const targetName = 'key';
+            const ambiguousMatches = [shinyKey, rustyKey]; // Assume both pass filters
+            // Mock findTarget to return FOUND_AMBIGUOUS
+            findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
+            // Adjust scope mock to include location for rustyKey
+            const combinedIds = new Set([...mockPlayerEntity.getComponent(InventoryComponent).getItems(), rustyKey.id]);
+            getEntityIdsForScopesSpy.mockReturnValue(combinedIds);
+
+
+            const config = {
+                scope: ['inventory', 'location'], // Include location where rustyKey is
+                requiredComponents: [ItemComponent],
+                targetName: targetName,
+            };
+            const result = resolveTargetEntity(mockContext, config);
+
+            expect(result).toEqual({status: 'AMBIGUOUS', entity: null, candidates: ambiguousMatches});
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
+        });
+
+        // --- Test unexpected findTarget status ---
+        test('should return NOT_FOUND status and log error for unexpected findTarget status', () => {
+            const unexpectedStatus = 'INVALID_FINDER_STATE';
+            // Mock findTarget to return an unexpected status
+            findTargetSpy.mockReturnValue({status: unexpectedStatus, matches: []});
+            const config = {
+                scope: 'inventory',
+                requiredComponents: [ItemComponent],
+                targetName: 'sword', // Target doesn't matter here
+            };
+
+            const result = resolveTargetEntity(mockContext, config);
+
+            // Expect fallback to NOT_FOUND status
+            expect(result).toEqual({status: 'NOT_FOUND', entity: null, candidates: null});
+            // Verify error was logged
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                `resolveTargetEntity: Internal error - Unexpected findTarget status: ${unexpectedStatus}`
+            );
+            expect(mockDispatch).not.toHaveBeenCalled(); // Verify no dispatch
+        });
+
+    }); // End describe Result Handling (findTarget outcomes)
+
+
+    // ========================================================================
+    // == Other Functional Tests (e.g., Punctuation Interaction) =============
+    // ========================================================================
+    describe('Punctuation Matching Interaction', () => {
+        // These tests verify interaction with findTarget correctly, asserting the final ResolutionResult
+        beforeEach(() => {
+            setupResolveEntityTestData(); // Includes warningSign and stopSign
+            // Mock scope to return location entities
+            const locationIds = new Set();
+            mockEntityManager.locations.get(mockCurrentLocation.id)?.forEach(id => {
+                if (id !== mockPlayerEntity.id) locationIds.add(id);
             });
+            getEntityIdsForScopesSpy.mockReturnValue(locationIds);
+        });
+
+        test('should return FOUND_UNIQUE status when findTarget matches name with punctuation', () => {
+            // Mock findTarget to simulate finding the punctuated sign
+            findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [warningSign]});
+            const config = {
+                scope: 'location',
+                requiredComponents: [], // NameComponent implicitly
+                targetName: 'Warning Sign.', // Exact match including '.'
+            };
+            const result = resolveTargetEntity(mockContext, config);
+
+            expect(findTargetSpy).toHaveBeenCalledWith('Warning Sign.', expect.arrayContaining([warningSign, stopSign])); // Verify input to findTarget
+            expect(result).toEqual({status: 'FOUND_UNIQUE', entity: warningSign, candidates: null});
+            expect(mockDispatch).not.toHaveBeenCalled();
+        });
+
+        test('should return FOUND_UNIQUE status when findTarget matches name ignoring punctuation', () => {
+            // Mock findTarget to simulate finding the sign even without punctuation input
+            findTargetSpy.mockReturnValue({status: 'FOUND_UNIQUE', matches: [warningSign]});
+            const config = {
+                scope: 'location',
+                requiredComponents: [], // NameComponent implicitly
+                targetName: 'Warning Sign', // Match without '.'
+            };
+            const result = resolveTargetEntity(mockContext, config);
+
+            expect(findTargetSpy).toHaveBeenCalledWith('Warning Sign', expect.arrayContaining([warningSign, stopSign]));
+            expect(result).toEqual({status: 'FOUND_UNIQUE', entity: warningSign, candidates: null});
+            expect(mockDispatch).not.toHaveBeenCalled();
+        });
+
+        test('should return AMBIGUOUS status when findTarget returns ambiguous for punctuated substring', () => {
+            // Mock findTarget returning ambiguous result for the punctuated input
+            const ambiguousMatches = [warningSign, stopSign];
+            findTargetSpy.mockReturnValue({status: 'FOUND_AMBIGUOUS', matches: ambiguousMatches});
+
+            const targetName = 'sign.'; // Ambiguous punctuated substring
+            const config = {
+                scope: 'location',
+                requiredComponents: [], // Name implicitly
+                targetName: targetName,
+            };
+
+            const result = resolveTargetEntity(mockContext, config);
+
+            expect(findTargetSpy).toHaveBeenCalledWith(targetName, expect.arrayContaining([warningSign, stopSign]));
+            expect(result).toEqual({status: 'AMBIGUOUS', entity: null, candidates: ambiguousMatches}); // Correct status and candidates
+            expect(mockDispatch).not.toHaveBeenCalled(); // No dispatch check
         });
     }); // End describe Punctuation Matching Interaction
 

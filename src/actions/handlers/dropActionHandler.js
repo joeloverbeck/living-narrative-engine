@@ -4,28 +4,26 @@
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
-// Keep InventoryComponent for the initial check
+// --- Standard Imports ---
 import {InventoryComponent} from '../../components/inventoryComponent.js';
-// PositionComponent and notifyPositionChange are removed from direct use here
-// import {PositionComponent} from '../../components/positionComponent.js';
-import {TARGET_MESSAGES} from '../../utils/messages.js'; // getDisplayName removed
-import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {ItemComponent} from "../../components/itemComponent.js";
+import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
+// --- Refactored Imports ---
+import {TARGET_MESSAGES} from '../../utils/messages.js'; // Import TARGET_MESSAGES
 
 /**
  * Handles the 'drop' action ('core:drop'). Allows the player to attempt
  * to drop items from their inventory into the current location by dispatching
  * an event for a system to handle the actual state changes.
- * Refactored to use parsedCommand based on Ticket 9.3.1.
+ * Uses the updated resolveTargetEntity service.
  * @param {ActionContext} context - The context for the action.
  * @returns {ActionResult} The result of the action attempt.
  */
 export function executeDrop(context) {
-    // Ticket 9.3.1: Remove 'targets', add 'parsedCommand'
-    const {playerEntity, currentLocation, dispatch, parsedCommand} = context; // entityManager removed from direct use
+    const {playerEntity, currentLocation, dispatch, parsedCommand} = context;
     const messages = [];
-    const internalErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR;
+    const internalErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR; // Keep for critical errors
 
     // --- Basic Validation ---
     if (!playerEntity || !currentLocation) {
@@ -39,19 +37,16 @@ export function executeDrop(context) {
     });
 
     // --- Validate required command part ---
-    // Ticket 9.3.1: Ensure this validation uses 'directObjectPhrase'
-    if (!validateRequiredCommandPart(context, 'drop', 'directObjectPhrase')) { // [cite: file:handlers/dropActionHandler.js]
+    if (!validateRequiredCommandPart(context, 'drop', 'directObjectPhrase')) {
         // Validation failed, message dispatched by utility
         return {success: false, messages: [], newState: undefined};
     }
     messages.push({text: `Required command part validated for 'drop'.`, type: 'internal'});
 
-    // Ticket 9.3.1: Assign targetName from parsedCommand, remove targets.join(' ')
     const targetName = parsedCommand.directObjectPhrase;
     messages.push({text: `Target name from parsed command: '${targetName}'.`, type: 'internal'});
 
-
-    // --- Get Player Inventory ---
+    // --- Get Player Inventory (Check existence) ---
     const playerInventory = playerEntity.getComponent(InventoryComponent);
     if (!playerInventory) {
         const componentErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory');
@@ -59,61 +54,94 @@ export function executeDrop(context) {
         console.error("executeDrop: Player entity missing InventoryComponent.");
         return {success: false, messages: [{text: componentErrorMsg, type: 'error'}]};
     }
+    // No need to check if empty here, FILTER_EMPTY status will handle it
     messages.push({text: `Player inventory component found.`, type: 'internal'});
 
     // --- 1. Resolve Target Item using Service ---
-    // Ticket 9.3.1: Ensure resolved target uses targetName from parsedCommand
-    const targetItemEntity = resolveTargetEntity(context, {
+    // Removed notFoundMessageKey
+    const resolution = resolveTargetEntity(context, {
         scope: 'inventory',
         requiredComponents: [ItemComponent],
-        actionVerb: 'drop',
-        targetName: targetName, // Pass the name derived from parsedCommand [cite: file:handlers/dropActionHandler.js]
-        notFoundMessageKey: 'NOT_FOUND_INVENTORY'
+        // actionVerb: 'drop', // Kept for potential future use
+        targetName: targetName,
     });
 
     // --- 2. Handle Resolver Result ---
-    if (!targetItemEntity) {
-        // Failure message already dispatched by resolveTargetEntity
-        messages.push({text: `Item resolution failed for target '${targetName}'.`, type: 'internal'});
-        return {success: false, messages: messages}; // Return failure, include internal logs
+    switch (resolution.status) {
+        case 'FOUND_UNIQUE': {
+            const targetItemEntity = resolution.entity;
+            const targetItemId = targetItemEntity.id;
+            const playerId = playerEntity.id;
+            const locationId = currentLocation.id;
+
+            messages.push({text: `Resolved target '${targetName}' to item ${targetItemId}.`, type: 'internal'});
+
+            // --- 3. Validation Success - Dispatch Event for System Handling ---
+            try {
+                dispatch('event:item_drop_attempted', {
+                    playerId: playerId,
+                    itemInstanceId: targetItemId,
+                    locationId: locationId
+                });
+                messages.push({
+                    text: `Dispatched event:item_drop_attempted for player ${playerId}, item ${targetItemId}, location ${locationId}`,
+                    type: 'internal'
+                });
+                // Return success (validation passed, event dispatched)
+                return {success: true, messages: messages, newState: undefined};
+            } catch (e) {
+                // Log critical error if dispatch fails
+                console.error("executeDrop: CRITICAL - Failed to dispatch event:item_drop_attempted:", e);
+                // Provide an internal error message to the user
+                dispatch('ui:message_display', {text: internalErrorMsg, type: 'error'});
+                messages.push({
+                    text: `CRITICAL: Failed to dispatch event:item_drop_attempted. Error: ${e.message}`,
+                    type: 'error'
+                });
+                // Return failure
+                return {success: false, messages: messages};
+            }
+        }
+
+        case 'NOT_FOUND':
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName), type: 'info'});
+            messages.push({
+                text: `Item resolution failed for target '${targetName}', reason: NOT_FOUND.`,
+                type: 'internal'
+            });
+            return {success: false, messages: messages};
+
+        case 'AMBIGUOUS':
+            const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('drop', targetName, resolution.candidates);
+            dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+            messages.push({
+                text: `Item resolution failed for target '${targetName}', reason: AMBIGUOUS.`,
+                type: 'internal'
+            });
+            return {success: false, messages: messages};
+
+        case 'FILTER_EMPTY':
+            // Inventory is empty or contains no items matching ItemComponent (shouldn't happen if inventory exists)
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'});
+            messages.push({
+                text: `Item resolution failed for target '${targetName}', reason: FILTER_EMPTY (Inventory empty).`,
+                type: 'internal'
+            });
+            return {success: false, messages: messages};
+
+        case 'INVALID_INPUT':
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            messages.push({
+                text: `Item resolution failed for target '${targetName}', reason: INVALID_INPUT.`,
+                type: 'internal_error'
+            });
+            console.error(`executeDrop: resolveTargetEntity returned INVALID_INPUT for target '${targetName}'. Context/Config issue?`);
+            return {success: false, messages: messages};
+
+        default:
+            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            console.error(`executeDrop: Unhandled resolution status: ${resolution.status}`);
+            messages.push({text: `Unhandled status: ${resolution.status}`, type: 'internal_error'});
+            return {success: false, messages};
     }
-    messages.push({text: `Resolved target '${targetName}' to item ${targetItemEntity.id}.`, type: 'internal'});
-
-
-    // --- 3. Validation Success - Dispatch Event for System Handling ---
-    const targetItemId = targetItemEntity.id;
-    const playerId = playerEntity.id;
-    const locationId = currentLocation.id;
-
-    try {
-        dispatch('event:item_drop_attempted', {
-            playerId: playerId,
-            itemInstanceId: targetItemId,
-            locationId: locationId
-        });
-        messages.push({
-            text: `Dispatched event:item_drop_attempted for player ${playerId}, item ${targetItemId}, location ${locationId}`,
-            type: 'internal'
-        });
-    } catch (e) {
-        // Log a critical error if dispatch fails, as the action cannot proceed.
-        console.error("executeDrop: CRITICAL - Failed to dispatch event:item_drop_attempted:", e);
-        // Provide an internal error message to the user, as the action failed unexpectedly.
-        dispatch('ui:message_display', {text: internalErrorMsg, type: 'error'});
-        messages.push({
-            text: `CRITICAL: Failed to dispatch event:item_drop_attempted. Error: ${e.message}`,
-            type: 'error'
-        });
-        // Return failure because the core mechanism (event dispatch) failed.
-        return {success: false, messages: messages};
-    }
-
-    // --- Return Success (Validation passed, event dispatched) ---
-    // The action handler's job is done; success means the attempt was valid and initiated.
-    // The actual outcome depends on the system processing the event.
-    return {
-        success: true,
-        messages: messages, // Include internal logs for debugging/tracing
-        newState: undefined // No direct state change here
-    };
 }

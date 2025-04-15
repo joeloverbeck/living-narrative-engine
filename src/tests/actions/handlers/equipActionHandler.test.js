@@ -95,18 +95,28 @@ describe('executeEquip', () => {
         // Default resolveTargetEntity mock (can be overridden in tests)
         // *** This mock needs to be updated to use context.parsedCommand.directObjectPhrase ***
         resolveTargetEntity.mockImplementation((context, config) => {
-            // Use parsedCommand.directObjectPhrase instead of config.targetName
-            const targetName = context.parsedCommand?.directObjectPhrase?.toLowerCase();
-            if (!targetName) return null; // No target provided in command
+            const targetName = context.parsedCommand?.directObjectPhrase?.toLowerCase() || config?.targetName?.toLowerCase(); // Use either source
+            if (!targetName) {
+                // Mimic real service behavior if input is invalid
+                return {status: 'INVALID_INPUT', message: 'No target name provided.'};
+            }
 
             const inv = context.playerEntity.getComponent(InventoryComponent);
-            let found = null;
+            if (!inv || inv.items.length === 0) {
+                // Mimic real service behavior if inventory is empty
+                return {status: 'FILTER_EMPTY'}; // Or 'NOT_FOUND', depending on real service logic
+            }
+
+            let foundEntity = null;
+            const candidates = []; // For ambiguity
 
             for (const itemId of inv.items) {
                 const item = context.entityManager.getEntityInstance(itemId);
-                const itemName = item?.getComponent(NameComponent)?.value?.toLowerCase();
+                if (!item) continue; // Skip if entity somehow doesn't exist
+
+                const itemName = item.getComponent(NameComponent)?.value?.toLowerCase();
                 if (itemName?.includes(targetName)) {
-                    // Check required components
+                    // Check required components if specified in config
                     let meetsReqs = true;
                     if (config.requiredComponents) {
                         for (const Comp of config.requiredComponents) {
@@ -116,38 +126,49 @@ describe('executeEquip', () => {
                             }
                         }
                     }
+
                     if (meetsReqs) {
-                        found = item; // Simple first match logic for test
-                        break;
+                        candidates.push(item); // Add to potential candidates
                     }
                 }
             }
-            return found;
+
+            // Determine final status based on candidates
+            if (candidates.length === 1) {
+                return {status: 'FOUND_UNIQUE', entity: candidates[0]};
+            } else if (candidates.length > 1) {
+                // Handle ambiguity - return candidates for the handler to deal with
+                return {status: 'AMBIGUOUS', candidates: candidates};
+            } else {
+                // No candidates found that meet requirements
+                return {status: 'NOT_FOUND'};
+            }
         });
     });
 
     // --- THE CRITICAL TEST ---
     it('should display ONE message when trying to equip an item NOT in inventory', () => {
-        addToInventory(leatherVest, playerEntity); // Player has *something* equippable
-        // mockContext.targets removed
-        mockContext.parsedCommand = {directObjectPhrase: 'rusty'}; // Using parsedCommand
+        addToInventory(leatherVest, playerEntity);
+        mockContext.parsedCommand = {directObjectPhrase: 'rusty'};
 
         const result = executeEquip(mockContext);
 
         expect(result.success).toBe(false);
-        // Ensure the specific message was dispatched ONLY ONCE
-        // Note: The message generation inside executeEquip now uses parsedCommand.directObjectPhrase
-        const expectedMsg = TARGET_MESSAGES.NOT_FOUND_EQUIPPABLE('rusty');
-        const calls = mockDispatch.mock.calls.filter(call =>
-            call[0] === 'ui:message_display' && call[1].text === expectedMsg
-        );
-        expect(calls).toHaveLength(1);
 
-        // More general check: ensure only one 'ui:message_display' happened overall
-        const totalDisplayCalls = mockDispatch.mock.calls.filter(call => call[0] === 'ui:message_display');
-        expect(totalDisplayCalls).toHaveLength(1);
+        // Correct the expected message key/text
+        const expectedMsgText = TARGET_MESSAGES.NOT_FOUND_INVENTORY('rusty'); // Use the correct message
+        const expectedMsgType = 'info'; // Check the type used in the NOT_FOUND case
 
-        // Verify the state hasn't changed incorrectly
+        // Verify the specific call
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: expectedMsgText,
+            type: expectedMsgType, // Make sure type matches too
+        });
+
+        // Verify it was called only once
+        expect(mockDispatch).toHaveBeenCalledTimes(1);
+
+        // Verify state
         expect(playerEntity.getComponent(InventoryComponent).hasItem(leatherVest.id)).toBe(true);
         expect(playerEntity.getComponent(EquipmentComponent).getEquippedItem('core:slot_body')).toBeNull();
     });

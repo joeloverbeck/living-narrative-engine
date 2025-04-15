@@ -42,6 +42,13 @@
       "demo_room_exit.location.json",
       "demo_room_outside.location.json"
     ],
+    "connections": [
+      "demo_conn_entrance_hallway.json",
+      "demo_conn_exit_outside.json",
+      "demo_conn_hallway_treasure.json",
+      "demo_conn_monster_treasure.json",
+      "demo_conn_treasure_exit.json"
+    ],
     "triggers": [
       "demo_trigger_unlock_treasure_door_on_goblin_death.trigger.json"
     ],

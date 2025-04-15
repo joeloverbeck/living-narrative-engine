@@ -1,297 +1,256 @@
 // src/services/entityFinderService.js
 
 // --- Standard JavaScript Imports ---
+// findTarget is still needed
 import {findTarget} from '../utils/targetFinder.js';
-import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
+// getDisplayName and TARGET_MESSAGES are NO LONGER needed here
+// import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js'; // Remains commented out
 import {NameComponent} from '../components/nameComponent.js';
-import {InventoryComponent} from '../components/inventoryComponent.js';
-import {EquipmentComponent} from '../components/equipmentComponent.js';
-import {ItemComponent} from '../components/itemComponent.js';
-import {PositionComponent} from "../components/positionComponent.js";
+
+// Import the entityScopeService function (remains the same)
+import {getEntityIdsForScopes} from './entityScopeService.js';
 
 // --- JSDoc Type Imports ---
-/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */ // No longer used directly
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../components/component.js').default} Component */ // Needed for ComponentConstructor type check
 /** @typedef {typeof Component} ComponentConstructor */ // Define ComponentConstructor based on Component import
 
+// --- NEW: JSDoc Type Definitions for Resolution Outcome ---
+
+/**
+ * Represents the status of the entity resolution attempt.
+ * - 'FOUND_UNIQUE': Exactly one matching entity was found.
+ * - 'NOT_FOUND': No entities matched the target name after filtering.
+ * - 'AMBIGUOUS': Multiple entities matched the target name after filtering.
+ * - 'FILTER_EMPTY': No entities met the required component/scope/filter criteria (list was empty before name matching).
+ * - 'INVALID_INPUT': The provided context, config, or targetName was invalid for processing.
+ * @typedef {'FOUND_UNIQUE' | 'NOT_FOUND' | 'AMBIGUOUS' | 'FILTER_EMPTY' | 'INVALID_INPUT'} ResolutionStatus
+ */
+
+/**
+ * Structure containing the result of an entity resolution attempt.
+ * @typedef {object} ResolutionResult
+ * @property {ResolutionStatus} status - The outcome status of the resolution attempt.
+ * @property {Entity | null} entity - The uniquely found entity (only non-null if status is 'FOUND_UNIQUE').
+ * @property {Entity[] | null} candidates - The list of ambiguous candidate entities (only non-null if status is 'AMBIGUOUS').
+ */
+
 /**
  * Configuration options for resolving a target entity.
- * NOTE: This definition is copied here as it's essential for the function signature.
  * @typedef {object} TargetResolverConfig
- * @property {string | string[]} scope - Defines where to search. Valid scopes: 'inventory', 'location', 'equipment', 'location_items', 'location_non_items', 'nearby'.
+ * @property {string | string[]} scope - Defines where to search. Valid scopes handled by entityScopeService.
  * @property {ComponentConstructor[]} requiredComponents - An array of Component classes the target must possess.
- * @property {string} actionVerb - The verb used in feedback messages.
+ * @property {string} actionVerb - The verb used in feedback messages. *NO LONGER USED INTERNALLY by resolveTargetEntity, but potentially useful for callers constructing feedback based on the ResolutionResult*.
  * @property {string} targetName - The name string provided by the user.
  * @property {(entity: Entity) => boolean} [customFilter] - Optional additional filtering function.
- * @property {keyof typeof TARGET_MESSAGES | null} [notFoundMessageKey] - Optional override for the TARGET_MESSAGES key used on NOT_FOUND. Defaults based on scope/action. null suppresses default message.
- * @property {string} [emptyScopeMessage] - Optional override for the message dispatched when the initial scope yields no suitable entities (e.g., use TARGET_MESSAGES.TAKE_EMPTY_LOCATION).
  */
 
 /**
  * Centralized utility function to find a target entity based on name, scope, and required components.
- * @param {ActionContext | null | undefined} context - The action context. Can be null/undefined for tests.
- * @param {TargetResolverConfig | null | undefined} config - Configuration for the target resolution. Can be null/undefined for tests.
- * @returns {Entity | null} The found Entity or null. Dispatches UI messages on failure.
+ * Uses entityScopeService to resolve entity IDs based on scope.
+ * Returns a structured result object indicating the outcome. Does NOT dispatch UI messages.
+ *
+ * @param {ActionContext | null | undefined} context - The action context. Requires entityManager.
+ * @param {TargetResolverConfig | null | undefined} config - Configuration for the target resolution. Requires scope, requiredComponents, targetName.
+ * @returns {ResolutionResult} An object detailing the resolution outcome.
  */
 function resolveTargetEntity(context, config) {
-
     // --- 1. Validate Core Inputs (Context and Config structure) ---
-    // FIX: Check context and config BEFORE destructuring context or accessing config deeply.
-    // FIX: Adjusted config check to allow targetName to be an empty string at this stage.
-    if (!context || !config || !config.scope || !config.requiredComponents || !config.actionVerb || typeof config.targetName !== 'string') {
-        // Check if targetName is strictly not a string (null, undefined, wrong type)
-        console.error("resolveTargetEntity: Invalid context or configuration provided.", {context, config});
-        return null;
+    // Check for essential properties. actionVerb is no longer strictly needed *internally*.
+    if (
+        !context ||
+        !context.entityManager ||
+        !config ||
+        !config.scope ||
+        !config.requiredComponents ||
+        // REMOVED: Internal check for config.actionVerb
+        typeof config.targetName !== 'string'
+    ) {
+        console.error(
+            'resolveTargetEntity: Invalid context or configuration provided.',
+            {context, config}
+        );
+        // Return INVALID_INPUT status
+        return {
+            status: 'INVALID_INPUT',
+            entity: null,
+            candidates: null,
+        };
     }
 
     // --- Now it's safe to destructure context ---
-    const {playerEntity, currentLocation, entityManager, dispatch} = context;
+    // Note: playerEntity and currentLocation might be null within context,
+    // the entityScopeService handles those cases internally.
+    const {entityManager} = context;
 
     // --- 2. Validate Target Name Content ---
     if (config.targetName.trim() === '') {
-        console.warn("resolveTargetEntity: Received empty targetName. Resolution cannot proceed.");
-        return null;
+        console.warn(
+            'resolveTargetEntity: Received empty targetName. Resolution cannot proceed.'
+        );
+        // Return INVALID_INPUT status
+        return {
+            status: 'INVALID_INPUT',
+            entity: null,
+            candidates: null,
+        };
     }
 
     // --- 3. Normalize Scope and Prepare Components ---
+    // Ensure `scopes` is an array for the service call
     const scopes = Array.isArray(config.scope) ? config.scope : [config.scope];
-    const requiredComponentsSet = new Set([NameComponent, ...config.requiredComponents]);
+    // Ensure NameComponent is always implicitly required for findTarget to work
+    const requiredComponentsSet = new Set([
+        NameComponent,
+        ...config.requiredComponents,
+    ]);
     const requiredComponents = Array.from(requiredComponentsSet);
 
-    // --- 4. Build Searchable Entities List ---
-    const entityIdSet = new Set();
-    for (const scope of scopes) {
-        try {
-            switch (scope) {
-                // *** IMPORTANT: Check for playerEntity existence *before* accessing its methods ***
-                case 'inventory': {
-                    // Check playerEntity exists AND has the component
-                    if (playerEntity && playerEntity.hasComponent(InventoryComponent)) {
-                        const inventory = playerEntity.getComponent(InventoryComponent);
-                        inventory.getItems().forEach(id => entityIdSet.add(id));
-                    } else if (playerEntity) { // Player exists but no inventory
-                        console.warn(`resolveTargetEntity: Scope 'inventory' requested but player ${playerEntity.id} lacks InventoryComponent.`);
-                    } else { // Player entity itself is missing from context (should have been caught earlier, but safe check)
-                        console.warn(`resolveTargetEntity: Scope 'inventory' requested but playerEntity is missing in context.`);
-                    }
-                    break;
-                }
-                case 'location':
-                case 'location_items':
-                case 'location_non_items': {
-                    if (!currentLocation) {
-                        console.warn(`resolveTargetEntity: Scope '${scope}' requested but currentLocation is null.`);
-                        continue; // Use continue to proceed to the next scope if in a loop
-                    }
-                    // Ensure playerEntity is checked before potentially excluding its ID
-                    const playerId = playerEntity ? playerEntity.id : null;
-                    const idsInLoc = entityManager.getEntitiesInLocation(currentLocation.id);
-                    if (idsInLoc) {
-                        idsInLoc.forEach(id => {
-                            // Exclude the player entity itself if player exists
-                            if (playerId && id === playerId) return;
-
-                            const entity = entityManager.getEntityInstance(id);
-                            if (!entity) {
-                                console.warn(`resolveTargetEntity: Entity ID ${id} listed in location ${currentLocation.id} but instance not found.`);
-                                return;
-                            }
-                            // Apply scope-specific filters
-                            if (scope === 'location_items' && !entity.hasComponent(ItemComponent)) return;
-                            if (scope === 'location_non_items' && entity.hasComponent(ItemComponent)) return;
-                            entityIdSet.add(id);
-                        });
-                    }
-                    break;
-                }
-                case 'equipment': {
-                    // Check playerEntity exists AND has the component
-                    if (playerEntity && playerEntity.hasComponent(EquipmentComponent)) {
-                        const equipment = playerEntity.getComponent(EquipmentComponent);
-                        Object.values(equipment.getAllEquipped()).forEach(id => {
-                            if (id) entityIdSet.add(id);
-                        });
-                    } else if (playerEntity) { // Player exists but no equipment
-                        console.warn(`resolveTargetEntity: Scope 'equipment' requested but player ${playerEntity.id} lacks EquipmentComponent.`);
-                    } else { // Player missing
-                        console.warn(`resolveTargetEntity: Scope 'equipment' requested but playerEntity is missing in context.`);
-                    }
-                    break;
-                }
-                case 'nearby': // Combines inventory and location (excluding player)
-                    // Inventory (Check player)
-                    if (playerEntity && playerEntity.hasComponent(InventoryComponent)) {
-                        playerEntity.getComponent(InventoryComponent).getItems().forEach(id => entityIdSet.add(id));
-                    }
-                    // Location (Check location and player)
-                    if (currentLocation) {
-                        const playerId = playerEntity ? playerEntity.id : null;
-                        const idsInLoc = entityManager.getEntitiesInLocation(currentLocation.id);
-                        if (idsInLoc) idsInLoc.forEach(id => {
-                            if (playerId && id === playerId) return; // Exclude player
-                            const entity = entityManager.getEntityInstance(id);
-                            if (entity) entityIdSet.add(id);
-                        });
-                    }
-                    break;
-                default:
-                    console.warn(`resolveTargetEntity: Unsupported scope specified: '${scope}'. Skipping.`);
-            }
-        } catch (error) {
-            console.error(`resolveTargetEntity: Error processing scope '${scope}':`, error);
-        }
-    }
+    // --- 4. Build Searchable Entities List (Using Service) ---
+    // Delegate scope resolution to the entityScopeService
+    const entityIdSet = getEntityIdsForScopes(scopes, context);
 
     // --- 5. Filter Entities by Required Components and Custom Filter ---
     const initialEntities = Array.from(entityIdSet)
-        .map(id => entityManager.getEntityInstance(id))
-        .filter(Boolean);
+        .map((id) => entityManager.getEntityInstance(id))
+        .filter(Boolean); // Filter out potential null entities
 
-    const filteredEntities = initialEntities.filter(entity => {
-        const hasAllRequired = requiredComponents.every(ComponentClass => entity.hasComponent(ComponentClass));
+    const filteredEntities = initialEntities.filter((entity) => {
+        // Check for required components
+        const hasAllRequired = requiredComponents.every((ComponentClass) =>
+            entity.hasComponent(ComponentClass)
+        );
         if (!hasAllRequired) return false;
 
+        // Apply custom filter if provided
         if (config.customFilter) {
             try {
                 return config.customFilter(entity);
             } catch (filterError) {
-                console.error(`resolveTargetEntity: Error executing customFilter for entity ${entity.id}:`, filterError);
-                return false;
+                console.error(
+                    `resolveTargetEntity: Error executing customFilter for entity ${entity.id}:`,
+                    filterError
+                );
+                return false; // Exclude entity if filter throws
             }
         }
         return true;
     });
 
     // --- 6. Handle Empty Filtered Scope ---
+    // This triggers if the service returned an empty set,
+    // OR if the component/custom filtering removed all candidates.
     if (filteredEntities.length === 0) {
-        if (config.notFoundMessageKey !== null) {
-            let emptyMsg;
-            if (config.emptyScopeMessage) {
-                emptyMsg = config.emptyScopeMessage;
-            } else {
-                const isPersonalScope = scopes.every(s => s === 'inventory' || s === 'equipment');
-                if (isPersonalScope) {
-                    emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(config.actionVerb);
-                } else {
-                    const scopeContext = (scopes.includes('location') || scopes.includes('location_items') || scopes.includes('location_non_items') || scopes.includes('nearby'))
-                        ? 'here' : 'nearby';
-                    emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, scopeContext);
-                }
-            }
-            // Ensure dispatch exists before calling it
-            if (dispatch) dispatch('ui:message_display', {text: emptyMsg, type: 'info'});
-            else console.warn("resolveTargetEntity: Cannot dispatch message, dispatch function missing in context.");
-        }
-        return null;
+        // REMOVED: All message determination and dispatch logic.
+        // Return FILTER_EMPTY status
+        return {
+            status: 'FILTER_EMPTY',
+            entity: null,
+            candidates: null,
+        };
     }
 
     // --- 7. Call findTarget Utility ---
+    // This remains the same, operating on the filtered list.
     const findResult = findTarget(config.targetName, filteredEntities);
 
     // --- 8. Handle findTarget Results (Not Found, Ambiguous, Found) ---
-    // Ensure dispatch exists before calling it in failure cases
-    if (!dispatch && (findResult.status === 'NOT_FOUND' || findResult.status === 'FOUND_AMBIGUOUS' || findResult.status === 'INTERNAL_ERROR')) {
-        console.warn("resolveTargetEntity: Cannot dispatch message, dispatch function missing in context.");
-    }
 
     switch (findResult.status) {
         case 'NOT_FOUND': {
-            // Check if message suppression is requested (null)
-            if (config.notFoundMessageKey !== null) {
-                let messageKey = config.notFoundMessageKey; // Use override key if provided
-
-                // Determine default message key if no override
-                if (!messageKey) {
-
-                    // <<< ADD DEBUG LOGGING HERE >>>
-                    console.log(`DEBUG: NOT_FOUND check. Verb: "${config.actionVerb}", Includes ' on ': ${config.actionVerb.includes(' on ')}`);
-                    // <<< END DEBUG LOGGING >>>
-
-                    // Prioritize specific action-related messages
-                    if (config.actionVerb === 'equip') messageKey = 'NOT_FOUND_EQUIPPABLE';
-                    else if (config.actionVerb === 'unequip') messageKey = 'NOT_FOUND_UNEQUIPPABLE';
-                    else if (config.actionVerb === 'attack') messageKey = 'NOT_FOUND_ATTACKABLE';
-                    else if (config.actionVerb === 'take') messageKey = 'NOT_FOUND_TAKEABLE';
-                    // Check for context actions (like 'use X on Y')
-                    else if (config.actionVerb.trim().includes(' on ') || config.actionVerb.trim().endsWith(' on') || config.actionVerb.trim().includes(' > ')) {
-                        messageKey = 'TARGET_NOT_FOUND_CONTEXT';
-                        console.log('DEBUG: Context key selected.'); // Add log here too
-                    }
-                    // Scope-specific messages
-                    else if (scopes.length === 1 && scopes[0] === 'inventory') messageKey = 'NOT_FOUND_INVENTORY';
-                    else if (scopes.length === 1 && scopes[0] === 'equipment') messageKey = 'NOT_FOUND_EQUIPPED';
-                    // Fallback based on general scope area
-                    else if (scopes.includes('inventory') || scopes.includes('equipment')) messageKey = 'NOT_FOUND_INVENTORY'; // Prefer inventory if it was searched
-                    else {
-                        messageKey = 'NOT_FOUND_LOCATION';
-                        console.log('DEBUG: Location key selected.'); // And here
-                    }
-
-                    // Final fallback if logic somehow failed
-                    if (!messageKey) {
-                        console.warn(`resolveTargetEntity: Could not determine a default message key for NOT_FOUND. Action: ${config.actionVerb}, Scope: ${scopes.join(',')}`);
-                        messageKey = 'NOT_FOUND_GENERIC'; // Use a truly generic one if available
-                    }
-                }
-
-                const messageGenerator = TARGET_MESSAGES[messageKey];
-                let errorMsg;
-                if (typeof messageGenerator === 'function') {
-                    // Pass appropriate parameter based on message type
-                    const msgParam = (messageKey === 'TARGET_NOT_FOUND_CONTEXT' || messageKey.startsWith('NOT_FOUND_'))
-                        ? config.targetName
-                        : config.targetName; // Default parameter is usually the target name
-                    errorMsg = messageGenerator(msgParam);
-                } else {
-                    // Fallback if the message key is invalid or message isn't defined
-                    console.warn(`resolveTargetEntity: Invalid or missing message key in TARGET_MESSAGES: ${messageKey}. Falling back to generic message.`);
-                    errorMsg = TARGET_MESSAGES.NOT_FOUND_GENERIC ? TARGET_MESSAGES.NOT_FOUND_GENERIC(config.targetName) : `You don't see any '${config.targetName}' to ${config.actionVerb}.`;
-                }
-                dispatch('ui:message_display', {text: errorMsg, type: 'info'});
-            }
-            return null; // Target not found
+            // Return NOT_FOUND status
+            return {
+                status: 'NOT_FOUND',
+                entity: null,
+                candidates: null,
+            };
         }
         case 'FOUND_AMBIGUOUS': {
-            // Check if message suppression is requested (null) - Although ambiguity usually needs feedback
-            if (config.notFoundMessageKey !== null) { // Reuse the same flag for general feedback control
-                let errorMsg;
-                const targetEntities = findResult.matches;
-
-                // <<< ADD DEBUG LOGGING HERE >>>
-                console.log(`DEBUG: AMBIGUOUS check. Verb: "${config.actionVerb}", Includes ' on ': ${config.actionVerb.includes(' on ')}, Context Msg Exists: ${!!TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT}`);
-                // <<< END DEBUG LOGGING >>>
-
-                // Prefer specific ambiguity messages if available
-                if ((config.actionVerb.includes(' on ') || config.actionVerb.includes(' > ')) && TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT) {
-                    errorMsg = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(config.actionVerb, config.targetName, targetEntities);
-                } else if (TARGET_MESSAGES.AMBIGUOUS_PROMPT) {
-                    errorMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, config.targetName, targetEntities);
-                } else {
-                    // Generic fallback if specific ambiguity messages aren't defined
-                    const displayNames = targetEntities.map(e => getDisplayName(e) || e.id).join(', ');
-                    errorMsg = `Which '${config.targetName}' did you want to ${config.actionVerb}? Be more specific (e.g., ${displayNames.split(', ')[0]}).`; // Simplified fallback
-                }
-                dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-            }
-            return null; // Ambiguous result
+            // Return AMBIGUOUS status with the candidates
+            return {
+                status: 'AMBIGUOUS',
+                entity: null,
+                candidates: findResult.matches,
+            };
         }
-        case 'FOUND_UNIQUE':
-            // Success! Return the single matching entity.
-            return findResult.matches[0];
+        case 'FOUND_UNIQUE': {
+            // Return FOUND_UNIQUE status with the single entity
+            return {
+                status: 'FOUND_UNIQUE',
+                entity: findResult.matches[0],
+                candidates: null,
+            };
+        }
         default: {
-            // Handle unexpected status from findTarget
-            const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_RESOLUTION
-                ? TARGET_MESSAGES.INTERNAL_ERROR_RESOLUTION(findResult.status || 'unknown')
-                : 'An internal error occurred during target resolution.';
-            dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-            console.error(`resolveTargetEntity: Internal error - Unexpected findTarget status: ${findResult.status}`);
-            return null; // Internal error state
+            // Handle unexpected status from findTarget - Log internal error and return a failure status.
+            // 'NOT_FOUND' seems the most appropriate fallback among the defined statuses, indicating failure to resolve.
+            console.error(
+                `resolveTargetEntity: Internal error - Unexpected findTarget status: ${
+                    findResult.status || 'unknown'
+                }`
+            );
+            // REMOVED: Dispatch call for internal error.
+            return {
+                status: 'NOT_FOUND', // Or potentially introduce an 'INTERNAL_ERROR' status if deemed necessary later.
+                entity: null,
+                candidates: null,
+            };
         }
     }
 } // End resolveTargetEntity
 
 // --- Export the function ---
 export {resolveTargetEntity};
+
+/**
+ * Example Usage (in an Action handler):
+ *
+ * import { resolveTargetEntity } from './entityFinderService.js';
+ * import { TARGET_MESSAGES, getDisplayName } from '../utils/messages.js';
+ *
+ * function handleLookAction(context, targetName) {
+ * const config = {
+ * scope: 'nearby', // Search inventory and location
+ * requiredComponents: [], // Just need NameComponent (implicit)
+ * actionVerb: 'look', // Still useful for constructing messages later
+ * targetName: targetName,
+ * };
+ *
+ * const resolution = resolveTargetEntity(context, config);
+ *
+ * switch (resolution.status) {
+ * case 'FOUND_UNIQUE':
+ * // Found the entity, proceed with 'look' logic
+ * context.dispatch('ui:message_display', { text: `You look at the ${getDisplayName(resolution.entity)}. It looks like a ${resolution.entity.name}.`, type: 'info' });
+ * // ... more detailed description logic ...
+ * break;
+ *
+ * case 'NOT_FOUND':
+ * // Use TARGET_MESSAGES (or custom logic) to generate feedback
+ * context.dispatch('ui:message_display', { text: TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName), type: 'info' });
+ * break;
+ *
+ * case 'AMBIGUOUS':
+ * // Generate ambiguity feedback
+ * const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, targetName, resolution.candidates);
+ * context.dispatch('ui:message_display', { text: ambiguousMsg, type: 'warning' });
+ * break;
+ *
+ * case 'FILTER_EMPTY':
+ * // Generate feedback for empty scope/filter result
+ * const emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, 'nearby'); // Determine context based on scope
+ * context.dispatch('ui:message_display', { text: emptyMsg, type: 'info' });
+ * break;
+ *
+ * case 'INVALID_INPUT':
+ * // Usually indicates a programming error in how the action called resolveTargetEntity
+ * // Logged internally by resolveTargetEntity, maybe show a generic error to user?
+ * context.dispatch('ui:message_display', { text: 'There seems to be a problem with that command.', type: 'error' });
+ * break;
+ * }
+ * }
+ *
+ */

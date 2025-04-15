@@ -6,15 +6,16 @@
  */
 
 // Import all necessary action handler functions
-import { executeMove } from '../actions/handlers/moveActionHandler.js';
-import { executeLook } from '../actions/handlers/lookActionHandler.js';
-import { executeTake } from '../actions/handlers/takeActionHandler.js';
-import { executeDrop } from '../actions/handlers/dropActionHandler.js';
-import { executeInventory } from '../actions/handlers/inventoryActionHandler.js';
-import { executeAttack } from '../actions/handlers/attackActionHandler.js';
-import { executeUse } from '../actions/handlers/useActionHandler.js';
-import { executeEquip } from '../actions/handlers/equipActionHandler.js';
-import { executeUnequip } from '../actions/handlers/unequipActionHandler.js';
+import {executeMove} from '../actions/handlers/moveActionHandler.js';
+import {executeLook} from '../actions/handlers/lookActionHandler.js';
+import {executeTake} from '../actions/handlers/takeActionHandler.js';
+import {executeDrop} from '../actions/handlers/dropActionHandler.js';
+import {executeInventory} from '../actions/handlers/inventoryActionHandler.js';
+import {executeAttack} from '../actions/handlers/attackActionHandler.js';
+import {executeUse} from '../actions/handlers/useActionHandler.js';
+import {executeEquip} from '../actions/handlers/equipActionHandler.js';
+import {executeUnequip} from '../actions/handlers/unequipActionHandler.js';
+import {executeExamine} from "../actions/handlers/examineActionHandler.js";
 // Import future handlers here...
 
 // Define and export the registry configuration as a Map
@@ -22,6 +23,7 @@ export const actionHandlerRegistryConfig = new Map([
     // Core Actions
     ['core:move', executeMove],
     ['core:look', executeLook],
+    ['core:examine', executeExamine],
     ['core:take', executeTake],
     ['core:drop', executeDrop],
     ['core:inventory', executeInventory],
