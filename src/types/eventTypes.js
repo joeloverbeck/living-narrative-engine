@@ -14,10 +14,10 @@
  * Defines the payload structure for the event:item_use_attempted event.
  * This event signifies that a user has successfully indicated an intent
  * to use a specific item from their inventory, potentially targeting another entity
- * within the current location.
+ * or connection within the current scope.
  * It is typically fired after basic command parsing and unique item identification
- * within the user's inventory, but before system-level validation (like usability
- * conditions or target validity checks).
+ * within the user's inventory, and potential unique target identification,
+ * but before system-level validation (like usability conditions or target validity checks).
  *
  * Fired By: useActionHandler
  * Consumed By: ItemUsageSystem
@@ -33,10 +33,14 @@
  * (e.g., 'potion_healing_lesser', 'sword_basic'). This is used by systems
  * to look up shared, definition-level properties like Usable component data,
  * effects, conditions, etc.
- * @property {string | null} explicitTargetEntityId The unique identifier of the *entity*
+ * @property {string | null} explicitTargetEntityId The unique identifier of the regular *entity*
  * that the user explicitly targeted with the command (e.g., the ID resolved from
- * "use potion *on goblin*"). This is mutually exclusive with `explicitTargetConnectionId`.
- * It is `null` if the use command did not specify an explicit target or targeted a connection.
+ * "use potion *on goblin*"). This is mutually exclusive with `explicitTargetConnectionEntityId`.
+ * It is `null` if the use command did not specify an explicit entity target or targeted a connection.
+ * @property {string | null} explicitTargetConnectionEntityId The unique identifier of the *connection entity*
+ * that the user explicitly targeted with the command (e.g., the ID resolved from
+ * "use key *on north door*"). This is mutually exclusive with `explicitTargetEntityId`.
+ * It is `null` if the use command did not specify an explicit connection target or targeted a regular entity. // << NEW FIELD ADDED
  */
 
 /**

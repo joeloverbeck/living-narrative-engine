@@ -56,7 +56,7 @@ const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {
 
 
 // --- Import the function to test and real constants ---
-import {handleActionWithTargetResolution} from '../../actions/actionExecutionUtils.js';
+import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../../actions/actionExecutionUtils.js';
 import {ResolutionStatus} from '../../services/entityFinderService.js'; // Get the real enum
 
 // --- Import mocked functions for use in tests ---
@@ -639,3 +639,181 @@ describe('handleActionWithTargetResolution', () => {
         });
     }); // End Resolution Failure Handling describe block
 });
+
+// --- NEW Test Suite for dispatchEventWithCatch ---
+describe('dispatchEventWithCatch', () => {
+    let mockContext;
+    let mockMessages;
+    let mockLogDetails;
+    let mockDispatch;
+    const testEventName = 'test:event';
+    const testPayload = {data: 'payload'};
+
+    beforeEach(() => {
+        // Reset mocks
+        jest.clearAllMocks();
+
+        mockDispatch = jest.fn(); // Mock the dispatch function
+        mockContext = {
+            dispatch: mockDispatch,
+            // Add other context properties if needed by your tests
+        };
+        mockMessages = []; // Start with an empty messages array for each test
+        mockLogDetails = {
+            success: `Successfully dispatched ${testEventName}`,
+            errorUser: 'Something went wrong processing your request.',
+            errorInternal: `Failed to dispatch ${testEventName}.`
+        };
+    });
+
+    // --- Success Case ---
+    test('should call context.dispatch, add success message, and return { success: true } on success', () => {
+        const result = dispatchEventWithCatch(mockContext, testEventName, testPayload, mockMessages, mockLogDetails);
+
+        // Check dispatch call
+        expect(mockDispatch).toHaveBeenCalledTimes(1);
+        expect(mockDispatch).toHaveBeenCalledWith(testEventName, testPayload);
+
+        // Check messages array mutation (AC)
+        expect(mockMessages).toHaveLength(1);
+        expect(mockMessages[0]).toEqual({
+            text: mockLogDetails.success,
+            type: 'internal'
+        });
+
+        // Check return value (AC)
+        expect(result).toEqual({success: true});
+
+        // Ensure no error messages were dispatched or logged
+        expect(mockDispatch).not.toHaveBeenCalledWith('ui:message_display', expect.anything());
+        expect(mockConsoleError).not.toHaveBeenCalled();
+    });
+
+    // --- Failure Case ---
+    test('should catch error, dispatch UI error, log console error, add internal error message, and return { success: false } on failure', () => {
+        const dispatchError = new Error('Dispatch failed!');
+        mockDispatch.mockImplementation((eventName, payload) => {
+            // Only throw error for the primary event, not for the ui:message_display
+            if (eventName === testEventName) {
+                throw dispatchError;
+            }
+        });
+
+        const result = dispatchEventWithCatch(mockContext, testEventName, testPayload, mockMessages, mockLogDetails);
+
+        // Check primary dispatch attempt (was called and threw)
+        expect(mockDispatch).toHaveBeenCalledWith(testEventName, testPayload);
+
+        // Check UI message dispatch (AC)
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: mockLogDetails.errorUser, // Static string in this test
+            type: 'error'
+        });
+        // Ensure dispatch was called exactly twice (attempt + ui message)
+        expect(mockDispatch).toHaveBeenCalledTimes(2);
+
+        // Check console error logging (AC)
+        expect(mockConsoleError).toHaveBeenCalledTimes(1);
+        expect(mockConsoleError).toHaveBeenCalledWith(
+            expect.stringContaining(`Error dispatching event '${testEventName}'`),
+            dispatchError // Check the original error was logged
+        );
+
+        // Check messages array mutation (AC)
+        expect(mockMessages).toHaveLength(1);
+        expect(mockMessages[0]).toEqual({
+            text: `${mockLogDetails.errorInternal} Error: ${dispatchError.message}`,
+            type: 'error',
+            details: dispatchError
+        });
+
+        // Check return value (AC)
+        expect(result).toEqual({success: false});
+    });
+
+    // --- Failure Case with Functional Error Message ---
+    test('should call errorUser function and use its result for UI message on failure', () => {
+        const dispatchError = new Error('Specific failure type');
+        mockDispatch.mockImplementation((eventName) => {
+            if (eventName === testEventName) throw dispatchError;
+        });
+
+        const mockErrorUserFn = jest.fn((err) => `User error due to: ${err.message}`);
+        mockLogDetails.errorUser = mockErrorUserFn; // Use the mock function
+
+        const result = dispatchEventWithCatch(mockContext, testEventName, testPayload, mockMessages, mockLogDetails);
+
+        // Check that the errorUser function was called with the error
+        expect(mockErrorUserFn).toHaveBeenCalledTimes(1);
+        expect(mockErrorUserFn).toHaveBeenCalledWith(dispatchError);
+
+        // Check UI message dispatch used the function's return value
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+            text: `User error due to: ${dispatchError.message}`,
+            type: 'error'
+        });
+
+        // Other checks remain similar
+        expect(mockConsoleError).toHaveBeenCalledTimes(1);
+        expect(mockMessages).toHaveLength(1);
+        expect(mockMessages[0].text).toContain(mockLogDetails.errorInternal);
+        expect(result).toEqual({success: false});
+    });
+
+    // --- Edge Case: context.dispatch is missing ---
+    test('should handle missing context.dispatch gracefully', () => {
+        mockContext.dispatch = undefined; // Simulate missing dispatch
+
+        const result = dispatchEventWithCatch(mockContext, testEventName, testPayload, mockMessages, mockLogDetails);
+
+        expect(mockConsoleError).toHaveBeenCalledWith(expect.stringContaining('context.dispatch is missing'));
+        expect(mockMessages).toHaveLength(1);
+        expect(mockMessages[0]).toEqual({
+            text: expect.stringContaining('Internal Error: context.dispatch is missing'),
+            type: 'internal_error'
+        });
+        expect(result).toEqual({success: false});
+    });
+
+    // --- Edge Case: ui:message_display dispatch also fails ---
+    test('should still log console error and return false if ui:message_display fails', () => {
+        const primaryError = new Error('Primary dispatch failed!');
+        const uiError = new Error('UI dispatch failed!');
+        mockDispatch.mockImplementation((eventName, payload) => {
+            if (eventName === testEventName) {
+                throw primaryError;
+            } else if (eventName === 'ui:message_display') {
+                throw uiError; // Simulate failure of the error display itself
+            }
+        });
+
+        const result = dispatchEventWithCatch(mockContext, testEventName, testPayload, mockMessages, mockLogDetails);
+
+        // Check primary dispatch attempt
+        expect(mockDispatch).toHaveBeenCalledWith(testEventName, testPayload);
+        // Check UI message dispatch attempt
+        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', expect.anything());
+
+        // Check console error logging (should log both errors)
+        expect(mockConsoleError).toHaveBeenCalledTimes(2);
+        // Log for primary error
+        expect(mockConsoleError).toHaveBeenCalledWith(
+            expect.stringContaining(`Error dispatching event '${testEventName}'`),
+            primaryError
+        );
+        // Log for UI error
+        expect(mockConsoleError).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL - Failed to dispatch ui:message_display`),
+            uiError
+        );
+
+        // Check messages array mutation (only the internal error for the primary failure)
+        expect(mockMessages).toHaveLength(1);
+        expect(mockMessages[0].text).toContain(mockLogDetails.errorInternal);
+        expect(mockMessages[0].details).toBe(primaryError);
+
+        // Check return value
+        expect(result).toEqual({success: false});
+    });
+
+}); // End describe('dispatchEventWithCatch')

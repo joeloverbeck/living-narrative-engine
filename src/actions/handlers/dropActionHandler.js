@@ -1,147 +1,113 @@
 // src/actions/handlers/dropActionHandler.js
 
+// --- Core Components ---
+import {InventoryComponent} from '../../components/inventoryComponent.js';
+import {ItemComponent} from "../../components/itemComponent.js"; // AC: Imported
+import {PositionComponent} from '../../components/positionComponent.js'; // Needed for currentLocationId if context missing
+
+// --- Utilities and Services ---
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+// AC: Import required utilities
+import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
+
+// --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../actionExecutionUtils.js').HandleActionWithOptions} HandleActionWithOptions */
+/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
 
-// --- Standard Imports ---
-import {InventoryComponent} from '../../components/inventoryComponent.js';
-import {ItemComponent} from "../../components/itemComponent.js";
-import {resolveTargetEntity} from '../../services/entityFinderService.js';
-import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
-// --- Refactored Imports ---
-import {TARGET_MESSAGES} from '../../utils/messages.js'; // Import TARGET_MESSAGES
+/** @typedef {import('../../types/eventTypes.js').ItemDropAttemptedEventPayload} ItemDropAttemptedEventPayload */
 
 /**
  * Handles the 'drop' action ('core:drop'). Allows the player to attempt
  * to drop items from their inventory into the current location by dispatching
  * an event for a system to handle the actual state changes.
- * Uses the updated resolveTargetEntity service.
+ * Refactored to use handleActionWithTargetResolution and dispatchEventWithCatch.
  * @param {ActionContext} context - The context for the action.
- * @returns {ActionResult} The result of the action attempt.
+ * @returns {Promise<ActionResult>} The result of the action attempt.
  */
-export function executeDrop(context) {
-    const {playerEntity, currentLocation, dispatch, parsedCommand} = context;
-    const messages = [];
-    const internalErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR; // Keep for critical errors
+export async function executeDrop(context) {
+    const {playerEntity, currentLocation, dispatch} = context; // dispatch needed for onFoundUnique
 
     // --- Basic Validation ---
-    if (!playerEntity || !currentLocation) {
-        console.error("executeDrop: Missing player or location in context.");
-        dispatch('ui:message_display', {text: internalErrorMsg, type: 'error'});
-        return {success: false, messages: [{text: internalErrorMsg, type: 'error'}]};
+    if (!playerEntity) {
+        console.error("executeDrop: Missing player in context.");
+        // Keep dispatch for critical errors, though handleAction... often covers user feedback
+        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        return {success: false, messages: [{text: "Critical: Missing player entity.", type: 'internal_error'}]};
     }
-    messages.push({
-        text: `Context validated: Player ${playerEntity.id}, Location ${currentLocation.id}`,
-        type: 'internal'
-    });
-
-    // --- Validate required command part ---
-    if (!validateRequiredCommandPart(context, 'drop', 'directObjectPhrase')) {
-        // Validation failed, message dispatched by utility
-        return {success: false, messages: [], newState: undefined};
+    // Get location ID safely
+    const playerPos = playerEntity.getComponent(PositionComponent);
+    const locationId = currentLocation?.id ?? playerPos?.locationId;
+    if (!locationId) {
+        console.error("executeDrop: Missing location in context and player position component.");
+        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        return {success: false, messages: [{text: "Critical: Missing location ID.", type: 'internal_error'}]};
     }
-    messages.push({text: `Required command part validated for 'drop'.`, type: 'internal'});
-
-    const targetName = parsedCommand.directObjectPhrase;
-    messages.push({text: `Target name from parsed command: '${targetName}'.`, type: 'internal'});
-
-    // --- Get Player Inventory (Check existence) ---
-    const playerInventory = playerEntity.getComponent(InventoryComponent);
-    if (!playerInventory) {
+    // Check for Inventory Component early - handleAction requires valid scope context
+    if (!playerEntity.hasComponent(InventoryComponent)) {
         const componentErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory');
         dispatch('ui:message_display', {text: componentErrorMsg, type: 'error'});
         console.error("executeDrop: Player entity missing InventoryComponent.");
-        return {success: false, messages: [{text: componentErrorMsg, type: 'error'}]};
+        return {success: false, messages: [{text: "Player missing InventoryComponent.", type: 'internal_error'}]};
     }
-    // No need to check if empty here, FILTER_EMPTY status will handle it
-    messages.push({text: `Player inventory component found.`, type: 'internal'});
 
-    // --- 1. Resolve Target Item using Service ---
-    // Removed notFoundMessageKey
-    const resolution = resolveTargetEntity(context, {
-        scope: 'inventory',
-        requiredComponents: [ItemComponent],
-        // actionVerb: 'drop', // Kept for potential future use
-        targetName: targetName,
-    });
 
-    // --- 2. Handle Resolver Result ---
-    switch (resolution.status) {
-        case 'FOUND_UNIQUE': {
-            const targetItemEntity = resolution.entity;
-            const targetItemId = targetItemEntity.id;
-            const playerId = playerEntity.id;
-            const locationId = currentLocation.id;
+    /**
+     * Callback executed when a unique item is found in the inventory.
+     * @param {ActionContext} innerContext - The action context passed through.
+     * @param {Entity} targetItemEntity - The uniquely resolved item entity.
+     * @param {ActionMessage[]} messages - The array of messages accumulated so far by handleActionWithTargetResolution.
+     * @returns {ActionResult} - The result of the drop attempt dispatch.
+     */
+    const onFoundUnique = (innerContext, targetItemEntity, messages) => {
+        const targetItemId = targetItemEntity.id;
+        const playerId = innerContext.playerEntity.id;
+        const itemDisplayName = getDisplayName(targetItemEntity); // For logging
 
-            messages.push({text: `Resolved target '${targetName}' to item ${targetItemId}.`, type: 'internal'});
+        // AC: Uses dispatchEventWithCatch inside callback for event:item_drop_attempted
+        /** @type {ItemDropAttemptedEventPayload} */
+        const eventPayload = {
+            playerId: playerId,
+            itemInstanceId: targetItemId,
+            locationId: locationId // Use locationId determined earlier
+        };
 
-            // --- 3. Validation Success - Dispatch Event for System Handling ---
-            try {
-                dispatch('event:item_drop_attempted', {
-                    playerId: playerId,
-                    itemInstanceId: targetItemId,
-                    locationId: locationId
-                });
-                messages.push({
-                    text: `Dispatched event:item_drop_attempted for player ${playerId}, item ${targetItemId}, location ${locationId}`,
-                    type: 'internal'
-                });
-                // Return success (validation passed, event dispatched)
-                return {success: true, messages: messages, newState: undefined};
-            } catch (e) {
-                // Log critical error if dispatch fails
-                console.error("executeDrop: CRITICAL - Failed to dispatch event:item_drop_attempted:", e);
-                // Provide an internal error message to the user
-                dispatch('ui:message_display', {text: internalErrorMsg, type: 'error'});
-                messages.push({
-                    text: `CRITICAL: Failed to dispatch event:item_drop_attempted. Error: ${e.message}`,
-                    type: 'error'
-                });
-                // Return failure
-                return {success: false, messages: messages};
+        const dispatchResult = dispatchEventWithCatch(
+            innerContext,
+            'event:item_drop_attempted',
+            eventPayload,
+            messages, // Pass messages array for internal logging
+            {
+                success: `Dispatched event:item_drop_attempted for ${itemDisplayName} (${targetItemId}) to location ${locationId}`,
+                errorUser: TARGET_MESSAGES.INTERNAL_ERROR, // User message on dispatch failure
+                errorInternal: `Failed to dispatch event:item_drop_attempted for ${itemDisplayName} (${targetItemId}) to location ${locationId}.` // Internal log on failure
             }
-        }
+        );
 
-        case 'NOT_FOUND':
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetName), type: 'info'});
-            messages.push({
-                text: `Item resolution failed for target '${targetName}', reason: NOT_FOUND.`,
-                type: 'internal'
-            });
-            return {success: false, messages: messages};
+        // AC: Callback returns correct ActionResult
+        // handleActionWithTargetResolution will combine messages.
+        return {
+            success: dispatchResult.success,
+            messages: [], // Messages are mutated directly by dispatchEventWithCatch
+            newState: undefined
+        };
+    };
 
-        case 'AMBIGUOUS':
-            const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('drop', targetName, resolution.candidates);
-            dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
-            messages.push({
-                text: `Item resolution failed for target '${targetName}', reason: AMBIGUOUS.`,
-                type: 'internal'
-            });
-            return {success: false, messages: messages};
+    // --- Configure and Call handleActionWithTargetResolution ---
+    /** @type {HandleActionWithOptions} */
+    const options = {
+        // AC: Imports and calls handleActionWithTargetResolution with correct options
+        scope: 'inventory',                     // Scope: Check player's inventory
+        requiredComponents: [ItemComponent],    // Must be an item
+        commandPart: 'directObjectPhrase',      // Get item name from DO
+        actionVerb: 'drop',                     // Action verb for messages
+        onFoundUnique: onFoundUnique,           // AC: Original FOUND_UNIQUE logic moved to callback
+        // Failure messages use defaults from TARGET_MESSAGES (NOT_FOUND_INVENTORY, AMBIGUOUS_PROMPT, SCOPE_EMPTY_PERSONAL -> NOTHING_CARRIED)
+        // No custom overrides needed here unless specific wording is desired.
+    };
 
-        case 'FILTER_EMPTY':
-            // Inventory is empty or contains no items matching ItemComponent (shouldn't happen if inventory exists)
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'});
-            messages.push({
-                text: `Item resolution failed for target '${targetName}', reason: FILTER_EMPTY (Inventory empty).`,
-                type: 'internal'
-            });
-            return {success: false, messages: messages};
-
-        case 'INVALID_INPUT':
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-            messages.push({
-                text: `Item resolution failed for target '${targetName}', reason: INVALID_INPUT.`,
-                type: 'internal_error'
-            });
-            console.error(`executeDrop: resolveTargetEntity returned INVALID_INPUT for target '${targetName}'. Context/Config issue?`);
-            return {success: false, messages: messages};
-
-        default:
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-            console.error(`executeDrop: Unhandled resolution status: ${resolution.status}`);
-            messages.push({text: `Unhandled status: ${resolution.status}`, type: 'internal_error'});
-            return {success: false, messages};
-    }
+    // AC: Resolution switch statement removed
+    return await handleActionWithTargetResolution(context, options);
 }

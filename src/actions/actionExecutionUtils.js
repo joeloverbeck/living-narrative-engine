@@ -192,3 +192,72 @@ export async function handleActionWithTargetResolution(context, options) {
         }
     }
 }
+
+/**
+ * @typedef {object} DispatchLogDetails
+ * @property {string} success - Message template for internal success log. Should include placeholder for event name/payload if desired.
+ * @property {string | ((error: Error) => string)} errorUser - Message template or function to generate the user-facing error message.
+ * @property {string} errorInternal - Base message template for internal error log. Should include placeholder for event name/payload if desired.
+ */
+
+/**
+ * Dispatches an event within a try...catch block, handling errors,
+ * logging results internally, and providing user feedback on failure.
+ * Mutates the provided messages array.
+ *
+ * @param {ActionContext} context - The action context, containing the dispatch function.
+ * @param {string} eventName - The name of the event to dispatch.
+ * @param {any} payload - The payload for the event.
+ * @param {ActionMessage[]} messages - The array to store internal log messages.
+ * @param {DispatchLogDetails} logDetails - Configuration for logging and error messages.
+ * @returns {{ success: boolean }} - Indicates whether the dispatch was successful.
+ */
+export function dispatchEventWithCatch(context, eventName, payload, messages, logDetails) {
+    const {dispatch} = context;
+
+    if (!dispatch || typeof dispatch !== 'function') {
+        console.error(`dispatchEventWithCatch: context.dispatch is missing or not a function.`);
+        // Attempt to add an internal error message even if dispatch fails
+        messages.push({
+            text: `Internal Error: context.dispatch is missing for event ${eventName}`,
+            type: 'internal_error'
+        });
+        return {success: false};
+    }
+
+    try {
+        dispatch(eventName, payload);
+
+        // Log success internally
+        messages.push({text: logDetails.success, type: 'internal'}); // AC: Add success message
+        console.debug(`dispatchEventWithCatch: Successfully dispatched '${eventName}'`); // Optional debug log
+        return {success: true}; // AC: Return true on success
+
+    } catch (error) {
+        // Log error to console
+        console.error(`dispatchEventWithCatch: Error dispatching event '${eventName}':`, error); // AC: Log caught error
+
+        // Determine user-facing error message
+        const userErrorMessage = typeof logDetails.errorUser === 'function'
+            ? logDetails.errorUser(error)
+            : logDetails.errorUser;
+
+        // Dispatch user-facing error message
+        // Safety check: Ensure ui:message_display dispatch doesn't cause infinite loop if IT fails
+        try {
+            dispatch('ui:message_display', {text: userErrorMessage, type: 'error'}); // AC: Dispatch user error message
+        } catch (uiError) {
+            console.error(`dispatchEventWithCatch: CRITICAL - Failed to dispatch ui:message_display after catching error for event '${eventName}':`, uiError);
+        }
+
+
+        // Log internal error message
+        messages.push({ // AC: Add detailed error message
+            text: `${logDetails.errorInternal} Error: ${error.message}`,
+            type: 'error', // Use 'error' type for internal logs of failures
+            details: error // Optionally include the error object
+        });
+
+        return {success: false}; // AC: Return false on failure
+    }
+} // AC: Function implemented and exported (assuming file structure)

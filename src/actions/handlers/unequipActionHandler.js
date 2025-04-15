@@ -1,184 +1,213 @@
 // src/actions/handlers/unequipActionHandler.js
 
-// --- Standard Imports ---
+// --- Core Components ---
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
-import {resolveTargetEntity} from '../../services/entityFinderService.js';
+// ItemComponent might be needed if we resolve by item name, but utilities handle it
+// import { ItemComponent } from "../../components/itemComponent.js";
+
+// --- Utilities and Services ---
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
-// --- Refactored Imports ---
-import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js'; // Import TARGET_MESSAGES and getDisplayName
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+// --- Refactored Imports (Ticket 9) ---
+import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
 
-
+// --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
-
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../actionExecutionUtils.js').HandleActionWithOptions} HandleActionWithOptions */
+/** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
 
-export function executeUnequip(context) {
+/** @typedef {import('../../types/eventTypes.js').ItemUnequipAttemptedEventPayload} ItemUnequipAttemptedEventPayload */
+
+
+/**
+ * Helper to attempt converting user input (e.g., "main hand", "head") to a canonical slot ID.
+ * Returns the potential slot ID (e.g., "core:slot_main_hand") or null if input is unlikely to be a slot name.
+ * @param {string} input - The user's target name input.
+ * @returns {string | null} - The potential slot ID or null.
+ */
+function mapInputToSlotId(input) {
+    if (!input || typeof input !== 'string') return null;
+    const cleanedInput = input.toLowerCase().trim().replace(/\s+/g, '_');
+    // Basic check: does it look like a plausible slot name fragment?
+    // You might have a more robust mapping/validation here based on your game's slots.
+    if (['head', 'body', 'legs', 'feet', 'main_hand', 'off_hand', 'ranged', 'amulet', 'ring1', 'ring2'].includes(cleanedInput)) {
+        return `core:slot_${cleanedInput}`;
+    }
+    // Also allow direct canonical IDs like "core:slot_head"
+    if (cleanedInput.startsWith('core:slot_')) {
+        return cleanedInput;
+    }
+    return null; // Input doesn't look like a slot name/ID
+}
+
+/**
+ * Handles the 'core:unequip' action. Allows the player to unequip items
+ * either by specifying the slot name or the item name.
+ * Refactored to use handleActionWithTargetResolution for item name resolution.
+ * @param {ActionContext} context
+ * @returns {Promise<ActionResult>}
+ */
+export async function executeUnequip(context) {
     const {playerEntity, entityManager, dispatch, parsedCommand} = context;
+    /** @type {ActionMessage[]} */
     const messages = [];
 
-    // --- Validate required command part ---
+    // --- 1. Validate Required Command Part ---
     if (!validateRequiredCommandPart(context, 'unequip', 'directObjectPhrase')) {
         return {success: false, messages: [], newState: undefined};
     }
-
     const targetName = parsedCommand.directObjectPhrase; // Could be slot name or item name
 
+    // --- 2. Check Essential Player Components ---
     const playerInventory = playerEntity.getComponent(InventoryComponent);
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
-
-    // --- Internal Error: Missing Essential Components ---
     if (!playerInventory || !playerEquipment) {
         const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment');
         dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        console.error("unequipActionHandler: Player entity missing Inventory/Equipment components.");
-        return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
+        console.error("executeUnequip: Player entity missing Inventory/Equipment components.");
+        messages.push({text: "Internal Error: Player missing Inventory/Equipment components.", type: 'internal_error'});
+        return {success: false, messages};
     }
 
-    let slotIdToUnequip = null;
-    let itemInstanceToUnequip = null; // The resolved entity instance
-
-    // --- Strategy: Check slot name first, then resolve by item name ---
-
-    // 1. Try matching slot name
-    const potentialSlotId = `core:slot_${targetName.toLowerCase().replace(/\s+/g, '_')}`;
-    if (playerEquipment.hasSlot(potentialSlotId)) {
+    // --- 3. Attempt Resolution via Slot Name First (AC 1) ---
+    const potentialSlotId = mapInputToSlotId(targetName);
+    if (potentialSlotId && playerEquipment.hasSlot(potentialSlotId)) {
+        messages.push({
+            text: `Unequip intent: Identified '${targetName}' as potential slot ID '${potentialSlotId}'.`,
+            type: 'internal'
+        });
         const itemIdInSlot = playerEquipment.getEquippedItem(potentialSlotId);
+
         if (itemIdInSlot) {
-            // Found an item in the explicitly named slot
-            slotIdToUnequip = potentialSlotId;
-            itemInstanceToUnequip = entityManager.getEntityInstance(itemIdInSlot);
+            // --- Slot Found & Occupied (AC 2) ---
+            const itemInstanceToUnequip = entityManager.getEntityInstance(itemIdInSlot);
             if (!itemInstanceToUnequip) {
-                console.error(`unequipActionHandler: Found item ID ${itemIdInSlot} in slot ${slotIdToUnequip} but instance is missing!`);
+                console.error(`executeUnequip: Found item ID ${itemIdInSlot} in slot ${potentialSlotId} but instance is missing!`);
                 const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Equipped item instance missing)";
                 dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-                return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
-            }
-            console.debug(`unequipActionHandler: Matched slot name '${targetName}' to slot ${slotIdToUnequip}`);
-            // Proceed to step 3 (Dispatch Event)
-        } else {
-            // Slot exists but is empty
-            const errorMsg = TARGET_MESSAGES.UNEQUIP_SLOT_EMPTY(targetName); // Pass the user-provided slot name
-            dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
-            messages.push({
-                text: `Unequip failed: Slot '${targetName}' (${potentialSlotId}) is empty.`,
-                type: 'internal'
-            });
-            return {success: false, messages: messages, newState: undefined};
-        }
-    } else {
-        // --- 2. If not a slot name, Resolve Target Item by Name using Service ---
-        console.debug(`unequipActionHandler: '${targetName}' not a direct slot match, resolving equipped item name.`);
-        messages.push({text: `Attempting to resolve equipped item by name: '${targetName}'.`, type: 'internal'});
-
-        // Removed notFoundMessageKey
-        const resolution = resolveTargetEntity(context, {
-            scope: 'equipment', // Search equipped items
-            requiredComponents: [], // Any equipped item matches
-            // actionVerb: 'unequip', // Keep for potential use
-            targetName: targetName,
-        });
-
-        // --- Handle Resolver Result (within else block) ---
-        switch (resolution.status) {
-            case 'FOUND_UNIQUE':
-                itemInstanceToUnequip = resolution.entity;
-                // Now find the slot for this resolved item
-                const equippedItemsMap = playerEquipment.getAllEquipped();
-                slotIdToUnequip = Object.keys(equippedItemsMap).find(slotId => equippedItemsMap[slotId] === itemInstanceToUnequip.id);
-
-                if (!slotIdToUnequip) {
-                    console.error(`unequipActionHandler: Found unique item ${itemInstanceToUnequip.id} ('${getDisplayName(itemInstanceToUnequip)}') by name but couldn't find its slot!`);
-                    const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Cannot find resolved item's slot)";
-                    dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-                    return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
-                }
-                console.debug(`unequipActionHandler: Matched item name '${targetName}' to item ${itemInstanceToUnequip.id} in slot ${slotIdToUnequip}`);
                 messages.push({
-                    text: `Resolved item name '${targetName}' to ${itemInstanceToUnequip.id} in slot ${slotIdToUnequip}.`,
-                    type: 'internal'
-                });
-                // Proceed to step 3 (Dispatch Event)
-                break; // Break from switch, execution continues below
-
-            case 'NOT_FOUND':
-                dispatch('ui:message_display', {
-                    text: TARGET_MESSAGES.NOT_FOUND_UNEQUIPPABLE(targetName),
-                    type: 'info'
-                });
-                messages.push({
-                    text: `Unequip resolution failed for '${targetName}', reason: NOT_FOUND.`,
-                    type: 'internal'
-                });
-                return {success: false, messages: messages, newState: undefined}; // Return directly
-
-            case 'AMBIGUOUS':
-                const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('unequip', targetName, resolution.candidates);
-                dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
-                messages.push({
-                    text: `Unequip resolution failed for '${targetName}', reason: AMBIGUOUS.`,
-                    type: 'internal'
-                });
-                return {success: false, messages: messages, newState: undefined}; // Return directly
-
-            case 'FILTER_EMPTY':
-                // No items equipped at all
-                dispatch('ui:message_display', {text: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('unequip'), type: 'info'}); // Or a more specific "nothing equipped" message
-                messages.push({
-                    text: `Unequip resolution failed for '${targetName}', reason: FILTER_EMPTY (Nothing equipped).`,
-                    type: 'internal'
-                });
-                return {success: false, messages: messages, newState: undefined}; // Return directly
-
-            case 'INVALID_INPUT':
-                dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-                messages.push({
-                    text: `Unequip resolution failed for '${targetName}', reason: INVALID_INPUT.`,
+                    text: `Internal Error: Instance for equipped item ${itemIdInSlot} missing.`,
                     type: 'internal_error'
                 });
-                console.error(`executeUnequip: resolveTargetEntity returned INVALID_INPUT for target '${targetName}'. Context/Config issue?`);
-                return {success: false, messages: messages, newState: undefined}; // Return directly
+                return {success: false, messages};
+            }
+            const itemName = getDisplayName(itemInstanceToUnequip);
 
-            default:
-                dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-                console.error(`executeUnequip: Unhandled resolution status: ${resolution.status}`);
-                messages.push({text: `Unhandled status: ${resolution.status}`, type: 'internal_error'});
-                return {success: false, messages: messages, newState: undefined}; // Return directly
+            // Use dispatchEventWithCatch for the event dispatch
+            /** @type {ItemUnequipAttemptedEventPayload} */
+            const eventPayload = {
+                playerEntity: playerEntity,
+                itemInstanceToUnequip: itemInstanceToUnequip,
+                slotIdToUnequip: potentialSlotId
+            };
+
+            const dispatchResult = dispatchEventWithCatch(
+                context,
+                'event:item_unequip_attempted',
+                eventPayload,
+                messages,
+                {
+                    success: `Dispatched event:item_unequip_attempted for ${itemName} (${itemIdInSlot}) from slot ${potentialSlotId}`,
+                    errorUser: TARGET_MESSAGES.INTERNAL_ERROR,
+                    errorInternal: `Failed to dispatch event:item_unequip_attempted for ${itemName} (${itemIdInSlot}) from slot ${potentialSlotId}.`
+                }
+            );
+            // Return based on dispatch success. Messages are mutated by the utility.
+            return {success: dispatchResult.success, messages};
+
+        } else {
+            // --- Slot Found & Empty (AC 3) ---
+            const errorMsg = TARGET_MESSAGES.UNEQUIP_SLOT_EMPTY(targetName); // Pass user input for message
+            dispatch('ui:message_display', {text: errorMsg, type: 'info'}); // Typically 'info' or 'warning' for empty slot
+            messages.push({
+                text: `Unequip failed: Slot '${potentialSlotId}' specified by '${targetName}' is empty.`,
+                type: 'internal'
+            });
+            return {success: false, messages};
         }
-        // If switch case was 'FOUND_UNIQUE', execution continues here
-    }
-
-    // --- 3. Validation Complete - Fire Unequip Attempt Event ---
-    // This block is reached if either:
-    // a) Slot name matched an equipped item (itemInstanceToUnequip and slotIdToUnequip are set).
-    // b) Item name resolved uniquely to an equipped item (itemInstanceToUnequip and slotIdToUnequip are set).
-
-    if (!itemInstanceToUnequip || !slotIdToUnequip) {
-        // Should not happen if logic above is correct, but safety check.
-        console.error("unequipActionHandler: Reached dispatch phase but item or slot ID is missing!");
-        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-        return {success: false, messages: messages, newState: undefined};
-    }
-
-    try {
-        dispatch('event:item_unequip_attempted', {
-            playerEntity: playerEntity,
-            itemInstanceToUnequip: itemInstanceToUnequip,
-            slotIdToUnequip: slotIdToUnequip
-        });
+    } else {
+        // --- 4. Input is Not a Slot Name - Delegate to Utility for Item Name Resolution (AC 4) ---
         messages.push({
-            text: `Dispatched event:item_unequip_attempted for ${itemInstanceToUnequip.id} from ${slotIdToUnequip}`,
-            type: "internal"
+            text: `Unequip intent: '${targetName}' not a known slot, resolving equipped item by name.`,
+            type: 'internal'
         });
-        console.debug(`unequipActionHandler: Dispatched event:item_unequip_attempted for ${itemInstanceToUnequip.id}`);
-        return {success: true, messages, newState: undefined}; // Validation and dispatch successful
-    } catch (e) {
-        // Log internal error if dispatch fails
-        console.error("unequipActionHandler: Failed to dispatch event:item_unequip_attempted:", e);
-        const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Event dispatch failed)";
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
-        messages.push({text: "Internal error: Failed to dispatch item_unequip_attempted event.", type: 'error'});
-        return {success: false, messages, newState: undefined};
+
+        /**
+         * onFoundUnique Callback for Item Resolution (AC 5)
+         * @param {ActionContext} innerContext
+         * @param {Entity} targetItemEntity - The resolved equipped item.
+         * @param {ActionMessage[]} accumulatedMessages - Messages from handleAction...
+         * @returns {ActionResult}
+         */
+        const onFoundUnique = (innerContext, targetItemEntity, accumulatedMessages) => {
+            const targetItemId = targetItemEntity.id;
+            const targetItemName = getDisplayName(targetItemEntity);
+
+            // Find the slot ID for the resolved item
+            const equippedItemsMap = playerEquipment.getAllEquipped(); // Use the component from the outer scope
+            const slotIdToUnequip = Object.keys(equippedItemsMap).find(slotId => equippedItemsMap[slotId] === targetItemId);
+
+            if (!slotIdToUnequip) {
+                // This indicates an inconsistency - item resolved in equipment scope but slot not found
+                console.error(`executeUnequip (onFoundUnique): Found unique item ${targetItemId} ('${targetItemName}') but failed to find its slot in EquipmentComponent!`);
+                const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Cannot locate resolved item's slot)";
+                innerContext.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                accumulatedMessages.push({
+                    text: `Internal Error: Slot not found for resolved item ${targetItemId}.`,
+                    type: 'internal_error'
+                });
+                return {success: false, messages: []}; // Return failure
+            }
+
+            accumulatedMessages.push({
+                text: `Resolved item ${targetItemId} ('${targetItemName}') found in slot ${slotIdToUnequip}.`,
+                type: 'internal'
+            });
+
+            // Use dispatchEventWithCatch for the event dispatch (AC 5 & 6)
+            /** @type {ItemUnequipAttemptedEventPayload} */
+            const eventPayload = {
+                playerEntity: innerContext.playerEntity,
+                itemInstanceToUnequip: targetItemEntity,
+                slotIdToUnequip: slotIdToUnequip
+            };
+
+            const dispatchResult = dispatchEventWithCatch(
+                innerContext,
+                'event:item_unequip_attempted',
+                eventPayload,
+                accumulatedMessages, // Pass messages for internal logging
+                {
+                    success: `Dispatched event:item_unequip_attempted for ${targetItemName} (${targetItemId}) from slot ${slotIdToUnequip}`,
+                    errorUser: TARGET_MESSAGES.INTERNAL_ERROR,
+                    errorInternal: `Failed to dispatch event:item_unequip_attempted for ${targetItemName} (${targetItemId}) from slot ${slotIdToUnequip}.`
+                }
+            );
+
+            // Return result based on dispatch success. handleAction... merges messages.
+            return {success: dispatchResult.success, messages: []};
+        };
+
+        // Configure options for handleActionWithTargetResolution
+        /** @type {HandleActionWithOptions} */
+        const options = {
+            scope: 'equipment', // AC 4: Scope
+            requiredComponents: [], // AC 4: Any equipped item
+            commandPart: 'directObjectPhrase', // AC 4: Command Part
+            actionVerb: 'unequip', // AC 4: Action Verb
+            onFoundUnique: onFoundUnique, // AC 4 & 5: Callback
+            failureMessages: { // AC 4: Failure Messages
+                // Override default 'inventory' not found with specific 'unequip' message
+                notFound: TARGET_MESSAGES.NOT_FOUND_UNEQUIPPABLE,
+                // Use default AMBIGUOUS_PROMPT
+                // Use default SCOPE_EMPTY_PERSONAL for 'equipment' scope (nothing equipped)
+            },
+        };
+
+        // Call the utility and return its result directly
+        return await handleActionWithTargetResolution(context, options);
     }
 }
