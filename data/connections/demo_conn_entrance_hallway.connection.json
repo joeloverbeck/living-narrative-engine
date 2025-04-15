@@ -1,0 +1,13 @@
+{
+  "id": "demo:conn_entrance_hallway",
+  "components": {
+    "PassageDetails": {
+      "locationAId": "demo:room_entrance",
+      "locationBId": "demo:room_hallway",
+      "directionAtoB": "north",
+      "directionBtoA": "south",
+      "blockerEntityId": null,
+      "type": "passage"
+    }
+  }
+}

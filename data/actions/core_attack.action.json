@@ -1,0 +1,18 @@
+{
+  "id": "core:attack",
+  "name": "Attack",
+  "description": "Perform a physical attack against a target.",
+  "commands": [
+    "attack",
+    "hit",
+    "fight",
+    "strike"
+  ],
+  "target_type": "entity_in_room",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "HealthComponent"
+    ]
+  }
+}

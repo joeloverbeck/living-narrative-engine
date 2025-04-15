@@ -1,0 +1,58 @@
+{
+  "id": "demo:item_key",
+  "components": {
+    "Name": {
+      "value": "Iron Key"
+    },
+    "Description": {
+      "text": "A heavy, rusted iron key. It looks like it fits a sturdy lock."
+    },
+    "Position": {
+      "locationId": "demo:room_treasure"
+    },
+    "Item": {
+      "tags": [
+        "key",
+        "iron"
+      ],
+      "stackable": false,
+      "value": 5
+    },
+    "Usable": {
+      "usability_conditions": [
+        {
+          "condition_type": "player_in_location",
+          "location_id": "demo:room_exit",
+          "failure_message": "You need to be near the door to use the key."
+        }
+      ],
+      "target_required": true,
+      "target_conditions": [
+        {
+          "condition_type": "target_has_property",
+          "property_path": "id",
+          "expected_value": "demo:exit_north_door",
+          "failure_message": "This key doesn't seem to fit this lock."
+        },
+        {
+          "condition_type": "target_has_property",
+          "property_path": "PassageDetails.state",
+          "expected_value": "locked",
+          "failure_message": "The door is already unlocked."
+        }
+      ],
+      "effects": [
+        {
+          "type": "trigger_event",
+          "parameters": {
+            "eventName": "event:connection_unlock_attempt",
+            "payload": {}
+          }
+        }
+      ],
+      "consume_on_use": false,
+      "success_message": "You insert the iron key into the lock. You hear a click as the lock disengages.",
+      "failure_message_default": "You need to use the key on the proper door."
+    }
+  }
+}

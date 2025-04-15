@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/pushable.schema.json",
+  "title": "Pushable Component Schema",
+  "description": "Defines properties for an entity that can be pushed.",
+  "type": "object",
+  "properties": {
+    "isHeavy": {
+      "type": "boolean",
+      "description": "Indicates if special effort (e.g., strength check) might be needed to push the entity.",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}

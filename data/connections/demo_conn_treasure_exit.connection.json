@@ -1,0 +1,13 @@
+{
+  "id": "demo:conn_treasure_exit",
+  "components": {
+    "PassageDetails": {
+      "locationAId": "demo:room_treasure",
+      "locationBId": "demo:room_exit",
+      "directionAtoB": "north",
+      "directionBtoA": "south",
+      "blockerEntityId": null,
+      "type": "passage"
+    }
+  }
+}

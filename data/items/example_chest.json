@@ -1,0 +1,25 @@
+{
+  "id": "demo:example_chest",
+  "components": {
+    "Name": {
+      "value": "Example Chest"
+    },
+    "Description": {
+      "text": "An old wooden chest. It seems unlocked."
+    },
+    "Openable": {
+      "isOpen": false
+    },
+    "Lockable": {
+      "isLocked": false,
+      "keyId": null
+    },
+    "Container": {
+      "capacity": 10,
+      "contains": [
+        "demo:item_potion_heal"
+      ],
+      "allowedTags": []
+    }
+  }
+}

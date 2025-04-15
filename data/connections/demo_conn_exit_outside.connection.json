@@ -1,0 +1,13 @@
+{
+  "id": "demo:conn_exit_outside",
+  "components": {
+    "PassageDetails": {
+      "locationAId": "demo:room_exit",
+      "locationBId": "demo:room_outside",
+      "directionAtoB": "north",
+      "directionBtoA": "south",
+      "blockerEntityId": "demo:door_exit_north",
+      "type": "doorway"
+    }
+  }
+}

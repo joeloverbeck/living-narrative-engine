@@ -1,0 +1,16 @@
+{
+  "id": "core:unequip",
+  "name": "Unequip",
+  "description": "Unequip an item you are wearing or wielding.",
+  "commands": [
+    "unequip",
+    "remove"
+  ],
+  "target_type": "item_in_equipment",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "EquippableComponent"
+    ]
+  }
+}
