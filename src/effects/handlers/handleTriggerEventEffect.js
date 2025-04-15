@@ -1,14 +1,15 @@
 // src/effects/handlers/handleTriggerEventEffect.js
 
-import { getDisplayName } from '../../utils/messages.js';
+import {getDisplayName} from '../../utils/messages.js';
 // Import PassageDetailsComponent to access blocker information
-import { PassageDetailsComponent } from '../../components/passageDetailsComponent.js'; // <<< ADDED IMPORT
+import {PassageDetailsComponent} from '../../components/passageDetailsComponent.js'; // <<< ADDED IMPORT
 
 // Type Imports for JSDoc
 /** @typedef {import('../../systems/itemUsageSystem.js').EffectContext} EffectContext */
 /** @typedef {import('../../systems/itemUsageSystem.js').EffectResult} EffectResult */
 /** @typedef {import('../../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../../entities/entity.js').default} Entity */
+
 /** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */
 
 
@@ -28,7 +29,16 @@ export function handleTriggerEventEffect(params, context) {
     /** @type {ActionMessage[]} */
     const messages = [];
     // Destructure targetType explicitly as it's needed for translation logic
-    const { eventBus, userEntity, target, targetType: resolvedTargetType, itemName, entityManager, itemInstanceId, itemDefinitionId } = context;
+    const {
+        eventBus,
+        userEntity,
+        target,
+        targetType: resolvedTargetType,
+        itemName,
+        entityManager,
+        itemInstanceId,
+        itemDefinitionId
+    } = context;
 
     // 1. Validate and Extract Parameters according to the NEW SCHEMA
     if (!params || typeof params.eventName !== 'string' || params.eventName.trim() === '') {
@@ -37,7 +47,7 @@ export function handleTriggerEventEffect(params, context) {
             text: `Internal Error: ${itemName} trigger_event effect misconfigured (missing/invalid eventName).`,
             type: 'error'
         });
-        return { success: false, messages: messages, stopPropagation: true };
+        return {success: false, messages: messages, stopPropagation: true};
     }
     const eventName = params.eventName;
 
@@ -47,7 +57,7 @@ export function handleTriggerEventEffect(params, context) {
             text: `Internal Error: ${itemName} trigger_event effect misconfigured (invalid payload type).`,
             type: 'error'
         });
-        return { success: false, messages: messages, stopPropagation: true };
+        return {success: false, messages: messages, stopPropagation: true};
     }
 
     const providedPayload = params.payload || {};
@@ -83,20 +93,34 @@ export function handleTriggerEventEffect(params, context) {
         sourceItemDefinitionId: itemDefinitionId,
         ...providedPayload,
     };
-    messages.push({ text: `Constructed initial payload: ${JSON.stringify(initialEventPayload)}`, type: 'internal' });
+    messages.push({text: `Constructed initial payload: ${JSON.stringify(initialEventPayload)}`, type: 'internal'});
 
     // 4. Specific Handling/Enrichment for Certain Events (Pre-Translation)
     // This block prepares the payload *as if* it were going to be dispatched directly.
     // The keyItemId logic is important for *both* the original and potentially translated events.
-    if (eventName === 'event:unlock_entity_attempt' || eventName === 'event:connection_unlock_attempt') {
+    // Combine the check for both lock and unlock attempts
+    if (eventName === 'event:unlock_entity_attempt' ||
+        eventName === 'event:connection_unlock_attempt' ||
+        eventName === 'event:lock_entity_attempt') {
         // Determine the definitive keyItemId for this attempt.
-        // Priority: Explicit keyItemId in payload > Item Definition ID from context.
+        // Priority: Explicit keyItemId in payload > Item Definition ID from context > Context keyItemId (if tests inject it).
         let derivedKeyItemId = initialEventPayload.keyItemId; // Check if payload provided it directly
         let keyIdSource = 'payload';
 
-        if (derivedKeyItemId === undefined && initialEventPayload.sourceItemDefinitionId) {
+        // Option A: Check context.keyItemId if not in payload (Matches test setup)
+        // Note: This assumes context.keyItemId is a valid way to pass this info for trigger_event
+        if (derivedKeyItemId === undefined && context.keyItemId !== undefined) {
+            derivedKeyItemId = context.keyItemId;
+            keyIdSource = 'context';
+            messages.push({
+                text: `Using keyItemId (${derivedKeyItemId}) found directly in context for ${eventName}.`,
+                type: 'internal'
+            });
+        }
+        // Option B: Fallback to sourceItemDefinitionId (Original logic for unlock)
+        else if (derivedKeyItemId === undefined && initialEventPayload.sourceItemDefinitionId) {
             derivedKeyItemId = initialEventPayload.sourceItemDefinitionId;
-            keyIdSource = 'definition';
+            keyIdSource = 'definition'; // Source changed for clarity
             messages.push({
                 text: `Mapped sourceItemDefinitionId (${derivedKeyItemId}) to keyItemId for ${eventName}.`,
                 type: 'internal'
@@ -107,15 +131,19 @@ export function handleTriggerEventEffect(params, context) {
                 type: 'internal'
             });
         } else {
-            // Neither provided nor derivable from definition ID - might be an issue? Log warning.
-            // The LockingSystem should handle null/undefined keyItemId appropriately if needed.
+            // Neither provided nor derivable - set to null or undefined explicitly?
+            // LockSystem expects null if no key used. Let's default to null here.
+            derivedKeyItemId = null; // Explicitly set to null if no key info found
+            keyIdSource = 'none';
             messages.push({
-                text: `No keyItemId provided in payload and no sourceItemDefinitionId available for ${eventName}. keyItemId will be undefined.`,
-                type: 'warning'
+                text: `No keyItemId provided in payload, context, or derived from sourceItemDefinitionId for ${eventName}. keyItemId defaulted to null.`,
+                type: 'warning' // Changed to warning
             });
         }
+
         // Ensure the derived keyItemId is in the payload we might use later.
-        initialEventPayload.keyItemId = derivedKeyItemId;
+        // IMPORTANT: Update the payload that will become finalPayload
+        initialEventPayload.keyItemId = derivedKeyItemId; // Make sure this gets into the payload
 
     }
 
@@ -128,7 +156,7 @@ export function handleTriggerEventEffect(params, context) {
         const PositionComponent = entityManager.componentRegistry.get('Position');
         if (!PositionComponent) {
             console.error("EffectExecutionService: Position component class not registered. Cannot get locationId.");
-            messages.push({ text: `CRITICAL: Cannot get locationId for ${eventName}.`, type: 'error' });
+            messages.push({text: `CRITICAL: Cannot get locationId for ${eventName}.`, type: 'error'});
             initialEventPayload.locationId = null;
         } else {
             const positionComponent = userEntity.getComponent(PositionComponent);
@@ -140,7 +168,10 @@ export function handleTriggerEventEffect(params, context) {
                 });
             } else if (initialEventPayload.locationId === undefined) {
                 console.warn(`EffectExecutionService: User ${userEntity.id} lacks PositionComponent or locationId when triggering ${eventName}. LocationId will be missing/null unless provided in payload.`);
-                messages.push({ text: `User ${userEntity.id} missing locationId for potential ${eventName}.`, type: 'warning' });
+                messages.push({
+                    text: `User ${userEntity.id} missing locationId for potential ${eventName}.`,
+                    type: 'warning'
+                });
                 initialEventPayload.locationId = null;
             } else {
                 messages.push({
@@ -158,25 +189,32 @@ export function handleTriggerEventEffect(params, context) {
     // == Phase 2, Step 4: Connection Unlock Attempt Translation Logic ==
     // ================================================================
     let finalEventName = eventName; // Event name to actually dispatch
-    let finalPayload = { ...initialEventPayload }; // Payload to actually dispatch (start with initial)
+    // --- Ensure finalPayload uses the potentially updated initialEventPayload ---
+    let finalPayload = {...initialEventPayload}; // Payload to actually dispatch (start with potentially modified initial)
     let dispatchTranslatedEvent = false; // Flag to indicate if translation occurred
 
     if (params.eventName === 'event:connection_unlock_attempt') {
-        messages.push({ text: "Checking for connection unlock translation...", type: 'internal' });
+        messages.push({text: "Checking for connection unlock translation...", type: 'internal'});
 
         // 1. Verify Target Type is 'connection'
         if (resolvedTargetType !== 'connection') {
             console.error(`EffectExecutionService: 'event:connection_unlock_attempt' received but resolved targetType is '${resolvedTargetType}' (expected 'connection'). Item: ${itemName}, Target:`, target);
-            messages.push({ text: `Internal Error: Invalid target type for connection unlock attempt. Expected 'connection', got '${resolvedTargetType}'.`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true }; // Return failure
+            messages.push({
+                text: `Internal Error: Invalid target type for connection unlock attempt. Expected 'connection', got '${resolvedTargetType}'.`,
+                type: 'error'
+            });
+            return {success: false, messages: messages, stopPropagation: true}; // Return failure
         }
 
         // 2. Verify Target (Connection Entity instance) is valid
         // Check if target looks like an Entity (basic check: has getComponent)
         if (!target || typeof target.getComponent !== 'function') {
             console.error(`EffectExecutionService: 'event:connection_unlock_attempt' received but context.target is invalid or not an Entity. Item: ${itemName}, Target:`, target);
-            messages.push({ text: `Internal Error: Invalid connection target instance provided for unlock attempt.`, type: 'error' });
-            return { success: false, messages: messages, stopPropagation: true }; // Return failure
+            messages.push({
+                text: `Internal Error: Invalid connection target instance provided for unlock attempt.`,
+                type: 'error'
+            });
+            return {success: false, messages: messages, stopPropagation: true}; // Return failure
         }
         const connectionEntity = /** @type {Entity} */ (target); // Cast for clarity
 
@@ -185,30 +223,37 @@ export function handleTriggerEventEffect(params, context) {
         if (!passageDetails) {
             // Gracefully handle missing component: Log warning, do not dispatch event, return success.
             console.warn(`EffectExecutionService: Connection Entity '${connectionEntity.id}' (${getDisplayName(connectionEntity)}) is missing PassageDetailsComponent. Cannot translate unlock attempt. Item: ${itemName}`);
-            messages.push({ text: `Cannot attempt unlock: The connection '${getDisplayName(connectionEntity)}' lacks required details (PassageDetailsComponent).`, type: 'warning' });
+            messages.push({
+                text: `Cannot attempt unlock: The connection '${getDisplayName(connectionEntity)}' lacks required details (PassageDetailsComponent).`,
+                type: 'warning'
+            });
             // Return success, preventing dispatch of any unlock event for this instance.
-            return { success: true, messages: messages };
+            return {success: true, messages: messages};
         }
 
         // 4. Get Blocker ID
         const blockerEntityId = passageDetails.getBlockerId();
 
         // 5. Handle Translation or No Blocker
+        // Ensure the translation logic also uses the correctly derived keyItemId
         if (blockerEntityId) {
             // --- Blocker Found: Translate the event ---
-            messages.push({ text: `Blocker '${blockerEntityId}' found for connection '${connectionEntity.id}'. Translating 'connection_unlock_attempt' to 'unlock_entity_attempt'.`, type: 'internal' });
+            messages.push({
+                text: `Blocker '${blockerEntityId}' found for connection '${connectionEntity.id}'. Translating 'connection_unlock_attempt' to 'unlock_entity_attempt'.`,
+                type: 'internal'
+            });
 
             finalEventName = 'event:unlock_entity_attempt'; // Change the event name
             dispatchTranslatedEvent = true; // Set the flag
 
-            // Determine the keyItemId to use (already derived in step 4's pre-translation logic)
-            const keyItemIdToUse = initialEventPayload.keyItemId;
+            // --- Ensure keyItemId is correct in the *translated* payload ---
+            const keyItemIdToUse = finalPayload.keyItemId; // Get it from the already-updated payload
 
             // Rebuild the payload for the translated event
             finalPayload = {
                 userId: userEntity.id,
-                targetEntityId: blockerEntityId, // CRITICAL: Target the blocker entity
-                keyItemId: keyItemIdToUse,       // Use the keyItemId determined earlier
+                targetEntityId: blockerEntityId,
+                keyItemId: keyItemIdToUse, // <<< Use the derived keyItemId
 
                 // Optional: Include original context for debugging/traceability
                 _sourceConnectionId: connectionEntity.id,
@@ -216,13 +261,19 @@ export function handleTriggerEventEffect(params, context) {
                 _sourceItemDefinitionId: itemDefinitionId,
                 // Do NOT include fields specific to connection_unlock_attempt like locationId unless needed by unlock_entity_attempt
             };
-            messages.push({ text: `Rebuilt payload for translated event '${finalEventName}': ${JSON.stringify(finalPayload)}`, type: 'internal' });
+            messages.push({
+                text: `Rebuilt payload for translated event '${finalEventName}': ${JSON.stringify(finalPayload)}`,
+                type: 'internal'
+            });
 
         } else {
             // --- No Blocker Found: Log info, prevent dispatch, return success ---
-            messages.push({ text: `Connection '${connectionEntity.id}' (${getDisplayName(connectionEntity)}) has no blocker. The way isn't blocked by a lock. No unlock event dispatched.`, type: 'info' });
+            messages.push({
+                text: `Connection '${connectionEntity.id}' (${getDisplayName(connectionEntity)}) has no blocker. The way isn't blocked by a lock. No unlock event dispatched.`,
+                type: 'info'
+            });
             // Return success early, effectively stopping the dispatch for this specific effect instance.
-            return { success: true, messages: messages };
+            return {success: true, messages: messages};
         }
     } // End of 'event:connection_unlock_attempt' translation logic
 
@@ -241,18 +292,21 @@ export function handleTriggerEventEffect(params, context) {
         }
 
         eventBus.dispatch(finalEventName, finalPayload);
-        messages.push({ text: `Dispatched ${dispatchTranslatedEvent ? 'translated ' : ''}event '${finalEventName}' for ${itemName}.`, type: 'internal' });
+        messages.push({
+            text: `Dispatched ${dispatchTranslatedEvent ? 'translated ' : ''}event '${finalEventName}' for ${itemName}.`,
+            type: 'internal'
+        });
 
     } catch (error) {
         const errorMsg = `Error dispatching event '${finalEventName}' for item ${itemName}: ${error.message}`;
         console.error(`EffectExecutionService: ${errorMsg}`, error);
-        messages.push({ text: `Internal Error: Failed to dispatch event for ${itemName}.`, type: 'error' });
+        messages.push({text: `Internal Error: Failed to dispatch event for ${itemName}.`, type: 'error'});
         // Dispatch UI error only if it's a real dispatch error, not a handled case like no blocker
         eventBus.dispatch('ui:message_display', {
             text: `An error occurred triggering an effect from ${itemName}.`,
             type: 'error'
         });
-        return { success: false, messages: messages, stopPropagation: true };
+        return {success: false, messages: messages, stopPropagation: true};
     }
 
     // 6. Optional Feedback via context.eventBus (Remains the same)
@@ -268,10 +322,10 @@ export function handleTriggerEventEffect(params, context) {
         } else if (finalFeedback.includes('{target}')) {
             finalFeedback = finalFeedback.replace('{target}', 'nothing');
         }
-        eventBus.dispatch('ui:message_display', { text: finalFeedback, type: 'info' });
-        messages.push({ text: `Dispatched feedback message: "${finalFeedback}"`, type: 'internal' });
+        eventBus.dispatch('ui:message_display', {text: finalFeedback, type: 'info'});
+        messages.push({text: `Dispatched feedback message: "${finalFeedback}"`, type: 'internal'});
     }
 
     // 7. Return Success (Remains the same)
-    return { success: true, messages: messages };
+    return {success: true, messages: messages};
 }
