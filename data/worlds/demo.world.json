@@ -18,7 +18,8 @@
       "core_drink.action.json",
       "core_push.action.json",
       "core_pull.action.json",
-      "core_examine.action.json"
+      "core_examine.action.json",
+      "core_open.action.json"
     ],
     "entities": [
       "core_player.entity.json",

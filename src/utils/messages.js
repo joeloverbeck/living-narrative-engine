@@ -290,6 +290,41 @@ export const TARGET_MESSAGES = {
     /** Feedback when movement is blocked because the referenced blocker entity could not be found. */
     MOVE_BLOCKER_NOT_FOUND: () => "The way seems blocked by something that isn't there anymore.",
 
+    /**
+     * Feedback when an entity is successfully opened.
+     * @param {string} targetName - The display name of the opened entity.
+     * @returns {string}
+     */
+    OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`,
+
+    /**
+     * Default feedback when opening an entity fails for an unspecified or default reason.
+     * @param {string} targetName - The display name of the entity that failed to open.
+     * @returns {string}
+     */
+    OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`,
+
+    /**
+     * Feedback when attempting to open an entity that is already open.
+     * @param {string} targetName - The display name of the already open entity.
+     * @returns {string}
+     */
+    OPEN_FAILED_ALREADY_OPEN: (targetName) => `The ${targetName} is already open.`,
+
+    /**
+     * Feedback when attempting to open an entity that is locked.
+     * @param {string} targetName - The display name of the locked entity.
+     * @returns {string}
+     */
+    OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`,
+
+    /**
+     * Feedback when attempting to open an entity that lacks the OpenableComponent or capability.
+     * @param {string} targetName - The display name of the entity that cannot be opened.
+     * @returns {string}
+     */
+    OPEN_FAILED_NOT_OPENABLE: (targetName) => `The ${targetName} cannot be opened.`,
+
     // --- Unequip ---
     /** Feedback when trying to unequip from an explicitly named slot that is empty.
      * @param {string} slotName - The user-friendly name of the slot.

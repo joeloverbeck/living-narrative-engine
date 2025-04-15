@@ -16,6 +16,7 @@ import {executeUse} from '../actions/handlers/useActionHandler.js';
 import {executeEquip} from '../actions/handlers/equipActionHandler.js';
 import {executeUnequip} from '../actions/handlers/unequipActionHandler.js';
 import {executeExamine} from "../actions/handlers/examineActionHandler.js";
+import {executeOpen} from "../actions/handlers/openActionHandler.js";
 // Import future handlers here...
 
 // Define and export the registry configuration as a Map
@@ -31,6 +32,7 @@ export const actionHandlerRegistryConfig = new Map([
     ['core:use', executeUse],
     ['core:equip', executeEquip],
     ['core:unequip', executeUnequip],
+    ['core:open', executeOpen]
 
     // Add mappings for new actions here as they are created
     // Example: ['custom:special', executeSpecialAction],

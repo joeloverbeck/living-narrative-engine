@@ -252,6 +252,37 @@
  */
 
 /**
+ * Defines the payload structure for the event:entity_opened event.
+ * Signals that an entity (e.g., door, container) was successfully opened by an actor.
+ *
+ * Fired By: OpenableSystem
+ * Consumed By: UI/Renderer (for messages), TriggerSystem (potentially), LoggingSystem.
+ *
+ * @typedef {object} EntityOpenedEventPayload
+ * @property {string} actorId - The unique identifier of the entity that initiated the open action.
+ * @property {string} targetEntityId - The unique identifier of the entity that was successfully opened.
+ * @property {string} targetDisplayName - The display name of the entity that was opened, for easy reference in logs or messages.
+ */
+
+/**
+ * Defines the payload structure for the event:open_failed event.
+ * Signals that an attempt to open an entity failed for a specific reason.
+ *
+ * Fired By: OpenableSystem
+ * Consumed By: UI/Renderer (for failure messages), LoggingSystem.
+ *
+ * @typedef {object} OpenFailedEventPayload
+ * @property {string} actorId - The unique identifier of the entity that initiated the failed open action.
+ * @property {string} targetEntityId - The unique identifier of the entity that failed to open.
+ * @property {string} targetDisplayName - The display name of the entity that failed to open.
+ * @property {'ALREADY_OPEN' | 'LOCKED' | 'TARGET_NOT_OPENABLE' | 'OTHER'} reasonCode - A code indicating the specific reason for the failure.
+ * - 'ALREADY_OPEN': The target was already in the open state.
+ * - 'LOCKED': The target has a LockableComponent and is currently locked.
+ * - 'TARGET_NOT_OPENABLE': The target entity does not possess an OpenableComponent.
+ * - 'OTHER': A generic failure reason not covered by other codes.
+ */
+
+/**
  * Defines the payload structure for the event:unlock_entity_attempt event.
  * Signals that an entity is attempting to unlock another entity (e.g., a door, a chest, a mechanism).
  * This event is typically fired *before* validation or state changes occur.

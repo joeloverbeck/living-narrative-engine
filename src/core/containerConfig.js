@@ -26,6 +26,7 @@ import BlockerSystem from '../systems/blockerSystem.js';
 import GenericTriggerSystem from "../systems/genericTriggerSystem.js";
 import GameRuleSystem from "../systems/gameRuleSystem.js";
 import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js';
+import OpenableSystem from '../systems/openableSystem.js';
 
 // Services
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
@@ -36,7 +37,7 @@ import {ObjectiveEventListenerService} from '../services/objectiveEventListenerS
 import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerService.js';
 import GameStateInitializer from './gameStateInitializer.js';
 import WorldInitializer from './worldInitializer.js';
-import {ItemTargetResolverService} from '../services/itemTargetResolver.js'; // Adjust path if necessary
+import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -50,6 +51,7 @@ import {ItemTargetResolverService} from '../services/itemTargetResolver.js'; // 
  * @param {HTMLInputElement} uiElements.inputElement
  * @param {HTMLHeadingElement} uiElements.titleElement
  */
+// AC 1: src/core/containerConfig.js is modified.
 export function registerCoreServices(container, {outputDiv, inputElement, titleElement}) {
     console.log("ContainerConfig: Starting service registration...");
 
@@ -85,10 +87,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
 
-    // REMOVED (Cleanup Step 6): Old TargetResolutionService Registration
-    // container.register('TargetResolutionService', () => new TargetResolutionService(), {lifecycle: 'singleton'});
-
-    // ADDED: Register New Service (Task 3)
     container.register('ItemTargetResolverService', (c) => new ItemTargetResolverService({
         entityManager: c.resolve('EntityManager'),
         eventBus: c.resolve('EventBus'),
@@ -198,7 +196,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
 
-    // UPDATED: ItemUsageSystem Registration (Task 4)
+    // ItemUsageSystem Registration (Task 4)
     container.register('ItemUsageSystem', (c) => new ItemUsageSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
@@ -249,6 +247,15 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         eventBus: c.resolve('EventBus'),
         dataManager: c.resolve('DataManager'),
     }), {lifecycle: 'singleton'});
+
+    container.register('OpenableSystem', (c) => new OpenableSystem({
+        // AC 4: The registration correctly provides eventBus and entityManager dependencies.
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager')
+    }), {
+        // AC 5: The registration uses the 'singleton' lifecycle.
+        lifecycle: 'singleton'
+    });
 
 
     // --- 10. Input Handler ---

@@ -1,20 +1,20 @@
 // src/systems/lockSystem.js
 
-import LockableComponent from './src/components/lockableComponent.js';
+import LockableComponent from '../components/lockableComponent.js';
 // Import helper for display name
-import { getDisplayName } from './src/utils/messages.js'; // Assuming getDisplayName is exported from messages.js or similar
+import { getDisplayName } from '../utils/messages.js'; // Assuming getDisplayName is exported from messages.js or similar
 
 // Type Imports for JSDoc
-/** @typedef {import('./src/core/eventBus.js').default} EventBus */
-/** @typedef {import('./src/entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./src/types/eventTypes.js').UnlockEntityAttemptEventPayload} UnlockEntityAttemptEventPayload */
-/** @typedef {import('./src/types/eventTypes.js').LockEntityAttemptEventPayload} LockEntityAttemptEventPayload */
-/** @typedef {import('./src/types/eventTypes.js').EntityUnlockedEventPayload} EntityUnlockedEventPayload */
-/** @typedef {import('./src/types/eventTypes.js').EntityLockedEventPayload} EntityLockedEventPayload */
-/** @typedef {import('./src/types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
-/** @typedef {import('./src/entities/entity.js').default} Entity */
-/** @typedef {import('./src/components/lockableComponent.js').LockAttemptResult} LockAttemptResult */
-/** @typedef {import('./src/components/lockableComponent.js').LockResultReasonCode} LockResultReasonCode */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../types/eventTypes.js').UnlockEntityAttemptEventPayload} UnlockEntityAttemptEventPayload */
+/** @typedef {import('../types/eventTypes.js').LockEntityAttemptEventPayload} LockEntityAttemptEventPayload */
+/** @typedef {import('../types/eventTypes.js').EntityUnlockedEventPayload} EntityUnlockedEventPayload */
+/** @typedef {import('../types/eventTypes.js').EntityLockedEventPayload} EntityLockedEventPayload */
+/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../components/lockableComponent.js').LockAttemptResult} LockAttemptResult */
+/** @typedef {import('../components/lockableComponent.js').LockResultReasonCode} LockResultReasonCode */
 
 
 /**
