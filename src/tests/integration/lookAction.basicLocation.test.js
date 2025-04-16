@@ -1,6 +1,6 @@
 // src/tests/integration/lookAction.basicLocation.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -8,22 +8,22 @@ import ActionExecutor from '../../actions/actionExecutor.js';
 import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for type hints and setup
-import { NotificationUISystem } from '../../systems/notificationUISystem.js'; // Potentially handles ui:display_location
+import {NotificationUISystem} from '../../systems/notificationUISystem.js'; // Potentially handles ui:display_location
 
 // --- Action Handler ---
-import { executeLook } from '../../actions/handlers/lookActionHandler.js';
+import {executeLook} from '../../actions/handlers/lookActionHandler.js';
 
 // --- Components ---
-import { NameComponent } from '../../components/nameComponent.js';
-import { DescriptionComponent } from '../../components/descriptionComponent.js';
-import { ConnectionsComponent } from '../../components/connectionsComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {DescriptionComponent} from '../../components/descriptionComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 // Import components needed for exclusion checks (even if not present)
-import { ItemComponent } from '../../components/itemComponent.js';
+import {ItemComponent} from '../../components/itemComponent.js';
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES } from '../../utils/messages.js';
-import { waitForEvent } from "../testUtils.js";
+import {TARGET_MESSAGES} from '../../utils/messages.js';
+import {waitForEvent} from "../testUtils.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
@@ -31,10 +31,10 @@ import { waitForEvent } from "../testUtils.js";
 // --- Mock DataManager ---
 const mockDataManager = {
     actions: new Map([
-        ['core:look', { id: 'core:look', commands: ['look', 'l'] }],
+        ['core:look', {id: 'core:look', commands: ['look', 'l']}],
         // No other actions strictly needed for this test
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -63,7 +63,7 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
 
         // Add/Update Name Component
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -75,7 +75,7 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
 
         if (locationId) { // Only add/update position if locationId is provided
             if (!existingPosComp) {
-                entity.addComponent(new PositionComponent({ locationId: locationId }));
+                entity.addComponent(new PositionComponent({locationId: locationId}));
             } else if (existingPosComp.locationId !== locationId) {
                 existingPosComp.locationId = locationId;
             }
@@ -111,7 +111,7 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
         entityManager.registerComponent('ItemComponent', ItemComponent); // Register even if not used, for checks
 
         // 3. Instantiate Systems
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:look', executeLook);
@@ -121,14 +121,16 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
         // --- CORRECTED SECTION ---
         // 7. Setup test entities (ensure location is set up first if needed)
         testLocation = setupEntity('test_location', 'A Quiet Room', [
-            new DescriptionComponent({ text: 'A simple, unremarkable test room.' }),
-            new ConnectionsComponent({ connections: {} }) // Empty connections
+            new DescriptionComponent({text: 'A simple, unremarkable test room.'}),
+            new ConnectionsComponent({connections: {}}) // Empty connections
         ]);
         player = setupEntity('player', 'Player', [], 'test_location'); // Place player in the location
 
@@ -164,11 +166,11 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch('ui:message_display', { text: errorText, type: 'error'});
-            return { success: false, messages: [{ text: errorText, type: 'error' }] }; // Return failure result
+            await eventBus.dispatch('ui:message_display', {text: errorText, type: 'error'});
+            return {success: false, messages: [{text: errorText, type: 'error'}]}; // Return failure result
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
-            return { success: true, messages: [] }; // Empty command is technically successful (does nothing)
+        if (!parsedCommand.actionId && commandString.trim() === '') {
+            return {success: true, messages: []}; // Empty command is technically successful (does nothing)
         }
 
         /** @type {ActionContext} */
@@ -231,7 +233,9 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
                     console.log("[Test Case LOOK-INT-LOC-01] Dispatch Spy Calls received:", JSON.stringify(dispatchSpy.mock.calls, (key, value) => {
                         // Basic circular reference handler (can be expanded if needed)
                         if (typeof value === 'object' && value !== null) {
-                            if (seen.has(value)) { return '[Circular]'; }
+                            if (seen.has(value)) {
+                                return '[Circular]';
+                            }
                             seen.add(value);
                         }
                         return value;
@@ -247,7 +251,7 @@ describe('Integration Test: core:look Action - LOOK-INT-LOC-01', () => {
             // 3. No Error Messages: Ensure no error messages were displayed
             expect(dispatchSpy).not.toHaveBeenCalledWith(
                 'ui:message_display',
-                expect.objectContaining({ type: 'error' })
+                expect.objectContaining({type: 'error'})
             );
 
             // 4. Console Checks: Ensure no unexpected errors/warnings

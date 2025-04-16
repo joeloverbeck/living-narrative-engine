@@ -1,33 +1,37 @@
 // src/systems/lockSystem.js
 
 import LockableComponent from '../components/lockableComponent.js';
+import {ItemComponent} from '../components/itemComponent.js'; // <<< Import ItemComponent
 // Import helper for display name
-import { getDisplayName } from '../utils/messages.js';
+import {getDisplayName} from '../utils/messages.js';
 import {
     EVENT_ENTITY_LOCKED,
     EVENT_ENTITY_UNLOCKED,
     EVENT_LOCK_ENTITY_ATTEMPT,
-    EVENT_UNLOCK_ENTITY_ATTEMPT
-} from "../types/eventTypes.js"; // Assuming getDisplayName is exported from messages.js or similar
+    EVENT_UNLOCK_ENTITY_ATTEMPT,
+    UI_MESSAGE_DISPLAY // Added for consistency in dispatching UI messages
+} from "../types/eventTypes.js";
 
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../types/eventTypes.js').UnlockEntityAttemptEventPayload} UnlockEntityAttemptEventPayload */
-/** @typedef {import('../types/eventTypes.js').LockEntityAttemptEventPayload} LockEntityAttemptEventPayload */
+/** @typedef {import('../entities/entity.js').default} Entity */
+// Define a type for the incoming payload, allowing flexibility but noting expected properties
+/** @typedef {{ userId: string, itemInstanceId?: string | null, targetEntityId?: string | null, validatedTargetId?: string | null, [key: string]: any }} ReceivedLockUnlockPayload */
 /** @typedef {import('../types/eventTypes.js').EntityUnlockedEventPayload} EntityUnlockedEventPayload */
 /** @typedef {import('../types/eventTypes.js').EntityLockedEventPayload} EntityLockedEventPayload */
 /** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
-/** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/lockableComponent.js').LockAttemptResult} LockAttemptResult */
+
 /** @typedef {import('../components/lockableComponent.js').LockResultReasonCode} LockResultReasonCode */
 
 
 /**
  * ECS System responsible for handling the logic of locking and unlocking entities
  * (e.g., chests, doors represented as entities).
- * Listens for EVENT_UNLOCK_ENTITY_ATTEMPT and 'event:lock_entity_attempt'.
- * Delegates the core state change and validation logic to LockableComponent.
+ * Listens for EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.
+ * Resolves the definition ID of the key used (if any) before delegating the core
+ * state change and validation logic to LockableComponent.
  */
 class LockSystem {
     #eventBus;
@@ -42,7 +46,7 @@ class LockSystem {
      * @param {EventBus} options.eventBus - The game's central event bus.
      * @param {EntityManager} options.entityManager - The game's entity manager.
      */
-    constructor({ eventBus, entityManager }) {
+    constructor({eventBus, entityManager}) {
         // Dependency injection and validation
         if (!eventBus) {
             throw new Error("LockSystem requires options.eventBus.");
@@ -67,136 +71,157 @@ class LockSystem {
     initialize() {
         this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
         this.#eventBus.subscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
-        console.log("LockSystem: Initialized and subscribed to EVENT_UNLOCK_ENTITY_ATTEMPT and event:lock_entity_attempt.");
+        console.log("LockSystem: Initialized and subscribed to EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.");
     }
 
     /**
-     * Handles entity unlock attempts by delegating to LockableComponent.unlock().
+     * Handles entity unlock attempts. Resolves key definition ID before delegating to LockableComponent.unlock().
      * Dispatches events and UI messages based on the component's result.
      *
      * @private
-     * @param {UnlockEntityAttemptEventPayload} payload - The event data associated with the unlock attempt.
+     * @param {ReceivedLockUnlockPayload} payload - The event data associated with the unlock attempt.
      */
     _handleUnlockAttempt(payload) {
         console.debug("LockSystem: _handleUnlockAttempt received:", payload);
 
-        const { userId, targetEntityId, keyItemId } = payload; // Keep: Extract payload data
-        console.debug(`LockSystem: Extracted - userId: ${userId}, targetId: ${targetEntityId}, keyId: ${keyItemId}`);
+        const {userId, itemInstanceId} = payload;
+        // Prioritize validatedTargetId (likely from ItemUsageSystem), fallback to targetEntityId
+        const targetEntityId = payload.validatedTargetId ?? payload.targetEntityId ?? null;
+        const keyInstanceIdUsed = itemInstanceId || null; // The specific instance ID used in the attempt
 
-        /** @type {Entity | undefined} */
-        const targetEntity = this.#entityManager.getEntityInstance(targetEntityId); // Keep: Find entity
+        console.debug(`LockSystem: Extracted - userId: ${userId}, targetEntityId: ${targetEntityId}, keyInstanceIdUsed: ${keyInstanceIdUsed}`);
 
-        if (!targetEntity) { // Keep: Check if entity exists
+        const targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
+
+        if (!targetEntity) {
             console.error(`LockSystem: Target entity not found for ID: ${targetEntityId}. Cannot process unlock attempt.`);
             this.#dispatchUIMessage("You can't find anything like that to unlock.", 'warning');
             return;
         }
         console.debug(`LockSystem: Found target entity: ${targetEntity.id}`);
 
-        /** @type {LockableComponent | undefined} */
-        const lockableComponent = targetEntity.getComponent(LockableComponent); // Keep: Get component
-
-        if (!lockableComponent) { // Keep: Check if component exists
+        const lockableComponent = targetEntity.getComponent(LockableComponent);
+        if (!lockableComponent) {
             console.error(`LockSystem: Entity ${targetEntityId} lacks a LockableComponent. Cannot process unlock attempt.`);
             this.#dispatchUIMessage("You can't unlock that.", 'warning');
             return;
         }
-        console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}.`); // Note: Removed internal state logging here
+        console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}. Required Key Def ID: ${lockableComponent.keyId}`);
 
-        // Call the component's unlock method
-        const currentKeyItemId = keyItemId || null; // Ensure null is passed if keyItemId is undefined/falsy
-        console.debug(`LockSystem: Calling lockableComponent.unlock(${currentKeyItemId})`);
-        /** @type {LockAttemptResult} */
-        const unlockResult = lockableComponent.unlock(currentKeyItemId); // Capture result
+        // --- Resolve Key Definition ID from Instance ID ---
+        let keyDefinitionIdToCompare = null;
+        if (keyInstanceIdUsed) {
+            const keyEntity = this.#entityManager.getEntityInstance(keyInstanceIdUsed);
+            if (keyEntity) {
+                const keyItemComp = keyEntity.getComponent(ItemComponent);
+                if (keyItemComp && typeof keyItemComp.definitionId === 'string') {
+                    keyDefinitionIdToCompare = keyItemComp.definitionId;
+                    console.debug(`LockSystem: Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare}`);
+                } else {
+                    console.warn(`LockSystem: Key instance ${keyInstanceIdUsed} found but lacks ItemComponent or valid definitionId.`);
+                }
+            } else {
+                console.warn(`LockSystem: Key instance ${keyInstanceIdUsed} not found in EntityManager.`);
+            }
+        }
+        // --- End Key Definition Resolution ---
+
+        // Call the component's unlock method with the RESOLVED DEFINITION ID (or null)
+        console.debug(`LockSystem: Calling lockableComponent.unlock(${keyDefinitionIdToCompare})`);
+        const unlockResult = lockableComponent.unlock(keyDefinitionIdToCompare);
         console.debug(`LockSystem: lockableComponent.unlock result:`, unlockResult);
 
-        // Retrieve display name using the helper - needed for both success/failure messages
         const entityName = getDisplayName(targetEntity);
 
-        // Based on the return value, dispatch events/messages
         if (unlockResult.success) {
-            // Dispatch the core game event ONLY if successful
             /** @type {EntityUnlockedEventPayload} */
             const entityUnlockedPayload = {
                 userId: userId,
                 targetEntityId: targetEntityId,
-                keyItemId: currentKeyItemId // Pass the key used, which might be null
+                keyItemId: keyInstanceIdUsed // Report the INSTANCE ID used in the success event
             };
             console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_UNLOCKED}`, entityUnlockedPayload);
+            // Use await if dispatch is async and subsequent actions depend on it finishing
             this.#eventBus.dispatch(EVENT_ENTITY_UNLOCKED, entityUnlockedPayload);
-
-            // Dispatch success UI message ONLY if successful
             this.#dispatchUIMessage(`You unlock the ${entityName}.`, 'success');
-
         } else {
-            // Dispatch failure UI message based on the reason code
             this.#handleUnlockFailure(unlockResult.reasonCode, entityName);
         }
     }
 
     /**
-     * Handles entity lock attempts by delegating to LockableComponent.lock().
+     * Handles entity lock attempts. Resolves key definition ID before delegating to LockableComponent.lock().
      * Dispatches events and UI messages based on the component's result.
      *
      * @private
-     * @param {LockEntityAttemptEventPayload} payload - The event data associated with the lock attempt.
+     * @param {ReceivedLockUnlockPayload} payload - The event data associated with the lock attempt.
      */
     _handleLockAttempt(payload) {
         console.debug("LockSystem: _handleLockAttempt received:", payload);
 
-        const { userId, targetEntityId, keyItemId } = payload; // Keep: Extract payload data
-        console.debug(`LockSystem: Extracted - userId: ${userId}, targetId: ${targetEntityId}, keyId: ${keyItemId}`);
+        const {userId, itemInstanceId} = payload;
+        const targetEntityId = payload.validatedTargetId ?? payload.targetEntityId ?? null;
+        const keyInstanceIdUsed = itemInstanceId || null;
 
-        /** @type {Entity | undefined} */
-        const targetEntity = this.#entityManager.getEntityInstance(targetEntityId); // Keep: Find entity
+        console.debug(`LockSystem: Extracted - userId: ${userId}, targetEntityId: ${targetEntityId}, keyInstanceIdUsed: ${keyInstanceIdUsed}`);
 
-        if (!targetEntity) { // Keep: Check if entity exists
+        const targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
+        if (!targetEntity) {
             console.error(`LockSystem: Target entity not found for ID: ${targetEntityId}. Cannot process lock attempt.`);
             this.#dispatchUIMessage("You can't find anything like that to lock.", 'warning');
             return;
         }
         console.debug(`LockSystem: Found target entity: ${targetEntity.id}`);
 
-        /** @type {LockableComponent | undefined} */
-        const lockableComponent = targetEntity.getComponent(LockableComponent); // Keep: Get component
-
-        if (!lockableComponent) { // Keep: Check if component exists
+        const lockableComponent = targetEntity.getComponent(LockableComponent);
+        if (!lockableComponent) {
             console.error(`LockSystem: Entity ${targetEntityId} lacks a LockableComponent. Cannot process lock attempt.`);
             this.#dispatchUIMessage("You can't lock that.", 'warning');
             return;
         }
-        console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}.`); // Note: Removed internal state logging here
+        console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}.`);
 
-        // Call the component's lock method
-        const currentKeyItemId = keyItemId || null; // Ensure null is passed if keyItemId is undefined/falsy
-        console.debug(`LockSystem: Calling lockableComponent.lock(${currentKeyItemId})`);
-        /** @type {LockAttemptResult} */
-        const lockResult = lockableComponent.lock(currentKeyItemId); // Capture result
+        // --- Resolve Key Definition ID from Instance ID ---
+        let keyDefinitionIdToCompare = null;
+        if (keyInstanceIdUsed) {
+            const keyEntity = this.#entityManager.getEntityInstance(keyInstanceIdUsed);
+            if (keyEntity) {
+                const keyItemComp = keyEntity.getComponent(ItemComponent);
+                if (keyItemComp && typeof keyItemComp.definitionId === 'string') {
+                    keyDefinitionIdToCompare = keyItemComp.definitionId;
+                    console.debug(`LockSystem (Lock Attempt): Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare}`);
+                } else {
+                    console.warn(`LockSystem (Lock Attempt): Key instance ${keyInstanceIdUsed} found but lacks ItemComponent or valid definitionId.`);
+                }
+            } else {
+                console.warn(`LockSystem (Lock Attempt): Key instance ${keyInstanceIdUsed} not found in EntityManager.`);
+            }
+        }
+        // --- End Key Definition Resolution ---
+
+        // Call lock with the resolved definition ID
+        console.debug(`LockSystem: Calling lockableComponent.lock(${keyDefinitionIdToCompare})`);
+        const lockResult = lockableComponent.lock(keyDefinitionIdToCompare);
         console.debug(`LockSystem: lockableComponent.lock result:`, lockResult);
 
-        // Retrieve display name using the helper
         const entityName = getDisplayName(targetEntity);
 
-        // Based on the return value, dispatch events/messages
         if (lockResult.success) {
-            // Dispatch core game event ONLY if successful
             /** @type {EntityLockedEventPayload} */
             const entityLockedPayload = {
                 userId: userId,
                 targetEntityId: targetEntityId,
-                keyItemId: currentKeyItemId // Pass the key used in the attempt, which might be null
+                keyItemId: keyInstanceIdUsed // Report instance ID used
             };
             console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_LOCKED}`, entityLockedPayload);
+            // Use await if dispatch is async and subsequent actions depend on it finishing
             this.#eventBus.dispatch(EVENT_ENTITY_LOCKED, entityLockedPayload);
-
-            // Dispatch success UI message ONLY if successful
             this.#dispatchUIMessage(`You lock the ${entityName}.`, 'success');
-
         } else {
-            // Dispatch failure UI message based on the reason code
             this.#handleLockFailure(lockResult.reasonCode, entityName);
         }
     }
+
 
     /**
      * Dispatches a UI message based on the unlock failure reason.
@@ -218,14 +243,11 @@ class LockSystem {
                 type = 'warning';
                 break;
             case 'WRONG_KEY':
-                message = "The key doesn't seem to fit the lock."; // Consistent with ticket example
+                message = "The key doesn't seem to fit the lock.";
                 type = 'warning';
                 break;
-            // case 'NO_KEY_NEEDED': // Should not happen for a failure, handled by success path
-            // case 'KEY_MATCH': // Should not happen for a failure, handled by success path
             default:
                 console.warn(`LockSystem: Unhandled unlock failure reasonCode: ${reasonCode}`);
-                // Keep default message & type
                 break;
         }
         this.#dispatchUIMessage(message, type);
@@ -247,42 +269,32 @@ class LockSystem {
                 type = 'info';
                 break;
             case 'KEY_REQUIRED':
-                // This implies the lock mechanism *itself* needs a key to operate (to lock)
-                message = `You need the right key to lock the ${entityName}.`; // Consistent with ticket example
+                message = `You need the right key to lock the ${entityName}.`;
                 type = 'warning';
                 break;
             case 'WRONG_KEY':
-                // This implies the lock mechanism *itself* needs a key to operate, and the wrong one was used
-                message = `That key doesn't seem to work for locking the ${entityName}.`; // Or reuse "doesn't seem to fit" as per unlock
-                // Let's use the ticket example for locking failure:
-                // message = "You need the right key..."; // Ambiguous, let's refine based on context
-                // Using the WRONG_KEY message seems more specific if a key was provided but didn't match
-                // Using KEY_REQUIRED if no key was provided but one was needed seems better handled by that case.
-                // Let's stick to a specific message for WRONG_KEY when locking:
                 message = `That key doesn't seem to work for locking the ${entityName}.`;
                 type = 'warning';
                 break;
-            // case 'NO_KEY_NEEDED': // Should not happen for a failure, handled by success path
-            // case 'KEY_MATCH': // Should not happen for a failure, handled by success path
             default:
                 console.warn(`LockSystem: Unhandled lock failure reasonCode: ${reasonCode}`);
-                // Keep default message & type
                 break;
         }
         this.#dispatchUIMessage(message, type);
     }
 
     /**
-     * Helper method to dispatch UI messages.
+     * Helper method to dispatch UI messages via the EventBus.
      * @private
      * @param {string} text - The message text.
      * @param {'info' | 'success' | 'warning' | 'error'} type - The message type.
      */
     #dispatchUIMessage(text, type) {
         /** @type {UIMessageDisplayPayload} */
-        const uiMessagePayload = { text, type };
+        const uiMessagePayload = {text, type};
         console.debug(`LockSystem: Dispatching UI message: "${text}" (Type: ${type})`);
-        this.#eventBus.dispatch('ui:message_display', uiMessagePayload);
+        // Use await if dispatch is async and subsequent actions depend on it finishing
+        this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, uiMessagePayload);
     }
 
     /**

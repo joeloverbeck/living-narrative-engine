@@ -103,10 +103,15 @@ class GameEngine {
                 // but here the dependencies are handled at construction via DI.
                 // Init order mainly affects event listener setup timing.
                 'BlockerSystem',        // Initialize first (provides checks)
+                'LockSystem',
                 'MovementSystem',       // Initialize next (performs action)
-                'MoveCoordinatorSystem',// <<< ADDED KEY (TRG-9 AC2) Initialize last (coordinates others)
+                'HealthSystem',         // NEW: Handles health modification events
+                'StatusEffectSystem',   // NEW: Handles status effect events
+                'MoveCoordinatorSystem',// Initialize last (coordinates others)
                 'WorldPresenceSystem',  // Handles entity presence updates (related to movement)s
-                'QuestSystem', 'QuestStartTriggerSystem', 'NotificationUISystem'
+                'QuestSystem',
+                'QuestStartTriggerSystem',
+                'NotificationUISystem'
             ];
             for (const key of systemsToInitialize) {
                 const system = this.#container.resolve(key);

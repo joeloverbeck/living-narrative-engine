@@ -2,12 +2,23 @@
 
 import {PositionComponent} from '../components/positionComponent.js';
 import {getDisplayName} from "../utils/messages.js";
-import {EVENT_ITEM_DROP_ATTEMPTED, EVENT_ITEM_DROPPED, EVENT_ITEM_PICKED_UP} from "../types/eventTypes";
+import {
+    EVENT_ITEM_DROP_ATTEMPTED,
+    EVENT_ITEM_DROPPED,
+    EVENT_ITEM_PICKED_UP,
+    EVENT_SPAWN_ENTITY_REQUESTED
+} from "../types/eventTypes";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */
+// --- Payload Type Imports ---
+/** @typedef {import('../types/eventTypes.js').ItemPickedUpEventPayload} ItemPickedUpEventPayload */
+/** @typedef {import('../types/eventTypes.js').ItemDropAttemptedEventPayload} ItemDropAttemptedEventPayload */
+/** @typedef {import('../types/eventTypes.js').ItemDroppedEventPayload} ItemDroppedEventPayload */
+
+/** @typedef {import('../types/eventTypes.js').SpawnEntityRequestedEventPayload} SpawnEntityRequestedEventPayload */
 
 /**
  * Handles world-state interactions resulting from events, such as removing items
@@ -43,6 +54,9 @@ class WorldPresenceSystem {
         this.#eventBus.subscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp.bind(this));
         this.#eventBus.subscribe(EVENT_ITEM_DROP_ATTEMPTED, this.#handleItemDropAttempted.bind(this));
         console.log("WorldPresenceSystem: Initialized and subscribed to '" + EVENT_ITEM_PICKED_UP + "'.");
+
+        this.#eventBus.subscribe(EVENT_SPAWN_ENTITY_REQUESTED, this._handleSpawnEntityRequested.bind(this));
+        console.log("WorldPresenceSystem: Initialized and subscribed to item pickup/drop and entity spawn events.");
     }
 
     /**
@@ -51,7 +65,7 @@ class WorldPresenceSystem {
      * and notifies the EntityManager to update the spatial index.
      *
      * @private
-     * @param {{ pickerId: string, itemId: string, locationId: string }} eventData - Data from the event.
+     * @param {ItemPickedUpEventPayload} eventData - Data from the event.
      */
     #handleItemPickedUp(eventData) {
         // Task 3: Implement the handler function
@@ -113,7 +127,7 @@ class WorldPresenceSystem {
      * and notifies the EntityManager to update the spatial index. Dispatches UI feedback.
      *
      * @private
-     * @param {{ playerId: string, itemInstanceId: string, locationId: string }} eventData - Data from the event.
+     * @param {ItemDropAttemptedEventPayload} eventData - Data from the event.
      */
     #handleItemDropAttempted(eventData) {
         const {playerId, itemInstanceId, locationId: newLocationId} = eventData;
@@ -203,10 +217,22 @@ class WorldPresenceSystem {
         }
     }
 
+    /**
+     * Stub handler for spawning entity requests.
+     * @private
+     * @param {SpawnEntityRequestedEventPayload} payload
+     */
+    _handleSpawnEntityRequested(payload) {
+        console.log(`[WorldPresenceSystem] Stub Handler: Received event '${EVENT_SPAWN_ENTITY_REQUESTED}' with payload:`, payload);
+        // Phase 1: Implement actual entity spawning logic here.
+        // This will likely involve using EntityManager.createEntityInstanceFromDefinition,
+        // setting its PositionComponent based on the payload, and potentially adding to spatial index.
+    }
+
 
     // Optional: Add a method to unsubscribe if needed during engine shutdown/restart
     shutdown() {
-        this.#eventBus.unsubscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp);
+        this.#eventBus.unsubscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp.bind(this)); // Ensure correct binding if using bind in subscribe
         this.#eventBus.unsubscribe(EVENT_ITEM_DROP_ATTEMPTED, this.#handleItemDropAttempted);
         console.log("WorldPresenceSystem: Unsubscribed from events.");
     }

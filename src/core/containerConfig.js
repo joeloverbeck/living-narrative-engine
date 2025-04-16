@@ -27,10 +27,12 @@ import GenericTriggerSystem from "../systems/genericTriggerSystem.js";
 import GameRuleSystem from "../systems/gameRuleSystem.js";
 import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js';
 import OpenableSystem from '../systems/openableSystem.js';
+import HealthSystem from "../systems/healthSystem.js";
+import StatusEffectSystem from "../systems/statusEffectSystem.js";
+import LockSystem from "../systems/lockSystem.js";
 
 // Services
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
-import EffectExecutionService from "../services/effectExecutionService.js";
 import {QuestPrerequisiteService} from '../services/questPrerequisiteService.js';
 import {QuestRewardService} from '../services/questRewardService.js';
 import {ObjectiveEventListenerService} from '../services/objectiveEventListenerService.js';
@@ -92,9 +94,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         eventBus: c.resolve('EventBus'),
         conditionEvaluationService: c.resolve('ConditionEvaluationService')
     }), {lifecycle: 'singleton'});
-
-
-    container.register('EffectExecutionService', () => new EffectExecutionService(), {lifecycle: 'singleton'});
 
     // --- 5. Action Executor ---
     container.register('ActionExecutor', () => {
@@ -203,7 +202,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         dataManager: c.resolve('DataManager'),
         conditionEvaluationService: c.resolve('ConditionEvaluationService'),
         itemTargetResolverService: c.resolve('ItemTargetResolverService'),
-        effectExecutionService: c.resolve('EffectExecutionService')
     }), {lifecycle: 'singleton'});
 
     // Movement Related Systems (Register dependencies first)
@@ -257,6 +255,22 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         lifecycle: 'singleton'
     });
 
+    container.register('HealthSystem', (c) => new HealthSystem({
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager'),
+        dataManager: c.resolve('DataManager')
+    }), {lifecycle: 'singleton'});
+
+    container.register('StatusEffectSystem', (c) => new StatusEffectSystem({
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager'),
+        dataManager: c.resolve('DataManager')
+    }), {lifecycle: 'singleton'});
+
+    container.register('LockSystem', (c) => new LockSystem({
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager'),
+    }), {lifecycle: 'singleton'});
 
     // --- 10. Input Handler ---
     container.register('InputHandler', (c) => new InputHandler(

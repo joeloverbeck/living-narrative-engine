@@ -30,16 +30,17 @@
       "target_required": false,
       "effects": [
         {
-          "type": "heal",
+          "type": "trigger_event",
           "parameters": {
-            "amount": 10,
-            "target": "user",
-            "$comment": "Restore 10 HP to the user."
+            "eventName": "event:apply_heal_requested",
+            "payload": {
+              "amount": 10,
+              "healTargetSpecifier": "user"
+            }
           }
         }
       ],
       "consume_on_use": true,
-      "success_message": "You drink the Minor Healing Potion and feel slightly better.",
       "failure_message_default": "You cannot use the potion right now."
     }
   }

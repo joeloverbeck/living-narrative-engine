@@ -45,12 +45,12 @@
         {
           "type": "trigger_event",
           "parameters": {
-            "eventName": "event:unlock_attempt"
+            "eventName": "event:unlock_attempt",
+            "payload": {}
           }
         }
       ],
       "consume_on_use": false,
-      "success_message": "You use the rusty key.",
       "failure_message_default": "You can't use the key like that."
     }
   }

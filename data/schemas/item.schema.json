@@ -132,7 +132,7 @@
     },
     "UsableComponent": {
       "type": "object",
-      "description": "Defines how an item can be used: conditions, targeting, effects, feedback.",
+      "description": "Defines how an item can be used: conditions, targeting, effects, feedback. Effect outcomes and messages are handled by event listeners, not this component.",
       "properties": {
         "usability_conditions": {
           "type": "array",
@@ -157,7 +157,7 @@
         },
         "effects": {
           "type": "array",
-          "description": "Sequence of effects occurring on successful use, after all condition checks pass.",
+          "description": "Sequence of event triggers occurring on successful use, after all condition checks pass. MUST use 'trigger_event' type.",
           "items": {
             "$ref": "#/definitions/EffectObject"
           },
@@ -165,16 +165,12 @@
         },
         "consume_on_use": {
           "type": "boolean",
-          "description": "Is the item consumed (removed/quantity decreased) after successful use?",
+          "description": "Is the item consumed (removed/quantity decreased) after successful use attempt orchestration?",
           "default": true
-        },
-        "success_message": {
-          "type": "string",
-          "description": "Optional message to user upon successful use (e.g., 'You drink the potion.')."
         },
         "failure_message_default": {
           "type": "string",
-          "description": "Optional default message if usage fails without a specific condition failure message (e.g., 'You cannot use that now.')."
+          "description": "Optional default message if usage fails without a specific condition failure message (e.g., 'You cannot use that now.'). Used by ItemUsageSystem if ConditionEvaluationService doesn't provide one."
         }
       },
       "required": [
@@ -247,7 +243,7 @@
       ]
     },
     "EffectObject": {
-      "description": "A single effect applied on item use. Inherits base 'type' and 'parameters' structure.",
+      "description": "A single effect triggered on item use. MUST use type 'trigger_event' to dispatch an event via the event bus, specifying the event name and any additional payload parameters needed by the consuming system. The ItemUsageSystem provides base context (user, item, target) when dispatching.",
       "allOf": [
         {
           "$ref": "common.schema.json#/definitions/TypedParameterBase"
@@ -255,94 +251,14 @@
       ],
       "properties": {
         "type": {
-          "description": "Identifier for the type of item effect.",
+          "description": "The type of effect. For Usable.effects, MUST be 'trigger_event'.",
           "enum": [
-            "heal",
-            "damage",
-            "trigger_event",
-            "apply_status_effect",
-            "remove_status_effect",
-            "spawn_entity",
-            "modify_stat",
-            "teleport",
-            "change_state",
-            "execute_script",
-            "attempt_lock",
-            "attempt_unlock"
-          ]
+            "trigger_event"
+          ],
+          "const": "trigger_event"
         }
       },
       "oneOf": [
-        {
-          "properties": {
-            "type": {
-              "const": "heal"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "amount",
-                "target"
-              ],
-              "properties": {
-                "amount": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "description": "Amount of health to restore."
-                },
-                "target": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "description": "Who receives the healing."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "damage"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "amount",
-                "target"
-              ],
-              "properties": {
-                "amount": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "description": "Amount of damage to inflict."
-                },
-                "damage_type": {
-                  "type": "string",
-                  "description": "Optional type of damage (e.g., 'fire', 'physical')."
-                },
-                "target": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "description": "Who receives the damage."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
         {
           "properties": {
             "type": {
@@ -356,346 +272,77 @@
               "properties": {
                 "eventName": {
                   "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "Name of the event to publish."
+                  "description": "Name of the event to publish (e.g., 'event:apply_heal_requested', 'event:unlock_entity_attempt'). Must match a defined event type constant.",
+                  "examples": [
+                    "event:apply_heal_requested",
+                    "event:inflict_damage_requested",
+                    "event:unlock_entity_attempt",
+                    "event:apply_status_effect_requested"
+                  ]
                 },
                 "payload": {
                   "type": "object",
                   "additionalProperties": true,
-                  "description": "Optional data payload for the event."
+                  "description": "Optional data payload containing parameters specific to this event, beyond the standard context provided by the ItemUsageSystem. Structure depends on the requirements of the system listening for 'eventName'."
                 }
               },
               "patternProperties": {
                 "^\\$.*": {}
               },
               "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "apply_status_effect"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "effect_id",
-                "target"
-              ],
-              "properties": {
-                "effect_id": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "ID of the status effect to apply."
-                },
-                "duration": {
-                  "type": [
-                    "number",
-                    "null"
-                  ],
-                  "minimum": 0,
-                  "description": "Optional duration in seconds (null/omit for permanent)."
-                },
-                "target": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "description": "Who receives the status effect."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "remove_status_effect"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "effect_id",
-                "target"
-              ],
-              "properties": {
-                "effect_id": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "ID of the status effect to remove."
-                },
-                "target": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "description": "Who to remove the effect from."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "spawn_entity"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "entity_id_to_spawn",
-                "location"
-              ],
-              "properties": {
-                "entity_id_to_spawn": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "The ID of the entity definition to spawn."
-                },
-                "location": {
-                  "type": "string",
-                  "enum": [
-                    "current",
-                    "target_location"
-                  ],
-                  "description": "'current' means user's location, 'target_location' means target's location."
-                },
-                "offset_x": {
-                  "type": "number",
-                  "default": 0,
-                  "description": "Optional X offset from location origin/target."
-                },
-                "offset_y": {
-                  "type": "number",
-                  "default": 0,
-                  "description": "Optional Y offset from location origin/target."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "modify_stat"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "stat_id",
-                "change",
-                "target"
-              ],
-              "properties": {
-                "stat_id": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "ID of the attribute or skill to modify (e.g., 'core:attr_strength', 'core:skill_stealth')."
-                },
-                "change": {
-                  "type": "integer",
-                  "description": "Amount to change by (positive or negative)."
-                },
-                "duration": {
-                  "type": [
-                    "number",
-                    "null"
-                  ],
-                  "minimum": 0,
-                  "description": "Optional duration in seconds for temporary modification (null/omit for permanent)."
-                },
-                "target": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "description": "Whose stat to modify."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "teleport"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "target_location_id"
-              ],
-              "properties": {
-                "target_location_id": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "ID of the destination location."
-                },
-                "target_x": {
-                  "type": "number",
-                  "description": "Optional destination X coordinate."
-                },
-                "target_y": {
-                  "type": "number",
-                  "description": "Optional destination Y coordinate."
-                },
-                "entity_to_teleport": {
-                  "type": "string",
-                  "enum": [
-                    "user",
-                    "target"
-                  ],
-                  "default": "user",
-                  "description": "Which entity to teleport."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "change_state"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "new_state",
-                "target_entity"
-              ],
-              "properties": {
-                "new_state": {
-                  "type": "string",
-                  "description": "The new state value to apply (e.g., 'unlocked', 'activated')."
-                },
-                "target_entity": {
-                  "type": "string",
-                  "enum": [
-                    "target",
-                    "self_item"
-                  ],
-                  "description": "'target' affects the targeted entity, 'self_item' affects the item entity itself (if applicable)."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "execute_script"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "script_id"
-              ],
-              "properties": {
-                "script_id": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "ID of the script function to execute."
-                },
-                "args": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "description": "Optional arguments for the script."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "attempt_lock"
-            },
-            "parameters": {
-              "type": "object",
-              "description": "Parameters are minimal; logic uses context. May add flags later if needed (e.g., force_lock).",
-              "additionalProperties": false,
-              "properties": {}
-            }
-          }
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "attempt_unlock"
-            },
-            "parameters": {
-              "type": "object",
-              "description": "Parameters are minimal; logic uses context. May add flags later if needed.",
-              "additionalProperties": false,
-              "properties": {}
             }
           }
         }
       ],
       "examples": [
         {
-          "type": "heal",
+          "type": "trigger_event",
           "parameters": {
-            "amount": 10,
-            "target": "user"
-          }
-        },
-        {
-          "type": "damage",
-          "parameters": {
-            "amount": 5,
-            "damage_type": "fire",
-            "target": "target"
+            "eventName": "event:apply_heal_requested",
+            "payload": {
+              "amount": 15,
+              "healTargetSpecifier": "user"
+            }
           }
         },
         {
           "type": "trigger_event",
           "parameters": {
-            "eventName": "game:door_unlocked",
+            "eventName": "event:inflict_damage_requested",
             "payload": {
-              "door_id": "demo:door_rusty"
+              "damageAmount": 8,
+              "damageType": "fire",
+              "damageTargetSpecifier": "target"
             }
           }
         },
         {
-          "type": "apply_status_effect",
+          "type": "trigger_event",
           "parameters": {
-            "effect_id": "core:buff_strength",
-            "duration": 60,
-            "target": "user"
+            "eventName": "event:unlock_entity_attempt",
+            "payload": {}
           }
         },
         {
-          "type": "spawn_entity",
+          "type": "trigger_event",
           "parameters": {
-            "entity_id_to_spawn": "demo:summoned_imp",
-            "location": "current",
-            "offset_x": 1
+            "eventName": "event:apply_status_effect_requested",
+            "payload": {
+              "effectId": "core:status_poisoned",
+              "duration": 30,
+              "statusEffectTargetSpecifier": "target"
+            }
+          }
+        },
+        {
+          "type": "trigger_event",
+          "parameters": {
+            "eventName": "event:spawn_entity_requested",
+            "payload": {
+              "entityDefinitionId": "monster:goblin_low",
+              "quantity": 1,
+              "spawnLocationSpecifier": "target_location"
+            }
           }
         }
       ]

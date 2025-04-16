@@ -1,15 +1,15 @@
 // src/systems/itemUsageSystem.js
 
-// Service Imports
-// REMOVED: import {TargetResolutionService} from '../services/targetResolutionService.js';
 import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
-
-// Utilities
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
 import {
     EVENT_ITEM_CONSUME_REQUESTED,
-    EVENT_ITEM_USE_ATTEMPTED, EVENT_LOCK_ENTITY_ATTEMPT,
-    EVENT_UNLOCK_ENTITY_ATTEMPT
+    EVENT_ITEM_USE_ATTEMPTED,
+    UI_MESSAGE_DISPLAY, // Added for clarity
+    EVENT_MOVE_FAILED,  // Added for clarity (although not used directly in the modified section)
+    // Include other event types potentially dispatched by handlers if needed for context,
+    // like EVENT_ENTITY_UNLOCKED, EVENT_APPLY_HEAL_REQUESTED etc.
+    // These are the events whose handlers *should* now provide outcome feedback.
 } from "../types/eventTypes.js";
 
 // Type Imports for JSDoc
@@ -19,36 +19,34 @@ import {
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../types/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
+/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */ // Added for clarity
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.EffectObject} EffectObjectData */
+/** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Explicit import
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationOptions} ConditionEvaluationOptions */
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationResult} ConditionEvaluationResult */
-// UPDATED: Typedef points to the new service
-/** @typedef {import('../services/itemTargetResolver.js').ResolveItemTargetResult} ResolveItemTargetResult */
-/** @typedef {import('../services/effectExecutionService.js').EffectExecutionResult} EffectExecutionResult */
 
-/** @typedef {import('../services/effectExecutionService.js').EffectContext} EffectContext */
+/** @typedef {import('../services/itemTargetResolver.js').ResolveItemTargetResult} ResolveItemTargetResult */
 
 /**
  * ECS System responsible for handling the logic of using items.
- * Orchestrates calls to ConditionEvaluationService, ItemTargetResolverService,
- * and EffectExecutionService based on item definition data.
+ * Orchestrates calls to ConditionEvaluationService, ItemTargetResolverService.
  * Listens for EVENT_ITEM_USE_ATTEMPTED to trigger logic.
+ * Dispatches specific effect request events based on item's Usable.effects definition.
  * Dispatches EVENT_ITEM_CONSUME_REQUESTED for consumption.
- * Dispatches event:lock_entity_attempt and EVENT_UNLOCK_ENTITY_ATTEMPT.
- * Dispatches final success UI messages. Failure messages are expected
- * to be dispatched by the service detecting the failure.
+ * **Crucially, this system NO LONGER dispatches final UI success messages detailing effect outcomes.**
+ * Failure messages related to usability/targeting or detected by dependencies are expected
+ * to be dispatched by the service/system detecting the failure or via specific event handlers.
  */
 class ItemUsageSystem {
     #eventBus;
     #entityManager;
     #dataManager;
     #conditionEvaluationService;
-    #itemTargetResolverService; // ADDED: New service property
-    #effectExecutionService;
+    #itemTargetResolverService;
 
     /**
      * @param {object} options
@@ -56,8 +54,7 @@ class ItemUsageSystem {
      * @param {EntityManager} options.entityManager
      * @param {DataManager} options.dataManager
      * @param {ConditionEvaluationService} options.conditionEvaluationService
-     * @param {ItemTargetResolverService} options.itemTargetResolverService - Service for resolving item usage targets. // ADDED: JSDoc for new service
-     * @param {EffectExecutionService} options.effectExecutionService
+     * @param {ItemTargetResolverService} options.itemTargetResolverService - Service for resolving item usage targets.
      */
     constructor({
                     eventBus,
@@ -65,24 +62,19 @@ class ItemUsageSystem {
                     dataManager,
                     conditionEvaluationService,
                     itemTargetResolverService,
-                    effectExecutionService
                 }) {
-        // Dependency checks
+        // Dependency checks (unchanged)
         if (!eventBus) throw new Error("ItemUsageSystem requires options.eventBus.");
         if (!entityManager) throw new Error("ItemUsageSystem requires options.entityManager.");
         if (!dataManager) throw new Error("ItemUsageSystem requires options.dataManager.");
         if (!conditionEvaluationService) throw new Error("ItemUsageSystem requires options.conditionEvaluationService.");
-        // REMOVED: if (!targetResolutionService) throw new Error("ItemUsageSystem requires options.targetResolutionService.");
-        if (!itemTargetResolverService) throw new Error("ItemUsageSystem requires options.itemTargetResolverService."); // ADDED: Null check for new service
-        if (!effectExecutionService) throw new Error("ItemUsageSystem requires options.effectExecutionService.");
+        if (!itemTargetResolverService) throw new Error("ItemUsageSystem requires options.itemTargetResolverService.");
 
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
         this.#dataManager = dataManager;
         this.#conditionEvaluationService = conditionEvaluationService;
-        // REMOVED: this.#targetResolutionService = targetResolutionService;
-        this.#itemTargetResolverService = itemTargetResolverService; // ADDED: Assign new service
-        this.#effectExecutionService = effectExecutionService;
+        this.#itemTargetResolverService = itemTargetResolverService;
 
         this.#eventBus.subscribe(
             EVENT_ITEM_USE_ATTEMPTED,
@@ -99,8 +91,10 @@ class ItemUsageSystem {
     /**
      * Handles the EVENT_ITEM_USE_ATTEMPTED event. Orchestrates the item usage flow
      * by calling relevant services and handling the overall sequence.
-     * Relies on services to perform detailed logic and dispatch specific failure messages.
-     * Dispatches final success messages and consumption requests.
+     * Dispatches events defined in the item's Usable component effects.
+     * Relies on services/event handlers to perform detailed logic and dispatch specific failure messages.
+     * Dispatches consumption requests.
+     * **NO LONGER dispatches final success UI messages.**
      *
      * @param {ItemUseAttemptedEventPayload} payload - The event data.
      * @private
@@ -114,7 +108,6 @@ class ItemUsageSystem {
             internalMessages.push(message);
         };
 
-
         const {
             userEntityId,
             itemInstanceId,
@@ -123,36 +116,60 @@ class ItemUsageSystem {
             explicitTargetConnectionEntityId
         } = payload;
 
-        let overallActionSuccess = false;
+        let overallActionSuccess = false; // Represents success of the *orchestration attempt* in this system
         let validatedTarget = null;
         let targetType = 'none';
+        let effectsProcessed = false; // Still useful for internal logging/debugging
 
         try {
             // --- 1. Setup & Basic Validation ---
+            // (Code unchanged)
             const userEntity = this.#entityManager.getEntityInstance(userEntityId);
-            const itemInstance = this.#entityManager.getEntityInstance(itemInstanceId);
+            const itemInstance = this.#entityManager.getEntityInstance(itemInstanceId); // Keep check, item might not exist
             const itemDefinition = this.#dataManager.getEntityDefinition(itemDefinitionId);
 
             if (!userEntity || !itemDefinition) {
+                // Error handling unchanged, uses eventBus for UI feedback
                 if (!itemDefinition) {
-                    this.#eventBus.dispatch('ui:message_display', {
+                    this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
                         text: "Error: Item definition is missing.",
                         type: 'error'
                     });
+                    log(`Item definition ${itemDefinitionId} not found.`, 'error');
                 }
-                return;
+                if (!userEntity) {
+                    this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: "Error: User entity not found.", type: 'error'});
+                    log(`User entity ${userEntityId} not found.`, 'error');
+                }
+                // Check for itemInstance AFTER definition check, as we need definition for name fallback
+                if (!itemInstance) {
+                    // Item might have been removed between action request and processing
+                    this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+                        text: "Error: The item seems to have disappeared.",
+                        type: 'error'
+                    });
+                    log(`Item instance ${itemInstanceId} not found for user ${userEntityId}.`, 'error');
+                }
+                return; // Exit if critical entities are missing
             }
             const itemName = getDisplayName(itemInstance) ?? itemDefinition?.components?.Name?.value ?? "the item";
 
             /** @type {UsableComponentData | undefined} */
             const usableComponentData = itemDefinition.components?.Usable;
             if (!usableComponentData) {
-                this.#eventBus.dispatch('ui:message_display', {text: `You cannot use ${itemName}.`, type: 'info'});
+                this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: `You cannot use ${itemName}.`, type: 'info'});
+                log(`Item "${itemName}" (${itemDefinitionId}) has no Usable component.`, 'info');
                 return;
             }
 
             // --- 2. Usability Check ---
-            const usabilityContext = {userEntity: userEntity, targetEntityContext: null, targetConnectionContext: null};
+            // (Code unchanged - relies on ConditionEvaluationService which may dispatch failure messages via its own events/logic if configured, or returns message here)
+            // Construct context without dataAccess; Service injects it internally
+            const usabilityBaseContext = {
+                userEntity: userEntity,
+                targetEntityContext: null,
+                targetConnectionContext: null
+            };
             const usabilityOptions = {
                 itemName: itemName,
                 checkType: 'Usability',
@@ -161,9 +178,10 @@ class ItemUsageSystem {
                     default: TARGET_MESSAGES.USE_CONDITION_FAILED(itemName)
                 }
             };
+            // Note: The subject for usability check is the userEntity
             const usabilityCheckResult = this.#conditionEvaluationService.evaluateConditions(
-                userEntity,
-                usabilityContext,
+                userEntity, // Subject is the user
+                usabilityBaseContext, // Base context for evaluation
                 usableComponentData.usability_conditions,
                 usabilityOptions
             );
@@ -171,230 +189,162 @@ class ItemUsageSystem {
 
             if (!usabilityCheckResult.success) {
                 if (usabilityCheckResult.failureMessage) {
-                    this.#eventBus.dispatch('item:use_condition_failed', {
-                        actorId: userEntityId,
-                        failureMessage: usabilityCheckResult.failureMessage
+                    // Dispatch a generic failure event, or directly dispatch UI message
+                    // Let's stick to direct UI message for simplicity here, matching original intent
+                    this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+                        text: usabilityCheckResult.failureMessage,
+                        type: 'warning' // Or 'info' depending on severity
                     });
+                    // Optionally dispatch a specific event if other systems need to react to usability failure
+                    // this.#eventBus.dispatch('item:use_usability_failed', { actorId: userEntityId, failureMessage: usabilityCheckResult.failureMessage });
                 } else {
                     log("Usability check failed, but no specific UI failure message provided by ConditionEvaluationService.", "debug");
+                    // Dispatch a generic failure message if none was provided
+                    this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+                        text: TARGET_MESSAGES.USE_CONDITION_FAILED(itemName),
+                        type: 'warning'
+                    });
                 }
-                return;
+                return; // Stop processing if usability conditions fail
             }
 
-            // --- 3. Target Resolution & Validation ---
 
-            // UPDATED: Call the new service with the correct signature
+            // --- 3. Target Resolution & Validation ---
+            // (Code unchanged - relies on ItemTargetResolverService which dispatches its own failure UI messages via eventBus)
             const targetResult = await this.#itemTargetResolverService.resolveItemTarget({
                 userEntity,
                 usableComponentData,
                 explicitTargetEntityId,
-                explicitTargetConnectionEntityId: explicitTargetConnectionEntityId, // Renamed key as per requirement
+                explicitTargetConnectionEntityId,
                 itemName
             });
-            // REMOVED: Second argument (targetServiceDependencies)
 
             internalMessages.push(...targetResult.messages);
 
+            // If target is required AND resolution failed, the service should have already sent a UI message.
             if (!targetResult.success && usableComponentData.target_required) {
-                return;
+                log(`Target resolution failed (and target was required) for item "${itemName}". UI message expected from ItemTargetResolverService.`, 'info');
+                return; // Stop processing if required target resolution fails
             }
+            // If target not required, or resolution succeeded, proceed.
             validatedTarget = targetResult.target;
             targetType = targetResult.targetType;
             const targetNameForLog = validatedTarget
-                ? (targetType === 'entity' ? getDisplayName(/** @type {Entity} */(validatedTarget)) : (/** @type {Connection} */(validatedTarget)).name || (/** @type {Connection} */(validatedTarget)).direction)
+                ? (targetType === 'entity' ? getDisplayName(/** @type {Entity} */(validatedTarget)) : (/** @type {Connection} */(validatedTarget)).name || (/** @type {Connection} */(validatedTarget)).direction || 'Unnamed Connection')
                 : 'None';
+            log(`Target resolved/validated: Type='${targetType}', Name='${targetNameForLog}', ID='${validatedTarget?.id ?? 'N/A'}'`, 'debug');
 
 
-            // --- Separate Effects: Standard vs. Attempt ---
-            /** @type {EffectObjectData[]} */
-            const effectsToExecute = [];
-            /** @type {EffectObjectData[]} */
-            const attemptEffects = [];
-
+            // --- 4. Effect Dispatch via EventBus ---
+            // (Code largely unchanged - focuses on dispatching events, not handling outcomes)
             if (usableComponentData.effects && Array.isArray(usableComponentData.effects) && usableComponentData.effects.length > 0) {
-                for (const effect of usableComponentData.effects) {
-                    if (effect.type === 'attempt_lock' || effect.type === 'attempt_unlock') {
-                        attemptEffects.push(effect);
-                    } else {
-                        effectsToExecute.push(effect);
-                    }
-                }
-            }
+                log(`Processing ${usableComponentData.effects.length} effects for item "${itemName}"...`, 'debug');
 
-            // --- Process Lock/Unlock Attempt Effects ---
-            if (attemptEffects.length > 0 && targetResult.success) {
-                log(`Processing ${attemptEffects.length} attempt effects for target type: ${targetType}`, 'debug');
+                for (const effectData of usableComponentData.effects) {
+                    // Check for the specific 'trigger_event' type which is the pattern moving forward
+                    if (effectData.type === 'trigger_event') {
+                        const eventName = effectData.parameters?.eventName;
+                        const customPayload = effectData.parameters?.payload ?? {};
 
-                if (targetType === 'entity') {
-                    const targetEntity = /** @type {Entity} */ (validatedTarget);
-                    if (targetEntity && targetEntity.id) {
-                        const targetEntityIdForEvent = targetEntity.id;
-                        log(`Target is entity ${targetEntityIdForEvent}. Dispatching lock/unlock attempt events.`, 'debug');
-
-                        for (const effect of attemptEffects) {
-                            let eventName = null;
-                            if (effect.type === 'attempt_lock') eventName = EVENT_LOCK_ENTITY_ATTEMPT;
-                            else if (effect.type === 'attempt_unlock') eventName = EVENT_UNLOCK_ENTITY_ATTEMPT;
-
-                            if (eventName) {
-                                const payload = {
-                                    userId: userEntityId,
-                                    targetEntityId: targetEntityIdForEvent,
-                                    keyItemId: itemInstanceId
-                                };
-                                log(`Dispatching ${eventName} with payload:`, 'debug', payload);
-                                this.#eventBus.dispatch(eventName, payload);
-                            } else {
-                                log(`Unhandled attempt effect type on entity: ${effect.type}`, 'warning');
-                            }
+                        if (!eventName || typeof eventName !== 'string' || eventName.trim() === '') {
+                            console.warn(`ItemUsageSystem: Skipping trigger_event effect for item "${itemName}" (${itemDefinitionId}) due to missing or invalid eventName. Effect data:`, effectData);
+                            log(`Skipping effect due to missing/invalid eventName for item "${itemName}"`, 'warning', effectData);
+                            continue;
                         }
-                    } else {
-                        log(`Attempt effects found, but target entity or ID is missing despite targetResult success. Cannot dispatch events.`, 'warning');
-                    }
-                } else if (targetType === 'connection') {
-                    // NOTE: Based on itemTargetResolver.js, targetResult.target is the *Connection Entity*, not the Connection object itself.
-                    // The Connection object logic (like blockerEntityId) seems to reside within the resolver now.
-                    // The events should still target the *blocker* entity if one exists.
-                    // HOWEVER, the current itemTargetResolver returns the Connection *Entity*.
-                    // This orchestration logic needs the *Blocker Entity ID* from the *actual Connection object*.
-                    // Let's assume the ItemTargetResolverService result needs adjustment OR the LockSystem needs adapting.
-                    // For *this specific ticket*, we follow the instructions which means the `target` is an Entity (the Connection Entity).
-                    // We *cannot* reliably get the blockerEntityId here without fetching the *actual* Connection object again.
-                    // Let's proceed by targeting the Connection *Entity* as per the available `validatedTarget`, acknowledging this discrepancy.
-                    // TODO: Revisit LockSystem/ItemTargetResolverService interaction regarding Connection targets.
 
-                    const connectionEntity = /** @type {Entity} */ (validatedTarget); // The target is the Connection Entity
-                    const connectionEntityId = connectionEntity?.id;
+                        const standardContext = {
+                            userId: userEntityId,
+                            itemInstanceId: itemInstanceId,
+                            itemDefinitionId: itemDefinitionId,
+                            sourceItemName: itemName,
+                            validatedTargetId: validatedTarget?.id ?? null,
+                            validatedTargetType: targetType
+                        };
 
-                    if (connectionEntityId) {
-                        log(`Target is connection entity ${connectionEntityId}. Attempting to dispatch lock/unlock events targeting this entity.`, 'debug');
-                        // Existing logic might need refinement based on how LockSystem handles connection entities directly.
-                        // Dispatching targeting the *connection entity* itself for now based on the refactored structure.
+                        const fullEventPayload = {...standardContext, ...customPayload};
 
-                        for (const effect of attemptEffects) {
-                            let eventName = null;
-                            if (effect.type === 'attempt_lock') eventName = 'event:lock_entity_attempt';
-                            else if (effect.type === 'attempt_unlock') eventName = EVENT_UNLOCK_ENTITY_ATTEMPT;
+                        console.debug(`ItemUsageSystem: Dispatching event "${eventName}" for item "${itemName}" with payload:`, fullEventPayload);
+                        log(`Dispatching event: ${eventName}`, 'debug', fullEventPayload);
 
-                            if (eventName) {
-                                const payload = {
-                                    userId: userEntityId,
-                                    targetEntityId: connectionEntityId, // Target the connection entity ID
-                                    keyItemId: itemInstanceId
-                                };
-                                log(`Dispatching ${eventName} targeting connection entity ${connectionEntityId}`, 'debug', payload);
-                                this.#eventBus.dispatch(eventName, payload);
-                            } else {
-                                log(`Unhandled attempt effect type on connection entity: ${effect.type}`, 'warning');
-                            }
+                        try {
+                            this.#eventBus.dispatch(eventName, fullEventPayload);
+                            effectsProcessed = true; // Mark that at least one valid event dispatch was attempted/successful
+                        } catch (dispatchError) {
+                            console.error(`ItemUsageSystem: Error dispatching event "${eventName}" for item "${itemName}":`, dispatchError);
+                            log(`ERROR dispatching event ${eventName}: ${dispatchError.message}`, 'error');
+                            // Decide if a dispatch error should halt the entire action?
+                            // For now, log and continue, but don't mark action as fully successful if critical.
+                            // Setting overallActionSuccess = false here might be too harsh if only one effect fails.
+                            // Let's assume for now that individual handlers manage their errors.
                         }
 
                     } else {
-                        log(`Attempt effects found for connection target, but connection entity ID is missing. Cannot dispatch events.`, 'warning');
+                        // Handle legacy or incorrect effect types if necessary, or just log a warning.
+                        // This section previously handled direct effect execution. Now it only warns.
+                        console.warn(`ItemUsageSystem: Effect type "${effectData.type}" on item "${itemName}" (${itemDefinitionId}) is not 'trigger_event' and was not executed by this system. Ensure handlers exist for relevant events.`);
+                        log(`Non-'trigger_event' effect type "${effectData.type}" found on item "${itemName}". Skipped by ItemUsageSystem.`, 'warning');
                     }
+                } // End of for...of loop over effects
 
-                } else {
-                    log(`Attempt effects found, but target type is '${targetType}'. No entity/blocker lock/unlock attempt events dispatched.`, 'debug');
-                }
+            } else {
+                log(`Item "${itemName}" (${itemDefinitionId}) has no effects defined in Usable component.`, 'debug');
             }
 
-
-            // --- 4. Effect Execution (Standard Effects) ---
-            let effectsProcessed = false;
-            let effectExecutionResult = {success: true, messages: [], stopPropagation: false};
-
-            if (effectsToExecute.length > 0) {
-                effectsProcessed = true;
-                /** @type {EffectContext} */
-                const effectContext = {
-                    userEntity: userEntity,
-                    target: validatedTarget,
-                    targetType: targetType,
-                    entityManager: this.#entityManager,
-                    eventBus: this.#eventBus,
-                    dataManager: this.#dataManager,
-                    usableComponentData: usableComponentData,
-                    itemName: itemName,
-                    itemInstanceId: itemInstanceId,
-                    itemDefinitionId: itemDefinitionId
-                };
-
-                effectExecutionResult = await this.#effectExecutionService.executeEffects(
-                    effectsToExecute,
-                    effectContext
-                );
-                internalMessages.push(...effectExecutionResult.messages);
-            } else if (attemptEffects.length > 0) {
-                effectsProcessed = true;
-                log(`Item use attempt had only attempt_lock/attempt_unlock effects. Standard effect execution skipped.`, 'debug');
-            }
-
+            // --- Set Overall Action Success ---
+            // If we reached here without returning early due to *initial* validation/usability/targeting failures,
+            // the *attempt* initiated by the user and orchestrated by this system is considered successful.
+            // The success of the *effects* is determined by the event handlers.
             overallActionSuccess = true;
 
+
             // --- 5. Item Consumption ---
+            // (Code unchanged - consumption depends on successful orchestration attempt and item config)
             if (overallActionSuccess && usableComponentData.consume_on_use) {
-                const currentItemInstance = this.#entityManager.getEntityInstance(itemInstanceId);
+                const currentItemInstance = this.#entityManager.getEntityInstance(itemInstanceId); // Re-check existence
                 if (currentItemInstance) {
-                    log(`Requesting consumption for item: ${itemInstanceId}`, 'debug');
+                    log(`Requesting consumption for item: ${itemInstanceId} ("${itemName}")`, 'debug');
                     this.#eventBus.dispatch(EVENT_ITEM_CONSUME_REQUESTED, {
                         userId: userEntityId,
                         itemInstanceId: itemInstanceId
                     });
                 } else {
-                    log(`Item instance ${itemInstanceId} was gone before consumption could be requested.`, 'debug');
+                    log(`Item instance ${itemInstanceId} ("${itemName}") was removed (likely by an event handler) before consumption could be requested.`, 'debug');
+                    // Don't treat this as an error necessarily, maybe an effect intentionally removed the item.
                 }
             }
 
             // --- 6. Final Outcome Reporting ---
+            // ***********************************************************************
+            // * IMPLEMENTATION OF TICKET 1.3 (STRATEGY A - REMOVE ALL SUCCESS MESSAGES)
+            // * The entire 'if (overallActionSuccess)' block related to constructing
+            // * and dispatching success UI_MESSAGE_DISPLAY events is REMOVED below.
+            // * Responsibility for outcome feedback shifts to event listeners.
+            // ***********************************************************************
+
+
+            // Log completion of the orchestration attempt
             if (overallActionSuccess) {
-                const successMsgTemplate = usableComponentData.success_message;
-                let finalMsg = '';
-
-                if (successMsgTemplate) {
-                    finalMsg = successMsgTemplate;
-                    if (finalMsg.includes('{item}')) finalMsg = finalMsg.replace('{item}', itemName);
-                    if (finalMsg.includes('{target}')) {
-                        if (validatedTarget) {
-                            // Target name needs to handle both Entity and Connection Entity display names
-                            const targetName = getDisplayName(/** @type {Entity} */ (validatedTarget)) || 'the target';
-                            finalMsg = finalMsg.replace('{target}', targetName);
-                        } else {
-                            finalMsg = finalMsg.replace(/ on {target}/g, '');
-                            finalMsg = finalMsg.replace(/{target}/g, 'nothing');
-                        }
-                    }
-                } else {
-                    if (effectsProcessed || usableComponentData.target_required) {
-                        if (validatedTarget) {
-                            const targetName = `the ${getDisplayName(/** @type {Entity} */(validatedTarget)) || 'target'}`;
-                            finalMsg = `You use the ${itemName} on ${targetName}.`;
-                        } else {
-                            if (effectsProcessed) finalMsg = `You use the ${itemName}.`;
-                        }
-                    }
-                }
-
-                if (finalMsg && attemptEffects.length === 0) {
-                    log(`Dispatching final success message: "${finalMsg}"`, 'debug');
-                    this.#eventBus.dispatch('ui:message_display', {text: finalMsg, type: 'info'});
-                } else if (finalMsg && attemptEffects.length > 0) {
-                    log(`Final success message "${finalMsg}" generated but suppressed; LockSystem will provide feedback for lock/unlock attempt.`, 'debug');
-                } else if (effectsProcessed) {
-                    log(`Item use action succeeded but generated no final success message (Item: ${itemName}, Target: ${targetNameForLog})`, 'debug');
-                }
+                log(`Item use orchestration completed successfully for "${itemName}". Effects processed: ${effectsProcessed}. Consumption requested: ${!!usableComponentData.consume_on_use}. No outcome UI message dispatched by this system.`, 'debug');
+            } else {
+                // This path should ideally not be reached if errors caused returns earlier,
+                // but log defensively.
+                log(`Item use orchestration attempt for "${itemName}" concluded with overallActionSuccess=false.`, 'warning');
             }
 
         } catch (error) {
             console.error("ItemUsageSystem: CRITICAL UNHANDLED ERROR during _handleItemUseAttempt orchestration:", error);
-            log(`CRITICAL ERROR: ${error.message}`, 'error');
-            this.#eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            log(`CRITICAL ERROR: ${error.message}`, 'error', {stack: error.stack});
+            // Dispatch a generic internal error message to the UI
+            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            // Ensure overallActionSuccess remains false if an error occurs here
             overallActionSuccess = false;
         } finally {
+            // Log all collected internal messages for debugging, regardless of success/failure (unchanged)
             if (internalMessages.length > 0) {
-                console.debug(`ItemUsageSystem internal log for item use attempt (User: ${userEntityId}, ItemDef: ${itemDefinitionId}, ItemInstance: ${itemInstanceId}):`, internalMessages);
+                console.debug(`ItemUsageSystem internal log for item use attempt (User: ${userEntityId}, ItemDef: ${itemDefinitionId}, ItemInstance: ${itemInstanceId}, Success: ${overallActionSuccess}):`, internalMessages);
             }
         }
-    }
+    } // End of _handleItemUseAttempt
 }
 
 export default ItemUsageSystem;
