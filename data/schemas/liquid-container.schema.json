@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/liquid-container.schema.json",
+  "title": "LiquidContainer Component Schema",
+  "description": "Defines properties for an entity that can contain liquids.",
+  "type": "object",
+  "properties": {
+    "currentVolume": {
+      "type": "number",
+      "description": "The current amount of liquid held.",
+      "minimum": 0
+    },
+    "maxVolume": {
+      "type": "number",
+      "description": "The maximum liquid capacity.",
+      "minimum": 0
+    },
+    "liquidType": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Identifier for the type of liquid contained (e.g., 'water', 'poison'). Can be null if empty or type is unknown/generic.",
+      "default": null
+    }
+  },
+  "required": [
+    "currentVolume",
+    "maxVolume"
+  ],
+  "additionalProperties": false
+}

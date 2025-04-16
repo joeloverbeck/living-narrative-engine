@@ -1,0 +1,23 @@
+{
+  "id": "demo:example_apple",
+  "components": {
+    "Name": {
+      "value": "Example Apple"
+    },
+    "Description": {
+      "text": "A crisp, red example apple. It looks edible."
+    },
+    "Item": {
+      "tags": [
+        "food",
+        "consumable",
+        "edible",
+        "organic"
+      ],
+      "stackable": true,
+      "value": 1,
+      "weight": 0.1
+    },
+    "Edible": {}
+  }
+}

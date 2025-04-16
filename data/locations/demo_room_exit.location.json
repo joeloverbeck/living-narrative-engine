@@ -1,0 +1,25 @@
+{
+  "id": "demo:room_exit",
+  "components": {
+    "Name": {
+      "value": "Exit"
+    },
+    "Description": {
+      "text": "You have reached the dungeon’s exit. Sunlight pours in from a rocky opening, and fresh air is a welcome change. Beyond this point lies the outside world. The treasure chamber is back to the south behind you."
+    },
+    "MetaDescription": {
+      "keywords": [
+        "dungeon exit",
+        "natural light",
+        "fresh air",
+        "forest outside"
+      ]
+    },
+    "Connections": {
+      "connections": {
+        "south": "demo:conn_treasure_exit",
+        "north": "demo:conn_exit_outside"
+      }
+    }
+  }
+}

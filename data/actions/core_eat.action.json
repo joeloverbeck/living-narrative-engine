@@ -1,0 +1,15 @@
+{
+  "id": "core:eat",
+  "name": "Eat",
+  "description": "Consume an edible item from inventory.",
+  "commands": [
+    "eat"
+  ],
+  "target_type": "item_in_inventory",
+  "requires_target": true,
+  "applicability": {
+    "requires_components": [
+      "EdibleComponent"
+    ]
+  }
+}
