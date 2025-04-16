@@ -1,9 +1,0 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/edible.schema.json",
-  "title": "Edible Component Schema",
-  "description": "Marker component indicating an entity can be eaten.",
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false
-}
