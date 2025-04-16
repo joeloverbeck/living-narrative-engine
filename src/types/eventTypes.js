@@ -325,7 +325,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload structure for the event:unlock_entity_attempt event.
+ * Defines the payload structure for the EVENT_UNLOCK_ENTITY_ATTEMPT event.
  * Signals that an entity is attempting to unlock another entity (e.g., a door, a chest, a mechanism).
  * This event is typically fired *before* validation or state changes occur.
  * (Confirmation: Payload structure compatible with ItemUsageSystem context)
@@ -355,7 +355,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload structure for the event:entity_unlocked event.
+ * Defines the payload structure for the EVENT_ENTITY_UNLOCKED event.
  * Signals that an entity has been successfully unlocked.
  * This event is fired *after* the entity's state has been updated.
  *
@@ -369,7 +369,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload structure for the event:entity_locked event.
+ * Defines the payload structure for the EVENT_ENTITY_LOCKED event.
  * Signals that an entity has been successfully locked.
  * This event is fired *after* the entity's state has been updated.
  *
@@ -426,7 +426,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
 // defined in the item's data (Usable component -> effects -> parameters).
 
 /**
- * Defines the payload for the event:apply_heal_requested event.
+ * Defines the payload for the EVENT_APPLY_HEAL_REQUESTED event.
  * Signals a request to apply healing to an entity.
  *
  * Fired By: ItemUsageSystem
@@ -446,7 +446,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload for the event:inflict_damage_requested event.
+ * Defines the payload for the EVENT_INFLICT_DAMAGE_REQUESTED event.
  * Signals a request to inflict damage on an entity.
  *
  * Fired By: ItemUsageSystem
@@ -467,7 +467,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload for the event:apply_status_effect_requested event.
+ * Defines the payload for the EVENT_APPLY_STATUS_EFFECT_REQUESTED event.
  * Signals a request to apply a status effect to an entity.
  *
  * Fired By: ItemUsageSystem
@@ -490,7 +490,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload for the event:remove_status_effect_requested event.
+ * Defines the payload for the EVENT_REMOVE_STATUS_EFFECT_REQUESTED event.
  * Signals a request to remove a status effect (or stacks) from an entity.
  *
  * Fired By: ItemUsageSystem
@@ -511,7 +511,7 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  */
 
 /**
- * Defines the payload for the event:spawn_entity_requested event.
+ * Defines the payload for the EVENT_SPAWN_ENTITY_REQUESTED event.
  * Signals a request to spawn a new entity into the game world.
  *
  * Fired By: ItemUsageSystem

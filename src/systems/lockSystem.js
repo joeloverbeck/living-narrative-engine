@@ -2,7 +2,13 @@
 
 import LockableComponent from '../components/lockableComponent.js';
 // Import helper for display name
-import { getDisplayName } from '../utils/messages.js'; // Assuming getDisplayName is exported from messages.js or similar
+import { getDisplayName } from '../utils/messages.js';
+import {
+    EVENT_ENTITY_LOCKED,
+    EVENT_ENTITY_UNLOCKED,
+    EVENT_LOCK_ENTITY_ATTEMPT,
+    EVENT_UNLOCK_ENTITY_ATTEMPT
+} from "../types/eventTypes.js"; // Assuming getDisplayName is exported from messages.js or similar
 
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -20,7 +26,7 @@ import { getDisplayName } from '../utils/messages.js'; // Assuming getDisplayNam
 /**
  * ECS System responsible for handling the logic of locking and unlocking entities
  * (e.g., chests, doors represented as entities).
- * Listens for 'event:unlock_entity_attempt' and 'event:lock_entity_attempt'.
+ * Listens for EVENT_UNLOCK_ENTITY_ATTEMPT and 'event:lock_entity_attempt'.
  * Delegates the core state change and validation logic to LockableComponent.
  */
 class LockSystem {
@@ -59,9 +65,9 @@ class LockSystem {
      * Subscribes the system to relevant lock/unlock events.
      */
     initialize() {
-        this.#eventBus.subscribe('event:unlock_entity_attempt', this._boundHandleUnlockAttempt);
-        this.#eventBus.subscribe('event:lock_entity_attempt', this._boundHandleLockAttempt);
-        console.log("LockSystem: Initialized and subscribed to event:unlock_entity_attempt and event:lock_entity_attempt.");
+        this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
+        this.#eventBus.subscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
+        console.log("LockSystem: Initialized and subscribed to EVENT_UNLOCK_ENTITY_ATTEMPT and event:lock_entity_attempt.");
     }
 
     /**
@@ -116,8 +122,8 @@ class LockSystem {
                 targetEntityId: targetEntityId,
                 keyItemId: currentKeyItemId // Pass the key used, which might be null
             };
-            console.debug(`LockSystem: Dispatching event:entity_unlocked`, entityUnlockedPayload);
-            this.#eventBus.dispatch('event:entity_unlocked', entityUnlockedPayload);
+            console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_UNLOCKED}`, entityUnlockedPayload);
+            this.#eventBus.dispatch(EVENT_ENTITY_UNLOCKED, entityUnlockedPayload);
 
             // Dispatch success UI message ONLY if successful
             this.#dispatchUIMessage(`You unlock the ${entityName}.`, 'success');
@@ -180,8 +186,8 @@ class LockSystem {
                 targetEntityId: targetEntityId,
                 keyItemId: currentKeyItemId // Pass the key used in the attempt, which might be null
             };
-            console.debug(`LockSystem: Dispatching event:entity_locked`, entityLockedPayload);
-            this.#eventBus.dispatch('event:entity_locked', entityLockedPayload);
+            console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_LOCKED}`, entityLockedPayload);
+            this.#eventBus.dispatch(EVENT_ENTITY_LOCKED, entityLockedPayload);
 
             // Dispatch success UI message ONLY if successful
             this.#dispatchUIMessage(`You lock the ${entityName}.`, 'success');
@@ -284,8 +290,8 @@ class LockSystem {
      */
     shutdown() {
         // Use the stored bound handlers for correct unsubscription
-        this.#eventBus.unsubscribe('event:unlock_entity_attempt', this._boundHandleUnlockAttempt);
-        this.#eventBus.unsubscribe('event:lock_entity_attempt', this._boundHandleLockAttempt);
+        this.#eventBus.unsubscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
+        this.#eventBus.unsubscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
         console.log("LockSystem: Shutdown complete, unsubscribed from events.");
     }
 }

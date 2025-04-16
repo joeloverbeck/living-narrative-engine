@@ -1,11 +1,14 @@
+// src/actions/handlers/lookActionHandler.js
+
 // --- Core Components ---
 import {NameComponent} from '../../components/nameComponent.js';
 import {DescriptionComponent} from '../../components/descriptionComponent.js';
 import {ConnectionsComponent} from '../../components/connectionsComponent.js';
 import {ItemComponent} from '../../components/itemComponent.js';
 import {PassageDetailsComponent} from '../../components/passageDetailsComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js'; // Ensure this is imported if needed
 
-// --- State-Determining Components for Blockers (CONN-9.4) ---
+// --- State-Determining Components for Blockers ---
 import OpenableComponent from '../../components/openableComponent.js';
 import LockableComponent from '../../components/lockableComponent.js';
 
@@ -17,38 +20,33 @@ import {handleActionWithTargetResolution} from '../actionExecutionUtils.js';
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../managers/entityManager.js').EntityManager} EntityManager */ // Added for helper type hint
+/** @typedef {import('../../managers/entityManager.js').EntityManager} EntityManager */
 /** @typedef {import('../../types').LocationRenderData} LocationRenderData */
 /** @typedef {import('../../components/passageDetailsComponent.js').PassageDetailsComponent} PassageDetailsComponentType */
 /** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
 
-
-// --- REFACTOR: Ticket 11 ---
-// Internal static helper to get display names of entities in a location matching a predicate.
-// Centralizes fetching, filtering, and mapping to names.
+// --- Helper Function: _getVisibleEntityNames ---
 /**
+ * Gets display names of entities in a location matching a predicate.
  * @param {EntityManager} entityManager
  * @param {string} locationId
- * @param {string | null} excludeEntityId - Entity ID to exclude (e.g., the player).
- * @param {(entity: Entity) => boolean} filterPredicate - Function to filter entities.
- * @returns {string[]} - Array of display names.
+ * @param {string | null} excludeEntityId
+ * @param {(entity: Entity) => boolean} filterPredicate
+ * @returns {string[]}
  */
 const _getVisibleEntityNames = (entityManager, locationId, excludeEntityId, filterPredicate) => {
     const entityIdsInLocation = entityManager.getEntitiesInLocation(locationId);
     return Array.from(entityIdsInLocation)
         .map(id => entityManager.getEntityInstance(id))
-        .filter(Boolean) // Remove nulls if an instance wasn't found
-        .filter(entity => entity.id !== excludeEntityId) // Exclude specified entity
-        .filter(filterPredicate) // Apply custom filter logic
-        .map(entity => getDisplayName(entity)); // Map to display name
+        .filter(Boolean)
+        .filter(entity => entity.id !== excludeEntityId)
+        .filter(filterPredicate)
+        .map(entity => getDisplayName(entity));
 };
 
-// --- END REFACTOR: Ticket 11 ---
-
-
+// --- Helper Function: formatExitString ---
 /**
- * Helper function to generate the user-facing description string for an exit.
- * (Function implementation remains unchanged from the provided context)
+ * Generates the user-facing description string for an exit.
  * @param {string} direction
  * @param {PassageDetailsComponentType} passageDetails
  * @param {Entity | null} blockerEntity
@@ -119,34 +117,35 @@ function formatExitString(direction, passageDetails, blockerEntity, effectivePas
     }
 
     if (effectivePassageState !== 'impassable' || !blockerEntity) {
-        description = description.charAt(0).toUpperCase() + description.slice(1);
+        if (typeof description === 'string' && description.length > 0) {
+            description = description.charAt(0).toUpperCase() + description.slice(1);
+        }
     }
 
     return `${direction}: ${description}`;
 }
 
-
+// --- Main Action Handler: executeLook ---
 /**
  * Handles the 'core:look' action.
- * Refactored (Ticket 11) location part to use _getVisibleEntityNames helper.
- * Uses handleActionWithTargetResolution for looking at specific targets.
  * @param {ActionContext} context
  * @returns {Promise<ActionResult>}
  */
 export async function executeLook(context) {
-    const {currentLocation, entityManager, playerEntity, parsedCommand, eventBus } = context;
+    const {currentLocation, entityManager, playerEntity, parsedCommand, eventBus} = context;
     const messages = [];
 
+    // --- Handle Missing Location ---
     if (!currentLocation) {
         const errorMsg = TARGET_MESSAGES.LOOK_LOCATION_UNKNOWN;
-        await eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'}); // Use eventBus instance
+        await eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
         return {success: false, messages: [{text: errorMsg, type: 'error'}]};
     }
 
     const targetName = parsedCommand.directObjectPhrase;
 
+    // --- Case 1: Look at Current Location ---
     if (!targetName) {
-        // --- Look at the current location ---
         messages.push({text: `Look intent: At current location ${currentLocation.id}`, type: 'internal'});
         const nameComp = currentLocation.getComponent(NameComponent);
         const descComp = currentLocation.getComponent(DescriptionComponent);
@@ -155,74 +154,105 @@ export async function executeLook(context) {
         const locationName = nameComp ? nameComp.value : `Unnamed Location (${currentLocation.id})`;
         const locationDesc = descComp ? descComp.text : "You are in an undescribed location.";
 
-        // --- REFACTOR: Ticket 11 ---
-        // Use helper to get visible item names
-        const itemsVisible = _getVisibleEntityNames(
-            entityManager,
-            currentLocation.id,
-            playerEntity.id, // Exclude player
-            entity => entity.hasComponent(ItemComponent) // Filter for items
-        );
+        // --- Get Items/NPCs ---
+        const itemsVisible = _getVisibleEntityNames(entityManager, currentLocation.id, playerEntity.id, entity => entity.hasComponent(ItemComponent));
+        const npcsVisible = _getVisibleEntityNames(entityManager, currentLocation.id, playerEntity.id, entity => !entity.hasComponent(ItemComponent));
 
-        // Use helper to get visible NPC names
-        const npcsVisible = _getVisibleEntityNames(
-            entityManager,
-            currentLocation.id,
-            playerEntity.id, // Exclude player
-            entity => !entity.hasComponent(ItemComponent) // Filter for non-items (basic NPC check)
-        );
-        // --- END REFACTOR: Ticket 11 ---
-
-
-        // --- Connection/Exit Processing (Logic remains the same, complexity noted) ---
+        // --- Connection/Exit Processing ---
         const formattedExits = [];
-        // ... (existing detailed connection processing loop remains here) ...
-        // (No changes to the loop itself based on the refactoring ticket's constraints)
-        // ... (rest of the connection processing loop) ...
+        let allConnections = []; // Default to empty array
+
+        // +++ Start Debug Block for Connections Component +++
+        console.log(`[EXECUTE_LOOK DEBUG] Checking connectionsComp for ${currentLocation.id}:`);
         if (connectionsComp) {
-            const allConnections = connectionsComp.getAllConnections();
-            for (const {direction, connectionEntityId} of allConnections) {
-                let connectionEntity = null;
-                let passageDetailsComp = null;
-                let blockerEntity = null;
-                let effectivePassageState = "open"; // Default
-
-                try {
-                    connectionEntity = entityManager.getEntityInstance(connectionEntityId);
-                    if (!connectionEntity) continue; // Skip if connection entity missing
-
-                    passageDetailsComp = connectionEntity.getComponent(PassageDetailsComponent);
-                    if (!passageDetailsComp || passageDetailsComp.isHidden()) continue; // Skip if no details or hidden
-
-                    const blockerId = passageDetailsComp.getBlockerId();
-                    if (blockerId) {
-                        blockerEntity = entityManager.getEntityInstance(blockerId);
-                        // Note: Warning if blockerEntity not found is good, but proceed without it for exit desc
-                    }
-
-                    // Determine effective state based on blocker (existing logic)
-                    if (blockerEntity) {
-                        const lockableComp = blockerEntity.getComponent(LockableComponent);
-                        const openableComp = blockerEntity.getComponent(OpenableComponent);
-                        if (lockableComp?.isLocked) effectivePassageState = "locked";
-                        else if (openableComp) effectivePassageState = openableComp.isOpen ? "open" : "closed";
-                        else if (lockableComp && !lockableComp.isLocked) effectivePassageState = "open";
-                        else effectivePassageState = "impassable"; // Blocker exists but no state components
-                    } // else: no blocker, state remains 'open'
-
-                    const exitString = formatExitString(direction, passageDetailsComp, blockerEntity, effectivePassageState);
-                    formattedExits.push(exitString);
-
-                } catch (error) {
-                    console.error(`LookActionHandler: Error processing connection '${connectionEntityId}' (direction '${direction}'):`, error);
-                }
+            try {
+                allConnections = connectionsComp.getAllConnections(); // Assign to the variable used by the loop
+                console.log(`[EXECUTE_LOOK DEBUG] Result of getAllConnections():`, allConnections);
+                console.log(`[EXECUTE_LOOK DEBUG] Type of result:`, typeof allConnections);
+                console.log(`[EXECUTE_LOOK DEBUG] Is result Array?`, Array.isArray(allConnections));
+                console.log(`[EXECUTE_LOOK DEBUG] Result length:`, Array.isArray(allConnections) ? allConnections.length : 'N/A (Not Array)');
+            } catch (e) {
+                console.error('[EXECUTE_LOOK DEBUG] Error calling getAllConnections():', e);
+                allConnections = []; // Ensure it's an empty array on error
             }
+        } else {
+            console.log(`[EXECUTE_LOOK DEBUG] connectionsComp is NULL or undefined for ${currentLocation.id}.`);
         }
-        // --- End Connection/Exit Processing ---
+        // +++ End Debug Block for Connections Component +++
 
+        // Iterate over connections (safe loop as allConnections is guaranteed array)
+        for (const {direction, connectionEntityId} of allConnections) {
+            console.log(`[EXECUTE_LOOK DEBUG] --- Loop Body Entered for direction: ${direction}, ID: ${connectionEntityId} ---`); // Log loop entry
+            let connectionEntity = null;
+            let passageDetailsComp = null;
+            let blockerEntity = null;
+            let effectivePassageState = "open"; // Default
 
+            try {
+                // --- Fetch Connection Entity ---
+                console.log(`[DEBUG] Processing connection: ${connectionEntityId} (Direction: ${direction})`);
+                connectionEntity = entityManager.getEntityInstance(connectionEntityId);
+                console.log(`[DEBUG] Fetched connectionEntity:`, connectionEntity ? connectionEntity.id : 'NULL');
+                if (!connectionEntity) {
+                    console.warn(`Could not find connection entity with ID: ${connectionEntityId}`);
+                    console.log(`[DEBUG] CONTINUING (loop iteration) because !connectionEntity`);
+                    continue; // Skip this iteration
+                }
+
+                // --- Fetch Passage Details ---
+                passageDetailsComp = connectionEntity.getComponent(PassageDetailsComponent);
+                console.log(`[DEBUG] Fetched passageDetailsComp:`, passageDetailsComp ? 'Exists' : 'NULL');
+                let isHiddenStatus = 'N/A (No Comp)';
+                if (passageDetailsComp) {
+                    isHiddenStatus = passageDetailsComp.isHidden();
+                    console.log(`[DEBUG] isHidden() returned: ${isHiddenStatus} (Type: ${typeof isHiddenStatus})`);
+                }
+                if (!passageDetailsComp || isHiddenStatus === true) {
+                    console.log(`[DEBUG] CONTINUING (loop iteration) because !passageDetailsComp or isHidden is true`);
+                    continue; // Skip this iteration
+                }
+
+                // --- Process Blocker ---
+                const blockerId = passageDetailsComp.getBlockerId();
+                console.log(`[DEBUG] Blocker ID from getBlockerId():`, blockerId, `(Type: ${typeof blockerId})`);
+                if (blockerId) {
+                    blockerEntity = entityManager.getEntityInstance(blockerId);
+                    console.log(`[DEBUG] Fetched blockerEntity for ID ${blockerId}:`, blockerEntity ? blockerEntity.id : 'NULL');
+                    if (!blockerEntity) {
+                        // *** THE EXPECTED WARNING FOR THE FAILING TEST ***
+                        console.warn(`Blocker entity with ID '${blockerId}' not found for connection ${connectionEntityId}. Treating passage as unblocked.`);
+                    }
+                } else {
+                    console.log(`[DEBUG] No blockerId specified.`);
+                }
+
+                // --- Determine State ---
+                if (blockerEntity) {
+                    const lockableComp = blockerEntity.getComponent(LockableComponent);
+                    const openableComp = blockerEntity.getComponent(OpenableComponent);
+                    if (lockableComp?.isLocked) effectivePassageState = "locked";
+                    else if (openableComp) effectivePassageState = openableComp.isOpen ? "open" : "closed";
+                    else if (lockableComp && !lockableComp.isLocked) effectivePassageState = "open"; // Assumed open if lockable but unlocked
+                    else effectivePassageState = "impassable"; // Generic blocker
+                    console.log(`[DEBUG] Blocker found. State: ${effectivePassageState}`);
+                } else {
+                    effectivePassageState = "open"; // Default if no blocker
+                    console.log(`[DEBUG] No blocker. State defaults to: ${effectivePassageState}`);
+                }
+
+                // --- Format & Add Exit ---
+                const exitString = formatExitString(direction, passageDetailsComp, blockerEntity, effectivePassageState);
+                formattedExits.push(exitString);
+                console.log(`[DEBUG] Added exit string: "${exitString}"`);
+
+            } catch (error) {
+                console.error(`LookActionHandler: Error processing connection '${connectionEntityId}' (direction '${direction}'):`, error);
+                console.log(`[DEBUG] CAUGHT error during processing for connection ${connectionEntityId}`);
+            }
+        } // --- End of Connection Loop ---
+
+        // --- Prepare and Dispatch Event ---
         const finalExits = formattedExits.length > 0 ? formattedExits : undefined;
-
         const locationData = {
             name: locationName,
             description: locationDesc,
@@ -230,48 +260,47 @@ export async function executeLook(context) {
             items: itemsVisible.length > 0 ? itemsVisible : undefined,
             npcs: npcsVisible.length > 0 ? npcsVisible : undefined,
         };
-
+        console.log("[EXECUTE_LOOK DEBUG] Dispatching ui:display_location with payload:", JSON.stringify(locationData));
         await eventBus.dispatch('ui:display_location', locationData);
 
         messages.push({text: `Displayed location ${currentLocation.id}`, type: 'internal'});
         return {success: true, messages: messages, newState: undefined};
 
+        // --- Case 2: Look at Self ---
     } else if (targetName.toLowerCase() === 'self' || targetName.toLowerCase() === 'me') {
-        // --- Look at self (Unchanged) ---
         messages.push({text: `Look intent: At self`, type: 'internal'});
         const lookSelfMsg = TARGET_MESSAGES.LOOK_SELF;
         await eventBus.dispatch('ui:message_display', {text: lookSelfMsg, type: 'info'});
         messages.push({text: lookSelfMsg, type: 'info'});
         return {success: true, messages: messages, newState: undefined};
 
+        // --- Case 3: Look at Specific Target ---
     } else {
-        // --- Look at specific target (Uses standard helper - Unchanged) ---
         messages.push({
             text: `Look intent: At target '${targetName}' using handleActionWithTargetResolution`,
             type: 'internal'
         });
 
-        const onFoundUniqueLookTarget = (innerContext, targetEntity, accumulatedMessages) => {
+        const onFoundUniqueLookTarget = async (innerContext, targetEntity, accumulatedMessages) => {
             const name = getDisplayName(targetEntity);
             const descComp = targetEntity.getComponent(DescriptionComponent);
             const description = descComp ? descComp.text : TARGET_MESSAGES.LOOK_DEFAULT_DESCRIPTION(name);
-            innerContext.eventBus.dispatch('ui:message_display', {text: description, type: 'info'});
-            // No need to modify accumulatedMessages directly; utility handles merging.
-            return {success: true, messages: []};
+            await innerContext.eventBus.dispatch('ui:message_display', {text: description, type: 'info'});
+            // Return minimal result, letting handleAction manage overall messages if appropriate
+            return {success: true, messages: [{text: description, type: 'info'}]};
         };
 
         const options = {
-            scope: 'nearby',
-            requiredComponents: [],
+            scope: 'nearby', // Look in location + inventory
+            requiredComponents: [], // Nothing specific required to look
             commandPart: 'directObjectPhrase',
             actionVerb: 'look at',
             onFoundUnique: onFoundUniqueLookTarget,
             failureMessages: {
-                notFound: TARGET_MESSAGES.NOT_FOUND_EXAMINABLE, // Use more specific message for look
-                // Using NOT_FOUND_LOCATION was also reasonable, switched to EXAMINABLE
+                notFound: TARGET_MESSAGES.NOT_FOUND_EXAMINABLE(targetName),
+                // Add notUnique etc. if needed
             },
         };
-
         return await handleActionWithTargetResolution(context, options);
     }
 }

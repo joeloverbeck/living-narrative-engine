@@ -6,7 +6,11 @@ import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
 
 // Utilities
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
-import {EVENT_ITEM_CONSUME_REQUESTED, EVENT_ITEM_USE_ATTEMPTED} from "../types/eventTypes.js";
+import {
+    EVENT_ITEM_CONSUME_REQUESTED,
+    EVENT_ITEM_USE_ATTEMPTED, EVENT_LOCK_ENTITY_ATTEMPT,
+    EVENT_UNLOCK_ENTITY_ATTEMPT
+} from "../types/eventTypes.js";
 
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -34,7 +38,7 @@ import {EVENT_ITEM_CONSUME_REQUESTED, EVENT_ITEM_USE_ATTEMPTED} from "../types/e
  * and EffectExecutionService based on item definition data.
  * Listens for EVENT_ITEM_USE_ATTEMPTED to trigger logic.
  * Dispatches EVENT_ITEM_CONSUME_REQUESTED for consumption.
- * Dispatches event:lock_entity_attempt and event:unlock_entity_attempt.
+ * Dispatches event:lock_entity_attempt and EVENT_UNLOCK_ENTITY_ATTEMPT.
  * Dispatches final success UI messages. Failure messages are expected
  * to be dispatched by the service detecting the failure.
  */
@@ -229,8 +233,8 @@ class ItemUsageSystem {
 
                         for (const effect of attemptEffects) {
                             let eventName = null;
-                            if (effect.type === 'attempt_lock') eventName = 'event:lock_entity_attempt';
-                            else if (effect.type === 'attempt_unlock') eventName = 'event:unlock_entity_attempt';
+                            if (effect.type === 'attempt_lock') eventName = EVENT_LOCK_ENTITY_ATTEMPT;
+                            else if (effect.type === 'attempt_unlock') eventName = EVENT_UNLOCK_ENTITY_ATTEMPT;
 
                             if (eventName) {
                                 const payload = {
@@ -270,7 +274,7 @@ class ItemUsageSystem {
                         for (const effect of attemptEffects) {
                             let eventName = null;
                             if (effect.type === 'attempt_lock') eventName = 'event:lock_entity_attempt';
-                            else if (effect.type === 'attempt_unlock') eventName = 'event:unlock_entity_attempt';
+                            else if (effect.type === 'attempt_unlock') eventName = EVENT_UNLOCK_ENTITY_ATTEMPT;
 
                             if (eventName) {
                                 const payload = {
