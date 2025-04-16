@@ -128,25 +128,26 @@ function findPotentialConnectionMatches(context, connectionTargetName) { // NOTE
  * **CONN-5.1.3 Implementation:** Resolves a target Connection entity based on user input (direction or name).
  * Moved from targetResolutionService.js (Sub-Ticket 3.3).
  * Uses a provided function (findMatchesFn) internally for finding potential matches.
- * Handles ambiguity and dispatches appropriate messages.
- * @param {ActionContext} context - The action context, requires `dispatch`.
+ * Handles ambiguity and dispatches appropriate messages using eventBus from context. // <<< Updated doc comment
+ * @param {ActionContext} context - The action context, requires `eventBus`. // <<< Updated doc comment
  * @param {string} connectionTargetName - The raw target string from the user.
  * @param {string} [actionVerb='go'] - The verb used in ambiguity messages.
- * @param {(context: ActionContext, targetName: string) => PotentialConnectionMatches} [findMatchesFn=findPotentialConnectionMatches] - The function to use for finding matches. **<-- Default to the internal function**
+ * @param {(context: ActionContext, targetName: string) => PotentialConnectionMatches} [findMatchesFn=findPotentialConnectionMatches] - The function to use for finding matches.
  * @returns {Entity | null} The resolved Connection entity or null if not found/ambiguous.
  */
 export function resolveTargetConnection(
     context,
     connectionTargetName,
     actionVerb = 'go',
-    // ***** ADD THE PARAMETER HERE *****
-    findMatchesFn = findPotentialConnectionMatches // Default to the internal function if not provided
+    findMatchesFn = findPotentialConnectionMatches
 ) {
-    const {dispatch} = context; // Requires dispatch from context
+    // --- Corrected: Get eventBus from context ---
+    const {eventBus} = context;
 
     // --- Step 1: Validate Inputs ---
-    if (!context || !dispatch) {
-        console.error("resolveTargetConnection (in ConnectionResolver): Invalid context or missing dispatch function provided.");
+    // --- Corrected: Validate eventBus and its dispatch method ---
+    if (!context || !eventBus || typeof eventBus.dispatch !== 'function') {
+        console.error("resolveTargetConnection (in ConnectionResolver): Invalid context or missing eventBus/dispatch function provided.");
         return null;
     }
     const trimmedTargetName = typeof connectionTargetName === 'string' ? connectionTargetName.trim() : '';
@@ -156,14 +157,12 @@ export function resolveTargetConnection(
     }
 
     // --- Step 2: Find Potential Matches (CONN-5.1.2 via Injection) ---
-    // ***** USE THE PROVIDED findMatchesFn PARAMETER *****
     const {directionMatches, nameMatches} = findMatchesFn(context, trimmedTargetName);
     console.log(`resolveTargetConnection (in ConnectionResolver): Matches for '${trimmedTargetName}': Directions=${directionMatches.length}, Names=${nameMatches.length}`);
 
     // ================================================================
     // --- Step 3: Resolve Priority and Ambiguity (CONN-5.1.3 Logic) ---
     // ================================================================
-    // (Rest of the function logic remains the same)
 
     // AC1: Priority Check - Check directionMatches first.
     // AC2: Unique Direction Match
@@ -183,7 +182,8 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `There are multiple ways to go '${trimmedTargetName}'. Which one did you mean? (${displayNames.join(', ')})`;
         }
-        dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+        // --- Corrected: Use eventBus.dispatch ---
+        eventBus.dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null;
     }
 
@@ -206,13 +206,15 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `Which '${trimmedTargetName}' did you want to ${actionVerb}? (${displayNames.join(', ')})`;
         }
-        dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+        // --- Corrected: Use eventBus.dispatch ---
+        eventBus.dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
         return null;
     }
 
     // AC7: Not Found
     console.log(`resolveTargetConnection (in ConnectionResolver): No direction or name matches found for '${trimmedTargetName}'.`);
     const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(trimmedTargetName);
-    dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
+    // --- Corrected: Use eventBus.dispatch ---
+    eventBus.dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
     return null;
 }

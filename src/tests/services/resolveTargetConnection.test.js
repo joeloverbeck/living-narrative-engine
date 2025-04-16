@@ -30,6 +30,11 @@ const mockEntityManager = {
     getEntitiesInLocation: jest.fn((locId) => mockEntityManager.locations.get(locId) || new Set()),
 };
 
+// --- Mock EventBus ---  <-- ADD THIS
+const mockEventBus = {
+    dispatch: mockDispatch,
+};
+
 // --- Mock Entities (defined with let for beforeEach reassignment) ---
 let mockPlayerEntity;
 let mockCurrentLocation;
@@ -37,12 +42,13 @@ let mockCurrentLocation;
 // --- Test Context ---
 // mock ActionContext object (mockContext)
 const mockContext = {
-    dispatch: mockDispatch,
+    // dispatch: mockDispatch, // You might be able to remove this top-level one if ONLY eventBus.dispatch is used by the function. Keep it for now if unsure.
     entityManager: mockEntityManager,
-    playerEntity: null, // Will be assigned in beforeEach
-    currentLocation: null, // Will be assigned in beforeEach
-    targets: [], // Often used in action contexts
-    dataManager: {}, // Placeholder for potential future use
+    playerEntity: null,
+    currentLocation: null,
+    targets: [],
+    dataManager: {},
+    eventBus: mockEventBus, // <-- ADD THIS LINE
 };
 
 // --- Helper Functions ---
@@ -462,7 +468,7 @@ describe('resolveTargetConnection', () => {
         test('test setup should complete without errors', () => {
             // Assert that the basic context setup in beforeEach worked
             expect(mockContext).toBeDefined();
-            expect(mockContext.dispatch).toBe(mockDispatch);
+            expect(mockContext.eventBus.dispatch).toBe(mockDispatch);
             expect(mockContext.entityManager).toBe(mockEntityManager);
             expect(mockContext.playerEntity).toBeInstanceOf(Entity);
             expect(mockContext.playerEntity.id).toBe('player-1');

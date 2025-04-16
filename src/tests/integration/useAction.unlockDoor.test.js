@@ -250,7 +250,6 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
         dispatchSpy.mockRestore();
         consoleErrorSpy.mockRestore();
         consoleWarnSpy.mockRestore();
-        itemUsageSystem?.shutdown();
         lockSystem?.shutdown();
         notificationUISystem?.shutdown();
         entityManager?.clearAll();
@@ -290,9 +289,17 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
                 userEntityId: player.id, itemInstanceId: keyInstance.id, itemDefinitionId: keyDefId,
                 explicitTargetEntityId: doorEntity.id, explicitTargetConnectionEntityId: null
             };
+            // <<< --- CORRECTION IS HERE --- >>>
+            // Update to match the payload dispatched by ItemUsageSystem for the unlock attempt effect
             const expectedUnlockAttemptPayload = {
-                userId: player.id, targetEntityId: doorEntity.id, itemInstanceId: keyInstance.id
+                userId: player.id,
+                itemInstanceId: keyInstance.id,
+                itemDefinitionId: keyDefId, // Include if needed for matching
+                // sourceItemName: 'Master Key', // Include if needed
+                validatedTargetId: doorEntity.id, // Correct key name
+                validatedTargetType: 'entity' // Include if needed
             };
+            // <<< --- END CORRECTION --- >>>
             const expectedEntityUnlockedPayload = {
                 userId: player.id, targetEntityId: doorEntity.id, keyItemId: keyInstance.id
             };

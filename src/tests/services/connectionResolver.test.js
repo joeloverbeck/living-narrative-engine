@@ -67,6 +67,9 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
 
         // 2. Setup fresh mocks for each test
         mockDispatch = jest.fn();
+        const mockEventBus = { // Create a mock eventBus object
+            dispatch: mockDispatch // Assign the mock dispatch function to its dispatch property
+        };
         mockEntityManager = {
             entities: new Map(),
             getEntityInstance: jest.fn((entityId) => mockEntityManager.entities.get(entityId)),
@@ -92,11 +95,11 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
 
         // Mock ActionContext
         mockContext = {
-            dispatch: mockDispatch,
+            // dispatch: mockDispatch, // Remove or comment out the direct dispatch
+            eventBus: mockEventBus, // Add the mock eventBus containing the dispatch function
             entityManager: mockEntityManager,
             currentLocation: mockCurrentLocation,
-            playerEntity: new Entity('player-test'), // Add player if context needs it
-            // Add other context properties if needed
+            playerEntity: new Entity('player-test'),
         };
 
         // Ensure getDisplayName mock points to the real implementation
