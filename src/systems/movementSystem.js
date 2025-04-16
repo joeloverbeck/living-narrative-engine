@@ -2,7 +2,7 @@
 
 // Assuming components are in ../components/
 import { PositionComponent } from '../components/positionComponent.js';
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes";
+import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 // Core dependencies (adjust paths if necessary)
 /** @typedef {import('../core/eventBus.js').default} EventBus */

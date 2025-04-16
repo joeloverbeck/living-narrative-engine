@@ -10,7 +10,7 @@
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
 
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes";
+import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 /**
  * Manages overarching game rules, potentially including time progression,

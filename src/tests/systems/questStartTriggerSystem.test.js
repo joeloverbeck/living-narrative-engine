@@ -129,7 +129,7 @@ class MockEntity {
 // NOTE: Path adjusted assuming tests are in src/tests/** and system is in src/services/**
 import {QuestStartTriggerSystem} from '../../systems/questStartTriggerSystem.js';
 import {QuestLogComponent} from '../../components/questLogComponent.js';
-import {EVENT_ENTITY_MOVED} from "../../types/eventTypes"; // Import real key if used
+import {EVENT_ENTITY_MOVED} from "../../types/eventTypes.js"; // Import real key if used
 
 // --- Test Data ---
 const PLAYER_ID = 'player:test';

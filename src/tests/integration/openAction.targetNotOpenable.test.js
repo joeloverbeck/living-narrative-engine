@@ -22,7 +22,7 @@ import { PositionComponent } from '../../components/positionComponent.js'; // Ne
 
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import {EVENT_ENTITY_OPENED, EVENT_OPEN_ATTEMPTED, EVENT_OPEN_FAILED} from "../../types/eventTypes";
+import {EVENT_ENTITY_OPENED, EVENT_OPEN_ATTEMPTED, EVENT_OPEN_FAILED} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 

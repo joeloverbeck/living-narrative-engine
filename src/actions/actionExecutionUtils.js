@@ -33,11 +33,15 @@ import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
  * @returns {Promise<ActionResult>}
  */
 export async function handleActionWithTargetResolution(context, options) {
-    const { eventBus } = context;
+    const {eventBus} = context;
 
     if (!eventBus || typeof eventBus.dispatch !== 'function') {
         console.error(`handleActionWithTargetResolution: context.eventBus or context.eventBus.dispatch is missing or not a function.`);
-        return { success: false, messages: [{ text: 'Internal setup error: EventBus dispatch unavailable.', type: 'internal_error' }], newState: undefined };
+        return {
+            success: false,
+            messages: [{text: 'Internal setup error: EventBus dispatch unavailable.', type: 'internal_error'}],
+            newState: undefined
+        };
     }
 
     /** @type {ActionMessage[]} */
@@ -51,15 +55,18 @@ export async function handleActionWithTargetResolution(context, options) {
         console.error(`handleActionWithTargetResolution: >>> ERROR caught calling validateRequiredCommandPart:`, validationError);
         // Ensure a valid ActionResult structure is returned on error
         // Add internal message indicating validation failure source
-        messages.push({ type: 'internal', text: `Validation failed for command part: ${options.commandPart}` });
-        return { success: false, messages, newState: undefined };
+        messages.push({type: 'internal', text: `Validation failed for command part: ${options.commandPart}`});
+        return {success: false, messages, newState: undefined};
     }
 
     // console.log(`handleActionWithTargetResolution: validateRequiredCommandPart result for part "${options.commandPart}": ${isValidCommandPart}`); // Log kept
 
     if (!isValidCommandPart) {
         // Add internal log; user message should be dispatched by validator
-        messages.push({ text: `Validation failed: Required command part '${options.commandPart}' missing.`, type: 'internal' });
+        messages.push({
+            text: `Validation failed: Required command part '${options.commandPart}' missing.`,
+            type: 'internal'
+        });
         return {success: false, messages, newState: undefined};
     }
 
@@ -67,7 +74,7 @@ export async function handleActionWithTargetResolution(context, options) {
     // Safety check - should be caught by validator, but good practice
     if (!targetName) {
         console.error(`handleActionWithTargetResolution: Command part '${options.commandPart}' null/empty after validation passed.`);
-        messages.push({ text: 'Internal Error: targetName missing after validation.', type: 'internal_error' });
+        messages.push({text: 'Internal Error: targetName missing after validation.', type: 'internal_error'});
         // Dispatch generic error if targetName is unexpectedly missing
         await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return {success: false, messages, newState: undefined};
@@ -91,9 +98,13 @@ export async function handleActionWithTargetResolution(context, options) {
         // console.log(`handleActionWithTargetResolution: resolveTargetEntity returned.`); // Log kept
     } catch (error) {
         console.error(`handleActionWithTargetResolution: *** Error caught during resolveTargetEntity call! ***`, error);
-        messages.push({ text: `Internal Error during resolveTargetEntity: ${error.message}`, type: 'internal_error', details: error });
-        await eventBus.dispatch('ui:message_display', { text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error' });
-        return { success: false, messages, newState: undefined };
+        messages.push({
+            text: `Internal Error during resolveTargetEntity: ${error.message}`,
+            type: 'internal_error',
+            details: error
+        });
+        await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        return {success: false, messages, newState: undefined};
     }
 
     // console.log(`handleActionWithTargetResolution: For target "${targetName}", resolution status is: ${resolution?.status ?? 'ERROR_DURING_CALL'}`); // Log kept
@@ -146,7 +157,7 @@ export async function handleActionWithTargetResolution(context, options) {
                 console.error(`handleActionWithTargetResolution: Error executing onFoundUnique callback for action '${options.actionVerb}' on target '${targetName}':`, error);
                 const userErrorMessage = TARGET_MESSAGES.INTERNAL_ERROR;
                 // Use await here as eventBus dispatch is async
-                await eventBus.dispatch('ui:message_display', { text: userErrorMessage, type: 'error' });
+                await eventBus.dispatch('ui:message_display', {text: userErrorMessage, type: 'error'});
                 messages.push({
                     text: `Internal Error during onFoundUnique: ${error.message}`,
                     type: 'internal_error',
@@ -172,7 +183,7 @@ export async function handleActionWithTargetResolution(context, options) {
                     ? TARGET_MESSAGES[messageKey](targetName)
                     : TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName);
             }
-            await eventBus.dispatch('ui:message_display', { text: messageText, type: 'info' }); // Await dispatch
+            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'info'}); // Await dispatch
             messages.push({text: `Resolution Failed: NOT_FOUND. User message: "${messageText}"`, type: 'internal'});
             return {success: false, messages, newState: undefined};
         }
@@ -186,7 +197,7 @@ export async function handleActionWithTargetResolution(context, options) {
             } else {
                 messageText = TARGET_MESSAGES.AMBIGUOUS_PROMPT(options.actionVerb, targetName, resolution.candidates);
             }
-            await eventBus.dispatch('ui:message_display', { text: messageText, type: 'warning' }); // Await dispatch
+            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'warning'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: AMBIGUOUS. Candidates: ${resolution.candidates.map(c => c.id).join(', ')}. User message: "${messageText}"`,
                 type: 'internal'
@@ -205,7 +216,7 @@ export async function handleActionWithTargetResolution(context, options) {
                     ? TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(options.actionVerb)
                     : TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(options.actionVerb, options.scope);
             }
-            await eventBus.dispatch('ui:message_display', { text: messageText, type: 'info' }); // Await dispatch
+            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'info'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: FILTER_EMPTY for scope '${options.scope}'. User message: "${messageText}"`,
                 type: 'internal'
@@ -215,7 +226,7 @@ export async function handleActionWithTargetResolution(context, options) {
 
         case ResolutionStatus.INVALID_INPUT: {
             const messageText = options.failureMessages?.invalidInput || TARGET_MESSAGES.INTERNAL_ERROR;
-            await eventBus.dispatch('ui:message_display', { text: messageText, type: 'error' }); // Await dispatch
+            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'error'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: INVALID_INPUT. User message: "${messageText}"`,
                 type: 'internal_error'
@@ -226,7 +237,7 @@ export async function handleActionWithTargetResolution(context, options) {
 
         default: {
             const messageText = TARGET_MESSAGES.INTERNAL_ERROR;
-            await eventBus.dispatch('ui:message_display', { text: messageText, type: 'error' }); // Await dispatch
+            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'error'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: Unexpected status '${resolution.status}'.`,
                 type: 'internal_error'
@@ -258,7 +269,7 @@ export async function handleActionWithTargetResolution(context, options) {
  */
 export async function dispatchEventWithCatch(context, eventName, payload, messages, logDetails) { // Mak
     // Access eventBus directly from context
-    const { eventBus } = context;
+    const {eventBus} = context;
 
     if (!eventBus || typeof eventBus.dispatch !== 'function') { // Check eventBus and its dispatch method
         console.error(`dispatchEventWithCatch: context.eventBus or context.eventBus.dispatch is missing or not a function.`);
@@ -266,7 +277,7 @@ export async function dispatchEventWithCatch(context, eventName, payload, messag
             text: `Internal Error: context.eventBus.dispatch is missing for event ${eventName}`,
             type: 'internal_error'
         });
-        return { success: false };
+        return {success: false};
     }
 
     try {
@@ -274,9 +285,11 @@ export async function dispatchEventWithCatch(context, eventName, payload, messag
         await eventBus.dispatch(eventName, payload);
 
         // Log success internally
-        messages.push({ text: logDetails.success, type: 'internal' });
+        messages.push({text: logDetails.success, type: 'internal'});
         console.debug(`dispatchEventWithCatch: Successfully dispatched '${eventName}'`);
-        return { success: true };
+        const successResult = {success: true};
+        console.log(`[DEBUG dispatchEventWithCatch] Returning on success: ${JSON.stringify(successResult)}`); // Add this
+        return successResult;
 
     } catch (error) {
         // Log error to console
@@ -291,7 +304,7 @@ export async function dispatchEventWithCatch(context, eventName, payload, messag
         // Safety check: Ensure ui:message_display dispatch doesn't cause infinite loop if IT fails
         try {
             // CORRECTED CALL (Needs await too!)
-            await eventBus.dispatch('ui:message_display', { text: userErrorMessage, type: 'error' });
+            await eventBus.dispatch('ui:message_display', {text: userErrorMessage, type: 'error'});
         } catch (uiError) {
             console.error(`dispatchEventWithCatch: CRITICAL - Failed to dispatch ui:message_display after catching error for event '${eventName}':`, uiError);
         }
@@ -303,6 +316,6 @@ export async function dispatchEventWithCatch(context, eventName, payload, messag
             details: error
         });
 
-        return { success: false };
+        return {success: false};
     }
 }

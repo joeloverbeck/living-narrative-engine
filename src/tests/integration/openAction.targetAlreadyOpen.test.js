@@ -1,6 +1,6 @@
 // src/tests/integration/openAction.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -9,22 +9,22 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for getDisplayName used in messages
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js';
+import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js';
+import {executeOpen} from '../../actions/handlers/openActionHandler.js';
 
 // --- Components ---
 import OpenableComponent from '../../components/openableComponent.js';
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 // LockableComponent not needed but OpenableComponent registration is vital
 
 // --- Utilities & Types ---
 // Assuming TARGET_MESSAGES has a key like ALREADY_OPEN
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes"; // Assuming testUtils.js is one level up
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+import {waitForEvent} from "../testUtils.js";
+import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -32,9 +32,9 @@ import {EVENT_ENTITY_OPENED} from "../../types/eventTypes"; // Assuming testUtil
 // Same mock as the other open tests
 const mockDataManager = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -65,7 +65,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
         if (!entity) throw new Error(`Entity instance creation failed for ${id}`);
 
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -75,7 +75,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
         if (existingPosComp) oldLocationId = existingPosComp.locationId;
 
         if (!existingPosComp) {
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else if (existingPosComp.locationId !== locationId) {
             existingPosComp.locationId = locationId;
         }
@@ -106,8 +106,8 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
         entityManager.registerComponent('PositionComponent', PositionComponent);
 
         // 3. Instantiate Systems
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -118,8 +118,10 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
         // 7. Setup common test entities
         player = setupEntity('player', 'Player', [], 'test_location');
@@ -143,14 +145,14 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
         const parsedCommand = commandParser.parse(commandString);
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
-            if(parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', { text: parsedCommand.error, type: 'error'});
+            if (parsedCommand.error) {
+                await eventBus.dispatch('ui:message_display', {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch('ui:message_display', { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch('ui:message_display', {text: "Unknown command.", type: 'error'});
             }
             return;
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
+        if (!parsedCommand.actionId && commandString.trim() === '') {
             return;
         }
 
@@ -173,7 +175,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
         it('should fail to open an already open target, display appropriate message, and dispatch failure event', async () => {
             // Arrange: Create a chest that is already open
             alreadyOpenChest = setupEntity('chest_already_open', 'chest',
-                [new OpenableComponent({ isOpen: true })], // <<< Key difference: isOpen starts as true
+                [new OpenableComponent({isOpen: true})], // <<< Key difference: isOpen starts as true
                 'test_location'
             );
 
@@ -231,7 +233,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
             // 3. Attempt Event: Check that an attempt was still made (usually happens before the state check)
             expect(dispatchSpy).toHaveBeenCalledWith(
                 'event:open_attempted',
-                expect.objectContaining({ actorId: player.id, targetEntityId: alreadyOpenChest.id })
+                expect.objectContaining({actorId: player.id, targetEntityId: alreadyOpenChest.id})
             );
 
             // 4. No Success Events/Messages: Ensure no success-related events or messages were dispatched
@@ -241,7 +243,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
             );
             expect(dispatchSpy).not.toHaveBeenCalledWith(
                 'ui:message_display',
-                expect.objectContaining({ type: 'success' })
+                expect.objectContaining({type: 'success'})
             );
 
             // 5. State Check: Verify the state of the chest remains unchanged (still open)

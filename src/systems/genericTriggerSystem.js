@@ -2,7 +2,7 @@
 
 // Import necessary components used by action implementations
 import {ConnectionsComponent} from "../components/connectionsComponent.js";
-import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes";
+import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */

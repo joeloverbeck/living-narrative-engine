@@ -6,7 +6,7 @@ import LockableComponent from '../components/lockableComponent.js';
 
 // --- Utility Imports ---
 import { getDisplayName } from '../utils/messages.js';
-import {EVENT_ENTITY_OPENED} from "../types/eventTypes"; // Adjust path if necessary
+import {EVENT_ENTITY_OPENED} from "../types/eventTypes.js"; // Adjust path if necessary
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../core/eventBus.js').default} EventBus */

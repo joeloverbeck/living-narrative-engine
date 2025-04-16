@@ -23,7 +23,7 @@ import { PositionComponent } from '../../components/positionComponent.js';
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
 import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes"; // Assuming testUtils.js is one level up
+import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 

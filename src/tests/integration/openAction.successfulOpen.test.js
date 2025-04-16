@@ -1,6 +1,6 @@
 // src/tests/integration/openAction.successfulOpen.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -9,30 +9,30 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for instanceof check
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js';
+import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js';
+import {executeOpen} from '../../actions/handlers/openActionHandler.js';
 
 // --- Components ---
 import OpenableComponent from '../../components/openableComponent.js';
 import LockableComponent from '../../components/lockableComponent.js';
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes"; // Assuming testUtils.js is one level up
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+import {waitForEvent} from "../testUtils.js";
+import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
 // --- Mock DataManager ---
 const mockDataManager = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -74,7 +74,7 @@ describe('Integration Test: core:open Action', () => {
 
         // Add/Update Name Component
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name; // Update if exists
         }
@@ -91,7 +91,7 @@ describe('Integration Test: core:open Action', () => {
         // Add or Update Position Component
         if (!existingPosComp) {
             // console.log(`[setupEntity] Adding new PositionComponent to ${id} with location ${locationId}`); // Optional Log
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else if (existingPosComp.locationId !== locationId) {
             // console.log(`[setupEntity] Updating existing PositionComponent on ${id} from ${oldLocationId} to ${locationId}`); // Optional Log
             existingPosComp.locationId = locationId;
@@ -145,8 +145,8 @@ describe('Integration Test: core:open Action', () => {
         entityManager.registerComponent('PositionComponent', PositionComponent);
 
         // 3. Instantiate Systems
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -157,8 +157,10 @@ describe('Integration Test: core:open Action', () => {
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
         // consoleLogSpy mock REMOVED
 
         // 7. Setup common test entities using the modified helper
@@ -196,14 +198,14 @@ describe('Integration Test: core:open Action', () => {
         console.log(`[simulateCommand] Parsed:`, parsedCommand); // Log parsed result
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
-            if(parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', { text: parsedCommand.error, type: 'error'});
+            if (parsedCommand.error) {
+                await eventBus.dispatch('ui:message_display', {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch('ui:message_display', { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch('ui:message_display', {text: "Unknown command.", type: 'error'});
             }
             return;
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
+        if (!parsedCommand.actionId && commandString.trim() === '') {
             return;
         }
 
@@ -245,7 +247,7 @@ describe('Integration Test: core:open Action', () => {
             console.log(`[Test Case START] entityManager is instance of EntityManager?`, entityManager instanceof EntityManager); // Add instanceof check
 
             console.log('[Test Case] Setting up closedChest...');
-            closedChest = setupEntity('chest_closed', 'chest', [new OpenableComponent({ isOpen: false })]); // <<< FAILING LINE SHOULD BE HERE
+            closedChest = setupEntity('chest_closed', 'chest', [new OpenableComponent({isOpen: false})]); // <<< FAILING LINE SHOULD BE HERE
             console.log('[Test Case] Finished setting up closedChest.');
 
             // <<< Check entityManager after the call (if it doesn't error) >>>
@@ -297,10 +299,10 @@ describe('Integration Test: core:open Action', () => {
 
             // 2. Event Sequence (Check these *after* waiting)
             expect(dispatchSpy).toHaveBeenCalledWith('event:open_attempted',
-                expect.objectContaining({ actorId: 'player', targetEntityId: 'chest_closed' })
+                expect.objectContaining({actorId: 'player', targetEntityId: 'chest_closed'})
             );
             expect(dispatchSpy).toHaveBeenCalledWith(EVENT_ENTITY_OPENED,
-                expect.objectContaining({ actorId: 'player', targetEntityId: 'chest_closed', targetDisplayName: 'chest' })
+                expect.objectContaining({actorId: 'player', targetEntityId: 'chest_closed', targetDisplayName: 'chest'})
             );
 
             // 3. UI Message (We already waited for this specific call, but assert again)

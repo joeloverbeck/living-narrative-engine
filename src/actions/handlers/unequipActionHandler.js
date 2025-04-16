@@ -11,7 +11,7 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 // --- Refactored Imports (Ticket 9) ---
 import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
-import {EVENT_ITEM_UNEQUIP_ATTEMPTED} from "../../types/eventTypes";
+import {EVENT_ITEM_UNEQUIP_ATTEMPTED} from "../../types/eventTypes.js";
 
 // --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */

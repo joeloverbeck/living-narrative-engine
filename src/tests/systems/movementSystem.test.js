@@ -6,7 +6,7 @@ import MovementSystem from '../../systems/movementSystem.js';
 // Import dependencies that need mocking or referencing
 import { PositionComponent } from '../../components/positionComponent.js';
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {EVENT_ENTITY_MOVED} from "../../types/eventTypes";
+import {EVENT_ENTITY_MOVED} from "../../types/eventTypes.js";
 // We don't need the actual EventBus/EntityManager/Entity classes for mocks,
 // but importing PositionComponent helps ensure we reference the correct class type.
 // import EventBus from '../../core/eventBus.js'; // Not strictly needed for mocks

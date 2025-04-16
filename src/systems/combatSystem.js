@@ -2,7 +2,7 @@
 
 import {HealthComponent} from '../components/healthComponent.js';
 import {NameComponent} from '../components/nameComponent.js';
-import {EVENT_ATTACK_INTENDED, EVENT_ENTITY_DIED} from "../types/eventTypes";
+import {EVENT_ATTACK_INTENDED, EVENT_ENTITY_DIED} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */

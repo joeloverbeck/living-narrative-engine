@@ -9,7 +9,7 @@
 
 // Assuming component keys match class names for getComponent lookup
 import { QuestLogComponent } from "../components/questLogComponent.js";
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes";
+import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 const QUEST_LOG_COMPONENT_KEY = QuestLogComponent;
 
 /**

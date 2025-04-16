@@ -7,7 +7,7 @@ import {
     EVENT_ITEM_DROPPED,
     EVENT_ITEM_PICKED_UP,
     EVENT_SPAWN_ENTITY_REQUESTED
-} from "../types/eventTypes";
+} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
