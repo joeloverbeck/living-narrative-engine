@@ -217,47 +217,96 @@ export {resolveTargetEntity};
 /**
  * Example Usage (in an Action handler):
  *
- * import { resolveTargetEntity } from './entityFinderService.js';
+ * import { resolveTargetEntity, ResolutionStatus } from './entityFinderService.js'; // Import ResolutionStatus too
  * import { TARGET_MESSAGES, getDisplayName } from '../utils/messages.js';
+ * // Assuming ItemComponent might be needed for some actions
+ * import { ItemComponent } from '../components/itemComponent.js';
+ * // Assuming PassageDetailsComponent might be relevant for interacting with blockers directly
+ * // import { PassageDetailsComponent } from '../components/passageDetailsComponent.js'; // Optional, depending on action
  *
+ * // --- Example 1: Standard 'look' using 'nearby' ---
  * function handleLookAction(context, targetName) {
  * const config = {
- * scope: 'nearby', // Search inventory and location
+ * scope: 'nearby', // Search inventory and location (excluding player)
  * requiredComponents: [], // Just need NameComponent (implicit)
- * actionVerb: 'look', // Still useful for constructing messages later
+ * actionVerb: 'look', // Useful for constructing messages
  * targetName: targetName,
  * };
  *
  * const resolution = resolveTargetEntity(context, config);
  *
  * switch (resolution.status) {
- * case 'FOUND_UNIQUE':
+ * case ResolutionStatus.FOUND_UNIQUE:
  * // Found the entity, proceed with 'look' logic
  * context.dispatch('ui:message_display', { text: `You look at the ${getDisplayName(resolution.entity)}. It looks like a ${resolution.entity.name}.`, type: 'info' });
  * // ... more detailed description logic ...
  * break;
  *
- * case 'NOT_FOUND':
+ * case ResolutionStatus.NOT_FOUND:
  * // Use TARGET_MESSAGES (or custom logic) to generate feedback
  * context.dispatch('ui:message_display', { text: TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName), type: 'info' });
  * break;
  *
- * case 'AMBIGUOUS':
+ * case ResolutionStatus.AMBIGUOUS:
  * // Generate ambiguity feedback
  * const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, targetName, resolution.candidates);
  * context.dispatch('ui:message_display', { text: ambiguousMsg, type: 'warning' });
  * break;
  *
- * case 'FILTER_EMPTY':
+ * case ResolutionStatus.FILTER_EMPTY:
  * // Generate feedback for empty scope/filter result
  * const emptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(config.actionVerb, 'nearby'); // Determine context based on scope
  * context.dispatch('ui:message_display', { text: emptyMsg, type: 'info' });
  * break;
  *
- * case 'INVALID_INPUT':
+ * case ResolutionStatus.INVALID_INPUT:
  * // Usually indicates a programming error in how the action called resolveTargetEntity
  * // Logged internally by resolveTargetEntity, maybe show a generic error to user?
  * context.dispatch('ui:message_display', { text: 'There seems to be a problem with that command.', type: 'error' });
+ * break;
+ * }
+ * }
+ *
+ * // --- NEW EXAMPLE: Using 'nearby_including_blockers' ---
+ * // Example for an action like 'examine blockage' or 'use key on door'
+ * function handleInteractWithPotentialBlocker(context, targetName) {
+ * const config = {
+ * // Key change: Use the new scope to include passage blockers
+ * scope: 'nearby_including_blockers',
+ * // Specify required components if needed, e.g., maybe you only want to target
+ * // things that *could* be blockers, or maybe specific items. [] is fine for general lookup.
+ * requiredComponents: [],
+ * actionVerb: 'examine', // Or 'use', 'clear', etc.
+ * targetName: targetName, // e.g., "rubble", "locked door", "iron key"
+ * };
+ *
+ * const resolution = resolveTargetEntity(context, config);
+ *
+ * // The resolved entity (if FOUND_UNIQUE) could be:
+ * // 1. An item in the player's inventory (e.g., trying to 'use' a key found earlier).
+ * // 2. An entity (item or non-item) in the current location.
+ * // 3. An entity that is currently blocking a passage connected to the current location.
+ *
+ * switch (resolution.status) {
+ * case ResolutionStatus.FOUND_UNIQUE:
+ * console.log(`Found unique target for '${config.actionVerb} ${targetName}': ${resolution.entity.id}`);
+ * // Now, you can proceed with the action logic based on the entity found.
+ * // You might check its components (e.g., does it block a passage? Is it an item?)
+ * context.dispatch('ui:message_display', { text: `You focus on the ${getDisplayName(resolution.entity)}.`, type: 'info' });
+ * // ... action logic continues ...
+ * break;
+ *
+ * // Handle other statuses (NOT_FOUND, AMBIGUOUS, etc.) similarly to the 'look' example
+ * case ResolutionStatus.NOT_FOUND:
+ * context.dispatch('ui:message_display', { text: `You don't see any '${targetName}' nearby or blocking an exit.`, type: 'info' });
+ * break;
+ * case ResolutionStatus.AMBIGUOUS:
+ * const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(config.actionVerb, targetName, resolution.candidates);
+ * context.dispatch('ui:message_display', { text: ambiguousMsg, type: 'warning' });
+ * break;
+ * // ... handle FILTER_EMPTY, INVALID_INPUT ...
+ * default:
+ * context.dispatch('ui:message_display', { text: `There's an issue trying to ${config.actionVerb} the ${targetName}.`, type: 'error' });
  * break;
  * }
  * }

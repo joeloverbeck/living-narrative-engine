@@ -49,12 +49,13 @@ export const TARGET_MESSAGES = {
     NOT_FOUND_EQUIPMENT: (targetName) => `You don't have '${targetName}' equipped.`, // Added for 'equipment' scope
 
     /**
-     * Default: Target not found nearby (location or inventory).
-     * Scope: 'nearby'
+     * Default: Target not found nearby (e.g., in location, inventory, or as an interactive connection/blocker).
+     * Scope: Used as a fallback or specifically for scopes like 'nearby_with_blockers'
+     * where "nearby" is the appropriate user-facing term.
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_NEARBY: (targetName) => `You don't find any '${targetName}' nearby.`, // Added for 'nearby' scope
+    NOT_FOUND_NEARBY: (targetName) => `You don't find any '${targetName}' nearby.`, // UPDATED COMMENT: Clarified usage relative to scope change
 
     /**
      * Default: Ambiguous target prompt when multiple entities match.
@@ -139,6 +140,21 @@ export const TARGET_MESSAGES = {
      */
     NOT_FOUND_EXAMINABLE: (targetName) => `You don't see anything called '${targetName}' to examine nearby.`, // Param name standardized
 
+    /**
+     * Target not found nearby specifically for opening.
+     * @param {string} targetName - The name of the target being looked for.
+     * @returns {string}
+     */
+    NOT_FOUND_OPENABLE: (targetName) => `You don't see anything called '${targetName}' that you can open nearby.`,
+
+    /**
+     * Feedback when the 'nearby' scope contains no entities suitable for opening.
+     * Used by handleActionWithTargetResolution when filter empty.
+     * @param {string} actionVerb - The action verb ('open').
+     * @param {string} scopeContext - The scope hint ('nearby').
+     * @returns {string}
+     */
+    FILTER_EMPTY_OPENABLE: (actionVerb, scopeContext) => `There's nothing ${scopeContext} that you can ${actionVerb}.`,
 
     /**
      * Feedback when a scope (like location for 'take') contains no items relevant to the action.

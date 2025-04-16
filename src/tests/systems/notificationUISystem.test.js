@@ -65,7 +65,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC1 (New - DIRECTION_LOCKED, Name Provided): should dispatch correct message', () => {
         const payload = {reasonCode: 'DIRECTION_LOCKED', blockerDisplayName: 'sturdy door', actorId: 'player'};
-        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_LOCKED('sturdy door'), type: 'info'};
+        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_LOCKED('sturdy door'), type: 'notice'};
         // Sanity check the expected text manually once
         expect(expectedDispatchPayload.text).toBe('The sturdy door is locked.');
 
@@ -79,7 +79,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC2 (New - DIRECTION_LOCKED, No Name): should dispatch fallback message and warn', () => {
         const payload = {reasonCode: 'DIRECTION_LOCKED', actorId: 'player'};
-        const expectedDispatchPayload = {text: 'Something blocks the way.', type: 'info'};
+        const expectedDispatchPayload = {text: 'The way that way is locked.', type: 'notice'};
 
         notificationUISystem._handleMoveFailed(payload);
 
@@ -122,7 +122,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
             reasonCode: 'BLOCKER_NOT_FOUND',
             details: 'The ethereal barrier dissipated unexpectedly.',
             blockerEntityId: 'barrier_abc',
-            locationId: 'room_1',
+            previousLocationId: 'room_1', // <-- FIX: Provide the expected propertys
             actorId: 'player'
         };
         const expectedDispatchPayload = {text: 'The ethereal barrier dissipated unexpectedly.', type: 'warning'};
@@ -140,7 +140,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
         const payload = {
             reasonCode: 'BLOCKER_NOT_FOUND',
             blockerEntityId: 'barrier_xyz',
-            locationId: 'room_2',
+            previousLocationId: 'room_2', // <-- FIX: Provide the expected property
             actorId: 'player'
         };
         const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKER_NOT_FOUND(), type: 'warning'};

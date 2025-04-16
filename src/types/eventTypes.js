@@ -283,6 +283,19 @@
  */
 
 /**
+ * Defines the payload structure for the event:open_attempted event.
+ * Signals that an actor is attempting to open a target entity.
+ * This event is fired *before* any state checks (like already open or locked).
+ *
+ * Fired By: openActionHandler
+ * Consumed By: OpenableSystem (or similar)
+ *
+ * @typedef {object} OpenAttemptedEventPayload
+ * @property {string} actorId - The unique identifier of the entity attempting the open action.
+ * @property {string} targetEntityId - The unique identifier of the entity being targeted for opening.
+ */
+
+/**
  * Defines the payload structure for the event:unlock_entity_attempt event.
  * Signals that an entity is attempting to unlock another entity (e.g., a door, a chest, a mechanism).
  * This event is typically fired *before* validation or state changes occur.
