@@ -87,7 +87,7 @@ class GameRuleSystem {
      * @private
      * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity | null }} eventData
      */
-    #handleInitialRoomEntered(eventData) {
+    async #handleInitialRoomEntered(eventData) {
         const {newLocation, playerEntity, previousLocation} = eventData;
 
         if (!newLocation || !playerEntity) {
@@ -118,7 +118,7 @@ class GameRuleSystem {
             };
 
             try {
-                const lookResult = this.#actionExecutor.executeAction('core:look', lookContext);
+                const lookResult = await this.#actionExecutor.executeAction('core:look', lookContext);
                 if (!lookResult.success) {
                     console.warn(`GameRuleSystem: Initial 'core:look' execution reported failure. Messages:`, lookResult.messages);
                 } else {
@@ -142,7 +142,7 @@ class GameRuleSystem {
      * @private
      * @param {{ entityId: string, newLocationId: string, oldLocationId: string | null }} eventData
      */
-    #handlePlayerMovedLook(eventData) {
+    async #handlePlayerMovedLook(eventData) {
         const {entityId, newLocationId} = eventData;
         const player = this.#gameStateManager.getPlayer();
 
@@ -190,7 +190,7 @@ class GameRuleSystem {
         };
 
         try {
-            const lookResult = this.#actionExecutor.executeAction('core:look', lookContext);
+            const lookResult = await this.#actionExecutor.executeAction('core:look', lookContext);
             if (!lookResult.success) {
                 console.warn(`GameRuleSystem: Automatic 'core:look' after move reported failure. Messages:`, lookResult.messages);
             } else {

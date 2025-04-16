@@ -15,7 +15,7 @@
   },
   "eventsToFireOnCompletion": [
     {
-      "eventName": "objective:completed",
+      "eventName": "event:objective_completed",
       "eventData": {
         "objectiveId": "demo:obj_unlock_exit_door",
         "questId": "demo:quest_exit_dungeon"

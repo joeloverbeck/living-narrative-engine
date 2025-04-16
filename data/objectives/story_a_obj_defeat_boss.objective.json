@@ -17,14 +17,14 @@
   },
   "eventsToFireOnCompletion": [
     {
-      "eventName": "objective:completed",
+      "eventName": "event:objective_completed",
       "eventData": {
         "objectiveId": "story_a:obj_defeat_boss",
         "questId": "story_a:quest_01"
       }
     },
     {
-      "eventName": "story:event:boss_defeated",
+      "eventName": "event:entity_died",
       "eventData": {
         "bossId": "story_a:boss_npc"
       }
