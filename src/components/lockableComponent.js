@@ -82,6 +82,15 @@ class LockableComponent extends Component {
         return this.#keyId;
     }
 
+    forceSetLockedState(isLocked) {
+        if (typeof isLocked !== 'boolean') {
+            console.error("forceSetLockedState requires a boolean argument.");
+            return;
+        }
+        this.#isLocked = isLocked;
+        console.debug(`LockableComponent: State FORCED to isLocked: ${this.#isLocked}`);
+    }
+
     /**
      * Attempts to unlock the entity using an optional key.
      * Encapsulates the logic for checking the lock state and key requirements.

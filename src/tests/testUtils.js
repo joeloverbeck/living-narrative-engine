@@ -49,62 +49,56 @@ export async function waitForEvent(spy, eventName, payloadMatcher, timeout = 100
 }
 
 // Helper to create and register entities
-export const setupEntity = (entityManager, id, name, components = [], locationId = 'test_location') => {
-    const entity = entityManager.createEntityInstance(id);
+export const setupEntity = (entityManager, id, name, components = [], locationId = 'test_location') => { // Keep locationId default or adjust as needed
+    // Get or create the entity instance. createEntityInstance handles definitions & default components.
+    const entity = entityManager.createEntityInstance(id); // Assuming forceNew=false default
 
     if (!entity) {
         console.error(`Failed to create or retrieve entity instance for ${id} in setupEntity`);
         throw new Error(`Entity instance creation failed for ${id}`);
     }
 
-    // Add/Update Name Component
+    // --- Name Component Handling (Seems OK) ---
     if (!entity.hasComponent(NameComponent)) {
-        entity.addComponent(new NameComponent({ value: name }));
+        entity.addComponent(new NameComponent({value: name}));
     } else {
         entity.getComponent(NameComponent).value = name; // Update if exists
     }
 
-
-    // --- Refined Position Component Handling & Index Notification ---
-    let oldLocationId = null;
-    const existingPosComp = entity.getComponent(PositionComponent);
-
-    if (existingPosComp) {
-        oldLocationId = existingPosComp.locationId; // Get current location before potentially changing it
-        console.log(`setupEntity: Entity ${id} already has PositionComponent. Old Location: ${oldLocationId}`); // Optional Log
+    // --- Position Component Handling (Seems OK) ---
+    let oldLocationId = entity.getComponent(PositionComponent)?.locationId ?? null;
+    if (!entity.hasComponent(PositionComponent)) {
+        // console.log(`setupEntity: Adding new PositionComponent to ${id} with location ${locationId}`);
+        entity.addComponent(new PositionComponent({locationId: locationId}));
+    } else if (entity.getComponent(PositionComponent).locationId !== locationId) {
+        // console.log(`setupEntity: Updating existing PositionComponent on ${id} from ${oldLocationId} to ${locationId}`);
+        entity.getComponent(PositionComponent).locationId = locationId;
     }
-
-    // Add or Update Position Component
-    if (!existingPosComp) {
-        console.log(`setupEntity: Adding new PositionComponent to ${id} with location ${locationId}`); // Optional Log
-        entity.addComponent(new PositionComponent({ locationId: locationId }));
-    } else if (existingPosComp.locationId !== locationId) {
-        // Only update if the location is actually different
-        console.log(`setupEntity: Updating existing PositionComponent on ${id} from ${oldLocationId} to ${locationId}`); // Optional Log
-        existingPosComp.locationId = locationId;
-    } else {
-        // Location is already correct, no component update needed
-        console.log(`setupEntity: PositionComponent on ${id} already has correct location ${locationId}.`); // Optional Log
-    }
-
     // Notify AFTER the component state is correct
-    // Only notify if the location actually changed or was newly set
     if (oldLocationId !== locationId) {
-        console.log(`setupEntity: Notifying position change for ${id}: ${oldLocationId} -> ${locationId}`); // Log the notification
+        // console.log(`setupEntity: Notifying position change for ${id}: ${oldLocationId} -> ${locationId}`);
         entityManager.notifyPositionChange(id, oldLocationId, locationId);
     }
-    // --- End Refined Handling ---
 
-
-    // Add other components passed in the array
-    components.forEach(comp => {
-        const compKey = comp.constructor?.name || typeof comp;
-        if (!entity.hasComponent(comp.constructor)) { // Check using constructor
-            entity.addComponent(comp);
-        } else {
-            // console.warn(`setupEntity: Component ${compKey} already exists on ${id}. Skipping add.`);
-            // Optionally update existing component data here if needed
+    // --- Component Handling from Array (Needs Correction) ---
+    components.forEach(compInstance => {
+        const ComponentClass = compInstance?.constructor;
+        if (!ComponentClass || typeof ComponentClass !== 'function' || !compInstance instanceof ComponentClass) {
+            console.warn(`setupEntity: Skipping component as it doesn't seem to be a class instance:`, compInstance);
+            return;
         }
+
+        // *** CORE FIX ***
+        // Always add/replace the component provided in the test setup array.
+        // This ensures the test's explicit components overwrite any defaults added by createEntityInstance.
+        // Assuming entity.addComponent handles replacement if the component type exists.
+        // If addComponent does NOT replace, you would need:
+        // if (entity.hasComponent(ComponentClass)) {
+        //     entity.removeComponent(ComponentClass); // Requires removeComponent method
+        // }
+        entity.addComponent(compInstance);
+        // *** END CORE FIX ***
+
     });
 
     return entity;

@@ -10,11 +10,9 @@
     {
       "type": "trigger_event",
       "parameters": {
-        "eventName": "event:unlock_entity_attempt",
+        "eventName": "event:unlock_entity_force",
         "payload": {
-          "userId": null,
-          "targetEntityId": "demo:door_treasure_room",
-          "keyItemId": null
+          "targetEntityId": "demo:door_treasure_room"
         }
       }
     }

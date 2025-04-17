@@ -12,7 +12,7 @@
     },
     "Lockable": {
       "isLocked": true,
-      "keyId": null
+      "keyId": "demo:nonexistent_key"
     }
   }
 }

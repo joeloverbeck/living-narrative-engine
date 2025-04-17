@@ -97,7 +97,12 @@ class GameEngine {
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
-                'TriggerDispatcher', 'GameRuleSystem', 'EquipmentSystem', 'InventorySystem', 'CombatSystem',
+                'TriggerDispatcher',
+                'GameRuleSystem',
+                'EquipmentSystem',
+                'InventorySystem',
+                'ItemUsageSystem',
+                'CombatSystem',
                 'DeathSystem',
                 // Movement-related systems: Order might matter slightly if one depends on another's init,
                 // but here the dependencies are handled at construction via DI.

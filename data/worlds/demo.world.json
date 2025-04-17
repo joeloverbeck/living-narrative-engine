@@ -28,7 +28,6 @@
       "demo_door_treasure_room.entity.json"
     ],
     "items": [
-      "demo_item_key.item.json",
       "demo_item_key_rusty.item.json",
       "demo_item_potion_heal_minor.item.json",
       "demo_item_sword.item.json",

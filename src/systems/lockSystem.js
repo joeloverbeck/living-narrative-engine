@@ -1,7 +1,8 @@
 // src/systems/lockSystem.js
 
 import LockableComponent from '../components/lockableComponent.js';
-import {ItemComponent} from '../components/itemComponent.js'; // <<< Import ItemComponent
+// import {ItemComponent} from '../components/itemComponent.js'; // <<< Removed ItemComponent import
+import DefinitionRefComponent from '../components/definitionRefComponent.js'; // <<< Added DefinitionRefComponent import
 // Import helper for display name
 import {getDisplayName} from '../utils/messages.js';
 import {
@@ -9,6 +10,7 @@ import {
     EVENT_ENTITY_UNLOCKED,
     EVENT_LOCK_ENTITY_ATTEMPT,
     EVENT_UNLOCK_ENTITY_ATTEMPT,
+    EVENT_UNLOCK_ENTITY_FORCE,
     UI_MESSAGE_DISPLAY // Added for consistency in dispatching UI messages
 } from "../types/eventTypes.js";
 
@@ -30,8 +32,8 @@ import {
  * ECS System responsible for handling the logic of locking and unlocking entities
  * (e.g., chests, doors represented as entities).
  * Listens for EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.
- * Resolves the definition ID of the key used (if any) before delegating the core
- * state change and validation logic to LockableComponent.
+ * Resolves the definition ID of the key used (if any) via DefinitionRefComponent
+ * before delegating the core state change and validation logic to LockableComponent.
  */
 class LockSystem {
     #eventBus;
@@ -40,6 +42,7 @@ class LockSystem {
     // Store bound handlers to ensure correct removal during shutdown
     _boundHandleUnlockAttempt;
     _boundHandleLockAttempt;
+    _boundHandleForceUnlock;
 
     /**
      * @param {object} options
@@ -60,6 +63,7 @@ class LockSystem {
 
         // Bind event handlers to this instance for correct context and removal
         this._boundHandleUnlockAttempt = this._handleUnlockAttempt.bind(this);
+        this._boundHandleForceUnlock = this._handleForceUnlock.bind(this);
         this._boundHandleLockAttempt = this._handleLockAttempt.bind(this);
 
         console.log("LockSystem: Instance created.");
@@ -71,12 +75,14 @@ class LockSystem {
     initialize() {
         this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
         this.#eventBus.subscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
+        this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_FORCE, this._boundHandleForceUnlock);
         console.log("LockSystem: Initialized and subscribed to EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.");
     }
 
     /**
-     * Handles entity unlock attempts. Resolves key definition ID before delegating to LockableComponent.unlock().
-     * Dispatches events and UI messages based on the component's result.
+     * Handles entity unlock attempts. Resolves key definition ID using DefinitionRefComponent
+     * before delegating to LockableComponent.unlock(). Dispatches events and UI messages
+     * based on the component's result.
      *
      * @private
      * @param {ReceivedLockUnlockPayload} payload - The event data associated with the unlock attempt.
@@ -108,18 +114,21 @@ class LockSystem {
         }
         console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}. Required Key Def ID: ${lockableComponent.keyId}`);
 
-        // --- Resolve Key Definition ID from Instance ID ---
+        // --- Resolve Key Definition ID from Instance ID using DefinitionRefComponent ---
         let keyDefinitionIdToCompare = null;
         if (keyInstanceIdUsed) {
             const keyEntity = this.#entityManager.getEntityInstance(keyInstanceIdUsed);
             if (keyEntity) {
-                const keyItemComp = keyEntity.getComponent(ItemComponent);
-                if (keyItemComp && typeof keyItemComp.definitionId === 'string') {
-                    keyDefinitionIdToCompare = keyItemComp.definitionId;
-                    console.debug(`LockSystem: Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare}`);
-                } else {
-                    console.warn(`LockSystem: Key instance ${keyInstanceIdUsed} found but lacks ItemComponent or valid definitionId.`);
+                // <<< Start Change T-4
+                const defRef = keyEntity.getComponent(DefinitionRefComponent);
+                keyDefinitionIdToCompare = defRef?.id ?? null; // Use the ID from DefinitionRefComponent
+
+                if (keyDefinitionIdToCompare) {
+                    console.debug(`LockSystem: Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare} (via DefinitionRefComponent)`);
+                } else { // Key entity exists but lacks component/id
+                    console.warn(`LockSystem: Key instance ${keyInstanceIdUsed} found but lacks DefinitionRefComponent or valid id property.`);
                 }
+                // <<< End Change T-4
             } else {
                 console.warn(`LockSystem: Key instance ${keyInstanceIdUsed} not found in EntityManager.`);
             }
@@ -150,8 +159,9 @@ class LockSystem {
     }
 
     /**
-     * Handles entity lock attempts. Resolves key definition ID before delegating to LockableComponent.lock().
-     * Dispatches events and UI messages based on the component's result.
+     * Handles entity lock attempts. Resolves key definition ID using DefinitionRefComponent
+     * before delegating to LockableComponent.lock(). Dispatches events and UI messages
+     * based on the component's result.
      *
      * @private
      * @param {ReceivedLockUnlockPayload} payload - The event data associated with the lock attempt.
@@ -181,18 +191,21 @@ class LockSystem {
         }
         console.debug(`LockSystem: Found LockableComponent on ${targetEntityId}.`);
 
-        // --- Resolve Key Definition ID from Instance ID ---
+        // --- Resolve Key Definition ID from Instance ID using DefinitionRefComponent ---
         let keyDefinitionIdToCompare = null;
         if (keyInstanceIdUsed) {
             const keyEntity = this.#entityManager.getEntityInstance(keyInstanceIdUsed);
             if (keyEntity) {
-                const keyItemComp = keyEntity.getComponent(ItemComponent);
-                if (keyItemComp && typeof keyItemComp.definitionId === 'string') {
-                    keyDefinitionIdToCompare = keyItemComp.definitionId;
-                    console.debug(`LockSystem (Lock Attempt): Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare}`);
-                } else {
-                    console.warn(`LockSystem (Lock Attempt): Key instance ${keyInstanceIdUsed} found but lacks ItemComponent or valid definitionId.`);
+                // <<< Start Change T-4
+                const defRef = keyEntity.getComponent(DefinitionRefComponent);
+                keyDefinitionIdToCompare = defRef?.id ?? null; // Use the ID from DefinitionRefComponent
+
+                if (keyDefinitionIdToCompare) {
+                    console.debug(`LockSystem (Lock Attempt): Resolved Key Instance ${keyInstanceIdUsed} to Definition ID: ${keyDefinitionIdToCompare} (via DefinitionRefComponent)`);
+                } else { // Key entity exists but lacks component/id
+                    console.warn(`LockSystem (Lock Attempt): Key instance ${keyInstanceIdUsed} found but lacks DefinitionRefComponent or valid id property.`);
                 }
+                // <<< End Change T-4
             } else {
                 console.warn(`LockSystem (Lock Attempt): Key instance ${keyInstanceIdUsed} not found in EntityManager.`);
             }
@@ -222,6 +235,42 @@ class LockSystem {
         }
     }
 
+    /**
+     * Handles EVENT_UNLOCK_ENTITY_FORCE.  Ignores key checks and never fails.
+     * @private
+     * @param {{targetEntityId:string, userId?:string|null, [key:string]:any}} payload
+     */
+    _handleForceUnlock(payload) {
+        const {targetEntityId, userId = null} = payload;
+        const targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
+        if (!targetEntity) {
+            console.warn(`LockSystem: FORCE unlock – target ${targetEntityId} not found.`);
+            return;
+        }
+
+        const lockableComponent = targetEntity.getComponent(LockableComponent);
+        if (!lockableComponent || !lockableComponent.isLocked) {
+            // Already unlocked or not lockable – silently succeed
+        } else {
+            lockableComponent.forceSetLockedState(false);
+        }
+
+        // Fire the normal “entity_unlocked” event so every other system stays in sync
+        this.#eventBus.dispatch(EVENT_ENTITY_UNLOCKED, {
+            userId,                     // null means “environment/script”
+            targetEntityId,
+            keyItemId: null,
+            force: true
+        });
+
+        // Optional UI message if *some* user triggered it
+        if (userId) {
+            const entityName = getDisplayName(targetEntity);
+            this.#dispatchUIMessage(`The ${entityName} unlocks with a loud *click*.`, 'info');
+        }
+
+        console.debug(`LockSystem: FORCE unlocked ${targetEntityId}`);
+    }
 
     /**
      * Dispatches a UI message based on the unlock failure reason.
@@ -269,11 +318,13 @@ class LockSystem {
                 type = 'info';
                 break;
             case 'KEY_REQUIRED':
-                message = `You need the right key to lock the ${entityName}.`;
+                // Changed message slightly for clarity based on using DefinitionRef
+                message = `You need the specific key associated with the ${entityName} to lock it.`;
                 type = 'warning';
                 break;
             case 'WRONG_KEY':
-                message = `That key doesn't seem to work for locking the ${entityName}.`;
+                // Changed message slightly for clarity based on using DefinitionRef
+                message = `That key doesn't seem to be the correct one for locking the ${entityName}.`;
                 type = 'warning';
                 break;
             default:
@@ -304,6 +355,7 @@ class LockSystem {
         // Use the stored bound handlers for correct unsubscription
         this.#eventBus.unsubscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
         this.#eventBus.unsubscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
+        this.#eventBus.unsubscribe(EVENT_UNLOCK_ENTITY_FORCE, this._boundHandleForceUnlock);
         console.log("LockSystem: Shutdown complete, unsubscribed from events.");
     }
 }

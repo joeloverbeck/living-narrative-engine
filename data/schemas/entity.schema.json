@@ -13,6 +13,10 @@
       "type": "object",
       "description": "Object containing the components that make up this entity. Each key is a component type name (string) and its value is the component data object.",
       "properties": {
+        "DefinitionRef": {
+          "$ref": "./common.schema.json#/definitions/DefinitionRefComponent",
+          "description": "(Optional) Holds a reference ID to a definition (e.g., linking an item instance entity to its item definition). Definition imported from common schema."
+        },
         "Name": {
           "$ref": "./common.schema.json#/definitions/NameComponent",
           "description": "(Recommended) The display name of the entity. Definition imported from common schema."

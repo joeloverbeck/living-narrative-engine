@@ -12,11 +12,15 @@
   "properties": {
     "components": {
       "type": "object",
-      "description": "Components defining the item's properties. Must include Name and Item components. Inherits other components.",
+      "description": "Components defining the item's properties. Must include Name component. Inherits other components.",
       "required": [
         "Name"
       ],
       "properties": {
+        "DefinitionRef": {
+          "$ref": "common.schema.json#/definitions/DefinitionRefComponent",
+          "description": "(Optional) Holds a reference ID to a base definition, linking this item instance entity to its item definition template. Definition imported from common schema."
+        },
         "Name": {
           "$ref": "common.schema.json#/definitions/NameComponent",
           "description": "The display name of the item. Definition imported from common schema."

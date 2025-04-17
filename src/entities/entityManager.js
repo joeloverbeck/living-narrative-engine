@@ -1,9 +1,10 @@
 // src/entities/entityManager.js
 
 import Entity from "./entity.js";
-
 import SpatialIndexManager from "../core/spatialIndexManager.js";
 import {PositionComponent} from "../components/positionComponent.js";
+// **** Added Import ****
+import DefinitionRefComponent from "../components/definitionRefComponent.js";
 
 /**
  * Manages the creation and tracking of Entity instances from data definitions.
@@ -58,6 +59,8 @@ class EntityManager {
      * finds corresponding Component classes from the registry,
      * instantiates components with data, and attaches them to the Entity.
      *
+     * **Crucially, it now also automatically adds a DefinitionRefComponent.**
+     *
      * Updates the spatial index if the new entity has a PositionComponent.
      *
      * Optionally stores the instance in an internal map.
@@ -70,6 +73,7 @@ class EntityManager {
      */
     createEntityInstance(entityId, forceNew = false) {
         if (!forceNew && this.activeEntities.has(entityId)) {
+            // Return existing instance if found and not forcing new
             return this.activeEntities.get(entityId);
         }
 
@@ -80,16 +84,18 @@ class EntityManager {
             return null;
         }
 
-        // Basic validation of components object
+        // Basic validation of components object from definition
         if (entityDefinition.components && typeof entityDefinition.components !== 'object') {
             console.warn(`EntityManager: Entity definition for ${entityId} has an invalid 'components' field (must be an object). Treating as no components.`);
             entityDefinition.components = null; // Ensure it's null or empty object if invalid
         }
 
         try {
+            // Note: The Entity constructor uses the definition ID (entityId) as the instance ID here.
+            // This might need review if multiple simultaneous instances of the same definition require unique IDs.
             const entity = new Entity(entityId);
 
-            // Instantiate and add components only if the components object exists
+            // Instantiate and add components specified in the JSON definition
             if (entityDefinition.components) {
                 for (const jsonKey in entityDefinition.components) {
                     const componentData = entityDefinition.components[jsonKey];
@@ -97,35 +103,49 @@ class EntityManager {
 
                     if (ComponentClass) {
                         try {
+                            // Basic validation that we retrieved a class constructor
                             if (typeof ComponentClass !== 'function' || !ComponentClass.prototype) {
                                 throw new Error(`Registry entry for "${jsonKey}" is not a valid class/constructor.`);
                             }
+                            // Instantiate the component with its data
                             const componentInstance = new ComponentClass(componentData);
                             entity.addComponent(componentInstance);
                         } catch (compError) {
                             console.error(`EntityManager: Error instantiating component ${jsonKey} (Class: ${ComponentClass ? ComponentClass.name : 'N/A'}) for entity ${entityId}:`, compError);
-                            throw compError; // Re-throw to halt creation on component error
+                            throw compError; // Re-throw to halt entity creation on component error
                         }
                     } else {
                         console.warn(`EntityManager: No registered component class found for JSON key "${jsonKey}" in entity ${entityId}. Skipping component.`);
                     }
                 }
+            } // <<< End of processing definition components
+
+            // Add DefinitionRefComponent *only if one doesn't already exist*.
+            // In this context, entityId often serves as the definition ID used for lookup.
+            if (!entity.getComponent(DefinitionRefComponent)) {
+                // Only add if the component is missing after processing definition/initial components
+                entity.addComponent(new DefinitionRefComponent(entityId));
+                // Optional: Log this default addition for clarity during debugging
+                // console.log(`EntityManager: Added default DefinitionRefComponent(${entityId}) to entity ${entity.id}`);
             }
 
-            // Add to active entities *before* adding to spatial index
+            // Add to active entities map *before* adding to spatial index
+            // Uses definition ID as the key for the active map.
             if (!forceNew) {
                 this.activeEntities.set(entityId, entity);
             }
 
             // ---- Spatial Index Update ----
+            // Add the entity to the spatial index if it has a position.
             const positionComp = entity.getComponent(PositionComponent);
             if (positionComp && positionComp.locationId) {
+                // Uses definition ID (entityId) as the key for the spatial index entry.
                 this.spatialIndexManager.addEntity(entityId, positionComp.locationId);
             }
             // ---- End Spatial Index Update ----
 
             console.log(`Successfully created instance for entity ${entityId}`);
-            return entity;
+            return entity; // Return the fully constructed entity
 
         } catch (error) {
             console.error(`EntityManager: Failed to create entity instance for ID ${entityId}:`, error);
@@ -133,7 +153,7 @@ class EntityManager {
             if (!forceNew && this.activeEntities.has(entityId)) {
                 this.activeEntities.delete(entityId);
             }
-            return null;
+            return null; // Return null on failure
         }
     }
 
@@ -171,7 +191,7 @@ class EntityManager {
         return false;
     }
 
-    // --- New Methods for Spatial Index ---
+    // --- Methods for Spatial Index ---
 
     /**
      * Retrieves all entity IDs present in a specific location using the spatial index.
@@ -199,8 +219,8 @@ class EntityManager {
         }
         const currentPos = entity.getComponent(PositionComponent);
         if (!currentPos || currentPos.locationId !== newLocationId) {
+            // Log discrepancy but trust reported values for the update
             console.warn(`EntityManager.notifyPositionChange: Discrepancy for entity ${entityId}. Reported new location ${newLocationId} but component has ${currentPos?.locationId}. Updating index based on reported values.`);
-            // Decide how to handle discrepancy. Here, we trust the reported values.
         }
 
         this.spatialIndexManager.updateEntityLocation(entityId, oldLocationId, newLocationId);
@@ -224,7 +244,7 @@ class EntityManager {
         console.log("EntityManager: Cleared all active entities and spatial index.");
     }
 
-    // --- End New Methods ---
+    // --- End Spatial Index Methods ---
 }
 
 export default EntityManager;

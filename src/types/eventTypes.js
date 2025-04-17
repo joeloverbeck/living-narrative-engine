@@ -33,6 +33,11 @@ export const EVENT_UNLOCK_ENTITY_ATTEMPT = 'event:unlock_entity_attempt';
 export const EVENT_LOCK_ENTITY_ATTEMPT = 'event:lock_entity_attempt';
 export const EVENT_ENTITY_UNLOCKED = 'event:entity_unlocked';
 export const EVENT_ENTITY_LOCKED = 'event:entity_locked';
+// ------------------------------------------------------------------------
+//  Force‑unlock (scripted) – bypasses key validation in LockSystem
+// ------------------------------------------------------------------------
+/** @constant {string} */
+export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
 export const EVENT_APPLY_HEAL_REQUESTED = 'event:apply_heal_requested';
 export const EVENT_INFLICT_DAMAGE_REQUESTED = 'event:inflict_damage_requested';
 export const EVENT_APPLY_STATUS_EFFECT_REQUESTED = 'event:apply_status_effect_requested';
@@ -66,6 +71,9 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  * (e.g., 'potion_healing_lesser', 'sword_basic'). This is used by systems
  * to look up shared, definition-level properties like Usable component data,
  * effects, conditions, etc.
+ * **Note:** While included in the payload for context, the `ItemUsageSystem` (as of T-6)
+ * now ignores this field and retrieves the ID directly from the item instance's
+ * `DefinitionRefComponent` using `itemInstanceId`.
  * @property {string | null} explicitTargetEntityId The unique identifier of the regular *entity*
  * that the user explicitly targeted with the command (e.g., the ID resolved from
  * "use potion *on goblin*"). This is mutually exclusive with `explicitTargetConnectionEntityId`.
@@ -337,6 +345,21 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
  * @property {string} userId The unique identifier of the entity attempting the unlock action.
  * @property {string} targetEntityId The unique identifier of the entity being targeted for unlocking.
  * @property {string | null} keyItemId The unique identifier of the item instance being used for the attempt, if any (typically the item triggering this event if fired by ItemUsageSystem).
+ */
+
+/**
+ * Defines the payload structure for the EVENT_UNLOCK_ENTITY_FORCE event.
+ * Used by cut‑scenes, triggers, or designer scripts to unlock an entity
+ * without consuming / validating a key.
+ *
+ * Fired by: TriggerDispatcher, ItemUsageSystem (trigger_event effect), etc.
+ * Consumed by: LockSystem
+ *
+ * @typedef {object} ForceUnlockEventPayload
+ * @property {string} targetEntityId   The entity to unlock.
+ * @property {string|null} [userId]    Who caused it (null for world events).
+ * @property {true} [force]            Always true – lets analytics separate
+ *                                     forced unlocks from player actions.
  */
 
 /**

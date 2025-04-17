@@ -8,6 +8,20 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9_\\-:]+$"
     },
+    "DefinitionRefComponent": {
+      "description": "A generic component holding a single reference ID string, typically to a definition (e.g., an item definition ID on an instance, a character class definition).",
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/namespacedId",
+          "description": "The namespaced ID referencing the target definition."
+        }
+      },
+      "additionalProperties": false
+    },
     "nullableNamespacedId": {
       "description": "A unique identifier string, typically namespaced (like namespacedId), or null.",
       "oneOf": [
@@ -397,7 +411,16 @@
           "type": "string",
           "default": "passage",
           "description": "The type of connection (e.g., 'doorway', 'path', 'archway', 'window', 'teleporter').",
-          "examples": ["passage", "doorway", "path", "archway", "stairs", "ladder", "teleporter", "window"]
+          "examples": [
+            "passage",
+            "doorway",
+            "path",
+            "archway",
+            "stairs",
+            "ladder",
+            "teleporter",
+            "window"
+          ]
         },
         "isHidden": {
           "type": "boolean",
@@ -407,7 +430,14 @@
         "state": {
           "type": "string",
           "description": "Optional current state of the connection itself (e.g., 'open', 'closed', 'collapsed', 'jammed', 'phase-aligned'). Distinct from the blocker entity's state.",
-          "examples": ["open", "closed", "collapsed", "jammed", "phase-aligned", "electrified"]
+          "examples": [
+            "open",
+            "closed",
+            "collapsed",
+            "jammed",
+            "phase-aligned",
+            "electrified"
+          ]
         },
         "descriptionOverrideAtoB": {
           "type": "string",

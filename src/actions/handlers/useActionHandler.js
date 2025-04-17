@@ -1,5 +1,3 @@
-// src/actions/handlers/useActionHandler.js
-
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -7,8 +5,9 @@
 /** @typedef {import('../actionTypes.js').ActionMessage} ActionMessage */
 
 // --- Standard Imports ---
-// Ensure ItemComponent is correctly imported (adjust path if necessary)
-import {ItemComponent} from '../../components/itemComponent.js';
+// Removed ItemComponent import as it's no longer directly needed for definitionId
+// Ensure DefinitionRefComponent is correctly imported
+import DefinitionRefComponent from '../../components/definitionRefComponent.js'; // <<< ADDED IMPORT
 
 // --- Utility Imports ---
 // Ensure these utilities are correctly imported (adjust paths if necessary)
@@ -21,6 +20,7 @@ import {EVENT_ITEM_USE_ATTEMPTED} from "../../types/eventTypes.js";
 /**
  * Handles the 'core:use' action ('use <item> [on <target>]').
  * Resolves the item from inventory and optionally the target from the surroundings.
+ * Retrieves item definition ID from DefinitionRefComponent.
  * Dispatches EVENT_ITEM_USE_ATTEMPTED for systems like ItemUsageSystem to handle effects.
  *
  * @param {ActionContext} context - The action context.
@@ -45,32 +45,22 @@ export async function executeUse(context) {
         // Use innerContext which includes eventBus
         const {playerEntity, dataManager, entityManager, parsedCommand, eventBus: innerEventBus} = innerContext;
         const itemInstanceId = targetItemEntity.id;
-        const itemComponent = targetItemEntity.getComponent(ItemComponent);
 
-        // --- Debug Logging ---
-        console.log('--- DEBUG USE HANDLER ---');
-        console.log('Target Item Entity ID:', targetItemEntity.id);
-        console.log('Retrieved ItemComponent Instance:', itemComponent); // Inspect the whole object
-        console.log('ItemComponent.definitionId Value:', itemComponent?.definitionId);
-        console.log('-------------------------');
-        // --- End Debug Logging ---
+        const itemDefinitionId = targetItemEntity.getComponent(DefinitionRefComponent)?.id;
 
         // Safety check for component/definition ID (essential for looking up Usable data)
-        if (!itemComponent?.definitionId) {
-            console.error(`onFoundUnique (use): Item ${itemInstanceId} lacks ItemComponent or definitionId!`);
+        if (!itemDefinitionId) {
+            const errorMsg = `Internal Error: Item ${itemInstanceId} (${getDisplayName(targetItemEntity)}) is missing required DefinitionRefComponent or its ID. Cannot determine item type.`;
+            console.error(`onFoundUnique (use): ${errorMsg}`);
             if (innerEventBus) { // Check if eventBus is available
                 await innerEventBus.dispatch('ui:message_display', {
-                    text: TARGET_MESSAGES.INTERNAL_ERROR,
-                    type: 'error'
+                    text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'
                 });
             }
-            messages.push({
-                text: `Internal Error: Item ${itemInstanceId} missing essential component data.`,
-                type: 'internal_error'
-            });
+            messages.push({text: errorMsg, type: 'internal_error'});
             return {success: false, messages: []}; // Callback fails
         }
-        const itemDefinitionId = itemComponent.definitionId;
+
         const foundItemName = getDisplayName(targetItemEntity);
 
         let explicitTargetEntityId = null;
@@ -95,14 +85,12 @@ export async function executeUse(context) {
             } else {
                 // 2. If not a connection, try resolving as a regular ENTITY
                 messages.push({
-                    text: `Target '${targetNameGuess}' not a connection, trying as regular entity...`,
-                    type: 'internal'
+                    text: `Target '${targetNameGuess}' not a connection, trying as regular entity...`, type: 'internal'
                 });
                 const entityTargetResolution = resolveTargetEntity(innerContext, {
                     scope: 'nearby', // Or 'location' - adjust based on desired targeting rules
                     requiredComponents: [], // Allow targeting any nearby entity initially
-                    targetName: targetNameGuess,
-                    actionVerb: targetResolutionContext,
+                    targetName: targetNameGuess, actionVerb: targetResolutionContext,
                 });
 
                 switch (entityTargetResolution.status) {
@@ -117,30 +105,26 @@ export async function executeUse(context) {
 
                     case ResolutionStatus.NOT_FOUND:
                         if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
-                            text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetNameGuess),
-                            type: 'info'
+                            text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetNameGuess), type: 'info'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.AMBIGUOUS:
                         const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(targetResolutionContext, targetNameGuess, entityTargetResolution.candidates);
                         if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
-                            text: ambiguousMsg,
-                            type: 'warning'
+                            text: ambiguousMsg, type: 'warning'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.FILTER_EMPTY:
                         const filterEmptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(targetResolutionContext, 'nearby'); // Adjust scope string if needed
                         if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
-                            text: filterEmptyMsg,
-                            type: 'info'
+                            text: filterEmptyMsg, type: 'info'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.INVALID_INPUT: // Should ideally not happen if input is validated
                     default: // Handle unexpected status
                         console.error(`onFoundUnique (use - target): Unhandled resolution status: ${entityTargetResolution.status}`);
                         if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
-                            text: TARGET_MESSAGES.INTERNAL_ERROR,
-                            type: 'error'
+                            text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'
                         });
                         return {success: false, messages: []};
                 }
@@ -148,17 +132,16 @@ export async function executeUse(context) {
         } else {
             messages.push({text: `No explicit target specified.`, type: 'internal'});
             // Check if the item requires a target based on its definition
+            // NOTE: This uses itemDefinitionId which is now correctly sourced
             const itemDefinition = dataManager.getEntityDefinition(itemDefinitionId);
             const usableData = itemDefinition?.components?.Usable;
             if (usableData?.target_required) {
                 // Item requires a target, but none was provided.
                 if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
-                    text: TARGET_MESSAGES.USE_REQUIRES_TARGET(foundItemName),
-                    type: 'warning'
+                    text: TARGET_MESSAGES.USE_REQUIRES_TARGET(foundItemName), type: 'warning'
                 });
                 messages.push({
-                    text: `Item '${foundItemName}' requires a target, but none provided.`,
-                    type: 'internal'
+                    text: `Item '${foundItemName}' requires a target, but none provided.`, type: 'internal'
                 });
                 return {success: false, messages: []};
             }
@@ -169,7 +152,7 @@ export async function executeUse(context) {
         const eventPayload = {
             userEntityId: playerEntity.id,
             itemInstanceId: itemInstanceId,
-            itemDefinitionId: itemDefinitionId,
+            itemDefinitionId: itemDefinitionId, // <<< This now comes from DefinitionRefComponent
             explicitTargetEntityId: explicitTargetEntityId,
             explicitTargetConnectionEntityId: explicitTargetConnectionEntityId,
         };
@@ -182,18 +165,13 @@ export async function executeUse(context) {
 
         // Dispatch the event using the utility, messages array is mutated by it
         // <<< ADDED await HERE >>>
-        const dispatchResult = await dispatchEventWithCatch(
-            innerContext, // Pass the context containing eventBus
-            EVENT_ITEM_USE_ATTEMPTED,
-            eventPayload,
-            messages, // Pass messages array for internal logging
-            dispatchLogDetails
-        );
+        const dispatchResult = await dispatchEventWithCatch(innerContext, // Pass the context containing eventBus
+            EVENT_ITEM_USE_ATTEMPTED, eventPayload, messages, // Pass messages array for internal logging
+            dispatchLogDetails);
 
         // Return success based on the dispatch result
         return {
-            success: dispatchResult.success,
-            messages: [] // Return empty; messages array was mutated if needed
+            success: dispatchResult.success, messages: [] // Return empty; messages array was mutated if needed
         };
     }; // End of onFoundUnique callback definition
 
@@ -201,7 +179,10 @@ export async function executeUse(context) {
     /** @type {import('../actionExecutionUtils.js').HandleActionWithOptions} */
     const options = {
         scope: 'inventory',
-        requiredComponents: [ItemComponent], // Ensure it's an item
+        // NOTE: Still require ItemComponent generally, as 'use' implies something usable,
+        // which is often tied to ItemComponent's presence, even if definitionId comes elsewhere.
+        // If *only* DefinitionRefComponent matters, this could be changed.
+        requiredComponents: [/* ItemComponent, */ DefinitionRefComponent], // Ensure it has a DefinitionRefComponent
         commandPart: 'directObjectPhrase', // 'use <item> ...'
         actionVerb: 'use',
         onFoundUnique: onFoundUnique, // The async callback defined above
@@ -209,6 +190,8 @@ export async function executeUse(context) {
             notFound: TARGET_MESSAGES.NOT_FOUND_INVENTORY,
             ambiguous: TARGET_MESSAGES.AMBIGUOUS_PROMPT,
             filterEmpty: TARGET_MESSAGES.NOTHING_CARRIED,
+            // Add specific message if something lacks DefinitionRefComponent?
+            // filterFail: (name) => `You see ${name}, but cannot determine what it is.`
         },
     };
 

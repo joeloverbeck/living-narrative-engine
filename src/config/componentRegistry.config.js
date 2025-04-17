@@ -20,6 +20,7 @@ import BreakableComponent from "../components/breakableComponent.js";
 import OpenableComponent from "../components/openableComponent.js";
 import {PassageDetailsComponent} from "../components/passageDetailsComponent.js";
 import LockableComponent from "../components/lockableComponent.js";
+import DefinitionRefComponent from "../components/definitionRefComponent.js";
 
 /**
  * Configuration mapping for component registration.
@@ -30,6 +31,7 @@ import LockableComponent from "../components/lockableComponent.js";
  */
 export const componentRegistryConfig = new Map([
     // Key (string from JSON) -> Value (Imported Class Constructor)
+    ['DefinitionRef', DefinitionRefComponent],
     ['Attack', AttackComponent],
     ['Breakable', BreakableComponent],
     ['Connections', ConnectionsComponent],

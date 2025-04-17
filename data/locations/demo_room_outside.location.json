@@ -16,6 +16,7 @@
     },
     "Connections": {
       "connections": {
+        "south": "demo:conn_exit_outside"
       }
     }
   }

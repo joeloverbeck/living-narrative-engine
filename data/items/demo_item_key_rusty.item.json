@@ -24,21 +24,16 @@
       "usability_conditions": [],
       "target_conditions": [
         {
-          "condition_type": "target_has_component",
-          "component_name": "Lockable",
-          "failure_message": "You can't unlock that."
+          "condition_type": "target_has_property",
+          "property_path": "id",
+          "expected_value": "demo:door_exit_north",
+          "failure_message": "This key doesn't seem to fit this lock."
         },
         {
           "condition_type": "target_has_property",
           "property_path": "Lockable.isLocked",
           "expected_value": true,
-          "failure_message": "It's already unlocked."
-        },
-        {
-          "condition_type": "target_has_property",
-          "property_path": "Lockable.keyId",
-          "expected_value": "demo:item_key_rusty",
-          "failure_message": "This key doesn't seem to fit."
+          "failure_message": "The door is already unlocked."
         }
       ],
       "effects": [

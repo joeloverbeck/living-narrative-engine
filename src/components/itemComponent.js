@@ -3,7 +3,7 @@ import Component from "./component.js";
 
 /**
  * @typedef {object} ItemComponentData - Defines the data structure for ItemComponent initialization.
- * @property {string | null} [definitionId=null] - The ID linking this item instance to its definition in the DataManager. Crucial for looking up base stats, usability, etc.
+ * // REMOVED: definitionId property from typedef
  * @property {string} [description='An item.'] - Instance-specific description (can override definition).
  * @property {number} [weight=0] - Instance-specific weight.
  * @property {boolean} [stackable=false] - Whether this item type can stack.
@@ -12,8 +12,10 @@ import Component from "./component.js";
  */
 
 export class ItemComponent extends Component {
-    /** @type {string | null} - Link to the item definition ID. */
-    definitionId;
+    // REMOVED: definitionId class property declaration
+    // /** @type {string | null} - Link to the item definition ID. */
+    // definitionId;
+
     /** @type {string} - Description of this specific item instance. */
     description;
     /** @type {number} - Weight of this item instance. */
@@ -32,8 +34,19 @@ export class ItemComponent extends Component {
     constructor(data = {}) { // Default to empty object
         super();
 
+        // ADDED: Check for legacy 'definitionId' in input data and issue warning
+        if ('definitionId' in data) {
+            console.warn("[DEPRECATION] ItemComponent.definitionId is obsolete – use DefinitionRefComponent.");
+        }
+        // Also check for the potential typo 'adefinitionId' found in the original typedef
+        if ('adefinitionId' in data) {
+            console.warn("[DEPRECATION] ItemComponent received 'adefinitionId', which is obsolete (and likely a typo for 'definitionId') – use DefinitionRefComponent.");
+        }
+
         // --- Assign properties from data, falling back to defaults ---
-        this.definitionId = (data && typeof data.definitionId === 'string') ? data.definitionId : null; // <<< ADDED THIS LINE
+        // REMOVED: Assignment of this.definitionId
+        // this.definitionId = (data && typeof data.definitionId === 'string') ? data.definitionId : null;
+
         this.description = (data && typeof data.description === 'string') ? data.description : "An item.";
         this.weight = (data && typeof data.weight === 'number' && data.weight >= 0) ? data.weight : 0;
         this.stackable = (data && typeof data.stackable === 'boolean') ? data.stackable : false;
