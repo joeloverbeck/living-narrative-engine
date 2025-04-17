@@ -32,7 +32,7 @@ import {
     EVENT_ITEM_USE_ATTEMPTED,
     EVENT_UNLOCK_ENTITY_ATTEMPT,
     EVENT_ENTITY_UNLOCKED,
-    UI_MESSAGE_DISPLAY
+    EVENT_DISPLAY_MESSAGE
 } from '../../types/eventTypes.js';
 
 import {getDisplayName} from '../../utils/messages.js';
@@ -314,7 +314,7 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
 
         await waitForEvent(
             spy,
-            UI_MESSAGE_DISPLAY,
+            EVENT_DISPLAY_MESSAGE,
             {text: `You unlock the ${getDisplayName(doorNorth)}.`, type: 'success'},
             500
         );

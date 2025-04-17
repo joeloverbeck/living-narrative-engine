@@ -22,7 +22,7 @@ import { PositionComponent } from '../../components/positionComponent.js';
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
 import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -145,7 +145,7 @@ describe('Integration Test: core:open Action - Missing Target Name In Input', ()
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             // Use parser error if available, otherwise generic unknown command
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch('ui:message_display', { text: errorText, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: errorText, type: 'error'});
             return;
         }
         if(!parsedCommand.actionId && commandString.trim() === '') {
@@ -203,8 +203,8 @@ describe('Integration Test: core:open Action - Missing Target Name In Input', ()
 
             // 1. Specific Validation Failure Message: Wait for the UI message generated AFTER validation fails
             try {
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedUIPayload, 500);
-                console.log("[Test Case] Successfully detected 'ui:message_display' for action validation failure.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedUIPayload, 500);
+                console.log("[Test Case] Successfully detected EVENT_DISPLAY_MESSAGE for action validation failure.");
             } catch (err) {
                 console.error("[Test Case] Failed to detect the expected validation failure message.", err);
                 try {
@@ -238,7 +238,7 @@ describe('Integration Test: core:open Action - Missing Target Name In Input', ()
                 expect.anything()
             );
             // Ensure no success message was displayed either
-            expect(dispatchSpy).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({ type: 'success' }));
+            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({ type: 'success' }));
 
 
             // 4. State Check: Verify the state of the closed chest remains unchanged

@@ -4,6 +4,7 @@ import {PositionComponent} from '../components/positionComponent.js';
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
+import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 
@@ -76,7 +77,7 @@ export class ItemTargetResolverService {
         }
 
         // ─────────────────────────── failure ────────────────────────────────────
-        await this.#bus.dispatch('ui:message_display', {
+        await this.#bus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: usableComponentData.failure_message_target_required
                 ?? TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName),
             type: 'warning'

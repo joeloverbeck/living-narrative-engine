@@ -11,42 +11,61 @@
 // ========================================================================
 
 // --- Event Name Constants for Maintainability ---
-export const EVENT_ITEM_USE_ATTEMPTED = 'event:item_use_attempted';
+export const EVENT_APPLY_HEAL_REQUESTED = 'event:apply_heal_requested';
+export const EVENT_APPLY_STATUS_EFFECT_REQUESTED = 'event:apply_status_effect_requested';
 export const EVENT_ATTACK_INTENDED = 'event:attack_intended';
+export const EVENT_ENTITY_DIED = 'event:entity_died';
+export const EVENT_ENTITY_LOCKED = 'event:entity_locked';
+export const EVENT_ENTITY_LOOT_SPAWN_REQUESTED = 'event:entity_loot_spawn_requested';
+export const EVENT_ENTITY_MOVED = 'event:entity_moved';
+export const EVENT_ENTITY_OPENED = 'event:entity_opened';
+export const EVENT_ENTITY_UNLOCKED = 'event:entity_unlocked';
+export const EVENT_INFLICT_DAMAGE_REQUESTED = 'event:inflict_damage_requested';
+export const EVENT_ITEM_CONSUME_REQUESTED = 'event:item_consume_requested';
 export const EVENT_ITEM_DROP_ATTEMPTED = 'event:item_drop_attempted';
+export const EVENT_ITEM_DROPPED = 'event:item_dropped';
 export const EVENT_ITEM_EQUIP_ATTEMPTED = 'event:item_equip_attempted';
-export const EVENT_MOVE_ATTEMPTED = 'event:move_attempted';
-export const EVENT_MOVE_FAILED = 'event:move_failed';
+export const EVENT_ITEM_EQUIPPED = 'event:item_equipped';
+// *** NEW CONSTANTS WILL GO HERE ALPHABETICALLY ***
+export const EVENT_EXAMINE_INTENDED = 'event:examine_intended';
+export const EVENT_LOOK_INTENDED = 'event:look_intended';
 export const EVENT_ITEM_PICKED_UP = 'event:item_picked_up';
 export const EVENT_ITEM_UNEQUIP_ATTEMPTED = 'event:item_unequip_attempted';
-export const EVENT_ENTITY_DIED = 'event:entity_died';
-export const EVENT_ENTITY_LOOT_SPAWN_REQUESTED = 'event:entity_loot_spawn_requested';
-export const EVENT_ITEM_CONSUME_REQUESTED = 'event:item_consume_requested';
 export const EVENT_ITEM_UNEQUIPPED = 'event:item_unequipped';
-export const EVENT_ITEM_EQUIPPED = 'event:item_equipped';
-export const EVENT_ENTITY_MOVED = 'event:entity_moved';
-export const EVENT_ITEM_DROPPED = 'event:item_dropped';
-export const EVENT_ENTITY_OPENED = 'event:entity_opened';
-export const EVENT_OPEN_FAILED = 'event:open_failed';
-export const EVENT_OPEN_ATTEMPTED = 'event:open_attempted';
-export const EVENT_UNLOCK_ENTITY_ATTEMPT = 'event:unlock_entity_attempt';
+export const EVENT_ITEM_USE_ATTEMPTED = 'event:item_use_attempted';
 export const EVENT_LOCK_ENTITY_ATTEMPT = 'event:lock_entity_attempt';
-export const EVENT_ENTITY_UNLOCKED = 'event:entity_unlocked';
-export const EVENT_ENTITY_LOCKED = 'event:entity_locked';
+export const EVENT_MOVE_ATTEMPTED = 'event:move_attempted';
+export const EVENT_MOVE_FAILED = 'event:move_failed';
+export const EVENT_OPEN_ATTEMPTED = 'event:open_attempted';
+export const EVENT_OPEN_FAILED = 'event:open_failed';
+export const EVENT_REMOVE_STATUS_EFFECT_REQUESTED = 'event:remove_status_effect_requested';
+export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
+export const EVENT_UNLOCK_ENTITY_ATTEMPT = 'event:unlock_entity_attempt';
 // ------------------------------------------------------------------------
 //  Force‑unlock (scripted) – bypasses key validation in LockSystem
 // ------------------------------------------------------------------------
 /** @constant {string} */
 export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
-export const EVENT_APPLY_HEAL_REQUESTED = 'event:apply_heal_requested';
-export const EVENT_INFLICT_DAMAGE_REQUESTED = 'event:inflict_damage_requested';
-export const EVENT_APPLY_STATUS_EFFECT_REQUESTED = 'event:apply_status_effect_requested';
-export const EVENT_REMOVE_STATUS_EFFECT_REQUESTED = 'event:remove_status_effect_requested';
-export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
 // Add more request event names as needed (e.g., change_state, teleport)
 
 
 // --- Base Gameplay Event Payloads ---
+
+/**
+ * Payload for EVENT_LOOK_INTENDED. Signals intent to get information about a general scope.
+ * @typedef {object} LookIntendedPayload
+ * @property {string} actorId              – The unique ID of the entity initiating the look action (usually player).
+ * @property {'location'|'self'|'target'} scope – The scope of the intended look action.
+ * @property {string|null}  targetEntityId – The unique ID of the specific entity being looked at, only present when scope is 'target'. Null otherwise.
+ */
+
+/**
+ * Payload for EVENT_EXAMINE_INTENDED. Signals intent to get detailed information about a specific target entity.
+ * @typedef {object} ExamineIntendedPayload
+ * @property {string} actorId – The unique ID of the entity initiating the examine action (usually player).
+ * @property {string} targetEntityId – The unique ID of the specific entity being examined. Unique resolution happens in the handler.
+ */
+
 
 /**
  * Defines the payload structure for the EVENT_ITEM_USE_ATTEMPTED event.
@@ -562,8 +581,8 @@ export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
 // ========================================================================
 
 // --- UI Event Name Constants ---
-export const UI_MESSAGE_DISPLAY = 'ui:message_display';
-export const UI_DISPLAY_LOCATION = 'ui:display_location';
+export const EVENT_DISPLAY_MESSAGE = 'event:display_message';
+export const EVENT_DISPLAY_LOCATION = 'event:display_location';
 // Add other UI event names as needed
 
 /**
@@ -579,13 +598,13 @@ export const UI_DISPLAY_LOCATION = 'ui:display_location';
  */
 
 /**
- * Defines the payload structure for the ui:display_location event.
+ * Defines the payload structure for the EVENT_DISPLAY_LOCATION event.
  * Sends the necessary data for the UI to render the description and contents of the player's current location.
  *
- * Fired By: lookActionHandler (when looking at the current location), potentially MovementSystem after move.
+ * Fired By: PerceptionSystem (when looking at the current location), potentially MovementSystem after move.
  * Consumed By: Renderer/UI Layer.
  *
- * @typedef {object} UIDisplayLocationPayload
+ * @typedef {object} LocationDisplayPayload
  * @property {string} name The display name of the location.
  * @property {string} description The descriptive text for the location.
  * @property {Array<{direction: string, locationId: string, displayName?: string, isLocked?: boolean, isBlocked?: boolean}>} exits An array of objects describing available exits, including direction, target location ID, and potentially display name/state.

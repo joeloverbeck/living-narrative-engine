@@ -24,6 +24,8 @@
  * @property {EventBus} eventBus - Facilitates decoupled communication.
  */
 
+import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
+
 /**
  * GameLoop orchestrates the main game flow *after* initialization.
  * It manages dependencies, processes user input, delegates action execution,
@@ -139,7 +141,7 @@ class GameLoop {
         if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
             const errorMsg = "Critical Error: GameLoop cannot start because initial game state (player/location) is missing!";
             console.error("GameLoop:", errorMsg);
-            this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: "error"});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: "error"});
 
             // --- Perform necessary "stop-like" cleanup directly ---
             // Ensure isRunning remains false (it is already, but for clarity)
@@ -152,7 +154,7 @@ class GameLoop {
             // Notify UI that input should be disabled (matching stop behavior)
             this.#eventBus.dispatch('ui:disable_input', {message: stopMessage});
             // Optionally, notify user game stopped here too, like in stop()
-            this.#eventBus.dispatch('ui:message_display', {text: stopMessage, type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: stopMessage, type: 'info'});
 
             return; // Exit start method
         }
@@ -180,7 +182,7 @@ class GameLoop {
 
         // AC2: Check for parsing errors reported by the parser
         if (parsedCommand.error) {
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: parsedCommand.error, // Use the specific error from the parser
                 type: "error"
             });
@@ -194,7 +196,7 @@ class GameLoop {
         if (!parsedCommand.actionId) {
             // Only show "Unknown command" if the user actually typed something
             if (parsedCommand.originalInput.trim().length > 0) {
-                this.#eventBus.dispatch('ui:message_display', {
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: "Unknown command. Try 'help'.", // Generic unknown command message
                     type: "error"
                 });
@@ -211,7 +213,7 @@ class GameLoop {
         // Check game state consistency before execution
         if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
             console.error("GameLoop Error: Attempted to execute action but game state is missing!");
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Game state not fully initialized.",
                 type: "error"
             });
@@ -242,7 +244,7 @@ class GameLoop {
         // but provides an extra layer of safety.
         if (!currentPlayer || !currentLocationBeforeAction) {
             console.error("GameLoop executeAction called but state missing from GameStateManager.");
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });
@@ -299,7 +301,7 @@ class GameLoop {
         // Perform ALL cleanup actions associated with stopping.
         this.#inputHandler.disable(); // Logically disable input capture
         this.#eventBus.dispatch('ui:disable_input', {message: stopMessage});
-        this.#eventBus.dispatch('ui:message_display', {text: stopMessage, type: 'info'});
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: stopMessage, type: 'info'});
 
         console.log("GameLoop: Stopped.");
     }

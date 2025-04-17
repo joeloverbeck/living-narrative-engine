@@ -17,6 +17,7 @@
 // --- Component Class Imports (needed for getComponent checks) ---
 // Removed unused InventoryComponent, NameComponent class imports here
 import RegistryInitializer from './registryInitializer.js';
+import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
 
 /**
  * Encapsulates core game systems, manages initialization using a dependency container,
@@ -67,18 +68,18 @@ class GameEngine {
             console.log("GameEngine: DomRenderer resolved.");
 
             this.#eventBus.dispatch('ui:set_title', {text: "Initializing Engine..."});
-            this.#eventBus.dispatch('ui:message_display', {text: "Initializing data manager...", type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Initializing data manager...", type: 'info'});
 
             // --- Load Data ---
             this.#eventBus.dispatch('ui:set_title', {text: `Loading Game Data for ${worldName}...`});
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `Loading data for world: ${worldName}...`,
                 type: 'info'
             });
             const dataManager = this.#container.resolve('DataManager');
             await dataManager.loadAllData(worldName);
             console.log(`GameEngine: DataManager resolved and data loaded for world: ${worldName}.`);
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `Game data for '${dataManager.getWorldName() || worldName}' loaded.`,
                 type: 'info'
             });
@@ -97,27 +98,32 @@ class GameEngine {
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
+                // Core & Rules
                 'TriggerDispatcher',
                 'GameRuleSystem',
+                // State & Interaction
                 'EquipmentSystem',
                 'InventorySystem',
-                'ItemUsageSystem',
                 'CombatSystem',
                 'DeathSystem',
-                // Movement-related systems: Order might matter slightly if one depends on another's init,
-                // but here the dependencies are handled at construction via DI.
-                // Init order mainly affects event listener setup timing.
-                'BlockerSystem',        // Initialize first (provides checks)
+                'HealthSystem',
+                'StatusEffectSystem',
                 'LockSystem',
                 'OpenableSystem',
-                'MovementSystem',       // Initialize next (performs action)
-                'HealthSystem',         // NEW: Handles health modification events
-                'StatusEffectSystem',   // NEW: Handles status effect events
-                'MoveCoordinatorSystem',// Initialize last (coordinates others)
-                'WorldPresenceSystem',  // Handles entity presence updates (related to movement)s
+                'WorldPresenceSystem',
+                'ItemUsageSystem',
+                // UI Feedback (often depends on state changes from above)
+                'NotificationUISystem',
+                // Perception (newly added, after UI, before movement)
+                'PerceptionSystem',
+                // Movement Coordination & Execution
+                'BlockerSystem',
+                'MovementSystem',
+                'MoveCoordinatorSystem',
+                // Quests (often triggered by other system events)
                 'QuestSystem',
                 'QuestStartTriggerSystem',
-                'NotificationUISystem'
+                // Add other systems here as needed
             ];
             for (const key of systemsToInitialize) {
                 const system = this.#container.resolve(key);
@@ -134,7 +140,7 @@ class GameEngine {
 
             // --- Core Game Setup (Player & Starting Location via Service) ---
             this.#eventBus.dispatch('ui:set_title', {text: "Setting Initial Game State..."});
-            this.#eventBus.dispatch('ui:message_display', {text: "Setting initial game state...", type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Setting initial game state...", type: 'info'});
             const gameStateInitializer = this.#container.resolve('GameStateInitializer');
             const setupSuccess = gameStateInitializer.setupInitialState();
             if (!setupSuccess) {
@@ -144,7 +150,7 @@ class GameEngine {
 
             // --- Instantiate Other Initial Entities & Build Spatial Index ---
             this.#eventBus.dispatch('ui:set_title', {text: "Initializing World Entities..."});
-            this.#eventBus.dispatch('ui:message_display', {text: "Instantiating world entities...", type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Instantiating world entities...", type: 'info'});
             const worldInitializer = this.#container.resolve('WorldInitializer');
             const worldInitSuccess = worldInitializer.initializeWorldEntities();
             if (!worldInitSuccess) {
@@ -176,7 +182,7 @@ class GameEngine {
             this.#isInitialized = true;
             console.log(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
             this.#eventBus.dispatch('ui:set_title', {text: "Initialization Complete. Starting..."});
-            this.#eventBus.dispatch('ui:message_display', {text: "Initialization complete.", type: 'success'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Initialization complete.", type: 'success'});
 
             return true;
 
@@ -187,7 +193,7 @@ class GameEngine {
             if (this.#eventBus) {
                 try {
                     this.#eventBus.dispatch('ui:set_title', {text: "Fatal Initialization Error!"});
-                    this.#eventBus.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
                     this.#eventBus.dispatch('ui:disable_input', {message: "Error during startup."});
                 } catch (eventBusError) {
                     console.error("GameEngine: Failed to dispatch error messages via EventBus during initialization failure:", eventBusError);
@@ -235,7 +241,7 @@ class GameEngine {
                 const dataManager = this.#container.resolve('DataManager');
                 const loadedWorldName = dataManager.getWorldName() || worldName;
                 this.#eventBus.dispatch('ui:set_title', {text: loadedWorldName});
-                this.#eventBus.dispatch('ui:message_display', {text: `Welcome to ${loadedWorldName}!`, type: "info"});
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `Welcome to ${loadedWorldName}!`, type: "info"});
 
                 const gameStateManager = this.#container.resolve('GameStateManager');
                 const player = gameStateManager.getPlayer();
@@ -255,7 +261,7 @@ class GameEngine {
 
                 this.#gameLoop.start();
                 console.log("GameEngine: GameLoop started.");
-                this.#eventBus.dispatch('ui:message_display', {text: "Game loop started. Good luck!", type: 'info'});
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Game loop started. Good luck!", type: 'info'});
             } else {
                 console.error("GameEngine: Initialization reported success but essential components missing or state invalid. Cannot start GameLoop.");
                 throw new Error("Inconsistent engine state after initialization. Cannot start.");

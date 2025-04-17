@@ -3,6 +3,7 @@
 import {PositionComponent} from '../components/positionComponent.js';
 import {getDisplayName} from "../utils/messages.js";
 import {
+    EVENT_DISPLAY_MESSAGE,
     EVENT_ITEM_DROP_ATTEMPTED,
     EVENT_ITEM_DROPPED,
     EVENT_ITEM_PICKED_UP,
@@ -141,7 +142,7 @@ class WorldPresenceSystem {
             // Handle cases where the entity might not be found (should not happen if action handler validated)
             console.error(`WorldPresenceSystem: Cannot find item entity instance with ID: ${itemId}. Cannot process drop.`);
             // Consider dispatching an internal error message?
-            // this.#eventBus.dispatch('ui:message_display', { text: "Internal error: Dropped item disappeared.", type: 'error' });
+            // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Internal error: Dropped item disappeared.", type: 'error' });
             return; // Stop processing
         }
 
@@ -165,7 +166,7 @@ class WorldPresenceSystem {
             } catch (error) {
                 console.error(`WorldPresenceSystem: Failed to create or add PositionComponent for item ${itemId}:`, error);
                 // Dispatch error?
-                this.#eventBus.dispatch('ui:message_display', {text: "Internal error placing item.", type: 'error'});
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Internal error placing item.", type: 'error'});
                 return; // Cannot proceed without a position component
             }
         }
@@ -183,7 +184,7 @@ class WorldPresenceSystem {
             // 5. Dispatch the final UI success message
             const itemName = getDisplayName(itemEntity); // Get item name for message
             const successMessage = `You drop the ${itemName}.`;
-            this.#eventBus.dispatch('ui:message_display', {text: successMessage, type: 'info'}); // Or 'action_feedback' type?
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: successMessage, type: 'info'}); // Or 'action_feedback' type?
 
             // 6. (Optional) Dispatch a follow-up event
             this.#eventBus.dispatch(EVENT_ITEM_DROPPED, {
@@ -197,7 +198,7 @@ class WorldPresenceSystem {
         } catch (error) {
             console.error(`WorldPresenceSystem: Error updating position, notifying EntityManager, or dispatching events for dropped item ${itemId}:`, error);
             // Attempt to revert? Very tricky. Log and maybe send UI error.
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `Error dropping item: ${error.message}`,
                 type: 'error'
             });

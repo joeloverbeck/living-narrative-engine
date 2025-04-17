@@ -2,7 +2,7 @@
 
 import {HealthComponent} from '../components/healthComponent.js';
 import {NameComponent} from '../components/nameComponent.js';
-import {EVENT_ATTACK_INTENDED, EVENT_ENTITY_DIED} from "../types/eventTypes.js";
+import {EVENT_ATTACK_INTENDED, EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_DIED} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -79,7 +79,7 @@ class CombatSystem {
             console.error(`CombatSystem: Target entity ${targetId} does not have a HealthComponent. Cannot apply damage.`);
             const targetNameComp = targetEntity.getComponent(NameComponent);
             const targetDisplayName = targetNameComp ? targetNameComp.value : `entity ${targetEntity.id}`;
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `You cannot damage the ${targetDisplayName}.`,
                 type: 'warning'
             });
@@ -115,7 +115,7 @@ class CombatSystem {
         const targetNameComp = targetEntity.getComponent(NameComponent);
         const targetDisplayName = targetNameComp ? targetNameComp.value : `entity ${targetEntity.id}`;
         const hitMessage = `${attackerDisplayName} hit${attackerDisplayName === 'You' ? '' : 's'} the ${targetDisplayName} for ${actualDamage} damage!`;
-        this.#eventBus.dispatch('ui:message_display', {text: hitMessage, type: 'combat_hit'}); // Use a specific type
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: hitMessage, type: 'combat_hit'}); // Use a specific type
 
         // --- 7. Check for Death (Transition) ---
         if (clampedNewHealth <= 0 && healthBefore > 0) {
@@ -129,7 +129,7 @@ class CombatSystem {
 
             // --- 7b. Dispatch UI Death Message ---
             const deathMessage = `The ${targetDisplayName} collapses, defeated!`;
-            this.#eventBus.dispatch('ui:message_display', {text: deathMessage, type: 'combat_critical'}); // Critical event type
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: deathMessage, type: 'combat_critical'}); // Critical event type
 
             // TODO: Future: Trigger loot drops, XP gain, quest updates via listeners on EVENT_ENTITY_DIED
         }

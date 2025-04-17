@@ -2,7 +2,8 @@
 
 import {InventoryComponent} from '../../components/inventoryComponent.js';
 import {EquipmentComponent} from '../../components/equipmentComponent.js';
-import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js"; // Import TARGET_MESSAGES
+import {getDisplayName, TARGET_MESSAGES} from "../../utils/messages.js";
+import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js"; // Import TARGET_MESSAGES
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
@@ -113,7 +114,7 @@ export function executeInventory(context) {
                 if (!itemInstance) {
                     // Specific error handling for corrupted inventory data remains here.
                     console.error(`executeInventory: Item instance for ID ${itemId} not found on entityManager! Inventory data might be corrupt.`);
-                    dispatch('ui:message_display', {
+                    dispatch(EVENT_DISPLAY_MESSAGE, {
                         text: TARGET_MESSAGES.INTERNAL_ERROR, // Use standard message
                         type: 'error'
                     });
@@ -136,7 +137,7 @@ export function executeInventory(context) {
     }
 
     // Dispatch the combined message
-    dispatch('ui:message_display', {text: messageText, type: 'info'});
+    dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'});
     messages.push({text: `Displayed inventory and equipment.`, type: 'internal'}); // Simplified internal message
 
     return {success: true, messages, newState: undefined};

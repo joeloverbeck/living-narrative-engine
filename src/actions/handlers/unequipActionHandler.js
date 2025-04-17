@@ -11,7 +11,7 @@ import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js'
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 // --- Refactored Imports (Ticket 9) ---
 import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
-import {EVENT_ITEM_UNEQUIP_ATTEMPTED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ITEM_UNEQUIP_ATTEMPTED} from "../../types/eventTypes.js";
 
 // --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
@@ -67,7 +67,7 @@ export async function executeUnequip(context) {
     const playerEquipment = playerEntity.getComponent(EquipmentComponent);
     if (!playerInventory || !playerEquipment) {
         const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment');
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
         console.error("executeUnequip: Player entity missing Inventory/Equipment components.");
         messages.push({text: "Internal Error: Player missing Inventory/Equipment components.", type: 'internal_error'});
         return {success: false, messages};
@@ -88,7 +88,7 @@ export async function executeUnequip(context) {
             if (!itemInstanceToUnequip) {
                 console.error(`executeUnequip: Found item ID ${itemIdInSlot} in slot ${potentialSlotId} but instance is missing!`);
                 const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Equipped item instance missing)";
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
                 messages.push({
                     text: `Internal Error: Instance for equipped item ${itemIdInSlot} missing.`,
                     type: 'internal_error'
@@ -122,7 +122,7 @@ export async function executeUnequip(context) {
         } else {
             // --- Slot Found & Empty (AC 3) ---
             const errorMsg = TARGET_MESSAGES.UNEQUIP_SLOT_EMPTY(targetName); // Pass user input for message
-            dispatch('ui:message_display', {text: errorMsg, type: 'info'}); // Typically 'info' or 'warning' for empty slot
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'info'}); // Typically 'info' or 'warning' for empty slot
             messages.push({
                 text: `Unequip failed: Slot '${potentialSlotId}' specified by '${targetName}' is empty.`,
                 type: 'internal'
@@ -155,7 +155,7 @@ export async function executeUnequip(context) {
                 // This indicates an inconsistency - item resolved in equipment scope but slot not found
                 console.error(`executeUnequip (onFoundUnique): Found unique item ${targetItemId} ('${targetItemName}') but failed to find its slot in EquipmentComponent!`);
                 const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR + " (Cannot locate resolved item's slot)";
-                innerContext.dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                innerContext.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
                 accumulatedMessages.push({
                     text: `Internal Error: Slot not found for resolved item ${targetItemId}.`,
                     type: 'internal_error'

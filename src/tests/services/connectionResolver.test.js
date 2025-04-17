@@ -13,7 +13,8 @@ import Entity from '../../entities/entity.js'; // Adjust path if necessary
 import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Adjust path
 import {NameComponent} from '../../components/nameComponent.js'; // Adjust path
 import {TARGET_MESSAGES} from '../../utils/messages.js'; // Adjust path
-import {getDisplayName} from '../../utils/messages.js'; // Adjust path
+import {getDisplayName} from '../../utils/messages.js';
+import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js"; // Adjust path
 
 // ** Import Types (for clarity, often optional in JS tests but good practice) **
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -181,7 +182,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             expectedNames.sort();
             // Check call arguments robustly
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({
                     text: expect.stringContaining(`There are multiple ways to go '${input}'`), // Check key parts
                     text: expect.stringContaining(getDisplayName(westEntity1)),
@@ -193,7 +194,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             );
             // More precise check if TARGET_MESSAGES function is stable
             const expectedMsg = TARGET_MESSAGES.AMBIGUOUS_DIRECTION(input, [getDisplayName(westEntity1), getDisplayName(westEntity2)]);
-            expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {text: expectedMsg, type: 'warning'});
+            expect(mockDispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {text: expectedMsg, type: 'warning'});
         });
     });
 
@@ -247,7 +248,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             const expectedMsg = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(actionVerb, input, expectedEntities); // Pass the actual array here
 
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 // Now this comparison should work correctly
                 {text: expectedMsg, type: 'warning'}
             );
@@ -293,7 +294,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             expect(mockDispatch).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 {text: expectedMsg, type: 'info'}
             );
         });
@@ -311,7 +312,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             expect(mockDispatch).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 {text: expectedMsg, type: 'info'}
             );
         });
@@ -325,7 +326,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             expect(mockDispatch).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 {text: expectedMsg, type: 'info'}
             );
             // Verify internal calls
@@ -351,7 +352,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
             expect(mockDispatch).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
             expect(mockDispatch).toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 {text: expectedMsg, type: 'info'}
             );
             // Verify the dangling ID was requested

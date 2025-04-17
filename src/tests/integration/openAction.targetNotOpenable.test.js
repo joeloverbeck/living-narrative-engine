@@ -22,7 +22,12 @@ import { PositionComponent } from '../../components/positionComponent.js'; // Ne
 
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import {EVENT_ENTITY_OPENED, EVENT_OPEN_ATTEMPTED, EVENT_OPEN_FAILED} from "../../types/eventTypes.js";
+import {
+    EVENT_DISPLAY_MESSAGE,
+    EVENT_ENTITY_OPENED,
+    EVENT_OPEN_ATTEMPTED,
+    EVENT_OPEN_FAILED
+} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -163,11 +168,11 @@ describe('Integration Test: core:open Action', () => {
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             // If parser itself identifies an error (like unknown command)
             if(parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', { text: parsedCommand.error, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: parsedCommand.error, type: 'error'});
             } else {
                 // Handle cases where parser returns no actionId but no specific error
                 // This shouldn't happen for known commands but handles edge cases
-                await eventBus.dispatch('ui:message_display', { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Unknown command.", type: 'error'});
             }
             return; // Stop processing if parsing fails significantly
         }
@@ -220,13 +225,13 @@ describe('Integration Test: core:open Action', () => {
             // The message depends on whether other openable things are nearby. Assuming ONLY the box is targetable by name nearby,
             // but fails the component filter, it should trigger FILTER_EMPTY. If other non-matching things were there, it might be NOT_FOUND.
             // Let's assume FILTER_EMPTY is the expected outcome here based on the setup.
-            expect(dispatchSpy).toHaveBeenCalledWith('ui:message_display', {
+            expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 // Note: Scope might differ slightly if 'nearby_including_blockers' isn't exactly mapped; adjust if needed.
                 text: TARGET_MESSAGES.FILTER_EMPTY_OPENABLE('open', 'nearby_including_blockers'), // Check scope name carefully
                 type: 'info' // Or 'warning' depending on how handleAction... maps FILTER_EMPTY
             });
             // Alternative check if NOT_FOUND is expected instead:
-            // expect(dispatchSpy).toHaveBeenCalledWith('ui:message_display', {
+            // expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
             //     text: TARGET_MESSAGES.NOT_FOUND_OPENABLE('box'),
             //     type: 'info' // Or 'warning'
             // });

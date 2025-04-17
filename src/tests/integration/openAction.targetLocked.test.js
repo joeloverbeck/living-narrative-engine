@@ -24,7 +24,7 @@ import {PositionComponent} from '../../components/positionComponent.js';
 // Assuming TARGET_MESSAGES has a key like LOCKED
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 import {waitForEvent} from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -147,9 +147,9 @@ describe('Integration Test: core:open Action - Target Locked', () => {
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             if (parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', {text: parsedCommand.error, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch('ui:message_display', {text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Unknown command.", type: 'error'});
             }
             return;
         }
@@ -215,8 +215,8 @@ describe('Integration Test: core:open Action - Target Locked', () => {
 
             // 1. Failure Message: Wait for the specific UI message indicating it's locked
             try {
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedUIPayload, 500);
-                console.log("[Test Case] Successfully detected 'ui:message_display' for locked target.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedUIPayload, 500);
+                console.log("[Test Case] Successfully detected EVENT_DISPLAY_MESSAGE for locked target.");
             } catch (err) {
                 console.error("[Test Case] Failed to detect the expected 'locked' message.", err);
                 try {
@@ -246,7 +246,7 @@ describe('Integration Test: core:open Action - Target Locked', () => {
                 expect.anything()
             );
             expect(dispatchSpy).not.toHaveBeenCalledWith(
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({type: 'success'})
             );
 

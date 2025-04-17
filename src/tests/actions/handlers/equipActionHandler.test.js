@@ -16,6 +16,7 @@ jest.mock('../../../utils/actionValidationUtils.js'); // Mock validation
 
 import {resolveTargetEntity} from '../../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../../utils/actionValidationUtils.js';
+import {EVENT_DISPLAY_MESSAGE} from "../../../types/eventTypes.js";
 
 // --- Mocks Setup ---
 const mockDispatch = jest.fn();
@@ -160,7 +161,7 @@ describe('executeEquip', () => {
         const expectedMsgType = 'info'; // Check the type used in the NOT_FOUND case
 
         // Verify the specific call
-        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+        expect(mockDispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
             text: expectedMsgText,
             type: expectedMsgType, // Make sure type matches too
         });
@@ -184,7 +185,7 @@ describe('executeEquip', () => {
         expect(result.success).toBe(false);
         // Check for the specific "cannot equip" message
         expect(mockDispatch).toHaveBeenCalledTimes(1); // Ensure only one message total
-        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+        expect(mockDispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
             text: TARGET_MESSAGES.EQUIP_CANNOT('Rock'), // Message depends on getDisplayName
             type: 'warning',
         });
@@ -206,7 +207,7 @@ describe('executeEquip', () => {
 
         expect(result.success).toBe(false);
         expect(mockDispatch).toHaveBeenCalledTimes(1);
-        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+        expect(mockDispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
             text: TARGET_MESSAGES.EQUIP_SLOT_FULL('Old Vest', 'body'), // Message depends on getDisplayName and slot processing
             type: 'warning',
         });
@@ -228,7 +229,7 @@ describe('executeEquip', () => {
 
         expect(result.success).toBe(false);
         expect(mockDispatch).toHaveBeenCalledTimes(1);
-        expect(mockDispatch).toHaveBeenCalledWith('ui:message_display', {
+        expect(mockDispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
             text: TARGET_MESSAGES.EQUIP_NO_SLOT('Rusty Sword', 'core:slot_main_hand'), // Message depends on getDisplayName
             type: 'error',
         });

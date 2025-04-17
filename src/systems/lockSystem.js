@@ -11,7 +11,7 @@ import {
     EVENT_LOCK_ENTITY_ATTEMPT,
     EVENT_UNLOCK_ENTITY_ATTEMPT,
     EVENT_UNLOCK_ENTITY_FORCE,
-    UI_MESSAGE_DISPLAY // Added for consistency in dispatching UI messages
+    EVENT_DISPLAY_MESSAGE // Added for consistency in dispatching UI messages
 } from "../types/eventTypes.js";
 
 // Type Imports for JSDoc
@@ -345,7 +345,7 @@ class LockSystem {
         const uiMessagePayload = {text, type};
         console.debug(`LockSystem: Dispatching UI message: "${text}" (Type: ${type})`);
         // Use await if dispatch is async and subsequent actions depend on it finishing
-        this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, uiMessagePayload);
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, uiMessagePayload);
     }
 
     /**

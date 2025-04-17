@@ -9,7 +9,7 @@ import {resolveTargetEntity} from '../../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 // --- Refactored Imports ---
 import {TARGET_MESSAGES, getDisplayName} from "../../utils/messages.js";
-import {EVENT_ITEM_EQUIP_ATTEMPTED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ITEM_EQUIP_ATTEMPTED} from "../../types/eventTypes.js";
 
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 
@@ -34,7 +34,7 @@ export function executeEquip(context) {
     // --- Component Existence Check ---
     if (!playerInventory || !playerEquipment) {
         const errorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment');
-        dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+        dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
         console.error("executeEquip: Player entity missing InventoryComponent or EquipmentComponent.");
         return {success: false, messages: [{text: errorMsg, type: 'error'}], newState: undefined};
     }
@@ -58,7 +58,7 @@ export function executeEquip(context) {
             if (!itemInstanceToEquip.hasComponent(EquippableComponent)) {
                 // Item found, but cannot be equipped
                 const errorMsg = TARGET_MESSAGES.EQUIP_CANNOT(itemDisplayName);
-                dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
+                dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'warning'});
                 messages.push({
                     text: `Equip failed: Item ${itemDisplayName} (${itemInstanceToEquip.id}) not equippable.`,
                     type: 'internal'
@@ -72,7 +72,7 @@ export function executeEquip(context) {
 
             if (!playerEquipment.hasSlot(targetSlotId)) {
                 const errorMsg = TARGET_MESSAGES.EQUIP_NO_SLOT(itemDisplayName, targetSlotId);
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
                 console.error(`executeEquip: Player tried to equip to slot '${targetSlotId}' but EquipmentComponent doesn't define it.`);
                 messages.push({text: `Equip failed: Slot ${targetSlotId} does not exist.`, type: 'internal'});
                 return {success: false, messages: messages, newState: undefined};
@@ -86,7 +86,7 @@ export function executeEquip(context) {
                 const slotName = targetSlotId.includes(':') ? targetSlotId.split(':').pop().replace(/^slot_/, '') : targetSlotId;
 
                 const errorMsg = TARGET_MESSAGES.EQUIP_SLOT_FULL(currentItemName, slotName);
-                dispatch('ui:message_display', {text: errorMsg, type: 'warning'});
+                dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'warning'});
                 messages.push({
                     text: `Equip failed: Slot ${targetSlotId} is full with ${currentItemName} (${currentItemInSlotId}).`,
                     type: 'internal'
@@ -110,7 +110,7 @@ export function executeEquip(context) {
             } catch (e) {
                 // Handle rare case where dispatch itself fails
                 const errorMsg = `${TARGET_MESSAGES.INTERNAL_ERROR} (Failed to dispatch item_equip_attempted event)`;
-                dispatch('ui:message_display', {text: errorMsg, type: 'error'});
+                dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
                 console.error("executeEquip: Failed to dispatch item_equip_attempted event:", e);
                 messages.push({text: errorMsg, type: 'error'});
                 return {success: false, messages, newState: undefined};
@@ -120,7 +120,7 @@ export function executeEquip(context) {
         case 'NOT_FOUND':
             // Item not found in inventory at all
             const errorMsg = TARGET_MESSAGES.NOT_FOUND_INVENTORY(targetItemName); // Use general inventory not found
-            dispatch('ui:message_display', {text: errorMsg, type: 'info'});
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'info'});
             messages.push({
                 text: `Equip resolution failed for '${targetItemName}', reason: NOT_FOUND.`,
                 type: 'internal'
@@ -129,7 +129,7 @@ export function executeEquip(context) {
 
         case 'AMBIGUOUS':
             const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT('equip', targetItemName, resolution.candidates);
-            dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: ambiguousMsg, type: 'warning'});
             messages.push({
                 text: `Equip resolution failed for '${targetItemName}', reason: AMBIGUOUS.`,
                 type: 'internal'
@@ -138,7 +138,7 @@ export function executeEquip(context) {
 
         case 'FILTER_EMPTY':
             // Inventory is empty
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'});
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.NOTHING_CARRIED, type: 'info'});
             messages.push({
                 text: `Equip resolution failed for '${targetItemName}', reason: FILTER_EMPTY (Inventory empty).`,
                 type: 'internal'
@@ -146,7 +146,7 @@ export function executeEquip(context) {
             return {success: false, messages: messages, newState: undefined};
 
         case 'INVALID_INPUT':
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
             messages.push({
                 text: `Equip resolution failed for '${targetItemName}', reason: INVALID_INPUT.`,
                 type: 'internal_error'
@@ -155,7 +155,7 @@ export function executeEquip(context) {
             return {success: false, messages: messages, newState: undefined};
 
         default:
-            dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
             console.error(`executeEquip: Unhandled resolution status: ${resolution.status}`);
             messages.push({text: `Unhandled status: ${resolution.status}`, type: 'internal_error'});
             return {success: false, messages: messages};

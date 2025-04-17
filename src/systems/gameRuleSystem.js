@@ -10,7 +10,7 @@
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
 
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 /**
  * Manages overarching game rules, potentially including time progression,
@@ -126,7 +126,7 @@ class GameRuleSystem {
                 }
             } catch (error) {
                 console.error("GameRuleSystem: Uncaught error executing initial 'core:look':", error);
-                this.#eventBus.dispatch('ui:message_display', {
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: "Internal Error: Failed to perform initial look.",
                     type: 'error'
                 });
@@ -158,7 +158,7 @@ class GameRuleSystem {
 
         if (!newLocationEntity) {
             console.error(`GameRuleSystem: Failed to find instance for location ${newLocationId}! Cannot proceed with post-move logic.`);
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `Critical Error: Cannot process arrival at ${newLocationId}. Location data might be missing or corrupted.`,
                 type: 'error'
             });
@@ -198,7 +198,7 @@ class GameRuleSystem {
             }
         } catch (error) {
             console.error("GameRuleSystem: Uncaught error executing automatic 'core:look' after move:", error);
-            this.#eventBus.dispatch('ui:message_display', {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Failed to perform automatic look after moving.",
                 type: 'error'
             });

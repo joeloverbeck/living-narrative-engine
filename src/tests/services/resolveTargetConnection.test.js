@@ -11,7 +11,8 @@ import {
     // Import findPotentialConnectionMatches if needed for mocking/spying
 } from '../../services/connectionResolver.js';
 // Import necessary for helper functions, even if not directly tested here yet
-import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js'; // Import TARGET_MESSAGES
+import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
+import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js"; // Import TARGET_MESSAGES
 
 
 // ========================================================================
@@ -273,7 +274,7 @@ describe('resolveTargetConnection', () => {
                 expect(result).toBeNull();
                 expect(mockDispatch).toHaveBeenCalledTimes(1);
                 expect(mockDispatch).toHaveBeenCalledWith(
-                    'ui:message_display',
+                    EVENT_DISPLAY_MESSAGE,
                     expect.objectContaining({
                         text: expectedMsg,
                         type: 'warning'
@@ -317,7 +318,7 @@ describe('resolveTargetConnection', () => {
                 expect(mockDispatch).toHaveBeenCalledTimes(1);
                 // Check against the specifically formatted message
                 expect(mockDispatch).toHaveBeenCalledWith(
-                    'ui:message_display',
+                    EVENT_DISPLAY_MESSAGE,
                     expect.objectContaining({
                         text: expectedMsg,
                         type: 'warning'
@@ -325,7 +326,7 @@ describe('resolveTargetConnection', () => {
                 );
                 // Broader check for content if message format might vary slightly
                 expect(mockDispatch).toHaveBeenCalledWith(
-                    'ui:message_display',
+                    EVENT_DISPLAY_MESSAGE,
                     expect.objectContaining({
                         type: 'warning',
                         text: expect.stringContaining(`Which '${ambiguousInput}' did you want to ${actionVerb}?`),
@@ -365,7 +366,7 @@ describe('resolveTargetConnection', () => {
             expect(result).toBeNull(); // AC1: returns null
             expect(mockDispatch).toHaveBeenCalledTimes(1); // AC1: dispatch called once
             expect(mockDispatch).toHaveBeenCalledWith( // AC1: dispatch details
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({
                     text: expectedMsg,
                     type: 'info' // Not found is usually 'info' type
@@ -389,7 +390,7 @@ describe('resolveTargetConnection', () => {
             expect(result).toBeNull(); // AC2: returns null
             expect(mockDispatch).toHaveBeenCalledTimes(1); // AC2: dispatch called once
             expect(mockDispatch).toHaveBeenCalledWith( // AC2: dispatch details
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({
                     text: expectedMsg,
                     type: 'info'
@@ -411,7 +412,7 @@ describe('resolveTargetConnection', () => {
             expect(result).toBeNull(); // AC3: returns null
             expect(mockDispatch).toHaveBeenCalledTimes(1); // AC3: dispatch called once
             expect(mockDispatch).toHaveBeenCalledWith( // AC3: dispatch details
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({
                     text: expectedMsg,
                     type: 'info'
@@ -451,7 +452,7 @@ describe('resolveTargetConnection', () => {
             expect(result).toBeNull(); // AC4: returns null (because 'up' match failed to resolve)
             expect(mockDispatch).toHaveBeenCalledTimes(1); // AC4: dispatch called once
             expect(mockDispatch).toHaveBeenCalledWith( // AC4: dispatch details
-                'ui:message_display',
+                EVENT_DISPLAY_MESSAGE,
                 expect.objectContaining({
                     text: expectedMsg,
                     type: 'info'

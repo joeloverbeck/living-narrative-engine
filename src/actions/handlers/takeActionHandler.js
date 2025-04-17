@@ -15,7 +15,7 @@ import {ItemComponent} from "../../components/itemComponent.js";
 // --- Refactored Imports ---
 import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
 import {TARGET_MESSAGES, getDisplayName} from "../../utils/messages.js";
-import {EVENT_ITEM_PICKED_UP} from "../../types/eventTypes.js"; // Core event
+import {EVENT_DISPLAY_MESSAGE, EVENT_ITEM_PICKED_UP} from "../../types/eventTypes.js"; // Core event
 // Optional: Define/import semantic event names if used consistently
 const ACTION_TAKE_SUCCEEDED = 'action:take_succeeded';
 const ACTION_TAKE_FAILED = 'action:take_failed';
@@ -35,14 +35,14 @@ export async function executeTake(context) {
         console.error("executeTake: Missing player in context.");
         // Use eventBus directly if available in context, otherwise log
         if (eventBus) {
-            await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         }
         return {success: false, messages: [{text: "Critical: Missing player entity.", type: 'internal_error'}]};
     }
     if (!currentLocation) {
         console.error("executeTake: Missing location in context.");
         if (eventBus) {
-            await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         }
         return {success: false, messages: [{text: "Critical: Missing location entity.", type: 'internal_error'}]};
     }

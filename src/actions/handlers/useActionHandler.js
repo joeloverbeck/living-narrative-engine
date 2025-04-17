@@ -15,7 +15,7 @@ import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actio
 import {resolveTargetEntity, ResolutionStatus} from '../../services/entityFinderService.js';
 import {resolveTargetConnection} from '../../services/connectionResolver.js';
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
-import {EVENT_ITEM_USE_ATTEMPTED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ITEM_USE_ATTEMPTED} from "../../types/eventTypes.js";
 
 /**
  * Handles the 'core:use' action ('use <item> [on <target>]').
@@ -34,7 +34,7 @@ export async function executeUse(context) {
         console.error("executeUse: Missing player in context.");
         // Use eventBus directly for critical early errors if available
         if (eventBus && typeof eventBus.dispatch === 'function') {
-            await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         }
         return {success: false, messages: [{text: "Critical: Missing player entity.", type: 'internal_error'}]};
     }
@@ -53,7 +53,7 @@ export async function executeUse(context) {
             const errorMsg = `Internal Error: Item ${itemInstanceId} (${getDisplayName(targetItemEntity)}) is missing required DefinitionRefComponent or its ID. Cannot determine item type.`;
             console.error(`onFoundUnique (use): ${errorMsg}`);
             if (innerEventBus) { // Check if eventBus is available
-                await innerEventBus.dispatch('ui:message_display', {
+                await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'
                 });
             }
@@ -104,26 +104,26 @@ export async function executeUse(context) {
                         break; // Proceed
 
                     case ResolutionStatus.NOT_FOUND:
-                        if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
+                        if (innerEventBus) await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                             text: TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(targetNameGuess), type: 'info'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.AMBIGUOUS:
                         const ambiguousMsg = TARGET_MESSAGES.AMBIGUOUS_PROMPT(targetResolutionContext, targetNameGuess, entityTargetResolution.candidates);
-                        if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
+                        if (innerEventBus) await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                             text: ambiguousMsg, type: 'warning'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.FILTER_EMPTY:
                         const filterEmptyMsg = TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(targetResolutionContext, 'nearby'); // Adjust scope string if needed
-                        if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
+                        if (innerEventBus) await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                             text: filterEmptyMsg, type: 'info'
                         });
                         return {success: false, messages: []};
                     case ResolutionStatus.INVALID_INPUT: // Should ideally not happen if input is validated
                     default: // Handle unexpected status
                         console.error(`onFoundUnique (use - target): Unhandled resolution status: ${entityTargetResolution.status}`);
-                        if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
+                        if (innerEventBus) await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                             text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'
                         });
                         return {success: false, messages: []};
@@ -137,7 +137,7 @@ export async function executeUse(context) {
             const usableData = itemDefinition?.components?.Usable;
             if (usableData?.target_required) {
                 // Item requires a target, but none was provided.
-                if (innerEventBus) await innerEventBus.dispatch('ui:message_display', {
+                if (innerEventBus) await innerEventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: TARGET_MESSAGES.USE_REQUIRES_TARGET(foundItemName), type: 'warning'
                 });
                 messages.push({

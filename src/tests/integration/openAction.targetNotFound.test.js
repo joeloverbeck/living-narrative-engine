@@ -23,7 +23,7 @@ import { PositionComponent } from '../../components/positionComponent.js';
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
 import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -125,7 +125,7 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
         const parsedCommand = commandParser.parse(commandString);
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch('ui:message_display', { text: errorText, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: errorText, type: 'error'});
             return;
         }
         if(!parsedCommand.actionId && commandString.trim() === '') return;
@@ -178,8 +178,8 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
 
             // 1. Failure Message: Wait for the specific UI message
             try {
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedUIPayload, 500);
-                console.log("[Test Case] Successfully detected 'ui:message_display' for target not found.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedUIPayload, 500);
+                console.log("[Test Case] Successfully detected EVENT_DISPLAY_MESSAGE for target not found.");
             } catch (err) {
                 console.error("[Test Case] Failed to detect the expected 'target not found' message.", err);
                 try {
@@ -195,8 +195,8 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
             expect(dispatchSpy).not.toHaveBeenCalledWith('event:open_attempted', expect.anything());
             expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_ENTITY_OPENED, expect.anything());
             expect(dispatchSpy).not.toHaveBeenCalledWith('event:open_failed', expect.anything());
-            expect(dispatchSpy).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({ type: 'success' }));
-            expect(dispatchSpy).toHaveBeenCalledWith('ui:message_display', expectedUIPayload);
+            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({ type: 'success' }));
+            expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expectedUIPayload);
 
             // 3. State Check
             const existingChestComp = existingChest.getComponent(OpenableComponent);

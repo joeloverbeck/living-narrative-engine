@@ -4,7 +4,7 @@
 import {
     EVENT_APPLY_HEAL_REQUESTED,
     EVENT_INFLICT_DAMAGE_REQUESTED,
-    UI_MESSAGE_DISPLAY // Needed for feedback
+    EVENT_DISPLAY_MESSAGE // Needed for feedback
 } from '../types/eventTypes.js';
 // Import required components and utilities
 import {HealthComponent} from '../components/healthComponent.js';
@@ -93,7 +93,7 @@ class HealthSystem {
             // Unknown specifier is an error
             console.error(`[HealthSystem] Heal failed: Unknown healTargetSpecifier '${payload.healTargetSpecifier}' from item ${payload.itemDefinitionId} (Instance: ${payload.itemInstanceId})`);
             // Provide minimal feedback, though this indicates a data setup error
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal error: Cannot determine heal target.",
                 type: 'error'
             });
@@ -105,7 +105,7 @@ class HealthSystem {
             console.warn(`[HealthSystem] Heal failed: Target entity not found (Specifier: '${payload.healTargetSpecifier}', Attempted ID: ${targetEntityIdForLog}). Source Item: ${payload.sourceItemName} (${payload.itemDefinitionId})`);
             // Task: If not, dispatch an appropriate ui:message_display ("Cannot heal that.") and return.
             // Note: ItemUsageSystem might have already filtered invalid targets, but this provides a safety net.
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: "Cannot heal that.", type: 'warning'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Cannot heal that.", type: 'warning'});
             return;
         }
 
@@ -118,7 +118,7 @@ class HealthSystem {
             console.warn(`[HealthSystem] Heal failed: Target entity '${targetName}' (ID: ${targetEntity.id}) does not have a HealthComponent. Source Item: ${payload.sourceItemName}`);
             // Task: If not, dispatch an appropriate ui:message_display ("Cannot heal that.") and return.
             // Provide slightly more context if possible.
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: `The ${targetName} cannot be healed.`, type: 'warning'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `The ${targetName} cannot be healed.`, type: 'warning'});
             return;
         }
 
@@ -127,7 +127,7 @@ class HealthSystem {
             // Determine subject for the message
             const subject = (targetEntity.id === payload.userId) ? "You are" : `${targetName} is`;
             // Task: If yes, dispatch "Health is full." message (type: 'info') and return
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: `${subject} already at full health.`, type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `${subject} already at full health.`, type: 'info'});
             console.debug(`[HealthSystem] Heal skipped: Target '${targetName}' (ID: ${targetEntity.id}) already at full health (${healthComponent.current}/${healthComponent.max}). Source Item: ${payload.sourceItemName}`);
             // Task: (unless item should fail here based on a potential fail_if_already_max flag in payload).
             // No such flag defined in ApplyHealRequestedEventPayload, so we return.
@@ -138,7 +138,7 @@ class HealthSystem {
         const healAmount = payload.amount;
         if (typeof healAmount !== 'number' || healAmount < 0) {
             console.warn(`[HealthSystem] Heal failed: Invalid heal amount (${healAmount}) received for target '${targetName}'. Source Item: ${payload.sourceItemName}`);
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `Cannot apply healing due to invalid amount.`,
                 type: 'warning'
             });
@@ -168,7 +168,7 @@ class HealthSystem {
                 successMessage = `You heal ${targetName} for ${actualHeal} health.`;
             }
 
-            this.#eventBus.dispatch(UI_MESSAGE_DISPLAY, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: successMessage,
                 type: 'success'
             });

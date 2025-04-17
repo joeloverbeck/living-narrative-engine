@@ -9,7 +9,7 @@ import {PositionComponent} from '../../components/positionComponent.js'; // Need
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 // AC: Import required utilities
 import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
-import {EVENT_ITEM_DROP_ATTEMPTED} from "../../types/eventTypes.js";
+import {EVENT_DISPLAY_MESSAGE, EVENT_ITEM_DROP_ATTEMPTED} from "../../types/eventTypes.js";
 
 // --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
@@ -35,7 +35,7 @@ export async function executeDrop(context) {
     if (!playerEntity) {
         console.error("executeDrop: Missing player in context.");
         // Keep dispatch for critical errors, though handleAction... often covers user feedback
-        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return {success: false, messages: [{text: "Critical: Missing player entity.", type: 'internal_error'}]};
     }
     // Get location ID safely
@@ -43,13 +43,13 @@ export async function executeDrop(context) {
     const locationId = currentLocation?.id ?? playerPos?.locationId;
     if (!locationId) {
         console.error("executeDrop: Missing location in context and player position component.");
-        dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return {success: false, messages: [{text: "Critical: Missing location ID.", type: 'internal_error'}]};
     }
     // Check for Inventory Component early - handleAction requires valid scope context
     if (!playerEntity.hasComponent(InventoryComponent)) {
         const componentErrorMsg = TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory');
-        dispatch('ui:message_display', {text: componentErrorMsg, type: 'error'});
+        dispatch(EVENT_DISPLAY_MESSAGE, {text: componentErrorMsg, type: 'error'});
         console.error("executeDrop: Player entity missing InventoryComponent.");
         return {success: false, messages: [{text: "Player missing InventoryComponent.", type: 'internal_error'}]};
     }

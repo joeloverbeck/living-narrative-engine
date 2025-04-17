@@ -8,7 +8,7 @@ import {AttackComponent} from '../../components/attackComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
 // Import the new utility functions
 import {handleActionWithTargetResolution, dispatchEventWithCatch} from '../actionExecutionUtils.js';
-import {EVENT_ATTACK_INTENDED} from "../../types/eventTypes.js";
+import {EVENT_ATTACK_INTENDED, EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
 
 // --- Type Imports ---
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
@@ -44,7 +44,7 @@ export async function executeAttack(context) {
         // Check if target is already defeated
         if (healthComp.current <= 0) {
             const infoMsg = TARGET_MESSAGES.ATTACK_DEFEATED(targetDisplayName);
-            innerContext.dispatch('ui:message_display', {text: infoMsg, type: 'info'});
+            innerContext.dispatch(EVENT_DISPLAY_MESSAGE, {text: infoMsg, type: 'info'});
             messages.push({text: infoMsg, type: 'info'}); // Add user message to internal log
             // Validation passed (found target), but no attack event dispatched.
             // Return success=true because the action handler successfully processed the intent.
@@ -63,7 +63,7 @@ export async function executeAttack(context) {
 
         // Dispatch Swing Message (Visual Feedback)
         const swingMsg = `${playerName} swing${playerName === 'You' ? '' : 's'} at the ${targetDisplayName}!`;
-        innerContext.dispatch('ui:message_display', {text: swingMsg, type: 'combat'});
+        innerContext.dispatch(EVENT_DISPLAY_MESSAGE, {text: swingMsg, type: 'combat'});
         messages.push({text: swingMsg, type: 'combat'}); // Add user message to internal log
 
         // FIRE INTENT EVENT using dispatchEventWithCatch

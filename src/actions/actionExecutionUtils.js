@@ -2,6 +2,7 @@
 import {ResolutionStatus, resolveTargetEntity} from '../services/entityFinderService.js';
 import {validateRequiredCommandPart} from '../utils/actionValidationUtils.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
+import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
 
 // --- Type Imports ---
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
@@ -76,7 +77,7 @@ export async function handleActionWithTargetResolution(context, options) {
         console.error(`handleActionWithTargetResolution: Command part '${options.commandPart}' null/empty after validation passed.`);
         messages.push({text: 'Internal Error: targetName missing after validation.', type: 'internal_error'});
         // Dispatch generic error if targetName is unexpectedly missing
-        await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return {success: false, messages, newState: undefined};
     }
     messages.push({
@@ -103,7 +104,7 @@ export async function handleActionWithTargetResolution(context, options) {
             type: 'internal_error',
             details: error
         });
-        await eventBus.dispatch('ui:message_display', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return {success: false, messages, newState: undefined};
     }
 
@@ -157,7 +158,7 @@ export async function handleActionWithTargetResolution(context, options) {
                 console.error(`handleActionWithTargetResolution: Error executing onFoundUnique callback for action '${options.actionVerb}' on target '${targetName}':`, error);
                 const userErrorMessage = TARGET_MESSAGES.INTERNAL_ERROR;
                 // Use await here as eventBus dispatch is async
-                await eventBus.dispatch('ui:message_display', {text: userErrorMessage, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: userErrorMessage, type: 'error'});
                 messages.push({
                     text: `Internal Error during onFoundUnique: ${error.message}`,
                     type: 'internal_error',
@@ -183,7 +184,7 @@ export async function handleActionWithTargetResolution(context, options) {
                     ? TARGET_MESSAGES[messageKey](targetName)
                     : TARGET_MESSAGES.NOT_FOUND_LOCATION(targetName);
             }
-            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'info'}); // Await dispatch
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'}); // Await dispatch
             messages.push({text: `Resolution Failed: NOT_FOUND. User message: "${messageText}"`, type: 'internal'});
             return {success: false, messages, newState: undefined};
         }
@@ -197,7 +198,7 @@ export async function handleActionWithTargetResolution(context, options) {
             } else {
                 messageText = TARGET_MESSAGES.AMBIGUOUS_PROMPT(options.actionVerb, targetName, resolution.candidates);
             }
-            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'warning'}); // Await dispatch
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'warning'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: AMBIGUOUS. Candidates: ${resolution.candidates.map(c => c.id).join(', ')}. User message: "${messageText}"`,
                 type: 'internal'
@@ -216,7 +217,7 @@ export async function handleActionWithTargetResolution(context, options) {
                     ? TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL(options.actionVerb)
                     : TARGET_MESSAGES.SCOPE_EMPTY_GENERIC(options.actionVerb, options.scope);
             }
-            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'info'}); // Await dispatch
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: FILTER_EMPTY for scope '${options.scope}'. User message: "${messageText}"`,
                 type: 'internal'
@@ -226,7 +227,7 @@ export async function handleActionWithTargetResolution(context, options) {
 
         case ResolutionStatus.INVALID_INPUT: {
             const messageText = options.failureMessages?.invalidInput || TARGET_MESSAGES.INTERNAL_ERROR;
-            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'error'}); // Await dispatch
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'error'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: INVALID_INPUT. User message: "${messageText}"`,
                 type: 'internal_error'
@@ -237,7 +238,7 @@ export async function handleActionWithTargetResolution(context, options) {
 
         default: {
             const messageText = TARGET_MESSAGES.INTERNAL_ERROR;
-            await eventBus.dispatch('ui:message_display', {text: messageText, type: 'error'}); // Await dispatch
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'error'}); // Await dispatch
             messages.push({
                 text: `Resolution Failed: Unexpected status '${resolution.status}'.`,
                 type: 'internal_error'
@@ -304,7 +305,7 @@ export async function dispatchEventWithCatch(context, eventName, payload, messag
         // Safety check: Ensure ui:message_display dispatch doesn't cause infinite loop if IT fails
         try {
             // CORRECTED CALL (Needs await too!)
-            await eventBus.dispatch('ui:message_display', {text: userErrorMessage, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: userErrorMessage, type: 'error'});
         } catch (uiError) {
             console.error(`dispatchEventWithCatch: CRITICAL - Failed to dispatch ui:message_display after catching error for event '${eventName}':`, uiError);
         }

@@ -2,6 +2,7 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
+import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
@@ -166,7 +167,7 @@ describe('GameLoop', () => {
             expect(mockInputHandler.enable).toHaveBeenCalledTimes(1);
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:enable_input', {placeholder: 'Enter command...'});
             // Ensure no error message was dispatched by start itself
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({type: 'error'}));
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({type: 'error'}));
         });
 
         it('Failure Case: should dispatch error, not set isRunning, and call stop if player is missing', () => {
@@ -177,7 +178,7 @@ describe('GameLoop', () => {
             gameLoop.start();
 
             expect(gameLoop.isRunning).toBe(false);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: expect.stringContaining('Critical Error: GameLoop cannot start'),
                 type: 'error',
             });
@@ -188,7 +189,7 @@ describe('GameLoop', () => {
             // Check that stop() was called implicitly from start's error path
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:disable_input', {message: 'Game stopped.'});
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: 'Game stopped.',
                 type: 'info'
             });
@@ -202,7 +203,7 @@ describe('GameLoop', () => {
             gameLoop.start();
 
             expect(gameLoop.isRunning).toBe(false);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: expect.stringContaining('Critical Error: GameLoop cannot start'),
                 type: 'error',
             });
@@ -213,7 +214,7 @@ describe('GameLoop', () => {
             // Check that stop() was called implicitly from start's error path
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:disable_input', {message: 'Game stopped.'});
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: 'Game stopped.',
                 type: 'info'
             });
@@ -270,7 +271,7 @@ describe('GameLoop', () => {
 
         it('When Running: should dispatch ui:message_display event with info', () => {
             gameLoop.stop();
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: 'Game stopped.',
                 type: 'info',
             });
@@ -291,7 +292,7 @@ describe('GameLoop', () => {
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
             expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:disable_input', expect.any(Object));
             // Check specifically for the 'Game stopped.' message
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({text: 'Game stopped.'}));
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({text: 'Game stopped.'}));
         });
     });
     // AC 6: promptInput() Method Tests
@@ -416,7 +417,7 @@ describe('GameLoop', () => {
             };
             mockCommandParser.parse.mockReturnValue(parserErrorResult);
             await gameLoop.processSubmittedCommand(commandInput);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: 'Parser failed spectacularly!',
                 type: 'error'
             });
@@ -433,7 +434,7 @@ describe('GameLoop', () => {
             mockCommandParser.parse.mockReturnValue(parserUnknownResult);
             await gameLoop.processSubmittedCommand(commandInput);
             // Updated expected message to match GameLoop implementation
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: "Unknown command. Try 'help'.",
                 type: 'error'
             });
@@ -446,7 +447,7 @@ describe('GameLoop', () => {
             const parserWhitespaceResult = {actionId: null, error: null, originalInput: commandInput};
             mockCommandParser.parse.mockReturnValue(parserWhitespaceResult);
             await gameLoop.processSubmittedCommand(commandInput);
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.any(Object));
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.any(Object));
             expect(mockActionExecutor.executeAction).not.toHaveBeenCalled();
             expect(promptInputSpy).toHaveBeenCalledTimes(1);
         });
@@ -470,8 +471,8 @@ describe('GameLoop', () => {
 
             // Verify NO specific error/warning message was dispatched by processSubmittedCommand itself
             // (Messages from the action *handler* are possible but not tested here)
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({type: 'error'}));
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({text: "Unknown command. Try 'help'."}));
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({type: 'error'}));
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({text: "Unknown command. Try 'help'."}));
 
             // Verify promptInput was called after processing
             expect(promptInputSpy).toHaveBeenCalledTimes(1);
@@ -508,7 +509,7 @@ describe('GameLoop', () => {
 
             await gameLoop.processSubmittedCommand(commandInput);
 
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Game state not fully initialized.",
                 type: "error"
             });
@@ -716,7 +717,7 @@ describe('GameLoop', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("GameLoop executeAction called but state missing"));
 
             // Verify error event was dispatched
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });
@@ -740,7 +741,7 @@ describe('GameLoop', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("GameLoop executeAction called but state missing"));
 
             // Verify error event was dispatched
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith('ui:message_display', {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });

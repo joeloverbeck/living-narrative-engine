@@ -1,6 +1,6 @@
 // src/tests/integration/lookAction.targetNotFound.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -8,22 +8,23 @@ import ActionExecutor from '../../actions/actionExecutor.js';
 import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for type hints and setup
-import { NotificationUISystem } from '../../systems/notificationUISystem.js'; // To check it's *not* called
+import {NotificationUISystem} from '../../systems/notificationUISystem.js'; // To check it's *not* called
 
 // --- Action Handler ---
-import { executeLook } from '../../actions/handlers/lookActionHandler.js';
+import {executeLook} from '../../actions/handlers/lookActionHandler.js';
 
 // --- Components ---
-import { NameComponent } from '../../components/nameComponent.js';
-import { DescriptionComponent } from '../../components/descriptionComponent.js';
-import { ConnectionsComponent } from '../../components/connectionsComponent.js'; // Needed for location setup
-import { PositionComponent } from '../../components/positionComponent.js';
-import { ItemComponent } from '../../components/itemComponent.js'; // Important for scope check
-import { InventoryComponent } from '../../components/inventoryComponent.js'; // Important for scope check
+import {NameComponent} from '../../components/nameComponent.js';
+import {DescriptionComponent} from '../../components/descriptionComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Needed for location setup
+import {PositionComponent} from '../../components/positionComponent.js';
+import {ItemComponent} from '../../components/itemComponent.js'; // Important for scope check
+import {InventoryComponent} from '../../components/inventoryComponent.js'; // Important for scope check
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES } from '../../utils/messages.js'; // Needed for the specific error message
-import { waitForEvent } from "../testUtils.js";
+import {TARGET_MESSAGES} from '../../utils/messages.js'; // Needed for the specific error message
+import {waitForEvent} from "../testUtils.js";
+import {EVENT_DISPLAY_LOCATION, EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
@@ -31,9 +32,9 @@ import { waitForEvent } from "../testUtils.js";
 // --- Mock DataManager ---
 const mockDataManager = {
     actions: new Map([
-        ['core:look', { id: 'core:look', commands: ['look', 'l'] }],
+        ['core:look', {id: 'core:look', commands: ['look', 'l']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -63,7 +64,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
         // Add/Update Name Component
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -75,7 +76,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
         if (locationId) {
             if (!existingPosComp) {
-                entity.addComponent(new PositionComponent({ locationId: locationId }));
+                entity.addComponent(new PositionComponent({locationId: locationId}));
             } else if (existingPosComp.locationId !== locationId) {
                 existingPosComp.locationId = locationId;
             }
@@ -114,7 +115,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
         entityManager.registerComponent('InventoryComponent', InventoryComponent); // Need for player inventory check
 
         // 3. Instantiate Systems
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:look', executeLook);
@@ -124,18 +125,20 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
         // 7. Setup test entities according to AC
         // Location setup
         testLocation = setupEntity('test_location', 'A Test Room', [
-            new DescriptionComponent({ text: 'A simple room for testing.' }),
-            new ConnectionsComponent({ connections: {} })
+            new DescriptionComponent({text: 'A simple room for testing.'}),
+            new ConnectionsComponent({connections: {}})
         ]);
         // Player in the location WITH an inventory
         player = setupEntity('player', 'Player',
-            [new InventoryComponent({ items: [] })], // Player needs inventory for scope check
+            [new InventoryComponent({items: []})], // Player needs inventory for scope check
             testLocation.id
         );
 
@@ -178,15 +181,15 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch('ui:message_display', { text: errorText, type: 'error'});
-            return { success: false, messages: [{ text: errorText, type: 'error' }] };
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorText, type: 'error'});
+            return {success: false, messages: [{text: errorText, type: 'error'}]};
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
-            return { success: true, messages: [] };
+        if (!parsedCommand.actionId && commandString.trim() === '') {
+            return {success: true, messages: []};
         }
         if (!parsedCommand.actionId) {
             console.error(`[simulateCommand] Error: Parsed command lacks actionId for input: "${commandString}"`);
-            return { success: false, messages: [{ text: "Internal parser error: No action ID found.", type: 'error' }] };
+            return {success: false, messages: [{text: "Internal parser error: No action ID found.", type: 'error'}]};
         }
 
         /** @type {ActionContext} */
@@ -232,8 +235,8 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
             // 2. Not Found Message Dispatched: Wait for the specific ui:message_display event
             try {
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedPayload, 1000); // <<< AC: Check for specific message
-                console.log("[Test Case LOOK-INT-TGT-03] Successfully detected 'ui:message_display' event with NOT_FOUND_EXAMINABLE message.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedPayload, 1000); // <<< AC: Check for specific message
+                console.log("[Test Case LOOK-INT-TGT-03] Successfully detected EVENT_DISPLAY_MESSAGE event with NOT_FOUND_EXAMINABLE message.");
             } catch (err) {
                 console.error("[Test Case LOOK-INT-TGT-03] Failed to detect the expected 'not found' message.", err);
                 // Log calls for debugging message issues
@@ -241,7 +244,9 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
                     const seen = new Set();
                     console.log("[Test Case LOOK-INT-TGT-03] Dispatch Spy Calls received:", JSON.stringify(dispatchSpy.mock.calls, (key, value) => {
                         if (typeof value === 'object' && value !== null) {
-                            if (seen.has(value)) { return '[Circular]'; }
+                            if (seen.has(value)) {
+                                return '[Circular]';
+                            }
                             seen.add(value);
                         }
                         return value;
@@ -253,16 +258,16 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
                 throw err; // Re-throw to fail test
             }
 
-            // 3. No Location Display Event: Check that 'ui:display_location' was NOT dispatched
+            // 3. No Location Display Event: Check that EVENT_DISPLAY_LOCATION was NOT dispatched
             expect(dispatchSpy).not.toHaveBeenCalledWith(
-                'ui:display_location',
+                EVENT_DISPLAY_LOCATION,
                 expect.anything() // Match any payload for this event type
             );
 
             // 4. No Other Error Messages: Ensure no *other* error messages were displayed via ui:message_display
             expect(dispatchSpy).not.toHaveBeenCalledWith(
-                'ui:message_display',
-                expect.objectContaining({ type: 'error' })
+                EVENT_DISPLAY_MESSAGE,
+                expect.objectContaining({type: 'error'})
             );
 
             // 5. Console Checks: Ensure no unexpected console errors or warnings

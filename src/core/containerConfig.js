@@ -30,6 +30,7 @@ import OpenableSystem from '../systems/openableSystem.js';
 import HealthSystem from "../systems/healthSystem.js";
 import StatusEffectSystem from "../systems/statusEffectSystem.js";
 import LockSystem from "../systems/lockSystem.js";
+import PerceptionSystem from '../systems/perceptionSystem.js';
 
 // Services
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
@@ -238,6 +239,11 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         eventBus: c.resolve('EventBus'),
         dataManager: c.resolve('DataManager'),
         gameStateManager: c.resolve('GameStateManager'),
+    }), {lifecycle: 'singleton'});
+
+    container.register('PerceptionSystem', (c) => new PerceptionSystem({
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager'),
     }), {lifecycle: 'singleton'});
 
     // UI Systems

@@ -33,7 +33,7 @@ import {
     EVENT_ITEM_USE_ATTEMPTED,
     EVENT_UNLOCK_ENTITY_ATTEMPT,
     EVENT_ENTITY_UNLOCKED,
-    UI_MESSAGE_DISPLAY
+    EVENT_DISPLAY_MESSAGE
 } from '../../types/eventTypes.js';
 
 // --- Utilities & Types ---
@@ -267,7 +267,7 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
         if (!parsedCommand.actionId) {
             const errorText = parsedCommand.error || (commandString.trim() === '' ? '' : "Unknown command.");
             if (errorText) {
-                await eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: errorText, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorText, type: 'error'});
                 return {success: false, messages: [{text: errorText, type: 'error'}]};
             } else {
                 return {success: true, messages: []}; // Allow empty command to succeed silently
@@ -360,16 +360,16 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
                 await waitForEvent(dispatchSpy, EVENT_ENTITY_UNLOCKED, expect.objectContaining(expectedEntityUnlockedPayload), 1000);
                 console.log("Assert: EVENT_ENTITY_UNLOCKED received.");
 
-                console.log("Assert: Waiting for UI_MESSAGE_DISPLAY (Success)...");
+                console.log("Assert: Waiting for EVENT_DISPLAY_MESSAGE (Success)...");
                 // This message confirms the lockSystem processed the unlock successfully
-                await waitForEvent(dispatchSpy, UI_MESSAGE_DISPLAY, expect.objectContaining(expectedSuccessUIMessagePayload), 1000);
-                console.log("Assert: UI_MESSAGE_DISPLAY (Success) received.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expect.objectContaining(expectedSuccessUIMessagePayload), 1000);
+                console.log("Assert: EVENT_DISPLAY_MESSAGE (Success) received.");
 
             } catch (error) {
                 console.error("Assert: Failed while waiting for event sequence.", error);
                 // Log dispatched events for easier debugging if a waitForEvent times out
                 const relevantCalls = dispatchSpy.mock.calls.filter(call =>
-                    [EVENT_ITEM_USE_ATTEMPTED, EVENT_UNLOCK_ENTITY_ATTEMPT, EVENT_ENTITY_UNLOCKED, UI_MESSAGE_DISPLAY].includes(call[0])
+                    [EVENT_ITEM_USE_ATTEMPTED, EVENT_UNLOCK_ENTITY_ATTEMPT, EVENT_ENTITY_UNLOCKED, EVENT_DISPLAY_MESSAGE].includes(call[0])
                 );
                 console.log("Relevant Dispatch Calls:", JSON.stringify(relevantCalls, null, 2));
                 throw error; // Re-throw to fail the test
@@ -381,7 +381,7 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
             expect(finalLockableComponent.isLocked).toBe(false);
 
             // Check for unexpected errors
-            const errorMessages = dispatchSpy.mock.calls.filter(call => call[0] === UI_MESSAGE_DISPLAY && call[1]?.type === 'error');
+            const errorMessages = dispatchSpy.mock.calls.filter(call => call[0] === EVENT_DISPLAY_MESSAGE && call[1]?.type === 'error');
             expect(errorMessages).toHaveLength(0); // No user-facing errors should have been dispatched
             expect(consoleErrorSpy).not.toHaveBeenCalled(); // No internal console errors logged
 

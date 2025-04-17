@@ -16,7 +16,13 @@
 // Ensure TARGET_MESSAGES is imported (already present in provided code)
 // Assumes OPEN-8 will add the required 'OPEN_*' templates to this utility.
 import {TARGET_MESSAGES} from '../utils/messages.js';
-import {EVENT_ENTITY_OPENED, EVENT_MOVE_ATTEMPTED, EVENT_MOVE_FAILED, EVENT_OPEN_FAILED} from "../types/eventTypes.js";
+import {
+    EVENT_DISPLAY_MESSAGE,
+    EVENT_ENTITY_OPENED,
+    EVENT_MOVE_ATTEMPTED,
+    EVENT_MOVE_FAILED,
+    EVENT_OPEN_FAILED
+} from "../types/eventTypes.js";
 
 /**
  * Listens for semantic game events (quests, actions, etc.)
@@ -106,7 +112,7 @@ class NotificationUISystem {
     _handleQuestStarted({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Started: ${questTitle}`,
             type: 'quest' // Use a specific type for quest messages
         });
@@ -125,7 +131,7 @@ class NotificationUISystem {
         const questTitle = this._getDisplayName(titleId, 'quest');
 
         // 1. Quest Completion Message
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Completed: ${questTitle}`,
             type: 'quest_complete' // Specific type for completion
         });
@@ -134,7 +140,7 @@ class NotificationUISystem {
         if (rewardSummary) {
             // Experience
             if (rewardSummary.experience) {
-                this.eventBus.dispatch('ui:message_display', {
+                this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: `Gained ${rewardSummary.experience} XP.`,
                     type: 'reward' // General type for rewards
                 });
@@ -143,7 +149,7 @@ class NotificationUISystem {
             if (rewardSummary.items?.length > 0) {
                 rewardSummary.items.forEach(item => {
                     const itemName = this._getDisplayName(item.itemId, 'item');
-                    this.eventBus.dispatch('ui:message_display', {
+                    this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                         text: `Received: ${itemName} x ${item.quantity}`,
                         type: 'reward'
                     });
@@ -153,7 +159,7 @@ class NotificationUISystem {
             if (rewardSummary.currency) {
                 for (const type in rewardSummary.currency) {
                     const currencyName = this._getDisplayName(type, 'currency');
-                    this.eventBus.dispatch('ui:message_display', {
+                    this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                         text: `Received: ${rewardSummary.currency[type]} ${currencyName}`,
                         type: 'reward'
                     });
@@ -176,7 +182,7 @@ class NotificationUISystem {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         const reasonText = reason ? `: ${reason}` : ''; // Add reason if provided
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Failed${reasonText}: ${questTitle}`,
             type: 'quest_fail' // Specific type for failure
         });
@@ -192,7 +198,7 @@ class NotificationUISystem {
     _handlePrerequisitesNotMet({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Cannot start quest "${questTitle}" yet. (Prerequisites not met)`,
             type: 'info' // Use a general info type
         });
@@ -221,7 +227,7 @@ class NotificationUISystem {
         }
         // Add more reason codes as needed
 
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });
@@ -243,7 +249,7 @@ class NotificationUISystem {
         // This message might conflict with failure messages if the move attempt
         // is immediately followed by an EVENT_MOVE_FAILED.
         // Let's comment it out for now, as the failure handler provides more specific feedback.
-        // this.eventBus.dispatch('ui:message_display', {
+        // this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
         //     text: `You attempt to move ${direction}.`,
         //     type: 'info'
         // });
@@ -359,7 +365,7 @@ class NotificationUISystem {
         }
 
         // Dispatch the final UI message
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType // This will now be 'warning' for locked/blocked cases
         });
@@ -378,7 +384,7 @@ class NotificationUISystem {
         // TODO: Check if the actor is the player before displaying
         // Example: if (actorId !== this.dataManager.getPlayerId()) return;
         const displayItemName = this._getDisplayName(itemName || itemId, 'item');
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `You take the ${displayItemName}.`,
             type: 'success'
         });
@@ -427,7 +433,7 @@ class NotificationUISystem {
                 console.warn(`NotificationUISystem: Unhandled take failure reasonCode: ${reasonCode}`);
         }
 
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });
@@ -445,7 +451,7 @@ class NotificationUISystem {
         // Example: if (actorId !== this.dataManager.getPlayerId()) return;
 
         // Directly use the failure message provided by the ItemUsageSystem/ConditionEvaluationService
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: failureMessage, // Use the message from the event payload
             type: 'warning'       // Or 'notice'/'info' depending on desired severity
         });
@@ -473,7 +479,7 @@ class NotificationUISystem {
             type: 'success'
         };
         console.log(`NotificationUISystem: Attempting to dispatch ui:message_display with payload:`, JSON.stringify(messagePayload)); // <<< ADD THIS LOG
-        this.eventBus.dispatch('ui:message_display', messagePayload);
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, messagePayload);
     }
 
     /**
@@ -522,7 +528,7 @@ class NotificationUISystem {
                 break;
         }
 
-        this.eventBus.dispatch('ui:message_display', {
+        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });

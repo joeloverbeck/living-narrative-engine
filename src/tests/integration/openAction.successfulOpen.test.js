@@ -23,7 +23,7 @@ import {PositionComponent} from '../../components/positionComponent.js';
 // --- Utilities & Types ---
 import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 import {waitForEvent} from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -199,9 +199,9 @@ describe('Integration Test: core:open Action', () => {
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             if (parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', {text: parsedCommand.error, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch('ui:message_display', {text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Unknown command.", type: 'error'});
             }
             return;
         }
@@ -274,8 +274,8 @@ describe('Integration Test: core:open Action', () => {
             console.log('[Test Case] Waiting for event "ui:message_display"...');
             try {
                 // Use await for the asynchronous waitForEvent function
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedSuccessMessagePayload);
-                console.log("[Test Case] Successfully detected 'ui:message_display' success event.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedSuccessMessagePayload);
+                console.log("[Test Case] Successfully detected EVENT_DISPLAY_MESSAGE success event.");
             } catch (err) {
                 console.error("[Test Case] Failed to detect the expected success message.", err);
                 // Log the calls that *did* happen for debugging
@@ -306,7 +306,7 @@ describe('Integration Test: core:open Action', () => {
             );
 
             // 3. UI Message (We already waited for this specific call, but assert again)
-            expect(dispatchSpy).toHaveBeenCalledWith('ui:message_display', expectedSuccessMessagePayload);
+            expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expectedSuccessMessagePayload);
 
             // 4. No failure events/messages
             expect(dispatchSpy).not.toHaveBeenCalledWith(expect.stringMatching(/event:open_failed/), expect.anything());

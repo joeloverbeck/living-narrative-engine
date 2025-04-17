@@ -22,7 +22,7 @@ import {ItemComponent} from '../../components/itemComponent.js';
 import {DescriptionComponent} from '../../components/descriptionComponent.js';
 
 // 4. --- Event Types ---
-import {EVENT_ITEM_PICKED_UP, UI_MESSAGE_DISPLAY} from '../../types/eventTypes.js';
+import {EVENT_ITEM_PICKED_UP, EVENT_DISPLAY_MESSAGE} from '../../types/eventTypes.js';
 // Define semantic event name constant if used consistently
 const ACTION_TAKE_SUCCEEDED = 'action:take_succeeded';
 
@@ -165,7 +165,7 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch(UI_MESSAGE_DISPLAY, {text: errorText, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorText, type: 'error'});
             return {success: false, messages: [{text: errorText, type: 'error'}]};
         }
         if (!parsedCommand.actionId && commandString.trim() === '') {
@@ -263,11 +263,11 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
 
             // 4. UI Success Message
             try {
-                // console.log(`Assert: Waiting for ${UI_MESSAGE_DISPLAY} (Success)...`); // Optional log
-                await waitForEvent(dispatchSpy, UI_MESSAGE_DISPLAY, expect.objectContaining(expectedSuccessUIMessagePayload), 1000);
-                // console.log(`Assert: ${UI_MESSAGE_DISPLAY} (Success) received.`); // Optional log
+                // console.log(`Assert: Waiting for ${EVENT_DISPLAY_MESSAGE} (Success)...`); // Optional log
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expect.objectContaining(expectedSuccessUIMessagePayload), 1000);
+                // console.log(`Assert: ${EVENT_DISPLAY_MESSAGE} (Success) received.`); // Optional log
             } catch (error) {
-                console.error(`Assert: Failed while waiting for ${UI_MESSAGE_DISPLAY} (Success).`, error);
+                console.error(`Assert: Failed while waiting for ${EVENT_DISPLAY_MESSAGE} (Success).`, error);
                 console.log("All dispatch calls:", JSON.stringify(dispatchSpy.mock.calls, null, 2));
                 throw error;
             }
@@ -287,7 +287,7 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
             expect(keyPosComp?.locationId).toBeNull(); // <<< THIS SHOULD NOW PASS
 
             // 8. No Errors
-            const errorMessages = dispatchSpy.mock.calls.filter(call => call[0] === UI_MESSAGE_DISPLAY && call[1]?.type === 'error');
+            const errorMessages = dispatchSpy.mock.calls.filter(call => call[0] === EVENT_DISPLAY_MESSAGE && call[1]?.type === 'error');
             expect(errorMessages).toHaveLength(0);
             expect(consoleErrorSpy).not.toHaveBeenCalled();
             // expect(consoleWarnSpy).not.toHaveBeenCalled(); // Comment out if warnings are acceptable/expected

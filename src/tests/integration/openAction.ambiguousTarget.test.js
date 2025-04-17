@@ -23,7 +23,7 @@ import { PositionComponent } from '../../components/positionComponent.js';
 // --- Utilities & Types ---
 import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
 import { waitForEvent } from "../testUtils.js";
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
+import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -151,9 +151,9 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             if(parsedCommand.error) {
-                await eventBus.dispatch('ui:message_display', { text: parsedCommand.error, type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch('ui:message_display', { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Unknown command.", type: 'error'});
             }
             return;
         }
@@ -212,8 +212,8 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
             // 1. Ambiguity Prompt: Wait for the specific UI message
             try {
-                await waitForEvent(dispatchSpy, 'ui:message_display', expectedUIPayload, 500); // Use shorter timeout
-                console.log("[Test Case] Successfully detected 'ui:message_display' ambiguity event.");
+                await waitForEvent(dispatchSpy, EVENT_DISPLAY_MESSAGE, expectedUIPayload, 500); // Use shorter timeout
+                console.log("[Test Case] Successfully detected EVENT_DISPLAY_MESSAGE ambiguity event.");
             } catch (err) {
                 console.error("[Test Case] Failed to detect the expected ambiguity message.", err);
                 // Log calls for debugging ambiguity message issues

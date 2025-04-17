@@ -42,7 +42,7 @@ import OpenableComponent from "../../components/openableComponent.js";
 
 // Event constants
 import {
-    EVENT_ITEM_USE_ATTEMPTED, EVENT_UNLOCK_ENTITY_ATTEMPT, EVENT_ENTITY_UNLOCKED, UI_MESSAGE_DISPLAY,
+    EVENT_ITEM_USE_ATTEMPTED, EVENT_UNLOCK_ENTITY_ATTEMPT, EVENT_ENTITY_UNLOCKED, EVENT_DISPLAY_MESSAGE,
 } from "../../types/eventTypes.js";
 
 // Convenience helpers shared by other integration suites
@@ -218,7 +218,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
             expect(res.success).toBe(true);
 
             // Make sure we did **not** exit early due to target‑not‑found
-            expect(spy).not.toHaveBeenCalledWith('ui:message_display', expect.objectContaining({text: expect.stringContaining("Could not find")}));
+            expect(spy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({text: expect.stringContaining("Could not find")}));
 
             // --- Event chain verification --------------------------------------
             await waitForEvent(spy, EVENT_ITEM_USE_ATTEMPTED, expect.objectContaining({itemInstanceId: keyInst.id}), 250);
@@ -227,7 +227,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
 
             await waitForEvent(spy, EVENT_ENTITY_UNLOCKED, expect.objectContaining({targetEntityId: door.id}), 250);
 
-            await waitForEvent(spy, UI_MESSAGE_DISPLAY, {
+            await waitForEvent(spy, EVENT_DISPLAY_MESSAGE, {
                 text: `You unlock the ${getDisplayName(door)}.`,
                 type: "success"
             }, 250);

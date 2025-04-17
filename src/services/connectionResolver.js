@@ -8,7 +8,8 @@ import Entity from '../entities/entity.js';
 import EntityManager from '../entities/entityManager.js'; // Dependency for function context
 import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Dependency for function logic
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
-import {PassageDetailsComponent} from "../components/passageDetailsComponent.js"; // Added TARGET_MESSAGES for resolveTargetConnection
+import {PassageDetailsComponent} from "../components/passageDetailsComponent.js";
+import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Added TARGET_MESSAGES for resolveTargetConnection
 
 // ========================================================================
 // == Core Type Definitions for Connection Resolution =====================
@@ -189,7 +190,7 @@ export function resolveTargetConnection(
             ambiguousMsg = `There are multiple ways to go '${trimmedTargetName}'. Which one did you mean? (${displayNames.join(', ')})`;
         }
         // --- Corrected: Use eventBus.dispatch ---
-        eventBus.dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+        eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: ambiguousMsg, type: 'warning'});
         return null;
     }
 
@@ -213,7 +214,7 @@ export function resolveTargetConnection(
             ambiguousMsg = `Which '${trimmedTargetName}' did you want to ${actionVerb}? (${displayNames.join(', ')})`;
         }
         // --- Corrected: Use eventBus.dispatch ---
-        eventBus.dispatch('ui:message_display', {text: ambiguousMsg, type: 'warning'});
+        eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: ambiguousMsg, type: 'warning'});
         return null;
     }
 
@@ -221,6 +222,6 @@ export function resolveTargetConnection(
     console.log(`resolveTargetConnection (in ConnectionResolver): No direction or name matches found for '${trimmedTargetName}'.`);
     const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(trimmedTargetName);
     // --- Corrected: Use eventBus.dispatch ---
-    eventBus.dispatch('ui:message_display', {text: notFoundMsg, type: 'info'});
+    eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: notFoundMsg, type: 'info'});
     return null;
 }
