@@ -7,7 +7,8 @@
 import Entity from '../entities/entity.js';
 import EntityManager from '../entities/entityManager.js'; // Dependency for function context
 import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Dependency for function logic
-import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js'; // Added TARGET_MESSAGES for resolveTargetConnection
+import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
+import {PassageDetailsComponent} from "../components/passageDetailsComponent.js"; // Added TARGET_MESSAGES for resolveTargetConnection
 
 // ========================================================================
 // == Core Type Definitions for Connection Resolution =====================
@@ -108,8 +109,13 @@ function findPotentialConnectionMatches(context, connectionTargetName) { // NOTE
         // AC3: Name Matching (Substring, Case-Insensitive)
         const entityName = getDisplayName(item.connectionEntity)?.toLowerCase();
 
+        // NEW: also look at the blocker’s entity‑name, if any
+        const blockerId = item.connectionEntity.getComponent(PassageDetailsComponent)?.blockerEntityId;
+        const blockerEnt = blockerId ? context.entityManager.getEntityInstance(blockerId) : null;
+        const blockerName = blockerEnt ? getDisplayName(blockerEnt).toLowerCase() : null;
+
         // Only consider for name match if NOT already a direction match
-        if (!isDirectionMatch && entityName && entityName.includes(lowerCaseTarget)) {
+        if (!isDirectionMatch && ((entityName && entityName.includes(lowerCaseTarget)) || (blockerName && blockerName.includes(lowerCaseTarget)))) {
             // Ensure we only add each unique *entity* once to nameMatches,
             // even if it's reachable via multiple directions whose names match.
             if (!nameMatchEntityIds.has(item.connectionEntity.id)) {
