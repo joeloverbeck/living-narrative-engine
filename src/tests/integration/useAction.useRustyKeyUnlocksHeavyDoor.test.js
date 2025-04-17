@@ -149,6 +149,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
             conditionEvaluationService: condEval,
             itemTargetResolverService: targetResolver,
         });
+        itemUsageSystem.initialize();
 
         lockSystem = new LockSystem({eventBus: bus, entityManager: em});
         uiSystem = new NotificationUISystem({eventBus: bus, dataManager: data});

@@ -212,6 +212,7 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
         lockSystem = new LockSystem({eventBus: bus, entityManager: em});
         uiSystem = new NotificationUISystem({eventBus: bus, dataManager: mockDataManager});
         lockSystem.initialize();
+        itemUsageSystem.initialize();
         uiSystem.initialize();
 
         exec.registerHandler('core:use', executeUse);
@@ -277,7 +278,7 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
         spy.mockClear();
 
         expect(bus.listenerCount(EVENT_ITEM_USE_ATTEMPTED)).toBeGreaterThan(0);
-        
+
         const res = await run('use rusty on north');
         expect(res.success).toBe(true);
 

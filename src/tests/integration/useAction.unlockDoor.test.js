@@ -192,8 +192,8 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
         actionExecutor.registerHandler('core:use', executeUse);
 
         // 6. Initialize Systems
-        // ItemUsageSystem needs initializing if it listens to events on init
         lockSystem.initialize();
+        itemUsageSystem.initialize();
         notificationUISystem.initialize();
 
         // 7. Setup Spies
