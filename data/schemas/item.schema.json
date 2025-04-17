@@ -159,7 +159,7 @@
           "type": "array",
           "description": "Sequence of event triggers occurring on successful use, after all condition checks pass. MUST use 'trigger_event' type.",
           "items": {
-            "$ref": "#/definitions/EffectObject"
+            "$ref": "effect.schema.json#/definitions/EffectObject"
           },
           "minItems": 1
         },
@@ -239,111 +239,6 @@
           "property_path": "PassageDetails.state",
           "expected_value": "locked",
           "failure_message": "It is already unlocked."
-        }
-      ]
-    },
-    "EffectObject": {
-      "description": "A single effect triggered on item use. MUST use type 'trigger_event' to dispatch an event via the event bus, specifying the event name and any additional payload parameters needed by the consuming system. The ItemUsageSystem provides base context (user, item, target) when dispatching.",
-      "allOf": [
-        {
-          "$ref": "common.schema.json#/definitions/TypedParameterBase"
-        }
-      ],
-      "properties": {
-        "type": {
-          "description": "The type of effect. For Usable.effects, MUST be 'trigger_event'.",
-          "enum": [
-            "trigger_event"
-          ],
-          "const": "trigger_event"
-        }
-      },
-      "oneOf": [
-        {
-          "properties": {
-            "type": {
-              "const": "trigger_event"
-            },
-            "parameters": {
-              "type": "object",
-              "required": [
-                "eventName"
-              ],
-              "properties": {
-                "eventName": {
-                  "$ref": "common.schema.json#/definitions/namespacedId",
-                  "description": "Name of the event to publish (e.g., 'event:apply_heal_requested', 'event:unlock_entity_attempt'). Must match a defined event type constant.",
-                  "examples": [
-                    "event:apply_heal_requested",
-                    "event:inflict_damage_requested",
-                    "event:unlock_entity_attempt",
-                    "event:apply_status_effect_requested"
-                  ]
-                },
-                "payload": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "description": "Optional data payload containing parameters specific to this event, beyond the standard context provided by the ItemUsageSystem. Structure depends on the requirements of the system listening for 'eventName'."
-                }
-              },
-              "patternProperties": {
-                "^\\$.*": {}
-              },
-              "additionalProperties": false
-            }
-          }
-        }
-      ],
-      "examples": [
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:apply_heal_requested",
-            "payload": {
-              "amount": 15,
-              "healTargetSpecifier": "user"
-            }
-          }
-        },
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:inflict_damage_requested",
-            "payload": {
-              "damageAmount": 8,
-              "damageType": "fire",
-              "damageTargetSpecifier": "target"
-            }
-          }
-        },
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:unlock_entity_attempt",
-            "payload": {}
-          }
-        },
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:apply_status_effect_requested",
-            "payload": {
-              "effectId": "core:status_poisoned",
-              "duration": 30,
-              "statusEffectTargetSpecifier": "target"
-            }
-          }
-        },
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:spawn_entity_requested",
-            "payload": {
-              "entityDefinitionId": "monster:goblin_low",
-              "quantity": 1,
-              "spawnLocationSpecifier": "target_location"
-            }
-          }
         }
       ]
     },

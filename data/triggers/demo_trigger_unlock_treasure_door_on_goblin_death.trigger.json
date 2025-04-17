@@ -3,19 +3,18 @@
   "listen_to": {
     "event_type": "event:entity_died",
     "filters": {
-      "source_id": "demo:enemy_goblin"
+      "deceasedEntityId": "demo:enemy_goblin"
     }
   },
-  "actions": [
+  "effects": [
     {
-      "type": "update_entity_component",
-      "target": {
-        "entity_id": "demo:door_treasure_room"
-      },
+      "type": "trigger_event",
       "parameters": {
-        "component_name": "Lockable",
-        "component_data": {
-          "isLocked": false
+        "eventName": "event:unlock_entity_attempt",
+        "payload": {
+          "userId": null,
+          "targetEntityId": "demo:door_treasure_room",
+          "keyItemId": null
         }
       }
     }

@@ -23,7 +23,7 @@ import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import {QuestStartTriggerSystem} from "../systems/questStartTriggerSystem.js";
 import BlockerSystem from '../systems/blockerSystem.js';
-import GenericTriggerSystem from "../systems/genericTriggerSystem.js";
+import TriggerDispatcher from "../systems/triggerDispatcher.js";
 import GameRuleSystem from "../systems/gameRuleSystem.js";
 import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js';
 import OpenableSystem from '../systems/openableSystem.js';
@@ -151,7 +151,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     // Grouping related systems can improve readability.
 
     // Base Systems
-    container.register('GenericTriggerSystem', (c) => new GenericTriggerSystem({
+    container.register('TriggerDispatcher', (c) => new TriggerDispatcher({
         eventBus: c.resolve('EventBus'),
         dataManager: c.resolve('DataManager'),
         entityManager: c.resolve('EntityManager'),

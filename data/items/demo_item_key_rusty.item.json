@@ -45,7 +45,7 @@
         {
           "type": "trigger_event",
           "parameters": {
-            "eventName": "event:unlock_attempt",
+            "eventName": "event:unlock_entity_attempt",
             "payload": {}
           }
         }

@@ -97,13 +97,14 @@ class GameEngine {
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
-                'GenericTriggerSystem', 'GameRuleSystem', 'EquipmentSystem', 'InventorySystem', 'CombatSystem',
+                'TriggerDispatcher', 'GameRuleSystem', 'EquipmentSystem', 'InventorySystem', 'CombatSystem',
                 'DeathSystem',
                 // Movement-related systems: Order might matter slightly if one depends on another's init,
                 // but here the dependencies are handled at construction via DI.
                 // Init order mainly affects event listener setup timing.
                 'BlockerSystem',        // Initialize first (provides checks)
                 'LockSystem',
+                'OpenableSystem',
                 'MovementSystem',       // Initialize next (performs action)
                 'HealthSystem',         // NEW: Handles health modification events
                 'StatusEffectSystem',   // NEW: Handles status effect events

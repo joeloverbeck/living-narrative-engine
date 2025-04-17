@@ -16,7 +16,7 @@ const SCHEMA_FILES = [
     'common.schema.json',
     'action.schema.json',
     'entity.schema.json',
-    'event-trigger.schema.json',
+    'trigger.schema.json',
     'interaction-test.schema.json',
     'item.schema.json',
     'location.schema.json',
@@ -26,6 +26,7 @@ const SCHEMA_FILES = [
     'world-manifest.schema.json',
     'container.schema.json',
     'lockable.schema.json',
+    'effect.schema.json',
     'openable.schema.json',
     'edible.schema.json',
     'pushable.schema.json',
@@ -42,7 +43,7 @@ const CONTENT_TYPE_SCHEMAS = {
     items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
     connections: 'http://example.com/schemas/connection.schema.json',
-    triggers: 'http://example.com/schemas/event-trigger.schema.json', // For triggers listed under "triggers" (array)
+    triggers: 'http://example.com/schemas/trigger.schema.json', // For triggers listed under "triggers" (array)
     objectives: 'http://example.com/schemas/objective.schema.json', // For objectives listed under "objectives"
     quests: 'http://example.com/schemas/quest.schema.json', // For quests listed under "quests"
     interactionTests: 'http://example.com/schemas/interaction-test.schema.json', // For tests listed under "interactionTests"
@@ -62,6 +63,7 @@ function getAllEventTypes() {
     // Filters exported values to find strings that look like event names (contain ':')
     return Object.values(eventTypes).filter(val => typeof val === 'string' && val.includes(':'));
 }
+
 // Create a Set of valid event type strings for quick lookups
 const VALID_EVENT_TYPES = new Set(getAllEventTypes());
 console.log(`DataManager: Initialized with ${VALID_EVENT_TYPES.size} known event types for runtime validation.`);
