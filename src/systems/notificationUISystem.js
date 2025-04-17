@@ -260,12 +260,12 @@ class NotificationUISystem {
             actorId,
             reasonCode,
             direction,
-            locationId, // Note: locationId is not used in the switch, but previousLocationId from the payload definition might be useful for logging
+            // locationId, // Not used in switch, but available
             details,
             blockerDisplayName,
-            blockerEntityId /*, lockMessageOverride - likely obsolete */,
-            previousLocationId, // Added from payload type definition
-            attemptedTargetLocationId // Added from payload type definition
+            blockerEntityId,
+            previousLocationId,
+            attemptedTargetLocationId
         } = payload;
 
         // TODO: Check if the actor is the player before displaying message
@@ -285,11 +285,11 @@ class NotificationUISystem {
                 break;
             case 'NO_EXITS':
                 messageText = TARGET_MESSAGES.MOVE_NO_EXITS;
-                messageType = 'info'; // It's informational, not an error
+                messageType = 'info'; // Keep as info - standard feedback
                 break;
             case 'INVALID_DIRECTION':
                 messageText = TARGET_MESSAGES.MOVE_CANNOT_GO_WAY;
-                messageType = 'info'; // Standard feedback for wrong direction
+                messageType = 'info'; // Keep as info - standard feedback
                 break;
             case 'DATA_ERROR':
                 messageText = details === 'Invalid connection: missing target'
@@ -298,38 +298,40 @@ class NotificationUISystem {
                 messageType = 'error';
                 console.error(`NotificationUISystem: Move data error for actor ${actorId} - Reason: ${reasonCode}, Direction: ${direction}, Details: ${details}`);
                 break;
-            case 'INTERNAL_DISPATCH_ERROR': // May not be used if MoveCoordinator handles errors better now
-                messageText = TARGET_MESSAGES.INTERNAL_ERROR; // Generic internal error
+            case 'INTERNAL_DISPATCH_ERROR':
+                messageText = TARGET_MESSAGES.INTERNAL_ERROR;
                 messageType = 'error';
                 console.error(`NotificationUISystem: Internal move dispatch error for actor ${actorId} - Reason: ${reasonCode}, Details: ${details}`);
                 break;
 
             // -- MoveCoordinator / Blocker System Reason Codes --
             case 'TARGET_LOCATION_NOT_FOUND':
-                messageText = TARGET_MESSAGES.MOVE_BAD_TARGET_DEF(direction || 'that way'); // Reuse message for now
-                messageType = 'error';
+                messageText = TARGET_MESSAGES.MOVE_BAD_TARGET_DEF(direction || 'that way');
+                messageType = 'error'; // Keep as error - data issue
                 console.warn(`NotificationUISystem: Move failed for actor ${actorId} - Target location ${attemptedTargetLocationId} not found.`);
                 break;
             case 'DIRECTION_LOCKED':
                 if (blockerDisplayName && blockerDisplayName.trim() !== '') {
                     messageText = TARGET_MESSAGES.MOVE_BLOCKED_LOCKED(blockerDisplayName);
                 } else {
-                    messageText = TARGET_MESSAGES.MOVE_LOCKED(direction || 'that way'); // Fallback if blocker name missing
+                    messageText = TARGET_MESSAGES.MOVE_LOCKED(direction || 'that way');
                     console.warn(`NotificationUISystem: Received 'DIRECTION_LOCKED' for actor ${actorId} without a valid blockerDisplayName.`);
                 }
-                messageType = 'notice'; // Changed from info to notice as 'locked' implies interaction needed
+                // *** CHANGE HERE: Use 'warning' for obstacles ***
+                messageType = 'warning';
                 break;
             case 'DIRECTION_BLOCKED':
                 if (blockerDisplayName && blockerDisplayName.trim() !== '') {
                     messageText = TARGET_MESSAGES.MOVE_BLOCKED_GENERIC(blockerDisplayName);
                 } else {
-                    messageText = "Something blocks the way."; // Generic fallback
+                    messageText = "Something blocks the way.";
                     console.warn(`NotificationUISystem: Received 'DIRECTION_BLOCKED' for actor ${actorId} without a valid blockerDisplayName.`);
                 }
-                messageType = 'info';
+                // *** CHANGE HERE: Use 'warning' for obstacles ***
+                messageType = 'warning';
                 break;
             case 'BLOCKER_NOT_FOUND':
-                messageType = 'warning'; // Data inconsistency
+                messageType = 'warning'; // Keep as warning - data inconsistency potentially blocking player
                 if (details && typeof details === 'string' && details.trim() !== '') {
                     messageText = details;
                 } else {
@@ -337,30 +339,29 @@ class NotificationUISystem {
                 }
                 console.error(`NotificationUISystem: Echoing BlockerSystem error - Blocker entity ID "${blockerEntityId}" not found for actor ${actorId} at location ${previousLocationId}.`);
                 break;
-            case 'MOVE_EXECUTION_ERROR': // Error within MovementSystem.executeMove (caught exception)
-            case 'MOVEMENT_EXECUTION_FAILED': // executeMove returned false
-                messageText = details || TARGET_MESSAGES.INTERNAL_ERROR; // Use details if provided
-                messageType = 'error';
+            case 'MOVE_EXECUTION_ERROR':
+            case 'MOVEMENT_EXECUTION_FAILED':
+                messageText = details || TARGET_MESSAGES.INTERNAL_ERROR;
+                messageType = 'error'; // Keep as error - system issue
                 console.error(`NotificationUISystem: Move execution failed for actor ${actorId}. Reason: ${reasonCode}, Details: ${details}`);
                 break;
-            case 'COORDINATOR_INTERNAL_ERROR': // Error within MoveCoordinatorSystem itself
+            case 'COORDINATOR_INTERNAL_ERROR':
                 messageText = details || TARGET_MESSAGES.INTERNAL_ERROR;
-                messageType = 'error';
+                messageType = 'error'; // Keep as error - system issue
                 console.error(`NotificationUISystem: Move coordination failed for actor ${actorId}. Reason: ${reasonCode}, Details: ${details}`);
                 break;
 
-
             // -- Default Case for Unhandled Reasons --
             default:
-                messageText = `You failed to move. (${reasonCode})`; // Generic fallback including the reason code
-                messageType = 'warning';
+                messageText = `You failed to move. (${reasonCode})`;
+                messageType = 'warning'; // Keep default as warning
                 console.warn(`NotificationUISystem: Unhandled move failure reasonCode: ${reasonCode} for actor ${actorId}`);
         }
 
-        // Dispatch the final UI message (handled consistently for all cases)
+        // Dispatch the final UI message
         this.eventBus.dispatch('ui:message_display', {
             text: messageText,
-            type: messageType
+            type: messageType // This will now be 'warning' for locked/blocked cases
         });
     }
 

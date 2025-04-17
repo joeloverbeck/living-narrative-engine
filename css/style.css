@@ -34,17 +34,18 @@
     --color-accent-reward: var(--color-accent-success); /* Use success accent for rewards too */
 
     /* -- Combat Colors -- */
+    /* -- Combat Colors -- */
     --color-text-combat: #495057; /* General combat action text */
-    --color-text-combat-hit: #155724; /* Player hit success */
-    --color-text-combat-crit: #721c24; /* Significant outcome (death/crit) */
+    --color-text-combat-hit: #155724; /* Player hit success (Dark Green) */
+    --color-text-combat-crit: #721c24; /* Significant outcome (death/crit) (Dark Red) */
 
     --color-background-combat: transparent; /* Default: no special background */
-    --color-background-combat-hit: #d4edda; /* Subtle green background for hits */
-    --color-background-combat-crit: #f8d7da; /* Subtle red/pink background for crits/death */
+    --color-background-combat-hit: #d4edda; /* Subtle green background for hits (Light Green) */
+    --color-background-combat-crit: #f8d7da; /* Subtle red/pink background for crits/death (Light Red/Pink) */
 
-    --color-accent-combat: #6c757d; /* Subtle accent for general combat */
-    --color-accent-combat-hit: #28a745; /* Green accent for hits */
-    --color-accent-combat-crit: #dc3545; /* Red accent for crits/death */
+    --color-accent-combat: #6c757d; /* Subtle accent for general combat (Grey) */
+    --color-accent-combat-hit: #28a745; /* Green accent for hits (Bright Green) */
+    --color-accent-combat-crit: #dc3545; /* Red accent for crits/death (Bright Red) */
 
     --color-text-success: var(--color-text-combat-hit, #155724); /* Reuse combat hit or define */
     --color-text-quest: var(--color-text-command, #000080); /* Use command blue or define custom */
@@ -247,16 +248,16 @@ h1 {
 }
 
 /* Combat Hit (Player successful hit) */
-.message-combat-hit {
-    color: var(--color-text-combat-hit);
-    background-color: var(--color-background-combat-hit);
+.message-combat_hit {
+    color: var(--color-text-combat-hit); /* Dark Green Text */
+    background-color: var(--color-background-combat-hit); /* Light Green Background */
     border-color: #c3e6cb; /* Border matching background */
-    border-left-color: var(--color-accent-combat-hit);
+    border-left-color: var(--color-accent-combat-hit); /* Bright Green Left Accent */
     font-weight: bold; /* Make hits stand out */
 }
 
 /* Combat Critical / Death */
-.message-combat-crit {
+.message-combat_critical {
     color: var(--color-text-combat-crit);
     background-color: var(--color-background-combat-crit);
     border-color: #f5c6cb; /* Border matching background */

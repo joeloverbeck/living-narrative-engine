@@ -65,7 +65,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC1 (New - DIRECTION_LOCKED, Name Provided): should dispatch correct message', () => {
         const payload = {reasonCode: 'DIRECTION_LOCKED', blockerDisplayName: 'sturdy door', actorId: 'player'};
-        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_LOCKED('sturdy door'), type: 'notice'};
+        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_LOCKED('sturdy door'), type: 'warning'};
         // Sanity check the expected text manually once
         expect(expectedDispatchPayload.text).toBe('The sturdy door is locked.');
 
@@ -79,7 +79,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC2 (New - DIRECTION_LOCKED, No Name): should dispatch fallback message and warn', () => {
         const payload = {reasonCode: 'DIRECTION_LOCKED', actorId: 'player'};
-        const expectedDispatchPayload = {text: 'The way that way is locked.', type: 'notice'};
+        const expectedDispatchPayload = {text: 'The way that way is locked.', type: 'warning'};
 
         notificationUISystem._handleMoveFailed(payload);
 
@@ -92,7 +92,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC3 (New - DIRECTION_BLOCKED, Name Provided): should dispatch correct message', () => {
         const payload = {reasonCode: 'DIRECTION_BLOCKED', blockerDisplayName: 'heavy gate', actorId: 'player'};
-        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_GENERIC('heavy gate'), type: 'info'};
+        const expectedDispatchPayload = {text: TARGET_MESSAGES.MOVE_BLOCKED_GENERIC('heavy gate'), type: 'warning'};
         // Sanity check the expected text manually once
         expect(expectedDispatchPayload.text).toBe('The heavy gate blocks the way.');
 
@@ -106,7 +106,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
     it('TC4 (New - DIRECTION_BLOCKED, No Name): should dispatch fallback message and warn', () => {
         const payload = {reasonCode: 'DIRECTION_BLOCKED', actorId: 'player'};
-        const expectedDispatchPayload = {text: 'Something blocks the way.', type: 'info'};
+        const expectedDispatchPayload = {text: 'Something blocks the way.', type: 'warning'};
 
         notificationUISystem._handleMoveFailed(payload);
 
