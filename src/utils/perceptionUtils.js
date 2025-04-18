@@ -22,24 +22,6 @@ import {getDisplayName} from './messages.js'; // Adjusted path
 /** @typedef {import('../components/passageDetailsComponent.js').PassageDetailsComponent} PassageDetailsComponentType */
 /** @typedef {import('../components/itemComponent.js').ItemComponent} ItemComponent */ // Needed for filterPredicate example in JSDoc
 
-// --- Helper Function: getVisibleEntityDisplayNames ---
-/**
- * Gets display names of entities in a location matching a predicate.
- * @param {EntityManager} entityManager - The entity manager instance.
- * @param {string} locationId - The ID of the location to check.
- * @param {string | null} excludeEntityId - The ID of an entity to exclude (e.g., the viewer).
- * @param {(entity: Entity) => boolean} filterPredicate - A function to filter entities (e.g., `entity => entity.hasComponent(ItemComponent)`).
- * @returns {string[]} - An array of display names for matching entities.
- */
-export const getVisibleEntityDisplayNames = (entityManager, locationId, excludeEntityId, filterPredicate) => {
-    const entityIdsInLocation = entityManager.getEntitiesInLocation(locationId);
-    return Array.from(entityIdsInLocation)
-        .map(id => entityManager.getEntityInstance(id))
-        .filter(Boolean) // Filter out any null results from getEntityInstance
-        .filter(entity => entity.id !== excludeEntityId)
-        .filter(filterPredicate)
-        .map(entity => getDisplayName(entity));
-};
 
 // --- Helper Function: formatExitString ---
 /**

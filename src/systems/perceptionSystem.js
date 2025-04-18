@@ -7,9 +7,7 @@ import {
     EVENT_DISPLAY_MESSAGE,
 } from '../types/eventTypes.js';
 import {
-    getVisibleEntityDisplayNames,
     formatExitString,
-    // formatExamineDescription, // We will implement this as a private method for now
 } from '../utils/perceptionUtils.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js'; // Ensure getDisplayName is imported
 import {PositionComponent} from '../components/positionComponent.js';

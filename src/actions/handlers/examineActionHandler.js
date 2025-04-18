@@ -55,7 +55,7 @@ export async function executeExamine(context) {
 
     // --- 2. Resolve Target Entity using Service ---
     const resolution = resolveTargetEntity(context, {
-        scope: 'nearby', // Examine things you can see, carry, or interact with nearby
+        scope: 'nearby_including_blockers',
         requiredComponents: [], // Examine any named entity initially
         actionVerb: 'examine', // For potential internal message construction in resolver
         targetName: targetName,
@@ -119,7 +119,7 @@ export async function executeExamine(context) {
         case 'FILTER_EMPTY': {
             // ** Removed feedbackMsg and UI dispatch **
             messages.push({
-                text: `Resolution failed: FILTER_EMPTY for scope 'nearby', action 'examine'.`,
+                text: `Resolution failed: FILTER_EMPTY for scope 'nearby_including_blockers', action 'examine'.`,
                 type: 'internal'
             });
             success = false;

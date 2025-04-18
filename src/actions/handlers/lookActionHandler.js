@@ -100,7 +100,7 @@ export async function executeLook(context) {
 
         // Configure options for target resolution
         const options = {
-            scope: 'nearby', // Look in current location + player's inventory
+            scope: 'nearby_including_blockers', // Look in current location + player's inventory
             requiredComponents: [], // Can look at anything, no specific component needed
             commandPart: 'directObjectPhrase',
             actionVerb: 'look at', // Used for potential disambiguation messages if needed
@@ -116,6 +116,7 @@ export async function executeLook(context) {
                 // Use default scope empty messages if needed:
                 // scopeEmptyPersonal: TARGET_MESSAGES.SCOPE_EMPTY_PERSONAL('look at'),
                 // scopeEmptyGeneric: TARGET_MESSAGES.SCOPE_EMPTY_GENERIC('look at', 'nearby'),
+                filterEmpty: "You don't see that here.",
             },
         };
 

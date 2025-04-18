@@ -216,7 +216,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
             const command = `look ${targetName}`;
 
             // Use the specific function from TARGET_MESSAGES as per AC
-            const expectedNotFoundMessage = "You don't see anything suitable nearby to look at."; // Use the actual message seen in logs
+            const expectedNotFoundMessage = "You don't see that here.";
             const expectedPayload = {
                 text: expectedNotFoundMessage,
                 type: 'info' // As specified in AC

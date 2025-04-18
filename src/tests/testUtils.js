@@ -49,7 +49,8 @@ export async function waitForEvent(spy, eventName, payloadMatcher, timeout = 100
 }
 
 // Helper to create and register entities
-export const setupEntity = (entityManager, id, name, components = [], locationId = 'test_location') => { // Keep locationId default or adjust as needed
+export const setupEntity = (entityManager, id, name, components = [], locationId = null) => { // Keep locationId default or adjust as needed
+    console.log(`>>> setupEntity called for ID: ${id}. Received locationId: ${locationId}`);
     // Get or create the entity instance. createEntityInstance handles definitions & default components.
     const entity = entityManager.createEntityInstance(id); // Assuming forceNew=false default
 
@@ -65,19 +66,30 @@ export const setupEntity = (entityManager, id, name, components = [], locationId
         entity.getComponent(NameComponent).value = name; // Update if exists
     }
 
-    // --- Position Component Handling (Seems OK) ---
-    let oldLocationId = entity.getComponent(PositionComponent)?.locationId ?? null;
-    if (!entity.hasComponent(PositionComponent)) {
-        // console.log(`setupEntity: Adding new PositionComponent to ${id} with location ${locationId}`);
-        entity.addComponent(new PositionComponent({locationId: locationId}));
-    } else if (entity.getComponent(PositionComponent).locationId !== locationId) {
-        // console.log(`setupEntity: Updating existing PositionComponent on ${id} from ${oldLocationId} to ${locationId}`);
-        entity.getComponent(PositionComponent).locationId = locationId;
-    }
-    // Notify AFTER the component state is correct
-    if (oldLocationId !== locationId) {
-        // console.log(`setupEntity: Notifying position change for ${id}: ${oldLocationId} -> ${locationId}`);
-        entityManager.notifyPositionChange(id, oldLocationId, locationId);
+    // --- Position Component Handling (Revised) ---
+    const existingPosComp = entity.getComponent(PositionComponent);
+    const oldLocationId = existingPosComp?.locationId ?? null;
+
+    console.log(`>>> Position check for ${id}. locationId !== null is ${locationId !== null}. Has existingPosComp: ${!!existingPosComp}`);
+
+    if (locationId !== null) { // Only add/update if a non-null locationId is intended
+        if (!existingPosComp) {
+            // Add position component only if locationId is not null
+            entity.addComponent(new PositionComponent({locationId: locationId}));
+            entityManager.notifyPositionChange(id, null, locationId); // Notify addition
+        } else if (existingPosComp.locationId !== locationId) {
+            // Update existing component's locationId
+            existingPosComp.locationId = locationId;
+            entityManager.notifyPositionChange(id, oldLocationId, locationId); // Notify update
+        }
+        // If locationId matches existing, do nothing regarding position
+        console.log(`>>> INSIDE locationId !== null block for ${id}`);
+    } else {
+        console.log(`>>> INSIDE locationId === null block for ${id}`);
+        // If locationId is null, ensure no position component exists or remove it
+        // (Though typically you wouldn't remove one added by definition this way)
+        // For this test's purpose, if locationId is null, we simply *don't add* one.
+        // If the definition *had* one, the test setup might need refinement.
     }
 
     // --- Component Handling from Array (Needs Correction) ---
