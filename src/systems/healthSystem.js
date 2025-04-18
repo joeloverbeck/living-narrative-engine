@@ -10,12 +10,13 @@ import {
 
 // Import required components and utilities
 import {HealthComponent} from '../components/healthComponent.js';
-import {getDisplayName} from '../utils/messages.js'; // Needed for entity names in messages
+import {getDisplayName} from '../utils/messages.js';
+import gameEngine from "../core/gameEngine.js"; // Needed for entity names in messages
 
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../types/eventTypes.js').ApplyHealRequestedEventPayload} ApplyHealRequestedEventPayload */
 /** @typedef {import('../types/eventTypes.js').InflictDamageRequestedEventPayload} InflictDamageRequestedEventPayload */
@@ -34,22 +35,22 @@ class HealthSystem {
     #eventBus;
     /** @type {EntityManager} */
     #entityManager;
-    /** @type {DataManager} */
-    #dataManager; // Kept for potential future use (e.g., resistances applied here)
+    /** @type {GameDataRepository} */
+    #repository; // Kept for potential future use (e.g., resistances applied here)
 
     /**
      * @param {object} dependencies
      * @param {EventBus} dependencies.eventBus
      * @param {EntityManager} dependencies.entityManager
-     * @param {DataManager} dependencies.dataManager
+     * @param {GameDataRepository} dependencies.gameDataRepository
      */
-    constructor({eventBus, entityManager, dataManager}) {
+    constructor({eventBus, entityManager, gameDataRepository}) {
         if (!eventBus) throw new Error("HealthSystem requires EventBus.");
         if (!entityManager) throw new Error("HealthSystem requires EntityManager.");
-        if (!dataManager) throw new Error("HealthSystem requires DataManager."); // Keep injection
+        if (!gameDataRepository) throw new Error("HealthSystem requires GameDataRepository."); // Keep injection
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository;
         console.log("HealthSystem: Instance created.");
     }
 
@@ -210,7 +211,7 @@ class HealthSystem {
         }
 
         // --- Apply Damage & Clamp Health ---
-        // TODO: Future: Apply resistances/vulnerabilities from dataManager/components here
+        // TODO: Future: Apply resistances/vulnerabilities from gameDataRepository/components here
         const actualDamage = amount; // In future, calculate based on resistances etc.
         const newHealth = healthBefore - actualDamage;
         const clampedNewHealth = Math.max(0, newHealth);

@@ -1,15 +1,16 @@
 // src/services/questStartTriggerSystem.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/eventTypes.js').EntityMovedEventPayload} EntityMovedEventPayload */
 
 // Assuming component keys match class names for getComponent lookup
-import { QuestLogComponent } from "../components/questLogComponent.js";
+import {QuestLogComponent} from "../components/questLogComponent.js";
 import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
+
 const QUEST_LOG_COMPONENT_KEY = QuestLogComponent;
 
 /**
@@ -20,28 +21,28 @@ const QUEST_LOG_COMPONENT_KEY = QuestLogComponent;
 class QuestStartTriggerSystem {
     /** @type {EventBus} */
     #eventBus;
-    /** @type {DataManager} */
-    #dataManager;
+    /** @type {GameDataRepository} */
+    #repository;
     /** @type {GameStateManager} */
     #gameStateManager;
 
     /**
      * @param {object} dependencies - The dependencies required by the service.
      * @param {EventBus} dependencies.eventBus - For subscribing to events and dispatching triggers.
-     * @param {DataManager} dependencies.dataManager - For accessing quest definitions.
+     * @param {GameDataRepository} dependencies.gameDataRepository - For accessing quest definitions.
      * @param {GameStateManager} dependencies.gameStateManager - For accessing the player entity and their quest log.
      */
-    constructor({ eventBus, dataManager, gameStateManager }) {
+    constructor({eventBus, gameDataRepository, gameStateManager}) { // Updated param name
         if (!eventBus) throw new Error("QuestStartTriggerSystem requires EventBus.");
-        if (!dataManager) throw new Error("QuestStartTriggerSystem requires DataManager.");
+        if (!gameDataRepository) throw new Error("QuestStartTriggerSystem requires GameDataRepository."); // Updated check
         if (!gameStateManager) throw new Error("QuestStartTriggerSystem requires GameStateManager.");
 
         this.#eventBus = eventBus;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // Updated assignment
         this.#gameStateManager = gameStateManager;
-
         console.log("QuestStartTriggerSystem: Instantiated.");
     }
+
 
     /**
      * Initializes the service by subscribing to relevant game events.
@@ -56,7 +57,7 @@ class QuestStartTriggerSystem {
      * @param {EntityMovedEventPayload} eventData - The payload from the entity movement event.
      * @private
      */
-    _handleEntityMoved({ entityId, newLocationId }) {
+    _handleEntityMoved({entityId, newLocationId}) {
         // 1. Check if the moved entity is the player
         const player = this.#gameStateManager.getPlayer();
         if (!player || player.id !== entityId) {
@@ -79,9 +80,9 @@ class QuestStartTriggerSystem {
         }
 
         // 3. Get All Quest Definitions
-        const allQuestDefinitions = this.#dataManager.getAllQuestDefinitions();
+        const allQuestDefinitions = this.#repository.getAllQuestDefinitions();
         if (!allQuestDefinitions || allQuestDefinitions.length === 0) {
-            // console.log("QuestStartTriggerSystem: No quest definitions found in DataManager.");
+            // console.log("QuestStartTriggerSystem: No quest definitions found in GameDataRepository.");
             return;
         }
 
@@ -126,4 +127,4 @@ class QuestStartTriggerSystem {
 }
 
 // Export the service class
-export { QuestStartTriggerSystem };
+export {QuestStartTriggerSystem};

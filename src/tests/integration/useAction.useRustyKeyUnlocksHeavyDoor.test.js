@@ -56,8 +56,8 @@ function makeAlwaysPassConditionEvaluator() {
     };
 }
 
-// Minimal DataManager stub with the exact real entity definitions relevant to the test.
-function makeMockDataManager() {
+// Minimal GameDataRepository stub with the exact real entity definitions relevant to the test.
+function makeMockGameDataRepository() {
     const defs = new Map([["demo:item_key_rusty", {
         id: "demo:item_key_rusty", components: {
             Name: {value: "Rusty Key"}, Description: {text: "An old, rusty iron key."}, Item: {}, Usable: {
@@ -100,6 +100,10 @@ function makeMockDataManager() {
 
     return {
         actions: new Map([["core:use", {id: "core:use", commands: ["use", "u"]}]]),
+        getAllActionDefinitions: function () {
+            // 'this' refers to mockGameDataRepository itself here
+            return Array.from(this.actions.values());
+        },
         getEntityDefinition: (id) => defs.get(id) || {id, components: {}},
         getPlayerId: () => "player",
     };
@@ -118,7 +122,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
 
     beforeEach(() => {
         // Core plumbing
-        const data = makeMockDataManager();
+        const data = makeMockGameDataRepository();
         bus = new EventBus();
         em = new EntityManager(data);
         parser = new CommandParser(data);
@@ -145,14 +149,17 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
         itemUsageSystem = new ItemUsageSystem({
             eventBus: bus,
             entityManager: em,
-            dataManager: data,
+            gameDataRepository: data,
             conditionEvaluationService: condEval,
             itemTargetResolverService: targetResolver,
         });
         itemUsageSystem.initialize();
 
         lockSystem = new LockSystem({eventBus: bus, entityManager: em});
-        uiSystem = new NotificationUISystem({eventBus: bus, dataManager: data});
+        uiSystem = new NotificationUISystem({
+            eventBus: bus,
+            gameDataRepository: data // <<< CORRECTED property name
+        });
 
         lockSystem.initialize();
         uiSystem.initialize();
@@ -197,7 +204,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
     const run = async (cmd) => {
         const parsed = parser.parse(cmd);
         return exec.executeAction(parsed.actionId, {
-            playerEntity: player, currentLocation: roomExit, parsedCommand: parsed, dataManager: makeMockDataManager(), // fresh stub not needed beyond structure
+            playerEntity: player, currentLocation: roomExit, parsedCommand: parsed, gameDataRepository: makeMockGameDataRepository(), // fresh stub not needed beyond structure
             entityManager: em, eventBus: bus,
         });
     };
@@ -211,7 +218,7 @@ describe("Integration ➜ Use Rusty Key to unlock Heavy Door", () => {
     },];
 
     variants.forEach(({cmd, desc}) => {
-        it(`unlocks the Heavy Door when player types “${cmd}”  – ${desc}`, async () => {
+        it(`unlocks the Heavy Door when player types “${cmd}”  –${desc}`, async () => {
             spy.mockClear();
 
             // --- Execute command ------------------------------------------------

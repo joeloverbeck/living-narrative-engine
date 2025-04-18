@@ -54,7 +54,7 @@ const TRIGGER_DEF = {
     one_shot: true
 };
 
-const makeMockDataManager = () => {
+const makeMockGameDataRepository = () => {
     const entities = new Map([
         [
             'demo:door_treasure_room',
@@ -85,7 +85,7 @@ describe('Force‑unlock keyed door on goblin death (via LockSystem)', () => {
     let bus, em, data, dispatcher, lockSystem, spy;
 
     beforeEach(() => {
-        data = makeMockDataManager();
+        data = makeMockGameDataRepository();
         bus = new EventBus();
         em = new EntityManager(data);
 
@@ -94,7 +94,7 @@ describe('Force‑unlock keyed door on goblin death (via LockSystem)', () => {
         em.registerComponent('Lockable', LockableComponent);
 
         // Wire systems
-        dispatcher = new TriggerDispatcher({eventBus: bus, dataManager: data, entityManager: em});
+        dispatcher = new TriggerDispatcher({eventBus: bus, gameDataRepository: data, entityManager: em});
         lockSystem = new LockSystem({eventBus: bus, entityManager: em}); // <<< Real LockSystem
 
         // --- REMOVED ---

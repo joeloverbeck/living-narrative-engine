@@ -78,7 +78,7 @@ const createMockContext = (directObjectPhrase = 'door') => {
             originalInput: `open ${directObjectPhrase}`,
             error: null,
         },
-        dataManager: {}, // Mock if needed
+        gameDataRepository: {}, // Mock if needed
         entityManager: { // Mock if needed by dependencies
             getEntityInstance: jest.fn(id => createMockEntity(id)) // Simple mock
         },

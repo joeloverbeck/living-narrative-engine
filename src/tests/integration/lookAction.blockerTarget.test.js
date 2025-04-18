@@ -53,8 +53,8 @@ import {waitForEvent, setupEntity as make} from "../testUtils.js";
 // The hard‑coded description we expect for the sturdy door
 const DOOR_DESCRIPTION = "A sturdy wooden example door. It looks locked.";
 
-// ─── Minimal DataManager stub covering just what we use in this test ─────────
-function makeMockDataManager() {
+// ─── Minimal GameDataRepository stub covering just what we use in this test ─────────
+function makeMockGameDataRepository() {
     const defs = new Map([
         ["demo:door_treasure_room", {
             id: "demo:door_treasure_room",
@@ -99,6 +99,10 @@ function makeMockDataManager() {
 
     return {
         actions: new Map([["core:look", {id: "core:look", commands: ["look", "l"]}]]),
+        getAllActionDefinitions: function () {
+            // 'this' refers to mockGameDataRepository itself here
+            return Array.from(this.actions.values());
+        },
         getEntityDefinition: (id) => defs.get(id) || {id, components: {}},
         getPlayerId: () => "player"
     };
@@ -113,7 +117,7 @@ describe("LOOK integration – door blocker target", () => {
     let player, hallway, door, conn;
 
     beforeEach(() => {
-        const data = makeMockDataManager();
+        const data = makeMockGameDataRepository();
         bus = new EventBus();
         em = new EntityManager(data);
         parser = new CommandParser(data);
@@ -174,7 +178,7 @@ describe("LOOK integration – door blocker target", () => {
             playerEntity: player,
             currentLocation: hallway,
             parsedCommand: parsed,
-            dataManager: makeMockDataManager(),
+            gameDataRepository: makeMockGameDataRepository(),
             entityManager: em,
             eventBus: bus
         });

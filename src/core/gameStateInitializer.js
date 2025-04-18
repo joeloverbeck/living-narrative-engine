@@ -3,62 +3,59 @@
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
-/** @typedef {import('./dataManager.js').default} DataManager */
+/** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */ // Keep for type checking if needed
 
 // --- Component Class Imports (needed for getComponent/addComponent) ---
-import { PositionComponent } from '../components/positionComponent.js';
+import {PositionComponent} from '../components/positionComponent.js';
 
 /**
- * Service responsible for setting up the initial game state, including creating
- * the player entity, the starting location entity (based on IDs retrieved from the
- * loaded world manifest via DataManager), and placing the player correctly.
+ * Service responsible for setting up the initial game state using GameDataRepository.
  */
 class GameStateInitializer {
     /** @type {EntityManager} */
     #entityManager;
     /** @type {GameStateManager} */
     #gameStateManager;
-    /** @type {DataManager} */
-    #dataManager;
-    // --- <<< CHANGE: Removed starting ID properties (AC4) >>> ---
-    // #startingPlayerId;
-    // #startingLocationId;
+    /**
+     * @type {GameDataRepository} // <-- UPDATED Type
+     */
+    #repository; // <-- UPDATED Property Name
 
     /**
-     * Creates an instance of GameStateInitializer.
-     * // --- <<< CHANGE: Removed starting ID parameters (AC4) >>> ---
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {object} dependencies
      * @param {EntityManager} dependencies.entityManager
      * @param {GameStateManager} dependencies.gameStateManager
-     * @param {DataManager} dependencies.dataManager
+     * @param {GameDataRepository} dependencies.gameDataRepository - The game data repository.
      */
-    constructor({ entityManager, gameStateManager, dataManager }) {
+    constructor({entityManager, gameStateManager, gameDataRepository}) { // <-- UPDATED Parameter key
         if (!entityManager) throw new Error("GameStateInitializer requires an EntityManager.");
         if (!gameStateManager) throw new Error("GameStateInitializer requires a GameStateManager.");
-        if (!dataManager) throw new Error("GameStateInitializer requires a DataManager.");
+        // Updated error message to reflect new dependency
+        if (!gameDataRepository) throw new Error("GameStateInitializer requires a GameDataRepository.");
 
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // <-- UPDATED Assignment
 
         console.log("GameStateInitializer: Instance created.");
     }
 
     /**
      * Executes the initial game state setup logic.
-     * Retrieves starting IDs from DataManager, creates player and starting location entities,
+     * Retrieves starting IDs from GameDataRepository, creates player and starting location entities,
      * sets them in the GameStateManager, and positions the player in the starting location.
-     * Assumes DataManager has successfully loaded data for the selected world *before* this method is called.
+     * Assumes GameDataRepository has successfully loaded data for the selected world *before* this method is called.
      * @returns {boolean} True if setup was successful, false otherwise.
      */
     setupInitialState() {
         try {
             console.log("GameStateInitializer: Setting up initial game state...");
 
-            console.log("GameStateInitializer: Retrieving starting IDs from DataManager...");
-            const startingPlayerId = this.#dataManager.getStartingPlayerId();
-            const startingLocationId = this.#dataManager.getStartingLocationId();
+            console.log("GameStateInitializer: Retrieving starting IDs from GameDataRepository...");
+            const startingPlayerId = this.#repository.getStartingPlayerId(); // <-- UPDATED
+            const startingLocationId = this.#repository.getStartingLocationId(); // <-- UPDATED
 
             if (!startingPlayerId) {
                 throw new Error("GameStateInitializer Error: Failed to retrieve startingPlayerId from loaded world manifest. Manifest invalid, missing 'startingPlayerId' property, or data not loaded?");
@@ -70,7 +67,7 @@ class GameStateInitializer {
 
 
             // --- 1. Retrieve Definition & Create Player Entity ---
-            if (!this.#dataManager.getEntityDefinition(startingPlayerId)) {
+            if (!this.#repository.getEntityDefinition(startingPlayerId)) {
                 throw new Error(`Player definition '${startingPlayerId}' (from manifest) not found in loaded data.`);
             }
             const player = this.#entityManager.createEntityInstance(startingPlayerId);
@@ -81,7 +78,7 @@ class GameStateInitializer {
             console.log(`GameStateInitializer: Player entity '${player.id}' created and set.`);
 
             // --- 2. Retrieve Definition & Create Starting Location Entity ---
-            if (!this.#dataManager.getEntityDefinition(startingLocationId)) {
+            if (!this.#repository.getEntityDefinition(startingLocationId)){
                 throw new Error(`Starting location definition '${startingLocationId}' (from manifest) not found in loaded data.`);
             }
             const startLocation = this.#entityManager.createEntityInstance(startingLocationId);
@@ -100,7 +97,7 @@ class GameStateInitializer {
                 console.warn(`GameStateInitializer: Player '${player.id}' missing PositionComponent. Adding one for location ${startLocation.id}.`);
                 try {
                     // Assume addComponent can take key + data, relying on EntityManager's registry
-                    player.addComponent('Position', { locationId: startLocation.id, x: 0, y: 0 });
+                    player.addComponent('Position', {locationId: startLocation.id, x: 0, y: 0});
                     console.log(`GameStateInitializer: Added PositionComponent to player '${player.id}' for location ${startLocation.id}`);
                 } catch (addCompError) {
                     console.error(`GameStateInitializer: Failed to add PositionComponent to player '${player.id}': ${addCompError.message}`, addCompError);

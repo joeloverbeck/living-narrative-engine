@@ -83,6 +83,15 @@
           },
           "default": []
         },
+        "blockers": {
+          "type": "array",
+          "description": "Relative paths to blocker entity definition files (JSON).",
+          "items": {
+            "type": "string",
+            "description": "Path relative to the world's root directory, e.g., 'content/blockers/demo_door_exit_north.blocker.json'."
+          },
+          "default": []
+        },
         "triggers": {
           "type": "array",
           "description": "Relative paths to event trigger definition files (JSON).",

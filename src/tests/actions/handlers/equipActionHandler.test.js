@@ -86,7 +86,7 @@ describe('executeEquip', () => {
             dispatch: mockDispatch,
             // targets property removed
             parsedCommand: {}, // Will be set per test
-            dataManager: {}, // Mock if needed
+            gameDataRepository: {}, // Mock if needed
             currentLocation: null, // Not directly used by equip scope='inventory'
         };
 

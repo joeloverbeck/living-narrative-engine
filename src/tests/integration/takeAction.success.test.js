@@ -34,11 +34,15 @@ import {waitForEvent, setupEntity as testSetupEntity} from "../testUtils.js";
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 /** @typedef {import('../../types/eventTypes.js').ItemPickedUpEventPayload} ItemPickedUpEventPayload */
 
-// 6. --- Mock DataManager ---
-const mockDataManager = {
+// 6. --- Mock GameDataRepository ---
+const mockGameDataRepository = {
     actions: new Map([
         ['core:take', {id: 'core:take', commands: ['take', 'get', 'g']}],
     ]),
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
     getEntityDefinition: (id) => {
         if (id === 'key_rusty_def') {
             return {
@@ -93,9 +97,9 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
     // 10. --- beforeEach Setup ---
     beforeEach(() => {
         // 1. Instantiate Core Modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Register ALL necessary Components
@@ -109,10 +113,10 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
         inventorySystem = new InventorySystem({
             eventBus,
             entityManager,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             gameStateManager: {getPlayer: () => entityManager.getEntityInstance('player')}
         });
-        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
         worldPresenceSystem = new WorldPresenceSystem({eventBus, entityManager}); // <<< ADDED Instance
 
         // 4. Register Action Handler(s)
@@ -177,7 +181,7 @@ describe('Integration Test: core:take Action - Successful Pickup (TAKE-INT-SUCCE
             playerEntity: player,
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             eventBus: eventBus,
             dispatch: eventBus.dispatch.bind(eventBus)

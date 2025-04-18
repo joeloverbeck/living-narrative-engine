@@ -1,7 +1,7 @@
 // src/tests/integration/openAction.test.js
 
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -10,29 +10,33 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js';
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js';
+import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js';
+import {executeOpen} from '../../actions/handlers/openActionHandler.js';
 
 // --- Components ---
 import OpenableComponent from '../../components/openableComponent.js';
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import { waitForEvent } from "../testUtils.js";
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+import {waitForEvent} from "../testUtils.js";
 import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
-const mockDataManager = {
+// --- Mock GameDataRepository ---
+const mockGameDataRepository = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }),
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
+    getEntityDefinition: (id) => ({id: id, components: {}}),
     getPlayerId: () => 'player'
 };
 
@@ -62,7 +66,7 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
         if (!entity) throw new Error(`Entity instance creation failed for ${id}`);
 
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -72,7 +76,7 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
         if (existingPosComp) oldLocationId = existingPosComp.locationId;
 
         if (!existingPosComp) {
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else if (existingPosComp.locationId !== locationId) {
             existingPosComp.locationId = locationId;
         }
@@ -91,24 +95,26 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
     // --- End setupEntity Helper ---
 
     beforeEach(() => {
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
         entityManager.registerComponent('NameComponent', NameComponent);
         entityManager.registerComponent('OpenableComponent', OpenableComponent);
         entityManager.registerComponent('PositionComponent', PositionComponent);
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
         actionExecutor.registerHandler('core:open', executeOpen);
         openableSystem.initialize();
         notificationUISystem.initialize();
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
         player = setupEntity('player', 'Player', [], 'test_location');
         testLocation = setupEntity('test_location', 'Test Room');
-        existingChest = setupEntity('chest_existing', 'chest', [new OpenableComponent({ isOpen: false })], 'test_location');
+        existingChest = setupEntity('chest_existing', 'chest', [new OpenableComponent({isOpen: false})], 'test_location');
     });
 
     afterEach(() => {
@@ -125,17 +131,17 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
         const parsedCommand = commandParser.parse(commandString);
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             const errorText = parsedCommand.error || "Unknown command.";
-            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: errorText, type: 'error'});
+            await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorText, type: 'error'});
             return;
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') return;
+        if (!parsedCommand.actionId && commandString.trim() === '') return;
 
         /** @type {ActionContext} */
         const context = {
             playerEntity: player,
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             dispatch: dispatchSpy,
             eventBus: eventBus
@@ -195,7 +201,7 @@ describe('Integration Test: core:open Action - Target Not Found', () => {
             expect(dispatchSpy).not.toHaveBeenCalledWith('event:open_attempted', expect.anything());
             expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_ENTITY_OPENED, expect.anything());
             expect(dispatchSpy).not.toHaveBeenCalledWith('event:open_failed', expect.anything());
-            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({ type: 'success' }));
+            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({type: 'success'}));
             expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expectedUIPayload);
 
             // 3. State Check

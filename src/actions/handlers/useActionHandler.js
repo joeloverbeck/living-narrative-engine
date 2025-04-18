@@ -43,7 +43,7 @@ export async function executeUse(context) {
     // <<< Make the callback async >>>
     const onFoundUnique = async (innerContext, targetItemEntity, messages) => {
         // Use innerContext which includes eventBus
-        const {playerEntity, dataManager, entityManager, parsedCommand, eventBus: innerEventBus} = innerContext;
+        const {playerEntity, gameDataRepository: gameDataRepository, entityManager, parsedCommand, eventBus: innerEventBus} = innerContext;
         const itemInstanceId = targetItemEntity.id;
 
         const itemDefinitionId = targetItemEntity.getComponent(DefinitionRefComponent)?.id;
@@ -133,7 +133,7 @@ export async function executeUse(context) {
             messages.push({text: `No explicit target specified.`, type: 'internal'});
             // Check if the item requires a target based on its definition
             // NOTE: This uses itemDefinitionId which is now correctly sourced
-            const itemDefinition = dataManager.getEntityDefinition(itemDefinitionId);
+            const itemDefinition = gameDataRepository.getEntityDefinition(itemDefinitionId);
             const usableData = itemDefinition?.components?.Usable;
             if (usableData?.target_required) {
                 // Item requires a target, but none was provided.

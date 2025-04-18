@@ -25,7 +25,7 @@ const mockGameStateManager = {
     setPlayer: jest.fn(),
     setCurrentLocation: jest.fn()
 };
-const mockDataManager = {}; // Basic mock object
+const mockGameDataRepository = {}; // Basic mock object
 const mockEntityManager = {}; // Basic mock object
 const mockCommandParser = {
     parse: jest.fn(),
@@ -40,7 +40,7 @@ const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.
 
 // Helper to create a complete, valid options object
 const createValidOptions = () => ({
-    dataManager: mockDataManager,
+    gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
     inputHandler: mockInputHandler,
@@ -78,10 +78,10 @@ describe('GameLoop', () => {
     // AC 3: Constructor Tests
     describe('constructor', () => {
         // ... (constructor tests unchanged) ...
-        it('should throw an error if options.dataManager is missing', () => {
+        it('should throw an error if options.gameDataRepository is missing', () => {
             const options = createValidOptions();
-            delete options.dataManager;
-            expect(() => new GameLoop(options)).toThrow(/options\.dataManager/);
+            delete options.gameDataRepository;
+            expect(() => new GameLoop(options)).toThrow(/options\.gameDataRepository/);
         });
 
         it('should throw an error if options.entityManager is missing', () => {
@@ -129,7 +129,7 @@ describe('GameLoop', () => {
         });
 
         it('should throw an error if options object itself is missing', () => {
-            expect(() => new GameLoop(undefined)).toThrow(/options\.dataManager/); // Checks first required dependency
+            expect(() => new GameLoop(undefined)).toThrow(/options\.gameDataRepository/); // Checks first required dependency
         });
 
         it('should successfully instantiate with valid mock dependencies', () => {
@@ -641,7 +641,7 @@ describe('GameLoop', () => {
             expect(context.currentLocation).toBe(mockLocation);
 
             // AC10: Assert ActionContext Dependencies
-            expect(context.dataManager).toBe(mockDataManager);
+            expect(context.gameDataRepository).toBe(mockGameDataRepository);
             expect(context.entityManager).toBe(mockEntityManager);
             expect(context.eventBus).toBe(mockEventBus);
 

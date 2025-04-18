@@ -1,33 +1,43 @@
 // src/services/questRewardService.js
 
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
+
 /** @typedef {import('../types/questTypes.js').RewardSummaryItem} RewardSummaryItem */
 
 /**
  * Service responsible for granting rewards upon quest completion and providing reward summaries.
- * Decouples reward distribution logic from the main QuestSystem and UI.
  */
 class QuestRewardService {
-    /** @type {DataManager} */
-    dataManager;
+    /**
+     * @type {GameDataRepository} // <-- UPDATED Type
+     */
+    #repository; // <-- UPDATED Property Name
     /** @type {EventBus} */
-    eventBus;
+    #eventBus;
     /** @type {GameStateManager} */
-    gameStateManager;
+    #gameStateManager;
 
-    constructor({ dataManager, eventBus, gameStateManager }) {
-        if (!dataManager) throw new Error("QuestRewardService requires DataManager.");
+    /**
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
+     * @param {object} dependencies
+     * @param {GameDataRepository} dependencies.gameDataRepository - The game data repository instance.
+     * @param {EventBus} dependencies.eventBus
+     * @param {GameStateManager} dependencies.gameStateManager
+     */
+    constructor({gameDataRepository, eventBus, gameStateManager}) { // <-- UPDATED Parameter key
+        // Updated error message to reflect new dependency
+        if (!gameDataRepository) throw new Error("QuestRewardService requires GameDataRepository.");
         if (!eventBus) throw new Error("QuestRewardService requires EventBus.");
         if (!gameStateManager) throw new Error("QuestRewardService requires GameStateManager.");
 
-        this.dataManager = dataManager;
-        this.eventBus = eventBus;
-        this.gameStateManager = gameStateManager;
+        this.#repository = gameDataRepository; // <-- UPDATED Assignment
+        this.#eventBus = eventBus;
+        this.#gameStateManager = gameStateManager;
 
         console.log("QuestRewardService: Instantiated.");
     }
@@ -53,7 +63,11 @@ class QuestRewardService {
         // Experience Points (XP)
         if (typeof rewards.experience === 'number' && rewards.experience > 0) {
             // console.log(` - Granting ${rewards.experience} XP (via event)`);
-            this.eventBus.dispatch('event:xp_gain_requested', { entityId: playerEntity.id, amount: rewards.experience, source: `Quest: ${questId}` });
+            this.eventBus.dispatch('event:xp_gain_requested', {
+                entityId: playerEntity.id,
+                amount: rewards.experience,
+                source: `Quest: ${questId}`
+            });
         }
 
         // Items
@@ -62,7 +76,12 @@ class QuestRewardService {
                 if (itemReward?.itemId) {
                     const quantity = typeof itemReward.quantity === 'number' && itemReward.quantity > 0 ? itemReward.quantity : 1;
                     // console.log(` - Granting item ${itemReward.itemId} x ${quantity} (via event)`);
-                    this.eventBus.dispatch('event:item_add_requested', { entityId: playerEntity.id, itemId: itemReward.itemId, quantity: quantity, source: `Quest: ${questId}` });
+                    this.eventBus.dispatch('event:item_add_requested', {
+                        entityId: playerEntity.id,
+                        itemId: itemReward.itemId,
+                        quantity: quantity,
+                        source: `Quest: ${questId}`
+                    });
                 } else {
                     console.warn(`QuestRewardService: Invalid item reward found in quest "${questId}":`, itemReward);
                 }
@@ -76,7 +95,12 @@ class QuestRewardService {
                     const amount = rewards.currency[currencyType];
                     if (typeof amount === 'number' && amount > 0) {
                         // console.log(` - Granting ${amount} ${currencyType} (via event)`);
-                        this.eventBus.dispatch('event:currency_add_requested', { entityId: playerEntity.id, currencyType: currencyType, amount: amount, source: `Quest: ${questId}` });
+                        this.eventBus.dispatch('event:currency_add_requested', {
+                            entityId: playerEntity.id,
+                            currencyType: currencyType,
+                            amount: amount,
+                            source: `Quest: ${questId}`
+                        });
                     } else {
                         console.warn(`QuestRewardService: Invalid amount (${amount}) for currency type "${currencyType}" in quest "${questId}".`);
                     }
@@ -90,7 +114,11 @@ class QuestRewardService {
                 if (Object.hasOwnProperty.call(rewards.gameStateChanges, flagName)) {
                     const value = rewards.gameStateChanges[flagName];
                     // console.log(` - Setting game state flag "${flagName}" to ${value} (via event)`);
-                    this.eventBus.dispatch('event:game_state_flag_set_requested', { flagName: flagName, value: value, source: `Quest: ${questId}` });
+                    this.eventBus.dispatch('event:game_state_flag_set_requested', {
+                        flagName: flagName,
+                        value: value,
+                        source: `Quest: ${questId}`
+                    });
                 }
             }
         }
@@ -163,4 +191,4 @@ class QuestRewardService {
     }
 }
 
-export { QuestRewardService };
+export {QuestRewardService};

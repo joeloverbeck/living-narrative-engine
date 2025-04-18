@@ -10,7 +10,8 @@ import {
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 
@@ -20,26 +21,17 @@ import {
  * directly modifies health or handles death events.
  */
 class CombatSystem {
-    /** @type {EventBus} */
     #eventBus;
-    /** @type {EntityManager} */
     #entityManager;
-    /** @type {DataManager} */
-    #dataManager; // Included for future enhancements (resistances, etc.)
+    #repository;
 
-    /**
-     * @param {object} dependencies
-     * @param {EventBus} dependencies.eventBus
-     * @param {EntityManager} dependencies.entityManager
-     * @param {DataManager} dependencies.dataManager
-     */
-    constructor({eventBus, entityManager, dataManager}) {
-        if (!eventBus || !entityManager || !dataManager) {
-            throw new Error("CombatSystem requires EventBus, EntityManager, and DataManager.");
+    constructor({eventBus, entityManager, gameDataRepository}) { // Updated param name
+        if (!eventBus || !entityManager || !gameDataRepository) { // Updated check
+            throw new Error("CombatSystem requires EventBus, EntityManager, and GameDataRepository."); // Updated error
         }
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // Updated assignment
     }
 
     /**
@@ -106,7 +98,7 @@ class CombatSystem {
         }
 
         // --- 4. Calculate Actual Damage (MVP: Simple Application) ---
-        // TODO: Implement defense, resistance, armor checks here using dataManager/components
+        // TODO: Implement defense, resistance, armor checks here using gameDataRepository/components
         const actualDamage = potentialDamage;
 
         // --- 5. Dispatch Damage Request Event --- <<<<------ CHANGE HERE

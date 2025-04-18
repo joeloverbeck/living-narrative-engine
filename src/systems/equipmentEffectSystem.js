@@ -4,7 +4,7 @@ import {StatsComponent} from '../components/statsComponent.js';
 import {getDisplayName} from "../utils/messages.js";
 import {EVENT_ITEM_EQUIPPED, EVENT_ITEM_UNEQUIPPED} from "../types/eventTypes.js";
 
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 
@@ -15,16 +15,17 @@ import {EVENT_ITEM_EQUIPPED, EVENT_ITEM_UNEQUIPPED} from "../types/eventTypes.js
  * with equipped items. Listens for EVENT_ITEM_EQUIPPED and EVENT_ITEM_UNEQUIPPED.
  */
 class EquipmentEffectSystem {
-    /**
-     * @param {{eventBus: EventBus, entityManager: EntityManager, dataManager: DataManager}} options
-     */
-    constructor({eventBus, entityManager, dataManager}) {
-        if (!eventBus || !entityManager || !dataManager) {
-            throw new Error("EquipmentEffectSystem requires eventBus, entityManager, and dataManager.");
+    #eventBus;
+    #entityManager;
+    #repository; // Renamed from gameDataRepository
+
+    constructor({eventBus, entityManager, gameDataRepository}) { // Updated param name
+        if (!eventBus || !entityManager || !gameDataRepository) { // Updated check
+            throw new Error("EquipmentEffectSystem requires eventBus, entityManager, and gameDataRepository."); // Updated error
         }
-        this.eventBus = eventBus;
-        this.entityManager = entityManager;
-        this.dataManager = dataManager;
+        this.#eventBus = eventBus;
+        this.#entityManager = entityManager;
+        this.#repository = gameDataRepository; // Updated assignment
         console.log("EquipmentEffectSystem initialized.");
     }
 
@@ -32,8 +33,8 @@ class EquipmentEffectSystem {
      * Subscribes to relevant events. Call this after instantiation.
      */
     initialize() {
-        this.eventBus.subscribe(EVENT_ITEM_EQUIPPED, this.handleItemEquipped.bind(this));
-        this.eventBus.subscribe(EVENT_ITEM_UNEQUIPPED, this.handleItemUnequipped.bind(this));
+        this.#eventBus.subscribe(EVENT_ITEM_EQUIPPED, this.handleItemEquipped.bind(this));
+        this.#eventBus.subscribe(EVENT_ITEM_UNEQUIPPED, this.handleItemUnequipped.bind(this));
         console.log("EquipmentEffectSystem subscribed to events: item_equipped, item_unequipped.");
     }
 
@@ -47,7 +48,7 @@ class EquipmentEffectSystem {
             console.warn("EquipmentEffectSystem (Equipped): Invalid eventData received:", eventData);
             return;
         }
-        const itemDefinition = this.dataManager.getEntityDefinition(itemId);
+        const itemDefinition = this.#repository.getEntityDefinition(itemId);
         if (!itemDefinition || !itemDefinition.components || !itemDefinition.components.Equippable) {
             if (!itemDefinition) {
                 console.warn(`EquipmentEffectSystem (Equipped): Could not find item definition for '${itemId}'.`);

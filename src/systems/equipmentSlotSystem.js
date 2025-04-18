@@ -19,7 +19,8 @@ import {
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */ // **** Added DataManager typedef ****
+
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 
 /**
  * Manages the definition, availability, and validation logic related to equipment slots.
@@ -28,17 +29,17 @@ import {
  * the final EVENT_ITEM_EQUIPPED or EVENT_ITEM_UNEQUIPPED events upon success.
  */
 class EquipmentSlotSystem {
-    /**
-     * @param {{eventBus: EventBus, entityManager: EntityManager, dataManager: DataManager}} options // **** Added dataManager ****
-     */
-    constructor({eventBus, entityManager, dataManager}) { // **** Added dataManager ****
-        // **** Updated constructor check ****
-        if (!eventBus || !entityManager || !dataManager) {
-            throw new Error("EquipmentSlotSystem requires eventBus, entityManager, and dataManager.");
+    #eventBus;
+    #entityManager;
+    #repository; // Renamed from gameDataRepository
+
+    constructor({eventBus, entityManager, gameDataRepository}) { // Updated param name
+        if (!eventBus || !entityManager || !gameDataRepository) { // Updated check
+            throw new Error("EquipmentSlotSystem requires eventBus, entityManager, and gameDataRepository."); // Updated error
         }
-        this.eventBus = eventBus;
-        this.entityManager = entityManager;
-        this.dataManager = dataManager; // **** Added dataManager assignment ****
+        this.#eventBus = eventBus;
+        this.#entityManager = entityManager;
+        this.#repository = gameDataRepository; // Updated assignment
         console.log("EquipmentSlotSystem instance created.");
     }
 
@@ -48,8 +49,8 @@ class EquipmentSlotSystem {
      */
     initialize() {
         // **** NEW: Subscribe to attempt events ****
-        this.eventBus.subscribe(EVENT_ITEM_EQUIP_ATTEMPTED, this.handleItemEquipAttempted.bind(this));
-        this.eventBus.subscribe(EVENT_ITEM_UNEQUIP_ATTEMPTED, this.handleItemUnequipAttempted.bind(this));
+        this.#eventBus.subscribe(EVENT_ITEM_EQUIP_ATTEMPTED, this.handleItemEquipAttempted.bind(this));
+        this.#eventBus.subscribe(EVENT_ITEM_UNEQUIP_ATTEMPTED, this.handleItemUnequipAttempted.bind(this));
         console.log("EquipmentSlotSystem initialized and subscribed to events: item_equip_attempted, item_unequip_attempted.");
     }
 
@@ -68,7 +69,7 @@ class EquipmentSlotSystem {
 
         if (!playerEntity || !itemInstanceToEquip || !targetSlotId) {
             console.error("EquipmentSlotSystem (Equip Attempt): Invalid eventData received:", eventData);
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
             return;
         }
         console.log(`EquipmentSlotSystem (Equip Attempt): Handling attempt for player ${playerEntity.id}, item ${itemIdToEquip} into slot ${targetSlotId}`); // **** Prefix updated ****
@@ -80,7 +81,7 @@ class EquipmentSlotSystem {
         // --- Sanity Check: Ensure components still exist ---
         if (!playerInventory || !playerEquipment) {
             console.error(`EquipmentSlotSystem (Equip Attempt): Player ${playerEntity.id} missing Inventory or Equipment component during equip attempt.`); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment'),
                 type: 'error'
             });
@@ -92,7 +93,7 @@ class EquipmentSlotSystem {
         if (!removedFromInv) {
             const errorMsg = `${TARGET_MESSAGES.INTERNAL_ERROR} (Item ${itemDisplayName} not found in inventory during equip attempt)`;
             console.warn(`EquipmentSlotSystem (Equip Attempt): Failed to remove item ${itemIdToEquip} (${itemDisplayName}) from ${playerEntity.id}'s inventory. It might have been removed between validation and execution.`); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
             return;
         }
         console.log(`EquipmentSlotSystem (Equip Attempt): Removed ${itemIdToEquip} from inventory of ${playerEntity.id}.`); // **** Prefix updated ****
@@ -107,18 +108,18 @@ class EquipmentSlotSystem {
             console.warn(`EquipmentSlotSystem (Equip Attempt): Rolling back inventory removal for ${itemIdToEquip}.`); // **** Prefix updated ****
             playerInventory.addItem(itemIdToEquip);
 
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
             return;
         }
         console.log(`EquipmentSlotSystem (Equip Attempt): Equipped ${itemIdToEquip} to ${targetSlotId} for ${playerEntity.id}.`); // **** Prefix updated ****
 
         // --- Step 3: Success - Dispatch final event and UI message ---
         const successMsg = `You equip the ${itemDisplayName}.`;
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: successMsg, type: 'success'});
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: successMsg, type: 'success'});
 
         try {
             // Dispatch the final 'equipped' event for other systems (like EquipmentEffectSystem)
-            this.eventBus.dispatch(EVENT_ITEM_EQUIPPED, {
+            this.#eventBus.dispatch(EVENT_ITEM_EQUIPPED, {
                 entity: playerEntity,
                 itemId: itemIdToEquip,
                 slotId: targetSlotId,
@@ -127,7 +128,7 @@ class EquipmentSlotSystem {
             console.log(`EquipmentSlotSystem (Equip Attempt): Dispatched ${EVENT_ITEM_EQUIPPED} for ${itemIdToEquip}.`); // **** Prefix updated ****
         } catch (e) {
             console.error("EquipmentSlotSystem (Equip Attempt): Failed to dispatch item_equipped event:", e); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `${TARGET_MESSAGES.INTERNAL_ERROR} (Equipped, but failed final notification)`,
                 type: 'warning'
             });
@@ -147,7 +148,7 @@ class EquipmentSlotSystem {
 
         if (!playerEntity || !itemInstanceToUnequip || !slotIdToUnequip) {
             console.error("EquipmentSlotSystem (Unequip Attempt): Invalid eventData received:", eventData); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
             return;
         }
         console.log(`EquipmentSlotSystem (Unequip Attempt): Handling attempt for player ${playerEntity.id}, item ${itemIdToUnequip} from slot ${slotIdToUnequip}`); // **** Prefix updated ****
@@ -159,7 +160,7 @@ class EquipmentSlotSystem {
         // --- Sanity Check: Ensure components still exist ---
         if (!playerInventory || !playerEquipment) {
             console.error(`EquipmentSlotSystem (Unequip Attempt): Player ${playerEntity.id} missing Inventory or Equipment component during unequip attempt.`); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: TARGET_MESSAGES.INTERNAL_ERROR_COMPONENT('Inventory/Equipment'),
                 type: 'error'
             });
@@ -176,7 +177,7 @@ class EquipmentSlotSystem {
         if (actuallyUnequippedId !== itemIdToUnequip) {
             const errorMsg = `${TARGET_MESSAGES.INTERNAL_ERROR} (Failed to unequip ${itemDisplayName} correctly)`;
             console.error(`EquipmentSlotSystem (Unequip Attempt): unequipItem inconsistency for slot ${slotIdToUnequip}. Expected ${itemIdToUnequip}, got ${actuallyUnequippedId}. Item: '${itemDisplayName}'. State might be inconsistent.`); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: errorMsg, type: 'error'});
             // Consider if a forced state check/reset is needed here in a real scenario.
             return;
         }
@@ -191,11 +192,11 @@ class EquipmentSlotSystem {
 
         // --- Step 3: Success - Dispatch final event and UI message ---
         const successMsg = `You unequip the ${itemDisplayName}.`;
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: successMsg, type: 'success'});
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: successMsg, type: 'success'});
 
         try {
             // Dispatch the final 'unequipped' event for other systems (like EquipmentEffectSystem)
-            this.eventBus.dispatch(EVENT_ITEM_UNEQUIPPED, {
+            this.#eventBus.dispatch(EVENT_ITEM_UNEQUIPPED, {
                 entity: playerEntity,
                 itemId: itemIdToUnequip,
                 slotId: slotIdToUnequip,
@@ -204,7 +205,7 @@ class EquipmentSlotSystem {
             console.log(`EquipmentSlotSystem (Unequip Attempt): Dispatched ${EVENT_ITEM_UNEQUIPPED} for ${itemIdToUnequip}.`); // **** Prefix updated ****
         } catch (e) {
             console.error("EquipmentSlotSystem (Unequip Attempt): Failed to dispatch item_unequipped event:", e); // **** Prefix updated ****
-            this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `${TARGET_MESSAGES.INTERNAL_ERROR} (Unequipped, but failed final notification)`,
                 type: 'warning'
             });

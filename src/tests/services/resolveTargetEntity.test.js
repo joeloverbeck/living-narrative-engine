@@ -46,7 +46,7 @@ const mockContext = {
     entityManager: mockEntityManager,
     dispatch: mockDispatch,
     targets: [],
-    dataManager: {}, // Placeholder
+    gameDataRepository: {}, // Placeholder
 };
 
 // --- Helper Functions (Create Entity, Place in Location, Add to Inventory, Equip) ---

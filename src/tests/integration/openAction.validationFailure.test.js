@@ -1,7 +1,7 @@
 // src/tests/integration/openAction.validationFailure.test.js
 // --- (Imports and other setup remain the same) ---
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -10,33 +10,37 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for getDisplayName used in messages
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js';
+import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js';
+import {executeOpen} from '../../actions/handlers/openActionHandler.js';
 
 // --- Components ---
 // OpenableComponent NOT needed for the target entity in this test
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 // Need OpenableComponent for registration even if not used on target
 import OpenableComponent from '../../components/openableComponent.js';
 
 import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js'; // Using TARGET_MESSAGES if FILTER_EMPTY key exists
-import { waitForEvent } from "../testUtils.js"; // Assuming testUtils.js is one level up
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js'; // Using TARGET_MESSAGES if FILTER_EMPTY key exists
+import {waitForEvent} from "../testUtils.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
+// --- Mock GameDataRepository ---
 // Same mock as the other open tests
-const mockDataManager = {
+const mockGameDataRepository = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -68,7 +72,7 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
         if (!entity) throw new Error(`Entity instance creation failed for ${id}`);
 
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -78,7 +82,7 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
         if (existingPosComp) oldLocationId = existingPosComp.locationId;
 
         if (!existingPosComp) {
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else if (existingPosComp.locationId !== locationId) {
             existingPosComp.locationId = locationId;
         }
@@ -98,9 +102,9 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
 
     beforeEach(() => {
         // 1. Instantiate core modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Register REAL components with EntityManager
@@ -109,8 +113,8 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
         entityManager.registerComponent('PositionComponent', PositionComponent);
 
         // 3. Instantiate Systems
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -121,8 +125,10 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
         // 7. Setup common test entities
         player = setupEntity('player', 'Player', [], 'test_location');
@@ -146,14 +152,14 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
         const parsedCommand = commandParser.parse(commandString);
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
-            if(parsedCommand.error) {
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: parsedCommand.error, type: 'error'});
+            if (parsedCommand.error) {
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Unknown command.", type: 'error'});
             }
             return;
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
+        if (!parsedCommand.actionId && commandString.trim() === '') {
             return;
         }
 
@@ -162,7 +168,7 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
             playerEntity: player,
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             dispatch: dispatchSpy, // For legacy checks / direct calls if any
             eventBus: eventBus     // Preferred method
@@ -236,7 +242,7 @@ describe('Integration Test: core:open Action - Target Resolution Failure (Not Op
                 expect.anything()
             );
             // Ensure no success message was displayed either
-            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({ type: 'success' }));
+            expect(dispatchSpy).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({type: 'success'}));
             // Check specifically that the expected failure message *was* called (covered by waitForEvent)
             expect(dispatchSpy).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expectedUIPayload);
 

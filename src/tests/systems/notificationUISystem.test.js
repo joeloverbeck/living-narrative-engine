@@ -2,10 +2,9 @@
 
 import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
-// --- Tell Jest to mock DataManager BEFORE importing NotificationUISystem ---
-// This replaces the actual DataManager module with a mock, preventing its
+// --- Tell Jest to mock GameDataRepository BEFORE importing NotificationUISystem ---
+// This replaces the actual GameDataRepository module with a mock, preventing its
 // code (including the Ajv import) from running during testing.
-jest.mock('../../core/dataManager.js');
 // jest.mock('../../core/eventBus.js'); // Optionally mock EventBus too if it's complex
 
 import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
@@ -13,7 +12,7 @@ import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
 import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // Dependencies to Mock
-// No need to import the real DataManager anymore.
+// No need to import the real GameDataRepository anymore.
 // We'll create a manual mock instance for EventBus for clarity in spying.
 const mockEventBus = {
     dispatch: jest.fn(),
@@ -38,11 +37,11 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
 
         // Instantiate the system with mocks
         // Pass the manual mock for eventBus.
-        // For dataManager, pass a simple object {} which satisfies the constructor check,
-        // as the actual DataManager module has been replaced by jest.mock.
+        // For gameDataRepository, pass a simple object {} which satisfies the constructor check,
+        // as the actual GameDataRepository module has been replaced by jest.mock.
         notificationUISystem = new NotificationUISystem({
             eventBus: mockEventBus,
-            dataManager: {}, // Pass an empty object - sufficient for constructor check
+            gameDataRepository: {}, // Pass an empty object - sufficient for constructor check
         });
 
         // Spy on console methods

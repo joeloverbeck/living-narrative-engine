@@ -4,7 +4,7 @@
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -12,47 +12,42 @@
 
 import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
+
 /**
- * Manages overarching game rules, potentially including time progression,
- * environmental effects, recurring checks, or other systemic behaviors
- * not directly tied to specific entity actions or location-based triggers.
- *
- * **Includes hardcoded rules like automatic 'look' on game start and player movement.**
+ * Manages overarching game rules, including auto-look on start/move.
  */
 class GameRuleSystem {
     #eventBus;
     #gameStateManager;
     #actionExecutor;
     #entityManager;
-    #dataManager;
+    /**
+     * @type {GameDataRepository} // <-- UPDATED Type
+     */
+    #repository; // <-- UPDATED Property Name
 
     /**
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {object} options Container for dependencies.
-     * @param {EventBus} options.eventBus The central event bus.
-     * @param {GameStateManager} options.gameStateManager Manages the overall game state.
-     * @param {ActionExecutor} options.actionExecutor Executes game actions.
-     * @param {EntityManager} options.entityManager Manages game entities and components.
-     * @param {DataManager} options.dataManager Provides access to game data definitions.
-     * @throws {Error} If any required dependency is missing.
+     * @param {EventBus} options.eventBus
+     * @param {GameStateManager} options.gameStateManager
+     * @param {ActionExecutor} options.actionExecutor
+     * @param {EntityManager} options.entityManager
+     * @param {GameDataRepository} options.gameDataRepository - The game data repository.
      */
-    constructor(options) {
-        if (!options) {
-            throw new Error("GameRuleSystem constructor requires an options object.");
-        }
-        const {eventBus, gameStateManager, actionExecutor, entityManager, dataManager} = options;
-
-        // --- Dependency Validation (AC 4) ---
+    constructor({eventBus, gameStateManager, actionExecutor, entityManager, gameDataRepository}) { // <-- UPDATED Parameter key
         if (!eventBus) throw new Error("GameRuleSystem requires options.eventBus.");
         if (!gameStateManager) throw new Error("GameRuleSystem requires options.gameStateManager.");
         if (!actionExecutor) throw new Error("GameRuleSystem requires options.actionExecutor.");
         if (!entityManager) throw new Error("GameRuleSystem requires options.entityManager.");
-        if (!dataManager) throw new Error("GameRuleSystem requires options.dataManager.");
+        // Updated error message to reflect new dependency
+        if (!gameDataRepository) throw new Error("GameRuleSystem requires options.gameDataRepository.");
 
         this.#eventBus = eventBus;
         this.#gameStateManager = gameStateManager;
         this.#actionExecutor = actionExecutor;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // <-- UPDATED Assignment
 
         console.log("GameRuleSystem: Instance created.");
     }
@@ -111,7 +106,7 @@ class GameRuleSystem {
                     originalInput: '[AUTO_LOOK_INITIAL]', // Indicate source
                     error: null
                 },
-                dataManager: this.#dataManager,
+                gameDataRepository: this.#repository,
                 entityManager: this.#entityManager,
                 dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
                 eventBus: this.#eventBus
@@ -127,8 +122,7 @@ class GameRuleSystem {
             } catch (error) {
                 console.error("GameRuleSystem: Uncaught error executing initial 'core:look':", error);
                 this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
-                    text: "Internal Error: Failed to perform initial look.",
-                    type: 'error'
+                    text: "Internal Error: Failed to perform initial look.", type: 'error'
                 });
             }
         }
@@ -183,7 +177,7 @@ class GameRuleSystem {
                 originalInput: '[AUTO_LOOK_MOVE]', // Indicate source
                 error: null
             },
-            dataManager: this.#dataManager,
+            gameDataRepository: this.#repository,
             entityManager: this.#entityManager,
             dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
             eventBus: this.#eventBus
@@ -199,8 +193,7 @@ class GameRuleSystem {
         } catch (error) {
             console.error("GameRuleSystem: Uncaught error executing automatic 'core:look' after move:", error);
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
-                text: "Internal Error: Failed to perform automatic look after moving.",
-                type: 'error'
+                text: "Internal Error: Failed to perform automatic look after moving.", type: 'error'
             });
         }
     }

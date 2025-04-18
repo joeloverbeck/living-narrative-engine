@@ -1,6 +1,6 @@
 // src/tests/integration/openAction.ambiguousTarget.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -9,31 +9,34 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js'; // Needed for instanceof check and getDisplayName
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js';
+import {NotificationUISystem} from '../../systems/notificationUISystem.js';
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js';
+import {executeOpen} from '../../actions/handlers/openActionHandler.js';
 
 // --- Components ---
 import OpenableComponent from '../../components/openableComponent.js';
 // LockableComponent not strictly needed for this test, but keep for consistency? No, remove if unused.
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
-import { waitForEvent } from "../testUtils.js";
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
+import {waitForEvent} from "../testUtils.js";
 import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes.js"; // Assuming testUtils.js is one level up
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
 // Same mock as the successful open test
-const mockDataManager = {
+const mockGameDataRepository = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
 
@@ -67,7 +70,7 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
         // Add/Update Name Component
         if (!entity.hasComponent(NameComponent)) {
-            entity.addComponent(new NameComponent({ value: name }));
+            entity.addComponent(new NameComponent({value: name}));
         } else {
             entity.getComponent(NameComponent).value = name;
         }
@@ -78,7 +81,7 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
         if (existingPosComp) oldLocationId = existingPosComp.locationId;
 
         if (!existingPosComp) {
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else if (existingPosComp.locationId !== locationId) {
             existingPosComp.locationId = locationId;
         }
@@ -99,9 +102,9 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
     beforeEach(() => {
         // 1. Instantiate core modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Register REAL components with EntityManager
@@ -112,8 +115,8 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
         // 3. Instantiate Systems
         // OpenableSystem is needed because executeOpen checks for OpenableComponent
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager });
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -124,8 +127,10 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
 
         // 6. Set up Spies
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
         // 7. Setup common test entities
         player = setupEntity('player', 'Player', [], 'test_location'); // Ensure player is at the location
@@ -150,14 +155,14 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
         const parsedCommand = commandParser.parse(commandString);
 
         if (!parsedCommand.actionId && commandString.trim() !== '') {
-            if(parsedCommand.error) {
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: parsedCommand.error, type: 'error'});
+            if (parsedCommand.error) {
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: parsedCommand.error, type: 'error'});
             } else {
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Unknown command.", type: 'error'});
             }
             return;
         }
-        if(!parsedCommand.actionId && commandString.trim() === '') {
+        if (!parsedCommand.actionId && commandString.trim() === '') {
             return;
         }
 
@@ -166,7 +171,7 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
             playerEntity: player,
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             dispatch: dispatchSpy, // Still pass spy for legacy? Better to rely on eventBus
             eventBus: eventBus
@@ -179,8 +184,8 @@ describe('Integration Test: core:open Action - Ambiguous Target', () => {
     describe('Scenario: Ambiguous Target', () => {
         it('should fail to resolve target, display ambiguity prompt, and dispatch no open events', async () => {
             // Arrange: Create two entities with the same name 'box' that are openable and in the player's location
-            box1 = setupEntity('box_1', 'box', [new OpenableComponent({ isOpen: false })], 'test_location');
-            box2 = setupEntity('box_2', 'box', [new OpenableComponent({ isOpen: false })], 'test_location');
+            box1 = setupEntity('box_1', 'box', [new OpenableComponent({isOpen: false})], 'test_location');
+            box2 = setupEntity('box_2', 'box', [new OpenableComponent({isOpen: false})], 'test_location');
 
             // Ensure the entities are correctly placed (check spatial index if debugging needed)
             const entitiesInLocation = entityManager.getEntitiesInLocation('test_location');

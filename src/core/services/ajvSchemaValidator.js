@@ -1,0 +1,189 @@
+// src/core/services/ajvSchemaValidator.js
+
+import Ajv from 'ajv';
+
+/**
+ * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
+ * @typedef {import('ajv').ErrorObject} AjvErrorObject // Import Ajv specific type if needed elsewhere
+ */
+
+/**
+ * Implements the ISchemaValidator interface using the Ajv library.
+ * Provides methods to add schemas and retrieve validation functions,
+ * replicating the core validation logic previously in GameDataRepository.
+ *
+ * @implements {ISchemaValidator}
+ */
+class AjvSchemaValidator {
+    /**
+     * The Ajv instance used for schema management and validation.
+     * @private
+     * @type {Ajv | null}
+     */
+    #ajv = null;
+
+    /**
+     * Initializes the Ajv instance.
+     * @throws {Error} If Ajv instantiation fails.
+     */
+    constructor() {
+        try {
+            // AC: AjvSchemaValidator constructor initializes an Ajv instance
+            this.#ajv = new Ajv({
+                allErrors: true,    // Collect all errors
+                strictTypes: false, // Adjust based on schema strictness needs
+                // Consider adding formats if needed: require("ajv-formats")(this.#ajv)
+            });
+            // console.log("AjvSchemaValidator: Ajv instance created successfully."); // Optional debug log
+        } catch (error) {
+            console.error("AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv:", error);
+            throw new Error("AjvSchemaValidator: Failed to initialize the Ajv validation library.");
+        }
+    }
+
+    /**
+     * Adds a JSON schema object to the validator instance, associating it with the given schema ID.
+     * The promise resolves when the schema is successfully added and potentially compiled/prepared for validation.
+     *
+     * @param {object} schemaData - The JSON schema object. Must have a valid structure.
+     * @param {string} schemaId - The unique identifier for the schema (typically the '$id' property within the schemaData, but provided explicitly here for consistency).
+     * @returns {Promise<void>} Resolves on successful addition, rejects if Ajv encounters an error (e.g., invalid schema, duplicate ID).
+     */
+    async addSchema(schemaData, schemaId) {
+        // AC: addSchema rejects if #ajv is null
+        if (!this.#ajv) {
+            return Promise.reject(new Error("AjvSchemaValidator: Ajv instance not available. Cannot add schema."));
+        }
+        // AC: addSchema rejects on invalid schemaData or schemaId.
+        if (!schemaData || typeof schemaData !== 'object' || Object.keys(schemaData).length === 0) {
+            return Promise.reject(new Error(`AjvSchemaValidator: Invalid or empty schemaData provided for ID '${schemaId}'. Expected a non-empty object.`));
+        }
+        if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
+            return Promise.reject(new Error(`AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.`));
+        }
+
+        try {
+            // AC: addSchema calls ajv.addSchema with schemaData and schemaId.
+            // Ajv's addSchema compiles synchronously and throws on error.
+            this.#ajv.addSchema(schemaData, schemaId);
+            // AC: addSchema resolves a promise on successful addition.
+            return Promise.resolve(); // Indicate success
+        } catch (error) {
+            // AC: addSchema rejects the promise if ajv.addSchema throws.
+            // Log the detailed error from Ajv
+            console.error(`AjvSchemaValidator: Error adding schema with ID '${schemaId}':`, error.message);
+            if (error.errors) { // Ajv often includes detailed errors here
+                console.error("Ajv Validation Errors (during addSchema):", JSON.stringify(error.errors, null, 2));
+            }
+            // Ensure a proper Error object is rejected for consistent error handling
+            const rejectionError = error instanceof Error ? error : new Error(`Failed to add schema '${schemaId}': ${error}`);
+            return Promise.reject(rejectionError); // Indicate failure
+        }
+    }
+
+    /**
+     * Retrieves a validation function for the specified schema ID.
+     * The returned function takes data as input and returns a `ValidationResult`.
+     * Returns `undefined` if no schema with the given ID is loaded or compiled,
+     * or if accessing the schema via Ajv throws an error (indicating a failed compilation).
+     *
+     * @param {string} schemaId - The unique identifier for the schema.
+     * @returns {((data: any) => ValidationResult) | undefined} A function that performs validation, or undefined if the schema ID is not found or invalid.
+     */
+    getValidator(schemaId) {
+        // AC: getValidator returns undefined if #ajv is null.
+        if (!this.#ajv) {
+            console.warn("AjvSchemaValidator: getValidator called but Ajv instance not available.");
+            return undefined;
+        }
+        // AC: getValidator returns undefined for invalid schemaId.
+        if (!schemaId || typeof schemaId !== 'string') {
+            console.warn(`AjvSchemaValidator: getValidator called with invalid schemaId: ${schemaId}`);
+            return undefined;
+        }
+
+        let originalValidator;
+        try {
+            // Wrap the potentially throwing call in try...catch
+            // AC: getValidator calls ajv.getSchema with schemaId.
+            originalValidator = this.#ajv.getSchema(schemaId);
+        } catch (error) {
+            // AC: getValidator returns undefined if ajv.getSchema throws.
+            console.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema (likely due to prior compilation failure):`, error.message);
+            return undefined; // Treat schema access error as "not available"
+        }
+
+        // AC: getValidator returns undefined if ajv.getSchema returns falsy.
+        if (!originalValidator) {
+            // Schema ID not found or schema failed compilation during addSchema
+            return undefined;
+        }
+
+        // AC: getValidator returns a function if ajv.getSchema succeeds.
+        // Return a new function adhering to the ISchemaValidator interface.
+        return (data) => {
+            try {
+                // AC: The returned validation function calls the original Ajv validator.
+                const isValid = originalValidator(data);
+                // AC: The returned function returns { isValid: true, errors: null } on success.
+                // AC: The returned function returns { isValid: false, errors: [...] } on failure.
+                return {
+                    isValid: isValid,
+                    errors: isValid ? null : (originalValidator.errors || []) // Ensure errors array is returned on failure
+                };
+            } catch (validationError) {
+                // AC: The returned function catches runtime errors... returns ValidationResult.
+                console.error(`AjvSchemaValidator: Runtime error during validation with schema '${schemaId}':`, validationError);
+                return {
+                    isValid: false,
+                    errors: [{
+                        // Structure matching AjvErrorObject roughly
+                        instancePath: "", // May not be available in runtime errors
+                        schemaPath: "",   // May not be available in runtime errors
+                        keyword: "runtimeError",
+                        params: {},
+                        message: `Runtime validation error: ${validationError.message}`
+                    }]
+                };
+            }
+        };
+    }
+
+    /**
+     * Checks if a schema with the specified ID has been successfully loaded and is ready for use.
+     * Returns false if accessing the schema via Ajv throws an error (indicating a failed compilation).
+     *
+     * @param {string} schemaId - The unique identifier for the schema.
+     * @returns {boolean} True if the schema is loaded and compiled, false otherwise.
+     */
+    isSchemaLoaded(schemaId) {
+        // AC: isSchemaLoaded returns false if #ajv is null.
+        if (!this.#ajv) {
+            console.warn("AjvSchemaValidator: isSchemaLoaded called but Ajv instance not available.");
+            return false;
+        }
+        // AC: isSchemaLoaded returns false for invalid schemaId.
+        if (!schemaId || typeof schemaId !== 'string') {
+            return false;
+        }
+
+        try {
+            // AC: isSchemaLoaded calls ajv.getSchema with schemaId.
+            // Wrap the potentially throwing call in try...catch
+            // ajv.getSchema returns the compiled function if successful, undefined otherwise.
+            // It might THROW if the schema definition itself was fundamentally broken during addSchema.
+            const validator = this.#ajv.getSchema(schemaId);
+            // AC: isSchemaLoaded returns true if ajv.getSchema returns truthy.
+            // AC: isSchemaLoaded returns false if ajv.getSchema returns falsy.
+            return !!validator;
+        } catch (error) {
+            // AC: isSchemaLoaded returns false if ajv.getSchema throws.
+            console.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema (likely due to prior compilation failure):`, error.message);
+            return false; // Treat schema access error as "not loaded"
+        }
+    }
+}
+
+// AC: ajvSchemaValidator.js exists and exports the AjvSchemaValidator class.
+export default AjvSchemaValidator;

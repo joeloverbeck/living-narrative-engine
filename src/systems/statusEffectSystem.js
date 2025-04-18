@@ -9,7 +9,7 @@ import {
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../types/eventTypes.js').ApplyStatusEffectRequestedEventPayload} ApplyStatusEffectRequestedEventPayload */
 
 /** @typedef {import('../types/eventTypes.js').RemoveStatusEffectRequestedEventPayload} RemoveStatusEffectRequestedEventPayload */
@@ -19,28 +19,18 @@ import {
  * including application, removal, and potentially ticking effects over time.
  */
 class StatusEffectSystem {
-    /** @type {EventBus} */
     #eventBus;
-    /** @type {EntityManager} */
     #entityManager;
-    /** @type {DataManager} */
-    #dataManager;
+    #repository; // Renamed
 
-    /**
-     * @param {object} dependencies
-     * @param {EventBus} dependencies.eventBus
-     * @param {EntityManager} dependencies.entityManager
-     * @param {DataManager} dependencies.dataManager
-     */
-    constructor({eventBus, entityManager, dataManager}) {
+    constructor({eventBus, entityManager, gameDataRepository}) { // Updated param name
         if (!eventBus) throw new Error("StatusEffectSystem requires EventBus.");
         if (!entityManager) throw new Error("StatusEffectSystem requires EntityManager.");
-        if (!dataManager) throw new Error("StatusEffectSystem requires DataManager.");
+        if (!gameDataRepository) throw new Error("StatusEffectSystem requires GameDataRepository."); // Updated check
 
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
-
+        this.#repository = gameDataRepository; // Updated assignment
         console.log("StatusEffectSystem: Instance created.");
     }
 

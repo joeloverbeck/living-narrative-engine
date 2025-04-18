@@ -17,7 +17,7 @@ import {
 // Type Imports for JSDoc (Unchanged)
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../types/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
@@ -47,35 +47,20 @@ import {
 class ItemUsageSystem {
     #eventBus;
     #entityManager;
-    #dataManager;
+    #repository; // Renamed
     #conditionEvaluationService;
     #itemTargetResolverService;
 
-    /**
-     * @param {object} options
-     * @param {EventBus} options.eventBus
-     * @param {EntityManager} options.entityManager
-     * @param {DataManager} options.dataManager
-     * @param {ConditionEvaluationService} options.conditionEvaluationService
-     * @param {ItemTargetResolverService} options.itemTargetResolverService - Service for resolving item usage targets.
-     */
-    constructor({
-                    eventBus,
-                    entityManager,
-                    dataManager,
-                    conditionEvaluationService,
-                    itemTargetResolverService,
-                }) {
-        // Dependency checks (unchanged)
+    constructor({eventBus, entityManager, gameDataRepository, conditionEvaluationService, itemTargetResolverService}) { // Updated param name
         if (!eventBus) throw new Error("ItemUsageSystem requires options.eventBus.");
         if (!entityManager) throw new Error("ItemUsageSystem requires options.entityManager.");
-        if (!dataManager) throw new Error("ItemUsageSystem requires options.dataManager.");
+        if (!gameDataRepository) throw new Error("ItemUsageSystem requires options.gameDataRepository."); // Updated check
         if (!conditionEvaluationService) throw new Error("ItemUsageSystem requires options.conditionEvaluationService.");
         if (!itemTargetResolverService) throw new Error("ItemUsageSystem requires options.itemTargetResolverService.");
 
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // Updated assignment
         this.#conditionEvaluationService = conditionEvaluationService;
         this.#itemTargetResolverService = itemTargetResolverService;
     }
@@ -170,11 +155,11 @@ class ItemUsageSystem {
             }
 
             // T-6 Step 2: Load item definition using the component-derived ID
-            const itemDefinition = this.#dataManager.getEntityDefinition(itemDefinitionId);
+            const itemDefinition = this.#repository.getEntityDefinition(itemDefinitionId);
 
             // T-6 Step 2 & 4: Check if definition exists, update log message source
             if (!itemDefinition) {
-                const errorMsg = `Item definition '${itemDefinitionId}' (referenced by item instance ${itemInstanceId}) not found in DataManager.`;
+                const errorMsg = `Item definition '${itemDefinitionId}' (referenced by item instance ${itemInstanceId}) not found in GameDataRepository.`;
                 console.error(`ItemUsageSystem: ${errorMsg}`);
                 log(errorMsg, 'error');
                 this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {

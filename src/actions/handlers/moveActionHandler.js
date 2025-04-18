@@ -1,10 +1,10 @@
 // src/actions/handlers/moveActionHandler.js
 
-import { ConnectionsComponent } from '../../components/connectionsComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js';
+import {ConnectionsComponent} from '../../components/connectionsComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js';
 // Import the component needed for the refactoring
-import { PassageDetailsComponent } from '../../components/passageDetailsComponent.js';
-import { validateRequiredCommandPart } from '../../utils/actionValidationUtils.js';
+import {PassageDetailsComponent} from '../../components/passageDetailsComponent.js';
+import {validateRequiredCommandPart} from '../../utils/actionValidationUtils.js';
 import {EVENT_MOVE_ATTEMPTED, EVENT_MOVE_FAILED} from "../../types/eventTypes.js";
 
 // No changes needed for DIRECTION_ALIASES
@@ -21,8 +21,8 @@ const DIRECTION_ALIASES = {
 /** @typedef {import('../actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../ecs/entity').Entity} Entity */
 /** @typedef {import('../../ecs/entityManager.js').EntityManager} EntityManager */
-/** @typedef {import('../../data/dataManager.js').DataManager} DataManager */
 /** @typedef {import('../../events/eventDispatcher.js').EventDispatcher} EventDispatcher */
+
 /** @typedef {import('../../commands/commandParser.js').ParsedCommand} ParsedCommand */
 
 
@@ -47,35 +47,35 @@ const DIRECTION_ALIASES = {
  * @property {Entity} playerEntity - The entity attempting to move.
  * @property {Entity} currentLocation - The current location entity of the player.
  * @property {EntityManager} entityManager - Manages entities and components.
- * @property {DataManager} dataManager - Manages entity definitions (potentially unused here now).
+ * @property {GameDataRepository} gameDataRepository - Manages entity definitions (potentially unused here now).
  * @property {EventDispatcher} dispatch - Used to dispatch events.
  * @property {ParsedCommand} parsedCommand - The parsed player command.
  * @returns {ActionResult} - The result of the action validation (success/fail).
  */
 export function executeMove(context) {
     // Destructure context for easier access
-    // dataManager might not be needed anymore for target validation here, but kept for context signature consistency.
-    const { playerEntity, currentLocation, entityManager, dispatch, parsedCommand } = context;
+    // gameDataRepository might not be needed anymore for target validation here, but kept for context signature consistency.
+    const {playerEntity, currentLocation, entityManager, dispatch, parsedCommand} = context;
     let success = false; // Assume failure until EVENT_MOVE_ATTEMPTED is dispatched successfully
 
     // --- 1. Initial Validations (Largely unchanged) ---
     if (!playerEntity) {
         console.error("executeMove: Critical error - playerEntity is missing in context.");
-        return { success: false };
+        return {success: false};
     }
     const actorId = playerEntity.id;
 
     if (!currentLocation) {
         const reasonCode = 'SETUP_ERROR';
         const details = 'Current location unknown';
-        dispatch(EVENT_MOVE_FAILED, { actorId, reasonCode, details });
+        dispatch(EVENT_MOVE_FAILED, {actorId, reasonCode, details});
         console.error("executeMove handler called with invalid currentLocation in context.");
-        return { success: false };
+        return {success: false};
     }
     const currentLocationId = currentLocation.id;
 
     if (!validateRequiredCommandPart(context, 'move', 'directObjectPhrase')) {
-        return { success: false };
+        return {success: false};
     }
 
     // --- 2. Get Player's Position Component (Unchanged) ---
@@ -90,7 +90,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Player entity ${actorId} is missing PositionComponent.`);
-        return { success: false };
+        return {success: false};
     }
     const previousLocationId = playerPositionComp.locationId;
 
@@ -114,7 +114,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Location entity ${currentLocationId} is missing ConnectionsComponent.`);
-        return { success: false };
+        return {success: false};
     }
 
     // --- 4. Get Connection Entity ID ---
@@ -128,7 +128,7 @@ export function executeMove(context) {
             direction,
             reasonCode
         });
-        return { success: false };
+        return {success: false};
     }
 
     // --- 5. Fetch Connection Entity ---
@@ -149,7 +149,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Connection entity instance not found in entityManager for ID: ${connectionEntityId}, referenced by location ${currentLocationId}.`);
-        return { success: false };
+        return {success: false};
     }
 
     // --- 6. Get Passage Details Component ---
@@ -167,7 +167,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Connection entity ${connectionEntityId} is missing PassageDetailsComponent.`);
-        return { success: false };
+        return {success: false};
     }
 
     // --- 7. Extract Target Information ---
@@ -186,7 +186,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Error calling getOtherLocationId on passage ${connectionEntityId} from location ${currentLocationId}.`, error);
-        return { success: false };
+        return {success: false};
     }
 
     if (!targetLocationId || typeof targetLocationId !== 'string') {
@@ -202,7 +202,7 @@ export function executeMove(context) {
             details
         });
         console.error(`executeMove: Invalid targetLocationId retrieved from PassageDetailsComponent on ${connectionEntityId}. Expected string, got: ${targetLocationId}`);
-        return { success: false };
+        return {success: false};
     }
 
     const blockerEntityId = passageDetailsComp.getBlockerId(); // Part of AC4
@@ -215,7 +215,7 @@ export function executeMove(context) {
             direction: direction,
             previousLocationId: previousLocationId,
             connectionEntityId: connectionEntityId,
-            ...(blockerEntityId && { blockerEntityId: blockerEntityId })
+            ...(blockerEntityId && {blockerEntityId: blockerEntityId})
         };
 
         dispatch(EVENT_MOVE_ATTEMPTED, moveAttemptPayload);
@@ -238,5 +238,5 @@ export function executeMove(context) {
     }
 
     // --- 9. Return Result ---
-    return { success: success };
+    return {success: success};
 }

@@ -28,12 +28,15 @@ import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_OPENED} from "../../types/eventTypes
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
 // Same mock as the other open tests
-const mockDataManager = {
+const mockGameDataRepository = {
     actions: new Map([
         ['core:open', {id: 'core:open', commands: ['open', 'o']}],
     ]),
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
     getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
@@ -95,9 +98,9 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
 
     beforeEach(() => {
         // 1. Instantiate core modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Register REAL components with EntityManager
@@ -107,7 +110,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
 
         // 3. Instantiate Systems
         openableSystem = new OpenableSystem({eventBus, entityManager});
-        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -161,7 +164,7 @@ describe('Integration Test: core:open Action - Target Already Open', () => {
             playerEntity: player,
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             dispatch: dispatchSpy, // For legacy checks / direct calls if any
             eventBus: eventBus     // Preferred method

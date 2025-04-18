@@ -65,11 +65,14 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
     let keyInstance;
     let doorEntity;
 
-    // --- Mock DataManager ---
-    const mockDataManager = {
+    const mockGameDataRepository = {
         actions: new Map([
             ['core:use', {id: 'core:use', commands: ['use', 'u']}],
         ]),
+        getAllActionDefinitions: function () {
+            // 'this' refers to mockGameDataRepository itself here
+            return Array.from(this.actions.values());
+        },
         getEntityDefinition: (id) => {
             if (id === 'key_master_def') {
                 return {
@@ -121,9 +124,9 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
 
     beforeEach(() => {
         // 1. Instantiate Core Modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Instantiate Mock Services
@@ -177,16 +180,25 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
         entityManager.registerComponent('Usable', UsableComponent);
         entityManager.registerComponent('DefinitionRefComponent', DefinitionRefComponent); // <<< REGISTER COMPONENT
 
-        // 4. Instantiate Systems - PASSING MOCKS
+// 4. Instantiate Systems - PASSING MOCKS
         itemUsageSystem = new ItemUsageSystem({
             eventBus,
             entityManager,
-            dataManager: mockDataManager,
+            // --- FIX: Use the correct property name ---
+            gameDataRepository: mockGameDataRepository,
+            // --- End Fix ---
             conditionEvaluationService: mockConditionEvaluationService,
             itemTargetResolverService: mockItemTargetResolverService
         });
         lockSystem = new LockSystem({eventBus, entityManager});
-        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
+
+        // --- Potential Fix Needed Here Too ---
+        // Check if NotificationUISystem also requires gameDataRepository
+        notificationUISystem = new NotificationUISystem({
+            eventBus,
+            // gameDataRepository: mockGameDataRepository // Original - Keep if it still uses gameDataRepository
+            gameDataRepository: mockGameDataRepository // Change if it now uses gameDataRepository
+        });
 
         // 5. Register Action Handler(s)
         actionExecutor.registerHandler('core:use', executeUse);
@@ -278,7 +290,7 @@ describe('Integration Test: core:use Action - Unlock Door Scenario (USE-INT-UNLO
             playerEntity: player,
             currentLocation: testLocation, // Ensure currentLocation is passed if needed by resolvers
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             eventBus: eventBus,
         };

@@ -1,7 +1,7 @@
 // src/services/objectiveStateCheckerService.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('./gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
@@ -20,62 +20,57 @@ import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
  */
 class ObjectiveStateCheckerService {
     /** @type {EventBus} */
-    eventBus;
-    /** @type {DataManager} */
-    dataManager;
+    #eventBus;
+    /**
+     * @type {GameDataRepository}
+     */
+    #repository;
     /** @type {EntityManager} */
-    entityManager;
+    #entityManager;
     /** @type {GameStateManager} */
-    gameStateManager;
+    #gameStateManager;
 
     /**
      * Stores objectives currently requiring checks.
-     * Structure: Map<questId, Map<objectiveId, { definition: ObjectiveDefinition, conditions: Array<PlayerLocationCondition | EntityStateCondition>, callback: Function }>>
      * @private
      * @type {Map<string, Map<string, { definition: ObjectiveDefinition, conditions: Array<PlayerLocationCondition | EntityStateCondition>, callback: Function }>>}
      */
     #activeChecks = new Map();
-
     /**
      * Lookup map for player location checks.
-     * Structure: Map<locationId, Set<string>> where string is 'questId:objectiveId'
      * @private
      * @type {Map<string, Set<string>>}
      */
     #locationWatchers = new Map();
-
     /**
      * Lookup map for entity state checks.
-     * Structure: Map<entityId, Set<{ questId: string, objectiveId: string, requiredState: string }>>
      * @private
      * @type {Map<string, Set<{ questId: string, objectiveId: string, requiredState: string }>>}
      */
     #entityWatchers = new Map();
 
     /**
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {object} dependencies - The dependencies required by the service.
      * @param {EventBus} dependencies.eventBus - For subscribing to game events.
-     * @param {DataManager} dependencies.dataManager - For fetching objective definitions.
-     * @param {EntityManager} dependencies.entityManager - For fetching entity instances to check state.
+     * @param {GameDataRepository} dependencies.gameDataRepository - For fetching objective definitions.
+     * @param {EntityManager} dependencies.entityManager - For fetching entity instances.
      * @param {GameStateManager} dependencies.gameStateManager - For getting the player entity ID.
      */
-    constructor({ eventBus, dataManager, entityManager, gameStateManager }) {
+    constructor({eventBus, gameDataRepository, entityManager, gameStateManager}) { // <-- UPDATED Parameter key
         if (!eventBus) throw new Error("ObjectiveStateCheckerService requires EventBus.");
-        if (!dataManager) throw new Error("ObjectiveStateCheckerService requires DataManager.");
+        // Updated error message to reflect new dependency
+        if (!gameDataRepository) throw new Error("ObjectiveStateCheckerService requires GameDataRepository.");
         if (!entityManager) throw new Error("ObjectiveStateCheckerService requires EntityManager.");
         if (!gameStateManager) throw new Error("ObjectiveStateCheckerService requires GameStateManager.");
 
-        this.eventBus = eventBus;
-        this.dataManager = dataManager;
-        this.entityManager = entityManager;
-        this.gameStateManager = gameStateManager;
+        this.#eventBus = eventBus;
+        this.#repository = gameDataRepository; // <-- UPDATED Assignment
+        this.#entityManager = entityManager;
+        this.#gameStateManager = gameStateManager;
 
-        // Subscribe to relevant events
-        this.eventBus.subscribe(EVENT_ENTITY_MOVED, this._handleEntityMoved.bind(this));
-        this.eventBus.subscribe(EVENT_ENTITY_DIED, this._handleEntityDied.bind(this));
-        // Future: Add subscriptions for other potential state-changing events if needed
-        // e.g., this.eventBus.subscribe('event:interaction_completed', this._handleInteraction.bind(this));
-        // e.g., this.eventBus.subscribe('event:item_effect_applied', this._handleEffectApplied.bind(this));
+        this.#eventBus.subscribe(EVENT_ENTITY_MOVED, this._handleEntityMoved.bind(this));
+        this.#eventBus.subscribe(EVENT_ENTITY_DIED, this._handleEntityDied.bind(this));
 
         console.log("ObjectiveStateCheckerService: Instantiated and subscribed to events.");
     }
@@ -105,7 +100,7 @@ class ObjectiveStateCheckerService {
                 continue; // Skip already completed
             }
 
-            const objectiveDefinition = this.dataManager.getObjectiveDefinition(objectiveId);
+            const objectiveDefinition = this.#repository.getObjectiveDefinition(objectiveId);
             if (!objectiveDefinition?.completionConditions?.allOf?.length) {
                 continue; // Skip objectives without valid conditions
             }
@@ -140,7 +135,7 @@ class ObjectiveStateCheckerService {
                         if (!this.#entityWatchers.has(entityId)) {
                             this.#entityWatchers.set(entityId, new Set());
                         }
-                        this.#entityWatchers.get(entityId).add({ questId, objectiveId, requiredState });
+                        this.#entityWatchers.get(entityId).add({questId, objectiveId, requiredState});
                         console.log(`  - Watching entity "${entityId}" for state "${requiredState}" for Objective "${objectiveId}"`);
                     }
                 }
@@ -163,7 +158,7 @@ class ObjectiveStateCheckerService {
         }
 
         console.log(`ObjectiveStateCheckerService: Unregistering checks for completed objective "${objectiveId}" (Quest: "${questId}")...`);
-        const { conditions } = questChecks.get(objectiveId);
+        const {conditions} = questChecks.get(objectiveId);
 
         // Remove from watcher maps
         for (const condition of conditions) {
@@ -250,8 +245,8 @@ class ObjectiveStateCheckerService {
      * @param {import('../types/eventTypes.js').EntityMovedEventPayload} eventData
      * @private
      */
-    _handleEntityMoved({ entityId, newLocationId }) {
-        const player = this.gameStateManager.getPlayer();
+    _handleEntityMoved({entityId, newLocationId}) {
+        const player = this.#gameStateManager.getPlayer();
         if (!player || entityId !== player.id) {
             return; // Ignore non-player movements
         }
@@ -278,7 +273,7 @@ class ObjectiveStateCheckerService {
      * @param {import('../types/eventTypes.js').EntityDiedEventPayload} eventData
      * @private
      */
-    _handleEntityDied({ deceasedEntityId }) {
+    _handleEntityDied({deceasedEntityId}) {
         const watchedObjectives = this.#entityWatchers.get(deceasedEntityId);
         if (!watchedObjectives || watchedObjectives.size === 0) {
             return; // No objectives are watching this entity
@@ -340,7 +335,7 @@ class ObjectiveStateCheckerService {
         }
 
         // We need the QuestLogComponent to verify *other* conditions for this objective
-        const player = this.gameStateManager.getPlayer();
+        const player = this.#gameStateManager.getPlayer();
         const questLogComponent = player?.getComponent(QuestLogComponent); // Adjust key if needed
         if (!questLogComponent) {
             console.error(`ObjectiveStateCheckerService._checkAndTriggerObjective: Cannot find player or QuestLogComponent for ${questId}:${objectiveId}.`);
@@ -367,7 +362,7 @@ class ObjectiveStateCheckerService {
                     conditionMet = playerLocation === condition.locationId;
                     break;
                 case 'entity_state_check':
-                    const entity = this.entityManager.getEntityInstance(condition.entityId);
+                    const entity = this.#entityManager.getEntityInstance(condition.entityId);
                     // Assume a standard way to get state, e.g., a component or property
                     const entityState = entity?.getComponent('StateComponent')?.getCurrentState() ?? entity?.currentState;
                     conditionMet = entityState === condition.requiredState;
@@ -425,4 +420,4 @@ class ObjectiveStateCheckerService {
     }
 }
 
-export { ObjectiveStateCheckerService };
+export {ObjectiveStateCheckerService};

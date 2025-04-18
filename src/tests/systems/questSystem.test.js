@@ -48,20 +48,19 @@ const mockEventBus = {
     }
 };
 
-// Mock DataManager (Keep as is, but ensure it's cleared)
-const mockDataManager = {
+const mockGameDataRepository = {
     _quests: new Map(),
     _objectives: new Map(),
-    getQuestDefinition: jest.fn((questId) => mockDataManager._quests.get(questId)),
-    getObjectiveDefinition: jest.fn((objectiveId) => mockDataManager._objectives.get(objectiveId)),
-    addQuestDefinition: (questDef) => mockDataManager._quests.set(questDef.id, questDef),
-    addObjectiveDefinition: (objDef) => mockDataManager._objectives.set(objDef.id, objDef),
+    getQuestDefinition: jest.fn((questId) => mockGameDataRepository._quests.get(questId)),
+    getObjectiveDefinition: jest.fn((objectiveId) => mockGameDataRepository._objectives.get(objectiveId)),
+    addQuestDefinition: (questDef) => mockGameDataRepository._quests.set(questDef.id, questDef),
+    addObjectiveDefinition: (objDef) => mockGameDataRepository._objectives.set(objDef.id, objDef),
     clearAllData: () => {
-        mockDataManager._quests.clear();
-        mockDataManager._objectives.clear();
+        mockGameDataRepository._quests.clear();
+        mockGameDataRepository._objectives.clear();
         // Clear mock function calls
-        mockDataManager.getQuestDefinition.mockClear();
-        mockDataManager.getObjectiveDefinition.mockClear();
+        mockGameDataRepository.getQuestDefinition.mockClear();
+        mockGameDataRepository.getObjectiveDefinition.mockClear();
     }
 };
 
@@ -119,7 +118,7 @@ describe('QuestSystem - Automatic Completion Check via _processObjectiveCompleti
         // Clear mocks and stored data FIRST
         jest.clearAllMocks(); // Clears all mock function calls and instances created by jest.fn()
         mockEventBus.clearAllSubscriptions(); // Reset EventBus state and mock calls
-        mockDataManager.clearAllData(); // Reset DataManager state and mock calls
+        mockGameDataRepository.clearAllData(); // Reset GameDataRepository state and mock calls
 
         // --- Create FRESH instances for each test ---
         mockPlayerEntity = new Entity('player'); // Create NEW Entity
@@ -150,7 +149,7 @@ describe('QuestSystem - Automatic Completion Check via _processObjectiveCompleti
 
         // --- Instantiate QuestSystem with ALL mocks --- // ********** UPDATED **********
         questSystem = new QuestSystem({
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             eventBus: mockEventBus,
             entityManager: mockEntityManager,
             gameStateManager: mockGameStateManager,
@@ -200,19 +199,19 @@ describe('QuestSystem - Automatic Completion Check via _processObjectiveCompleti
             rewards: rewards
         };
 
-        // Add definitions to mock DataManager
-        mockDataManager.addQuestDefinition(questDef);
-        objectiveDefs.forEach(objDef => mockDataManager.addObjectiveDefinition(objDef));
+        // Add definitions to mock GameDataRepository
+        mockGameDataRepository.addQuestDefinition(questDef);
+        objectiveDefs.forEach(objDef => mockGameDataRepository.addObjectiveDefinition(objDef));
 
-        // Ensure mock DataManager returns these specific definitions when asked
-        mockDataManager.getQuestDefinition.mockImplementation((qId) => {
+        // Ensure mock GameDataRepository returns these specific definitions when asked
+        mockGameDataRepository.getQuestDefinition.mockImplementation((qId) => {
             if (qId === questId) return questDef;
-            return mockDataManager._quests.get(qId); // Fallback
+            return mockGameDataRepository._quests.get(qId); // Fallback
         });
-        mockDataManager.getObjectiveDefinition.mockImplementation((oId) => {
+        mockGameDataRepository.getObjectiveDefinition.mockImplementation((oId) => {
             const found = objectiveDefs.find(def => def.id === oId);
             if (found) return found;
-            return mockDataManager._objectives.get(oId); // Fallback
+            return mockGameDataRepository._objectives.get(oId); // Fallback
         });
 
         // Mock reward summary generation based on the quest definition rewards

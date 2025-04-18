@@ -4,7 +4,7 @@
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */ // Added for type hinting
-/** @typedef {import('./dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./inputHandler.js').default} InputHandler */
@@ -15,7 +15,7 @@
 // --- Define the options object structure ---
 /**
  * @typedef {object} GameLoopOptions
- * @property {DataManager} dataManager - Manages game data loading and access.
+ * @property {GameDataRepository} gameDataRepository - Manages game data loading and access.
  * @property {EntityManager} entityManager - Manages entity creation and components.
  * @property {GameStateManager} gameStateManager - Manages core game state (player, location).
  * @property {InputHandler} inputHandler - Handles raw user input.
@@ -33,7 +33,7 @@ import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
  * Assumes GameInitializer has successfully set up the initial game state.
  */
 class GameLoop {
-    #dataManager;
+    #gameDataRepository;
     #entityManager;
     #gameStateManager;
     #inputHandler;
@@ -49,7 +49,7 @@ class GameLoop {
     constructor(options) {
         // --- Destructure and Validate constructor arguments ---
         const {
-            dataManager,
+            gameDataRepository: gameDataRepository,
             entityManager,
             gameStateManager,
             inputHandler,
@@ -58,7 +58,7 @@ class GameLoop {
             eventBus
         } = options || {};
 
-        if (!dataManager) throw new Error("GameLoop requires options.dataManager.");
+        if (!gameDataRepository) throw new Error("GameLoop requires options.gameDataRepository.");
         if (!entityManager) throw new Error("GameLoop requires options.entityManager.");
         if (!gameStateManager) throw new Error("GameLoop requires options.gameStateManager.");
         if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function') {
@@ -74,7 +74,7 @@ class GameLoop {
             throw new Error("GameLoop requires a valid options.eventBus object.");
         }
 
-        this.#dataManager = dataManager;
+        this.#gameDataRepository = gameDataRepository;
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
         this.#inputHandler = inputHandler;
@@ -257,7 +257,7 @@ class GameLoop {
             currentLocation: currentLocationBeforeAction,
             // targets: targets, // AC7: Removed obsolete targets array
             parsedCommand: parsedCommand, // AC6: Added the full parsedCommand object
-            dataManager: this.#dataManager,
+            gameDataRepository: this.#gameDataRepository,
             entityManager: this.#entityManager,
             dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
             eventBus: this.#eventBus

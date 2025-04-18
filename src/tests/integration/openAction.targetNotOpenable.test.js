@@ -1,6 +1,6 @@
 // src/tests/integration/openAction.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Core Modules & Systems ---
 import CommandParser from '../../core/commandParser.js';
@@ -9,19 +9,19 @@ import EventBus from '../../core/eventBus.js';
 import EntityManager from '../../entities/entityManager.js';
 import Entity from '../../entities/entity.js';
 import OpenableSystem from '../../systems/openableSystem.js';
-import { NotificationUISystem } from '../../systems/notificationUISystem.js'; // Ensure correct import path
+import {NotificationUISystem} from '../../systems/notificationUISystem.js'; // Ensure correct import path
 
 // --- Action Handler ---
-import { executeOpen } from '../../actions/handlers/openActionHandler.js'; // The specific handler
+import {executeOpen} from '../../actions/handlers/openActionHandler.js'; // The specific handler
 
 // --- Components ---
 import OpenableComponent from '../../components/openableComponent.js';
 import LockableComponent from '../../components/lockableComponent.js';
-import { NameComponent } from '../../components/nameComponent.js';
-import { PositionComponent } from '../../components/positionComponent.js'; // Needed for scope checks
+import {NameComponent} from '../../components/nameComponent.js';
+import {PositionComponent} from '../../components/positionComponent.js'; // Needed for scope checks
 
 // --- Utilities & Types ---
-import { TARGET_MESSAGES, getDisplayName } from '../../utils/messages.js';
+import {TARGET_MESSAGES, getDisplayName} from '../../utils/messages.js';
 import {
     EVENT_DISPLAY_MESSAGE,
     EVENT_ENTITY_OPENED,
@@ -31,14 +31,17 @@ import {
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
 // A minimal mock to satisfy CommandParser dependencies
-const mockDataManager = {
+const mockGameDataRepository = {
     actions: new Map([
-        ['core:open', { id: 'core:open', commands: ['open', 'o'] }],
+        ['core:open', {id: 'core:open', commands: ['open', 'o']}],
         // Add other actions if their commands could interfere or are needed by helper functions
     ]),
-    getEntityDefinition: (id) => ({ id: id, components: {} }), // Minimal definition lookup
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
+    getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     // Add other methods if NotificationUISystem uses them (e.g., getPlayerId)
     getPlayerId: () => 'player' // Assuming NotificationUISystem might use this
 };
@@ -74,11 +77,11 @@ describe('Integration Test: core:open Action', () => {
             throw new Error(`Entity instance creation failed for ${id}`);
         }
 
-        entity.addComponent(new NameComponent({ value: name }));
+        entity.addComponent(new NameComponent({value: name}));
         // Ensure PositionComponent is added for scope resolution
         // Check if it already has one from definition before adding potentially duplicate
         if (!entity.hasComponent(PositionComponent)) {
-            entity.addComponent(new PositionComponent({ locationId: locationId }));
+            entity.addComponent(new PositionComponent({locationId: locationId}));
         } else {
             // Optionally update existing position if needed, though createEntityInstance
             // should handle components from definition now.
@@ -110,9 +113,9 @@ describe('Integration Test: core:open Action', () => {
 
     beforeEach(() => {
         // 1. Instantiate core modules
-        entityManager = new EntityManager(mockDataManager); // Use real EM
+        entityManager = new EntityManager(mockGameDataRepository); // Use real EM
         eventBus = new EventBus(); // Use real EventBus
-        commandParser = new CommandParser(mockDataManager); // Use real Parser
+        commandParser = new CommandParser(mockGameDataRepository); // Use real Parser
         actionExecutor = new ActionExecutor(); // Use real Executor
 
         // 2. Register REAL components with EntityManager
@@ -124,8 +127,8 @@ describe('Integration Test: core:open Action', () => {
         // Register other components if needed by test entities
 
         // 3. Instantiate Systems
-        openableSystem = new OpenableSystem({ eventBus, entityManager });
-        notificationUISystem = new NotificationUISystem({ eventBus, dataManager: mockDataManager }); // Provide mock DM
+        openableSystem = new OpenableSystem({eventBus, entityManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository}); // Provide mock DM
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:open', executeOpen);
@@ -136,9 +139,12 @@ describe('Integration Test: core:open Action', () => {
 
         // 6. Set up Spies AFTER instances are created
         dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
+        });
 
         // 7. Setup common test entities
         // Note: locationId must match for 'nearby' scope checks to work implicitly via EntityManager state
@@ -167,17 +173,17 @@ describe('Integration Test: core:open Action', () => {
         // Basic check if parsing failed fundamentally (e.g., empty input)
         if (!parsedCommand.actionId && commandString.trim() !== '') {
             // If parser itself identifies an error (like unknown command)
-            if(parsedCommand.error) {
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: parsedCommand.error, type: 'error'});
+            if (parsedCommand.error) {
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: parsedCommand.error, type: 'error'});
             } else {
                 // Handle cases where parser returns no actionId but no specific error
                 // This shouldn't happen for known commands but handles edge cases
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "Unknown command.", type: 'error'});
+                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Unknown command.", type: 'error'});
             }
             return; // Stop processing if parsing fails significantly
         }
         // Handle case of empty input string which correctly results in no actionId/error
-        if(!parsedCommand.actionId && commandString.trim() === '') {
+        if (!parsedCommand.actionId && commandString.trim() === '') {
             return; // Do nothing for empty input
         }
 
@@ -188,7 +194,7 @@ describe('Integration Test: core:open Action', () => {
             // Critical: currentLocation must be the entity representing the location
             currentLocation: testLocation,
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             // Pass the spied dispatch function
             dispatch: dispatchSpy, // <-- Use the spy directly here!
@@ -200,7 +206,6 @@ describe('Integration Test: core:open Action', () => {
     };
 
     // --- Test Scenarios (Matching ACs) ---
-
 
 
     describe('Scenario: Target Not Openable (Component Missing)', () => {

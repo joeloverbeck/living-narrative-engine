@@ -1,7 +1,7 @@
 // src/actions/actionTypes.js
 
 // Ensure necessary imports for type hinting (won't be executed at runtime)
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // <<< ADDED GameDataRepository Import (Adjust path if needed)
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 // Added EventBus based on its use in ActionContext
@@ -36,7 +36,7 @@
  * @property {Entity} playerEntity - The entity instance representing the player.
  * @property {Entity} currentLocation - The entity instance representing the player's current location.
  * @property {ParsedCommand} parsedCommand - The structured output from the command parser, containing the identified action, objects, preposition, and original input.
- * @property {DataManager} dataManager - The central manager for game data definitions.
+ * @property {GameDataRepository} gameDataRepository - Provides access to loaded game definition data via the data registry. // <<< MODIFIED Type and Description
  * @property {EntityManager} entityManager - The manager for creating and tracking entity instances.
  * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events (via EventBus).
  * @property {EventBus} eventBus - The event bus instance for dispatching events.

@@ -1,7 +1,7 @@
 // src/systems/notificationUISystem.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 // Optional: Import Localization Service if you have one
 // /** @typedef {import('../../services/localizationService.js').default} LocalizationService */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
@@ -30,26 +30,24 @@ import {
  */
 class NotificationUISystem {
     /** @type {EventBus} */
-    eventBus;
-    /** @type {DataManager} */
-    dataManager;
+    #eventBus;
+    /** @type {GameDataRepository} */
+    #repository;
     // /** @type {LocalizationService} */ // Optional
     // localizationService;             // Optional
 
     /**
      * @param {object} dependencies
      * @param {EventBus} dependencies.eventBus
-     * @param {DataManager} dependencies.dataManager
+     * @param {GameDataRepository} dependencies.gameDataRepository
      * // @param {LocalizationService} [dependencies.localizationService] // Optional
      */
-    constructor({eventBus, dataManager /*, localizationService */}) {
+    constructor({eventBus, gameDataRepository}) { // Updated param name
         if (!eventBus) throw new Error("NotificationUISystem requires EventBus.");
-        if (!dataManager) throw new Error("NotificationUISystem requires DataManager.");
-        // if (localizationService) this.localizationService = localizationService; // Optional
+        if (!gameDataRepository) throw new Error("NotificationUISystem requires GameDataRepository."); // Updated check
 
-        this.eventBus = eventBus;
-        this.dataManager = dataManager;
-
+        this.#eventBus = eventBus;
+        this.#repository = gameDataRepository; // Updated assignment
         console.log("NotificationUISystem: Instantiated.");
     }
 
@@ -59,32 +57,32 @@ class NotificationUISystem {
     initialize() {
         console.log("NotificationUISystem: Initializing and subscribing to events...");
         // Quest Events
-        this.eventBus.subscribe('quest:started', this._handleQuestStarted.bind(this));
-        this.eventBus.subscribe('quest:completed', this._handleQuestCompleted.bind(this));
-        this.eventBus.subscribe('quest:failed', this._handleQuestFailed.bind(this));
-        this.eventBus.subscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet.bind(this));
+        this.#eventBus.subscribe('quest:started', this._handleQuestStarted.bind(this));
+        this.#eventBus.subscribe('quest:completed', this._handleQuestCompleted.bind(this));
+        this.#eventBus.subscribe('quest:failed', this._handleQuestFailed.bind(this));
+        this.#eventBus.subscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet.bind(this));
 
         // Action Validation/Failure Events
-        this.eventBus.subscribe('action:validation_failed', this._handleValidationFailed.bind(this));
-        this.eventBus.subscribe('action:take_failed', this._handleTakeFailed.bind(this));
-        this.eventBus.subscribe(EVENT_MOVE_FAILED, this._handleMoveFailed.bind(this));
-        this.eventBus.subscribe('item:use_condition_failed', this._handleItemUseConditionFailed.bind(this));
+        this.#eventBus.subscribe('action:validation_failed', this._handleValidationFailed.bind(this));
+        this.#eventBus.subscribe('action:take_failed', this._handleTakeFailed.bind(this));
+        this.#eventBus.subscribe(EVENT_MOVE_FAILED, this._handleMoveFailed.bind(this));
+        this.#eventBus.subscribe('item:use_condition_failed', this._handleItemUseConditionFailed.bind(this));
         // Add subscriptions for other action failures (drop, use, attack, etc.) here...
 
         // AC 2: Subscribe to open action events
-        this.eventBus.subscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened.bind(this));
-        this.eventBus.subscribe(EVENT_OPEN_FAILED, this._handleOpenFailed.bind(this));
+        this.#eventBus.subscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened.bind(this));
+        this.#eventBus.subscribe(EVENT_OPEN_FAILED, this._handleOpenFailed.bind(this));
 
         // Action Success/Attempt Events (that generate immediate feedback)
-        this.eventBus.subscribe('action:take_succeeded', this._handleTakeSucceeded.bind(this));
-        this.eventBus.subscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted.bind(this)); // Listens to attempt, might display "You move..."
+        this.#eventBus.subscribe('action:take_succeeded', this._handleTakeSucceeded.bind(this));
+        this.#eventBus.subscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted.bind(this)); // Listens to attempt, might display "You move..."
         // Add subscriptions for other action successes here...
 
         console.log("NotificationUISystem: Initialization complete.");
     }
 
     /**
-     * Gets a displayable name, preferring a looked-up title from DataManager/Localization,
+     * Gets a displayable name, preferring a looked-up title from GameDataRepository/Localization,
      * falling back to the provided ID.
      * @param {string} id - The localization key or fallback ID (e.g., titleId, itemId).
      * @param {'quest'|'item'|'currency'|'default'} type - The type of ID for context.
@@ -93,9 +91,6 @@ class NotificationUISystem {
      */
     _getDisplayName(id, type = 'default') {
         // Basic fallback implementation. Replace with actual localization lookup if available.
-        // Example: if (this.localizationService) return this.localizationService.get(id);
-        // Example: if (type === 'item' && this.dataManager) return this.dataManager.getItemDefinition(id)?.name || id;
-        // Example: if (type === 'quest' && this.dataManager) return this.dataManager.getQuestDefinition(id)?.title || id; // Requires quest def has title prop
 
         // Simple fallback: capitalize and replace underscores
         if (!id) return 'something'; // Fallback for undefined/null id
@@ -112,7 +107,7 @@ class NotificationUISystem {
     _handleQuestStarted({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Started: ${questTitle}`,
             type: 'quest' // Use a specific type for quest messages
         });
@@ -131,7 +126,7 @@ class NotificationUISystem {
         const questTitle = this._getDisplayName(titleId, 'quest');
 
         // 1. Quest Completion Message
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Completed: ${questTitle}`,
             type: 'quest_complete' // Specific type for completion
         });
@@ -140,7 +135,7 @@ class NotificationUISystem {
         if (rewardSummary) {
             // Experience
             if (rewardSummary.experience) {
-                this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: `Gained ${rewardSummary.experience} XP.`,
                     type: 'reward' // General type for rewards
                 });
@@ -149,7 +144,7 @@ class NotificationUISystem {
             if (rewardSummary.items?.length > 0) {
                 rewardSummary.items.forEach(item => {
                     const itemName = this._getDisplayName(item.itemId, 'item');
-                    this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                         text: `Received: ${itemName} x ${item.quantity}`,
                         type: 'reward'
                     });
@@ -159,7 +154,7 @@ class NotificationUISystem {
             if (rewardSummary.currency) {
                 for (const type in rewardSummary.currency) {
                     const currencyName = this._getDisplayName(type, 'currency');
-                    this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                         text: `Received: ${rewardSummary.currency[type]} ${currencyName}`,
                         type: 'reward'
                     });
@@ -182,7 +177,7 @@ class NotificationUISystem {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         const reasonText = reason ? `: ${reason}` : ''; // Add reason if provided
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Quest Failed${reasonText}: ${questTitle}`,
             type: 'quest_fail' // Specific type for failure
         });
@@ -198,7 +193,7 @@ class NotificationUISystem {
     _handlePrerequisitesNotMet({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `Cannot start quest "${questTitle}" yet. (Prerequisites not met)`,
             type: 'info' // Use a general info type
         });
@@ -216,7 +211,6 @@ class NotificationUISystem {
      */
     _handleValidationFailed({actorId, actionVerb, reasonCode}) {
         // TODO: Check if the actor is the player before displaying
-        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
         let messageText = `Validation failed for action: ${actionVerb}`; // Generic fallback
         let messageType = 'error'; // Usually an error or notice
 
@@ -227,7 +221,7 @@ class NotificationUISystem {
         }
         // Add more reason codes as needed
 
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });
@@ -245,11 +239,10 @@ class NotificationUISystem {
      */
     _handleMoveAttempted({entityId, direction}) {
         // TODO: Check if the entityId is the player before displaying
-        // Example: if (entityId !== this.dataManager.getPlayerId()) return;
         // This message might conflict with failure messages if the move attempt
         // is immediately followed by an EVENT_MOVE_FAILED.
         // Let's comment it out for now, as the failure handler provides more specific feedback.
-        // this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
         //     text: `You attempt to move ${direction}.`,
         //     type: 'info'
         // });
@@ -275,7 +268,6 @@ class NotificationUISystem {
         } = payload;
 
         // TODO: Check if the actor is the player before displaying message
-        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
 
         let messageText = "You cannot move."; // Generic fallback message
         let messageType = 'warning';      // Default type for failure
@@ -365,7 +357,7 @@ class NotificationUISystem {
         }
 
         // Dispatch the final UI message
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType // This will now be 'warning' for locked/blocked cases
         });
@@ -382,9 +374,8 @@ class NotificationUISystem {
      */
     _handleTakeSucceeded({actorId, itemId, itemName, locationId}) {
         // TODO: Check if the actor is the player before displaying
-        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
         const displayItemName = this._getDisplayName(itemName || itemId, 'item');
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: `You take the ${displayItemName}.`,
             type: 'success'
         });
@@ -402,7 +393,6 @@ class NotificationUISystem {
      */
     _handleTakeFailed({actorId, targetName, reasonCode, locationId, details}) {
         // TODO: Check if the actor is the player before displaying
-        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
         let messageText;
         let messageType = 'warning'; // Default type for failure
 
@@ -433,7 +423,7 @@ class NotificationUISystem {
                 console.warn(`NotificationUISystem: Unhandled take failure reasonCode: ${reasonCode}`);
         }
 
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });
@@ -448,10 +438,9 @@ class NotificationUISystem {
      */
     _handleItemUseConditionFailed({actorId, failureMessage}) {
         // TODO: Check if the actor is the player before displaying, if necessary
-        // Example: if (actorId !== this.dataManager.getPlayerId()) return;
 
         // Directly use the failure message provided by the ItemUsageSystem/ConditionEvaluationService
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: failureMessage, // Use the message from the event payload
             type: 'warning'       // Or 'notice'/'info' depending on desired severity
         });
@@ -467,7 +456,6 @@ class NotificationUISystem {
     _handleEntityOpened(payload) {
         // AC 3: Check if the actor is the player before displaying
         // TODO: Replace with actual player ID check mechanism
-        // Example: if (payload.actorId !== this.dataManager?.getPlayerId?.()) return;
         const isPlayerAction = true; // Placeholder assumption
         if (!isPlayerAction) return;
 
@@ -479,7 +467,7 @@ class NotificationUISystem {
             type: 'success'
         };
         console.log(`NotificationUISystem: Attempting to dispatch ui:message_display with payload:`, JSON.stringify(messagePayload)); // <<< ADD THIS LOG
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, messagePayload);
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, messagePayload);
     }
 
     /**
@@ -490,7 +478,6 @@ class NotificationUISystem {
     _handleOpenFailed(payload) {
         // AC 6: Check if the actor is the player before displaying
         // TODO: Replace with actual player ID check mechanism
-        // Example: if (payload.actorId !== this.dataManager?.getPlayerId?.()) return;
         const isPlayerAction = true; // Placeholder assumption
         if (!isPlayerAction) return;
 
@@ -528,7 +515,7 @@ class NotificationUISystem {
                 break;
         }
 
-        this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
             text: messageText,
             type: messageType
         });
@@ -536,18 +523,18 @@ class NotificationUISystem {
 
     shutdown() {
         // Unsubscribe from all events it subscribed to in initialize()
-        this.eventBus.unsubscribe('quest:started', this._handleQuestStarted);
-        this.eventBus.unsubscribe('quest:completed', this._handleQuestCompleted);
-        this.eventBus.unsubscribe('quest:failed', this._handleQuestFailed);
-        this.eventBus.unsubscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet);
-        this.eventBus.unsubscribe('action:validation_failed', this._handleValidationFailed);
-        this.eventBus.unsubscribe('action:take_failed', this._handleTakeFailed);
-        this.eventBus.unsubscribe(EVENT_MOVE_FAILED, this._handleMoveFailed);
-        this.eventBus.unsubscribe('item:use_condition_failed', this._handleItemUseConditionFailed);
-        this.eventBus.unsubscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened);
-        this.eventBus.unsubscribe(EVENT_OPEN_FAILED, this._handleOpenFailed);
-        this.eventBus.unsubscribe('action:take_succeeded', this._handleTakeSucceeded);
-        this.eventBus.unsubscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted);
+        this.#eventBus.unsubscribe('quest:started', this._handleQuestStarted);
+        this.#eventBus.unsubscribe('quest:completed', this._handleQuestCompleted);
+        this.#eventBus.unsubscribe('quest:failed', this._handleQuestFailed);
+        this.#eventBus.unsubscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet);
+        this.#eventBus.unsubscribe('action:validation_failed', this._handleValidationFailed);
+        this.#eventBus.unsubscribe('action:take_failed', this._handleTakeFailed);
+        this.#eventBus.unsubscribe(EVENT_MOVE_FAILED, this._handleMoveFailed);
+        this.#eventBus.unsubscribe('item:use_condition_failed', this._handleItemUseConditionFailed);
+        this.#eventBus.unsubscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened);
+        this.#eventBus.unsubscribe(EVENT_OPEN_FAILED, this._handleOpenFailed);
+        this.#eventBus.unsubscribe('action:take_succeeded', this._handleTakeSucceeded);
+        this.#eventBus.unsubscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted);
         console.log("NotificationUISystem: Shutdown and unsubscribed from events.");
     }
 }

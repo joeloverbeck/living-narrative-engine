@@ -1,9 +1,9 @@
 // src/tests/gameStateInitializer.test.js
 
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach} from '@jest/globals';
 import GameStateInitializer from '../core/gameStateInitializer.js'; // Adjust path
 import Entity from '../entities/entity.js'; // Adjust path
-import { PositionComponent } from '../components/positionComponent.js'; // Adjust path
+import {PositionComponent} from '../components/positionComponent.js'; // Adjust path
 
 // --- Mocks ---
 const mockEntityManager = {
@@ -17,7 +17,7 @@ const mockGameStateManager = {
     // getPlayer/getCurrentLocation aren't called by the initializer itself
 };
 
-const mockDataManager = {
+const mockGameDataRepository = {
     getEntityDefinition: jest.fn(),
     getStartingPlayerId: jest.fn(), // Add this mock
     getStartingLocationId: jest.fn(), // Add this mock
@@ -50,7 +50,7 @@ const mockPlayerEntity = {
         // No need to reset the mock implementation itself if the main one is correct now
     }
 };
-const mockLocationEntity = { id: 'location_mock' };
+const mockLocationEntity = {id: 'location_mock'};
 const mockPlayerPositionComponent = {
     setLocation: jest.fn(),
 };
@@ -68,16 +68,15 @@ describe('GameStateInitializer', () => {
         mockPlayerEntity._clearMocks(); // Clear mocks on the entity itself
 
         // --- Configure Mock Return Values ---
-        // DataManager: Assume definitions exist and starting IDs are available
-        mockDataManager.getEntityDefinition.mockImplementation((id) => {
+        mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
             if (id === START_PLAYER_ID || id === START_LOC_ID) {
-                return { id: id, components: {} }; // Return a minimal valid definition
+                return {id: id, components: {}}; // Return a minimal valid definition
             }
             return undefined;
         });
         // --- ADD THIS ---
-        mockDataManager.getStartingPlayerId.mockReturnValue(START_PLAYER_ID);
-        mockDataManager.getStartingLocationId.mockReturnValue(START_LOC_ID);
+        mockGameDataRepository.getStartingPlayerId.mockReturnValue(START_PLAYER_ID);
+        mockGameDataRepository.getStartingLocationId.mockReturnValue(START_LOC_ID);
         // --- END ADD ---
 
         // EntityManager: Return the mock entities when created
@@ -92,7 +91,7 @@ describe('GameStateInitializer', () => {
         initializer = new GameStateInitializer({
             entityManager: mockEntityManager,
             gameStateManager: mockGameStateManager,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             // Remove these lines if they were still present:
             // startingPlayerId: START_PLAYER_ID,
             // startingLocationId: START_LOC_ID,
@@ -111,8 +110,8 @@ describe('GameStateInitializer', () => {
         expect(success).toBe(true);
 
         // 1. Definitions retrieved?
-        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledWith(START_PLAYER_ID);
-        expect(mockDataManager.getEntityDefinition).toHaveBeenCalledWith(START_LOC_ID);
+        expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(START_PLAYER_ID);
+        expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(START_LOC_ID);
 
         // 2. Entities created?
         expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(START_PLAYER_ID);
@@ -142,16 +141,21 @@ describe('GameStateInitializer', () => {
         // Verify setLocation was NOT called on a non-existent component
         expect(mockPlayerPositionComponent.setLocation).not.toHaveBeenCalled();
         // Verify addComponent WAS called
-        expect(mockPlayerEntity.addComponent).toHaveBeenCalledWith('Position', { locationId: mockLocationEntity.id, x: 0, y: 0 });
+        expect(mockPlayerEntity.addComponent).toHaveBeenCalledWith('Position', {
+            locationId: mockLocationEntity.id,
+            x: 0,
+            y: 0
+        });
     });
 
     it('should return false and log error if player definition is missing', () => {
         // --- Arrange ---
-        mockDataManager.getEntityDefinition.mockImplementation((id) => {
-            if (id === START_LOC_ID) return { id: id, components: {} };
+        mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
+            if (id === START_LOC_ID) return {id: id, components: {}};
             return undefined; // Player def missing
         });
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console output
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        }); // Suppress console output
 
         // --- Act ---
         const success = initializer.setupInitialState();
@@ -173,7 +177,8 @@ describe('GameStateInitializer', () => {
             if (id === START_LOC_ID) return mockLocationEntity;
             return null;
         });
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
 
         // --- Act ---
         const success = initializer.setupInitialState();
@@ -189,11 +194,12 @@ describe('GameStateInitializer', () => {
 
     it('should return false and log error if location definition is missing', () => {
         // --- Arrange ---
-        mockDataManager.getEntityDefinition.mockImplementation((id) => {
-            if (id === START_PLAYER_ID) return { id: id, components: {} };
+        mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
+            if (id === START_PLAYER_ID) return {id: id, components: {}};
             return undefined; // Location def missing
         });
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
 
         // --- Act ---
         const success = initializer.setupInitialState();

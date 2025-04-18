@@ -29,11 +29,15 @@ import {EVENT_DISPLAY_LOCATION, EVENT_DISPLAY_MESSAGE} from "../../types/eventTy
 /** @typedef {import('../../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
-// --- Mock DataManager ---
-const mockDataManager = {
+// --- Mock GameDataRepository ---
+const mockGameDataRepository = {
     actions: new Map([
         ['core:look', {id: 'core:look', commands: ['look', 'l']}],
     ]),
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
     getEntityDefinition: (id) => ({id: id, components: {}}), // Minimal definition lookup
     getPlayerId: () => 'player'
 };
@@ -101,9 +105,9 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
 
     beforeEach(() => {
         // 1. Instantiate core modules
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
         eventBus = new EventBus();
-        commandParser = new CommandParser(mockDataManager);
+        commandParser = new CommandParser(mockGameDataRepository);
         actionExecutor = new ActionExecutor();
 
         // 2. Register REAL components with EntityManager
@@ -115,7 +119,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
         entityManager.registerComponent('InventoryComponent', InventoryComponent); // Need for player inventory check
 
         // 3. Instantiate Systems
-        notificationUISystem = new NotificationUISystem({eventBus, dataManager: mockDataManager});
+        notificationUISystem = new NotificationUISystem({eventBus, gameDataRepository: mockGameDataRepository});
 
         // 4. Register Action Handler
         actionExecutor.registerHandler('core:look', executeLook);
@@ -197,7 +201,7 @@ describe('Integration Test: core:look Action - LOOK-INT-TGT-03', () => {
             playerEntity: player,
             currentLocation: entityManager.getEntityInstance(player.getComponent(PositionComponent).locationId),
             parsedCommand: parsedCommand,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: entityManager,
             dispatch: dispatchSpy,
             eventBus: eventBus

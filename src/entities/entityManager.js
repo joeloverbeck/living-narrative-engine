@@ -6,6 +6,8 @@ import {PositionComponent} from "../components/positionComponent.js";
 // **** Added Import ****
 import DefinitionRefComponent from "../components/definitionRefComponent.js";
 
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+
 /**
  * Manages the creation and tracking of Entity instances from data definitions.
  * It uses a registry to map JSON component names to JavaScript component classes.
@@ -14,22 +16,29 @@ import DefinitionRefComponent from "../components/definitionRefComponent.js";
  */
 class EntityManager {
     /**
-     * @param {import('../core/dataManager.js').default} dataManager - The loaded data manager instance.
+     * @private
+     * @type {GameDataRepository} // <-- UPDATED Type
      */
-    constructor(dataManager) {
-        if (!dataManager) {
-            throw new Error("EntityManager requires a DataManager instance.");
+    #repository;
+
+    /** @type {Map<string, Function>} */
+    componentRegistry = new Map();
+    /** @type {Map<string, Entity>} */
+    activeEntities = new Map();
+    /** @type {SpatialIndexManager} */
+    spatialIndexManager = new SpatialIndexManager();
+
+    /**
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
+     * @param {GameDataRepository} repository - The game data repository instance.
+     */
+    constructor(repository) { // <-- UPDATED Parameter name
+        if (!repository) {
+            // Updated error message to reflect new dependency
+            throw new Error("EntityManager requires a GameDataRepository instance.");
         }
-        this.dataManager = dataManager;
-        /** @type {Map<string, Function>} */
-        this.componentRegistry = new Map();
-        /** @type {Map<string, Entity>} */
-        this.activeEntities = new Map();
-
-        /** @type {SpatialIndexManager} */
-        this.spatialIndexManager = new SpatialIndexManager(); // Instantiate the index manager
-
-        console.log("EntityManager initialized. Components need manual registration. Spatial index ready.");
+        this.#repository = repository; // <-- UPDATED Assignment
+        console.log("EntityManager initialized with GameDataRepository. Components need manual registration. Spatial index ready.");
     }
 
     /**
@@ -55,7 +64,7 @@ class EntityManager {
 
     /**
      * Creates a new Entity instance based on its definition ID.
-     * Retrieves the definition from DataManager, instantiates the Entity,
+     * Retrieves the definition from GameDataRepository, instantiates the Entity,
      * finds corresponding Component classes from the registry,
      * instantiates components with data, and attaches them to the Entity.
      *
@@ -77,7 +86,7 @@ class EntityManager {
             return this.activeEntities.get(entityId);
         }
 
-        const entityDefinition = this.dataManager.getEntityDefinition(entityId);
+        const entityDefinition = this.#repository.getEntityDefinition(entityId); // <-- UPDATED
 
         if (!entityDefinition) {
             console.error(`EntityManager: Entity definition not found for ID: ${entityId}`);

@@ -3,7 +3,6 @@
 // --- Type Imports ---
 /** @typedef {import('./appContainer.js').default} AppContainer */
 /** @typedef {import('./eventBus.js').default} EventBus */
-/** @typedef {import('./dataManager.js').default} DataManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
@@ -12,6 +11,8 @@
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('./gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('./worldInitializer.js').default} WorldInitializer */
+/** @typedef {import('./services/worldLoader.js').default} WorldLoader */ // <-- Present (Correct)
+/** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // <-- Task 3: Verified Present (Correct)
 
 
 // --- Component Class Imports (needed for getComponent checks) ---
@@ -50,6 +51,7 @@ class GameEngine {
 
     /**
      * Initializes all core game systems asynchronously.
+     * (No changes in this method for REFACTOR-014-SUB-06)
      * @param {string} worldName - The identifier of the world to load.
      * @returns {Promise<boolean>} True if initialization succeeded, false otherwise.
      * @private
@@ -68,21 +70,26 @@ class GameEngine {
             console.log("GameEngine: DomRenderer resolved.");
 
             this.#eventBus.dispatch('ui:set_title', {text: "Initializing Engine..."});
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Initializing data manager...", type: 'info'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Initializing core systems...", type: 'info'});
 
-            // --- Load Data ---
+
+            // --- Load Data (using WorldLoader - Implemented in previous ticket SUB-03) ---
             this.#eventBus.dispatch('ui:set_title', {text: `Loading Game Data for ${worldName}...`});
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
-                text: `Loading data for world: ${worldName}...`,
+                text: `Loading world data for '${worldName}' via WorldLoader...`,
                 type: 'info'
             });
-            const dataManager = this.#container.resolve('DataManager');
-            await dataManager.loadAllData(worldName);
-            console.log(`GameEngine: DataManager resolved and data loaded for world: ${worldName}.`);
+
+            const worldLoader = this.#container.resolve('WorldLoader');
+            await worldLoader.loadWorld(worldName);
+
+            console.log(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
-                text: `Game data for '${dataManager.getWorldName() || worldName}' loaded.`,
+                text: `World data for '${worldName}' loading process complete.`,
                 type: 'info'
             });
+            // --- End Load Data Block ---
+
 
             // --- Resolve Managers needed for setup ---
             this.#eventBus.dispatch('ui:set_title', {text: "Initializing Systems..."});
@@ -98,41 +105,18 @@ class GameEngine {
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
-                // Core & Rules
-                'TriggerDispatcher',
-                'GameRuleSystem',
-                // State & Interaction
-                'EquipmentEffectSystem',
-                'EquipmentSlotSystem',
-                'InventorySystem',
-                'CombatSystem',
-                'DeathSystem',
-                'HealthSystem',
-                'StatusEffectSystem',
-                'LockSystem',
-                'OpenableSystem',
-                'WorldPresenceSystem',
-                'ItemUsageSystem',
-                // UI Feedback (often depends on state changes from above)
-                'NotificationUISystem',
-                // Perception (newly added, after UI, before movement)
-                'PerceptionSystem',
-                // Movement Coordination & Execution
-                'BlockerSystem',
-                'MovementSystem',
-                'MoveCoordinatorSystem',
-                // Quests (often triggered by other system events)
-                'QuestSystem',
-                'QuestStartTriggerSystem',
-                // Add other systems here as needed
+                'TriggerDispatcher', 'GameRuleSystem', 'EquipmentEffectSystem', 'EquipmentSlotSystem',
+                'InventorySystem', 'CombatSystem', 'DeathSystem', 'HealthSystem', 'StatusEffectSystem',
+                'LockSystem', 'OpenableSystem', 'WorldPresenceSystem', 'ItemUsageSystem',
+                'NotificationUISystem', 'PerceptionSystem', 'BlockerSystem', 'MovementSystem',
+                'MoveCoordinatorSystem', 'QuestSystem', 'QuestStartTriggerSystem',
             ];
             for (const key of systemsToInitialize) {
                 const system = this.#container.resolve(key);
                 if (system && typeof system.initialize === 'function') {
                     console.log(`GameEngine: Initializing system: ${key}...`);
-                    system.initialize(); // Call initialize()
+                    system.initialize();
                 } else {
-                    // Log if resolved but no initialize or if resolve somehow returned null/undefined
                     console.warn(`GameEngine: Resolved system '${key}' but it lacks an initialize() method or could not be resolved properly.`);
                 }
             }
@@ -219,7 +203,12 @@ class GameEngine {
         }
     }
 
-    // --- start() method (no changes needed for TRG-9) ---
+    /**
+     * Starts the game engine after successful initialization.
+     * Retrieves world name using GameDataRepository.
+     * @param {string} worldName - The identifier of the world that was loaded.
+     * @returns {Promise<void>}
+     */
     async start(worldName) {
         if (!worldName) {
             console.error("GameEngine: Fatal Error - start() called without providing a worldName.");
@@ -238,11 +227,37 @@ class GameEngine {
             const initSuccess = await this.#initialize(worldName);
 
             if (initSuccess && this.#isInitialized && this.#gameLoop && this.#eventBus) {
+
+                // --- Task 4: Modify start Method ---
+                // Retrieve World Name using GameDataRepository instead of GameDataRepository
                 console.log("GameEngine: Initialization successful. Starting GameLoop...");
-                const dataManager = this.#container.resolve('DataManager');
-                const loadedWorldName = dataManager.getWorldName() || worldName;
-                this.#eventBus.dispatch('ui:set_title', {text: loadedWorldName});
-                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `Welcome to ${loadedWorldName}!`, type: "info"});
+
+                // Resolve the new repository (AC1)
+                const gameDataRepository = this.#container.resolve('GameDataRepository');
+                // Get world name from the repository (AC2)
+                const loadedWorldName = gameDataRepository.getWorldName();
+                // Added clarifying log as per refined ticket
+                console.log(`GameEngine: Resolved GameDataRepository to get world name: ${loadedWorldName || 'Not Found in Repo'}.`);
+
+                // Verify Cleanup (AC3): No GameDataRepository resolution/usage should exist here.
+
+                // Fallback logic remains the same
+                if (!loadedWorldName) {
+                    // Handle case where manifest might be missing the worldName property after loading
+                    console.warn(`GameEngine: Could not retrieve world name from GameDataRepository. Falling back to input name: ${worldName}`);
+                    this.#eventBus.dispatch('ui:set_title', {text: worldName}); // Fallback title
+                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                        text: `Welcome to ${worldName}! (Name from input)`,
+                        type: "info"
+                    });
+                } else {
+                    this.#eventBus.dispatch('ui:set_title', {text: loadedWorldName});
+                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                        text: `Welcome to ${loadedWorldName}!`,
+                        type: "info"
+                    });
+                }
+                // --- End Task 4 Modification ---
 
                 const gameStateManager = this.#container.resolve('GameStateManager');
                 const player = gameStateManager.getPlayer();
@@ -288,7 +303,10 @@ class GameEngine {
         }
     }
 
-    // --- stop() method (no changes needed for TRG-9) ---
+    /**
+     * Stops the game loop and performs necessary cleanup.
+     * (No changes in this method for REFACTOR-014-SUB-06)
+     */
     stop() {
         console.log("GameEngine: Stop requested.");
         if (this.#gameLoop && this.#gameLoop.isRunning) {

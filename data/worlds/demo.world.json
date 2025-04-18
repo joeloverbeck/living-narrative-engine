@@ -23,9 +23,7 @@
     ],
     "entities": [
       "core_player.entity.json",
-      "demo_enemy_goblin.entity.json",
-      "demo_door_exit_north.entity.json",
-      "demo_door_treasure_room.entity.json"
+      "demo_enemy_goblin.entity.json"
     ],
     "items": [
       "demo_item_key_rusty.item.json",
@@ -49,6 +47,10 @@
       "demo_conn_hallway_treasure.connection.json",
       "demo_conn_monster_treasure.connection.json",
       "demo_conn_treasure_exit.connection.json"
+    ],
+    "blockers": [
+      "demo_door_exit_north.blocker.json",
+      "demo_door_treasure_room.blocker.json"
     ],
     "triggers": [
       "demo_trigger_unlock_treasure_door_on_goblin_death.trigger.json"

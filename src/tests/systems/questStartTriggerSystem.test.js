@@ -58,18 +58,17 @@ const createMockEventBus = () => {
     return mockBus;
 };
 
-// Mock DataManager
-const mockDataManager = {
+const mockGameDataRepository = {
     getAllQuestDefinitions: jest.fn(),
     // Add other methods if QuestStartTriggerSystem were to use them
     _quests: [], // Internal store for mock data
     setupQuests: (quests) => {
-        mockDataManager._quests = quests;
-        mockDataManager.getAllQuestDefinitions.mockReturnValue(mockDataManager._quests);
+        mockGameDataRepository._quests = quests;
+        mockGameDataRepository.getAllQuestDefinitions.mockReturnValue(mockGameDataRepository._quests);
     },
     clearData: () => {
-        mockDataManager._quests = [];
-        mockDataManager.getAllQuestDefinitions.mockClear();
+        mockGameDataRepository._quests = [];
+        mockGameDataRepository.getAllQuestDefinitions.mockClear();
     }
 };
 
@@ -184,7 +183,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
     beforeEach(() => {
         jest.clearAllMocks(); // Ensure mocks are clean
         mockEventBus = createMockEventBus();
-        mockDataManager.clearData();
+        mockGameDataRepository.clearData();
         mockGameStateManager.clearPlayer();
 
         // Setup Player
@@ -196,7 +195,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         // Setup Managers
         mockGameStateManager.setPlayer(mockPlayerEntity);
         // Setup default quests - including the target quest
-        mockDataManager.setupQuests([
+        mockGameDataRepository.setupQuests([
             questDefWithCorrectTrigger,
             questDefWithWrongLocation,
             questDefWithWrongType,
@@ -208,7 +207,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         // Instantiate System Under Test
         questStartTriggerSystem = new QuestStartTriggerSystem({
             eventBus: mockEventBus,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             gameStateManager: mockGameStateManager
         });
 
@@ -250,8 +249,8 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         // Verify AC checks:
         // 1. Player check passed (implied by reaching dispatch)
         // 2. Quest Log checked (implied by reaching dispatch)
-        // 3. Quest Definition retrieved (mockDataManager.getAllQuestDefinitions was called)
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalledTimes(1);
+        // 3. Quest Definition retrieved (mockGameDataRepository.getAllQuestDefinitions was called)
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalledTimes(1);
         // 4. startingTriggers accessed and matched (implied by reaching dispatch)
         // 5. Correct event dispatched
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
@@ -276,7 +275,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
 
         // --- Assert ---
         expect(mockGameStateManager.getPlayer).toHaveBeenCalled(); // Still checks who the player is
-        expect(mockDataManager.getAllQuestDefinitions).not.toHaveBeenCalled(); // Should exit before checking quests
+        expect(mockGameDataRepository.getAllQuestDefinitions).not.toHaveBeenCalled(); // Should exit before checking quests
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
     });
 
@@ -297,7 +296,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
 
         // --- Assert ---
         expect(mockGameStateManager.getPlayer).toHaveBeenCalled();
-        expect(mockDataManager.getAllQuestDefinitions).not.toHaveBeenCalled(); // Should exit before checking quests
+        expect(mockGameDataRepository.getAllQuestDefinitions).not.toHaveBeenCalled(); // Should exit before checking quests
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
         expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('missing newLocationId'));
 
@@ -319,7 +318,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled(); // It will check quests
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled(); // It will check quests
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
     });
 
@@ -341,7 +340,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled();
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
         // Crucially, check that the QuestLogComponent's getQuestStatus was called for the target quest
         expect(mockPlayerQuestLog.getQuestStatus).toHaveBeenCalledWith(TARGET_QUEST_ID);
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
@@ -351,7 +350,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         // Verify AC: Trigger type mismatch check
 
         // --- Arrange ---
-        mockDataManager.setupQuests([questDefWithWrongType, otherQuestDef]); // Only provide quests with wrong types
+        mockGameDataRepository.setupQuests([questDefWithWrongType, otherQuestDef]); // Only provide quests with wrong types
         const eventPayload = {
             entityId: PLAYER_ID,
             oldLocationId: OTHER_LOCATION_ID,
@@ -362,7 +361,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled();
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
     });
 
@@ -370,7 +369,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         // Verify AC: Trigger location mismatch check
 
         // --- Arrange ---
-        mockDataManager.setupQuests([questDefWithWrongLocation, otherQuestDef]); // Only provide quests with wrong location triggers
+        mockGameDataRepository.setupQuests([questDefWithWrongLocation, otherQuestDef]); // Only provide quests with wrong location triggers
         const eventPayload = {
             entityId: PLAYER_ID,
             oldLocationId: OTHER_LOCATION_ID,
@@ -381,34 +380,34 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled();
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
         expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('event:quest_trigger_met', expect.anything());
     });
 
     it('should handle quests with no startingTriggers array gracefully', () => {
         // --- Arrange ---
-        mockDataManager.setupQuests([questDefWithNoTriggers]);
+        mockGameDataRepository.setupQuests([questDefWithNoTriggers]);
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled();
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
         expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         // No error should be thrown
     });
 
     it('should handle quests with null startingTriggers gracefully', () => {
         // --- Arrange ---
-        mockDataManager.setupQuests([questDefWithNullTriggers]);
+        mockGameDataRepository.setupQuests([questDefWithNullTriggers]);
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---
         mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
 
         // --- Assert ---
-        expect(mockDataManager.getAllQuestDefinitions).toHaveBeenCalled();
+        expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
         expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         // No error should be thrown
     });
@@ -418,7 +417,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
 
         // --- Arrange ---
         // Use the default setup which has multiple quests
-        expect(mockDataManager._quests.length).toBeGreaterThan(1);
+        expect(mockGameDataRepository._quests.length).toBeGreaterThan(1);
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---

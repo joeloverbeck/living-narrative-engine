@@ -48,7 +48,7 @@ const mockContext = {
     playerEntity: null,
     currentLocation: null,
     targets: [],
-    dataManager: {},
+    gameDataRepository: {},
     eventBus: mockEventBus, // <-- ADD THIS LINE
 };
 

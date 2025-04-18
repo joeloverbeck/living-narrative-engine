@@ -55,10 +55,10 @@ const TRIGGER_DEF = {
 };
 
 /**
- * A *very* lean mock of DataManager just sufficient for TriggerDispatcher and
+ * A *very* lean mock of GameDataRepository just sufficient for TriggerDispatcher and
  * EntityManager to operate.  We stub only the methods actually invoked.
  */
-const createMockDataManager = () => {
+const createMockGameDataRepository = () => {
     // 👉  Door definition includes the _locked_ state we expect to change
     const entities = new Map([
         [
@@ -103,16 +103,16 @@ const createMockDataManager = () => {
 describe('Trigger → LockSystem integration – unlock treasure door on goblin death', () => {
     let eventBus;
     let entityManager;
-    let mockDataManager;
+    let mockGameDataRepository;
     let triggerDispatcher;
     let lockSystem;
     let dispatchSpy;
 
     beforeEach(() => {
         // Core plumbing
-        mockDataManager = createMockDataManager();
+        mockGameDataRepository = createMockGameDataRepository();
         eventBus = new EventBus();
-        entityManager = new EntityManager(mockDataManager);
+        entityManager = new EntityManager(mockGameDataRepository);
 
         // Register only the components we actually instantiate
         entityManager.registerComponent('Name', NameComponent);
@@ -121,7 +121,7 @@ describe('Trigger → LockSystem integration – unlock treasure door on goblin 
         // Systems under test
         triggerDispatcher = new TriggerDispatcher({
             eventBus,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager
         });
 

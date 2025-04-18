@@ -73,8 +73,18 @@ const mockActionDefinitions = new Map([
     }],
 ]);
 
-const mockDataManager = {
-    actions: mockActionDefinitions,
+const mockRepository = {
+    /**
+     * Mock implementation of getAllActionDefinitions.
+     * The CommandParser's parse method iterates over the result,
+     * so returning an array of the map's values is appropriate.
+     * @returns {ActionDefinition[]} An array of action definition objects.
+     */
+    getAllActionDefinitions: () => {
+        return Array.from(mockActionDefinitions.values());
+    }
+    // Add mock implementations for other GameDataRepository methods
+    // if CommandParser starts using them in the future.
 };
 
 // --- Test Suite ---
@@ -82,7 +92,8 @@ describe('CommandParser', () => {
     let parser;
 
     beforeEach(() => {
-        parser = new CommandParser(mockDataManager);
+        // *** Use the new mockRepository ***
+        parser = new CommandParser(mockRepository);
     });
 
     // --- Helper Function for Assertions (Verified to check all fields per Ticket 2.3.3.2 AC2) ---

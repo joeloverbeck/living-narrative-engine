@@ -1,9 +1,9 @@
 // src/systems/inventorySystem.js
 
 // --- Component Imports ---
-import { InventoryComponent } from '../components/inventoryComponent.js';
-import { ItemComponent } from '../components/itemComponent.js';
-import { NameComponent } from '../components/nameComponent.js';
+import {InventoryComponent} from '../components/inventoryComponent.js';
+import {ItemComponent} from '../components/itemComponent.js';
+import {NameComponent} from '../components/nameComponent.js';
 import {
     EVENT_ITEM_CONSUME_REQUESTED,
     EVENT_ITEM_DROP_ATTEMPTED,
@@ -13,7 +13,7 @@ import {
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */ // Added
 /** @typedef {import('../entities/entity.js').default} Entity */
 
@@ -31,29 +31,19 @@ import {
 class InventorySystem {
     #eventBus;
     #entityManager;
-    #dataManager;
-    #gameStateManager; // Added
+    #repository; // Renamed
+    #gameStateManager;
 
-    /**
-     * @param {object} options
-     * @param {EventBus} options.eventBus
-     * @param {EntityManager} options.entityManager
-     * @param {DataManager} options.dataManager
-     * @param {GameStateManager} options.gameStateManager // Added
-     */
-    constructor(options) {
-        const { eventBus, entityManager, dataManager, gameStateManager } = options || {}; // Added gameStateManager
-
+    constructor({eventBus, entityManager, gameDataRepository, gameStateManager}) { // Updated param name
         if (!eventBus) throw new Error("InventorySystem requires options.eventBus.");
         if (!entityManager) throw new Error("InventorySystem requires options.entityManager.");
-        if (!dataManager) throw new Error("InventorySystem requires options.dataManager.");
-        if (!gameStateManager) throw new Error("InventorySystem requires options.gameStateManager."); // Added check
+        if (!gameDataRepository) throw new Error("InventorySystem requires options.gameDataRepository."); // Updated check
+        if (!gameStateManager) throw new Error("InventorySystem requires options.gameStateManager.");
 
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#dataManager = dataManager;
-        this.#gameStateManager = gameStateManager; // Added assignment
-
+        this.#repository = gameDataRepository; // Updated assignment
+        this.#gameStateManager = gameStateManager;
         console.log("InventorySystem: Instance created.");
     }
 
@@ -82,7 +72,7 @@ class InventorySystem {
      */
     #handleItemPickedUp(eventData) {
         // locationId is destructured but no longer used in this method after refactoring.
-        const { pickerId, itemId } = eventData;
+        const {pickerId, itemId} = eventData;
         console.log(`InventorySystem: Handling ${EVENT_ITEM_PICKED_UP} for item ${itemId} by ${pickerId}`); // Removed location from log
 
         // --- 1. Validate Entities and Components ---
@@ -114,7 +104,7 @@ class InventorySystem {
 
         // --- 2. Check Stacking / Duplicates ---
         // Attempt to get definition first for authoritative data
-        const itemDef = this.#dataManager.getEntityDefinition(itemEntity.id); // Use itemEntity.id for clarity
+        const itemDef = this.#repository.getEntityDefinition(itemEntity.id);
         const itemCompInstance = itemEntity.getComponent(ItemComponent);
 
         // Determine stackability safely, defaulting to false
@@ -148,7 +138,7 @@ class InventorySystem {
      * @param {ItemDropAttemptedEventPayload} eventData - Data from the event. // Updated type hint
      */
     #handleItemDropAttempted(eventData) {
-        const { playerId, itemInstanceId } = eventData; // locationId is available but not needed for inventory removal
+        const {playerId, itemInstanceId} = eventData; // locationId is available but not needed for inventory removal
         console.log(`InventorySystem (Drop): Handling ${EVENT_ITEM_DROP_ATTEMPTED} for player ${playerId}, item ${itemInstanceId}`);
 
         // --- 1. Retrieve Player Entity and Inventory ---
@@ -199,7 +189,7 @@ class InventorySystem {
      * @param {ItemConsumeRequestedEventPayload} payload - Data from the event.
      */
     #handleItemConsumeRequested(payload) {
-        const { userId, itemInstanceId } = payload;
+        const {userId, itemInstanceId} = payload;
         console.log(`InventorySystem (Consume): Handling ${EVENT_ITEM_CONSUME_REQUESTED} for user ${userId}, item ${itemInstanceId}`);
 
         const userEntity = this.#entityManager.getEntityInstance(userId);
@@ -242,14 +232,14 @@ class InventorySystem {
         if (!player) {
             console.error("InventorySystem: Cannot render inventory, player entity not found in GameStateManager.");
             // Dispatch empty inventory event for UI consistency
-            this.#eventBus.dispatch('ui:render_inventory', { items: [] });
+            this.#eventBus.dispatch('ui:render_inventory', {items: []});
             return;
         }
 
         const inventoryComp = player.getComponent(InventoryComponent);
         if (!inventoryComp) {
             console.log(`InventorySystem: Player ${player.id} has no InventoryComponent. Rendering empty inventory.`);
-            this.#eventBus.dispatch('ui:render_inventory', { items: [] });
+            this.#eventBus.dispatch('ui:render_inventory', {items: []});
             return;
         }
 
@@ -272,11 +262,11 @@ class InventorySystem {
             const descriptionComp = itemInstance.getComponent('Description');
             const description = descriptionComp ? descriptionComp.value : '';
 
-            itemsData.push({ id: itemId, name: itemName, icon: icon, description: description });
+            itemsData.push({id: itemId, name: itemName, icon: icon, description: description});
         }
 
         /** @type {InventoryRenderPayload} */
-        const renderPayload = { items: itemsData };
+        const renderPayload = {items: itemsData};
         this.#eventBus.dispatch('ui:render_inventory', renderPayload);
         console.log(`InventorySystem: Dispatched 'ui:render_inventory' with ${itemsData.length} items for player ${player.id}.`);
     }

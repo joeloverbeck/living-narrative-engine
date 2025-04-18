@@ -4,42 +4,33 @@
 import {ConnectionsComponent} from "../components/connectionsComponent.js"; // eslint-disable-line no-unused-vars
 import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes.js"; // eslint-disable-line no-unused-vars
 
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 
 class TriggerDispatcher {
     #eventBus;
-    #dataManager;
+    #repository; // Renamed
     #entityManager;
-
-    /**
-     * Maps trigger IDs → `{ eventName, handler }` tuples so we can later
-     * unsubscribe the exact listener that was originally registered.
-     * @type {Map<string, {eventName: string, handler: Function}>}
-     */
     #triggerIdToHandlerMap = new Map();
-
-    /** @type {Set<string>} */
     #activeOneShotTriggerIds = new Set();
 
-    constructor({eventBus, dataManager, entityManager} = {}) {
+    constructor({eventBus, gameDataRepository, entityManager}) { // Updated param name
         if (!eventBus) throw new Error("TriggerDispatcher requires options.eventBus.");
-        if (!dataManager) throw new Error("TriggerDispatcher requires options.dataManager.");
+        if (!gameDataRepository) throw new Error("TriggerDispatcher requires options.gameDataRepository."); // Updated check
         if (!entityManager) throw new Error("TriggerDispatcher requires options.entityManager.");
 
         this.#eventBus = eventBus;
-        this.#dataManager = dataManager;
+        this.#repository = gameDataRepository; // Updated assignment
         this.#entityManager = entityManager;
-
         console.log("TriggerDispatcher: Instance created.");
     }
 
-    /** Scan DataManager, subscribe to each trigger’s listen_to.event_type */
+    /** Scan GameDataRepository, subscribe to each trigger’s listen_to.event_type */
     initialize() {
         console.log("TriggerDispatcher: Initializing...");
-        const allTriggers = this.#dataManager.getAllTriggers();
+        const allTriggers = this.#repository.getAllTriggers();
 
         if (!allTriggers?.length) {
             console.log("TriggerDispatcher: No trigger definitions found.");

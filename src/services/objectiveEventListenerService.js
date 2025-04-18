@@ -1,7 +1,7 @@
 // src/service/objectiveEventListenerService.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/dataManager.js').default} DataManager */
+/** @typedef {import('./gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../../types/questTypes.js').QuestDefinition} QuestDefinition */ // Assuming type definition exists
 /** @typedef {import('../../types/questTypes.js').ObjectiveDefinition} ObjectiveDefinition */ // Assuming type definition exists
@@ -13,29 +13,32 @@
  */
 class ObjectiveEventListenerService {
     /** @type {EventBus} */
-    eventBus;
-    /** @type {DataManager} */
-    dataManager; // Needed to fetch objective definitions if not passed in
+    #eventBus;
+    /**
+     * @type {GameDataRepository} // <-- UPDATED Type
+     */
+    #repository; // <-- UPDATED Property Name
 
     /**
-     * Stores active event listeners associated with objectives.
-     * Structure: Map<questId, Map<objectiveId, Array<{ eventName: string, handler: Function }>>>
+     * Stores active event listeners.
      * @private
      * @type {Map<string, Map<string, Array<{ eventName: string, handler: Function }>>>}
      */
     #activeEventListeners = new Map();
 
     /**
+     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {object} dependencies - The dependencies required by the service.
      * @param {EventBus} dependencies.eventBus - For subscribing/unsubscribing to game events.
-     * @param {DataManager} dependencies.dataManager - For fetching objective definitions.
+     * @param {GameDataRepository} dependencies.gameDataRepository - For fetching objective definitions.
      */
-    constructor({ eventBus, dataManager }) {
+    constructor({eventBus, gameDataRepository}) { // <-- UPDATED Parameter key
         if (!eventBus) throw new Error("ObjectiveEventListenerService requires EventBus.");
-        if (!dataManager) throw new Error("ObjectiveEventListenerService requires DataManager.");
+        // Updated error message to reflect new dependency
+        if (!gameDataRepository) throw new Error("ObjectiveEventListenerService requires GameDataRepository.");
 
-        this.eventBus = eventBus;
-        this.dataManager = dataManager;
+        this.#eventBus = eventBus;
+        this.#repository = gameDataRepository; // <-- UPDATED Assignment
 
         console.log("ObjectiveEventListenerService: Instantiated.");
     }
@@ -73,7 +76,7 @@ class ObjectiveEventListenerService {
             }
 
             // Retrieve Objective Definition
-            const objectiveDefinition = this.dataManager.getObjectiveDefinition(objectiveId);
+            const objectiveDefinition = this.#repository.getObjectiveDefinition(objectiveId);
             if (!objectiveDefinition) {
                 console.error(`ObjectiveEventListenerService: Objective definition not found for ID: ${objectiveId} (referenced by quest ${questId}). Skipping.`);
                 continue;
@@ -192,7 +195,7 @@ class ObjectiveEventListenerService {
 
         // Prevent adding the exact same handler multiple times (safety check)
         if (!objectiveListeners.some(l => l.eventName === eventName && l.handler === handler)) {
-            objectiveListeners.push({ eventName, handler });
+            objectiveListeners.push({eventName, handler});
         }
     }
 
@@ -268,4 +271,4 @@ class ObjectiveEventListenerService {
     }
 }
 
-export { ObjectiveEventListenerService }; // Export the service class
+export {ObjectiveEventListenerService}; // Export the service class

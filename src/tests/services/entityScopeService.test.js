@@ -46,7 +46,7 @@ const mockContext = {
     // Include other potential context properties even if not used by this service directly
     dispatch: jest.fn(),
     targets: [],
-    dataManager: {},
+    gameDataRepository: {},
 };
 
 // --- Helper Functions (for setting up test data consistently) ---

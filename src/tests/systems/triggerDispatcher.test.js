@@ -41,21 +41,23 @@ const makeMockEventBus = () => {
     return bus;
 };
 
-const makeMockDataManager = (triggersArray) => ({
+// Renamed function for clarity
+const makeMockGameDataRepository = (triggersArray) => ({
     getAllTriggers: jest.fn(() => triggersArray),
+    // Add mocks for other GameDataRepository methods if TriggerDispatcher starts using them
 });
 
 // EntityManager is not touched in the current TriggerDispatcher code path but
 // is required by its constructor – provide the lightest stub possible.
 const MOCK_ENTITY_MANAGER = {};
 
-// ── Test Suite ────────────────────────────────────────────────────────────────
+// ── Test Suite ────────────────────────────────────────────────────────────────
 
 describe('TriggerDispatcher – filter matching & one‑shot logic', () => {
     /** @type {ReturnType<typeof makeMockEventBus>} */
     let mockEventBus;
-    /** @type {ReturnType<typeof makeMockDataManager>} */
-    let mockDataManager;
+    /** @type {ReturnType<typeof makeMockGameDataRepository>} */ // Updated type hint if using JSDoc
+    let mockGameDataRepository; // Renamed variable
     /** @type {TriggerDispatcher} */
     let dispatcher;
     /** Captured handler for the subscribed event */
@@ -63,11 +65,13 @@ describe('TriggerDispatcher – filter matching & one‑shot logic', () => {
 
     beforeEach(() => {
         mockEventBus = makeMockEventBus();
-        mockDataManager = makeMockDataManager([TRIGGER_DEF]);
+        // Use renamed function and variable
+        mockGameDataRepository = makeMockGameDataRepository([TRIGGER_DEF]);
 
         dispatcher = new TriggerDispatcher({
             eventBus: mockEventBus,
-            dataManager: mockDataManager,
+            // *** THE FIX: Use the correct property name 'gameDataRepository' ***
+            gameDataRepository: mockGameDataRepository,
             entityManager: MOCK_ENTITY_MANAGER,
         });
 
@@ -102,8 +106,9 @@ describe('TriggerDispatcher – filter matching & one‑shot logic', () => {
             'event:unlock_entity_attempt',
             expect.objectContaining({
                 triggerId: TRIGGER_DEF.id,
-                deceasedEntityId: 'demo:enemy_goblin',
-                targetEntityId: 'demo:door_treasure_room',
+                // Include other expected properties based on how #handleMatch merges data
+                deceasedEntityId: 'demo:enemy_goblin', // from eventData
+                targetEntityId: 'demo:door_treasure_room', // from effect payload
             }),
         );
     });
@@ -120,6 +125,6 @@ describe('TriggerDispatcher – filter matching & one‑shot logic', () => {
         await subscribedHandler(MATCHING_EVENT);
         await subscribedHandler(MATCHING_EVENT); // second identical event
 
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1); // Still expect only one call
     });
 });

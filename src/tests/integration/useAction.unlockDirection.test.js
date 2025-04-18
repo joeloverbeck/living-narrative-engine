@@ -38,10 +38,19 @@ import {
 import {getDisplayName} from '../../utils/messages.js';
 import {waitForEvent} from '../testUtils.js';
 
-/* ────────────────── Minimal DataManager stub ─────────────────────────── */
+/* ────────────────── Minimal GameDataRepository stub ─────────────────────────── */
 
-const mockDataManager = {
+const mockGameDataRepository = {
     actions: new Map([['core:use', {id: 'core:use', commands: ['use', 'u']}]]),
+
+    /**
+     * Mock implementation required by the refactored CommandParser.
+     * @returns {ActionDefinition[]} An array of action definition objects.
+     */
+    getAllActionDefinitions: function () {
+        // 'this' refers to mockGameDataRepository itself here
+        return Array.from(this.actions.values());
+    },
 
     /** Return a very small “definition” object for the requested id. */
     getEntityDefinition: (id) => {
@@ -174,9 +183,9 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
 
     beforeEach(() => {
         /* --- core plumbing --- */
-        em = new EntityManager(mockDataManager);
+        em = new EntityManager(mockGameDataRepository);
         bus = new EventBus();
-        parser = new CommandParser(mockDataManager);
+        parser = new CommandParser(mockGameDataRepository);
         exec = new ActionExecutor();
 
         /* --- component registration (only those used directly) --- */
@@ -204,13 +213,13 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
         itemUsageSystem = new ItemUsageSystem({
             eventBus: bus,
             entityManager: em,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             conditionEvaluationService: mockCE,
             itemTargetResolverService: targetResolver
         });
 
         lockSystem = new LockSystem({eventBus: bus, entityManager: em});
-        uiSystem = new NotificationUISystem({eventBus: bus, dataManager: mockDataManager});
+        uiSystem = new NotificationUISystem({eventBus: bus, gameDataRepository: mockGameDataRepository});
         lockSystem.initialize();
         itemUsageSystem.initialize();
         uiSystem.initialize();
@@ -268,7 +277,7 @@ describe('USE‑INT‑DIR‑01 ➜ “use rusty on north” unlocks the blocking
             playerEntity: player,
             currentLocation: roomExit,
             parsedCommand: parsed,
-            dataManager: mockDataManager,
+            gameDataRepository: mockGameDataRepository,
             entityManager: em,
             eventBus: bus
         });
