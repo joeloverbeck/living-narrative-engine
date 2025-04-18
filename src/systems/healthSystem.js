@@ -4,8 +4,10 @@
 import {
     EVENT_APPLY_HEAL_REQUESTED,
     EVENT_INFLICT_DAMAGE_REQUESTED,
-    EVENT_DISPLAY_MESSAGE // Needed for feedback
+    EVENT_DISPLAY_MESSAGE, // Needed for feedback
+    EVENT_ENTITY_DIED     // Needed to dispatch death event
 } from '../types/eventTypes.js';
+
 // Import required components and utilities
 import {HealthComponent} from '../components/healthComponent.js';
 import {getDisplayName} from '../utils/messages.js'; // Needed for entity names in messages
@@ -17,12 +19,15 @@ import {getDisplayName} from '../utils/messages.js'; // Needed for entity names 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../types/eventTypes.js').ApplyHealRequestedEventPayload} ApplyHealRequestedEventPayload */
 /** @typedef {import('../types/eventTypes.js').InflictDamageRequestedEventPayload} InflictDamageRequestedEventPayload */
-
 /** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
+
+/** @typedef {import('../types/eventTypes.js').EntityDiedEventPayload} EntityDiedEventPayload */
+
 
 /**
  * System responsible for handling direct changes to entity health,
- * such as applying healing or damage requested by item effects or other actions.
+ * such as applying healing or damage requested by events.
+ * It also handles the transition to death when health reaches zero.
  */
 class HealthSystem {
     /** @type {EventBus} */
@@ -30,7 +35,7 @@ class HealthSystem {
     /** @type {EntityManager} */
     #entityManager;
     /** @type {DataManager} */
-    #dataManager; // Kept for potential future use, though not used in heal handler
+    #dataManager; // Kept for potential future use (e.g., resistances applied here)
 
     /**
      * @param {object} dependencies
@@ -41,105 +46,78 @@ class HealthSystem {
     constructor({eventBus, entityManager, dataManager}) {
         if (!eventBus) throw new Error("HealthSystem requires EventBus.");
         if (!entityManager) throw new Error("HealthSystem requires EntityManager.");
-        // dataManager might not be strictly needed yet but good practice to inject dependencies
-        if (!dataManager) throw new Error("HealthSystem requires DataManager.");
-
+        if (!dataManager) throw new Error("HealthSystem requires DataManager."); // Keep injection
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
         this.#dataManager = dataManager;
-
         console.log("HealthSystem: Instance created.");
     }
 
     /**
      * Initializes the system by subscribing to health-related events.
-     * Confirms subscription required by Ticket 2.1.
      */
     initialize() {
-        // Task: Add/confirm the subscription
         this.#eventBus.subscribe(EVENT_APPLY_HEAL_REQUESTED, this._handleApplyHealRequested.bind(this));
-        // Existing subscription for damage (can remain or be implemented later)
         this.#eventBus.subscribe(EVENT_INFLICT_DAMAGE_REQUESTED, this._handleInflictDamageRequested.bind(this));
-        console.log("HealthSystem: Initialized and subscribed to APPLY_HEAL_REQUESTED and INFLICT_DAMAGE_REQUESTED.");
+        console.log(`HealthSystem: Initialized and subscribed to ${EVENT_APPLY_HEAL_REQUESTED} and ${EVENT_INFLICT_DAMAGE_REQUESTED}.`);
     }
 
     /**
-     * Handles the request to apply healing to an entity based on the
-     * EVENT_APPLY_HEAL_REQUESTED event.
-     * Implements the logic described in Ticket 2.1.
-     *
+     * Handles the request to apply healing to an entity.
      * @private
-     * @param {ApplyHealRequestedEventPayload} payload - The event payload containing details for the heal request.
+     * @param {ApplyHealRequestedEventPayload} payload
      */
     _handleApplyHealRequested(payload) {
-        // Task: Cast or treat payload as ApplyHealRequestedEventPayload (Handled by JSDoc/parameter type)
-
-        // Task: Log the received payload for debugging.
+        // ... (existing heal logic remains unchanged) ...
         console.debug(`[HealthSystem] Received event '${EVENT_APPLY_HEAL_REQUESTED}' with payload:`, payload);
-
-        // Task: Determine the target Entity
         let targetEntity = null;
-        let targetEntityIdForLog = 'N/A'; // For logging purposes
-
+        let targetEntityIdForLog = 'N/A';
         if (payload.healTargetSpecifier === 'user') {
             targetEntityIdForLog = payload.userId;
             targetEntity = this.#entityManager.getEntityInstance(payload.userId);
         } else if (payload.healTargetSpecifier === 'target') {
             targetEntityIdForLog = payload.validatedTargetId;
-            // Task: Handle cases where validatedTargetId might be null or not an entity.
-            // getEntityInstance handles null/undefined input gracefully, returning null/undefined.
             targetEntity = payload.validatedTargetId ? this.#entityManager.getEntityInstance(payload.validatedTargetId) : null;
         } else {
-            // Unknown specifier is an error
             console.error(`[HealthSystem] Heal failed: Unknown healTargetSpecifier '${payload.healTargetSpecifier}' from item ${payload.itemDefinitionId} (Instance: ${payload.itemInstanceId})`);
-            // Provide minimal feedback, though this indicates a data setup error
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal error: Cannot determine heal target.",
                 type: 'error'
             });
-            return; // Stop processing
+            return;
         }
 
-        // Task: Validate the target entity: Check if it exists and has a HealthComponent.
         if (!targetEntity) {
             console.warn(`[HealthSystem] Heal failed: Target entity not found (Specifier: '${payload.healTargetSpecifier}', Attempted ID: ${targetEntityIdForLog}). Source Item: ${payload.sourceItemName} (${payload.itemDefinitionId})`);
-            // Task: If not, dispatch an appropriate ui:message_display ("Cannot heal that.") and return.
-            // Note: ItemUsageSystem might have already filtered invalid targets, but this provides a safety net.
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Cannot heal that.", type: 'warning'});
             return;
         }
 
-        // Task: Get the HealthComponent.
         /** @type {HealthComponent | null} */
         const healthComponent = targetEntity.getComponent(HealthComponent);
-        const targetName = getDisplayName(targetEntity); // Get name for messages
+        const targetName = getDisplayName(targetEntity);
 
         if (!healthComponent) {
             console.warn(`[HealthSystem] Heal failed: Target entity '${targetName}' (ID: ${targetEntity.id}) does not have a HealthComponent. Source Item: ${payload.sourceItemName}`);
-            // Task: If not, dispatch an appropriate ui:message_display ("Cannot heal that.") and return.
-            // Provide slightly more context if possible.
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `The ${targetName} cannot be healed.`, type: 'warning'});
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                text: `The ${targetName} cannot be healed.`,
+                type: 'warning'
+            });
             return;
         }
 
-        // Task: Check if health is already full.
         if (healthComponent.current >= healthComponent.max) {
-            // Determine subject for the message
             const subject = (targetEntity.id === payload.userId) ? "You are" : `${targetName} is`;
-            // Task: If yes, dispatch "Health is full." message (type: 'info') and return
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `${subject} already at full health.`, type: 'info'});
             console.debug(`[HealthSystem] Heal skipped: Target '${targetName}' (ID: ${targetEntity.id}) already at full health (${healthComponent.current}/${healthComponent.max}). Source Item: ${payload.sourceItemName}`);
-            // Task: (unless item should fail here based on a potential fail_if_already_max flag in payload).
-            // No such flag defined in ApplyHealRequestedEventPayload, so we return.
             return;
         }
 
-        // Task: Apply the healing: healthComponent.current = Math.min(healthComponent.max, healthComponent.current + payload.amount);. Calculate actualHeal.
         const healAmount = payload.amount;
         if (typeof healAmount !== 'number' || healAmount < 0) {
             console.warn(`[HealthSystem] Heal failed: Invalid heal amount (${healAmount}) received for target '${targetName}'. Source Item: ${payload.sourceItemName}`);
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
-                text: `Cannot apply healing due to invalid amount.`,
+                text: "Cannot apply healing due to invalid amount.",
                 type: 'warning'
             });
             return;
@@ -148,62 +126,125 @@ class HealthSystem {
         const healthBeforeHeal = healthComponent.current;
         const potentialNewHealth = healthBeforeHeal + healAmount;
         const newHealth = Math.min(healthComponent.max, potentialNewHealth);
-
-        // Calculate the actual amount of health restored
         const actualHeal = newHealth - healthBeforeHeal;
 
-        // Only update and report if actual healing occurred.
         if (actualHeal > 0) {
             healthComponent.current = newHealth;
             console.debug(`[HealthSystem] Applied ${actualHeal} healing to '${targetName}' (ID: ${targetEntity.id}). New health: ${newHealth}/${healthComponent.max}. Source Item: ${payload.sourceItemName}`);
 
-            // Task: Dispatch success ui:message_display (e.g., You heal ${targetName} for ${actualHeal} health., type: 'success').
             let successMessage = "";
-            // Customize message based on who was healed
             if (targetEntity.id === payload.userId) {
-                // User healed themselves
                 successMessage = `You heal yourself for ${actualHeal} health.`;
             } else {
-                // User healed someone/something else
-                successMessage = `You heal ${targetName} for ${actualHeal} health.`;
+                // Need user entity for the message source, but we only have userId from payload
+                // Assuming the message should reflect the action taker (user)
+                const userEntity = this.#entityManager.getEntityInstance(payload.userId);
+                const userName = userEntity ? getDisplayName(userEntity) : "Someone"; // Fallback
+                // Or simplify the message:
+                successMessage = `${targetName} is healed for ${actualHeal} health.`;
+                // If you need "You heal X", you might need the user's ID explicitly passed or looked up.
+                // Let's stick to a more generic one for healing others for now.
+                // Reverting to the previous simpler logic:
+                if (targetEntity.id === payload.userId) {
+                    successMessage = `You heal yourself for ${actualHeal} health.`;
+                } else {
+                    successMessage = `You heal ${targetName} for ${actualHeal} health.`; // Assumes 'You' is the actor
+                }
+
             }
 
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: successMessage,
                 type: 'success'
             });
-
-            // Optional: Dispatch another event like 'event:entity_healed' if other systems need to react
-            // this.#eventBus.dispatch('event:entity_healed', {
-            //    healerId: payload.userId, // The initiator of the item use
-            //    targetId: targetEntity.id,
-            //    amountHealed: actualHeal,
-            //    sourceItemId: payload.itemDefinitionId,
-            //    newHealth: newHealth,
-            //    maxHealth: healthComponent.max
-            // });
-
         } else {
-            // This branch might be reached if healAmount was 0, or if health was already max (though the earlier check should prevent that).
-            // Log it, but don't send a user message unless it was an error condition (like negative amount, handled above).
             console.debug(`[HealthSystem] Requested heal amount (${healAmount}) resulted in no actual health change for '${targetName}'. Current: ${healthComponent.current}/${healthComponent.max}. Source Item: ${payload.sourceItemName}`);
-            // No UI message needed if no change occurred.
         }
     }
 
     /**
-     * Stub handler for inflicting damage requests.
-     * Needs implementation based on CombatSystem/Damage logic.
+     * Handles the request to inflict damage on an entity based on the
+     * EVENT_INFLICT_DAMAGE_REQUESTED event. Applies damage, clamps health,
+     * checks for death, and dispatches death-related events/messages.
      * @private
-     * @param {InflictDamageRequestedEventPayload} payload
+     * @param {InflictDamageRequestedEventPayload} payload - The event payload.
      */
     _handleInflictDamageRequested(payload) {
-        console.log(`[HealthSystem] STUB Handler: Received event '${EVENT_INFLICT_DAMAGE_REQUESTED}' with payload:`, payload);
-        // TODO: Implement damage application logic, considering target validation,
-        // HealthComponent, defenses, resistances, and potentially dispatching
-        // EVENT_ENTITY_DIED if health drops to 0 or below.
-        // This might delegate to a CombatSystem or handle directly.
+        console.debug(`[HealthSystem] Received event '${EVENT_INFLICT_DAMAGE_REQUESTED}' with payload:`, payload);
+
+        const {targetId, amount, sourceEntityId} = payload;
+
+        // --- Validate Damage Amount ---
+        if (typeof amount !== 'number' || amount < 0) {
+            console.warn(`[HealthSystem] Damage failed: Invalid damage amount (${amount}) received for target ID '${targetId}'. Source: ${sourceEntityId || 'Unknown'}`);
+            // Maybe dispatch an error message? Depends if this should ever happen.
+            return; // Stop processing if damage amount is invalid
+        }
+
+        // --- Retrieve Target Entity ---
+        const targetEntity = this.#entityManager.getEntityInstance(targetId);
+
+        if (!targetEntity) {
+            console.warn(`[HealthSystem] Damage failed: Target entity not found (ID: ${targetId}). Source: ${sourceEntityId || 'Unknown'}`);
+            // No UI message here usually, as the CombatSystem might have already reported a miss or invalid target.
+            return;
+        }
+
+        // --- Retrieve Health Component & Target Name ---
+        /** @type {HealthComponent | null} */
+        const healthComponent = targetEntity.getComponent(HealthComponent);
+        const targetName = getDisplayName(targetEntity); // Get name for messages/logs
+
+        if (!healthComponent) {
+            console.warn(`[HealthSystem] Damage failed: Target entity '${targetName}' (ID: ${targetId}) does not have a HealthComponent. Source: ${sourceEntityId || 'Unknown'}`);
+            // Again, CombatSystem likely handled the feedback if the attack was attempted.
+            return;
+        }
+
+        // --- Check if Already Dead ---
+        const healthBefore = healthComponent.current;
+        if (healthBefore <= 0) {
+            // Target is already dead, no need to apply more damage or trigger another death event.
+            console.debug(`[HealthSystem] Damage ignored: Target '${targetName}' (ID: ${targetId}) already has 0 or less health (${healthBefore}). Source: ${sourceEntityId || 'Unknown'}`);
+            return;
+        }
+
+        // --- Apply Damage & Clamp Health ---
+        // TODO: Future: Apply resistances/vulnerabilities from dataManager/components here
+        const actualDamage = amount; // In future, calculate based on resistances etc.
+        const newHealth = healthBefore - actualDamage;
+        const clampedNewHealth = Math.max(0, newHealth);
+        const actualDamageApplied = healthBefore - clampedNewHealth; // How much health was actually lost
+
+        healthComponent.current = clampedNewHealth;
+        console.log(`[HealthSystem] Applied ${actualDamageApplied} damage to '${targetName}' (ID: ${targetId}). Health: ${healthBefore} -> ${clampedNewHealth}. Source: ${sourceEntityId || 'Unknown'}`);
+
+
+        // --- Check for Death (Transition) ---
+        if (clampedNewHealth <= 0 /*&& healthBefore > 0 */) { // The healthBefore > 0 check is implicitly handled by the earlier "Already Dead" check
+            console.log(`[HealthSystem] Target '${targetName}' (ID: ${targetId}) died as a result of damage from Source: ${sourceEntityId || 'Unknown'}.`);
+
+            // --- 7a. Fire Death Event ---
+            /** @type EntityDiedEventPayload */
+            const deathPayload = {
+                deceasedEntityId: targetId,
+                killerEntityId: sourceEntityId // Can be null/undefined if damage source wasn't an entity (e.g., poison)
+            };
+            this.#eventBus.dispatch(EVENT_ENTITY_DIED, deathPayload);
+
+            // --- 7b. Dispatch UI Death Message ---
+            // Consider if killer name is needed/available
+            // const killerEntity = sourceEntityId ? this.#entityManager.getEntityInstance(sourceEntityId) : null;
+            // const killerName = killerEntity ? getDisplayName(killerEntity) : 'Something';
+            const deathMessage = `The ${targetName} collapses, defeated!`; // Simple message
+            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: deathMessage, type: 'combat_critical'}); // Critical event type
+
+            // TODO: Future: Other systems listen to EVENT_ENTITY_DIED for XP, loot, quests etc.
+        }
+        // No specific UI message for *just* taking damage here, as CombatSystem handles the "hit" message.
+        // We could add one if needed (e.g., "The Goblin takes 5 damage.") but it might be redundant.
     }
+
 
     /**
      * Cleans up subscriptions when the system is shut down.

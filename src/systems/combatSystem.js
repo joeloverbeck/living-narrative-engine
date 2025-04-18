@@ -1,8 +1,12 @@
 // src/systems/combatSystem.js
-
 import {HealthComponent} from '../components/healthComponent.js';
 import {NameComponent} from '../components/nameComponent.js';
-import {EVENT_ATTACK_INTENDED, EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_DIED} from "../types/eventTypes.js";
+import {
+    EVENT_ATTACK_INTENDED,
+    EVENT_DISPLAY_MESSAGE,
+    EVENT_ENTITY_DIED, // Keep for reference/context, but won't dispatch directly
+    EVENT_INFLICT_DAMAGE_REQUESTED // Import the new event type
+} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -11,7 +15,9 @@ import {EVENT_ATTACK_INTENDED, EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_DIED} from ".
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
- * Handles the application of damage based on attack intentions and processes entity death.
+ * Handles the *intention* to attack, calculates potential damage,
+ * and requests damage application via event dispatch. It no longer
+ * directly modifies health or handles death events.
  */
 class CombatSystem {
     /** @type {EventBus} */
@@ -46,8 +52,8 @@ class CombatSystem {
     }
 
     /**
-     * Handles the EVENT_ATTACK_INTENDED event, calculates and applies damage,
-     * and checks for death.
+     * Handles the EVENT_ATTACK_INTENDED event, calculates potential damage,
+     * dispatches a damage request, and sends a UI message about the attack.
      * @param {object} eventData
      * @param {string} eventData.attackerId
      * @param {string} eventData.targetId
@@ -56,7 +62,6 @@ class CombatSystem {
      */
     _handleAttackIntended(eventData) {
         const {attackerId, targetId, potentialDamage} = eventData;
-
         console.log(`CombatSystem: Handling attack intention from ${attackerId} to ${targetId} for ${potentialDamage} potential damage.`);
 
         // --- 1. Retrieve Entities ---
@@ -69,16 +74,18 @@ class CombatSystem {
         }
         if (!targetEntity) {
             console.error(`CombatSystem: Target entity not found for ID: ${targetId}. Cannot process attack.`);
-            // Dispatch a message? Maybe not, the handler already did.
+            // Attack handler likely already sent a message if target was invalid.
             return;
         }
 
-        // --- 2. Retrieve Target Health Component ---
+        // --- 2. Retrieve Target Health Component (for validation only) ---
         const targetHealthComp = targetEntity.getComponent(HealthComponent);
+        const targetNameComp = targetEntity.getComponent(NameComponent); // For messages
+        const targetDisplayName = targetNameComp ? targetNameComp.value : `entity ${targetEntity.id}`;
+
         if (!targetHealthComp) {
-            console.error(`CombatSystem: Target entity ${targetId} does not have a HealthComponent. Cannot apply damage.`);
-            const targetNameComp = targetEntity.getComponent(NameComponent);
-            const targetDisplayName = targetNameComp ? targetNameComp.value : `entity ${targetEntity.id}`;
+            console.warn(`CombatSystem: Target entity ${targetDisplayName} (ID: ${targetId}) does not have a HealthComponent. Cannot request damage.`);
+            // Send feedback that the target is invalid for damage
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: `You cannot damage the ${targetDisplayName}.`,
                 type: 'warning'
@@ -86,15 +93,15 @@ class CombatSystem {
             return;
         }
 
-        // --- 3. Check if Target Already Dead ---
-        // We process the intent even if dead to allow messages, but maybe skip damage?
-        // Let's apply damage anyway, but clamp at 0. The check for *transition* is key.
-        const healthBefore = targetHealthComp.current;
-        if (healthBefore <= 0) {
-            // We might still get here if multiple attacks land in the same 'tick' before death processing
-            // No need to apply more damage or fire another death event.
-            // console.log(`CombatSystem: Target ${targetId} already has 0 or less health. Ignoring further damage application.`);
-            // Optionally, add a message like "It's already dead!" - but attack handler might cover this.
+        // --- 3. Check if Target Already Seems Dead (basic check) ---
+        // HealthSystem will perform the definitive check before applying damage.
+        // This prevents spamming damage requests if multiple attacks resolve in one tick
+        // after the target should already be considered dead by CombatSystem.
+        if (targetHealthComp.current <= 0) {
+            console.log(`CombatSystem: Target ${targetDisplayName} (ID: ${targetId}) already appears to have 0 or less health. Skipping damage request.`);
+            // Optionally, add a message like "It's already dead!" - but the attack handler might cover this.
+            // Or maybe the target selection should prevent targeting dead entities.
+            // Let's keep it silent here for now.
             return;
         }
 
@@ -102,37 +109,35 @@ class CombatSystem {
         // TODO: Implement defense, resistance, armor checks here using dataManager/components
         const actualDamage = potentialDamage;
 
-        // --- 5. Apply Damage & Clamp Health ---
-        const newHealth = healthBefore - actualDamage;
-        const clampedNewHealth = Math.max(0, newHealth);
-        targetHealthComp.current = clampedNewHealth;
+        // --- 5. Dispatch Damage Request Event --- <<<<------ CHANGE HERE
+        // Instead of applying damage directly, dispatch an event for HealthSystem
+        this.#eventBus.dispatch(EVENT_INFLICT_DAMAGE_REQUESTED, {
+            targetId: targetId,
+            amount: actualDamage,
+            sourceEntityId: attackerId // Pass attacker ID for death attribution
+        });
+        console.log(`CombatSystem: Dispatched ${EVENT_INFLICT_DAMAGE_REQUESTED} for ${actualDamage} damage to ${targetId} from ${attackerId}.`);
 
-        console.log(`CombatSystem: Applied ${actualDamage} damage to ${targetId}. Health: ${healthBefore} -> ${clampedNewHealth}`);
 
         // --- 6. Dispatch UI Hit Message ---
+        // This remains appropriate here as it describes the attack action.
         const attackerNameComp = attackerEntity.getComponent(NameComponent);
         const attackerDisplayName = attackerNameComp ? attackerNameComp.value : 'Attacker';
-        const targetNameComp = targetEntity.getComponent(NameComponent);
-        const targetDisplayName = targetNameComp ? targetNameComp.value : `entity ${targetEntity.id}`;
+
         const hitMessage = `${attackerDisplayName} hit${attackerDisplayName === 'You' ? '' : 's'} the ${targetDisplayName} for ${actualDamage} damage!`;
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: hitMessage, type: 'combat_hit'}); // Use a specific type
+        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: hitMessage, type: 'combat_hit'});
 
-        // --- 7. Check for Death (Transition) ---
-        if (clampedNewHealth <= 0 && healthBefore > 0) {
-            console.log(`CombatSystem: Target ${targetId} died.`);
+        // --- 7. Death Check and Death Event/Message REMOVED ---
+        // This logic is now the responsibility of the HealthSystem,
+        // which will listen for EVENT_INFLICT_DAMAGE_REQUESTED.
+    }
 
-            // --- 7a. Fire Death Event ---
-            this.#eventBus.dispatch(EVENT_ENTITY_DIED, {
-                deceasedEntityId: targetId,
-                killerEntityId: attackerId
-            });
-
-            // --- 7b. Dispatch UI Death Message ---
-            const deathMessage = `The ${targetDisplayName} collapses, defeated!`;
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: deathMessage, type: 'combat_critical'}); // Critical event type
-
-            // TODO: Future: Trigger loot drops, XP gain, quest updates via listeners on EVENT_ENTITY_DIED
-        }
+    /**
+     * Cleans up subscriptions when the system is shut down.
+     */
+    shutdown() {
+        this.#eventBus.unsubscribe(EVENT_ATTACK_INTENDED, this._handleAttackIntended);
+        console.log("CombatSystem: Unsubscribed from " + EVENT_ATTACK_INTENDED + ".");
     }
 }
 

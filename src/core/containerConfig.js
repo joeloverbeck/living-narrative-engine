@@ -12,7 +12,8 @@ import InputHandler from './inputHandler.js';
 import GameLoop from './gameLoop.js';
 
 // Systems
-import EquipmentSystem from '../systems/equipmentSystem.js';
+import EquipmentEffectSystem from '../systems/equipmentEffectSystem.js';
+import EquipmentSlotSystem from '../systems/equipmentSlotSystem.js';
 import InventorySystem from '../systems/inventorySystem.js';
 import CombatSystem from '../systems/combatSystem.js';
 import DeathSystem from "../systems/deathSystem.js";
@@ -166,11 +167,17 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         dataManager: c.resolve('DataManager')
     }), {lifecycle: 'singleton'});
 
-    // Entity State & Interaction Systems
-    container.register('EquipmentSystem', (c) => new EquipmentSystem({
+    container.register('EquipmentEffectSystem', (c) => new EquipmentEffectSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         dataManager: c.resolve('DataManager')
+    }), {lifecycle: 'singleton'});
+
+    container.register('EquipmentSlotSystem', (c) => new EquipmentSlotSystem({ // New system registration
+        eventBus: c.resolve('EventBus'),
+        entityManager: c.resolve('EntityManager'),
+        dataManager: c.resolve('DataManager')
+        // Note: dataManager might be needed later if slots are data-driven
     }), {lifecycle: 'singleton'});
 
     container.register('InventorySystem', (c) => new InventorySystem({

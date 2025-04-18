@@ -102,7 +102,8 @@ class GameEngine {
                 'TriggerDispatcher',
                 'GameRuleSystem',
                 // State & Interaction
-                'EquipmentSystem',
+                'EquipmentEffectSystem',
+                'EquipmentSlotSystem',
                 'InventorySystem',
                 'CombatSystem',
                 'DeathSystem',
