@@ -582,6 +582,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
 // --- UI Event Name Constants ---
 export const EVENT_DISPLAY_MESSAGE = 'event:display_message';
 export const EVENT_DISPLAY_LOCATION = 'event:display_location';
+export const EVENT_UPDATE_ACTIONS = 'event:update_actions';
 // Add other UI event names as needed
 
 /**
@@ -610,4 +611,17 @@ export const EVENT_DISPLAY_LOCATION = 'event:display_location';
  * @property {Array<{id: string, name: string, description?: string}>} [items] An optional list of objects describing items visible in the location.
  * @property {Array<{id: string, name: string, description?: string}>} [entities] An optional list of objects describing other entities (NPCs, players) visible in the location. // Changed from npcs for generality
  * @property {Array<{id: string, name: string, description?: string}>} [connections] An optional list of objects describing interactive connection entities (doors, passages) visible in the location. // Added connections
+ */
+
+/**
+ * Defines the payload structure for the EVENT_UPDATE_ACTIONS.
+ * Communicates the list of currently available actions for the player to the UI.
+ * This allows the UI to dynamically render action buttons or other interactive elements.
+ *
+ * Fired By: GameLoop (after discovering actions via ActionDiscoverySystem).
+ * Consumed By: DomRenderer (or other UI rendering components).
+ * Purpose: To update the UI with clickable actions relevant to the current game state.
+ *
+ * @typedef {object} UIUpdateActionsPayload  // AC2: Payload definition
+ * @property {string[]} actions - An array of strings, where each string represents an available action command (e.g., "look", "go north", "take potion", "attack goblin").
  */

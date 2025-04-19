@@ -12,6 +12,7 @@
     --color-text-warning: #856404; /* Warning messages */
     --color-text-info: var(--color-text-default); /* Info messages (can use default) */
     --color-text-location: var(--color-text-default); /* Location block text */
+    --color-text-button: #fff; /* Text for action buttons */
 
     --color-background-page: #fff; /* Overall page background */
     --color-background-output: #f8f9fa; /* Main game output area */
@@ -21,11 +22,19 @@
     --color-background-location: #e9ecef; /* Background for location blocks */
     --color-background-pre: #eee; /* Background for <pre> blocks (if used) */
     --color-background-success: var(--color-background-combat-hit, #d4edda); /* Reuse combat hit or define */
+    --color-background-button: #007bff; /* Primary action button background */
+    --color-background-button-hover: #0056b3; /* Hover state for action button */
+    --color-background-button-active: #004085; /* Active state for action button */
+
 
     --color-border-default: #ced4da; /* Default borders (input, output area) */
     --color-border-error: #f5c6cb; /* Border for error messages (match bg) */
     --color-border-warning: #ffeeba; /* Border for warning messages (match bg) */
     --color-border-location: #adb5bd; /* Border for location blocks */
+    --color-border-button: #007bff; /* Action button border (match background) */
+    --color-border-button-hover: #0056b3; /* Hover border */
+    --color-border-button-active: #004085; /* Active border */
+
     --color-accent-error: #dc3545; /* Accent border (e.g., left border on errors) */
     --color-accent-warning: #ffc107; /* Accent border for warnings */
     --color-accent-location: #6c757d; /* Accent border for location blocks */
@@ -33,7 +42,6 @@
     --color-accent-quest: #4a90e2; /* A distinct medium blue for quest start */
     --color-accent-reward: var(--color-accent-success); /* Use success accent for rewards too */
 
-    /* -- Combat Colors -- */
     /* -- Combat Colors -- */
     --color-text-combat: #495057; /* General combat action text */
     --color-text-combat-hit: #155724; /* Player hit success (Dark Green) */
@@ -53,6 +61,7 @@
     /* -- Typography -- */
     --font-family-base: sans-serif; /* Base font stack */
     --font-size-base: 1rem; /* Base font size (16px default) */
+    --font-size-small: 0.875rem; /* Slightly smaller font for buttons */
     --line-height-base: 1.5; /* Base line height */
 
     /* -- Spacing & Sizing -- */
@@ -226,17 +235,18 @@ h1 {
     font-size: 0.9rem; /* Slightly smaller */
 }
 
-/* Example for future items/npcs */
-/*
 .location__items {
     color: var(--color-text-secondary);
-    font-style: italic;
+    font-style: italic; /* Make items stand out a bit */
+    margin-bottom: var(--margin-small);
 }
-.location__npcs {
+
+.location__entities {
     color: var(--color-text-secondary);
-    font-weight: bold;
+    font-weight: bold; /* Make NPCs/entities bold */
+    margin-bottom: var(--margin-small);
 }
-*/
+
 
 /* General Combat Action (e.g., swing) */
 .message-combat {
@@ -443,6 +453,45 @@ h1 {
     border-color: #c3e6cb; /* Match background */
     border-left-color: var(--color-accent-success);
     /* font-weight: bold; */ /* Optional: Make success bold too? Or keep normal */
+}
+
+/* --- Action Button Styles (FEAT-UI-ACTIONS-01) --- */
+#action-buttons-container {
+    /* AC4: Container Styling */
+    display: flex; /* Enable flex layout */
+    flex-wrap: wrap; /* Allow buttons to wrap to next line */
+    gap: var(--margin-small); /* Space between buttons (e.g., 4px) */
+    margin-bottom: var(--margin-medium); /* Space below container, above input (e.g., 8px) */
+    min-height: 2rem; /* Prevent collapsing when empty, reserves some space */
+    padding: var(--padding-small) 0; /* Optional: Add some vertical padding */
+}
+
+.action-button {
+    /* AC5: Button Styling */
+    padding: var(--padding-small) var(--padding-medium); /* e.g., 4px 8px */
+    font-size: var(--font-size-small); /* e.g., 0.875rem */
+    color: var(--color-text-button); /* e.g., white */
+    background-color: var(--color-background-button); /* e.g., blue */
+    border: 1px solid var(--color-border-button); /* e.g., blue */
+    border-radius: var(--border-radius-small); /* e.g., 3px */
+    cursor: pointer;
+    text-align: center;
+    /* Prevent buttons from shrinking too much if text is long */
+    flex-shrink: 0;
+    /* Optional: Basic transition for hover/active states */
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.action-button:hover {
+    /* AC5: Hover state */
+    background-color: var(--color-background-button-hover); /* Darker blue */
+    border-color: var(--color-border-button-hover);
+}
+
+.action-button:active {
+    /* AC5: Active state */
+    background-color: var(--color-background-button-active); /* Even darker blue */
+    border-color: var(--color-border-button-active);
 }
 
 /* --- Utility Styles --- */

@@ -4,16 +4,17 @@
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Corrected path if needed
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./inputHandler.js').default} InputHandler */
 /** @typedef {import('./commandParser.js').default} CommandParser */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('./eventBus.js').default} EventBus */
-/** @typedef {import('../systems/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */ // *** ADDED ***
-/** @typedef {import('../core/services/consoleLogger.js').default} ILogger */ // *** ADDED *** // Assuming ConsoleLogger is the impl
-/** @typedef {import('../entities/entity.js').default} Entity */ // *** ADDED ***
+/** @typedef {import('../systems/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */
+/** @typedef {import('../core/services/consoleLogger.js').default} ILogger */
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../types/eventTypes.js').UIUpdateActionsPayload} UIUpdateActionsPayload */ // *** ADDED Type for clarity ***
 
 // --- Define the options object structure ---
 /**
@@ -25,11 +26,19 @@
  * @property {CommandParser} commandParser
  * @property {ActionExecutor} actionExecutor
  * @property {EventBus} eventBus
- * @property {ActionDiscoverySystem} actionDiscoverySystem // *** ADDED ***
- * @property {ILogger} logger // *** ADDED ***
+ * @property {ActionDiscoverySystem} actionDiscoverySystem
+ * @property {ILogger} logger
  */
 
-import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
+// *** FEAT-CORE-ACTIONS-02: AC1 START ***
+// Import EVENT_UPDATE_ACTIONS alongside EVENT_DISPLAY_MESSAGE
+import {
+    EVENT_DISPLAY_MESSAGE,
+    EVENT_UPDATE_ACTIONS // <-- Added import
+} from "../types/eventTypes.js";
+
+// *** FEAT-CORE-ACTIONS-02: AC1 END ***
+
 
 /**
  * GameLoop orchestrates the main game flow *after* initialization.
@@ -45,8 +54,8 @@ class GameLoop {
     #commandParser;
     #actionExecutor;
     #eventBus;
-    #actionDiscoverySystem; // *** ADDED ***
-    #logger; // *** ADDED ***
+    #actionDiscoverySystem;
+    #logger;
 
     #isRunning = false;
 
@@ -63,8 +72,8 @@ class GameLoop {
             commandParser,
             actionExecutor,
             eventBus,
-            actionDiscoverySystem, // *** ADDED ***
-            logger // *** ADDED ***
+            actionDiscoverySystem,
+            logger
         } = options || {};
 
         // --- Validate Dependencies ---
@@ -83,14 +92,12 @@ class GameLoop {
         if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') {
             throw new Error("GameLoop requires a valid options.eventBus object.");
         }
-        // *** ADDED Validation ***
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
             throw new Error("GameLoop requires a valid options.actionDiscoverySystem object.");
         }
         if (!logger || typeof logger.info !== 'function') {
             throw new Error("GameLoop requires a valid options.logger object (ILogger).");
         }
-        // *** END ADDED Validation ***
 
         // --- Assign Dependencies ---
         this.#gameDataRepository = gameDataRepository;
@@ -100,8 +107,8 @@ class GameLoop {
         this.#commandParser = commandParser;
         this.#actionExecutor = actionExecutor;
         this.#eventBus = eventBus;
-        this.#actionDiscoverySystem = actionDiscoverySystem; // *** ADDED ***
-        this.#logger = logger; // *** ADDED ***
+        this.#actionDiscoverySystem = actionDiscoverySystem;
+        this.#logger = logger;
 
         this.#isRunning = false; // Initialize running state
 
@@ -124,19 +131,18 @@ class GameLoop {
      * @private
      * @param {{command: string}} eventData - The event payload containing the command string.
      */
-    async #handleSubmittedCommandFromEvent(eventData) { // *** Made async ***
+    async #handleSubmittedCommandFromEvent(eventData) {
         if (!this.#isRunning) {
             this.#logger.warn("GameLoop received command submission via event, but loop is not running.");
             return;
         }
         if (eventData && typeof eventData.command === 'string') {
             this.#logger.info(`GameLoop: Received command via event: "${eventData.command}"`);
-            // Process the command using the main processing logic (now async)
-            await this.processSubmittedCommand(eventData.command); // *** Added await ***
+            await this.processSubmittedCommand(eventData.command);
         } else {
             this.#logger.warn("GameLoop received invalid 'command:submit' event data:", eventData);
             // Even if data is bad, ensure actions are discovered and input is enabled for next try
-            await this._discoverPlayerActions(); // *** Added await ***
+            await this._discoverPlayerActions();
             this.promptInput(); // Enable input again
         }
     }
@@ -145,7 +151,7 @@ class GameLoop {
      * Starts the main game loop and enables input.
      * Assumes GameInitializer has already run successfully.
      */
-    async start() { // *** Made async ***
+    async start() {
         if (this.#isRunning) {
             this.#logger.warn("GameLoop: start() called but loop is already running.");
             return;
@@ -168,10 +174,10 @@ class GameLoop {
         this.#isRunning = true;
         this.#logger.info("GameLoop: Started.");
 
-        // *** ADDED: Discover initial actions FIRST ***
+        // Discover initial actions FIRST
         await this._discoverPlayerActions();
 
-        // *** THEN enable input ***
+        // THEN enable input
         this.promptInput("Enter command..."); // Provide initial placeholder
     }
 
@@ -181,7 +187,7 @@ class GameLoop {
      * Parses the command, executes the action, discovers next actions, and re-enables input.
      * @param {string} command - The raw command string from the input.
      */
-    async processSubmittedCommand(command) { // *** Made async ***
+    async processSubmittedCommand(command) {
         if (!this.#isRunning) return;
 
         this.#logger.debug(`Processing command: "${command}"`);
@@ -196,7 +202,7 @@ class GameLoop {
                 this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: message, type: "error"});
             }
             // Even on error, discover actions for the *next* turn and re-enable input
-            await this._discoverPlayerActions(); // *** Added await ***
+            await this._discoverPlayerActions();
             this.promptInput(); // Re-enable input
             return;
         }
@@ -209,7 +215,7 @@ class GameLoop {
                 type: "error"
             });
             // Discover actions and re-enable input even after internal error
-            await this._discoverPlayerActions(); // *** Added await ***
+            await this._discoverPlayerActions();
             this.promptInput(); // Re-enable input
             return;
         }
@@ -217,10 +223,10 @@ class GameLoop {
         // Execute the action (synchronous in this example)
         this.executeAction(parsedCommand.actionId, parsedCommand);
 
-        // *** ADDED: Discover actions for the *next* turn AFTER execution ***
+        // Discover actions for the *next* turn AFTER execution
         await this._discoverPlayerActions();
 
-        // *** THEN re-enable input ***
+        // THEN re-enable input
         this.promptInput();
     }
 
@@ -239,7 +245,7 @@ class GameLoop {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });
-            return;
+            return; // Don't continue if state is bad
         }
 
         /** @type {ActionContext} */
@@ -254,18 +260,26 @@ class GameLoop {
         };
 
         this.#logger.debug(`Executing action: ${actionId}`);
-        /** @type {ActionResult} */
+        // Assuming executeAction itself doesn't throw errors handled here, but ActionExecutor handles internal ones.
         this.#actionExecutor.executeAction(actionId, context);
     }
 
-    // *** ADDED: Method to discover actions ***
+
     /**
-     * Discovers available actions for the player based on the current state.
+     * Discovers available actions for the player based on the current state
+     * via ActionDiscoverySystem and dispatches the result via the EventBus.
      * Handles errors during action discovery gracefully.
      * @private
+     * @async
      */
     async _discoverPlayerActions() {
         if (!this.#isRunning) return;
+
+        // *** FEAT-CORE-ACTIONS-02: AC4 (Scope) START ***
+        // Initialize validActions here so it's available in the finally block.
+        // Defaults to empty array in case of errors during discovery.
+        let validActions = [];
+        // *** FEAT-CORE-ACTIONS-02: AC4 (Scope) END ***
 
         this.#logger.debug("Attempting to discover player actions...");
         try {
@@ -274,40 +288,46 @@ class GameLoop {
 
             if (!playerEntity || !currentLocation) {
                 this.#logger.error("Cannot discover actions: Player or Location is missing from GameStateManager.");
-                return; // Don't attempt discovery if state is bad
+                // Skip discovery attempt if state is bad, validActions remains []
+                return;
             }
 
-            // Construct context needed by getValidActions & dependencies (e.g., entityScopeService)
+            // Construct context needed by getValidActions & dependencies
+            // Type assertion ensures ActionContext compatibility if needed by ActionDiscoverySystem internally
+            /** @type {ActionContext} */
             const discoveryContext = {
                 playerEntity: playerEntity,
                 currentLocation: currentLocation,
                 entityManager: this.#entityManager,
                 gameDataRepository: this.#gameDataRepository,
                 dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
-                eventBus: this.#eventBus
-                // Ensure ActionContext type definition covers these if strict typing needed
+                eventBus: this.#eventBus,
+                // `parsedCommand` is not relevant for discovery, so omit or set to null/undefined if required by type
+                parsedCommand: undefined
             };
 
             this.#logger.debug(`Calling getValidActions for player ${playerEntity.id}`);
-            // Call the injected ActionDiscoverySystem
-            const validActions = await this.#actionDiscoverySystem.getValidActions(playerEntity, discoveryContext); // AC5
+            // Call the injected ActionDiscoverySystem and store the result
+            validActions = await this.#actionDiscoverySystem.getValidActions(playerEntity, discoveryContext); // AC6: Discovery logic unchanged
 
-            // AC6: Log the results
-            this.#logger.debug(`Discovered ${validActions.length} valid player actions:`, validActions);
-
-            // --- Future Step (Separate Ticket) ---
-            // Dispatch an event with these actions for UI/AI
-            // this.#eventBus.dispatch('player:actions_discovered', { actions: validActions });
-            // --- End Future Step ---
+            // NOTE: Logging of discovered actions moved to the finally block after dispatch.
 
         } catch (error) {
-            // AC7: Error Handling
+            // Log errors during the discovery process itself
             this.#logger.error('Error during player action discovery:', error);
-            // Continue execution even if discovery fails. Input will still be enabled.
+            // validActions will remain as initialized (likely []) due to the error
+        } finally {
+            // *** FEAT-CORE-ACTIONS-02: AC2, AC3, AC4, AC5 START ***
+            // This block executes regardless of whether the try block succeeded or failed.
+            /** @type {UIUpdateActionsPayload} */
+            const payload = {actions: validActions}; // AC4: Payload structure
+            this.#eventBus.dispatch(EVENT_UPDATE_ACTIONS, payload); // AC2: Dispatch in finally, AC3: Use constant event name
+            this.#logger.debug(`Dispatched ${EVENT_UPDATE_ACTIONS} with ${validActions.length} actions.`); // AC5: Logging dispatch
+            // *** FEAT-CORE-ACTIONS-02: AC2, AC3, AC4, AC5 END ***
         }
+        // AC6: Method continues to function correctly. Control flow passes through finally.
     }
 
-    // *** END ADDED ***
 
     /**
      * Enables the input handler and dispatches an event to update the UI input state.
@@ -318,7 +338,7 @@ class GameLoop {
         if (!this.#isRunning) return;
         this.#inputHandler.enable(); // Logically enable input capture in the handler
         // Dispatch event for UI update (e.g., DomRenderer listens for this)
-        this.#eventBus.dispatch('ui:enable_input', {placeholder: message}); // AC: Signal UI
+        this.#eventBus.dispatch('ui:enable_input', {placeholder: message}); // Signal UI
         this.#logger.debug(`Input enabled via 'ui:enable_input' event. Placeholder: "${message}"`);
     }
 

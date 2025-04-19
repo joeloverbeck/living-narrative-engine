@@ -228,24 +228,38 @@ export class ActionValidationService {
             // --- 2. Target Domain / Context Type Compatibility Checks ---
             const expectedDomain = actionDefinition.target_domain || 'none';
             const contextType = targetContext.type;
-            const entityDomains = ['self', 'inventory', 'equipment', 'environment'];
+            
+            // ONLY perform mismatch checks if a specific context type ('direction' or 'entity') is provided.
+            // If contextType is 'none', skip these checks here, allowing the initial actor validation to proceed.
+            // The ActionDiscoverySystem is responsible for calling isValid again later with the appropriate context.
+            if (contextType !== 'none') {
+                const entityDomains = ['self', 'inventory', 'equipment', 'environment'];
 
-            if (expectedDomain === 'none' && contextType !== 'none') {
-                this.#logger.debug(`Validation failed: Action '${actionId}' expects no target (domain 'none'), but context has type ${contextType}`);
-                return false;
-            }
-            if (expectedDomain === 'direction' && contextType !== 'direction') {
-                this.#logger.debug(`Validation failed: Action '${actionId}' expects direction target (domain 'direction'), but context has type ${contextType}`);
-                return false;
-            }
-            if (entityDomains.includes(expectedDomain) && contextType !== 'entity') {
-                this.#logger.debug(`Validation failed: Action '${actionId}' expects an entity target (domain '${expectedDomain}'), but context has type ${contextType}`);
-                return false;
-            }
-            if (expectedDomain === 'self' && contextType === 'entity' && targetContext.entityId !== actorId) {
-                this.#logger.debug(`Validation failed: Action '${actionId}' expects target 'self', but target context entity ID (${targetContext.entityId}) does not match actor ID (${actorId}).`);
-                return false;
-            }
+                // Action expects 'none', but context is specific (e.g., 'direction', 'entity')
+                if (expectedDomain === 'none') { // Note: No need to check contextType !== 'none' again here
+                    this.#logger.debug(`Validation failed: Action '${actionId}' expects no target (domain 'none'), but context has type ${contextType}`);
+                    return false;
+                }
+
+                // Action expects 'direction', but context is not 'direction' (must be 'entity' since contextType !== 'none')
+                if (expectedDomain === 'direction' && contextType !== 'direction') {
+                    this.#logger.debug(`Validation failed: Action '${actionId}' expects direction target (domain 'direction'), but context has type ${contextType}`);
+                    return false;
+                }
+
+                // Action expects an entity domain, but context is not 'entity' (must be 'direction' since contextType !== 'none')
+                if (entityDomains.includes(expectedDomain) && contextType !== 'entity') {
+                    this.#logger.debug(`Validation failed: Action '${actionId}' expects an entity target (domain '${expectedDomain}'), but context has type ${contextType}`);
+                    return false;
+                }
+
+                // Action expects 'self' (an entity domain), context IS 'entity', but the ID doesn't match the actor
+                // This check should only happen if contextType is 'entity'
+                if (expectedDomain === 'self' && contextType === 'entity' && targetContext.entityId !== actorId) {
+                    this.#logger.debug(`Validation failed: Action '${actionId}' expects target 'self', but target context entity ID (${targetContext.entityId}) does not match actor ID (${actorId}).`);
+                    return false;
+                }
+            } // End of checks that depend on contextType !== 'none'
 
             // --- 3. Target Entity Resolution and Component Checks (Conditional) ---
             if (contextType === 'entity') {

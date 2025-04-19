@@ -60,6 +60,7 @@ import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
 import {ActionValidationService} from "../services/actionValidationService.js";
 import TargetResolutionService from '../services/targetResolutionService.js';
 import PayloadValueResolverService from '../services/payloadValueResolverService.js';
+import {formatActionCommand} from '../services/actionFormatter.js';
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -344,7 +345,8 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         gameDataRepository: c.resolve('GameDataRepository'),
         entityManager: c.resolve('EntityManager'),
         actionValidationService: c.resolve('ActionValidationService'),
-        logger: c.resolve('ILogger')
+        logger: c.resolve('ILogger'),
+        formatActionCommandFn: formatActionCommand
     }), {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered ActionDiscoverySystem."); // Use logger instance
 
