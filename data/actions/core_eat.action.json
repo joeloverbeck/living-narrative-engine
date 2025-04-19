@@ -1,15 +1,14 @@
 {
+  "$schema": "../schemas/action-definition.schema.json",
   "id": "core:eat",
   "name": "Eat",
-  "description": "Consume an edible item from inventory.",
-  "commands": [
-    "eat"
+  "target_domain": "inventory",
+  "actor_required_components": [],
+  "actor_forbidden_components": [],
+  "target_required_components": [
+    "Edible"
   ],
-  "target_type": "item_in_inventory",
-  "requires_target": true,
-  "applicability": {
-    "requires_components": [
-      "EdibleComponent"
-    ]
-  }
+  "target_forbidden_components": [],
+  "prerequisites": [],
+  "template": "eat {target}"
 }

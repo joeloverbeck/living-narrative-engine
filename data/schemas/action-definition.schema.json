@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/action-definition.schema.json",
+  "title": "Action Definition Schema",
+  "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies requirements, targeting, prerequisites, output format, and optional event dispatching for actions.",
+  "type": "object",
+  "definitions": {
+    "ConditionObject": {
+      "type": "object",
+      "description": "A single prerequisite condition. Specific parameters depend on 'condition_type'. Extensible.",
+      "required": [
+        "condition_type"
+      ],
+      "properties": {
+        "condition_type": {
+          "type": "string",
+          "description": "Identifier for the type of condition check (e.g., 'placeholder', 'placeholder_fail', 'actor_has_component', 'target_has_component', 'actor_stat_check', 'target_state_check', 'world_state_check')."
+        },
+        "negate": {
+          "type": "boolean",
+          "description": "If true, the result of the condition check is inverted.",
+          "default": false
+        },
+        "failure_message": {
+          "type": "string",
+          "description": "Optional message to provide if this specific condition fails."
+        },
+        "force_fail": {
+          "type": "boolean",
+          "description": "Optional flag specifically for placeholder testing to force a failure result.",
+          "default": false
+        },
+        "details": {
+          "type": "object",
+          "description": "Optional object to hold specific parameters needed by the condition type (e.g., componentId, statId, minValue). Structure depends on condition_type.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true,
+      "$comment": "Allows specific condition types to add their own parameters within 'details' or as direct properties. Specific condition types will define their own required properties beyond 'condition_type'."
+    }
+  },
+  "properties": {
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. Unique, namespaced ID for the action definition (e.g., 'core:action_eat', 'combat:action_attack')."
+    },
+    "name": {
+      "type": "string",
+      "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). Primarily for debugging or tooling."
+    },
+    "target_domain": {
+      "type": "string",
+      "description": "Required. Specifies where to look for potential targets for this action.",
+      "enum": [
+        "none",
+        "self",
+        "inventory",
+        "equipment",
+        "environment",
+        "direction"
+      ]
+    },
+    "actor_required_components": {
+      "type": "array",
+      "description": "Optional. List of component identifiers (namespaced IDs) that the acting entity must possess.",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "default": []
+    },
+    "actor_forbidden_components": {
+      "type": "array",
+      "description": "Optional. List of component identifiers (namespaced IDs) that the acting entity must NOT possess.",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "default": []
+    },
+    "target_required_components": {
+      "type": "array",
+      "description": "Optional. List of component identifiers (namespaced IDs) that the target entity must possess (if target_domain is applicable).",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "default": []
+    },
+    "target_forbidden_components": {
+      "type": "array",
+      "description": "Optional. List of component identifiers (namespaced IDs) that the target entity must NOT possess (if target_domain is applicable).",
+      "items": {
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "default": []
+    },
+    "prerequisites": {
+      "type": "array",
+      "description": "Optional. List of additional conditions (beyond basic component checks) that must all be met for the action to be valid. Evaluated AFTER component requirements.",
+      "items": {
+        "$ref": "#/definitions/ConditionObject"
+      },
+      "default": []
+    },
+    "template": {
+      "type": "string",
+      "description": "Required. Text template for generating the command string output, using placeholders like {target} or {direction} (e.g., 'eat {target}', 'go {direction}', 'wait')."
+    },
+    "dispatch_event": {
+      "description": "Optional. Defines the event to dispatch if this action passes validation and target resolution.",
+      "type": "object",
+      "required": [
+        "eventName",
+        "payload"
+      ],
+      "properties": {
+        "eventName": {
+          "type": "string",
+          "description": "The namespaced ID of the event to dispatch (e.g., 'event:move_attempted'). Must match a defined event type.",
+          "pattern": "^[a-zA-Z0-9_\\-:]+$"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Defines the event payload. Keys are payload field names, values specify the data source using the documented convention (e.g., 'actor.id', 'target.component.Health.current', 'resolved.direction', 'literal.boolean.true').",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Source mapping string (e.g., 'actor.id', 'target.component.Health.current')."
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "target_domain",
+    "template"
+  ],
+  "additionalProperties": true,
+  "$comment": "Allows additional properties for future extensions like action costs, effects definitions, or categorization. The 'dispatch_event' property has been added here."
+}

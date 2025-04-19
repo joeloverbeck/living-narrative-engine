@@ -1,21 +1,14 @@
 {
+  "$schema": "../schemas/action-definition.schema.json",
   "id": "core:open",
   "name": "Open",
-  "description": "Allows opening entities that are currently closed and not locked.",
-  "commands": [
-    "open"
+  "target_domain": "environment",
+  "actor_required_components": [],
+  "actor_forbidden_components": [],
+  "target_required_components": [
+    "Openable"
   ],
-  "requires_target": true,
-  "target_type": "entity_in_room",
-  "applicability": {
-    "requires_components": [
-      "Openable"
-    ],
-    "requires_target_state": {
-      "Openable.isOpen": false
-    },
-    "excluded_target_state": {
-      "Lockable.isLocked": true
-    }
-  }
+  "target_forbidden_components": [],
+  "prerequisites": [],
+  "template": "open {target}"
 }

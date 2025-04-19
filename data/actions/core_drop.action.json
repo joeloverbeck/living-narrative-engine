@@ -1,11 +1,12 @@
 {
+  "$schema": "../schemas/action-definition.schema.json",
   "id": "core:drop",
   "name": "Drop",
-  "description": "Drop an item from your inventory into the current location.",
-  "commands": [
-    "drop"
-  ],
-  "target_type": "item_in_inventory",
-  "requires_target": true,
-  "applicability": {}
+  "target_domain": "inventory",
+  "actor_required_components": [],
+  "actor_forbidden_components": [],
+  "target_required_components": [],
+  "target_forbidden_components": [],
+  "prerequisites": [],
+  "template": "drop {target}"
 }

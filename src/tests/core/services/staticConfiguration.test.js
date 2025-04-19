@@ -10,7 +10,7 @@ const EXPECTED_BASE_DATA_PATH = './data';
 // Source: const SCHEMA_FILES = [...]
 const EXPECTED_SCHEMA_FILES = [
     'common.schema.json',
-    'action.schema.json',
+    'action-definition.schema.json',
     'entity.schema.json',
     'trigger.schema.json',
     'interaction-test.schema.json',
@@ -33,7 +33,7 @@ const EXPECTED_SCHEMA_FILES = [
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
 const EXPECTED_CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
-    actions: 'http://example.com/schemas/action.schema.json',
+    actions: 'http://example.com/schemas/action-definition.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json',
     items: 'http://example.com/schemas/item.schema.json',
     locations: 'http://example.com/schemas/location.schema.json',

@@ -1,14 +1,12 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:attack",
-  "name": "Attack",
-  "target_domain": "environment",
+  "id": "core:go",
+  "name": "Go",
+  "target_domain": "direction",
   "actor_required_components": [],
   "actor_forbidden_components": [],
-  "target_required_components": [
-    "Health"
-  ],
+  "target_required_components": [],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "attack {target}"
+  "template": "go {direction}"
 }

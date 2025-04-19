@@ -10,7 +10,7 @@
  *
  * // Add specific type imports for your game data definitions if using TS/JSDoc extensively
  * // Assuming these paths might be slightly different based on project structure
- * @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
+ * @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition // Adjust if schema name differs
  * @typedef {import('../../../data/schemas/item.schema.json').ItemDefinition} ItemDefinition // Adjust if schema name differs
  * @typedef {import('../../../data/schemas/location.schema.json').LocationDefinition} LocationDefinition // Adjust if schema name differs

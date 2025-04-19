@@ -99,8 +99,8 @@ const testSchemas = {
     // strictly required for Ajv to compile the above (e.g., base definitions).
     // For simplicity, assume the above are self-contained or only depend on common.
     // If tests fail due to missing schema refs, add minimal versions here.
-    "action.schema.json": {
-        $id: "http://example.com/schemas/action.schema.json",
+    "action-definition.schema.json": {
+        $id: "http://example.com/schemas/action-definition.schema.json",
         type: "object",
         properties: {id: {type: "string"}}
     }, // Minimal stub

@@ -2,34 +2,43 @@
 
 // --- Import Configurations ---
 // These were previously imported in containerConfig.js factories
-import { componentRegistryConfig } from '../config/componentRegistry.config.js';
-import { actionHandlerRegistryConfig } from '../config/actionHandlerRegistry.config.js';
+import {componentRegistryConfig} from '../config/componentRegistry.config.js';
+// Removed import for actionHandlerRegistryConfig as it's no longer used
+// import { actionHandlerRegistryConfig } from '../config/actionHandlerRegistry.config.js';
 
 // --- Import Types for JSDoc ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
+
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 
 /**
- * Responsible for centralizing the registration of components and action handlers
- * with their respective managers after the managers have been instantiated.
+ * Responsible for centralizing the registration of components
+ * with the EntityManager after it has been instantiated.
+ * Action handler registration is no longer performed here.
  */
 class RegistryInitializer {
     /**
-     * Populates the registries of the provided EntityManager and ActionExecutor
-     * using the imported configuration maps.
+     * Populates the component registry of the provided EntityManager
+     * using the imported configuration map.
      *
      * @param {EntityManager} entityManager - The EntityManager instance.
-     * @param {ActionExecutor} actionExecutor - The ActionExecutor instance.
+     * @param {ActionExecutor} actionExecutor - The ActionExecutor instance (passed but no longer used for registration here).
      */
     initializeRegistries(entityManager, actionExecutor) {
+        // --- Validate EntityManager ---
         if (!entityManager || typeof entityManager.registerComponent !== 'function') {
             throw new Error("RegistryInitializer: A valid EntityManager instance is required.");
         }
-        if (!actionExecutor || typeof actionExecutor.registerHandler !== 'function') {
-            throw new Error("RegistryInitializer: A valid ActionExecutor instance is required.");
+        // --- Validate ActionExecutor (presence only, not registerHandler method) ---
+        if (!actionExecutor) {
+            // Optional: Keep the check to ensure it's provided, even if not used for registration here.
+            // Or remove this check if ActionExecutor is no longer strictly needed by this initializer.
+            console.warn("RegistryInitializer: ActionExecutor instance provided but no longer used for handler registration in this initializer.");
+            // throw new Error("RegistryInitializer: A valid ActionExecutor instance is required."); // Uncomment if needed
         }
 
-        console.log("RegistryInitializer: Initializing component and action handler registries...");
+
+        console.log("RegistryInitializer: Initializing component registry...");
 
         // --- Register Components with EntityManager ---
         if (!componentRegistryConfig || !(componentRegistryConfig instanceof Map) || componentRegistryConfig.size === 0) {
@@ -52,23 +61,11 @@ class RegistryInitializer {
             }
         }
 
-        // --- Register Action Handlers with ActionExecutor ---
-        if (!actionHandlerRegistryConfig || !(actionHandlerRegistryConfig instanceof Map) || actionHandlerRegistryConfig.size === 0) {
-            console.warn("RegistryInitializer: Action handler registry configuration is invalid, empty, or failed to load. No handlers registered.");
-        } else {
-            try {
-                for (const [actionId, handlerFunction] of actionHandlerRegistryConfig.entries()) {
-                    // ActionExecutor's registerHandler already has logging and error handling
-                    actionExecutor.registerHandler(actionId, handlerFunction);
-                }
-                // Log summary based on internal state of ActionExecutor registry
-                console.log(`RegistryInitializer: Action handler registration process completed. ActionExecutor reports ${actionExecutor.handlers.size} handlers registered.`);
-            } catch (error) {
-                console.error(`RegistryInitializer: Error during action handler registration loop: ${error.message}`, error);
-                // Optionally re-throw to make registration failure fatal
-                // throw error;
-            }
-        }
+        // --- Removed Action Handler Registration ---
+        // The block for registering action handlers with ActionExecutor has been removed
+        // as the registerHandler method is deprecated and removed.
+        console.log("RegistryInitializer: Action handler registration is skipped (using definition-based execution).");
+
 
         console.log("RegistryInitializer: Registry initialization finished.");
     }

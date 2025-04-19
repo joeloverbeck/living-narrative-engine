@@ -22,6 +22,10 @@ const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {
 });
 const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
 });
+// Mock console.log as well to potentially suppress entity creation logs if needed
+const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {
+});
+
 
 // Mock EntityManager adhering to its expected interface
 const mockEntityManager = {
@@ -52,11 +56,15 @@ const mockContext = {
 // --- Helper Functions (for setting up test data consistently) ---
 const createMockEntity = (id, name, components = []) => {
     const entity = new Entity(id); // Assuming Entity constructor takes ID
-    entity.addComponent(new NameComponent({value: name}));
+    // Add name component only if name is provided and not null
+    if (name !== null && typeof name === 'string') {
+        entity.addComponent(new NameComponent({value: name}));
+    }
     components.forEach(comp => entity.addComponent(comp));
     mockEntityManager.entities.set(id, entity); // Register entity with mock manager
     return entity;
 };
+
 
 // Helper to correctly add component to mock entity (if not present)
 const ensureComponent = (entity, ComponentClass, componentData = {}) => {
@@ -112,6 +120,7 @@ describe('entityScopeService', () => {
         // Clear mock function calls and internal states
         mockConsoleWarn.mockClear();
         mockConsoleError.mockClear();
+        mockConsoleLog.mockClear(); // Clear log mock too
         mockEntityManager.entities.clear();
         mockEntityManager.locations.clear();
         // Reset mock implementations to default behavior
@@ -188,22 +197,22 @@ describe('entityScopeService', () => {
         blocker2 = createMockEntity('blocker-guard', 'sleepy guard', [new HealthComponent({current: 5, max: 5})]);
 
         // Basic setup for passage1 (add core component)
-        passage1.addComponent(new PassageDetailsComponent({
+        ensureComponent(passage1, PassageDetailsComponent, { // Use ensureComponent
             locationAId: mockCurrentLocation.id,
             locationBId: location2.id,
             directionAtoB: 'north',
             directionBtoA: 'south',
             blockerEntityId: null, // Initially no blocker
-        }));
+        });
 
         // Basic setup for passage2 (add core component)
-        passage2.addComponent(new PassageDetailsComponent({
+        ensureComponent(passage2, PassageDetailsComponent, { // Use ensureComponent
             locationAId: mockCurrentLocation.id,
             locationBId: location2.id,
             directionAtoB: 'east',
             directionBtoA: 'west',
             blockerEntityId: null, // Initially no blocker
-        }));
+        });
     });
 
     // --- Tests for existing scopes (abbreviated for focus) ---
@@ -213,6 +222,20 @@ describe('entityScopeService', () => {
             expect(result).toEqual(new Set([sword.id, potion.id, shinyKey.id]));
         });
         // ... other inventory tests ...
+        test('should return empty set and warn if playerEntity is missing', () => {
+            mockContext.playerEntity = null;
+            const result = getEntityIdsForScopes('inventory', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining("Scope 'inventory' requested but playerEntity is missing"));
+        });
+
+        test('should return empty set and warn if InventoryComponent is missing', () => {
+            mockPlayerEntity.removeComponent(InventoryComponent);
+            const result = getEntityIdsForScopes('inventory', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining(`player ${mockPlayerEntity.id} lacks InventoryComponent`));
+        });
+
     });
 
     describe('Scope: location', () => {
@@ -223,17 +246,22 @@ describe('entityScopeService', () => {
             expect(result.has(mockPlayerEntity.id)).toBe(false);
         });
         // ... other location tests ...
+        test('should return empty set and warn if currentLocation is null', () => {
+            mockContext.currentLocation = null;
+            const result = getEntityIdsForScopes('location', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining("currentLocation is null"));
+        });
 
-        // Test relevant to the mock update: dangling IDs in location
-        test('should return empty set and log error if entityManager is missing', () => {
-            // Simulate missing entityManager
+
+        test('should return empty set and log error if entityManager is missing from context', () => {
             const originalEntityManager = mockContext.entityManager;
             mockContext.entityManager = null;
             const result = getEntityIdsForScopes('location', mockContext);
             expect(result).toEqual(new Set());
             expect(mockConsoleError).toHaveBeenCalledWith(
-                expect.stringContaining("Invalid or incomplete context provided"),
-                expect.any(Object) // Or be more specific about the context object logged
+                "getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.",
+                {context: mockContext} // Check the context object passed to the log
             );
             mockContext.entityManager = originalEntityManager; // Restore
         });
@@ -245,6 +273,19 @@ describe('entityScopeService', () => {
             expect(result).toEqual(new Set([shield.id]));
         });
         // ... other equipment tests ...
+        test('should return empty set and warn if playerEntity is missing', () => {
+            mockContext.playerEntity = null;
+            const result = getEntityIdsForScopes('equipment', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining("Scope 'equipment' requested but playerEntity is missing"));
+        });
+
+        test('should return empty set and warn if EquipmentComponent is missing', () => {
+            mockPlayerEntity.removeComponent(EquipmentComponent);
+            const result = getEntityIdsForScopes('equipment', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining(`player ${mockPlayerEntity.id} lacks EquipmentComponent`));
+        });
     });
 
     describe('Scope: location_items', () => {
@@ -257,18 +298,12 @@ describe('entityScopeService', () => {
             const danglingId = 'dangling-item-123';
             // Add ID to location set, but not to entity map
             mockEntityManager.locations.get(mockCurrentLocation.id).add(danglingId);
-            // Make sure getEntitiesInLocation includes it (it should if player exclusion doesn't apply)
-            mockEntityManager.getEntitiesInLocation.mockImplementation((locId) => {
-                const ids = new Set(mockEntityManager.locations.get(locId) || []);
-                // Don't exclude player here to test the specific warning in _handleLocationItems
-                return ids;
-            });
 
             // Ensure getEntityInstance returns undefined for this ID
             const originalGetEntityInstance = mockEntityManager.getEntityInstance;
             mockEntityManager.getEntityInstance = jest.fn((id) => {
                 if (id === danglingId) return undefined;
-                return originalGetEntityInstance(id);
+                return originalGetEntityInstance.call(mockEntityManager, id); // Use .call()
             });
 
 
@@ -280,16 +315,6 @@ describe('entityScopeService', () => {
 
             // Restore mocks
             mockEntityManager.getEntityInstance = originalGetEntityInstance;
-            // Restore the default getEntitiesInLocation mock behavior if needed elsewhere
-            mockEntityManager.getEntitiesInLocation.mockImplementation((locId) => {
-                const allIds = mockEntityManager.locations.get(locId) || new Set();
-                const filteredIds = new Set();
-                for (const id of allIds) {
-                    if (mockContext.playerEntity && id === mockContext.playerEntity.id) continue;
-                    filteredIds.add(id);
-                }
-                return filteredIds;
-            });
         });
     });
 
@@ -302,14 +327,11 @@ describe('entityScopeService', () => {
         test('should log warning for dangling entity IDs when checking non-ItemComponent', () => {
             const danglingId = 'dangling-nonitem-456';
             mockEntityManager.locations.get(mockCurrentLocation.id).add(danglingId);
-            mockEntityManager.getEntitiesInLocation.mockImplementation((locId) => {
-                const ids = new Set(mockEntityManager.locations.get(locId) || []);
-                return ids;
-            });
+
             const originalGetEntityInstance = mockEntityManager.getEntityInstance;
             mockEntityManager.getEntityInstance = jest.fn((id) => {
                 if (id === danglingId) return undefined;
-                return originalGetEntityInstance(id);
+                return originalGetEntityInstance.call(mockEntityManager, id); // Use .call()
             });
 
             const result = getEntityIdsForScopes('location_non_items', mockContext);
@@ -317,15 +339,6 @@ describe('entityScopeService', () => {
             expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining(`Entity ID ${danglingId} from location scope not found in entityManager when checking for non-ItemComponent`));
 
             mockEntityManager.getEntityInstance = originalGetEntityInstance;
-            mockEntityManager.getEntitiesInLocation.mockImplementation((locId) => {
-                const allIds = mockEntityManager.locations.get(locId) || new Set();
-                const filteredIds = new Set();
-                for (const id of allIds) {
-                    if (mockContext.playerEntity && id === mockContext.playerEntity.id) continue;
-                    filteredIds.add(id);
-                }
-                return filteredIds;
-            });
         });
     });
 
@@ -352,12 +365,10 @@ describe('entityScopeService', () => {
         // This beforeEach can reset state SPECIFIC to blocker tests if needed
         beforeEach(() => {
             // Reset blockers on passages before each test in this suite
-            if (passage1?.hasComponent(PassageDetailsComponent)) {
-                passage1.getComponent(PassageDetailsComponent).blockerEntityId = null;
-            }
-            if (passage2?.hasComponent(PassageDetailsComponent)) {
-                passage2.getComponent(PassageDetailsComponent).blockerEntityId = null;
-            }
+            const p1Details = passage1?.getComponent(PassageDetailsComponent);
+            if (p1Details) p1Details.blockerEntityId = null;
+            const p2Details = passage2?.getComponent(PassageDetailsComponent);
+            if (p2Details) p2Details.blockerEntityId = null;
             // Ensure the location doesn't have connections carrying over from previous tests
             if (mockCurrentLocation?.hasComponent(ConnectionsComponent)) {
                 mockCurrentLocation.removeComponent(ConnectionsComponent); // Remove if exists
@@ -400,9 +411,9 @@ describe('entityScopeService', () => {
             const result = getEntityIdsForScopes('nearby_including_blockers', mockContext);
             expect(result).toEqual(expectedNearbySet); // Should still match 'nearby'
             // Expect a warning about the missing component
+            // --- UPDATED ASSERTION ---
             expect(console.warn).toHaveBeenCalledWith(
-                expect.stringContaining("Passage entity 'conn-nodetails' lacks PassageDetailsComponent. Cannot check for blocker. Entity:"), // Check the full first string arg contains the key part
-                expect.objectContaining({id: 'conn-nodetails'}) // Check the second arg is an object with at least the ID
+                `entityScopeService._handleNearbyIncludingBlockers: Passage entity '${passageNoDetails.id}' lacks PassageDetailsComponent. Cannot check for blocker.`
             );
         });
 
@@ -482,7 +493,7 @@ describe('entityScopeService', () => {
             // Verify the specific warning about the missing passage instance was logged
             expect(mockConsoleWarn).toHaveBeenCalledTimes(1);
             expect(mockConsoleWarn).toHaveBeenCalledWith(
-                expect.stringContaining(`Passage entity instance not found for ID '${danglingPassageId}'`)
+                `entityScopeService._handleNearbyIncludingBlockers: Passage entity instance not found for ID '${danglingPassageId}'. Skipping blocker check.`
             );
         });
 
@@ -505,8 +516,9 @@ describe('entityScopeService', () => {
             expect(result).toEqual(expectedResult); // The ID should be included
             // Verify the specific warning about the missing blocker *instance* was logged
             expect(mockConsoleWarn).toHaveBeenCalledTimes(1);
+            // --- UPDATED ASSERTION ---
             expect(mockConsoleWarn).toHaveBeenCalledWith(
-                expect.stringContaining(`Added blocker ID '${danglingBlockerId}' from passage '${passage1.id}', but the blocker entity instance was not found`)
+                `entityScopeService._handleNearbyIncludingBlockers: Added blocker ID '${danglingBlockerId}' but instance not found.`
             );
         });
 
@@ -543,7 +555,7 @@ describe('entityScopeService', () => {
                 expect.anything()
             );
             // No specific warning about blockers should occur as it exits earlier
-            expect(mockConsoleWarn).not.toHaveBeenCalledWith(expect.stringContaining("entityManager missing"));
+            // expect(mockConsoleWarn).not.toHaveBeenCalledWith(expect.stringContaining("entityManager missing")); // This check is no longer relevant as the error happens sooner
 
             mockContext.entityManager = originalEntityManager; // Restore
         });
@@ -582,44 +594,113 @@ describe('entityScopeService', () => {
 
     }); // End describe('Scope: nearby_including_blockers')
 
+    // ******** NEW TEST SUITE FOR 'self' scope ********
+    describe("Scope: self", () => {
+        test("should return a set containing only the player's ID", () => {
+            const result = getEntityIdsForScopes('self', mockContext);
+            expect(result).toEqual(new Set([mockPlayerEntity.id]));
+            expect(mockConsoleWarn).not.toHaveBeenCalled();
+        });
+
+        test("should return an empty set and warn if playerEntity is missing in context", () => {
+            mockContext.playerEntity = null;
+            const result = getEntityIdsForScopes('self', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining("Scope 'self' requested but playerEntity or playerEntity.id is missing"));
+        });
+
+        test("should return an empty set and warn if playerEntity has no ID (edge case)", () => {
+            mockContext.playerEntity.id = null; // Simulate missing ID
+            const result = getEntityIdsForScopes('self', mockContext);
+            expect(result).toEqual(new Set());
+            expect(mockConsoleWarn).toHaveBeenCalledWith(expect.stringContaining("Scope 'self' requested but playerEntity or playerEntity.id is missing"));
+        });
+    });
+
+    // ******** NEW TEST SUITE FOR 'environment' mapping ********
+    describe("Scope: environment (mapped)", () => {
+        test("should behave like 'nearby_including_blockers'", () => {
+            // Setup: Block passage1 with blocker1
+            passage1.getComponent(PassageDetailsComponent).blockerEntityId = blocker1.id;
+            // Setup: Add connection from current location to passage1
+            ensureComponent(mockCurrentLocation, ConnectionsComponent, {connections: {north: passage1.id}});
+
+            // Calculate expected: nearby + blocker1
+            const expectedResult = new Set([...expectedNearbySet, blocker1.id]);
+
+            const result = getEntityIdsForScopes('environment', mockContext); // Use 'environment' scope
+            expect(result).toEqual(expectedResult);
+            expect(mockConsoleWarn).not.toHaveBeenCalled();
+        });
+
+        test("should return 'nearby' results if no blockers configured, when called with 'environment'", () => {
+            // No blockers configured in this setup
+            ensureComponent(mockCurrentLocation, ConnectionsComponent, {connections: {north: passage1.id}}); // Connect to unblocked passage
+
+            const result = getEntityIdsForScopes('environment', mockContext);
+            expect(result).toEqual(expectedNearbySet); // Should match nearby
+            expect(mockConsoleWarn).not.toHaveBeenCalled();
+        });
+    });
+
+
     // --- Aggregator Function (`getEntityIdsForScopes`) Tests ---
     describe('getEntityIdsForScopes (Aggregator Logic)', () => {
         // These tests can now safely access passage1, blocker1 etc.
 
-        test('should aggregate unique IDs correctly from multiple valid scopes including the new one', () => {
-            // Setup a blocker for the new scope within this test's context
+        test('should aggregate unique IDs correctly from multiple valid scopes including new ones', () => {
+            // Setup a blocker for the 'environment' scope test
             passage1.getComponent(PassageDetailsComponent).blockerEntityId = blocker1.id;
             ensureComponent(mockCurrentLocation, ConnectionsComponent, {connections: {north: passage1.id}});
 
-            // Request equipment, location, and the new scope
-            const result = getEntityIdsForScopes(['equipment', 'location', 'nearby_including_blockers'], mockContext);
+            // Request equipment, self, and environment
+            const result = getEntityIdsForScopes(['equipment', 'self', 'environment'], mockContext);
 
-            // Expected: Equipment(shield) + Location(goblin,rock,rustyKey,door) + NearbyIncludingBlockers(nearby + blocker1)
-            // The Set automatically handles duplicates between 'location' and 'nearby_including_blockers' parts.
+            // Expected: Equipment(shield) + Self(player) + Environment(nearby + blocker1)
+            // The Set automatically handles duplicates. Player ID from 'self' might also be in inventory/equipment but Set handles it.
             const expected = new Set([
                 // Equipment:
                 shield.id,
-                // Location (player excluded):
-                goblin.id, rock.id, rustyKey.id, door.id,
-                // From nearby (inventory part):
+                // Self
+                mockPlayerEntity.id, // player-1
+                // Environment -> nearby_including_blockers:
+                // -> Nearby -> Inventory:
                 sword.id, potion.id, shinyKey.id,
-                // From blocker part:
+                // -> Nearby -> Location (player already excluded by mock):
+                goblin.id, rock.id, rustyKey.id, door.id,
+                // -> Blockers:
                 blocker1.id
             ]);
             expect(result).toEqual(expected);
-            expect(mockConsoleWarn).not.toHaveBeenCalled(); // No specific warnings expected for this path
+            expect(mockConsoleWarn).not.toHaveBeenCalled();
             expect(mockConsoleError).not.toHaveBeenCalled();
         });
 
         test('should log warning and skip unknown scopes', () => {
+            mockConsoleWarn.mockClear(); // Clear warnings from setup
             const result = getEntityIdsForScopes(['inventory', 'unknown_scope_xyz', 'location'], mockContext);
             const expected = new Set([
                 sword.id, potion.id, shinyKey.id, // Inventory
                 goblin.id, rock.id, rustyKey.id, door.id // Location
             ]);
             expect(result).toEqual(expected);
-            expect(mockConsoleWarn).toHaveBeenCalledWith("getEntityIdsForScopes: Unknown scope requested: 'unknown_scope_xyz'. Skipping.");
+            // --- UPDATED ASSERTION ---
+            expect(mockConsoleWarn).toHaveBeenCalledWith("getEntityIdsForScopes: Unknown or unhandled scope/domain requested: 'unknown_scope_xyz'. Skipping.");
         });
+
+        test('should log message and skip "direction" and "none" scopes', () => {
+            mockConsoleLog.mockClear(); // Clear log mock specifically
+            const result = getEntityIdsForScopes(['inventory', 'direction', 'none', 'equipment'], mockContext);
+            const expected = new Set([
+                sword.id, potion.id, shinyKey.id, // Inventory
+                shield.id // Equipment
+            ]);
+            expect(result).toEqual(expected);
+            expect(mockConsoleLog).toHaveBeenCalledWith("getEntityIdsForScopes: Scope 'direction' does not resolve to entity IDs. Skipping.");
+            expect(mockConsoleLog).toHaveBeenCalledWith("getEntityIdsForScopes: Scope 'none' does not resolve to entity IDs. Skipping.");
+            expect(mockConsoleWarn).not.toHaveBeenCalled(); // Should be log, not warn
+        });
+
 
         test('should log error and skip scope if handler throws, but process others', () => {
             // Mock the failing component method specifically for this test
@@ -637,6 +718,9 @@ describe('entityScopeService', () => {
             // Setup blocker for nearby_including_blockers part of the test (still relevant for error logging check)
             passage1.getComponent(PassageDetailsComponent).blockerEntityId = blocker1.id;
             ensureComponent(mockCurrentLocation, ConnectionsComponent, {connections: {north: passage1.id}});
+
+            // Clear error mock before the call
+            mockConsoleError.mockClear();
 
             // Request failing scope ('inventory') and successful ones ('equipment', 'nearby_including_blockers')
             const result = getEntityIdsForScopes(['inventory', 'equipment', 'nearby_including_blockers'], mockContext);
@@ -658,17 +742,20 @@ describe('entityScopeService', () => {
             expect(result).toEqual(expected); // This should now expect Set {'item-shield'}
 
             // Verify the errors were logged FOR BOTH failing scopes
+            // --- UPDATED ASSERTION ---
             expect(mockConsoleError).toHaveBeenCalledTimes(2); // Once for 'inventory', once for 'nearby_including_blockers'
 
             // Check the error message for the 'inventory' scope failure
+            // --- UPDATED ASSERTION ---
             expect(mockConsoleError).toHaveBeenCalledWith(
-                "getEntityIdsForScopes: Error executing handler for scope 'inventory':",
+                "getEntityIdsForScopes: Error executing handler for scope/domain 'inventory':", // Updated string
                 expect.objectContaining({message: "Test Error Getting Inventory"}) // Check the error object message
             );
 
             // Check the error message for the 'nearby_including_blockers' scope failure
+            // --- UPDATED ASSERTION ---
             expect(mockConsoleError).toHaveBeenCalledWith(
-                "getEntityIdsForScopes: Error executing handler for scope 'nearby_including_blockers':",
+                "getEntityIdsForScopes: Error executing handler for scope/domain 'nearby_including_blockers':", // Updated string
                 expect.objectContaining({message: "Test Error Getting Inventory"}) // It fails with the same underlying error
             );
 
@@ -676,7 +763,9 @@ describe('entityScopeService', () => {
             mockPlayerEntity.getComponent = originalGetComponent; // Restore original method
         });
 
+
         test('should return empty set and log error if context is invalid (null)', () => {
+            mockConsoleError.mockClear(); // Clear errors from setup/other tests
             const resultNull = getEntityIdsForScopes(['inventory'], null);
             expect(resultNull).toEqual(new Set());
             expect(mockConsoleError).toHaveBeenCalledWith("getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.", {context: null});

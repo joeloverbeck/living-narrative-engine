@@ -70,7 +70,6 @@
  * @typedef {object} ActionResult
  * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For handlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
  * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., EVENT_DISPLAY_MESSAGE, EVENT_MOVE_FAILED). **NOTE:** Usage varies; some handlers still return messages. This might be refined later.
- * @property {ActionNewState} [newState] - An optional object signaling required changes to GameLoop-managed state (like changing location). If omitted, no core state change is requested.
  */
 
 // ---- Placeholder Export ----

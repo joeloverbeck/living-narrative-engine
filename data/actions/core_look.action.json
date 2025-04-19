@@ -1,12 +1,12 @@
 {
+  "$schema": "../schemas/action-definition.schema.json",
   "id": "core:look",
   "name": "Look",
-  "description": "Examine the general surroundings of your current location.",
-  "commands": [
-    "look",
-    "l"
-  ],
-  "requires_target": false,
-  "target_type": "none",
-  "applicability": {}
+  "target_domain": "none",
+  "actor_required_components": [],
+  "actor_forbidden_components": [],
+  "target_required_components": [],
+  "target_forbidden_components": [],
+  "prerequisites": [],
+  "template": "look"
 }

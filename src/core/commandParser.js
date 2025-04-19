@@ -8,7 +8,7 @@
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
 // Assume ActionDefinition type exists from GameDataRepository types
-/** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 /**
  * Defines the list of prepositions recognized by the parser. (No changes needed)

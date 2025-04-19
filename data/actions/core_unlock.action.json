@@ -1,18 +1,14 @@
 {
+  "$schema": "../schemas/action-definition.schema.json",
   "id": "core:unlock",
   "name": "Unlock",
-  "description": "Unlock a locked object. May require a key or skill (checked by game logic).",
-  "commands": [
-    "unlock"
+  "target_domain": "environment",
+  "actor_required_components": [],
+  "actor_forbidden_components": [],
+  "target_required_components": [
+    "Lockable"
   ],
-  "target_type": "entity_in_room",
-  "requires_target": true,
-  "applicability": {
-    "requires_components": [
-      "Lockable"
-    ],
-    "requires_target_state": {
-      "Lockable.isLocked": true
-    }
-  }
+  "target_forbidden_components": [],
+  "prerequisites": [],
+  "template": "unlock {target}"
 }
