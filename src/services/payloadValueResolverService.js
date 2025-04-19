@@ -357,40 +357,60 @@ class PayloadValueResolverService {
      */
     #resolveLiteralSource(parts, actionDefinition, originalSourceString) {
         const logPrefix = `PayloadValueResolverService (#resolveLiteralSource):`;
-        // Need at least <type>.<value>, so parts length must be >= 2
-        if (parts.length < 2) {
-            this.#logger?.warn(`${logPrefix} Malformed 'literal' source string '${originalSourceString}' for action '${actionDefinition.id}'. Requires 'literal.<type>.<value>'.`);
+
+        // Check if we have at least the <type> part
+        if (parts.length < 1) {
+            this.#logger?.warn(`${logPrefix} Malformed 'literal' source string '${originalSourceString}'. Requires at least 'literal.<type>'.`);
             return undefined;
         }
-        const type = parts[0].toLowerCase();
-        // Join remaining parts for the value (handles dots in numbers/strings)
-        const valueString = parts.slice(1).join('.');
 
+        const type = parts[0].toLowerCase();
+
+        // *** NEW: Special handling for 'null' type ***
+        if (type === 'null') {
+            // Allow either "literal.null" (parts.length == 1)
+            // or "literal.null.<anything>" (parts.length > 1)
+            // Both should resolve to null.
+            if (parts.length > 1) {
+                const valueString = parts.slice(1).join('.');
+                // Optional: Warn if the value part isn't literally 'null' for consistency,
+                // even though we ignore it.
+                if (valueString.toLowerCase() !== 'null') {
+                    this.#logger?.warn(`${logPrefix} Literal 'null' type used with unexpected value part ('${valueString}') in source '${originalSourceString}'. Resolving to null anyway.`);
+                }
+            }
+            return null; // <<< Correctly handles "literal.null" now
+        }
+
+        // *** Original logic for other types that REQUIRE a value part ***
+        if (parts.length < 2) {
+            // This error now only triggers for types other than 'null' if they are missing the value part.
+            this.#logger?.warn(`${logPrefix} Malformed 'literal' source string '${originalSourceString}'. Type '${type}' requires a value part ('literal.<type>.<value>').`);
+            return undefined;
+        }
+
+        // Process other types (string, number, boolean) which have parts.length >= 2
+        const valueString = parts.slice(1).join('.');
         switch (type) {
             case 'string':
-                return valueString; // Keep as is
+                return valueString;
             case 'number':
                 const num = parseFloat(valueString);
                 if (isNaN(num)) {
-                    this.#logger?.error(`${logPrefix} Failed to parse number from literal source '${originalSourceString}' for action '${actionDefinition.id}'. Value: '${valueString}'.`);
-                    return undefined; // Parsing failed
+                    this.#logger?.error(`${logPrefix} Failed to parse number from literal source '${originalSourceString}'. Value: '${valueString}'.`);
+                    return undefined;
                 }
                 return num;
             case 'boolean':
                 const boolStr = valueString.toLowerCase();
                 if (boolStr === 'true') return true;
                 if (boolStr === 'false') return false;
-                this.#logger?.error(`${logPrefix} Invalid boolean value in literal source '${originalSourceString}' for action '${actionDefinition.id}'. Value: '${valueString}'. Expected 'true' or 'false'.`);
-                return undefined; // Invalid boolean value
-            case 'null':
-                // Check if the value string is also 'null' for consistency, though type 'null' is sufficient.
-                if (valueString.toLowerCase() !== 'null') {
-                    this.#logger?.warn(`${logPrefix} Literal 'null' type used, but value part was not 'null' (value: '${valueString}') in source '${originalSourceString}' for action '${actionDefinition.id}'. Returning null anyway.`);
-                }
-                return null; // Explicit null literal
+                this.#logger?.error(`${logPrefix} Invalid boolean value in literal source '${originalSourceString}'. Value: '${valueString}'. Expected 'true' or 'false'.`);
+                return undefined;
+            // case 'null': // Already handled above
             default:
                 this.#logger?.error(`${logPrefix} Unknown literal type '${type}' in source '${originalSourceString}' for action '${actionDefinition.id}'.`);
-                return undefined; // Unknown literal type
+                return undefined;
         }
     }
 

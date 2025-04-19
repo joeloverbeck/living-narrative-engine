@@ -45,6 +45,20 @@
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "Required. Unique, namespaced ID for the action definition (e.g., 'core:action_eat', 'combat:action_attack')."
     },
+    "commandVerb": {
+      "type": "string",
+      "description": "Required. The single, canonical, lowercase command verb associated with this action (e.g., 'go', 'take', 'look', 'use'). Used for UI generation and potentially mapping. Should not contain spaces.",
+      "minLength": 1,
+      "pattern": "^[a-z]+$",
+      "examples": [
+        "go",
+        "take",
+        "look",
+        "inventory",
+        "wait",
+        "attack"
+      ]
+    },
     "name": {
       "type": "string",
       "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). Primarily for debugging or tooling."
@@ -123,7 +137,7 @@
           "description": "Defines the event payload. Keys are payload field names, values specify the data source using the documented convention (e.g., 'actor.id', 'target.component.Health.current', 'resolved.direction', 'literal.boolean.true').",
           "additionalProperties": {
             "type": "string",
-            "description": "Source mapping string (e.g., 'actor.id', 'target.component.Health.current')."
+            "description": "Source mapping string (e.g., 'actor.id', 'target.component.Health.current', 'literal.null')."
           }
         }
       },
@@ -132,6 +146,7 @@
   },
   "required": [
     "id",
+    "commandVerb",
     "target_domain",
     "template"
   ],

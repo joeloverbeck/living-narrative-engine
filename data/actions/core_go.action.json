@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:go",
+  "commandVerb": "go",
   "name": "Go",
   "target_domain": "direction",
   "actor_required_components": [],
@@ -8,5 +9,16 @@
   "target_required_components": [],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "go {direction}"
+  "template": "go {direction}",
+  "dispatch_event": {
+    "eventName": "event:move_attempted",
+    "payload": {
+      "entityId": "actor.id",
+      "direction": "resolved.direction",
+      "previousLocationId": "context.currentLocation.id",
+      "connectionEntityId": "resolved.connection.id",
+      "targetLocationId": "resolved.connection.targetLocationId",
+      "blockerEntityId": "resolved.connection.blockerEntityId"
+    }
+  }
 }

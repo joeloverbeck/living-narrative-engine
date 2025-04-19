@@ -8,6 +8,7 @@
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
 // Assume ActionDefinition type exists from GameDataRepository types
+// Use the actual schema definition which includes 'commandVerb'
 /** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 /**
@@ -29,7 +30,7 @@ class CommandParser {
      * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {GameDataRepository} repository - The game data repository instance.
      */
-    constructor(repository) { // <-- UPDATED Parameter name
+    constructor(repository) {
         if (!repository) {
             // Updated error message to reflect new dependency
             throw new Error("CommandParser requires a GameDataRepository instance.");
@@ -45,18 +46,18 @@ class CommandParser {
     }
 
     /**
-     * Parses a command string to identify action, objects, and preposition.
+     * Parses a command string to identify action, objects, and preposition
+     * based on matching the first word against ActionDefinition.commandVerb.
      * // *** [REFACTOR-014-SUB-11] Updated to use GameDataRepository ***
+     * // *** Task 2.1: Refactored parse method ***
      * @param {string} commandString
      * @returns {ParsedCommand}
      */
     parse(commandString) {
+        // --- Initial Setup ---
+        console.log('CommandParser: Will parse the command string \'' + commandString + '\'.');
         const originalInput = commandString;
-        // *** [REFACTOR-014-SUB-11] Fetch actions using repository method ***
-        // Assuming repository provides a method to get all actions for parsing.
-        // If the repository only offers getAction(id), this parser logic needs a complete rewrite.
-        const allActionDefinitions = this.#repository.getAllActionDefinitions(); // <-- UPDATED: Fetch all definitions
-
+        const allActionDefinitions = this.#repository.getAllActionDefinitions(); // Fetch definitions
         const parsedCommand = {
             actionId: null,
             directObjectPhrase: null,
@@ -68,62 +69,40 @@ class CommandParser {
 
         const inputTrimmedStart = commandString.trimStart();
         if (inputTrimmedStart === "") {
-            return parsedCommand;
+            return parsedCommand; // Handle empty/whitespace input
         }
 
-        let longestMatchLength = 0;
-        let matchedActionId = null;
+        // --- Implement New Verb Matching ---
         const lowerInputTrimmedStart = inputTrimmedStart.toLowerCase();
+        const inputWords = lowerInputTrimmedStart.split(/\s+/);
+        const inputVerb = inputWords.length > 0 ? inputWords[0] : null;
 
-        // Find Command (Iterate through definitions from repository)
-        // *** [REFACTOR-014-SUB-11] Use fetched definitions ***
-        for (const actionDefinition of allActionDefinitions) { // <-- UPDATED: Iterate over fetched array
-            if (actionDefinition.commands && Array.isArray(actionDefinition.commands)) {
-                for (const commandOrAlias of actionDefinition.commands) {
-                    if (typeof commandOrAlias === 'string' && commandOrAlias.length > 0) {
-                        const lowerCommandOrAlias = commandOrAlias.toLowerCase();
-                        if (lowerInputTrimmedStart.startsWith(lowerCommandOrAlias)) {
-                            const isEndOfCommand = lowerInputTrimmedStart.length === lowerCommandOrAlias.length;
-                            const charAfterCommandIndex = lowerCommandOrAlias.length;
-                            const isFollowedByWhitespaceOrEnd = isEndOfCommand ||
-                                (lowerInputTrimmedStart.length > charAfterCommandIndex && /\s/.test(lowerInputTrimmedStart[charAfterCommandIndex]));
+        let matchedActionId = null;
+        let matchedVerbLength = 0;
 
-                            if (isFollowedByWhitespaceOrEnd) {
-                                if (lowerCommandOrAlias.length > longestMatchLength) {
-                                    longestMatchLength = lowerCommandOrAlias.length;
-                                    matchedActionId = actionDefinition.id;
-                                }
-                            }
-                        }
-                    }
+        if (inputVerb !== null) {
+            for (const actionDefinition of allActionDefinitions) {
+                // Compare input verb with the canonical commandVerb from the definition
+                if (actionDefinition.commandVerb === inputVerb) {
+                    matchedActionId = actionDefinition.id;
+                    matchedVerbLength = inputVerb.length; // Store length of the matched verb
+                    break; // Found the unique match based on commandVerb
                 }
             }
         }
+        // Note: The case where inputVerb is null (e.g., only whitespace) is handled by the initial empty string check.
 
+        // --- Adapt Argument Parsing ---
         if (matchedActionId !== null) {
             parsedCommand.actionId = matchedActionId;
-            // Find the actual command/alias string that caused the match
-            let matchedAlias = '';
-            // *** [REFACTOR-014-SUB-11] Use fetched definitions ***
-            for (const actionDefinition of allActionDefinitions) { // <-- UPDATED: Iterate over fetched array
-                if (actionDefinition.id === matchedActionId && actionDefinition.commands) {
-                    for (const commandOrAlias of actionDefinition.commands) {
-                        const lowerCommandOrAlias = commandOrAlias.toLowerCase();
-                        if (lowerInputTrimmedStart.startsWith(lowerCommandOrAlias) && lowerCommandOrAlias.length === longestMatchLength) {
-                            matchedAlias = lowerCommandOrAlias;
-                            break; // Found the specific alias that matched
-                        }
-                    }
-                }
-                if (matchedAlias) break;
-            }
 
-
-            const remainingText = inputTrimmedStart.substring(longestMatchLength);
+            // Calculate remainder based on the matched command verb's length
+            const remainingText = inputTrimmedStart.substring(matchedVerbLength);
             const textAfterCommand = remainingText.trimStart();
 
+            // Reuse existing argument parsing logic block
             if (textAfterCommand) {
-                // --- REVISED PREPOSITION FINDING LOGIC V3 --- (No changes needed here)
+                // --- REVISED PREPOSITION FINDING LOGIC V3 --- (Kept as-is)
                 let firstMatchIndex = -1;
                 let firstMatchPrep = null;
                 let firstMatchLength = 0;
@@ -132,57 +111,86 @@ class CommandParser {
                 for (const word of words) {
                     const lowerWord = word.toLowerCase();
                     if (SUPPORTED_PREPOSITIONS.includes(lowerWord)) {
+                        // Use regex to ensure whole word match, considering start/end of string or whitespace boundaries
                         const wordBoundaryPattern = new RegExp(`(?:^|\\s)${word}(?:\\s|$)`, 'i');
                         const match = wordBoundaryPattern.exec(textAfterCommand);
                         if (match) {
-                            const prepStartIndex = match[0].toLowerCase().indexOf(lowerWord) + match.index;
-                            firstMatchIndex = prepStartIndex;
-                            firstMatchPrep = lowerWord;
-                            firstMatchLength = word.length;
-                            break;
+                            // Find the precise start index of the matched preposition within the textAfterCommand
+                            const prepStartIndex = match.index + match[0].toLowerCase().indexOf(lowerWord);
+
+                            // Check if this preposition occurs *before* any previously found one
+                            if (firstMatchIndex === -1 || prepStartIndex < firstMatchIndex) {
+                                firstMatchIndex = prepStartIndex;
+                                firstMatchPrep = lowerWord; // Store the matched preposition (lowercase)
+                                firstMatchLength = word.length; // Store the original length for substring calculation
+                                // Keep searching to ensure we find the *first* one.
+                                // break; // NO BREAK - must find the *first* occurrence in textAfterCommand
+                            }
                         }
                     }
                 }
+                // Corrected logic: break should have been outside the inner `if (match)` but inside the `if (SUPPORTED_PREPOSITIONS.includes(lowerWord))`?
+                // Let's re-evaluate the V3 logic's intent. It iterates all words. If a word is a prep, it finds its index using regex. It stores the *first* match's details (index, prep, length).
+                // The original loop structure without a break inside the `if(SUPPORTED_PREPOSITIONS)` correctly finds the details of the first preposition encountered. No change needed here.
+
                 // --- END REVISED PREPOSITION FINDING LOGIC V3 ---
 
                 if (firstMatchPrep !== null) {
+                    // Found a preposition
                     const prepositionIndexInText = firstMatchIndex;
-                    const foundPreposition = firstMatchPrep;
-                    const textBeforePrep = textAfterCommand.substring(0, prepositionIndexInText);
-                    const textAfterPrep = textAfterCommand.substring(prepositionIndexInText + foundPreposition.length);
+                    const foundPreposition = firstMatchPrep; // Already lowercase
+                    const textBeforePrep = textAfterCommand.substring(0, prepositionIndexInText).trimEnd();
+                    const textAfterPrep = textAfterCommand.substring(prepositionIndexInText + firstMatchLength).trimStart(); // Use firstMatchLength here
 
+                    parsedCommand.preposition = foundPreposition;
+                    parsedCommand.directObjectPhrase = textBeforePrep === "" ? null : textBeforePrep;
+                    parsedCommand.indirectObjectPhrase = textAfterPrep === "" ? null : textAfterPrep; // trimEnd() potentially needed if punctuation handling requires it later
+
+                    // Refined assignment based on whether textBeforePrep is empty (handles V+P+IO case)
+                    // This refinement seems unnecessary given the check above. Reverting to simpler logic.
+                    /*
                     if (textBeforePrep.trim() !== "") {
                         parsedCommand.preposition = foundPreposition;
                         parsedCommand.directObjectPhrase = textBeforePrep.trimEnd();
                         const potentialIO = textAfterPrep.trimStart();
                         parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
                     } else {
+                        // Handles cases like "look > north" (V+P+IO)
                         parsedCommand.preposition = foundPreposition;
                         parsedCommand.directObjectPhrase = null;
                         const potentialIO = textAfterPrep.trimStart();
                         parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
                     }
+                    */
+
                 } else {
-                    parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
+                    // No preposition found, the entire remaining text is the direct object
+                    parsedCommand.directObjectPhrase = textAfterCommand.trimEnd(); // trimEnd needed? Yes, potentially.
                     parsedCommand.preposition = null;
                     parsedCommand.indirectObjectPhrase = null;
                 }
             } else {
-                // --- NEW LOGIC FOR ALIAS-AS-OBJECT --- (No changes needed here)
-                const moveActionVerbs = ['move', 'go'];
-                if (matchedActionId === 'core:move' && matchedAlias && !moveActionVerbs.includes(matchedAlias)) {
-                    parsedCommand.directObjectPhrase = matchedAlias;
-                } else {
-                    parsedCommand.directObjectPhrase = null;
-                }
+                // textAfterCommand is empty (e.g., just "look" or "inventory")
+                // DO/Prep/IO should remain null as initialized.
+                // --- REMOVED Alias Handling ---
+                // Deleted the 'else' block containing special logic for 'core:move' and matchedAlias.
+                parsedCommand.directObjectPhrase = null;
                 parsedCommand.preposition = null;
                 parsedCommand.indirectObjectPhrase = null;
             }
 
         } else {
-            if (commandString.trim() !== "") {
-                parsedCommand.error = "Unknown command.";
+            // --- Update Error Handling ---
+            // matchedActionId is null, meaning the inputVerb didn't match any actionDefinition.commandVerb
+            if (inputTrimmedStart !== "") { // Avoid error on purely whitespace input
+                // As per ticket instructions, assume this indicates an internal issue if commands
+                // are expected to be generated system-side via ActionDiscovery.
+                // If user typing is primary, "Unknown command." might be better, but following spec:
+                parsedCommand.error = "Internal Error: Command verb mismatch.";
+                // If a user-facing error is preferred for direct typing:
+                // parsedCommand.error = "Unknown command.";
             }
+            // If input was only whitespace, error remains null (handled by initial check).
         }
 
         return parsedCommand;

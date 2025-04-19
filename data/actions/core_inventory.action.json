@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:inventory",
+  "commandVerb": "inventory",
   "name": "Inventory",
   "target_domain": "none",
   "actor_required_components": [],

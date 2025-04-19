@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:take",
+  "commandVerb": "take",
   "name": "Take",
   "target_domain": "environment",
   "actor_required_components": [],

@@ -357,7 +357,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         gameStateManager: c.resolve('GameStateManager'),
         inputHandler: c.resolve('InputHandler'),
         commandParser: c.resolve('CommandParser'),
-        actionExecutor: c.resolve('ActionExecutor'), // Now gets the DI-configured instance
+        actionExecutor: c.resolve('ActionExecutor'),
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository'),

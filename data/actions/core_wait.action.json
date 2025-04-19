@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:wait",
+  "commandVerb": "wait",
   "name": "Wait",
   "target_domain": "none",
   "actor_required_components": [],

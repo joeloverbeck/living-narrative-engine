@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:drop",
+  "commandVerb": "drop",
   "name": "Drop",
   "target_domain": "inventory",
   "actor_required_components": [],

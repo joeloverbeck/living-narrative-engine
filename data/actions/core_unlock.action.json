@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:unlock",
+  "commandVerb": "unlock",
   "name": "Unlock",
   "target_domain": "environment",
   "actor_required_components": [],

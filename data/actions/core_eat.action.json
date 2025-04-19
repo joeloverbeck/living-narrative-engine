@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:eat",
+  "commandVerb": "eat",
   "name": "Eat",
   "target_domain": "inventory",
   "actor_required_components": [],

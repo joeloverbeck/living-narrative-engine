@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
   "id": "core:attack",
+  "commandVerb": "attack",
   "name": "Attack",
   "target_domain": "environment",
   "actor_required_components": [],

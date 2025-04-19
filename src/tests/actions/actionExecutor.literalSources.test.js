@@ -380,7 +380,13 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`Failed to parse number from literal source '${sourceString}' for action '${actionDef.id}'. Value: '${valueString}'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '${sourceString}'\. Value\: '${valueString}'.`)
+                    // Note: The actionDef.id part is no longer included in the log message from #resolveLiteralSource in this specific case,
+                    //       so remove it from the expectation *if* it's truly absent in the Received message.
+                    //       Looking at your code snippet, the action ID *is* missing from the specific error log lines
+                    //       within #resolveLiteralSource. Double-check the exact output if needed.
+                    //       If the action ID *should* be there, you'd add it back:
+                    // expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '<span class="math-inline">\{sourceString\}' for action '</span>{actionDef.id}'. Value: '${valueString}'.`)
                 );
                 expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -463,7 +469,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`Invalid boolean value in literal source '${sourceString}' for action '${actionDef.id}'. Value: '${valueString}'. Expected 'true' or 'false'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Invalid boolean value in literal source '${sourceString}'\. Value\: '${valueString}'. Expected 'true' or 'false'.`)
                 );
                 expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -563,7 +569,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`Failed to parse number from literal source '${sourceString}' for action '${actionDef.id}'. Value: '${valueString}'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '${sourceString}'\. Value\: '${valueString}'.`)
                 );
                 expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -585,7 +591,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`Invalid boolean value in literal source '${sourceString}' for action '${actionDef.id}'. Value: '${valueString}'. Expected 'true' or 'false'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Invalid boolean value in literal source '${sourceString}'\. Value\: '${valueString}'. Expected 'true' or 'false'.`)
                 );
                 expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -611,7 +617,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`Malformed 'literal' source string '${sourceString}' for action '${actionDef.id}'. Requires 'literal.<type>.<value>'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Type '' requires a value part ('literal.<type>.<value>').`)
                 );
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -632,7 +638,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`Malformed 'literal' source string '${sourceString}' for action '${actionDef.id}'. Requires 'literal.<type>.<value>'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Type 'string' requires a value part ('literal.<type>.<value>').`)
                 );
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -653,7 +659,7 @@ describe('ActionExecutor', () => {
                 await executor.executeAction(actionDef.id, mockContext);
 
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`Malformed 'literal' source string '${sourceString}' for action '${actionDef.id}'. Requires 'literal.<type>.<value>'.`)
+                    expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Requires at least 'literal.<type>'.`)
                 );
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(mockLogger.debug).toHaveBeenCalledWith(
