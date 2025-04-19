@@ -114,7 +114,6 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  * @typedef {object} AttackIntendedEventPayload
  * @property {string} attackerId The unique identifier of the attacking entity.
  * @property {string} targetId The unique identifier of the entity being targeted for the attack.
- * @property {number} potentialDamage The base calculated damage the attacker intends to inflict,
  * before target defenses or resistances are applied.
  */
 

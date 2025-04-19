@@ -4,10 +4,22 @@
   "commandVerb": "drop",
   "name": "Drop",
   "target_domain": "inventory",
-  "actor_required_components": [],
+  "actor_required_components": [
+    "Inventory"
+  ],
   "actor_forbidden_components": [],
-  "target_required_components": [],
+  "target_required_components": [
+    "Item"
+  ],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "drop {target}"
+  "template": "drop {target}",
+  "dispatch_event": {
+    "eventName": "event:item_drop_attempted",
+    "payload": {
+      "playerId": "actor.id",
+      "itemInstanceId": "target.id",
+      "locationId": "context.currentLocation.id"
+    }
+  }
 }

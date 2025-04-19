@@ -11,5 +11,12 @@
   ],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "attack {target}"
+  "template": "attack {target}",
+  "dispatch_event": {
+    "eventName": "event:attack_intended",
+    "payload": {
+      "attackerId": "actor.id",
+      "targetId": "target.id"
+    }
+  }
 }
