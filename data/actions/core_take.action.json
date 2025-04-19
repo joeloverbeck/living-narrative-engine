@@ -11,5 +11,13 @@
   ],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "take {target}"
+  "template": "take {target}",
+  "dispatch_event": {
+    "eventName": "event:item_picked_up",
+    "payload": {
+      "pickerId": "actor.id",
+      "itemId": "target.id",
+      "locationId": "context.currentLocation.id"
+    }
+  }
 }

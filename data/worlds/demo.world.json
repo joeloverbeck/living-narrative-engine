@@ -7,9 +7,7 @@
     "actions": [
       "core_attack.action.json",
       "core_drop.action.json",
-      "core_eat.action.json",
       "core_go.action.json",
-      "core_inventory.action.json",
       "core_look.action.json",
       "core_open.action.json",
       "core_take.action.json",

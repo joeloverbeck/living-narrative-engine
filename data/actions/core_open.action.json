@@ -9,7 +9,17 @@
   "target_required_components": [
     "Openable"
   ],
-  "target_forbidden_components": [],
+  "target_forbidden_components": [
+    "Open",
+    "Locked"
+  ],
   "prerequisites": [],
-  "template": "open {target}"
+  "template": "open {target}",
+  "dispatch_event": {
+    "eventName": "event:open_attempted",
+    "payload": {
+      "actorId": "actor.id",
+      "targetEntityId": "target.id"
+    }
+  }
 }
