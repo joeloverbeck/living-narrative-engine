@@ -12,9 +12,6 @@ import {getDisplayName} from '../utils/messages.js';
 /** @typedef {import('../entities/entity.js').default} Entity */
 // Define a type for the incoming payload, allowing flexibility but noting expected properties
 /** @typedef {{ userId: string, itemInstanceId?: string | null, targetEntityId?: string | null, validatedTargetId?: string | null, [key: string]: any }} ReceivedLockUnlockPayload */
-/** @typedef {import('../types/eventTypes.js').EntityUnlockedEventPayload} EntityUnlockedEventPayload */
-/** @typedef {import('../types/eventTypes.js').EntityLockedEventPayload} EntityLockedEventPayload */
-/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
 /** @typedef {import('../components/lockableComponent.js').LockAttemptResult} LockAttemptResult */
 
 /** @typedef {import('../components/lockableComponent.js').LockResultReasonCode} LockResultReasonCode */

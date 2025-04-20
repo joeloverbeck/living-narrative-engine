@@ -1,13 +1,4 @@
 // src/systems/combatSystem.js
-import {HealthComponent} from '../components/healthComponent.js';
-import {NameComponent} from '../components/nameComponent.js';
-import {
-    EVENT_ATTACK_INTENDED,
-    "event:display_message",
-    "event:entity_died", // Keep for reference/context, but won't dispatch directly
-    EVENT_INFLICT_DAMAGE_REQUESTED // Import the new event type
-} from "../types/eventTypes.js";
-
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
@@ -39,12 +30,12 @@ class CombatSystem {
      */
     initialize() {
         // Bind the handler to ensure 'this' context is correct when called by EventBus
-        this.#eventBus.subscribe(EVENT_ATTACK_INTENDED, this._handleAttackIntended.bind(this));
-        console.log("CombatSystem: Initialized and subscribed to '" + EVENT_ATTACK_INTENDED + "'.");
+        this.#eventBus.subscribe("event:attack_intended", this._handleAttackIntended.bind(this));
+        console.log("CombatSystem: Initialized and subscribed to '" + "event:attack_intended" + "'.");
     }
 
     /**
-     * Handles the EVENT_ATTACK_INTENDED event, calculates potential damage,
+     * Handles the "event:attack_intended" event, calculates potential damage,
      * dispatches a damage request, and sends a UI message about the attack.
      * @param {object} eventData
      * @param {string} eventData.attackerId
@@ -103,12 +94,12 @@ class CombatSystem {
 
         // --- 5. Dispatch Damage Request Event --- <<<<------ CHANGE HERE
         // Instead of applying damage directly, dispatch an event for HealthSystem
-        this.#eventBus.dispatch(EVENT_INFLICT_DAMAGE_REQUESTED, {
+        this.#eventBus.dispatch("event:inflict_damage_requested", {
             targetId: targetId,
             amount: actualDamage,
             sourceEntityId: attackerId // Pass attacker ID for death attribution
         });
-        console.log(`CombatSystem: Dispatched ${EVENT_INFLICT_DAMAGE_REQUESTED} for ${actualDamage} damage to ${targetId} from ${attackerId}.`);
+        console.log(`CombatSystem: Dispatched ${"event:inflict_damage_requested"} for ${actualDamage} damage to ${targetId} from ${attackerId}.`);
 
 
         // --- 6. Dispatch UI Hit Message ---
@@ -121,15 +112,15 @@ class CombatSystem {
 
         // --- 7. Death Check and Death Event/Message REMOVED ---
         // This logic is now the responsibility of the HealthSystem,
-        // which will listen for EVENT_INFLICT_DAMAGE_REQUESTED.
+        // which will listen for "event:inflict_damage_requested".
     }
 
     /**
      * Cleans up subscriptions when the system is shut down.
      */
     shutdown() {
-        this.#eventBus.unsubscribe(EVENT_ATTACK_INTENDED, this._handleAttackIntended);
-        console.log("CombatSystem: Unsubscribed from " + EVENT_ATTACK_INTENDED + ".");
+        this.#eventBus.unsubscribe("event:attack_intended", this._handleAttackIntended);
+        console.log("CombatSystem: Unsubscribed from " + "event:attack_intended" + ".");
     }
 }
 

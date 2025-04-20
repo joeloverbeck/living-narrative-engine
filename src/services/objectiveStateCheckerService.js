@@ -241,7 +241,6 @@ class ObjectiveStateCheckerService {
     /**
      * Handles the "event:entity_moved" event. Checks if the moved entity is the player
      * and if their new location matches any watched locations for objectives.
-     * @param {import('../types/eventTypes.js').EntityMovedEventPayload} eventData
      * @private
      */
     _handleEntityMoved({entityId, newLocationId}) {
@@ -269,7 +268,6 @@ class ObjectiveStateCheckerService {
     /**
      * Handles the "event:entity_died" event. Checks if the deceased entity
      * is being watched for a state change (likely 'defeated').
-     * @param {import('../types/eventTypes.js').EntityDiedEventPayload} eventData
      * @private
      */
     _handleEntityDied({deceasedEntityId}) {

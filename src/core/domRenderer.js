@@ -4,15 +4,10 @@
 /** @typedef {import('./eventBus.js').default} EventBus */
 /** @typedef {import('./services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../types/eventTypes.js').EVENT_DISPLAY_LOCATION} EVENT_DISPLAY_LOCATION */
 /** @typedef {import('../types/eventPayloads.js').LocationDisplayPayload} LocationDisplayPayload */
 /** @typedef {import('../types/eventPayloads.js').InventoryRenderPayload} InventoryRenderPayload */
 /** @typedef {import('../types/eventPayloads.js').ItemUIData} ItemUIData */
 /** @typedef {import('../types/eventPayloads.js').UIUpdateActionsPayload} UIUpdateActionsPayload */
-
-// Assume EVENT_DISPLAY_LOCATION is defined elsewhere, e.g., import { EVENT_DISPLAY_LOCATION } from '../types/eventTypes.js';
-// For standalone execution, define it:
-const EVENT_DISPLAY_LOCATION = 'event:display_location';
 
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.
@@ -138,7 +133,7 @@ class DomRenderer {
         this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this));
         this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
         this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
-        this.#eventBus.subscribe(EVENT_DISPLAY_LOCATION, this.#handleDisplayLocation.bind(this));
+        this.#eventBus.subscribe("event:display_location", this.#handleDisplayLocation.bind(this));
         this.#eventBus.subscribe('event:set_title', this.#handleSetTitle.bind(this));
 
         // --- Inventory UI Events ---
@@ -225,7 +220,7 @@ class DomRenderer {
         ) {
             this.renderLocation(locationData);
         } else {
-            this.#logger.warn("DomRenderer received '" + EVENT_DISPLAY_LOCATION + "' event with invalid or incomplete data:", locationData);
+            this.#logger.warn("DomRenderer received '" + "event:display_location" + "' event with invalid or incomplete data:", locationData);
             this.renderMessage("Error: Could not display location details due to invalid data format received.", "error");
         }
     }

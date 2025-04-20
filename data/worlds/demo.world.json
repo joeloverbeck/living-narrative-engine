@@ -83,9 +83,6 @@
       "demo_door_exit_north.blocker.json",
       "demo_door_treasure_room.blocker.json"
     ],
-    "triggers": [
-      "demo_trigger_unlock_treasure_door_on_goblin_death.trigger.json"
-    ],
     "objectives": [
       "story_a_obj_defeat_boss.objective.json",
       "demo_obj_unlock_exit_door.objective.json"

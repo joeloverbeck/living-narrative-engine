@@ -12,7 +12,6 @@
  * @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver
  * @typedef {import('../interfaces/coreServices.js').IDataFetcher} IDataFetcher
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
- * @typedef {import('../interfaces/coreServices.js').IEventTypeValidator} IEventTypeValidator
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
@@ -32,8 +31,6 @@ class GenericContentLoader {
     #fetcher;
     /** @private @type {ISchemaValidator} */
     #validator;
-    /** @private @type {IEventTypeValidator} */
-    #eventTypeValidator;
     /** @private @type {IDataRegistry} */
     #registry;
     /** @private @type {ILogger} */
@@ -46,12 +43,11 @@ class GenericContentLoader {
      * @param {IPathResolver} pathResolver - Service to resolve content filenames to paths.
      * @param {IDataFetcher} fetcher - Service to fetch raw content data.
      * @param {ISchemaValidator} validator - Service for schema validation.
-     * @param {IEventTypeValidator} eventTypeValidator - Service for conditional event type validation.
      * @param {IDataRegistry} registry - Service to store loaded data.
      * @param {ILogger} logger - Service for logging messages.
      * @throws {Error} If any required dependency is not provided or invalid.
      */
-    constructor(configuration, pathResolver, fetcher, validator, eventTypeValidator, registry, logger) {
+    constructor(configuration, pathResolver, fetcher, validator, registry, logger) {
         // AC: Constructor accepts all specified service interfaces as parameters & validates them
         if (!configuration || typeof configuration.getContentTypeSchemaId !== 'function') {
             throw new Error("GenericContentLoader: Missing or invalid 'configuration' dependency (IConfiguration).");
@@ -65,9 +61,6 @@ class GenericContentLoader {
         if (!validator || typeof validator.getValidator !== 'function' || typeof validator.isSchemaLoaded !== 'function') {
             throw new Error("GenericContentLoader: Missing or invalid 'validator' dependency (ISchemaValidator).");
         }
-        if (!eventTypeValidator || typeof eventTypeValidator.isValidEventType !== 'function') {
-            throw new Error("GenericContentLoader: Missing or invalid 'eventTypeValidator' dependency (IEventTypeValidator).");
-        }
         if (!registry || typeof registry.store !== 'function' || typeof registry.get !== 'function') {
             throw new Error("GenericContentLoader: Missing or invalid 'registry' dependency (IDataRegistry).");
         }
@@ -80,7 +73,6 @@ class GenericContentLoader {
         this.#resolver = pathResolver;
         this.#fetcher = fetcher;
         this.#validator = validator;
-        this.#eventTypeValidator = eventTypeValidator;
         this.#registry = registry;
         this.#logger = logger;
 
@@ -187,11 +179,6 @@ class GenericContentLoader {
                 throw new Error(`Schema validation failed for ${typeName} file '${filename}'.`);
             }
 
-            // --- 4. Conditional Event Type Validation ---
-            // AC: Event type validation is performed conditionally... logs warnings for invalid types.
-            if (typeName === 'triggers') {
-                this.#validateTriggerEventType(data, path);
-            }
             // Add other conditional validations here if needed for other types
 
             // --- 5. Extract ID ---
@@ -246,33 +233,6 @@ class GenericContentLoader {
             // Ensure the message includes context.
             throw new Error(`Error processing ${typeName} file ${filename} at path ${path || 'unknown'}: ${error.message}`);
         }
-    }
-
-    /**
-     * Validates the event type within trigger data, logging warnings.
-     * @private
-     * @param {object} triggerData - The parsed trigger data object.
-     * @param {string} filePath - The path of the file for logging context.
-     */
-    #validateTriggerEventType(triggerData, filePath) {
-        // AC: Conditionally validates 'event_type' in triggers using IEventTypeValidator.
-        // Example assumes structure { listen_to: { event_type: "..." } }
-        // Adjust based on your actual trigger schema structure
-        const eventTypeString = triggerData?.listen_to?.event_type;
-
-        if (typeof eventTypeString === 'string' && eventTypeString.trim() !== '') {
-            // AC: Logs a warning if IEventTypeValidator.isValidEventType returns false.
-            if (!this.#eventTypeValidator.isValidEventType(eventTypeString)) {
-                this.#logger.warn(`GenericContentLoader WARNING: Trigger "${triggerData.id || '(no id)'}" in file "${filePath}" uses an unregistered event_type: "${eventTypeString}". This trigger might not function correctly.`);
-            }
-        } else if (triggerData && typeof triggerData === 'object' && triggerData.listen_to && typeof triggerData.listen_to === 'object' && !('event_type' in triggerData.listen_to)) {
-            // Case where listen_to exists but event_type is missing or not a string
-            this.#logger.warn(`GenericContentLoader WARNING: Trigger "${triggerData.id || '(no id)'}" in file "${filePath}" has 'listen_to' object but is missing a valid 'event_type' string.`);
-        }
-        // Optionally log if listen_to itself is missing, depending on schema strictness
-        // else if (!triggerData?.listen_to) {
-        //     this.#logger.warn(`GenericContentLoader WARNING: Trigger "${triggerData.id || '(no id)'}" in file "${filePath}" is missing the 'listen_to' object.`);
-        // }
     }
 }
 

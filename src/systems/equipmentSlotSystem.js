@@ -4,13 +4,6 @@
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {EquipmentComponent} from '../components/equipmentComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from "../utils/messages.js";
-import {
-    "event:display_message",
-    EVENT_ITEM_EQUIP_ATTEMPTED, // Need to subscribe
-    EVENT_ITEM_EQUIPPED,        // Need to dispatch
-    EVENT_ITEM_UNEQUIP_ATTEMPTED, // Need to subscribe
-    EVENT_ITEM_UNEQUIPPED       // Need to dispatch
-} from "../types/eventTypes.js";
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/inventoryComponent').InventoryComponent} InventoryComponentType */
 /** @typedef {import('../components/equipmentComponent').EquipmentComponent} EquipmentComponentType */
@@ -26,7 +19,7 @@ import {
  * Manages the definition, availability, and validation logic related to equipment slots.
  * NOW ALSO handles the core state transition logic for equipping and unequipping items,
  * moving items between InventoryComponent and EquipmentComponent, and dispatching
- * the final EVENT_ITEM_EQUIPPED or EVENT_ITEM_UNEQUIPPED events upon success.
+ * the final "event:item_equipped" or "event:item_unequipped" events upon success.
  */
 class EquipmentSlotSystem {
     #eventBus;
@@ -49,8 +42,8 @@ class EquipmentSlotSystem {
      */
     initialize() {
         // **** NEW: Subscribe to attempt events ****
-        this.#eventBus.subscribe(EVENT_ITEM_EQUIP_ATTEMPTED, this.handleItemEquipAttempted.bind(this));
-        this.#eventBus.subscribe(EVENT_ITEM_UNEQUIP_ATTEMPTED, this.handleItemUnequipAttempted.bind(this));
+        this.#eventBus.subscribe("event:item_equip_attempted", this.handleItemEquipAttempted.bind(this));
+        this.#eventBus.subscribe("event:item_unequip_attempted", this.handleItemUnequipAttempted.bind(this));
         console.log("EquipmentSlotSystem initialized and subscribed to events: item_equip_attempted, item_unequip_attempted.");
     }
 
@@ -119,13 +112,13 @@ class EquipmentSlotSystem {
 
         try {
             // Dispatch the final 'equipped' event for other systems (like EquipmentEffectSystem)
-            this.#eventBus.dispatch(EVENT_ITEM_EQUIPPED, {
+            this.#eventBus.dispatch("event:item_equipped", {
                 entity: playerEntity,
                 itemId: itemIdToEquip,
                 slotId: targetSlotId,
                 itemInstance: itemInstanceToEquip // Pass instance if needed downstream
             });
-            console.log(`EquipmentSlotSystem (Equip Attempt): Dispatched ${EVENT_ITEM_EQUIPPED} for ${itemIdToEquip}.`); // **** Prefix updated ****
+            console.log(`EquipmentSlotSystem (Equip Attempt): Dispatched ${"event:item_equipped"} for ${itemIdToEquip}.`); // **** Prefix updated ****
         } catch (e) {
             console.error("EquipmentSlotSystem (Equip Attempt): Failed to dispatch item_equipped event:", e); // **** Prefix updated ****
             this.#eventBus.dispatch("event:display_message", {
@@ -196,13 +189,13 @@ class EquipmentSlotSystem {
 
         try {
             // Dispatch the final 'unequipped' event for other systems (like EquipmentEffectSystem)
-            this.#eventBus.dispatch(EVENT_ITEM_UNEQUIPPED, {
+            this.#eventBus.dispatch("event:item_unequipped", {
                 entity: playerEntity,
                 itemId: itemIdToUnequip,
                 slotId: slotIdToUnequip,
                 itemInstance: itemInstanceToUnequip // Pass instance if needed downstream
             });
-            console.log(`EquipmentSlotSystem (Unequip Attempt): Dispatched ${EVENT_ITEM_UNEQUIPPED} for ${itemIdToUnequip}.`); // **** Prefix updated ****
+            console.log(`EquipmentSlotSystem (Unequip Attempt): Dispatched ${"event:item_unequipped"} for ${itemIdToUnequip}.`); // **** Prefix updated ****
         } catch (e) {
             console.error("EquipmentSlotSystem (Unequip Attempt): Failed to dispatch item_unequipped event:", e); // **** Prefix updated ****
             this.#eventBus.dispatch("event:display_message", {

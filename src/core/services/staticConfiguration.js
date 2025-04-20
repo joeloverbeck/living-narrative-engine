@@ -16,7 +16,6 @@ const SCHEMA_FILES = [
     'event-definition.schema.json',
     'action-definition.schema.json',
     'entity.schema.json',
-    'trigger.schema.json',
     'interaction-test.schema.json',
     'item.schema.json',
     'location.schema.json',
@@ -43,7 +42,6 @@ const CONTENT_TYPE_SCHEMAS = {
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
     connections: 'http://example.com/schemas/connection.schema.json',
     blockers: 'http://example.com/schemas/entity.schema.json',
-    triggers: 'http://example.com/schemas/trigger.schema.json', // For triggers listed under "triggers" (array)
     objectives: 'http://example.com/schemas/objective.schema.json', // For objectives listed under "objectives"
     quests: 'http://example.com/schemas/quest.schema.json', // For quests listed under "quests"
     interactionTests: 'http://example.com/schemas/interaction-test.schema.json', // For tests listed under "interactionTests"

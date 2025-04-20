@@ -8,7 +8,6 @@ import GenericContentLoader from '../../../core/services/genericContentLoader.js
 /** @typedef {import('../../../core/interfaces/coreServices.js').IPathResolver} IPathResolver */
 /** @typedef {import('../../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../../core/interfaces/coreServices.js').IEventTypeValidator} IEventTypeValidator */
 /** @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
@@ -23,8 +22,6 @@ describe('GenericContentLoader - Fetch Error Test', () => {
     let mockDataFetcher;
     /** @type {jest.Mocked<ISchemaValidator>} */
     let mockSchemaValidator;
-    /** @type {jest.Mocked<IEventTypeValidator>} */
-    let mockEventTypeValidator;
     /** @type {jest.Mocked<IDataRegistry>} */
     let mockDataRegistry;
     /** @type {jest.Mocked<ILogger>} */
@@ -65,10 +62,6 @@ describe('GenericContentLoader - Fetch Error Test', () => {
             getValidator: jest.fn(),
             isSchemaLoaded: jest.fn(), // Not used directly by GenericContentLoader, but part of interface
         };
-        mockEventTypeValidator = {
-            isValidEventType: jest.fn(),
-            initialize: jest.fn(), // Not used by GenericContentLoader
-        };
         mockDataRegistry = {
             store: jest.fn(),
             get: jest.fn(),
@@ -100,7 +93,6 @@ describe('GenericContentLoader - Fetch Error Test', () => {
         );
         // Default mock behavior (can be overridden in tests)
         mockDataRegistry.get.mockReturnValue(undefined); // Assume no duplicates by default
-        mockEventTypeValidator.isValidEventType.mockReturnValue(true); // Assume valid by default
 
         // Instantiate the loader with mocks
         contentLoader = new GenericContentLoader(
@@ -108,7 +100,6 @@ describe('GenericContentLoader - Fetch Error Test', () => {
             mockPathResolver,
             mockDataFetcher,
             mockSchemaValidator,
-            mockEventTypeValidator,
             mockDataRegistry,
             mockLogger
         );

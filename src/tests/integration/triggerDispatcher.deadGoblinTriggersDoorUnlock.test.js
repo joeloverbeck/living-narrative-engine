@@ -147,7 +147,6 @@ describe('Trigger → LockSystem integration – unlock treasure door on goblin 
         });
 
         // Assert part 1 – "event:entity_unlocked" is eventually fired with correct target
-        /** @type {import('../../types/eventTypes.js').EntityUnlockedEventPayload} */
         const unlockedPayload = await waitForEvent(
             dispatchSpy,
             "event:entity_unlocked",

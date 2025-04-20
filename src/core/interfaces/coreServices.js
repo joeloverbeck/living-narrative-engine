@@ -119,19 +119,6 @@
  * Takes a content type (e.g., 'items') and a filename (e.g., 'potion.json') and returns the full path needed to fetch that content definition file.
  */
 
-// --- Event Type Validation ---
-
-/**
- * Interface for validating event type strings used in data definitions (e.g., triggers).
- * Ensures that triggers or other data only reference event types known to the system.
- * @typedef {object} IEventTypeValidator
- * @property {(eventType: string) => boolean} isValidEventType
- * Checks if the provided `eventType` string is a valid, registered event type within the system.
- * @property {(eventTypesSource: object | Set<string> | string[]) => void} initialize
- * Initializes the validator with the set of known, valid event type strings.
- * The `eventTypesSource` could be the imported event types module object, a Set of strings, or an array of strings.
- */
-
 
 // --- Boilerplate to make this a module ---
 // This prevents JSDoc types from potentially polluting the global scope in some environments

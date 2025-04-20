@@ -5,8 +5,6 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./blockerSystem.js').default} BlockerSystem */
 /** @typedef {import('./movementSystem.js').default} MovementSystem */
-/** @typedef {import('../types/eventTypes.js').MoveAttemptedEventPayload} MoveAttemptedEventPayload */
-/** @typedef {import('../types/eventTypes.js').ActionMoveFailedPayload} ActionMoveFailedPayload */
 /** @typedef {import('./blockerSystem.js').BlockerCheckPayload} BlockerCheckPayload */
 /** @typedef {import('./blockerSystem.js').BlockerCheckResult} BlockerCheckResult */
 /** @typedef {import('./movementSystem.js').MoveExecutionPayload} MoveExecutionPayload */ // Assuming MovementSystem defines this type

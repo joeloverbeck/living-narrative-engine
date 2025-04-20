@@ -6,12 +6,6 @@
 // /** @typedef {import('../../services/localizationService.js').default} LocalizationService */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
 
-// --- Event Payload Type Imports (Expected based on eventTypes.js and OPEN-4/OPEN-7) ---
-/** @typedef {import('../types/eventTypes.js').EntityOpenedEventPayload} EntityOpenedEventPayload */
-/** @typedef {import('../types/eventTypes.js').OpenFailedEventPayload} OpenFailedEventPayload */
-// Import specific payload types used by existing handlers if needed
-/** @typedef {import('../types/eventTypes.js').ActionMoveFailedPayload} ActionMoveFailedPayload */
-
 
 // Ensure TARGET_MESSAGES is imported (already present in provided code)
 // Assumes OPEN-8 will add the required 'OPEN_*' templates to this utility.
@@ -466,7 +460,6 @@ class NotificationUISystem {
 
     /**
      * Handles the 'event:open_failed' event and displays a failure message based on the reason.
-     * @param {OpenFailedEventPayload} payload - The event payload.
      * @private
      */
     _handleOpenFailed(payload) {
@@ -476,7 +469,6 @@ class NotificationUISystem {
         if (!isPlayerAction) return;
 
         // AC 4 & 5: Extract data and use switch
-        // Note: Assumes payload conforms to eventTypes.js definition, including targetDisplayName
         const {
             reasonCode,
             targetDisplayName = 'something' // Default fallback

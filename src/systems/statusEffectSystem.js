@@ -1,18 +1,9 @@
 // src/systems/statusEffectSystem.js
 
-// Import event types
-import {
-    EVENT_APPLY_STATUS_EFFECT_REQUESTED,
-    EVENT_REMOVE_STATUS_EFFECT_REQUESTED
-} from '../types/eventTypes.js';
-
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../types/eventTypes.js').ApplyStatusEffectRequestedEventPayload} ApplyStatusEffectRequestedEventPayload */
-
-/** @typedef {import('../types/eventTypes.js').RemoveStatusEffectRequestedEventPayload} RemoveStatusEffectRequestedEventPayload */
 
 /**
  * System responsible for managing status effects on entities,
@@ -38,8 +29,8 @@ class StatusEffectSystem {
      * Initializes the system by subscribing to status effect related events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_APPLY_STATUS_EFFECT_REQUESTED, this._handleApplyStatusEffectRequested.bind(this));
-        this.#eventBus.subscribe(EVENT_REMOVE_STATUS_EFFECT_REQUESTED, this._handleRemoveStatusEffectRequested.bind(this));
+        this.#eventBus.subscribe("event:apply_status_effect_requested", this._handleApplyStatusEffectRequested.bind(this));
+        this.#eventBus.subscribe("event:remove_status_effect_requested", this._handleRemoveStatusEffectRequested.bind(this));
         console.log("StatusEffectSystem: Initialized and subscribed to APPLY_STATUS_EFFECT_REQUESTED and REMOVE_STATUS_EFFECT_REQUESTED.");
     }
 
@@ -49,7 +40,7 @@ class StatusEffectSystem {
      * @param {ApplyStatusEffectRequestedEventPayload} payload
      */
     _handleApplyStatusEffectRequested(payload) {
-        console.log(`[StatusEffectSystem] Stub Handler: Received event '${EVENT_APPLY_STATUS_EFFECT_REQUESTED}' with payload:`, payload);
+        console.log(`[StatusEffectSystem] Stub Handler: Received event '${"event:apply_status_effect_requested"}' with payload:`, payload);
         // Phase 1: Implement actual status effect application logic here.
         // Needs StatusEffect component on entities.
     }
@@ -60,14 +51,14 @@ class StatusEffectSystem {
      * @param {RemoveStatusEffectRequestedEventPayload} payload
      */
     _handleRemoveStatusEffectRequested(payload) {
-        console.log(`[StatusEffectSystem] Stub Handler: Received event '${EVENT_REMOVE_STATUS_EFFECT_REQUESTED}' with payload:`, payload);
+        console.log(`[StatusEffectSystem] Stub Handler: Received event '${"event:remove_status_effect_requested"}' with payload:`, payload);
         // Phase 1: Implement actual status effect removal logic here.
     }
 
     // Optional: Add shutdown method if needed
     shutdown() {
-        this.#eventBus.unsubscribe(EVENT_APPLY_STATUS_EFFECT_REQUESTED, this._handleApplyStatusEffectRequested);
-        this.#eventBus.unsubscribe(EVENT_REMOVE_STATUS_EFFECT_REQUESTED, this._handleRemoveStatusEffectRequested);
+        this.#eventBus.unsubscribe("event:apply_status_effect_requested", this._handleApplyStatusEffectRequested);
+        this.#eventBus.unsubscribe("event:remove_status_effect_requested", this._handleRemoveStatusEffectRequested);
         console.log("StatusEffectSystem: Unsubscribed from events.");
     }
 }

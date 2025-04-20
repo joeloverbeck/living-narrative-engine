@@ -8,7 +8,6 @@ import GenericContentLoader from '../../../core/services/genericContentLoader.js
 /** @typedef {import('../../../core/interfaces/coreServices.js').IPathResolver} IPathResolver */
 /** @typedef {import('../../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../../core/interfaces/coreServices.js').IEventTypeValidator} IEventTypeValidator */
 /** @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
@@ -23,8 +22,6 @@ describe('GenericContentLoader', () => {
     let mockDataFetcher;
     /** @type {jest.Mocked<ISchemaValidator>} */
     let mockSchemaValidator;
-    /** @type {jest.Mocked<IEventTypeValidator>} */
-    let mockEventTypeValidator;
     /** @type {jest.Mocked<IDataRegistry>} */
     let mockDataRegistry;
     /** @type {jest.Mocked<ILogger>} */
@@ -64,10 +61,6 @@ describe('GenericContentLoader', () => {
             getValidator: jest.fn(),
             isSchemaLoaded: jest.fn(), // Not used directly by GenericContentLoader, but part of interface
         };
-        mockEventTypeValidator = {
-            isValidEventType: jest.fn(),
-            initialize: jest.fn(), // Not used by GenericContentLoader
-        };
         mockDataRegistry = {
             store: jest.fn(),
             get: jest.fn(),
@@ -106,7 +99,6 @@ describe('GenericContentLoader', () => {
         );
         // Default mock behavior (can be overridden in tests)
         mockDataRegistry.get.mockReturnValue(undefined); // Assume no duplicates by default
-        mockEventTypeValidator.isValidEventType.mockReturnValue(true); // Assume valid by default
 
         // Instantiate the loader with mocks
         contentLoader = new GenericContentLoader(
@@ -114,7 +106,6 @@ describe('GenericContentLoader', () => {
             mockPathResolver,
             mockDataFetcher,
             mockSchemaValidator,
-            mockEventTypeValidator,
             mockDataRegistry,
             mockLogger
         );
@@ -374,73 +365,6 @@ describe('GenericContentLoader', () => {
     });
 
 
-    // ====================================================================
-    // --- Task: Test Scenario: Conditional Event Type Validation (Triggers) ---
-    // ====================================================================
-    it('[Event Type Validation] should validate trigger event types, log warnings for invalid/missing, but still store', async () => {
-        // Arrange
-        const typeName = 'triggers';
-        const filenames = ['trigger_valid.json', 'trigger_invalid.json', 'trigger_missing_event.json', 'trigger_missing_listen.json'];
-        const paths = filenames.map(f => `./test/data/${typeName}/${f}`);
-        const triggerValidData = {id: 'trigger1', listen_to: {event_type: 'VALID_EVENT'}};
-        const triggerInvalidData = {id: 'trigger2', listen_to: {event_type: 'INVALID_EVENT'}};
-        const triggerMissingEventData = {id: 'trigger3', listen_to: {some_other_prop: true}}; // listen_to exists, event_type missing
-        const triggerMissingListenData = {id: 'trigger4', some_prop: true}; // listen_to missing entirely
-        const mockValidate = jest.fn().mockReturnValue({isValid: true, errors: null}); // Schema validation passes for all
-
-        mockSchemaValidator.getValidator.mockReturnValue(mockValidate);
-        mockDataFetcher.fetch.mockImplementation(async (path) => {
-            if (path === paths[0]) return triggerValidData;
-            if (path === paths[1]) return triggerInvalidData;
-            if (path === paths[2]) return triggerMissingEventData;
-            if (path === paths[3]) return triggerMissingListenData;
-            throw new Error(`Unexpected fetch path: ${path}`);
-        });
-        // Configure event type validator
-        mockEventTypeValidator.isValidEventType.mockImplementation((eventType) => {
-            return eventType === 'VALID_EVENT';
-        });
-
-        // Act
-        await expect(contentLoader.loadContentFiles(typeName, filenames)).resolves.toBeUndefined();
-
-        // Assert
-        // Verify Service Interactions
-        expect(mockConfiguration.getContentTypeSchemaId).toHaveBeenCalledWith(typeName);
-        expect(mockSchemaValidator.getValidator).toHaveBeenCalledWith(TRIGGERS_SCHEMA_ID);
-        expect(mockPathResolver.resolveContentPath).toHaveBeenCalledTimes(filenames.length);
-        expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(filenames.length);
-        expect(mockValidate).toHaveBeenCalledTimes(filenames.length);
-
-        // Verify IEventTypeValidator calls
-        expect(mockEventTypeValidator.isValidEventType).toHaveBeenCalledTimes(2); // Only called when event_type exists
-        expect(mockEventTypeValidator.isValidEventType).toHaveBeenCalledWith('VALID_EVENT');
-        expect(mockEventTypeValidator.isValidEventType).toHaveBeenCalledWith('INVALID_EVENT');
-
-        // Verify registry interactions - ALL should be stored
-        expect(mockDataRegistry.store).toHaveBeenCalledTimes(filenames.length);
-        expect(mockDataRegistry.store).toHaveBeenCalledWith(typeName, triggerValidData.id, triggerValidData);
-        expect(mockDataRegistry.store).toHaveBeenCalledWith(typeName, triggerInvalidData.id, triggerInvalidData);
-        expect(mockDataRegistry.store).toHaveBeenCalledWith(typeName, triggerMissingEventData.id, triggerMissingEventData);
-        expect(mockDataRegistry.store).toHaveBeenCalledWith(typeName, triggerMissingListenData.id, triggerMissingListenData);
-
-        // Verify Logging
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting load for content type '${typeName}'`));
-        // Warnings:
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(`Trigger "${triggerInvalidData.id}" in file "${paths[1]}" uses an unregistered event_type: "INVALID_EVENT"`)
-        );
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(`Trigger "${triggerMissingEventData.id}" in file "${paths[2]}" has 'listen_to' object but is missing a valid 'event_type' string.`) // Adjusted wording and added period
-        );
-        // Note: No warning for triggerMissingListenData unless the schema requires listen_to or the code is changed to warn. Based on current code, no warning.
-        expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully finished loading content type '${typeName}'`));
-        expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
-
     // ===========================================================
     // --- Task: Test Scenario: No Schema ID Configured for Type ---
     // ===========================================================
@@ -463,7 +387,6 @@ describe('GenericContentLoader', () => {
         expect(mockDataFetcher.fetch).not.toHaveBeenCalled();
         expect(mockDataRegistry.store).not.toHaveBeenCalled();
         expect(mockDataRegistry.get).not.toHaveBeenCalled();
-        expect(mockEventTypeValidator.isValidEventType).not.toHaveBeenCalled();
 
         // Verify Logging
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting load for content type '${typeName}'`));
@@ -501,7 +424,6 @@ describe('GenericContentLoader', () => {
         expect(mockDataFetcher.fetch).not.toHaveBeenCalled();
         expect(mockDataRegistry.store).not.toHaveBeenCalled();
         expect(mockDataRegistry.get).not.toHaveBeenCalled();
-        expect(mockEventTypeValidator.isValidEventType).not.toHaveBeenCalled();
 
         // Verify Logging
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting load for content type '${typeName}'`));
@@ -534,7 +456,6 @@ describe('GenericContentLoader', () => {
         expect(mockDataFetcher.fetch).not.toHaveBeenCalled();
         expect(mockDataRegistry.store).not.toHaveBeenCalled();
         expect(mockDataRegistry.get).not.toHaveBeenCalled();
-        expect(mockEventTypeValidator.isValidEventType).not.toHaveBeenCalled();
 
         // Verify Logging
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting load for content type '${typeName}' (0 files)`));
@@ -588,39 +509,31 @@ describe('GenericContentLoader', () => {
 
         it('should throw if ISchemaValidator is missing or invalid', () => {
             const mocks = createValidMocks();
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, null, mocks.mockEventTypeValidator, mocks.mockDataRegistry, mocks.mockLogger))
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, null, mocks.mockDataRegistry, mocks.mockLogger))
                 .toThrow(/Missing or invalid 'validator' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, {}, mocks.mockEventTypeValidator, mocks.mockDataRegistry, mocks.mockLogger)) // Missing methods
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, {}, mocks.mockDataRegistry, mocks.mockLogger)) // Missing methods
                 .toThrow(/Missing or invalid 'validator' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, {getValidator: jest.fn()}, mocks.mockEventTypeValidator, mocks.mockDataRegistry, mocks.mockLogger)) // Missing isSchemaLoaded
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, {getValidator: jest.fn()}, mocks.mockDataRegistry, mocks.mockLogger)) // Missing isSchemaLoaded
                 .toThrow(/Missing or invalid 'validator' dependency/);
-        });
-
-        it('should throw if IEventTypeValidator is missing or invalid', () => {
-            const mocks = createValidMocks();
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, null, mocks.mockDataRegistry, mocks.mockLogger))
-                .toThrow(/Missing or invalid 'eventTypeValidator' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, {}, mocks.mockDataRegistry, mocks.mockLogger))
-                .toThrow(/Missing or invalid 'eventTypeValidator' dependency/);
         });
 
         it('should throw if IDataRegistry is missing or invalid', () => {
             const mocks = createValidMocks();
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, null, mocks.mockLogger))
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, null, mocks.mockLogger))
                 .toThrow(/Missing or invalid 'registry' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, {}, mocks.mockLogger)) // Missing methods
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, {}, mocks.mockLogger)) // Missing methods
                 .toThrow(/Missing or invalid 'registry' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, {store: jest.fn()}, mocks.mockLogger)) // Missing get
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, {store: jest.fn()}, mocks.mockLogger)) // Missing get
                 .toThrow(/Missing or invalid 'registry' dependency/);
         });
 
         it('should throw if ILogger is missing or invalid', () => {
             const mocks = createValidMocks();
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, mocks.mockDataRegistry, null))
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockDataRegistry, null))
                 .toThrow(/Missing or invalid 'logger' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, mocks.mockDataRegistry, {})) // Missing methods
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockDataRegistry, {})) // Missing methods
                 .toThrow(/Missing or invalid 'logger' dependency/);
-            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockEventTypeValidator, mocks.mockDataRegistry, {
+            expect(() => new GenericContentLoader(mocks.mockConfiguration, mocks.mockPathResolver, mocks.mockDataFetcher, mocks.mockSchemaValidator, mocks.mockDataRegistry, {
                 info: jest.fn(),
                 warn: jest.fn()
             })) // Missing error

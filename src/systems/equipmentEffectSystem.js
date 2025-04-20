@@ -2,7 +2,6 @@
 
 import {StatsComponent} from '../components/statsComponent.js';
 import {getDisplayName} from "../utils/messages.js";
-import {EVENT_ITEM_EQUIPPED, EVENT_ITEM_UNEQUIPPED} from "../types/eventTypes.js";
 
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -12,7 +11,7 @@ import {EVENT_ITEM_EQUIPPED, EVENT_ITEM_UNEQUIPPED} from "../types/eventTypes.js
 
 /**
  * Handles applying and removing the effects (e.g., stat modifiers) associated
- * with equipped items. Listens for EVENT_ITEM_EQUIPPED and EVENT_ITEM_UNEQUIPPED.
+ * with equipped items. Listens for "event:item_equipped" and "event:item_unequipped".
  */
 class EquipmentEffectSystem {
     #eventBus;
@@ -33,8 +32,8 @@ class EquipmentEffectSystem {
      * Subscribes to relevant events. Call this after instantiation.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_ITEM_EQUIPPED, this.handleItemEquipped.bind(this));
-        this.#eventBus.subscribe(EVENT_ITEM_UNEQUIPPED, this.handleItemUnequipped.bind(this));
+        this.#eventBus.subscribe("event:item_equipped", this.handleItemEquipped.bind(this));
+        this.#eventBus.subscribe("event:item_unequipped", this.handleItemUnequipped.bind(this));
         console.log("EquipmentEffectSystem subscribed to events: item_equipped, item_unequipped.");
     }
 

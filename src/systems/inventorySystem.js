@@ -4,24 +4,12 @@
 import {InventoryComponent} from '../components/inventoryComponent.js';
 import {ItemComponent} from '../components/itemComponent.js';
 import {NameComponent} from '../components/nameComponent.js';
-import {
-    EVENT_ITEM_CONSUME_REQUESTED,
-    EVENT_ITEM_DROP_ATTEMPTED,
-    EVENT_ITEM_DROPPED,
-    EVENT_ITEM_PICKED_UP
-} from "../types/eventTypes.js"; // Added for item details
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */ // Added
 /** @typedef {import('../entities/entity.js').default} Entity */
-
-// Add JSDoc type imports for payloads if not already present globally
-/** @typedef {import('../types/eventTypes.js').ItemPickedUpEventPayload} ItemPickedUpEventPayload */
-/** @typedef {import('../types/eventTypes.js').ItemDropAttemptedEventPayload} ItemDropAttemptedEventPayload */
-/** @typedef {import('../types/eventTypes.js').ItemConsumeRequestedEventPayload} ItemConsumeRequestedEventPayload */
-/** @typedef {import('../types/eventTypes.js').InventoryRenderPayload} InventoryRenderPayload */ // Added
 
 
 /**
@@ -52,18 +40,18 @@ class InventorySystem {
      */
     initialize() {
         // Gameplay events
-        this.#eventBus.subscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp.bind(this));
-        this.#eventBus.subscribe(EVENT_ITEM_DROP_ATTEMPTED, this.#handleItemDropAttempted.bind(this));
-        this.#eventBus.subscribe(EVENT_ITEM_CONSUME_REQUESTED, this.#handleItemConsumeRequested.bind(this));
+        this.#eventBus.subscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this));
+        this.#eventBus.subscribe("event:item_drop_attempted", this.#handleItemDropAttempted.bind(this));
+        this.#eventBus.subscribe("event:item_consume_requested", this.#handleItemConsumeRequested.bind(this));
 
         // UI events
         this.#eventBus.subscribe('ui:request_inventory_render', this.#handleInventoryRenderRequest.bind(this)); // Added
 
-        console.log("InventorySystem: Initialized and subscribed to '" + EVENT_ITEM_PICKED_UP + "', '" + EVENT_ITEM_DROP_ATTEMPTED + "', '" + EVENT_ITEM_CONSUME_REQUESTED + "', and 'ui:request_inventory_render'."); // Updated log
+        console.log("InventorySystem: Initialized and subscribed to '" + "event:item_picked_up" + "', '" + "event:item_drop_attempted" + "', '" + "event:item_consume_requested" + "', and 'ui:request_inventory_render'."); // Updated log
     }
 
     /**
-     * Handles the EVENT_ITEM_PICKED_UP event.
+     * Handles the "event:item_picked_up" event.
      * Adds the item to the picker's inventory.
      * Assumes the item's removal from the world/spatial index is handled elsewhere
      * (e.g., by the system dispatching the event or another listener reacting to it).
@@ -73,7 +61,7 @@ class InventorySystem {
     #handleItemPickedUp(eventData) {
         // locationId is destructured but no longer used in this method after refactoring.
         const {pickerId, itemId} = eventData;
-        console.log(`InventorySystem: Handling ${EVENT_ITEM_PICKED_UP} for item ${itemId} by ${pickerId}`); // Removed location from log
+        console.log(`InventorySystem: Handling ${"event:item_picked_up"} for item ${itemId} by ${pickerId}`); // Removed location from log
 
         // --- 1. Validate Entities and Components ---
         const pickerEntity = this.#entityManager.getEntityInstance(pickerId);
@@ -125,13 +113,13 @@ class InventorySystem {
         console.log(`InventorySystem: Added '${itemId}' to inventory of '${pickerId}'.`);
 
         // Note: The actual removal of the item entity from the world (EntityManager.removeEntityInstance)
-        // is assumed to be handled by another system listening to EVENT_ITEM_PICKED_UP
+        // is assumed to be handled by another system listening to "event:item_picked_up"
         // or by the system that initially dispatched the event (e.g., InteractionSystem).
         // This system (InventorySystem) is now *only* responsible for managing the inventory component state.
     }
 
     /**
-     * Handles the EVENT_ITEM_DROP_ATTEMPTED event.
+     * Handles the "event:item_drop_attempted" event.
      * Removes the specified item from the player's inventory state.
      * Does not handle placing the item in the world.
      * @private
@@ -139,7 +127,7 @@ class InventorySystem {
      */
     #handleItemDropAttempted(eventData) {
         const {playerId, itemInstanceId} = eventData; // locationId is available but not needed for inventory removal
-        console.log(`InventorySystem (Drop): Handling ${EVENT_ITEM_DROP_ATTEMPTED} for player ${playerId}, item ${itemInstanceId}`);
+        console.log(`InventorySystem (Drop): Handling ${"event:item_drop_attempted"} for player ${playerId}, item ${itemInstanceId}`);
 
         // --- 1. Retrieve Player Entity and Inventory ---
         const playerEntity = this.#entityManager.getEntityInstance(playerId);
@@ -179,18 +167,18 @@ class InventorySystem {
 
         // Note: This system's responsibility ends here. Placing the item in the world
         // or dispatching UI messages would be handled by other systems listening
-        // to EVENT_ITEM_DROP_ATTEMPTED or a subsequent event like EVENT_ITEM_DROPPED.
+        // to "event:item_drop_attempted" or a subsequent event like "event:item_dropped".
     }
 
     /**
-     * Handles the EVENT_ITEM_CONSUME_REQUESTED event.
+     * Handles the "event:item_consume_requested" event.
      * Removes the specified item from the user's inventory.
      * @private
      * @param {ItemConsumeRequestedEventPayload} payload - Data from the event.
      */
     #handleItemConsumeRequested(payload) {
         const {userId, itemInstanceId} = payload;
-        console.log(`InventorySystem (Consume): Handling ${EVENT_ITEM_CONSUME_REQUESTED} for user ${userId}, item ${itemInstanceId}`);
+        console.log(`InventorySystem (Consume): Handling ${"event:item_consume_requested"} for user ${userId}, item ${itemInstanceId}`);
 
         const userEntity = this.#entityManager.getEntityInstance(userId);
         if (!userEntity) {

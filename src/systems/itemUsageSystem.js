@@ -4,15 +4,6 @@
 import DefinitionRefComponent from '../components/definitionRefComponent.js';
 import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
-import {
-    EVENT_ITEM_CONSUME_REQUESTED,
-    EVENT_ITEM_USE_ATTEMPTED,
-    "event:display_message",
-    "event:move_failed", "event:unlock_entity_attempt", "event:lock_entity_attempt", "event:unlock_entity_force",
-    // Include other event types potentially dispatched by handlers if needed for context,
-    // like "event:entity_unlocked", EVENT_APPLY_HEAL_REQUESTED etc.
-    // These are the events whose handlers *should* now provide outcome feedback.
-} from "../types/eventTypes.js";
 
 // Type Imports for JSDoc (Unchanged)
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -20,8 +11,6 @@ import {
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
-/** @typedef {import('../types/eventTypes.js').ItemUseAttemptedEventPayload} ItemUseAttemptedEventPayload */
-/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
 /** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
@@ -36,9 +25,9 @@ import {
 /**
  * ECS System responsible for handling the logic of using items.
  * Orchestrates calls to ConditionEvaluationService, ItemTargetResolverService.
- * Listens for EVENT_ITEM_USE_ATTEMPTED to trigger logic.
+ * Listens for "event:item_use_attempted" to trigger logic.
  * Dispatches specific effect request events based on item's Usable.effects definition.
- * Dispatches EVENT_ITEM_CONSUME_REQUESTED for consumption.
+ * Dispatches "event:item_consume_requested" for consumption.
  * **Crucially, this system NO LONGER dispatches final UI success messages detailing effect outcomes.**
  * Failure messages related to usability/targeting or detected by dependencies are expected
  * to be dispatched by the service/system detecting the failure or via specific event handlers.
@@ -69,7 +58,7 @@ class ItemUsageSystem {
      * Subscribes the system to relevant lock/unlock events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_ITEM_USE_ATTEMPTED, this._handleItemUseAttempt.bind(this));
+        this.#eventBus.subscribe("event:item_use_attempted", this._handleItemUseAttempt.bind(this));
 
         console.log("ItemUsageSystem: Initialized and ready.");
     }
@@ -79,7 +68,7 @@ class ItemUsageSystem {
     // ========================================================================
 
     /**
-     * Handles the EVENT_ITEM_USE_ATTEMPTED event. Orchestrates the item usage flow.
+     * Handles the "event:item_use_attempted" event. Orchestrates the item usage flow.
      * **Refactored (T-6): Gets itemDefinitionId from DefinitionRefComponent.**
      * Relies on services/event handlers for detailed logic and feedback.
      * Dispatches effect events and consumption requests.
@@ -122,7 +111,10 @@ class ItemUsageSystem {
 
             // Check user entity first
             if (!userEntity) {
-                this.#eventBus.dispatch("event:display_message", {text: "Error: User entity not found.", type: 'error'});
+                this.#eventBus.dispatch("event:display_message", {
+                    text: "Error: User entity not found.",
+                    type: 'error'
+                });
                 log(`User entity ${userEntityId} not found.`, 'error');
                 return; // Exit if user is missing
             }
@@ -290,7 +282,7 @@ class ItemUsageSystem {
                 const currentItemInstance = this.#entityManager.getEntityInstance(itemInstanceId);
                 if (currentItemInstance) {
                     log(`Requesting consumption for item: ${itemInstanceId} ("${itemName}")`, 'debug');
-                    this.#eventBus.dispatch(EVENT_ITEM_CONSUME_REQUESTED, {
+                    this.#eventBus.dispatch("event:item_consume_requested", {
                         userId: userEntityId,
                         itemInstanceId: itemInstanceId
                     });

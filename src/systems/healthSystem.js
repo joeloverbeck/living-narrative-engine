@@ -1,13 +1,5 @@
 // src/systems/healthSystem.js
 
-// Import event types
-import {
-    EVENT_APPLY_HEAL_REQUESTED,
-    EVENT_INFLICT_DAMAGE_REQUESTED,
-    "event:display_message", // Needed for feedback
-    "event:entity_died"     // Needed to dispatch death event
-} from '../types/eventTypes.js';
-
 // Import required components and utilities
 import {HealthComponent} from '../components/healthComponent.js';
 import {getDisplayName} from '../utils/messages.js';
@@ -18,11 +10,6 @@ import gameEngine from "../core/gameEngine.js"; // Needed for entity names in me
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../types/eventTypes.js').ApplyHealRequestedEventPayload} ApplyHealRequestedEventPayload */
-/** @typedef {import('../types/eventTypes.js').InflictDamageRequestedEventPayload} InflictDamageRequestedEventPayload */
-/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
-
-/** @typedef {import('../types/eventTypes.js').EntityDiedEventPayload} EntityDiedEventPayload */
 
 
 /**
@@ -58,9 +45,9 @@ class HealthSystem {
      * Initializes the system by subscribing to health-related events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_APPLY_HEAL_REQUESTED, this._handleApplyHealRequested.bind(this));
-        this.#eventBus.subscribe(EVENT_INFLICT_DAMAGE_REQUESTED, this._handleInflictDamageRequested.bind(this));
-        console.log(`HealthSystem: Initialized and subscribed to ${EVENT_APPLY_HEAL_REQUESTED} and ${EVENT_INFLICT_DAMAGE_REQUESTED}.`);
+        this.#eventBus.subscribe("event:apply_heal_requested", this._handleApplyHealRequested.bind(this));
+        this.#eventBus.subscribe("event:inflict_damage_requested", this._handleInflictDamageRequested.bind(this));
+        console.log(`HealthSystem: Initialized and subscribed to ${"event:apply_heal_requested"} and ${"event:inflict_damage_requested"}.`);
     }
 
     /**
@@ -70,7 +57,7 @@ class HealthSystem {
      */
     _handleApplyHealRequested(payload) {
         // ... (existing heal logic remains unchanged) ...
-        console.debug(`[HealthSystem] Received event '${EVENT_APPLY_HEAL_REQUESTED}' with payload:`, payload);
+        console.debug(`[HealthSystem] Received event '${"event:apply_heal_requested"}' with payload:`, payload);
         let targetEntity = null;
         let targetEntityIdForLog = 'N/A';
         if (payload.healTargetSpecifier === 'user') {
@@ -165,13 +152,13 @@ class HealthSystem {
 
     /**
      * Handles the request to inflict damage on an entity based on the
-     * EVENT_INFLICT_DAMAGE_REQUESTED event. Applies damage, clamps health,
+     * "event:inflict_damage_requested" event. Applies damage, clamps health,
      * checks for death, and dispatches death-related events/messages.
      * @private
      * @param {InflictDamageRequestedEventPayload} payload - The event payload.
      */
     _handleInflictDamageRequested(payload) {
-        console.debug(`[HealthSystem] Received event '${EVENT_INFLICT_DAMAGE_REQUESTED}' with payload:`, payload);
+        console.debug(`[HealthSystem] Received event '${"event:inflict_damage_requested"}' with payload:`, payload);
 
         const {targetId, amount, sourceEntityId} = payload;
 
@@ -251,8 +238,8 @@ class HealthSystem {
      * Cleans up subscriptions when the system is shut down.
      */
     shutdown() {
-        this.#eventBus.unsubscribe(EVENT_APPLY_HEAL_REQUESTED, this._handleApplyHealRequested);
-        this.#eventBus.unsubscribe(EVENT_INFLICT_DAMAGE_REQUESTED, this._handleInflictDamageRequested);
+        this.#eventBus.unsubscribe("event:apply_heal_requested", this._handleApplyHealRequested);
+        this.#eventBus.unsubscribe("event:inflict_damage_requested", this._handleInflictDamageRequested);
         console.log("HealthSystem: Unsubscribed from events.");
     }
 }

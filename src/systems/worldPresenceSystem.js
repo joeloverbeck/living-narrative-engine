@@ -2,24 +2,12 @@
 
 import {PositionComponent} from '../components/positionComponent.js';
 import {getDisplayName} from "../utils/messages.js";
-import {
-    "event:display_message",
-    EVENT_ITEM_DROP_ATTEMPTED,
-    EVENT_ITEM_DROPPED,
-    EVENT_ITEM_PICKED_UP,
-    EVENT_SPAWN_ENTITY_REQUESTED
-} from "../types/eventTypes.js";
+
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /** @typedef {import('../entities/entity.js').default} Entity */
-// --- Payload Type Imports ---
-/** @typedef {import('../types/eventTypes.js').ItemPickedUpEventPayload} ItemPickedUpEventPayload */
-/** @typedef {import('../types/eventTypes.js').ItemDropAttemptedEventPayload} ItemDropAttemptedEventPayload */
-/** @typedef {import('../types/eventTypes.js').ItemDroppedEventPayload} ItemDroppedEventPayload */
-
-/** @typedef {import('../types/eventTypes.js').SpawnEntityRequestedEventPayload} SpawnEntityRequestedEventPayload */
 
 /**
  * Handles world-state interactions resulting from events, such as removing items
@@ -52,16 +40,16 @@ class WorldPresenceSystem {
      * Subscribes the system to relevant game events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp.bind(this));
-        this.#eventBus.subscribe(EVENT_ITEM_DROP_ATTEMPTED, this.#handleItemDropAttempted.bind(this));
-        console.log("WorldPresenceSystem: Initialized and subscribed to '" + EVENT_ITEM_PICKED_UP + "'.");
+        this.#eventBus.subscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this));
+        this.#eventBus.subscribe("event:item_drop_attempted", this.#handleItemDropAttempted.bind(this));
+        console.log("WorldPresenceSystem: Initialized and subscribed to '" + "event:item_picked_up" + "'.");
 
-        this.#eventBus.subscribe(EVENT_SPAWN_ENTITY_REQUESTED, this._handleSpawnEntityRequested.bind(this));
+        this.#eventBus.subscribe("event:spawn_entity_requested", this._handleSpawnEntityRequested.bind(this));
         console.log("WorldPresenceSystem: Initialized and subscribed to item pickup/drop and entity spawn events.");
     }
 
     /**
-     * Handles the EVENT_ITEM_PICKED_UP event.
+     * Handles the "event:item_picked_up" event.
      * Updates the item's PositionComponent to remove it from its world location
      * and notifies the EntityManager to update the spatial index.
      *
@@ -72,7 +60,7 @@ class WorldPresenceSystem {
         // Task 3: Implement the handler function
         const {pickerId, itemId, locationId} = eventData; // locationId from event might be useful for validation
 
-        console.log(`WorldPresenceSystem: Handling ${EVENT_ITEM_PICKED_UP} for item ${itemId} picked by ${pickerId} from reported location ${locationId}`);
+        console.log(`WorldPresenceSystem: Handling ${"event:item_picked_up"} for item ${itemId} picked by ${pickerId} from reported location ${locationId}`);
 
         // Get the item entity
         const itemEntity = this.#entityManager.getEntityInstance(itemId);
@@ -123,7 +111,7 @@ class WorldPresenceSystem {
     }
 
     /**
-     * Handles the EVENT_ITEM_DROP_ATTEMPTED event.
+     * Handles the "event:item_drop_attempted" event.
      * Updates the item's PositionComponent to place it into the specified world location
      * and notifies the EntityManager to update the spatial index. Dispatches UI feedback.
      *
@@ -134,7 +122,7 @@ class WorldPresenceSystem {
         const {playerId, itemInstanceId, locationId: newLocationId} = eventData;
         const itemId = itemInstanceId; // Alias for clarity within this handler
 
-        console.log(`WorldPresenceSystem: Handling ${EVENT_ITEM_DROP_ATTEMPTED} for item ${itemId} dropped by player ${playerId} into location ${newLocationId}`);
+        console.log(`WorldPresenceSystem: Handling ${"event:item_drop_attempted"} for item ${itemId} dropped by player ${playerId} into location ${newLocationId}`);
 
         // 1. Get the item entity
         const itemEntity = this.#entityManager.getEntityInstance(itemId);
@@ -187,7 +175,7 @@ class WorldPresenceSystem {
             this.#eventBus.dispatch("event:display_message", {text: successMessage, type: 'info'}); // Or 'action_feedback' type?
 
             // 6. (Optional) Dispatch a follow-up event
-            this.#eventBus.dispatch(EVENT_ITEM_DROPPED, {
+            this.#eventBus.dispatch("event:item_dropped", {
                 playerId: playerId,
                 itemId: itemId,
                 locationId: newLocationId
@@ -224,7 +212,7 @@ class WorldPresenceSystem {
      * @param {SpawnEntityRequestedEventPayload} payload
      */
     _handleSpawnEntityRequested(payload) {
-        console.log(`[WorldPresenceSystem] Stub Handler: Received event '${EVENT_SPAWN_ENTITY_REQUESTED}' with payload:`, payload);
+        console.log(`[WorldPresenceSystem] Stub Handler: Received event '${"event:spawn_entity_requested"}' with payload:`, payload);
         // Phase 1: Implement actual entity spawning logic here.
         // This will likely involve using EntityManager.createEntityInstanceFromDefinition,
         // setting its PositionComponent based on the payload, and potentially adding to spatial index.
@@ -233,8 +221,8 @@ class WorldPresenceSystem {
 
     // Optional: Add a method to unsubscribe if needed during engine shutdown/restart
     shutdown() {
-        this.#eventBus.unsubscribe(EVENT_ITEM_PICKED_UP, this.#handleItemPickedUp.bind(this)); // Ensure correct binding if using bind in subscribe
-        this.#eventBus.unsubscribe(EVENT_ITEM_DROP_ATTEMPTED, this.#handleItemDropAttempted);
+        this.#eventBus.unsubscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this)); // Ensure correct binding if using bind in subscribe
+        this.#eventBus.unsubscribe("event:item_drop_attempted", this.#handleItemDropAttempted);
         console.log("WorldPresenceSystem: Unsubscribed from events.");
     }
 }

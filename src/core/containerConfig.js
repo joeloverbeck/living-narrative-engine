@@ -23,7 +23,6 @@ import QuestSystem from '../systems/questSystem.js';
 import {NotificationUISystem} from "../systems/notificationUISystem.js";
 import {QuestStartTriggerSystem} from "../systems/questStartTriggerSystem.js";
 import BlockerSystem from '../systems/blockerSystem.js';
-import TriggerDispatcher from "../systems/triggerDispatcher.js";
 import GameRuleSystem from "../systems/gameRuleSystem.js";
 import MoveCoordinatorSystem from '../systems/moveCoordinatorSystem.js';
 import OpenableSystem from '../systems/openableSystem.js';
@@ -41,12 +40,10 @@ import {GameDataRepository} from './services/gameDataRepository.js';
 import GenericContentLoader from './services/genericContentLoader.js';
 import InMemoryDataRegistry from './services/inMemoryDataRegistry.js';
 import ManifestLoader from './services/manifestLoader.js';
-import RuntimeEventTypeValidator from './services/runtimeEventTypeValidator.js';
 import SchemaLoader from './services/schemaLoader.js';
 import WorkspaceDataFetcher from './services/workspaceDataFetcher.js';
 import StaticConfiguration from './services/staticConfiguration.js';
 import WorldLoader from './services/worldLoader.js';
-import * as eventTypes from '../types/eventTypes.js';
 
 // Other Services (Existing application services)
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
@@ -94,18 +91,12 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     container.register('IConfiguration', () => new StaticConfiguration(), {lifecycle: 'singleton'});
     container.register('IPathResolver', (c) => new DefaultPathResolver(c.resolve('IConfiguration')), {lifecycle: 'singleton'});
     container.register('ISchemaValidator', () => new AjvSchemaValidator(), {lifecycle: 'singleton'});
-    container.register('IEventTypeValidator', (c) => {
-        const validator = new RuntimeEventTypeValidator();
-        validator.initialize(eventTypes);
-        c.resolve('ILogger').info("Initialized RuntimeEventTypeValidator with event types.");
-        return validator;
-    }, {lifecycle: 'singleton'});
     container.register('IDataRegistry', () => new InMemoryDataRegistry(), {lifecycle: 'singleton'});
 
     // --- 3. Data Loaders (Depend on core services) ---
     container.register('SchemaLoader', (c) => new SchemaLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ManifestLoader', (c) => new ManifestLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
-    container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IEventTypeValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
+    container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
     // --- 4. World Orchestrator & Data Access ---
     container.register('WorldLoader', (c) => new WorldLoader(c.resolve('IDataRegistry'), c.resolve('ILogger'), c.resolve('SchemaLoader'), c.resolve('ManifestLoader'), c.resolve('GenericContentLoader'), c.resolve('ISchemaValidator'), c.resolve('IConfiguration')), {lifecycle: 'singleton'});
@@ -261,11 +252,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
 
     // --- 14. Core Systems ---
     // (Registrations for other systems remain unchanged from the input, assuming they are correct)
-    container.register('TriggerDispatcher', (c) => new TriggerDispatcher({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
     container.register('GameRuleSystem', (c) => new GameRuleSystem({
         eventBus: c.resolve('EventBus'),
         gameStateManager: c.resolve('GameStateManager'),

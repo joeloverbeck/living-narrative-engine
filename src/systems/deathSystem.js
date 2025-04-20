@@ -1,7 +1,5 @@
 // src/systems/deathSystem.js
 
-import {PositionComponent} from '../components/positionComponent.js';
-import {"event:entity_died", EVENT_ENTITY_LOOT_SPAWN_REQUESTED} from "../types/eventTypes.js"; // Import PositionComponent
 // Other necessary imports remain the same
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -92,7 +90,7 @@ class DeathSystem {
         // Example: Firing an event to request loot spawning at the determined location.
         if (locationId) {
             // Example: Emit an event for loot generation system
-            this.#eventBus.dispatch(EVENT_ENTITY_LOOT_SPAWN_REQUESTED, {
+            this.#eventBus.dispatch("event:entity_loot_spawn_requested", {
                 deceasedEntityId: deceasedEntityId,
                 locationId: locationId,
                 killerEntityId: eventData.killerEntityId // Pass along killer if available

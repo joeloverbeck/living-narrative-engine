@@ -1,12 +1,6 @@
 // src/systems/perceptionSystem.js
 
 import {
-    EVENT_LOOK_INTENDED,
-    EVENT_EXAMINE_INTENDED, // Ensure this is imported
-    EVENT_DISPLAY_LOCATION,
-    "event:display_message",
-} from '../types/eventTypes.js';
-import {
     formatExitString,
 } from '../utils/perceptionUtils.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js'; // Ensure getDisplayName is imported
@@ -25,12 +19,8 @@ import {ConnectionsComponent} from "../components/connectionsComponent.js";
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../types/eventTypes.js').LookIntendedPayload} LookIntendedPayload */
-/** @typedef {import('../types/eventTypes.js').ExamineIntendedPayload} ExamineIntendedPayload */
-/** @typedef {import('../types/eventTypes.js').UIDisplayLocationPayload} UIDisplayLocationPayload */
 
-/** @typedef {import('../types/eventTypes.js').UIMessageDisplayPayload} UIMessageDisplayPayload */
+/** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
  * PerceptionSystem
@@ -69,23 +59,23 @@ class PerceptionSystem {
      * Initializes the system by subscribing to perception-related intent events.
      */
     initialize() {
-        this.eventBus.subscribe(EVENT_LOOK_INTENDED, this.#handleLook.bind(this));
+        this.eventBus.subscribe("event:look_intended", this.#handleLook.bind(this));
         // Ensure examine subscription exists (it did in the original code)
-        this.eventBus.subscribe(EVENT_EXAMINE_INTENDED, this.#handleExamine.bind(this));
+        this.eventBus.subscribe("event:examine_intended", this.#handleExamine.bind(this));
 
         console.info("PerceptionSystem initialized and subscribed to intent events.");
     }
 
     // #handleLook method remains unchanged from the provided code...
     /**
-     * Handles the EVENT_LOOK_INTENDED event.
+     * Handles the "event:look_intended" event.
      * Gathers game state based on the scope ('location', 'self', 'target')
-     * and dispatches the appropriate UI event (EVENT_DISPLAY_LOCATION or ui:message_display).
+     * and dispatches the appropriate UI event ("event:display_location" or ui:message_display).
      * @param {LookIntendedPayload} payload - The event payload.
      * @private
      */
     async #handleLook(payload) {
-        console.debug(`Received ${EVENT_LOOK_INTENDED}`, payload);
+        console.debug(`Received ${"event:look_intended"}`, payload);
         const {actorId, scope, targetEntityId} = payload;
 
         try {
@@ -116,7 +106,7 @@ class PerceptionSystem {
                     console.warn(`Unhandled look scope: ${scope} for actor ${actorId}`);
             }
         } catch (error) {
-            console.error(`Error processing ${EVENT_LOOK_INTENDED} for actor ${actorId}:`, error);
+            console.error(`Error processing ${"event:look_intended"} for actor ${actorId}:`, error);
             // Optionally dispatch a generic error message to the user
             await this.#dispatchMessage("An error occurred while trying to look around.", 'error', actorId);
         }
@@ -180,8 +170,7 @@ class PerceptionSystem {
             else if (entityInstance.hasComponent(NameComponent)) {
                 // The 'else if' prevents items from being listed twice
                 entities.push({
-                    name: getDisplayName(entityInstance),
-                    id: entityInstance.id
+                    name: getDisplayName(entityInstance), id: entityInstance.id
                 });
             }
             // Entities without ItemComponent or NameComponent are ignored for the basic look description
@@ -191,13 +180,10 @@ class PerceptionSystem {
         /** @type {UIDisplayLocationPayload} */
         const payload = {
             name: locationName,
-            description: locationDesc,
-            // Map exit data to the format expected by UIDisplayLocationPayload
+            description: locationDesc, // Map exit data to the format expected by UIDisplayLocationPayload
             exits: exits.map(exit => ({
-                direction: exit.direction,
-                // Assuming #getLocationExits provides a 'description' field compatible with UI_DISPLAY_LOCATION
-                description: exit.description,
-                // Map other potential fields if available and needed by UI
+                direction: exit.direction, // Assuming #getLocationExits provides a 'description' field compatible with UI_DISPLAY_LOCATION
+                description: exit.description, // Map other potential fields if available and needed by UI
                 locationId: exit.targetLocationId ?? undefined,
                 isLocked: exit.state === 'locked',
                 isBlocked: exit.state === 'closed' || exit.state === 'locked' || exit.state === 'impassable',
@@ -208,8 +194,8 @@ class PerceptionSystem {
             // connections: [], // Example - uncomment and populate if needed
         };
 
-        await this.eventBus.dispatch(EVENT_DISPLAY_LOCATION, payload);
-        console.debug(`Dispatched ${EVENT_DISPLAY_LOCATION} for actor ${actor.id} in location ${locationId}`);
+        await this.eventBus.dispatch("event:display_location", payload);
+        console.debug(`Dispatched ${"event:display_location"} for actor ${actor.id} in location ${locationId}`);
     }
 
     // #getLocationExits method remains unchanged...
@@ -272,12 +258,7 @@ class PerceptionSystem {
                 }
             }
 
-            const description = formatExitString(
-                direction,
-                passageDetails,
-                blockerEntity,
-                effectivePassageState
-            );
+            const description = formatExitString(direction, passageDetails, blockerEntity, effectivePassageState);
 
             exitDetails.push({
                 direction: direction,
@@ -334,14 +315,14 @@ class PerceptionSystem {
     // --- NEW/MODIFIED Methods for Examine ---
 
     /**
-     * Handles the EVENT_EXAMINE_INTENDED event.
+     * Handles the "event:examine_intended" event.
      * Retrieves the target entity, builds a detailed description (including item extras),
      * and dispatches a ui:message_display event.
      * @param {ExamineIntendedPayload} payload - The event payload.
      * @private
      */
     async #handleExamine(payload) {
-        console.debug(`Received ${EVENT_EXAMINE_INTENDED}`, payload);
+        console.debug(`Received ${"event:examine_intended"}`, payload);
         const {actorId, targetEntityId} = payload;
 
         try {
@@ -363,7 +344,7 @@ class PerceptionSystem {
             await this.#dispatchMessage(descriptionText, 'info', actorId, targetEntityId);
 
         } catch (error) {
-            console.error(`Error processing ${EVENT_EXAMINE_INTENDED} for actor ${actorId} targeting ${targetEntityId}:`, error);
+            console.error(`Error processing ${"event:examine_intended"} for actor ${actorId} targeting ${targetEntityId}:`, error);
             // Dispatch a generic error message to the user
             await this.#dispatchMessage("An error occurred while trying to examine that.", 'error', actorId, targetEntityId);
         }
@@ -412,17 +393,7 @@ class PerceptionSystem {
 
     // --- End NEW/MODIFIED Methods ---
 
-
-    /**
-     * Helper to dispatch a UI message event.
-     * @param {string} text - The message text.
-     * @param {'info' | 'warning' | 'error' | 'success' | 'combat' | 'combat_hit' | 'combat_critical' | 'sound' | 'prompt' | 'internal' | 'debug'} type - The message type. // Added types from eventTypes.js
-     * @param {string} [actorId] - Optional actor ID for logging context.
-     * @param {string} [targetId] - Optional target ID for logging context.
-     * @private
-     */
     async #dispatchMessage(text, type = 'info', actorId = 'N/A', targetId = 'N/A') {
-        /** @type {UIMessageDisplayPayload} */
         const payload = {text, type};
         await this.eventBus.dispatch("event:display_message", payload);
         // Use logger instance for consistency
@@ -438,8 +409,8 @@ class PerceptionSystem {
         // Check if unsubscribe method exists before calling
         if (this.eventBus && typeof this.eventBus.unsubscribe === 'function') {
             // Use the bound method references stored if needed, or re-bind:
-            this.eventBus.unsubscribe(EVENT_LOOK_INTENDED, this.#handleLook.bind(this));
-            this.eventBus.unsubscribe(EVENT_EXAMINE_INTENDED, this.#handleExamine.bind(this));
+            this.eventBus.unsubscribe("event:look_intended", this.#handleLook.bind(this));
+            this.eventBus.unsubscribe("event:examine_intended", this.#handleExamine.bind(this));
             console.info("PerceptionSystem shutdown and unsubscribed from events.");
         } else {
             console.info("PerceptionSystem shutdown.");

@@ -10,7 +10,6 @@ import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js';
 import StaticConfiguration from '../../core/services/staticConfiguration.js'; // Using the actual static config
 import DefaultPathResolver from '../../core/services/defaultPathResolver.js';
 import AjvSchemaValidator from '../../core/services/ajvSchemaValidator.js';
-import RuntimeEventTypeValidator from '../../core/services/runtimeEventTypeValidator.js';
 import SchemaLoader from '../../core/services/schemaLoader.js';
 import ManifestLoader from '../../core/services/manifestLoader.js';
 import GenericContentLoader from '../../core/services/genericContentLoader.js';
@@ -224,7 +223,6 @@ describe('WorldLoader Integration Test', () => {
     let realConfig;
     let realResolver;
     let realValidator;
-    let realEventTypeValidator;
     let schemaLoader;
     let manifestLoader;
     let contentLoader;
@@ -240,7 +238,6 @@ describe('WorldLoader Integration Test', () => {
         realConfig = new StaticConfiguration(); // Using the real one as specified
         realResolver = new DefaultPathResolver(realConfig);
         realValidator = new AjvSchemaValidator(); // Real Ajv validator
-        realEventTypeValidator = new RuntimeEventTypeValidator();
         // Initialize event type validator if needed (not critical for this success path)
         // realEventTypeValidator.initialize(['event:some_test_event']);
 
@@ -303,7 +300,7 @@ describe('WorldLoader Integration Test', () => {
         // --- Instantiate Orchestrating Loaders with Real/Mock Dependencies ---
         schemaLoader = new SchemaLoader(realConfig, realResolver, mockDataFetcher, realValidator, mockLogger);
         manifestLoader = new ManifestLoader(realConfig, realResolver, mockDataFetcher, realValidator, mockLogger);
-        contentLoader = new GenericContentLoader(realConfig, realResolver, mockDataFetcher, realValidator, realEventTypeValidator, realRegistry, mockLogger);
+        contentLoader = new GenericContentLoader(realConfig, realResolver, mockDataFetcher, realValidator, realRegistry, mockLogger);
 
         // --- Instantiate System Under Test (WorldLoader) ---
         worldLoader = new WorldLoader(

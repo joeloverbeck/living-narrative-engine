@@ -10,11 +10,6 @@ import {getDisplayName} from "../utils/messages.js";
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-// --- Import Event Payload Types ---
-/** @typedef {import('../types/eventTypes.js').OpenAttemptedEventPayload} OpenAttemptedEventPayload */
-/** @typedef {import('../types/eventTypes.js').EntityOpenedEventPayload} EntityOpenedEventPayload */
-
-/** @typedef {import('../types/eventTypes.js').OpenFailedEventPayload} OpenFailedEventPayload */
 
 
 /**

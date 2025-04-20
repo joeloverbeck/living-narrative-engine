@@ -9,10 +9,6 @@
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
-
-import {"event:display_message", "event:entity_moved"} from "../types/eventTypes.js";
-
-
 /**
  * Manages overarching game rules, including auto-look on start/move.
  */

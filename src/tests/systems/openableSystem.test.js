@@ -10,10 +10,6 @@ import {NameComponent} from "../../components/nameComponent.js";
 
 // --- Dependencies to Mock/Use ---
 
-/** @typedef {import('../../types/eventTypes.js').OpenAttemptedEventPayload} OpenAttemptedEventPayload */
-/** @typedef {import('../../types/eventTypes.js').EntityOpenedEventPayload} EntityOpenedEventPayload */
-/** @typedef {import('../../types/eventTypes.js').OpenFailedEventPayload} OpenFailedEventPayload */
-
 const mockEventBus = {
     dispatch: jest.fn(),
     subscribe: jest.fn(),

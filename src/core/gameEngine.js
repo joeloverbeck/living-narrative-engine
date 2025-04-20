@@ -143,7 +143,7 @@ class GameEngine {
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
-                'TriggerDispatcher', 'GameRuleSystem', 'EquipmentEffectSystem', 'EquipmentSlotSystem',
+                'GameRuleSystem', 'EquipmentEffectSystem', 'EquipmentSlotSystem',
                 'InventorySystem', 'CombatSystem', 'DeathSystem', 'HealthSystem', 'StatusEffectSystem',
                 'LockSystem', 'OpenableSystem', 'WorldPresenceSystem', 'ItemUsageSystem',
                 'NotificationUISystem', 'PerceptionSystem', 'BlockerSystem', 'MovementSystem',
