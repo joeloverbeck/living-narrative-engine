@@ -1,20 +1,14 @@
 // src/tests/systems/openableSystem.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- System Under Test ---
 import OpenableSystem from '../../systems/openableSystem.js';
+import OpenableComponent from "../../components/openableComponent.js";
+import LockableComponent from "../../components/lockableComponent.js";
+import {NameComponent} from "../../components/nameComponent.js";
 
 // --- Dependencies to Mock/Use ---
-// Mocks and helpers remain the same as before...
-import EventBus from '../../core/eventBus.js';
-import EntityManager from '../../entities/entityManager.js';
-import Entity from '../../entities/entity.js';
-import OpenableComponent from '../../components/openableComponent.js';
-import LockableComponent from '../../components/lockableComponent.js';
-import { NameComponent } from '../../components/nameComponent.js';
-import { getDisplayName } from '../../utils/messages.js';
-import {EVENT_ENTITY_OPENED} from "../../types/eventTypes.js";
 
 /** @typedef {import('../../types/eventTypes.js').OpenAttemptedEventPayload} OpenAttemptedEventPayload */
 /** @typedef {import('../../types/eventTypes.js').EntityOpenedEventPayload} EntityOpenedEventPayload */
@@ -66,9 +60,12 @@ describe('OpenableSystem', () => {
             eventBus: mockEventBus,
             entityManager: mockEntityManager,
         });
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
+        });
     });
 
     afterEach(() => {
@@ -80,13 +77,13 @@ describe('OpenableSystem', () => {
     // Constructor tests remain the same...
     describe('Constructor', () => {
         it('should throw error if eventBus is missing', () => {
-            expect(() => new OpenableSystem({ entityManager: mockEntityManager })).toThrow('OpenableSystem requires options.eventBus.');
+            expect(() => new OpenableSystem({entityManager: mockEntityManager})).toThrow('OpenableSystem requires options.eventBus.');
         });
         it('should throw error if entityManager is missing', () => {
-            expect(() => new OpenableSystem({ eventBus: mockEventBus })).toThrow('OpenableSystem requires options.entityManager.');
+            expect(() => new OpenableSystem({eventBus: mockEventBus})).toThrow('OpenableSystem requires options.entityManager.');
         });
         it('should successfully instantiate with valid dependencies', () => {
-            expect(() => new OpenableSystem({ eventBus: mockEventBus, entityManager: mockEntityManager })).not.toThrow();
+            expect(() => new OpenableSystem({eventBus: mockEventBus, entityManager: mockEntityManager})).not.toThrow();
         });
     });
 
@@ -156,9 +153,9 @@ describe('OpenableSystem', () => {
         it('AC4 - Success Case: should open a closed, unlocked entity and dispatch entity_opened', () => {
             // --- Arrange ---
             const handleOpenAttempted = getSubscribedHandler(); // Get the handler
-            const mockOpenableComp = { isOpen: false, setState: jest.fn() };
-            const mockNameComp = { value: TARGET_NAME };
-            const mockLockableComp = { isLocked: false }; // Unlockable
+            const mockOpenableComp = {isOpen: false, setState: jest.fn()};
+            const mockNameComp = {value: TARGET_NAME};
+            const mockLockableComp = {isLocked: false}; // Unlockable
 
             const mockTargetEntity = createMockEntity(TARGET_ID, {
                 NameComponent: mockNameComp,
@@ -176,7 +173,7 @@ describe('OpenableSystem', () => {
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(OpenableComponent);
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(LockableComponent);
             expect(mockOpenableComp.setState).toHaveBeenCalledWith(true);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_ENTITY_OPENED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:entity_opened", {
                 actorId: ACTOR_ID, targetEntityId: TARGET_ID, targetDisplayName: TARGET_NAME,
             });
             expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -186,8 +183,8 @@ describe('OpenableSystem', () => {
         it('AC4 - Success Case (No Lockable): should open a closed entity without LockableComponent', () => {
             // --- Arrange ---
             const handleOpenAttempted = getSubscribedHandler();
-            const mockOpenableComp = { isOpen: false, setState: jest.fn() };
-            const mockNameComp = { value: TARGET_NAME };
+            const mockOpenableComp = {isOpen: false, setState: jest.fn()};
+            const mockNameComp = {value: TARGET_NAME};
             // No LockableComponent
 
             const mockTargetEntity = createMockEntity(TARGET_ID, {
@@ -205,7 +202,7 @@ describe('OpenableSystem', () => {
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(OpenableComponent);
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(LockableComponent); // Still checks for it
             expect(mockOpenableComp.setState).toHaveBeenCalledWith(true);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_ENTITY_OPENED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:entity_opened", {
                 actorId: ACTOR_ID, targetEntityId: TARGET_ID, targetDisplayName: TARGET_NAME,
             });
             expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -215,8 +212,8 @@ describe('OpenableSystem', () => {
         it('AC4 - Failure Case - Already Open: should do nothing and dispatch open_failed (ALREADY_OPEN)', () => {
             // --- Arrange ---
             const handleOpenAttempted = getSubscribedHandler();
-            const mockOpenableComp = { isOpen: true, setState: jest.fn() }; // Already open
-            const mockNameComp = { value: TARGET_NAME };
+            const mockOpenableComp = {isOpen: true, setState: jest.fn()}; // Already open
+            const mockNameComp = {value: TARGET_NAME};
             const mockTargetEntity = createMockEntity(TARGET_ID, {
                 NameComponent: mockNameComp, OpenableComponent: mockOpenableComp
             });
@@ -230,7 +227,10 @@ describe('OpenableSystem', () => {
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(OpenableComponent);
             expect(mockOpenableComp.setState).not.toHaveBeenCalled();
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:open_failed', {
-                actorId: ACTOR_ID, targetEntityId: TARGET_ID, targetDisplayName: TARGET_NAME, reasonCode: 'ALREADY_OPEN',
+                actorId: ACTOR_ID,
+                targetEntityId: TARGET_ID,
+                targetDisplayName: TARGET_NAME,
+                reasonCode: 'ALREADY_OPEN',
             });
             expect(consoleErrorSpy).not.toHaveBeenCalled();
         });
@@ -238,9 +238,9 @@ describe('OpenableSystem', () => {
         it('AC4 - Failure Case - Locked: should do nothing and dispatch open_failed (LOCKED)', () => {
             // --- Arrange ---
             const handleOpenAttempted = getSubscribedHandler();
-            const mockOpenableComp = { isOpen: false, setState: jest.fn() };
-            const mockLockableComp = { isLocked: true }; // Locked!
-            const mockNameComp = { value: TARGET_NAME };
+            const mockOpenableComp = {isOpen: false, setState: jest.fn()};
+            const mockLockableComp = {isLocked: true}; // Locked!
+            const mockNameComp = {value: TARGET_NAME};
             const mockTargetEntity = createMockEntity(TARGET_ID, {
                 NameComponent: mockNameComp, OpenableComponent: mockOpenableComp, LockableComponent: mockLockableComp
             });
@@ -263,9 +263,9 @@ describe('OpenableSystem', () => {
         it('AC4 - Failure Case - Not Openable: should do nothing and dispatch open_failed (TARGET_NOT_OPENABLE)', () => {
             // --- Arrange ---
             const handleOpenAttempted = getSubscribedHandler();
-            const mockNameComp = { value: TARGET_NAME };
+            const mockNameComp = {value: TARGET_NAME};
             // No OpenableComponent
-            const mockTargetEntity = createMockEntity(TARGET_ID, { NameComponent: mockNameComp });
+            const mockTargetEntity = createMockEntity(TARGET_ID, {NameComponent: mockNameComp});
             mockEntityManager.getEntityInstance.mockReturnValue(mockTargetEntity);
 
             // --- Act ---
@@ -275,7 +275,10 @@ describe('OpenableSystem', () => {
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
             expect(mockTargetEntity.getComponent).toHaveBeenCalledWith(OpenableComponent); // Still checked
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:open_failed', {
-                actorId: ACTOR_ID, targetEntityId: TARGET_ID, targetDisplayName: TARGET_NAME, reasonCode: 'TARGET_NOT_OPENABLE',
+                actorId: ACTOR_ID,
+                targetEntityId: TARGET_ID,
+                targetDisplayName: TARGET_NAME,
+                reasonCode: 'TARGET_NOT_OPENABLE',
             });
             expect(consoleErrorSpy).not.toHaveBeenCalled();
             expect(consoleWarnSpy).toHaveBeenCalled(); // Warning expected

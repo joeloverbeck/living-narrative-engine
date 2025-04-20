@@ -128,7 +128,6 @@ class MockEntity {
 // NOTE: Path adjusted assuming tests are in src/tests/** and system is in src/services/**
 import {QuestStartTriggerSystem} from '../../systems/questStartTriggerSystem.js';
 import {QuestLogComponent} from '../../components/questLogComponent.js';
-import {EVENT_ENTITY_MOVED} from "../../types/eventTypes.js"; // Import real key if used
 
 // --- Test Data ---
 const PLAYER_ID = 'player:test';
@@ -220,11 +219,11 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         mockEventBus.clearAll();
     });
 
-    it('should subscribe to "' + EVENT_ENTITY_MOVED + '" upon initialization', () => {
+    it('should subscribe to "' + "event:entity_moved" + '" upon initialization', () => {
         // Verify AC: Initialization subscribes
         expect(mockEventBus.subscribe).toHaveBeenCalledTimes(1);
         expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-            EVENT_ENTITY_MOVED,
+            "event:entity_moved",
             expect.any(Function) // The bound _handleEntityMoved method
         );
     });
@@ -243,7 +242,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
 
         // --- Act ---
         // Simulate the event bus triggering the subscribed handler
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         // Verify AC checks:
@@ -271,7 +270,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         };
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameStateManager.getPlayer).toHaveBeenCalled(); // Still checks who the player is
@@ -292,7 +291,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         }); // Suppress warning
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameStateManager.getPlayer).toHaveBeenCalled();
@@ -315,7 +314,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         };
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled(); // It will check quests
@@ -337,7 +336,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         };
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
@@ -358,7 +357,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         };
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
@@ -377,7 +376,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         };
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
@@ -390,7 +389,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
@@ -404,7 +403,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         expect(mockGameDataRepository.getAllQuestDefinitions).toHaveBeenCalled();
@@ -421,7 +420,7 @@ describe('QuestStartTriggerSystem - Trigger Matching (Ticket 3)', () => {
         const eventPayload = {entityId: PLAYER_ID, newLocationId: TARGET_LOCATION_ID};
 
         // --- Act ---
-        mockEventBus.triggerEvent(EVENT_ENTITY_MOVED, eventPayload);
+        mockEventBus.triggerEvent("event:entity_moved", eventPayload);
 
         // --- Assert ---
         // Should still only dispatch for the one matching quest

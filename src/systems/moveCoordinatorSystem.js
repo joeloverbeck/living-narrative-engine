@@ -11,12 +11,10 @@
 /** @typedef {import('./blockerSystem.js').BlockerCheckResult} BlockerCheckResult */
 /** @typedef {import('./movementSystem.js').MoveExecutionPayload} MoveExecutionPayload */ // Assuming MovementSystem defines this type
 
-import {EVENT_ENTITY_MOVED, EVENT_MOVE_ATTEMPTED, EVENT_MOVE_FAILED} from "../types/eventTypes.js";
-
 /**
  * @class MoveCoordinatorSystem
  * @description Coordinates the process of entity movement attempts. It listens for
- * EVENT_MOVE_ATTEMPTED, checks the target location, checks for potential blockers
+ * "event:move_attempted", checks the target location, checks for potential blockers
  * using the BlockerSystem, and if the path is clear, instructs the MovementSystem
  * to execute the move. Includes top-level error handling for robustness. // <<< UPDATED JSDoc
  */
@@ -39,7 +37,7 @@ class MoveCoordinatorSystem {
      * @param {MovementSystem} options.movementSystem - System responsible for executing the actual entity move.
      * @throws {Error} If any required dependency is missing.
      */
-    constructor({ eventBus, entityManager, blockerSystem, movementSystem }) {
+    constructor({eventBus, entityManager, blockerSystem, movementSystem}) {
         if (!eventBus) {
             throw new Error("MoveCoordinatorSystem requires an EventBus dependency.");
         }
@@ -63,18 +61,18 @@ class MoveCoordinatorSystem {
 
     /**
      * Initializes the system by subscribing to relevant events.
-     * Specifically, listens for EVENT_MOVE_ATTEMPTED to trigger the coordination logic.
+     * Specifically, listens for "event:move_attempted" to trigger the coordination logic.
      */
     initialize() {
         this.#eventBus.subscribe(
-            EVENT_MOVE_ATTEMPTED,
+            "event:move_attempted",
             this.#handleMoveAttempted.bind(this)
         );
-        console.log(`MoveCoordinatorSystem: Initialized. Listening for '${EVENT_MOVE_ATTEMPTED}'.`);
+        console.log(`MoveCoordinatorSystem: Initialized. Listening for '${"event:move_attempted"}'.`);
     }
 
     /**
-     * Handles the EVENT_MOVE_ATTEMPTED event.
+     * Handles the "event:move_attempted" event.
      * This is the entry point for the move coordination logic.
      * Step 1 (TRG-8.2): Check if the target location entity exists.
      * Step 2 (TRG-8.3): Check for blockers.
@@ -90,7 +88,7 @@ class MoveCoordinatorSystem {
         // --- Start Top-Level try...catch (TRG-8.6 Implementation) ---
         try {
             // --- AC 1: Scope - Entire method body wrapped ---
-            const { entityId: actorId, direction, targetLocationId, previousLocationId, blockerEntityId } = payload;
+            const {entityId: actorId, direction, targetLocationId, previousLocationId, blockerEntityId} = payload;
 
             console.log(`MoveCoordinatorSystem: Handling move attempt for actor ${actorId} (Dir: ${direction}) towards location ${targetLocationId} from ${previousLocationId}.`);
 
@@ -103,11 +101,16 @@ class MoveCoordinatorSystem {
                 console.warn(`MoveCoordinatorSystem: [Step 1 Failed] Target location ${targetLocationId} not found for actor ${actorId}'s move attempt. Reason: ${reason}`);
                 /** @type {ActionMoveFailedPayload} */
                 const failurePayload = {
-                    actorId: actorId, direction: direction, previousLocationId: previousLocationId,
-                    attemptedTargetLocationId: targetLocationId, reasonCode: 'TARGET_LOCATION_NOT_FOUND', details: reason,
-                    blockerDisplayName: null, blockerEntityId: null,
+                    actorId: actorId,
+                    direction: direction,
+                    previousLocationId: previousLocationId,
+                    attemptedTargetLocationId: targetLocationId,
+                    reasonCode: 'TARGET_LOCATION_NOT_FOUND',
+                    details: reason,
+                    blockerDisplayName: null,
+                    blockerEntityId: null,
                 };
-                await this.#eventBus.dispatch(EVENT_MOVE_FAILED, failurePayload);
+                await this.#eventBus.dispatch("event:move_failed", failurePayload);
                 return; // Exit early on handled failure
             }
             console.log(`MoveCoordinatorSystem: [Step 1 Succeeded] Target location ${targetLocationId} exists.`);
@@ -127,12 +130,17 @@ class MoveCoordinatorSystem {
                 console.log(`MoveCoordinatorSystem: [Step 2 Failed] Movement blocked for actor ${actorId}. Blocker: ${blockerResult.blockerDisplayName ?? 'Unknown/Not Found'} (${blockerResult.blockerEntityId}). Reason: ${blockerResult.reasonCode} - ${blockerResult.details}`);
                 /** @type {ActionMoveFailedPayload} */
                 const failurePayload = {
-                    actorId: actorId, direction: direction, previousLocationId: previousLocationId,
-                    attemptedTargetLocationId: targetLocationId, reasonCode: blockerResult.reasonCode, details: blockerResult.details,
-                    blockerDisplayName: blockerResult.blockerDisplayName, blockerEntityId: blockerResult.blockerEntityId
+                    actorId: actorId,
+                    direction: direction,
+                    previousLocationId: previousLocationId,
+                    attemptedTargetLocationId: targetLocationId,
+                    reasonCode: blockerResult.reasonCode,
+                    details: blockerResult.details,
+                    blockerDisplayName: blockerResult.blockerDisplayName,
+                    blockerEntityId: blockerResult.blockerEntityId
                 };
-                await this.#eventBus.dispatch(EVENT_MOVE_FAILED, failurePayload);
-                console.log(`MoveCoordinatorSystem: Dispatched ${EVENT_MOVE_FAILED} (${blockerResult.reasonCode}) for actor ${actorId} due to blocker.`);
+                await this.#eventBus.dispatch("event:move_failed", failurePayload);
+                console.log(`MoveCoordinatorSystem: Dispatched ${"event:move_failed"} (${blockerResult.reasonCode}) for actor ${actorId} due to blocker.`);
                 return; // Exit early on handled failure
             }
             console.log(`MoveCoordinatorSystem: [Step 2 Succeeded] Blocker check passed for actor ${actorId}. Path is clear. ${blockerResult.details ? `(${blockerResult.details})` : ''}`);
@@ -163,14 +171,14 @@ class MoveCoordinatorSystem {
                     details: `An unexpected error occurred in MovementSystem during move execution: ${error.message}`,
                     blockerDisplayName: null, blockerEntityId: null,
                 };
-                await this.#eventBus.dispatch(EVENT_MOVE_FAILED, failurePayload);
-                console.log(`MoveCoordinatorSystem: Dispatched ${EVENT_MOVE_FAILED} (MOVE_EXECUTION_ERROR) for actor ${actorId}.`);
+                await this.#eventBus.dispatch("event:move_failed", failurePayload);
+                console.log(`MoveCoordinatorSystem: Dispatched ${"event:move_failed"} (MOVE_EXECUTION_ERROR) for actor ${actorId}.`);
                 return; // Exit early on handled failure (from inner catch)
             }
 
             // --- Handle executeMove Result ---
             if (moveSuccessful) { // TRG-8.4 Success Path
-                console.log(`MoveCoordinatorSystem: [Step 3 Succeeded] MovementSystem reported successful execution for actor ${actorId}. Coordination complete (MovementSystem should dispatch ${EVENT_ENTITY_MOVED}).`);
+                console.log(`MoveCoordinatorSystem: [Step 3 Succeeded] MovementSystem reported successful execution for actor ${actorId}. Coordination complete (MovementSystem should dispatch ${"event:entity_moved"}).`);
             } else { // TRG-8.5 Failure Path (executeMove returned false)
                 const failureReason = `MovementSystem.executeMove returned false, indicating an internal error or condition prevented the move execution.`;
                 console.error(`MoveCoordinatorSystem: [Step 4 Failed] Movement execution failed (executeMove returned false) for actor ${actorId}. Reason: ${failureReason}`);
@@ -186,8 +194,8 @@ class MoveCoordinatorSystem {
                     blockerDisplayName: null,
                     blockerEntityId: null
                 };
-                await this.#eventBus.dispatch(EVENT_MOVE_FAILED, failurePayload);
-                console.log(`MoveCoordinatorSystem: Dispatched ${EVENT_MOVE_FAILED} (MOVEMENT_EXECUTION_FAILED) for actor ${actorId}.`);
+                await this.#eventBus.dispatch("event:move_failed", failurePayload);
+                console.log(`MoveCoordinatorSystem: Dispatched ${"event:move_failed"} (MOVEMENT_EXECUTION_FAILED) for actor ${actorId}.`);
             }
             // --- End Step 3 ---
 
@@ -207,7 +215,11 @@ class MoveCoordinatorSystem {
                 payloadString = `Payload could not be stringified: ${stringifyError.message}`;
             }
 
-            console.error(`MoveCoordinatorSystem: [Top-Level Error Caught] Unexpected error during move attempt handling for actor ${actorId}. Error: ${error.message}`, { error, stack: error.stack, payloadString });
+            console.error(`MoveCoordinatorSystem: [Top-Level Error Caught] Unexpected error during move attempt handling for actor ${actorId}. Error: ${error.message}`, {
+                error,
+                stack: error.stack,
+                payloadString
+            });
 
             // AC 4: Prepare failure payload
             /** @type {ActionMoveFailedPayload} */
@@ -224,11 +236,14 @@ class MoveCoordinatorSystem {
 
             // AC 3: Dispatch failure event asynchronously
             try {
-                await this.#eventBus.dispatch(EVENT_MOVE_FAILED, failurePayload);
-                console.log(`MoveCoordinatorSystem: Dispatched ${EVENT_MOVE_FAILED} (COORDINATOR_INTERNAL_ERROR) for actor ${actorId}.`);
+                await this.#eventBus.dispatch("event:move_failed", failurePayload);
+                console.log(`MoveCoordinatorSystem: Dispatched ${"event:move_failed"} (COORDINATOR_INTERNAL_ERROR) for actor ${actorId}.`);
             } catch (dispatchError) {
                 // Log critically if dispatching the error event itself fails
-                console.error(`MoveCoordinatorSystem: [Critical] Failed to dispatch COORDINATOR_INTERNAL_ERROR event after catching top-level error. Dispatch Error: ${dispatchError.message}`, { originalError: error, dispatchError });
+                console.error(`MoveCoordinatorSystem: [Critical] Failed to dispatch COORDINATOR_INTERNAL_ERROR event after catching top-level error. Dispatch Error: ${dispatchError.message}`, {
+                    originalError: error,
+                    dispatchError
+                });
             }
 
             // AC 5: Error is contained. Do not re-throw. Method completes here.

@@ -10,7 +10,7 @@
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 
 
-import {EVENT_DISPLAY_MESSAGE, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
+import {"event:display_message", "event:entity_moved"} from "../types/eventTypes.js";
 
 
 /**
@@ -66,8 +66,8 @@ class GameRuleSystem {
         console.log("GameRuleSystem: Subscribed #handleInitialRoomEntered to 'event:room_entered' for initial auto-look.");
 
         // Handler for subsequent player moves (look after move)
-        this.#eventBus.subscribe(EVENT_ENTITY_MOVED, this.#handlePlayerMovedLook.bind(this));
-        console.log("GameRuleSystem: Subscribed #handlePlayerMovedLook to '" + EVENT_ENTITY_MOVED + "' for post-move auto-look.");
+        this.#eventBus.subscribe("event:entity_moved", this.#handlePlayerMovedLook.bind(this));
+        console.log("GameRuleSystem: Subscribed #handlePlayerMovedLook to '" + "event:entity_moved" + "' for post-move auto-look.");
 
         // Future logic like turn progression subscriptions would go here.
         // Example: this.#eventBus.subscribe('core:turn_ended', this.#handleTurnEnd.bind(this));
@@ -121,7 +121,7 @@ class GameRuleSystem {
                 }
             } catch (error) {
                 console.error("GameRuleSystem: Uncaught error executing initial 'action:look':", error);
-                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                this.#eventBus.dispatch("event:display_message", {
                     text: "Internal Error: Failed to perform initial look.", type: 'error'
                 });
             }
@@ -130,7 +130,7 @@ class GameRuleSystem {
     }
 
     /**
-     * Handles the EVENT_ENTITY_MOVED event, specifically for the player.
+     * Handles the "event:entity_moved" event, specifically for the player.
      * Updates the game state's current location and triggers an automatic 'look'.
      * (AC 2)
      * @private
@@ -152,7 +152,7 @@ class GameRuleSystem {
 
         if (!newLocationEntity) {
             console.error(`GameRuleSystem: Failed to find instance for location ${newLocationId}! Cannot proceed with post-move logic.`);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: `Critical Error: Cannot process arrival at ${newLocationId}. Location data might be missing or corrupted.`,
                 type: 'error'
             });
@@ -192,7 +192,7 @@ class GameRuleSystem {
             }
         } catch (error) {
             console.error("GameRuleSystem: Uncaught error executing automatic 'action:look' after move:", error);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: "Internal Error: Failed to perform automatic look after moving.", type: 'error'
             });
         }

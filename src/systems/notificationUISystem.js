@@ -15,14 +15,8 @@
 
 // Ensure TARGET_MESSAGES is imported (already present in provided code)
 // Assumes OPEN-8 will add the required 'OPEN_*' templates to this utility.
-import {TARGET_MESSAGES} from '../utils/messages.js';
-import {
-    EVENT_DISPLAY_MESSAGE,
-    EVENT_ENTITY_OPENED,
-    EVENT_MOVE_ATTEMPTED,
-    EVENT_MOVE_FAILED,
-    EVENT_OPEN_FAILED
-} from "../types/eventTypes.js";
+
+import {TARGET_MESSAGES} from "../utils/messages.js";
 
 /**
  * Listens for semantic game events (quests, actions, etc.)
@@ -65,17 +59,17 @@ class NotificationUISystem {
         // Action Validation/Failure Events
         this.#eventBus.subscribe('action:validation_failed', this._handleValidationFailed.bind(this));
         this.#eventBus.subscribe('action:take_failed', this._handleTakeFailed.bind(this));
-        this.#eventBus.subscribe(EVENT_MOVE_FAILED, this._handleMoveFailed.bind(this));
+        this.#eventBus.subscribe("event:move_failed", this._handleMoveFailed.bind(this));
         this.#eventBus.subscribe('item:use_condition_failed', this._handleItemUseConditionFailed.bind(this));
         // Add subscriptions for other action failures (drop, use, attack, etc.) here...
 
         // AC 2: Subscribe to open action events
-        this.#eventBus.subscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened.bind(this));
-        this.#eventBus.subscribe(EVENT_OPEN_FAILED, this._handleOpenFailed.bind(this));
+        this.#eventBus.subscribe("event:entity_opened", this._handleEntityOpened.bind(this));
+        this.#eventBus.subscribe("event:open_failed", this._handleOpenFailed.bind(this));
 
         // Action Success/Attempt Events (that generate immediate feedback)
         this.#eventBus.subscribe('action:take_succeeded', this._handleTakeSucceeded.bind(this));
-        this.#eventBus.subscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted.bind(this)); // Listens to attempt, might display "You move..."
+        this.#eventBus.subscribe("event:move_attempted", this._handleMoveAttempted.bind(this)); // Listens to attempt, might display "You move..."
         // Add subscriptions for other action successes here...
 
         console.log("NotificationUISystem: Initialization complete.");
@@ -107,7 +101,7 @@ class NotificationUISystem {
     _handleQuestStarted({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: `Quest Started: ${questTitle}`,
             type: 'quest' // Use a specific type for quest messages
         });
@@ -126,7 +120,7 @@ class NotificationUISystem {
         const questTitle = this._getDisplayName(titleId, 'quest');
 
         // 1. Quest Completion Message
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: `Quest Completed: ${questTitle}`,
             type: 'quest_complete' // Specific type for completion
         });
@@ -135,7 +129,7 @@ class NotificationUISystem {
         if (rewardSummary) {
             // Experience
             if (rewardSummary.experience) {
-                this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                this.#eventBus.dispatch("event:display_message", {
                     text: `Gained ${rewardSummary.experience} XP.`,
                     type: 'reward' // General type for rewards
                 });
@@ -144,7 +138,7 @@ class NotificationUISystem {
             if (rewardSummary.items?.length > 0) {
                 rewardSummary.items.forEach(item => {
                     const itemName = this._getDisplayName(item.itemId, 'item');
-                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                    this.#eventBus.dispatch("event:display_message", {
                         text: `Received: ${itemName} x ${item.quantity}`,
                         type: 'reward'
                     });
@@ -154,7 +148,7 @@ class NotificationUISystem {
             if (rewardSummary.currency) {
                 for (const type in rewardSummary.currency) {
                     const currencyName = this._getDisplayName(type, 'currency');
-                    this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                    this.#eventBus.dispatch("event:display_message", {
                         text: `Received: ${rewardSummary.currency[type]} ${currencyName}`,
                         type: 'reward'
                     });
@@ -177,7 +171,7 @@ class NotificationUISystem {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
         const reasonText = reason ? `: ${reason}` : ''; // Add reason if provided
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: `Quest Failed${reasonText}: ${questTitle}`,
             type: 'quest_fail' // Specific type for failure
         });
@@ -193,7 +187,7 @@ class NotificationUISystem {
     _handlePrerequisitesNotMet({questId, titleId}) {
         // TODO: Filter messages based on player context if needed
         const questTitle = this._getDisplayName(titleId, 'quest');
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: `Cannot start quest "${questTitle}" yet. (Prerequisites not met)`,
             type: 'info' // Use a general info type
         });
@@ -221,14 +215,14 @@ class NotificationUISystem {
         }
         // Add more reason codes as needed
 
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: messageText,
             type: messageType
         });
     }
 
     /**
-     * Handles EVENT_MOVE_ATTEMPTED event for initial feedback.
+     * Handles "event:move_attempted" event for initial feedback.
      * NOTE: This might be redundant if the move succeeds, as the UI might update location anyway.
      * It's primarily useful for immediate feedback before potential failure messages.
      * Consider if this is needed alongside the location display update.
@@ -240,16 +234,16 @@ class NotificationUISystem {
     _handleMoveAttempted({entityId, direction}) {
         // TODO: Check if the entityId is the player before displaying
         // This message might conflict with failure messages if the move attempt
-        // is immediately followed by an EVENT_MOVE_FAILED.
+        // is immediately followed by an "event:move_failed".
         // Let's comment it out for now, as the failure handler provides more specific feedback.
-        // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        // this.#eventBus.dispatch("event:display_message", {
         //     text: `You attempt to move ${direction}.`,
         //     type: 'info'
         // });
     }
 
     /**
-     * Handles EVENT_MOVE_FAILED event.
+     * Handles "event:move_failed" event.
      * @param {ActionMoveFailedPayload} payload - The event payload.
      * @private
      */
@@ -357,7 +351,7 @@ class NotificationUISystem {
         }
 
         // Dispatch the final UI message
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: messageText,
             type: messageType // This will now be 'warning' for locked/blocked cases
         });
@@ -375,7 +369,7 @@ class NotificationUISystem {
     _handleTakeSucceeded({actorId, itemId, itemName, locationId}) {
         // TODO: Check if the actor is the player before displaying
         const displayItemName = this._getDisplayName(itemName || itemId, 'item');
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: `You take the ${displayItemName}.`,
             type: 'success'
         });
@@ -423,7 +417,7 @@ class NotificationUISystem {
                 console.warn(`NotificationUISystem: Unhandled take failure reasonCode: ${reasonCode}`);
         }
 
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: messageText,
             type: messageType
         });
@@ -440,7 +434,7 @@ class NotificationUISystem {
         // TODO: Check if the actor is the player before displaying, if necessary
 
         // Directly use the failure message provided by the ItemUsageSystem/ConditionEvaluationService
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: failureMessage, // Use the message from the event payload
             type: 'warning'       // Or 'notice'/'info' depending on desired severity
         });
@@ -449,7 +443,7 @@ class NotificationUISystem {
     // --- NEW HANDLERS for OPEN-7 ---
 
     /**
-     * Handles the EVENT_ENTITY_OPENED event and displays a success message.
+     * Handles the "event:entity_opened" event and displays a success message.
      * @param {EntityOpenedEventPayload} payload - The event payload.
      * @private
      */
@@ -467,7 +461,7 @@ class NotificationUISystem {
             type: 'success'
         };
         console.log(`NotificationUISystem: Attempting to dispatch ui:message_display with payload:`, JSON.stringify(messagePayload)); // <<< ADD THIS LOG
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, messagePayload);
+        this.#eventBus.dispatch("event:display_message", messagePayload);
     }
 
     /**
@@ -515,7 +509,7 @@ class NotificationUISystem {
                 break;
         }
 
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+        this.#eventBus.dispatch("event:display_message", {
             text: messageText,
             type: messageType
         });
@@ -529,12 +523,12 @@ class NotificationUISystem {
         this.#eventBus.unsubscribe('quest:prerequisites_not_met', this._handlePrerequisitesNotMet);
         this.#eventBus.unsubscribe('action:validation_failed', this._handleValidationFailed);
         this.#eventBus.unsubscribe('action:take_failed', this._handleTakeFailed);
-        this.#eventBus.unsubscribe(EVENT_MOVE_FAILED, this._handleMoveFailed);
+        this.#eventBus.unsubscribe("event:move_failed", this._handleMoveFailed);
         this.#eventBus.unsubscribe('item:use_condition_failed', this._handleItemUseConditionFailed);
-        this.#eventBus.unsubscribe(EVENT_ENTITY_OPENED, this._handleEntityOpened);
-        this.#eventBus.unsubscribe(EVENT_OPEN_FAILED, this._handleOpenFailed);
+        this.#eventBus.unsubscribe("event:entity_opened", this._handleEntityOpened);
+        this.#eventBus.unsubscribe("event:open_failed", this._handleOpenFailed);
         this.#eventBus.unsubscribe('action:take_succeeded', this._handleTakeSucceeded);
-        this.#eventBus.unsubscribe(EVENT_MOVE_ATTEMPTED, this._handleMoveAttempted);
+        this.#eventBus.unsubscribe("event:move_attempted", this._handleMoveAttempted);
         console.log("NotificationUISystem: Shutdown and unsubscribed from events.");
     }
 }

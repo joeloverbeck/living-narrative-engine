@@ -2,11 +2,10 @@
 
 // Import the class we are testing
 import MovementSystem from '../../systems/movementSystem.js';
+import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
+import {PositionComponent} from "../../components/positionComponent.js";
 
 // Import dependencies that need mocking or referencing
-import { PositionComponent } from '../../components/positionComponent.js';
-import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {EVENT_ENTITY_MOVED} from "../../types/eventTypes.js";
 // We don't need the actual EventBus/EntityManager/Entity classes for mocks,
 // but importing PositionComponent helps ensure we reference the correct class type.
 // import EventBus from '../../core/eventBus.js'; // Not strictly needed for mocks
@@ -55,8 +54,10 @@ describe('MovementSystem', () => {
         });
 
         // Spy on console methods to monitor output without cluttering results
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
     });
 
     afterEach(() => {
@@ -93,9 +94,9 @@ describe('MovementSystem', () => {
 
         // AC: Test: executeMove - Successful Execution
         it('should successfully execute a move when conditions are met', () => {
-            const validPayload = { ...basePayload };
+            const validPayload = {...basePayload};
             mockEntity.id = validPayload.entityId; // Align mock entity ID
-            mockPositionComp = { locationId: validPayload.previousLocationId }; // Start at the correct location
+            mockPositionComp = {locationId: validPayload.previousLocationId}; // Start at the correct location
 
             // Configure mocks for the success path
             mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -128,7 +129,7 @@ describe('MovementSystem', () => {
 
             // Assert: mockEventBus.dispatch was called correctly
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_ENTITY_MOVED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:entity_moved", {
                 entityId: validPayload.entityId,
                 newLocationId: validPayload.targetLocationId,
                 oldLocationId: validPayload.previousLocationId,
@@ -142,7 +143,7 @@ describe('MovementSystem', () => {
 
         // AC: Test: executeMove - Failure (Entity Not Found)
         it('should return false and log error if entity is not found', () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
 
             // Configure mockEntityManager to simulate entity not found
             mockEntityManager.getEntityInstance.mockReturnValue(null); // Or undefined
@@ -170,7 +171,7 @@ describe('MovementSystem', () => {
 
         // AC: Test: executeMove - Failure (PositionComponent Not Found)
         it('should return false and log error if PositionComponent is missing', () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
             mockEntity.id = payload.entityId;
 
             // Configure mocks: return entity, but component lookup fails
@@ -199,10 +200,10 @@ describe('MovementSystem', () => {
 
         // AC: Test: executeMove - Failure (Previous Location Mismatch)
         it('should return false and log warning if previousLocationId mismatches component state', () => {
-            const payload = { ...basePayload, previousLocationId: 'room-a' };
+            const payload = {...basePayload, previousLocationId: 'room-a'};
             const incorrectStartingLocation = 'unexpected-room';
             mockEntity.id = payload.entityId;
-            mockPositionComp = { locationId: incorrectStartingLocation }; // Entity is somewhere else
+            mockPositionComp = {locationId: incorrectStartingLocation}; // Entity is somewhere else
 
             // Configure mocks: return entity and component, but location is wrong
             mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -230,9 +231,9 @@ describe('MovementSystem', () => {
 
         // AC: Test: executeMove - Failure (Unexpected Error)
         it('should return false and log error if an unexpected error occurs', () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
             mockEntity.id = payload.entityId;
-            mockPositionComp = { locationId: payload.previousLocationId }; // Correct starting location
+            mockPositionComp = {locationId: payload.previousLocationId}; // Correct starting location
             const testError = new Error('Test Internal Error');
 
             // Configure mocks to allow execution to reach the point of error
@@ -274,7 +275,7 @@ describe('MovementSystem', () => {
 
         // Test edge case: Error during entity retrieval (less likely with simple mock, but good practice)
         it('should return false and log error if getEntityInstance throws', () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
             const retrievalError = new Error("DB Error");
 
             // Configure getEntityInstance to throw
@@ -305,7 +306,7 @@ describe('MovementSystem', () => {
 
         // Test edge case: Error during component retrieval
         it('should return false and log error if getComponent throws', () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
             mockEntity.id = payload.entityId;
             const componentError = new Error("Component System Error");
 
@@ -336,7 +337,7 @@ describe('MovementSystem', () => {
         });
 
         // Test edge case: Error during event dispatch
-        it('should return true but log error if event dispatch throws (move succeeded internally)',  async () => {
+        it('should return true but log error if event dispatch throws (move succeeded internally)', async () => {
             // Note: The current implementation returns true *before* dispatch.
             // If dispatch were awaited and wrapped in the main try/catch, this test would change.
             // Based on the *current* code, the move completes state-wise, then dispatch happens.
@@ -349,9 +350,9 @@ describe('MovementSystem', () => {
             // --- This test reflects THAT behavior. If executeMove is changed to await dispatch, ---
             // --- this test expectation needs to change to return false. ---
 
-            const validPayload = { ...basePayload };
+            const validPayload = {...basePayload};
             mockEntity.id = validPayload.entityId;
-            mockPositionComp = { locationId: validPayload.previousLocationId };
+            mockPositionComp = {locationId: validPayload.previousLocationId};
             const dispatchError = new Error('EventBus Listener Failed');
 
             // Configure mocks for success up to dispatch

@@ -10,9 +10,8 @@
 /** @typedef {import('../../types/questTypes.js').ObjectiveDefinition} ObjectiveDefinition */
 /** @typedef {import('../../types/questTypes.js').PlayerLocationCondition} PlayerLocationCondition */
 /** @typedef {import('../../types/questTypes.js').EntityStateCondition} EntityStateCondition */
-/** @typedef {import('../../types/questTypes.js').CompletionCondition} CompletionCondition */
 
-import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
+/** @typedef {import('../../types/questTypes.js').CompletionCondition} CompletionCondition */
 
 /**
  * Service dedicated to managing the checking of objectives based on
@@ -69,8 +68,8 @@ class ObjectiveStateCheckerService {
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
 
-        this.#eventBus.subscribe(EVENT_ENTITY_MOVED, this._handleEntityMoved.bind(this));
-        this.#eventBus.subscribe(EVENT_ENTITY_DIED, this._handleEntityDied.bind(this));
+        this.#eventBus.subscribe("event:entity_moved", this._handleEntityMoved.bind(this));
+        this.#eventBus.subscribe("event:entity_died", this._handleEntityDied.bind(this));
 
         console.log("ObjectiveStateCheckerService: Instantiated and subscribed to events.");
     }
@@ -240,7 +239,7 @@ class ObjectiveStateCheckerService {
     // --- Event Handlers ---
 
     /**
-     * Handles the EVENT_ENTITY_MOVED event. Checks if the moved entity is the player
+     * Handles the "event:entity_moved" event. Checks if the moved entity is the player
      * and if their new location matches any watched locations for objectives.
      * @param {import('../types/eventTypes.js').EntityMovedEventPayload} eventData
      * @private
@@ -268,7 +267,7 @@ class ObjectiveStateCheckerService {
     }
 
     /**
-     * Handles the EVENT_ENTITY_DIED event. Checks if the deceased entity
+     * Handles the "event:entity_died" event. Checks if the deceased entity
      * is being watched for a state change (likely 'defeated').
      * @param {import('../types/eventTypes.js').EntityDiedEventPayload} eventData
      * @private

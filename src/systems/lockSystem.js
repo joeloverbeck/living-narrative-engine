@@ -5,14 +5,6 @@ import LockableComponent from '../components/lockableComponent.js';
 import DefinitionRefComponent from '../components/definitionRefComponent.js'; // <<< Added DefinitionRefComponent import
 // Import helper for display name
 import {getDisplayName} from '../utils/messages.js';
-import {
-    EVENT_ENTITY_LOCKED,
-    EVENT_ENTITY_UNLOCKED,
-    EVENT_LOCK_ENTITY_ATTEMPT,
-    EVENT_UNLOCK_ENTITY_ATTEMPT,
-    EVENT_UNLOCK_ENTITY_FORCE,
-    EVENT_DISPLAY_MESSAGE // Added for consistency in dispatching UI messages
-} from "../types/eventTypes.js";
 
 // Type Imports for JSDoc
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -31,7 +23,7 @@ import {
 /**
  * ECS System responsible for handling the logic of locking and unlocking entities
  * (e.g., chests, doors represented as entities).
- * Listens for EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.
+ * Listens for "event:unlock_entity_attempt" and "event:lock_entity_attempt".
  * Resolves the definition ID of the key used (if any) via DefinitionRefComponent
  * before delegating the core state change and validation logic to LockableComponent.
  */
@@ -73,10 +65,10 @@ class LockSystem {
      * Subscribes the system to relevant lock/unlock events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
-        this.#eventBus.subscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
-        this.#eventBus.subscribe(EVENT_UNLOCK_ENTITY_FORCE, this._boundHandleForceUnlock);
-        console.log("LockSystem: Initialized and subscribed to EVENT_UNLOCK_ENTITY_ATTEMPT and EVENT_LOCK_ENTITY_ATTEMPT.");
+        this.#eventBus.subscribe("event:unlock_entity_attempt", this._boundHandleUnlockAttempt);
+        this.#eventBus.subscribe("event:lock_entity_attempt", this._boundHandleLockAttempt);
+        this.#eventBus.subscribe("event:unlock_entity_force", this._boundHandleForceUnlock);
+        console.log("LockSystem: Initialized and subscribed to \"event:unlock_entity_attempt\" and \"event:lock_entity_attempt\".");
     }
 
     /**
@@ -149,9 +141,9 @@ class LockSystem {
                 targetEntityId: targetEntityId,
                 keyItemId: keyInstanceIdUsed // Report the INSTANCE ID used in the success event
             };
-            console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_UNLOCKED}`, entityUnlockedPayload);
+            console.debug(`LockSystem: Dispatching ${"event:entity_unlocked"}`, entityUnlockedPayload);
             // Use await if dispatch is async and subsequent actions depend on it finishing
-            this.#eventBus.dispatch(EVENT_ENTITY_UNLOCKED, entityUnlockedPayload);
+            this.#eventBus.dispatch("event:entity_unlocked", entityUnlockedPayload);
             this.#dispatchUIMessage(`You unlock the ${entityName}.`, 'success');
         } else {
             this.#handleUnlockFailure(unlockResult.reasonCode, entityName);
@@ -226,9 +218,9 @@ class LockSystem {
                 targetEntityId: targetEntityId,
                 keyItemId: keyInstanceIdUsed // Report instance ID used
             };
-            console.debug(`LockSystem: Dispatching ${EVENT_ENTITY_LOCKED}`, entityLockedPayload);
+            console.debug(`LockSystem: Dispatching ${"event:entity_locked"}`, entityLockedPayload);
             // Use await if dispatch is async and subsequent actions depend on it finishing
-            this.#eventBus.dispatch(EVENT_ENTITY_LOCKED, entityLockedPayload);
+            this.#eventBus.dispatch("event:entity_locked", entityLockedPayload);
             this.#dispatchUIMessage(`You lock the ${entityName}.`, 'success');
         } else {
             this.#handleLockFailure(lockResult.reasonCode, entityName);
@@ -236,7 +228,7 @@ class LockSystem {
     }
 
     /**
-     * Handles EVENT_UNLOCK_ENTITY_FORCE.  Ignores key checks and never fails.
+     * Handles "event:unlock_entity_force".  Ignores key checks and never fails.
      * @private
      * @param {{targetEntityId:string, userId?:string|null, [key:string]:any}} payload
      */
@@ -256,7 +248,7 @@ class LockSystem {
         }
 
         // Fire the normal “entity_unlocked” event so every other system stays in sync
-        this.#eventBus.dispatch(EVENT_ENTITY_UNLOCKED, {
+        this.#eventBus.dispatch("event:entity_unlocked", {
             userId,                     // null means “environment/script”
             targetEntityId,
             keyItemId: null,
@@ -345,7 +337,7 @@ class LockSystem {
         const uiMessagePayload = {text, type};
         console.debug(`LockSystem: Dispatching UI message: "${text}" (Type: ${type})`);
         // Use await if dispatch is async and subsequent actions depend on it finishing
-        this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, uiMessagePayload);
+        this.#eventBus.dispatch("event:display_message", uiMessagePayload);
     }
 
     /**
@@ -353,9 +345,9 @@ class LockSystem {
      */
     shutdown() {
         // Use the stored bound handlers for correct unsubscription
-        this.#eventBus.unsubscribe(EVENT_UNLOCK_ENTITY_ATTEMPT, this._boundHandleUnlockAttempt);
-        this.#eventBus.unsubscribe(EVENT_LOCK_ENTITY_ATTEMPT, this._boundHandleLockAttempt);
-        this.#eventBus.unsubscribe(EVENT_UNLOCK_ENTITY_FORCE, this._boundHandleForceUnlock);
+        this.#eventBus.unsubscribe("event:unlock_entity_attempt", this._boundHandleUnlockAttempt);
+        this.#eventBus.unsubscribe("event:lock_entity_attempt", this._boundHandleLockAttempt);
+        this.#eventBus.unsubscribe("event:unlock_entity_force", this._boundHandleForceUnlock);
         console.log("LockSystem: Shutdown complete, unsubscribed from events.");
     }
 }

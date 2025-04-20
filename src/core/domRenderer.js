@@ -11,7 +11,7 @@
 // Import necessary event types
 import {
     EVENT_DISPLAY_LOCATION,
-    EVENT_DISPLAY_MESSAGE,
+    "event:display_message",
     EVENT_UPDATE_ACTIONS // <-- Import the new event type (AC Ref: Import)
 } from "../types/eventTypes.js";
 
@@ -80,7 +80,7 @@ class DomRenderer {
             // Log an error but don't throw, as the rest of the renderer might still be useful
             console.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
             // Optionally, could dispatch an error message to the UI if the logger/eventbus is ready
-            // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "UI Init Warning: Action button container missing.", type: 'warning'});
+            // this.#eventBus.dispatch("event:display_message", { text: "UI Init Warning: Action button container missing.", type: 'warning'});
         } else {
             console.log("DomRenderer: Found '#action-buttons-container'.");
         }
@@ -126,7 +126,7 @@ class DomRenderer {
 
     #subscribeToEvents() {
         // --- Standard UI Events ---
-        this.#eventBus.subscribe(EVENT_DISPLAY_MESSAGE, this.#handleMessageDisplay.bind(this));
+        this.#eventBus.subscribe("event:display_message", this.#handleMessageDisplay.bind(this));
         this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this));
         this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
         this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
@@ -153,7 +153,7 @@ class DomRenderer {
         if (message && typeof message.text === 'string') {
             this.renderMessage(message.text, message.type || 'info');
         } else {
-            console.warn("DomRenderer received EVENT_DISPLAY_MESSAGE with invalid data:", message);
+            console.warn("DomRenderer received "event:display_message" with invalid data:", message);
         }
     }
 

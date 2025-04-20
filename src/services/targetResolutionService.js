@@ -33,7 +33,6 @@
 import {getEntityIdsForScopes} from './entityScopeService.js';
 import {findTarget} from '../utils/targetFinder.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js'; // Assuming getDisplayName is here too
-import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Assuming path
 import {resolveTargetConnection} from './connectionResolver.js';
 import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
 
@@ -312,7 +311,7 @@ class TargetResolutionService {
             } catch (error) {
                 console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain 'direction':`, error);
                 // Dispatch a generic internal error message?
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+                await eventBus.dispatch("event:display_message", {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
                 return {
                     status: ResolutionStatus.ERROR,
                     targetType: null,
@@ -356,7 +355,7 @@ class TargetResolutionService {
                     const messageKeySuffix = _getMessageKeySuffix(target_domain);
                     const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
                     const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'});
+                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
                     return {
                         status: ResolutionStatus.FILTER_EMPTY,
                         targetType: null,
@@ -379,7 +378,7 @@ class TargetResolutionService {
                     const messageKeySuffix = _getMessageKeySuffix(target_domain);
                     const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
                     const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'});
+                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
                     return {
                         status: ResolutionStatus.FILTER_EMPTY,
                         targetType: null,
@@ -420,7 +419,7 @@ class TargetResolutionService {
                     const messageKeySuffix = _getMessageKeySuffix(target_domain);
                     const messageFunc = TARGET_MESSAGES[`FILTER_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
                     const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'});
+                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
                     return {
                         status: ResolutionStatus.FILTER_EMPTY, targetType: null, targetId: null, targetEntity: null,
                         targetConnectionEntity: null, candidateIds: initialEntities.map(e => e.id),
@@ -449,7 +448,7 @@ class TargetResolutionService {
                             if (typeof messageFunc !== 'function') {
                                 console.error(`TargetResolutionService: CRITICAL - Fallback message function NOT_FOUND_NEARBY is also missing!`);
                                 // Dispatch internal error and return ERROR status to prevent further issues
-                                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+                                await eventBus.dispatch("event:display_message", {
                                     text: TARGET_MESSAGES.INTERNAL_ERROR,
                                     type: 'error'
                                 });
@@ -469,7 +468,7 @@ class TargetResolutionService {
 
                         // Now we are reasonably sure messageFunc is a function
                         const messageText = messageFunc(trimmedTargetName); // This line should no longer throw the TypeError
-                        await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'info'});
+                        await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
 
                         // Return the correct NOT_FOUND status
                         return {
@@ -490,7 +489,7 @@ class TargetResolutionService {
                             trimmedTargetName,
                             ambiguousEntities
                         );
-                        await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: messageText, type: 'warning'});
+                        await eventBus.dispatch("event:display_message", {text: messageText, type: 'warning'});
                         return {
                             status: ResolutionStatus.AMBIGUOUS,
                             targetType: 'entity',
@@ -531,7 +530,7 @@ class TargetResolutionService {
 
             } catch (error) {
                 console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain '${target_domain}':`, error);
-                await eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+                await eventBus.dispatch("event:display_message", {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
                 return {
                     status: ResolutionStatus.ERROR,
                     targetType: null,

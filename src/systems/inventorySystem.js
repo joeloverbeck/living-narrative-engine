@@ -98,7 +98,7 @@ class InventorySystem {
         if (!inventoryComp) {
             console.error(`InventorySystem: Picker entity '${pickerId}' has no InventoryComponent.`);
             // Maybe dispatch a UI error? For now, just log and stop.
-            // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: "You cannot carry items!", type: 'error' });
+            // this.#eventBus.dispatch("event:display_message", { text: "You cannot carry items!", type: 'error' });
             return;
         }
 
@@ -115,7 +115,7 @@ class InventorySystem {
         if (!isStackable && alreadyHas) {
             console.warn(`InventorySystem: Picker '${pickerId}' already has non-stackable item '${itemId}'. Pickup skipped.`);
             // Optionally dispatch a UI message:
-            // this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, { text: `You already have a ${itemDef?.components?.Name?.value ?? itemId}.`, type: 'info' });
+            // this.#eventBus.dispatch("event:display_message", { text: `You already have a ${itemDef?.components?.Name?.value ?? itemId}.`, type: 'info' });
             return; // Stop processing
         }
 

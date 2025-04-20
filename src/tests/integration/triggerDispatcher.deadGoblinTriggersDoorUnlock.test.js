@@ -17,12 +17,6 @@ import LockSystem from '../../systems/lockSystem.js';
 import LockableComponent from '../../components/lockableComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';
 
-// Event constants
-import {
-    EVENT_ENTITY_DIED,
-    EVENT_ENTITY_UNLOCKED
-} from '../../types/eventTypes.js';
-
 // Utility helper shared by the other integration‑test suite
 import {waitForEvent} from '../testUtils.js';
 
@@ -147,16 +141,16 @@ describe('Trigger → LockSystem integration – unlock treasure door on goblin 
 
     it('unlocks the treasure‑room door exactly once when the goblin dies', async () => {
         // Act: simulate the goblin's death
-        await eventBus.dispatch(EVENT_ENTITY_DIED, {
+        await eventBus.dispatch("event:entity_died", {
             deceasedEntityId: 'demo:enemy_goblin',
             killerEntityId: null
         });
 
-        // Assert part 1 – EVENT_ENTITY_UNLOCKED is eventually fired with correct target
+        // Assert part 1 – "event:entity_unlocked" is eventually fired with correct target
         /** @type {import('../../types/eventTypes.js').EntityUnlockedEventPayload} */
         const unlockedPayload = await waitForEvent(
             dispatchSpy,
-            EVENT_ENTITY_UNLOCKED,
+            "event:entity_unlocked",
             expect.objectContaining({targetEntityId: 'demo:door_treasure_room'}),
             500
         );
@@ -169,14 +163,14 @@ describe('Trigger → LockSystem integration – unlock treasure door on goblin 
 
         // Assert part 3 – one‑shot safety: a second death event should NOT unlock again
         dispatchSpy.mockClear();
-        await eventBus.dispatch(EVENT_ENTITY_DIED, {
+        await eventBus.dispatch("event:entity_died", {
             deceasedEntityId: 'demo:enemy_goblin',
             killerEntityId: null
         });
 
         // No further unlock events expected
         expect(dispatchSpy).not.toHaveBeenCalledWith(
-            EVENT_ENTITY_UNLOCKED,
+            "event:entity_unlocked",
             expect.anything()
         );
     });

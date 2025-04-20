@@ -1,8 +1,6 @@
 // src/systems/movementSystem.js
 
 // Assuming components are in ../components/
-import { PositionComponent } from '../components/positionComponent.js';
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 // Core dependencies (adjust paths if necessary)
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -19,9 +17,11 @@ import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
  * @property {string} direction - The canonical, lowercase direction of movement (e.g., 'north', 'south').
  */
 
+import {PositionComponent} from "../components/positionComponent.js";
+
 /**
  * Handles the actual updating of an entity's position.
- * This system previously listened for EVENT_MOVE_ATTEMPTED but now exposes
+ * This system previously listened for "event:move_attempted" but now exposes
  * a synchronous `executeMove` method to be called after external validation.
  */
 class MovementSystem {
@@ -35,7 +35,7 @@ class MovementSystem {
      * @param {EventBus} dependencies.eventBus - The game's event bus.
      * @param {EntityManager} dependencies.entityManager - The entity manager instance.
      */
-    constructor({ eventBus, entityManager }) {
+    constructor({eventBus, entityManager}) {
         if (!eventBus) {
             throw new Error("MovementSystem requires an EventBus instance.");
         }
@@ -114,9 +114,9 @@ class MovementSystem {
                 direction: payload.direction // Pass along the direction used
             };
 
-            // AC7: Dispatch EVENT_ENTITY_MOVED via EventBus
+            // AC7: Dispatch "event:entity_moved" via EventBus
             // Step 6b: Announce the successful move to the rest of the game
-            this.#eventBus.dispatch(EVENT_ENTITY_MOVED, movedEventPayload);
+            this.#eventBus.dispatch("event:entity_moved", movedEventPayload);
 
             // AC8: Verified no external validation logic added here.
             // AC9: Inline comments added for steps 1-7.
@@ -130,7 +130,7 @@ class MovementSystem {
         } catch (error) {
             // AC7 (Ticket): Error Handling (Catch Block)
             // Log unexpected errors during the execution process
-            console.error('MovementSystem: Unexpected error during executeMove:', { payload, error });
+            console.error('MovementSystem: Unexpected error during executeMove:', {payload, error});
             return false; // Indicate failure due to unexpected error
         }
     }

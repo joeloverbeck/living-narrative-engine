@@ -11,15 +11,8 @@
 // ========================================================================
 
 // --- Event Name Constants for Maintainability ---
-export const EVENT_APPLY_HEAL_REQUESTED = 'event:apply_heal_requested';
 export const EVENT_APPLY_STATUS_EFFECT_REQUESTED = 'event:apply_status_effect_requested';
-export const EVENT_ATTACK_INTENDED = 'event:attack_intended';
-export const EVENT_ENTITY_DIED = 'event:entity_died';
-export const EVENT_ENTITY_LOCKED = 'event:entity_locked';
 export const EVENT_ENTITY_LOOT_SPAWN_REQUESTED = 'event:entity_loot_spawn_requested';
-export const EVENT_ENTITY_MOVED = 'event:entity_moved';
-export const EVENT_ENTITY_OPENED = 'event:entity_opened';
-export const EVENT_ENTITY_UNLOCKED = 'event:entity_unlocked';
 export const EVENT_INFLICT_DAMAGE_REQUESTED = 'event:inflict_damage_requested';
 export const EVENT_ITEM_CONSUME_REQUESTED = 'event:item_consume_requested';
 export const EVENT_ITEM_DROP_ATTEMPTED = 'event:item_drop_attempted';
@@ -27,25 +20,17 @@ export const EVENT_ITEM_DROPPED = 'event:item_dropped';
 export const EVENT_ITEM_EQUIP_ATTEMPTED = 'event:item_equip_attempted';
 export const EVENT_ITEM_EQUIPPED = 'event:item_equipped';
 // *** NEW CONSTANTS WILL GO HERE ALPHABETICALLY ***
-export const EVENT_EXAMINE_INTENDED = 'event:examine_intended';
-export const EVENT_LOOK_INTENDED = 'event:look_intended';
 export const EVENT_ITEM_PICKED_UP = 'event:item_picked_up';
 export const EVENT_ITEM_UNEQUIP_ATTEMPTED = 'event:item_unequip_attempted';
 export const EVENT_ITEM_UNEQUIPPED = 'event:item_unequipped';
-export const EVENT_ITEM_USE_ATTEMPTED = 'event:item_use_attempted';
-export const EVENT_LOCK_ENTITY_ATTEMPT = 'event:lock_entity_attempt';
-export const EVENT_MOVE_ATTEMPTED = 'event:move_attempted';
-export const EVENT_MOVE_FAILED = 'event:move_failed';
-export const EVENT_OPEN_ATTEMPTED = 'event:open_attempted';
-export const EVENT_OPEN_FAILED = 'event:open_failed';
 export const EVENT_REMOVE_STATUS_EFFECT_REQUESTED = 'event:remove_status_effect_requested';
 export const EVENT_SPAWN_ENTITY_REQUESTED = 'event:spawn_entity_requested';
-export const EVENT_UNLOCK_ENTITY_ATTEMPT = 'event:unlock_entity_attempt';
 // ------------------------------------------------------------------------
 //  Force‑unlock (scripted) – bypasses key validation in LockSystem
 // ------------------------------------------------------------------------
 /** @constant {string} */
-export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
+export const "event:unlock_entity_force"
+= 'event:unlock_entity_force';
 // Add more request event names as needed (e.g., change_state, teleport)
 
 
@@ -147,7 +132,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_MOVE_ATTEMPTED event.
+ * Defines the payload structure for the "event:move_attempted" event.
  * Signals that an entity has validated its intent to move in a specific direction from its current location.
  * Validation checks for valid exits. Blocking logic (e.g., locked doors, blocker entities)
  * is handled by systems listening to this event (like MoveCoordinatorSystem).
@@ -165,7 +150,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_MOVE_FAILED event. (Consider renaming to event:move_failed)
+ * Defines the payload structure for the "event:move_failed" event. (Consider renaming to event:move_failed)
  * Signals that a move attempt, after initial validation (e.g., exit exists), has failed
  * due to a subsequent check (e.g., target location missing, path blocked, internal error).
  *
@@ -213,7 +198,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_ENTITY_DIED event.
+ * Defines the payload structure for the "event:entity_died" event.
  * Signals that an entity's health has reached zero or below as a result of an action (typically combat).
  *
  * Fired By: CombatSystem, HealthSystem
@@ -283,7 +268,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_ENTITY_MOVED event.
+ * Defines the payload structure for the "event:entity_moved" event.
  * Signals that an entity has successfully completed its move and its position has been updated.
  *
  * Fired By: MovementSystem, MoveCoordinatorSystem
@@ -311,7 +296,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_ENTITY_OPENED event.
+ * Defines the payload structure for the "event:entity_opened" event.
  * Signals that an entity (e.g., door, container) was successfully opened by an actor.
  *
  * Fired By: OpenableSystem
@@ -351,7 +336,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_UNLOCK_ENTITY_ATTEMPT event.
+ * Defines the payload structure for the "event:unlock_entity_attempt" event.
  * Signals that an entity is attempting to unlock another entity (e.g., a door, a chest, a mechanism).
  * This event is typically fired *before* validation or state changes occur.
  * (Confirmation: Payload structure compatible with ItemUsageSystem context)
@@ -366,7 +351,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_UNLOCK_ENTITY_FORCE event.
+ * Defines the payload structure for the "event:unlock_entity_force" event.
  * Used by cut‑scenes, triggers, or designer scripts to unlock an entity
  * without consuming / validating a key.
  *
@@ -396,7 +381,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_ENTITY_UNLOCKED event.
+ * Defines the payload structure for the "event:entity_unlocked" event.
  * Signals that an entity has been successfully unlocked.
  * This event is fired *after* the entity's state has been updated.
  *
@@ -410,7 +395,7 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
  */
 
 /**
- * Defines the payload structure for the EVENT_ENTITY_LOCKED event.
+ * Defines the payload structure for the "event:entity_locked" event.
  * Signals that an entity has been successfully locked.
  * This event is fired *after* the entity's state has been updated.
  *
@@ -580,8 +565,6 @@ export const EVENT_UNLOCK_ENTITY_FORCE = 'event:unlock_entity_force';
 // ========================================================================
 
 // --- UI Event Name Constants ---
-export const EVENT_DISPLAY_MESSAGE = 'event:display_message';
-export const EVENT_DISPLAY_LOCATION = 'event:display_location';
 export const EVENT_UPDATE_ACTIONS = 'event:update_actions';
 // Add other UI event names as needed
 

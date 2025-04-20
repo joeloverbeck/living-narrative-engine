@@ -3,11 +3,9 @@
 // --- Component Imports ---
 import OpenableComponent from '../components/openableComponent.js';
 import LockableComponent from '../components/lockableComponent.js';
+import {getDisplayName} from "../utils/messages.js";
 
 // --- Utility Imports ---
-import { getDisplayName } from '../utils/messages.js';
-import {EVENT_ENTITY_OPENED} from "../types/eventTypes.js"; // Adjust path if necessary
-
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -15,6 +13,7 @@ import {EVENT_ENTITY_OPENED} from "../types/eventTypes.js"; // Adjust path if ne
 // --- Import Event Payload Types ---
 /** @typedef {import('../types/eventTypes.js').OpenAttemptedEventPayload} OpenAttemptedEventPayload */
 /** @typedef {import('../types/eventTypes.js').EntityOpenedEventPayload} EntityOpenedEventPayload */
+
 /** @typedef {import('../types/eventTypes.js').OpenFailedEventPayload} OpenFailedEventPayload */
 
 
@@ -23,7 +22,7 @@ import {EVENT_ENTITY_OPENED} from "../types/eventTypes.js"; // Adjust path if ne
  * possessing an OpenableComponent. It listens for 'event:open_attempted',
  * validates the attempt, checks for blocking states (like being locked),
  * modifies the OpenableComponent state, and dispatches events indicating
- * success (EVENT_ENTITY_OPENED) or failure ('event:open_failed').
+ * success ("event:entity_opened") or failure ('event:open_failed').
  */
 class OpenableSystem {
     /** @type {EventBus} */
@@ -38,7 +37,7 @@ class OpenableSystem {
      * @param {EntityManager} options.entityManager - The game's entity manager.
      * @throws {Error} If eventBus or entityManager is missing.
      */
-    constructor({ eventBus, entityManager }) {
+    constructor({eventBus, entityManager}) {
         // Constructor remains the same
         if (!eventBus) {
             throw new Error("OpenableSystem requires options.eventBus.");
@@ -72,7 +71,7 @@ class OpenableSystem {
      * @param {OpenAttemptedEventPayload} payload - The event data containing actorId and targetEntityId.
      */
     #handleOpenAttempted(payload) {
-        const { actorId, targetEntityId } = payload;
+        const {actorId, targetEntityId} = payload;
 
         // <<< ADD LOG 1 HERE >>>
         console.log(`OpenableSystem: Received 'event:open_attempted'. Actor [${actorId}] Target [${targetEntityId}].`);
@@ -163,11 +162,11 @@ class OpenableSystem {
         };
 
         // <<< ADD LOG 2 HERE >>>
-        console.log(`OpenableSystem: Attempting to dispatch '${EVENT_ENTITY_OPENED}' with payload:`, JSON.stringify(successPayload));
-        this.#eventBus.dispatch(EVENT_ENTITY_OPENED, successPayload);
+        console.log(`OpenableSystem: Attempting to dispatch '${"event:entity_opened"}' with payload:`, JSON.stringify(successPayload));
+        this.#eventBus.dispatch("event:entity_opened", successPayload);
 
         // Logging success
-        console.log(`OpenableSystem: Successfully opened target [${targetDisplayName} (${targetEntityId})] by actor [${actorId}]. Event '${EVENT_ENTITY_OPENED}' dispatched.`);
+        console.log(`OpenableSystem: Successfully opened target [${targetDisplayName} (${targetEntityId})] by actor [${actorId}]. Event '${"event:entity_opened"}' dispatched.`);
 
         // No return value needed for event handlers
     }

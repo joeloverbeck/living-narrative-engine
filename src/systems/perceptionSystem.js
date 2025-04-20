@@ -4,7 +4,7 @@ import {
     EVENT_LOOK_INTENDED,
     EVENT_EXAMINE_INTENDED, // Ensure this is imported
     EVENT_DISPLAY_LOCATION,
-    EVENT_DISPLAY_MESSAGE,
+    "event:display_message",
 } from '../types/eventTypes.js';
 import {
     formatExitString,
@@ -424,9 +424,9 @@ class PerceptionSystem {
     async #dispatchMessage(text, type = 'info', actorId = 'N/A', targetId = 'N/A') {
         /** @type {UIMessageDisplayPayload} */
         const payload = {text, type};
-        await this.eventBus.dispatch(EVENT_DISPLAY_MESSAGE, payload);
+        await this.eventBus.dispatch("event:display_message", payload);
         // Use logger instance for consistency
-        console.debug(`Dispatched ${EVENT_DISPLAY_MESSAGE} (Actor: ${actorId}, Target: ${targetId}): "${text}"`);
+        console.debug(`Dispatched ${"event:display_message"} (Actor: ${actorId}, Target: ${targetId}): "${text}"`);
     }
 
 

@@ -4,9 +4,13 @@ import {PositionComponent} from '../components/positionComponent.js';
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
-import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
 
 /** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../core/entityManager.js').default} EntityManager */
+
+/** @typedef {import('./conditionEvaluationService.js').default} ConditionEvaluationService */
 
 /**
  * Resolve and validate an item‑use target.
@@ -15,13 +19,29 @@ import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js";
  */
 export class ItemTargetResolverService {
     #em;
-    #bus;
+    #validatedDispatcher; // Changed from #bus
     #ce;
+    #logger; // Added
 
-    constructor({entityManager, eventBus, conditionEvaluationService}) {
+    /**
+     * @param {object} dependencies
+     * @param {EntityManager} dependencies.entityManager
+     * @param {ValidatedEventDispatcher} dependencies.validatedDispatcher - Changed from eventBus
+     * @param {ConditionEvaluationService} dependencies.conditionEvaluationService
+     * @param {ILogger} dependencies.logger - Added
+     */
+    constructor({entityManager, validatedDispatcher, conditionEvaluationService, logger}) {
+        if (!entityManager) throw new Error("ItemTargetResolverService: Missing dependency 'entityManager'.");
+        if (!validatedDispatcher) throw new Error("ItemTargetResolverService: Missing dependency 'validatedDispatcher'.");
+        if (!conditionEvaluationService) throw new Error("ItemTargetResolverService: Missing dependency 'conditionEvaluationService'.");
+        if (!logger) throw new Error("ItemTargetResolverService: Missing dependency 'logger'.");
+
         this.#em = entityManager;
-        this.#bus = eventBus;
+        this.#validatedDispatcher = validatedDispatcher; // Store validated dispatcher
         this.#ce = conditionEvaluationService;
+        this.#logger = logger; // Store logger
+
+        this.#logger.debug("ItemTargetResolverService instance created.");
     }
 
     /**
@@ -35,7 +55,11 @@ export class ItemTargetResolverService {
         } = p;
 
         const messages = [];
-        const log = (t, type = 'internal') => messages.push({text: t, type});
+        // Internal logging for the resolution process itself
+        const log = (t, type = 'internal') => {
+            messages.push({text: t, type});
+            this.#logger.debug(`ItemTargetResolverService.resolveItemTarget: ${t}`); // Also log internally
+        }
 
         if (!usableComponentData.target_required)
             return {success: true, target: null, targetType: 'none', messages};
@@ -44,7 +68,6 @@ export class ItemTargetResolverService {
         if (explicitTargetConnectionEntityId) {
             const conn = this.#em.getEntityInstance(explicitTargetConnectionEntityId);
             if (conn) {
-                // Quick room‑exit sanity check (property‑agnostic):
                 const userRoomId = userEntity.getComponent(PositionComponent)?.locationId;
                 const exits = this.#em
                     .getEntityInstance(userRoomId)
@@ -54,7 +77,6 @@ export class ItemTargetResolverService {
                 const isExitHere = exits.some(e => (e.id ?? e.connectionEntityId) === conn.id);
                 if (!isExitHere) log('Connection is not an exit from this room.', 'warning');
                 else {
-                    // swap to blocker if any
                     const passage = conn.getComponent(PassageDetailsComponent);
                     const blockerId = passage?.blockerEntityId ?? null;
 
@@ -77,11 +99,20 @@ export class ItemTargetResolverService {
         }
 
         // ─────────────────────────── failure ────────────────────────────────────
-        await this.#bus.dispatch(EVENT_DISPLAY_MESSAGE, {
-            text: usableComponentData.failure_message_target_required
-                ?? TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName),
-            type: 'warning'
+        const failureText = usableComponentData.failure_message_target_required
+            ?? TARGET_MESSAGES.USE_REQUIRES_TARGET(itemName);
+        const failureType = 'warning';
+
+        this.#logger.warn(`ItemTargetResolverService: No valid target found for item '${itemName}'. Dispatching failure message.`);
+
+        // --- Refactored Dispatch Logic ---
+        // Line: 54 (approx)
+        await this.#validatedDispatcher.dispatchValidated("event:display_message", {
+            text: failureText,
+            type: failureType
         });
+        // --- End Refactored Dispatch Logic ---
+
         return {success: false, target: null, targetType: 'none', messages};
     }
 }

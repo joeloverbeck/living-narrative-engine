@@ -9,7 +9,6 @@
 
 // Assuming component keys match class names for getComponent lookup
 import {QuestLogComponent} from "../components/questLogComponent.js";
-import {EVENT_ENTITY_MOVED} from "../types/eventTypes.js";
 
 const QUEST_LOG_COMPONENT_KEY = QuestLogComponent;
 
@@ -48,11 +47,11 @@ class QuestStartTriggerSystem {
      * Initializes the service by subscribing to relevant game events.
      */
     initialize() {
-        this.#eventBus.subscribe(EVENT_ENTITY_MOVED, this._handleEntityMoved.bind(this));
+        this.#eventBus.subscribe("event:entity_moved", this._handleEntityMoved.bind(this));
     }
 
     /**
-     * Handles the EVENT_ENTITY_MOVED event. Checks if the player entered a location
+     * Handles the "event:entity_moved" event. Checks if the player entered a location
      * that triggers the start of any eligible quests.
      * @param {EntityMovedEventPayload} eventData - The payload from the entity movement event.
      * @private

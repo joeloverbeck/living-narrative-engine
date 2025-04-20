@@ -5,11 +5,16 @@
 
 // ** Import Core Classes/Types **
 import Entity from '../entities/entity.js';
-import EntityManager from '../entities/entityManager.js'; // Dependency for function context
-import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Dependency for function logic
+import EntityManager from '../entities/entityManager.js';
+import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
 import {PassageDetailsComponent} from "../components/passageDetailsComponent.js";
-import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Added TARGET_MESSAGES for resolveTargetConnection
+
+// ** Added Type Imports for Dependencies **
+/** @typedef {import('../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
+
 
 // ========================================================================
 // == Core Type Definitions for Connection Resolution =====================
@@ -17,20 +22,16 @@ import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Added TARGET_ME
 
 /**
  * Represents a fetched connection along with its originating direction.
- * Copied from targetResolutionService.js - TICKET-REF-SUB-3.1
  * @typedef {object} FetchedConnectionData
- * @property {string} direction - The direction key (lowercase, trimmed) associated with this connection from the source location.
- * @property {Entity} connectionEntity - The fetched Connection entity instance.
+ * @property {string} direction
+ * @property {Entity} connectionEntity
  */
 
 /**
- * Represents the output of the connection matching logic (e.g., CONN-5.1.2).
- * Contains arrays of matches found based on direction or name.
- * Depends on FetchedConnectionData.
- * Copied from targetResolutionService.js - TICKET-REF-SUB-3.1
+ * Represents the output of the connection matching logic.
  * @typedef {object} PotentialConnectionMatches
- * @property {FetchedConnectionData[]} directionMatches - Array of connection data where the direction key matched the input.
- * @property {FetchedConnectionData[]} nameMatches - Array of unique connection data where the connection entity's display name matched the input.
+ * @property {FetchedConnectionData[]} directionMatches
+ * @property {FetchedConnectionData[]} nameMatches
  */
 
 // ========================================================================
@@ -38,14 +39,17 @@ import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Added TARGET_ME
 // ========================================================================
 
 /**
- * **CONN-5.1.2 Implementation:** Finds potential Connection entities based on direction and name matching.
- * Moved from targetResolutionService.js (Sub-Ticket 3.2). Kept internal for now.
- * @param {ActionContext} context - The action context, requires `currentLocation` and `entityManager`.
- * @param {string} connectionTargetName - The name or direction string provided by the user (non-empty).
- * @returns {PotentialConnectionMatches} An object containing arrays of direction and name matches.
+ * **Internal:** Finds potential Connection entities based on direction and name matching.
+ * @param {ActionContext} context - Needs `currentLocation`, `entityManager`.
+ * @param {string} connectionTargetName - The user input.
+ * @returns {PotentialConnectionMatches}
  */
-function findPotentialConnectionMatches(context, connectionTargetName) { // NOTE: No 'export' keyword
-    const {currentLocation, entityManager} = context;
+function findPotentialConnectionMatches(context, connectionTargetName, logger) {
+    // Use a fallback just in case, but logger should always be provided by the caller
+    const logWarn = logger?.warn || console.warn;
+    const logError = logger?.error || console.error;
+
+    const {currentLocation, entityManager} = context; // Assume context provides these
 
     /** @type {PotentialConnectionMatches} */
     const results = {
@@ -53,72 +57,56 @@ function findPotentialConnectionMatches(context, connectionTargetName) { // NOTE
         nameMatches: [],
     };
 
-    // --- Pre-computation Checks ---
-    if (!currentLocation) {
-        console.warn("findPotentialConnectionMatches (in ConnectionResolver): Missing currentLocation in context.");
-        return results;
-    }
-    if (!entityManager) {
-        // Ensure context provides entityManager
-        console.error("findPotentialConnectionMatches (in ConnectionResolver): Missing entityManager in context.");
+    if (!currentLocation || !entityManager) {
+        // Use the passed logger (or fallback)
+        logError("findPotentialConnectionMatches (in ConnectionResolver): Missing currentLocation or entityManager in context.");
         return results;
     }
     const connectionsComponent = currentLocation.getComponent(ConnectionsComponent);
     if (!connectionsComponent) {
-        // Warning message updated slightly to reflect new location
-        console.warn(`findPotentialConnectionMatches (in ConnectionResolver): ConnectionsComponent not found on location '${currentLocation.id}'`);
+        // Use the passed logger (or fallback)
+        logWarn(`findPotentialConnectionMatches (in ConnectionResolver): ConnectionsComponent not found on location '${currentLocation.id}'`);
         return results;
     }
     const connectionMappings = connectionsComponent.getAllConnections();
-    if (connectionMappings.length === 0) {
-        return results;
-    }
+    if (connectionMappings.length === 0) return results;
 
-    // --- Fetch Connection Entities ---
     /** @type {FetchedConnectionData[]} */
     const fetchedConnectionsData = [];
     for (const mapping of connectionMappings) {
         const {direction, connectionEntityId} = mapping;
         const connectionEntity = entityManager.getEntityInstance(connectionEntityId);
-
         if (connectionEntity) {
             fetchedConnectionsData.push({direction, connectionEntity});
         } else {
-            // Warning message updated slightly
-            console.warn(`findPotentialConnectionMatches (in ConnectionResolver): Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}'`);
+            // Use the passed logger (or fallback)
+            logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}'`);
         }
     }
-    if (fetchedConnectionsData.length === 0) {
-        // Warning message updated slightly
-        console.warn(`findPotentialConnectionMatches (in ConnectionResolver): Location '${currentLocation.id}' has connection mappings, but failed to fetch any corresponding Connection entities.`);
+    if (fetchedConnectionsData.length === 0 && connectionMappings.length > 0) { // Added condition to only warn if mappings existed
+        // Use the passed logger (or fallback)
+        logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Location '${currentLocation.id}' has connection mappings, but failed to fetch any corresponding Connection entities.`);
         return results;
     }
 
-    // --- Step 7: Find Matching Connections (Logic as copied) ---
-    const lowerCaseTarget = connectionTargetName.trim().toLowerCase(); // AC1
-    const nameMatchEntityIds = new Set(); // To track unique entities added to nameMatches
+
+    const lowerCaseTarget = connectionTargetName.trim().toLowerCase();
+    const nameMatchEntityIds = new Set();
 
     for (const item of fetchedConnectionsData) {
-        let isDirectionMatch = false; // Flag to track if this item matched by direction
+        let isDirectionMatch = false;
 
-        // AC2: Direction Matching (Exact, Case-Insensitive)
         if (item.direction === lowerCaseTarget) {
             results.directionMatches.push(item);
-            isDirectionMatch = true; // Mark it as a direction match
+            isDirectionMatch = true;
         }
 
-        // AC3: Name Matching (Substring, Case-Insensitive)
         const entityName = getDisplayName(item.connectionEntity)?.toLowerCase();
-
-        // NEW: also look at the blocker’s entity‑name, if any
         const blockerId = item.connectionEntity.getComponent(PassageDetailsComponent)?.blockerEntityId;
         const blockerEnt = blockerId ? context.entityManager.getEntityInstance(blockerId) : null;
         const blockerName = blockerEnt ? getDisplayName(blockerEnt).toLowerCase() : null;
 
-        // Only consider for name match if NOT already a direction match
         if (!isDirectionMatch && ((entityName && entityName.includes(lowerCaseTarget)) || (blockerName && blockerName.includes(lowerCaseTarget)))) {
-            // Ensure we only add each unique *entity* once to nameMatches,
-            // even if it's reachable via multiple directions whose names match.
             if (!nameMatchEntityIds.has(item.connectionEntity.id)) {
                 results.nameMatches.push(item);
                 nameMatchEntityIds.add(item.connectionEntity.id);
@@ -126,62 +114,60 @@ function findPotentialConnectionMatches(context, connectionTargetName) { // NOTE
         }
     }
 
-    // AC4: Return the structured results
     return results;
 } // End findPotentialConnectionMatches
 
 
 /**
- * **CONN-5.1.3 Implementation:** Resolves a target Connection entity based on user input (direction or name).
- * Moved from targetResolutionService.js (Sub-Ticket 3.3).
- * Uses a provided function (findMatchesFn) internally for finding potential matches.
- * Handles ambiguity and dispatches appropriate messages using eventBus from context. // <<< Updated doc comment
- * @param {ActionContext} context - The action context, requires `eventBus`. // <<< Updated doc comment
+ * **CONN-5.1.3 Implementation:** Resolves a target Connection entity based on user input.
+ * Handles ambiguity and dispatches messages using the validated dispatcher from context.
+ * @param {ActionContext & { validatedDispatcher: ValidatedEventDispatcher, logger: ILogger }} context - The action context, **MUST** include `validatedDispatcher` and `logger`. Also needs `eventBus` (implicitly used by dispatcher), `currentLocation`, `entityManager`.
  * @param {string} connectionTargetName - The raw target string from the user.
  * @param {string} [actionVerb='go'] - The verb used in ambiguity messages.
- * @param {(context: ActionContext, targetName: string) => PotentialConnectionMatches} [findMatchesFn=findPotentialConnectionMatches] - The function to use for finding matches.
- * @returns {Entity | null} The resolved Connection entity or null if not found/ambiguous.
+ * // Update the type definition for findMatchesFn to include the logger
+ * @param {(context: ActionContext, targetName: string, logger: ILogger) => PotentialConnectionMatches} [findMatchesFn=findPotentialConnectionMatches] - The function to use for finding matches.
+ * @returns {Promise<Entity | null>} The resolved Connection entity or null if not found/ambiguous.
  */
-export function resolveTargetConnection(
+export async function resolveTargetConnection(
     context,
     connectionTargetName,
     actionVerb = 'go',
     findMatchesFn = findPotentialConnectionMatches
 ) {
-    // --- Corrected: Get eventBus from context ---
-    const {eventBus} = context;
+    // --- Get required dependencies from context ---
+    const {validatedDispatcher, logger} = context; // Expect these to be passed in context
 
-    // --- Step 1: Validate Inputs ---
-    // --- Corrected: Validate eventBus and its dispatch method ---
-    if (!context || !eventBus || typeof eventBus.dispatch !== 'function') {
-        console.error("resolveTargetConnection (in ConnectionResolver): Invalid context or missing eventBus/dispatch function provided.");
+    // --- Step 1: Validate Inputs & Dependencies ---
+    if (!context || !validatedDispatcher || typeof validatedDispatcher.dispatchValidated !== 'function' || !logger || typeof logger.warn !== 'function' || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+        // Use console.error as logger might be missing
+        console.error("resolveTargetConnection (in ConnectionResolver): Invalid context or missing validatedDispatcher/logger functions provided.");
         return null;
     }
     const trimmedTargetName = typeof connectionTargetName === 'string' ? connectionTargetName.trim() : '';
     if (trimmedTargetName === '') {
-        console.warn("resolveTargetConnection (in ConnectionResolver): Invalid or empty connectionTargetName provided.");
+        logger.warn("resolveTargetConnection (in ConnectionResolver): Invalid or empty connectionTargetName provided.");
         return null;
     }
 
-    // --- Step 2: Find Potential Matches (CONN-5.1.2 via Injection) ---
-    const {directionMatches, nameMatches} = findMatchesFn(context, trimmedTargetName);
-    console.log(`resolveTargetConnection (in ConnectionResolver): Matches for '${trimmedTargetName}': Directions=${directionMatches.length}, Names=${nameMatches.length}`);
+    // --- Step 2: Find Potential Matches ---
+    // Pass the logger to the findMatchesFn
+    const {directionMatches, nameMatches} = findMatchesFn(context, trimmedTargetName, logger); // <-- Pass logger here
+    logger.debug(`resolveTargetConnection: Matches for '${trimmedTargetName}': Directions=${directionMatches.length}, Names=${nameMatches.length}`);
 
     // ================================================================
-    // --- Step 3: Resolve Priority and Ambiguity (CONN-5.1.3 Logic) ---
+    // --- Step 3: Resolve Priority and Ambiguity ---
     // ================================================================
 
-    // AC1: Priority Check - Check directionMatches first.
-    // AC2: Unique Direction Match
+    // Unique Direction Match
     if (directionMatches.length === 1) {
         const match = directionMatches[0];
-        console.log(`resolveTargetConnection (in ConnectionResolver): Found unique direction match: ${match.direction} -> ${match.connectionEntity.id}`);
-        return match.connectionEntity; // Return the Connection Entity
+        logger.info(`resolveTargetConnection: Found unique direction match: ${match.direction} -> ${match.connectionEntity.id}`);
+        return match.connectionEntity;
     }
 
-    // AC3: Ambiguous Direction Match
+    // Ambiguous Direction Match
     if (directionMatches.length > 1) {
-        console.warn(`resolveTargetConnection (in ConnectionResolver): Ambiguous direction match for '${trimmedTargetName}'.`);
+        logger.warn(`resolveTargetConnection: Ambiguous direction match for '${trimmedTargetName}'. Dispatching message.`);
         const displayNames = directionMatches.map(item => getDisplayName(item.connectionEntity) || item.direction || item.connectionEntity.id);
         let ambiguousMsg;
         if (TARGET_MESSAGES.AMBIGUOUS_DIRECTION) {
@@ -189,22 +175,24 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `There are multiple ways to go '${trimmedTargetName}'. Which one did you mean? (${displayNames.join(', ')})`;
         }
-        // --- Corrected: Use eventBus.dispatch ---
-        eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: ambiguousMsg, type: 'warning'});
+
+        // --- Refactored Dispatch Logic ---
+        // Line: 142 (approx)
+        await validatedDispatcher.dispatchValidated("event:display_message", {text: ambiguousMsg, type: 'warning'});
+        // --- End Refactored Dispatch Logic ---
         return null;
     }
 
-    // AC4: Name Match Check (If No Direction Match)
-    // AC5: Unique Name Match
+    // Unique Name Match
     if (nameMatches.length === 1) {
         const match = nameMatches[0];
-        console.log(`resolveTargetConnection (in ConnectionResolver): Found unique name match: ${getDisplayName(match.connectionEntity)} (${match.connectionEntity.id}) via direction ${match.direction}`);
+        logger.info(`resolveTargetConnection: Found unique name match: ${getDisplayName(match.connectionEntity)} (${match.connectionEntity.id}) via direction ${match.direction}`);
         return match.connectionEntity;
     }
 
-    // AC6: Ambiguous Name Match
+    // Ambiguous Name Match
     if (nameMatches.length > 1) {
-        console.warn(`resolveTargetConnection (in ConnectionResolver): Ambiguous name match for '${trimmedTargetName}'.`);
+        logger.warn(`resolveTargetConnection: Ambiguous name match for '${trimmedTargetName}'. Dispatching message.`);
         const displayNames = nameMatches.map(item => getDisplayName(item.connectionEntity) || item.direction || item.connectionEntity.id);
         let ambiguousMsg;
         if (TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT) {
@@ -213,15 +201,21 @@ export function resolveTargetConnection(
         } else {
             ambiguousMsg = `Which '${trimmedTargetName}' did you want to ${actionVerb}? (${displayNames.join(', ')})`;
         }
-        // --- Corrected: Use eventBus.dispatch ---
-        eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: ambiguousMsg, type: 'warning'});
+
+        // --- Refactored Dispatch Logic ---
+        // Line: 165 (approx)
+        await validatedDispatcher.dispatchValidated("event:display_message", {text: ambiguousMsg, type: 'warning'});
+        // --- End Refactored Dispatch Logic ---
         return null;
     }
 
-    // AC7: Not Found
-    console.log(`resolveTargetConnection (in ConnectionResolver): No direction or name matches found for '${trimmedTargetName}'.`);
+    // Not Found
+    logger.info(`resolveTargetConnection: No direction or name matches found for '${trimmedTargetName}'. Dispatching message.`);
     const notFoundMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(trimmedTargetName);
-    // --- Corrected: Use eventBus.dispatch ---
-    eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: notFoundMsg, type: 'info'});
+
+    // --- Refactored Dispatch Logic ---
+    // Line: 172 (approx)
+    await validatedDispatcher.dispatchValidated("event:display_message", {text: notFoundMsg, type: 'info'});
+    // --- End Refactored Dispatch Logic ---
     return null;
 }

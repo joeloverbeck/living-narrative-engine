@@ -127,11 +127,20 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         entityManager: c.resolve('EntityManager'), // gameDataRepository: c.resolve('GameDataRepository') // Uncomment if needed later
     }), {lifecycle: 'singleton'});
 
-    container.register('ItemTargetResolverService', (c) => new ItemTargetResolverService({
-        entityManager: c.resolve('EntityManager'),
-        eventBus: c.resolve('EventBus'),
-        conditionEvaluationService: c.resolve('ConditionEvaluationService')
-    }), {lifecycle: 'singleton'});
+    container.register('ItemTargetResolverService', (c) => {
+        // Resolve the NEW dependencies
+        const resolvedLogger = c.resolve('ILogger');
+        const validatedDispatcher = c.resolve('ValidatedEventDispatcher'); // Resolve the validated dispatcher
+
+        resolvedLogger.info("ContainerConfig: Creating ItemTargetResolverService instance with dependencies...");
+        // Pass NEW dependencies to constructor
+        return new ItemTargetResolverService({
+            entityManager: c.resolve('EntityManager'), // eventBus: c.resolve('EventBus'), // No longer inject raw EventBus
+            validatedDispatcher: validatedDispatcher, // Inject ValidatedEventDispatcher instead
+            conditionEvaluationService: c.resolve('ConditionEvaluationService'), logger: resolvedLogger // Inject ILogger
+        });
+    }, {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered ItemTargetResolverService (with validated dispatcher and logger).");
 
     // +++ ADD TargetResolutionService Registration +++
     container.register('TargetResolutionService', (c) => {

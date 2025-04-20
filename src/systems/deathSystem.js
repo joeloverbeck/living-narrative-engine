@@ -1,7 +1,7 @@
 // src/systems/deathSystem.js
 
 import {PositionComponent} from '../components/positionComponent.js';
-import {EVENT_ENTITY_DIED, EVENT_ENTITY_LOOT_SPAWN_REQUESTED} from "../types/eventTypes.js"; // Import PositionComponent
+import {"event:entity_died", EVENT_ENTITY_LOOT_SPAWN_REQUESTED} from "../types/eventTypes.js"; // Import PositionComponent
 // Other necessary imports remain the same
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
@@ -34,16 +34,16 @@ class DeathSystem {
     }
 
     /**
-     * Subscribes to the EVENT_ENTITY_DIED event. Call this after instantiation.
+     * Subscribes to the "event:entity_died" event. Call this after instantiation.
      */
     initialize() {
         // Bind the handler to ensure 'this' context is correct when called by EventBus
-        this.#eventBus.subscribe(EVENT_ENTITY_DIED, this._handleEntityDied.bind(this));
-        console.log("DeathSystem: Initialized and subscribed to '" + EVENT_ENTITY_DIED + "'.");
+        this.#eventBus.subscribe("event:entity_died", this._handleEntityDied.bind(this));
+        console.log("DeathSystem: Initialized and subscribed to '" + "event:entity_died" + "'.");
     }
 
     /**
-     * Handles the EVENT_ENTITY_DIED event.
+     * Handles the "event:entity_died" event.
      * Determines the location of the deceased entity using its PositionComponent.
      * This location ID can be used for subsequent events (e.g., loot spawning).
      * @param {object} eventData
@@ -55,7 +55,7 @@ class DeathSystem {
         const {deceasedEntityId} = eventData;
 
         if (!deceasedEntityId) {
-            console.error(`DeathSystem: Received '${EVENT_ENTITY_DIED}' without a deceasedEntityId.`, eventData);
+            console.error(`DeathSystem: Received '${"event:entity_died"}' without a deceasedEntityId.`, eventData);
             return;
         }
 

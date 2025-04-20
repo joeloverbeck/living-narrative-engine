@@ -1,10 +1,8 @@
 // src/test/systems/moveCoordinatorSystem.test.js
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
+import MoveCoordinatorSystem from "../../systems/moveCoordinatorSystem.js";
 
-// Class under test
-import MoveCoordinatorSystem from '../../systems/moveCoordinatorSystem.js';
-import {EVENT_MOVE_ATTEMPTED, EVENT_MOVE_FAILED} from "../../types/eventTypes.js"; // Adjust path if needed
 
 // Mocked Dependencies (using manual mocks pattern from examples)
 // No need to import the actual classes unless needed for instanceof checks or static properties
@@ -84,7 +82,7 @@ describe('MoveCoordinatorSystem', () => {
 
         // Set default mock return values
         mockEntityManager.getEntityInstance.mockReturnValue(undefined); // Default: not found
-        mockBlockerSystem.checkMovementBlock.mockReturnValue({ blocked: false }); // Default: not blocked
+        mockBlockerSystem.checkMovementBlock.mockReturnValue({blocked: false}); // Default: not blocked
         mockMovementSystem.executeMove.mockReturnValue(true); // Default: success
 
         // Create a new system instance for each test
@@ -97,10 +95,14 @@ describe('MoveCoordinatorSystem', () => {
         });
 
         // Spy on console methods
-        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+        consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
+        });
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+        });
+        consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {
+        });
 
         // <<< ADD THIS LINE >>>
         system.initialize(); // Ensure the handler is subscribed for tests
@@ -125,16 +127,16 @@ describe('MoveCoordinatorSystem', () => {
 
     // AC 2: `initialize()` Test Case
     describe('initialize', () => {
-        it(`should subscribe #handleMoveAttempted to ${EVENT_MOVE_ATTEMPTED} on the eventBus`, () => {
+        it(`should subscribe #handleMoveAttempted to ${"event:move_attempted"} on the eventBus`, () => {
             // The subscribe call happened in beforeEach, so we can assert it here.
             expect(mockEventBus.subscribe).toHaveBeenCalledTimes(1); // Should now pass
             expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-                EVENT_MOVE_ATTEMPTED,
+                "event:move_attempted",
                 expect.any(Function)
             );
 
             // Verify the log message from initialize
-            expect(consoleLogSpy).toHaveBeenCalledWith(`MoveCoordinatorSystem: Initialized. Listening for '${EVENT_MOVE_ATTEMPTED}'.`);
+            expect(consoleLogSpy).toHaveBeenCalledWith(`MoveCoordinatorSystem: Initialized. Listening for '${"event:move_attempted"}'.`);
         });
     });
 
@@ -146,19 +148,19 @@ describe('MoveCoordinatorSystem', () => {
             previousLocationId: 'loc-prev',
             blockerEntityId: undefined, // Explicitly undefined by default
         };
-        const mockTargetLocationEntity = { id: basePayload.targetLocationId, name: 'Target Room' };
+        const mockTargetLocationEntity = {id: basePayload.targetLocationId, name: 'Target Room'};
 
         // AC 3: Successful Move Scenario
         it('should coordinate a successful move when checks pass', async () => {
-            const payload = { ...basePayload };
+            const payload = {...basePayload};
 
             // Arrange: Configure mocks for success path
             mockEntityManager.getEntityInstance.mockReturnValue(mockTargetLocationEntity);
-            mockBlockerSystem.checkMovementBlock.mockReturnValue({ blocked: false, reasonCode: null, details: null });
+            mockBlockerSystem.checkMovementBlock.mockReturnValue({blocked: false, reasonCode: null, details: null});
             mockMovementSystem.executeMove.mockReturnValue(true);
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify mock calls and arguments
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -181,18 +183,18 @@ describe('MoveCoordinatorSystem', () => {
             });
 
             // Assert: Verify failure event was NOT dispatched
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(EVENT_MOVE_FAILED, expect.anything());
+            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith("event:move_failed", expect.anything());
         });
 
         // AC 4: Failure: Target Location Not Found (TRG-8.2)
-        it(`should dispatch ${EVENT_MOVE_FAILED} with TARGET_LOCATION_NOT_FOUND if target location is missing`, async () => {
-            const payload = { ...basePayload };
+        it(`should dispatch ${"event:move_failed"} with TARGET_LOCATION_NOT_FOUND if target location is missing`, async () => {
+            const payload = {...basePayload};
 
             // Arrange: Mock entity manager to return null
             mockEntityManager.getEntityInstance.mockReturnValue(null);
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify only getEntityInstance was called
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -202,7 +204,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: payload.entityId,
                 direction: payload.direction,
                 previousLocationId: payload.previousLocationId,
@@ -217,8 +219,8 @@ describe('MoveCoordinatorSystem', () => {
         });
 
         // AC 5: Failure: Blocker Check Returns Blocked (TRG-8.3)
-        it(`should dispatch ${EVENT_MOVE_FAILED} with blocker details if checkMovementBlock returns blocked`, async () => {
-            const payload = { ...basePayload, blockerEntityId: 'door1' }; // Include a potential blocker ID
+        it(`should dispatch ${"event:move_failed"} with blocker details if checkMovementBlock returns blocked`, async () => {
+            const payload = {...basePayload, blockerEntityId: 'door1'}; // Include a potential blocker ID
             const blockerResult = {
                 blocked: true,
                 reasonCode: 'DIRECTION_LOCKED',
@@ -232,7 +234,7 @@ describe('MoveCoordinatorSystem', () => {
             mockBlockerSystem.checkMovementBlock.mockReturnValue(blockerResult);
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify calls up to blocker check
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -247,7 +249,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch using blocker details
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: payload.entityId,
                 direction: payload.direction,
                 previousLocationId: payload.previousLocationId,
@@ -261,16 +263,16 @@ describe('MoveCoordinatorSystem', () => {
         });
 
         // AC 6: Failure: Movement Execution Returns `false` (TRG-8.5)
-        it(`should dispatch ${EVENT_MOVE_FAILED} with MOVEMENT_EXECUTION_FAILED if executeMove returns false`, async () => {
-            const payload = { ...basePayload };
+        it(`should dispatch ${"event:move_failed"} with MOVEMENT_EXECUTION_FAILED if executeMove returns false`, async () => {
+            const payload = {...basePayload};
 
             // Arrange: Mock dependencies for this path
             mockEntityManager.getEntityInstance.mockReturnValue(mockTargetLocationEntity);
-            mockBlockerSystem.checkMovementBlock.mockReturnValue({ blocked: false });
+            mockBlockerSystem.checkMovementBlock.mockReturnValue({blocked: false});
             mockMovementSystem.executeMove.mockReturnValue(false); // Simulate executeMove failure
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify all steps were attempted
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -279,7 +281,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: payload.entityId,
                 direction: payload.direction,
                 previousLocationId: payload.previousLocationId,
@@ -294,19 +296,19 @@ describe('MoveCoordinatorSystem', () => {
         });
 
         // AC 7: Failure: Movement Execution Throws Error (Inner Catch)
-        it(`should dispatch ${EVENT_MOVE_FAILED} with MOVE_EXECUTION_ERROR if executeMove throws an error`, async () => {
-            const payload = { ...basePayload };
+        it(`should dispatch ${"event:move_failed"} with MOVE_EXECUTION_ERROR if executeMove throws an error`, async () => {
+            const payload = {...basePayload};
             const movementError = new Error('Internal movement system crash');
 
             // Arrange: Mock dependencies, make executeMove throw
             mockEntityManager.getEntityInstance.mockReturnValue(mockTargetLocationEntity);
-            mockBlockerSystem.checkMovementBlock.mockReturnValue({ blocked: false });
+            mockBlockerSystem.checkMovementBlock.mockReturnValue({blocked: false});
             mockMovementSystem.executeMove.mockImplementation(() => {
                 throw movementError;
             });
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify all steps were attempted
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -315,7 +317,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: payload.entityId,
                 direction: payload.direction,
                 previousLocationId: payload.previousLocationId,
@@ -334,8 +336,8 @@ describe('MoveCoordinatorSystem', () => {
         });
 
         // AC 8: Failure: Unexpected Internal Coordinator Error (Top-Level Catch - TRG-8.6)
-        it(`should dispatch ${EVENT_MOVE_FAILED} with COORDINATOR_INTERNAL_ERROR if a dependency throws unexpectedly (top-level catch)`, async () => {
-            const payload = { ...basePayload };
+        it(`should dispatch ${"event:move_failed"} with COORDINATOR_INTERNAL_ERROR if a dependency throws unexpectedly (top-level catch)`, async () => {
+            const payload = {...basePayload};
             const unexpectedError = new Error('Unexpected BlockerSystem failure');
 
             // Arrange: Mock dependencies, make blocker check throw
@@ -345,7 +347,7 @@ describe('MoveCoordinatorSystem', () => {
             });
 
             // Act: Call the handler VIA the event bus simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, payload);
+            await mockEventBus.simulateEvent("event:move_attempted", payload);
 
             // Assert: Verify steps up to the failing one
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
@@ -354,7 +356,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: payload.entityId,
                 direction: payload.direction,
                 previousLocationId: payload.previousLocationId,
@@ -387,7 +389,7 @@ describe('MoveCoordinatorSystem', () => {
             });
 
             // Act: Call the handler with invalid payload VIA event simulation
-            await mockEventBus.simulateEvent(EVENT_MOVE_ATTEMPTED, invalidPayload);
+            await mockEventBus.simulateEvent("event:move_attempted", invalidPayload);
 
             // Assert: Verify mock calls (Adjusted for immediate destructuring error)
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(0); // <<< CORRECTED: Not called due to early TypeError
@@ -396,7 +398,7 @@ describe('MoveCoordinatorSystem', () => {
 
             // Assert: Verify failure event dispatch with fallback IDs
             expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1); // <<< Should now be reached and pass
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(EVENT_MOVE_FAILED, {
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith("event:move_failed", {
                 actorId: 'Unknown Actor',
                 direction: 'Unknown Direction',
                 previousLocationId: 'Unknown Previous',

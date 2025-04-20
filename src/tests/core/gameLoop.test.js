@@ -2,7 +2,6 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
-import {EVENT_DISPLAY_MESSAGE} from "../../types/eventTypes.js";
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
@@ -187,7 +186,7 @@ describe('GameLoop', () => {
             expect(mockInputHandler.enable).toHaveBeenCalledTimes(1);
             // Check the dispatch from promptInput, using the correct placeholder from start()
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:enable_input', {placeholder: 'Enter command...'});
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({type: 'error'}));
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith("event:display_message", expect.objectContaining({type: 'error'}));
         });
 
         it('Failure Case: should dispatch error, not set isRunning, and call stop if player is missing', async () => { // <-- Add async
@@ -198,7 +197,7 @@ describe('GameLoop', () => {
             await gameLoop.start(); // <-- Add await
 
             expect(gameLoop.isRunning).toBe(false);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: expect.stringContaining('Critical Error: GameLoop cannot start'), // Keep this flexible
                 type: 'error',
             });
@@ -210,7 +209,7 @@ describe('GameLoop', () => {
             // CHANGE 2a: Update expected message
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:disable_input', {message: 'Game stopped due to initialization error.'});
             // CHANGE 2b: Update expected message
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: 'Game stopped due to initialization error.',
                 type: 'info'
             });
@@ -224,7 +223,7 @@ describe('GameLoop', () => {
             await gameLoop.start(); // <-- Add await
 
             expect(gameLoop.isRunning).toBe(false);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: expect.stringContaining('Critical Error: GameLoop cannot start'), // Keep this flexible
                 type: 'error',
             });
@@ -236,7 +235,7 @@ describe('GameLoop', () => {
             // CHANGE 3a: Update expected message
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:disable_input', {message: 'Game stopped due to initialization error.'});
             // CHANGE 3b: Update expected message
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: 'Game stopped due to initialization error.',
                 type: 'info'
             });
@@ -294,7 +293,7 @@ describe('GameLoop', () => {
 
         it('When Running: should dispatch ui:message_display event with info', () => {
             gameLoop.stop();
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: 'Game stopped.',
                 type: 'info',
             });
@@ -315,7 +314,7 @@ describe('GameLoop', () => {
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
             expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith('event:disable_input', expect.any(Object));
             // Check specifically for the 'Game stopped.' message
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, expect.objectContaining({text: 'Game stopped.'}));
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith("event:display_message", expect.objectContaining({text: 'Game stopped.'}));
         });
     });
     // AC 6: promptInput() Method Tests
@@ -662,7 +661,7 @@ describe('GameLoop', () => {
             );
 
             // Verify error event was dispatched
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });
@@ -692,7 +691,7 @@ describe('GameLoop', () => {
             );
 
             // Verify error event was dispatched
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(EVENT_DISPLAY_MESSAGE, {
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith("event:display_message", {
                 text: "Internal Error: Game state inconsistent.",
                 type: "error"
             });

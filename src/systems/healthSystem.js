@@ -4,8 +4,8 @@
 import {
     EVENT_APPLY_HEAL_REQUESTED,
     EVENT_INFLICT_DAMAGE_REQUESTED,
-    EVENT_DISPLAY_MESSAGE, // Needed for feedback
-    EVENT_ENTITY_DIED     // Needed to dispatch death event
+    "event:display_message", // Needed for feedback
+    "event:entity_died"     // Needed to dispatch death event
 } from '../types/eventTypes.js';
 
 // Import required components and utilities
@@ -81,7 +81,7 @@ class HealthSystem {
             targetEntity = payload.validatedTargetId ? this.#entityManager.getEntityInstance(payload.validatedTargetId) : null;
         } else {
             console.error(`[HealthSystem] Heal failed: Unknown healTargetSpecifier '${payload.healTargetSpecifier}' from item ${payload.itemDefinitionId} (Instance: ${payload.itemInstanceId})`);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: "Internal error: Cannot determine heal target.",
                 type: 'error'
             });
@@ -90,7 +90,7 @@ class HealthSystem {
 
         if (!targetEntity) {
             console.warn(`[HealthSystem] Heal failed: Target entity not found (Specifier: '${payload.healTargetSpecifier}', Attempted ID: ${targetEntityIdForLog}). Source Item: ${payload.sourceItemName} (${payload.itemDefinitionId})`);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: "Cannot heal that.", type: 'warning'});
+            this.#eventBus.dispatch("event:display_message", {text: "Cannot heal that.", type: 'warning'});
             return;
         }
 
@@ -100,7 +100,7 @@ class HealthSystem {
 
         if (!healthComponent) {
             console.warn(`[HealthSystem] Heal failed: Target entity '${targetName}' (ID: ${targetEntity.id}) does not have a HealthComponent. Source Item: ${payload.sourceItemName}`);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: `The ${targetName} cannot be healed.`,
                 type: 'warning'
             });
@@ -109,7 +109,7 @@ class HealthSystem {
 
         if (healthComponent.current >= healthComponent.max) {
             const subject = (targetEntity.id === payload.userId) ? "You are" : `${targetName} is`;
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: `${subject} already at full health.`, type: 'info'});
+            this.#eventBus.dispatch("event:display_message", {text: `${subject} already at full health.`, type: 'info'});
             console.debug(`[HealthSystem] Heal skipped: Target '${targetName}' (ID: ${targetEntity.id}) already at full health (${healthComponent.current}/${healthComponent.max}). Source Item: ${payload.sourceItemName}`);
             return;
         }
@@ -117,7 +117,7 @@ class HealthSystem {
         const healAmount = payload.amount;
         if (typeof healAmount !== 'number' || healAmount < 0) {
             console.warn(`[HealthSystem] Heal failed: Invalid heal amount (${healAmount}) received for target '${targetName}'. Source Item: ${payload.sourceItemName}`);
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: "Cannot apply healing due to invalid amount.",
                 type: 'warning'
             });
@@ -154,7 +154,7 @@ class HealthSystem {
 
             }
 
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
+            this.#eventBus.dispatch("event:display_message", {
                 text: successMessage,
                 type: 'success'
             });
@@ -231,16 +231,16 @@ class HealthSystem {
                 deceasedEntityId: targetId,
                 killerEntityId: sourceEntityId // Can be null/undefined if damage source wasn't an entity (e.g., poison)
             };
-            this.#eventBus.dispatch(EVENT_ENTITY_DIED, deathPayload);
+            this.#eventBus.dispatch("event:entity_died", deathPayload);
 
             // --- 7b. Dispatch UI Death Message ---
             // Consider if killer name is needed/available
             // const killerEntity = sourceEntityId ? this.#entityManager.getEntityInstance(sourceEntityId) : null;
             // const killerName = killerEntity ? getDisplayName(killerEntity) : 'Something';
             const deathMessage = `The ${targetName} collapses, defeated!`; // Simple message
-            this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {text: deathMessage, type: 'combat_critical'}); // Critical event type
+            this.#eventBus.dispatch("event:display_message", {text: deathMessage, type: 'combat_critical'}); // Critical event type
 
-            // TODO: Future: Other systems listen to EVENT_ENTITY_DIED for XP, loot, quests etc.
+            // TODO: Future: Other systems listen to "event:entity_died" for XP, loot, quests etc.
         }
         // No specific UI message for *just* taking damage here, as CombatSystem handles the "hit" message.
         // We could add one if needed (e.g., "The Goblin takes 5 damage.") but it might be redundant.

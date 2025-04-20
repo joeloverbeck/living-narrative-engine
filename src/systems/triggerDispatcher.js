@@ -2,7 +2,6 @@
 
 // Import necessary components used by action implementations
 import {ConnectionsComponent} from "../components/connectionsComponent.js"; // eslint-disable-line no-unused-vars
-import {EVENT_ENTITY_DIED, EVENT_ENTITY_MOVED} from "../types/eventTypes.js"; // eslint-disable-line no-unused-vars
 
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 

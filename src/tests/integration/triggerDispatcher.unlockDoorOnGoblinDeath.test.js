@@ -5,11 +5,11 @@
 //
 //  * The door starts locked and has a keyId that does NOT exist in the world
 //    (to guarantee there is *no* matching key instance during the test).
-//  * The trigger fires on EVENT_ENTITY_DIED where deceasedEntityId is the
+//  * The trigger fires on "event:entity_died" where deceasedEntityId is the
 //    goblin, and emits **event:unlock_entity_force**.
 //  * The LockSystem handler for event:unlock_entity_force bypasses
 //    key checks and unlocks the door immediately.
-//  * The test asserts both that EVENT_ENTITY_UNLOCKED is produced (with force:true),
+//  * The test asserts both that "event:entity_unlocked" is produced (with force:true),
 //    and that the LockableComponent state flips to `isLocked: false`.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -23,11 +23,6 @@ import LockSystem from '../../systems/lockSystem.js'; // <<< Assuming LockSystem
 import LockableComponent from '../../components/lockableComponent.js';
 import {NameComponent} from '../../components/nameComponent.js';
 
-import {
-    EVENT_ENTITY_DIED,
-    EVENT_ENTITY_UNLOCKED,
-    // EVENT_UNLOCK_ENTITY_FORCE // <<< No longer needed for direct subscription in test
-} from '../../types/eventTypes.js';
 
 import {waitForEvent} from '../testUtils.js';
 
@@ -37,7 +32,7 @@ import {waitForEvent} from '../testUtils.js';
 const TRIGGER_DEF = {
     id: 'demo:trigger_unlock_treasure_door_on_goblin_death',
     listen_to: {
-        event_type: EVENT_ENTITY_DIED,
+        event_type: "event:entity_died",
         filters: {deceasedEntityId: 'demo:enemy_goblin'}
     },
     effects: [
@@ -122,24 +117,24 @@ describe('Force‑unlock keyed door on goblin death (via LockSystem)', () => {
         em.clearAll();
     });
 
-    it('unlocks the treasure room door via EVENT_UNLOCK_ENTITY_FORCE handled by LockSystem', async () => {
+    it('unlocks the treasure room door via "event:unlock_entity_force" handled by LockSystem', async () => {
         // 1. Preconditions
         const door = em.getEntityInstance('demo:door_treasure_room');
         expect(door).toBeDefined(); // Good practice to ensure entity exists
         expect(door.getComponent(LockableComponent).isLocked).toBe(true);
 
         // 2. Act – kill the goblin, which triggers the event dispatch via TriggerDispatcher
-        await bus.dispatch(EVENT_ENTITY_DIED, {
+        await bus.dispatch("event:entity_died", {
             deceasedEntityId: 'demo:enemy_goblin',
             killerEntityId: null
         });
 
-        // 3. Assert – EVENT_ENTITY_UNLOCKED is fired by LockSystem._handleForceUnlock
+        // 3. Assert – "event:entity_unlocked" is fired by LockSystem._handleForceUnlock
         //    Note: The trigger dispatches 'event:unlock_entity_force',
-        //          LockSystem handles it and dispatches EVENT_ENTITY_UNLOCKED.
+        //          LockSystem handles it and dispatches "event:entity_unlocked".
         await waitForEvent(
             spy,
-            EVENT_ENTITY_UNLOCKED, // <<< We expect this event from LockSystem
+            "event:entity_unlocked", // <<< We expect this event from LockSystem
             expect.objectContaining({
                 targetEntityId: 'demo:door_treasure_room',
                 force: true // <<< Check the force flag is correctly passed through
@@ -154,11 +149,11 @@ describe('Force‑unlock keyed door on goblin death (via LockSystem)', () => {
 
         // 5. Safety – check trigger is one‑shot (no change needed here)
         spy.mockClear();
-        await bus.dispatch(EVENT_ENTITY_DIED, {deceasedEntityId: 'demo:enemy_goblin'});
-        // We should not see *another* EVENT_ENTITY_UNLOCKED because the trigger is one-shot
+        await bus.dispatch("event:entity_died", {deceasedEntityId: 'demo:enemy_goblin'});
+        // We should not see *another* "event:entity_unlocked" because the trigger is one-shot
         // and should have been deactivated after the first firing.
         expect(spy).not.toHaveBeenCalledWith(
-            EVENT_ENTITY_UNLOCKED,
+            "event:entity_unlocked",
             expect.objectContaining({targetEntityId: 'demo:door_treasure_room'})
         );
         // Optionally, also check that 'event:unlock_entity_force' wasn't dispatched again
