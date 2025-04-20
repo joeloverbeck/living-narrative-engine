@@ -120,7 +120,16 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }, {lifecycle: 'singleton'});
 
     // --- 6. Renderer ---
-    container.register('DomRenderer', (c) => new DomRenderer(c.resolve('outputDiv'), c.resolve('inputElement'), c.resolve('titleElement'), c.resolve('EventBus')), {lifecycle: 'singleton'});
+    container.register('DomRenderer', (c) => new DomRenderer(
+        c.resolve('outputDiv'),
+        c.resolve('inputElement'),
+        c.resolve('titleElement'),
+        c.resolve('EventBus'),
+        c.resolve('ValidatedEventDispatcher'), // Inject ValidatedEventDispatcher
+        c.resolve('ILogger')                  // Inject ILogger
+    ), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered DomRenderer (with ValidatedEventDispatcher and ILogger).");
+
 
     // --- 7. Core Game Logic Services ---
     container.register('ConditionEvaluationService', (c) => new ConditionEvaluationService({
@@ -221,9 +230,11 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     container.register('QuestPrerequisiteService', () => new QuestPrerequisiteService(), {lifecycle: 'singleton'});
     container.register('QuestRewardService', (c) => new QuestRewardService({
         gameDataRepository: c.resolve('GameDataRepository'),
-        eventBus: c.resolve('EventBus'),
-        gameStateManager: c.resolve('GameStateManager')
+        gameStateManager: c.resolve('GameStateManager'),
+        validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
+        logger: c.resolve('ILogger')
     }), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered QuestRewardService (with ValidatedDispatcher and Logger).");
     container.register('ObjectiveEventListenerService', (c) => new ObjectiveEventListenerService({
         eventBus: c.resolve('EventBus'), gameDataRepository: c.resolve('GameDataRepository')
     }), {lifecycle: 'singleton'});

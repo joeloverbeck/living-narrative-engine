@@ -564,9 +564,6 @@ export const "event:unlock_entity_force"
 // == UI Events (ui:) =====================================================
 // ========================================================================
 
-// --- UI Event Name Constants ---
-export const EVENT_UPDATE_ACTIONS = 'event:update_actions';
-// Add other UI event names as needed
 
 /**
  * Defines the payload structure for the ui:message_display event.
@@ -597,7 +594,7 @@ export const EVENT_UPDATE_ACTIONS = 'event:update_actions';
  */
 
 /**
- * Defines the payload structure for the EVENT_UPDATE_ACTIONS.
+ * Defines the payload structure for the "event:update_available_actions".
  * Communicates the list of currently available actions for the player to the UI.
  * This allows the UI to dynamically render action buttons or other interactive elements.
  *
