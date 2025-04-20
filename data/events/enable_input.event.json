@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:enable_input",
+  "description": "Signals the UI to enable the command input field, optionally setting its placeholder text, and potentially focusing it.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "placeholder": {
+        "description": "The placeholder text to display in the input field when it's empty (e.g., 'Enter command...').",
+        "type": "string"
+      }
+    },
+    "required": [
+      "placeholder"
+    ],
+    "additionalProperties": false,
+    "$comment": "This event tells the UI that the game is ready for the next command. The placeholder provides guidance to the user."
+  }
+}

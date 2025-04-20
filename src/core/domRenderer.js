@@ -127,15 +127,15 @@ class DomRenderer {
     #subscribeToEvents() {
         // --- Standard UI Events ---
         this.#eventBus.subscribe(EVENT_DISPLAY_MESSAGE, this.#handleMessageDisplay.bind(this));
-        this.#eventBus.subscribe('ui:command_echo', this.#handleCommandEcho.bind(this));
-        this.#eventBus.subscribe('ui:enable_input', this.#handleEnableInput.bind(this));
-        this.#eventBus.subscribe('ui:disable_input', this.#handleDisableInput.bind(this));
+        this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this));
+        this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
+        this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
         this.#eventBus.subscribe(EVENT_DISPLAY_LOCATION, this.#handleDisplayLocation.bind(this));
-        this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this));
+        this.#eventBus.subscribe('event:set_title', this.#handleSetTitle.bind(this));
 
         // --- Inventory UI Events ---
-        this.#eventBus.subscribe('ui:render_inventory', this.#handleRenderInventory.bind(this));
-        this.#eventBus.subscribe('ui:toggle_inventory', () => this.toggleInventory());
+        this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
+        this.#eventBus.subscribe('event:toggle_inventory', () => this.toggleInventory());
 
         // --- Action Buttons Events (FEAT-UI-ACTIONS-03) ---
         // AC2: Subscribe to EVENT_UPDATE_ACTIONS
@@ -171,7 +171,7 @@ class DomRenderer {
         if (data && typeof data.placeholder === 'string') {
             this.setInputState(true, data.placeholder);
         } else {
-            console.warn("DomRenderer received 'ui:enable_input' with invalid/missing data, using default placeholder:", data);
+            console.warn("DomRenderer received 'event:enable_input' with invalid/missing data, using default placeholder:", data);
             this.setInputState(true, "Enter command...");
         }
     }
@@ -187,7 +187,7 @@ class DomRenderer {
 
     // #handleSetTitle, #handleRenderInventory remain the same...
     /**
-     * Handles the 'ui:set_title' event.
+     * Handles the 'event:set_title' event.
      * @private
      * @param {{text: string}} data - The event payload. Should contain the new title text.
      */
@@ -195,7 +195,7 @@ class DomRenderer {
         if (data && typeof data.text === 'string') {
             this.#titleElement.textContent = data.text;
         } else {
-            console.warn("DomRenderer received 'ui:set_title' with invalid data:", data);
+            console.warn("DomRenderer received 'event:set_title' with invalid data:", data);
         }
     }
 

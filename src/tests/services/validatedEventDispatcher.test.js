@@ -123,7 +123,7 @@ describe('ValidatedEventDispatcher', () => {
             // Arrange
             mockGameDataRepository.getEventDefinition.mockReturnValue(eventDefinitionWithSchema);
             mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-            mockSchemaValidator.validate.mockReturnValue({valid: true, errors: null});
+            mockSchemaValidator.validate.mockReturnValue({isValid: true, errors: null});
             mockEventBus.dispatch.mockResolvedValue(undefined); // Simulate successful dispatch
 
             // Act
@@ -377,7 +377,7 @@ describe('ValidatedEventDispatcher', () => {
             // Using eventDefinitionWithSchema to ensure validation part runs successfully
             mockGameDataRepository.getEventDefinition.mockReturnValue(eventDefinitionWithSchema);
             mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-            mockSchemaValidator.validate.mockReturnValue({valid: true, errors: null});
+            mockSchemaValidator.validate.mockReturnValue({isValid: true, errors: null});
             mockEventBus.dispatch.mockRejectedValue(dispatchError); // Simulate dispatch failure
 
             // Act

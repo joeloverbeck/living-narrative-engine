@@ -8,7 +8,7 @@
       "actorId": {
         "type": "string",
         "description": "The unique ID of the entity initiating the look action (usually player).",
-        "$ref": "./common.schema.json#/definitions/namespacedId"
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
       },
       "scope": {
         "type": "string",
@@ -21,7 +21,7 @@
       },
       "targetEntityId": {
         "description": "The unique ID of the specific entity being looked at, only present when scope is 'target'. Null otherwise.",
-        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId"
       }
     },
     "required": [

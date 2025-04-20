@@ -119,7 +119,7 @@ class InputHandler {
         this.#isEnabled = true;
         this.#inputElement.focus();
         // Note: Does not change the visual state (like removing disabled attribute or placeholder)
-        // That should be handled via EventBus ('ui:enable_input') if needed.
+        // That should be handled via EventBus ('event:enable_input') if needed.
     }
 
     /**
@@ -128,7 +128,7 @@ class InputHandler {
     disable() {
         this.#isEnabled = false;
         // Note: Does not change the visual state (like adding disabled attribute or placeholder)
-        // That should be handled via EventBus ('ui:disable_input') if needed.
+        // That should be handled via EventBus ('event:disable_input') if needed.
     }
 
     /**

@@ -355,10 +355,11 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         inputHandler: c.resolve('InputHandler'),
         commandParser: c.resolve('CommandParser'),
         actionExecutor: c.resolve('ActionExecutor'),
-        eventBus: c.resolve('EventBus'),
+        eventBus: c.resolve('EventBus'), // Keep EventBus injection
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository'),
         actionDiscoverySystem: c.resolve('ActionDiscoverySystem'),
+        validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
         logger: c.resolve('ILogger')
     }), {lifecycle: 'singleton'});
 

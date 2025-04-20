@@ -19,7 +19,6 @@
 
 // --- Component Class Imports ---
 import RegistryInitializer from './registryInitializer.js';
-import {EVENT_DISPLAY_MESSAGE} from "../types/eventTypes.js"; // Import event type constant
 
 /**
  * Encapsulates core game systems, manages initialization using a dependency container,
@@ -103,16 +102,16 @@ class GameEngine {
             const earlyDispatchOptions = {allowSchemaNotFound: true}; // Define once
 
             // --- Use ValidatedEventDispatcher ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Initializing Engine..."});
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Initializing Engine..."}, earlyDispatchOptions);
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: "Initializing core systems...",
                 type: 'info'
             }, earlyDispatchOptions);
 
 
             // --- Load Data (using WorldLoader) ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: `Loading Game Data for ${worldName}...`});
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: `Loading Game Data for ${worldName}...`}, earlyDispatchOptions);
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: `Loading world data for '${worldName}' via WorldLoader...`,
                 type: 'info'
             }, earlyDispatchOptions);
@@ -121,7 +120,7 @@ class GameEngine {
             await worldLoader.loadWorld(worldName);
 
             this.#logger.info(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: `World data for '${worldName}' loading process complete.`,
                 type: 'info'
             });
@@ -129,7 +128,7 @@ class GameEngine {
 
 
             // --- Resolve Managers needed for setup ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Initializing Systems..."});
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Initializing Systems..."});
 
             const entityManager = this.#container.resolve('EntityManager');
             const actionExecutor = this.#container.resolve('ActionExecutor');
@@ -164,8 +163,8 @@ class GameEngine {
 
 
             // --- Core Game Setup (Player & Starting Location via Service) ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Setting Initial Game State..."});
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Setting Initial Game State..."});
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: "Setting initial game state...",
                 type: 'info'
             });
@@ -178,8 +177,8 @@ class GameEngine {
             this.#logger.info("GameEngine: Initial game state setup completed via GameStateInitializer.");
 
             // --- Instantiate Other Initial Entities & Build Spatial Index ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Initializing World Entities..."});
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Initializing World Entities..."});
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: "Instantiating world entities...",
                 type: 'info'
             });
@@ -225,8 +224,8 @@ class GameEngine {
             this.#isInitialized = true;
             this.#logger.info(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
             // --- Use ValidatedEventDispatcher ---
-            await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Initialization Complete. Starting..."});
-            await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+            await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Initialization Complete. Starting..."});
+            await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                 text: "Initialization complete.",
                 type: 'success'
             });
@@ -241,8 +240,8 @@ class GameEngine {
             if (this.#validatedDispatcher) { // Check if dispatcher was resolved before error
                 try {
                     // --- Use ValidatedEventDispatcher ---
-                    await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Fatal Initialization Error!"});
-                    await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+                    await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Fatal Initialization Error!"});
+                    await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                         text: errorMsg,
                         type: 'error'
                     });
@@ -305,13 +304,13 @@ class GameEngine {
                 // --- Use ValidatedEventDispatcher ---
                 if (!loadedWorldName) {
                     this.#logger.warn(`GameEngine: Could not retrieve world name. Falling back to input name: ${worldName}`);
-                    await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: worldName});
-                    await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+                    await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: worldName});
+                    await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                         text: `Welcome to ${worldName}! (Name from input)`, type: "info"
                     });
                 } else {
-                    await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: loadedWorldName});
-                    await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+                    await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: loadedWorldName});
+                    await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                         text: `Welcome to ${loadedWorldName}!`, type: "info"
                     });
                 }
@@ -323,9 +322,9 @@ class GameEngine {
                 if (player && startLocation) {
                     // --- Use ValidatedEventDispatcher ---
                     await this.#validatedDispatcher.dispatchValidated('event:room_entered', {
-                        playerEntity: player, // Or player.id if schema expects ID
-                        newLocation: startLocation, // Or startLocation.id
-                        previousLocation: null
+                        playerId: player.id,
+                        newLocationId: startLocation.id,
+                        previousLocationId: null
                     });
                     this.#logger.info("GameEngine: Initial 'event:room_entered' dispatch attempted.");
                 } else {
@@ -337,17 +336,17 @@ class GameEngine {
                 this.#logger.info("GameEngine: GameLoop started.");
 
                 // --- Use ValidatedEventDispatcher ---
-                await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+                await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                     text: "Game loop started. Good luck!", type: 'info'
                 });
 
             } else {
                 this.#logger.error("GameEngine: Initialization failed OR essential components missing/state invalid post-init. Cannot start GameLoop.");
                 if (this.#validatedDispatcher) { // Attempt feedback if dispatcher is available
-                    await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
+                    await this.#validatedDispatcher.dispatchValidated("event:display_message", {
                         text: "Engine failed to start post-initialization. Check logs.", type: 'error'
                     });
-                    await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Engine Start Failed"});
+                    await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Engine Start Failed"});
                 }
                 throw new Error("Inconsistent engine state after initialization.");
             }

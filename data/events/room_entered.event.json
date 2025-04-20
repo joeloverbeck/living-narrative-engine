@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:room_entered",
+  "description": "Signifies that an entity, typically the player, has successfully entered a new location entity.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "playerId": {
+        "type": "string",
+        "description": "The unique ID of the entity (usually the player) that entered the room."
+      },
+      "newLocationId": {
+        "type": "string",
+        "description": "The unique ID of the location entity that was entered."
+      },
+      "previousLocationId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The unique ID of the location entity the entity came from, or null if this represents the initial entry into the game world or if the previous location is unknown/not applicable."
+      }
+    },
+    "required": [
+      "playerId",
+      "newLocationId",
+      "previousLocationId"
+    ],
+    "additionalProperties": false
+  }
+}

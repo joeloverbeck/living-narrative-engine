@@ -83,21 +83,21 @@ class GameRuleSystem {
      * @param {{ newLocation: Entity, playerEntity: Entity, previousLocation?: Entity | null }} eventData
      */
     async #handleInitialRoomEntered(eventData) {
-        const {newLocation, playerEntity, previousLocation} = eventData;
+        const {newLocationId, playerId, previousLocationId} = eventData;
 
-        if (!newLocation || !playerEntity) {
+        if (!newLocationId || !playerId) {
             console.error("GameRuleSystem #handleInitialRoomEntered: Received 'event:room_entered' but newLocation or playerEntity was missing.", eventData);
             return;
         }
 
         // Check if this is the initial entry (no previous location)
-        if (previousLocation === null || previousLocation === undefined) {
+        if (previousLocationId === null || previousLocationId === undefined) {
             console.log("GameRuleSystem: Initial game load detected (no previousLocation). Triggering initial 'look'.");
 
             /** @type {ActionContext} */
             const lookContext = {
-                playerEntity: playerEntity,
-                currentLocation: newLocation,
+                playerEntity: this.#entityManager.getEntityInstance(playerId),
+                currentLocation: this.#entityManager.getEntityInstance(newLocationId),
                 parsedCommand: {
                     actionId: 'action:look',
                     directObjectPhrase: null,

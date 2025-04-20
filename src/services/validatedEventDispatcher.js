@@ -85,7 +85,7 @@ class ValidatedEventDispatcher {
                         /** @type {ValidationResult} */
                         const validationResult = this.#schemaValidator.validate(schemaId, payload);
 
-                        if (!validationResult.valid) {
+                        if (!validationResult.isValid) {
                             validationPassed = false;
                             const errorDetails = validationResult.errors?.map(e => `[${e.instancePath || 'root'}]: ${e.message}`).join('; ') || 'No details available';
 

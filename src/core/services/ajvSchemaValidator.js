@@ -124,13 +124,15 @@ class AjvSchemaValidator {
         // Return a new function adhering to the ISchemaValidator interface.
         return (data) => {
             try {
-                // AC: The returned validation function calls the original Ajv validator.
+                // Ensure you have the original Ajv validator function correctly available here
+                // (Assuming it's captured in the closure as originalValidator)
                 const isValid = originalValidator(data);
-                // AC: The returned function returns { isValid: true, errors: null } on success.
-                // AC: The returned function returns { isValid: false, errors: [...] } on failure.
+
+                const ajvErrors = originalValidator.errors;
+
                 return {
                     isValid: isValid,
-                    errors: isValid ? null : (originalValidator.errors || []) // Ensure errors array is returned on failure
+                    errors: isValid ? null : (ajvErrors || []) // Use the logged variable
                 };
             } catch (validationError) {
                 // AC: The returned function catches runtime errors... returns ValidationResult.
