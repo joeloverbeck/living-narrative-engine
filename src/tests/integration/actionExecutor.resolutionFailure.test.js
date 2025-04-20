@@ -65,7 +65,12 @@ const mockEventBus = {
     unsubscribe: jest.fn(),
     listenerCount: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 /** @type {jest.Mocked<ILogger>} */
 const mockLogger = {
     debug: jest.fn(),
@@ -90,9 +95,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -246,7 +252,7 @@ describe('ActionExecutor: Integration Test - Target Resolution Failure (Sub-Task
             // The code currently uses Logger.warn for all resolution failures before returning.
             expect(mockLogger[expectedLogger]).toHaveBeenCalledTimes(1);
             expect(mockLogger[expectedLogger]).toHaveBeenCalledWith(
-                expect.stringContaining(`ActionExecutor: Target resolution failed for action '${actionId}' with status: ${status}. Action aborted.`)
+                expect.stringContaining(`ActionExecutor: Target resolution failed for '${actionId}' with status: ${status}. Action aborted.`) // <-- Corrected: Removed "action "
             );
             // Ensure the *other* log level wasn't called for this specific log message
             const otherLogger = expectedLogger === 'warn' ? 'error' : 'warn';

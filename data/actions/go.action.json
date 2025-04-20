@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:go",
+  "id": "action:go",
   "commandVerb": "go",
   "name": "Go",
   "target_domain": "direction",

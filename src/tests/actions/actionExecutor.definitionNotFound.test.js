@@ -29,7 +29,12 @@ const mockActionValidationService = {
 const mockEventBus = {
     dispatch: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 // --- Mock Logger ---
 /** @type {jest.Mocked<ILogger>} */
 const mockLogger = {
@@ -55,9 +60,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -136,7 +142,7 @@ describe('ActionExecutor: Integration Test', () => {
             // Assert: ActionResult.messages contains an appropriate error message
             expect(result.messages).toEqual(expect.arrayContaining([
                 expect.objectContaining({
-                    text: expect.stringContaining(`Internal Error: Action '${actionId}' is not defined.`),
+                    text: expect.stringContaining(`Internal Error: Action '${actionId}' not defined.`),
                     // text: `Internal Error: Action '${actionId}' is not defined.`, // Stricter check if preferred
                     type: 'error'
                 })
@@ -152,7 +158,7 @@ describe('ActionExecutor: Integration Test', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(`Executing action '${actionId}'...`, mockContext.parsedCommand);
 
             expect(mockLogger.info).toHaveBeenCalledTimes(2);
-            expect(mockLogger.info).toHaveBeenCalledWith("ActionExecutor initialized with dependencies.");
+            expect(mockLogger.info).toHaveBeenCalledWith("ActionExecutor initialized with dependencies (including ValidatedEventDispatcher).");
 
             expect(mockLogger.warn).not.toHaveBeenCalled();
 

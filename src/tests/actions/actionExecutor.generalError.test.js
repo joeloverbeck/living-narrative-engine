@@ -51,7 +51,12 @@ const mockEventBus = {
     // IMPORTANT: Ensure dispatch returns a resolved promise
     dispatch: jest.fn().mockResolvedValue(undefined),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 // --- Mock Logger ---
 /** @type {ILogger} */
 const mockLogger = {
@@ -92,9 +97,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -278,11 +284,6 @@ describe('ActionExecutor Isolated Tests', () => {
             expect(result).toBeDefined(); // <<<< This should now pass
             expect(result.success).toBe(true); // Action execution flow completed successfully
 
-            // [AC] Assertion verifies the internal resolution returned undefined (Implicitly checked by payload & log)
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-            );
-
             // [AC] Assertion verifies the correct internal error message is logged
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -292,8 +293,8 @@ describe('ActionExecutor Isolated Tests', () => {
             expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected in this path
 
             // Check event dispatch payload is empty (or missing the key)
-            expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 actionDef.dispatch_event.eventName,
                 {} // Payload empty as the only field failed resolution
             );

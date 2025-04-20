@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:item_dropped",
+  "description": "Signals that an item has been successfully removed from a player's inventory and placed into a location. This is fired *after* the state change is complete.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "playerId": {
+        "type": "string",
+        "description": "The unique identifier of the player who dropped the item.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemId": {
+        "type": "string",
+        "description": "The unique identifier of the item instance that was dropped.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "locationId": {
+        "type": "string",
+        "description": "The unique identifier of the location where the item was dropped.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "playerId",
+      "itemId",
+      "locationId"
+    ],
+    "additionalProperties": false
+  }
+}

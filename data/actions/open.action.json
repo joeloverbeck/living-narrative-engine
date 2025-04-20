@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:open",
+  "id": "action:open",
   "commandVerb": "open",
   "name": "Open",
   "target_domain": "environment",

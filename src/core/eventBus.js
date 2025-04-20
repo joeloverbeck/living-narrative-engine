@@ -1,4 +1,4 @@
-// eventBus.js
+// src/core/eventBus.js
 
 /**
  * A simple Event Bus for decoupled communication between systems using a publish/subscribe pattern.

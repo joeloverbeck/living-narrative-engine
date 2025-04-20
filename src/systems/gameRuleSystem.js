@@ -99,7 +99,7 @@ class GameRuleSystem {
                 playerEntity: playerEntity,
                 currentLocation: newLocation,
                 parsedCommand: {
-                    actionId: 'core:look',
+                    actionId: 'action:look',
                     directObjectPhrase: null,
                     preposition: null,
                     indirectObjectPhrase: null,
@@ -113,14 +113,14 @@ class GameRuleSystem {
             };
 
             try {
-                const lookResult = await this.#actionExecutor.executeAction('core:look', lookContext);
+                const lookResult = await this.#actionExecutor.executeAction('action:look', lookContext);
                 if (!lookResult.success) {
-                    console.warn(`GameRuleSystem: Initial 'core:look' execution reported failure. Messages:`, lookResult.messages);
+                    console.warn(`GameRuleSystem: Initial 'action:look' execution reported failure. Messages:`, lookResult.messages);
                 } else {
-                    console.log(`GameRuleSystem: Initial 'core:look' executed successfully.`);
+                    console.log(`GameRuleSystem: Initial 'action:look' executed successfully.`);
                 }
             } catch (error) {
-                console.error("GameRuleSystem: Uncaught error executing initial 'core:look':", error);
+                console.error("GameRuleSystem: Uncaught error executing initial 'action:look':", error);
                 this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                     text: "Internal Error: Failed to perform initial look.", type: 'error'
                 });
@@ -170,7 +170,7 @@ class GameRuleSystem {
             playerEntity: player,
             currentLocation: newLocationEntity,
             parsedCommand: {
-                actionId: 'core:look',
+                actionId: 'action:look',
                 directObjectPhrase: null,
                 preposition: null,
                 indirectObjectPhrase: null,
@@ -184,14 +184,14 @@ class GameRuleSystem {
         };
 
         try {
-            const lookResult = await this.#actionExecutor.executeAction('core:look', lookContext);
+            const lookResult = await this.#actionExecutor.executeAction('action:look', lookContext);
             if (!lookResult.success) {
-                console.warn(`GameRuleSystem: Automatic 'core:look' after move reported failure. Messages:`, lookResult.messages);
+                console.warn(`GameRuleSystem: Automatic 'action:look' after move reported failure. Messages:`, lookResult.messages);
             } else {
-                console.log(`GameRuleSystem: Automatic 'core:look' after move executed successfully.`);
+                console.log(`GameRuleSystem: Automatic 'action:look' after move executed successfully.`);
             }
         } catch (error) {
-            console.error("GameRuleSystem: Uncaught error executing automatic 'core:look' after move:", error);
+            console.error("GameRuleSystem: Uncaught error executing automatic 'action:look' after move:", error);
             this.#eventBus.dispatch(EVENT_DISPLAY_MESSAGE, {
                 text: "Internal Error: Failed to perform automatic look after moving.", type: 'error'
             });

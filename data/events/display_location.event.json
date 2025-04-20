@@ -1,0 +1,137 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json#",
+  "id": "event:display_location",
+  "description": "Sends the necessary data for the UI to render the description and contents of the player's current location.",
+  "payloadSchema": {
+    "type": "object",
+    "description": "Payload for the event:display_location event.",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The display name of the location."
+      },
+      "description": {
+        "type": "string",
+        "description": "The descriptive text for the location."
+      },
+      "exits": {
+        "type": "array",
+        "description": "An array of objects describing available exits, including direction, target location ID, and potentially display name/state.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "description": "The direction or command word for the exit."
+            },
+            "locationId": {
+              "type": "string",
+              "description": "The unique identifier of the target location entity."
+            },
+            "displayName": {
+              "type": "string",
+              "description": "Optional display name for the exit (e.g., 'a sturdy oak door')."
+            },
+            "isLocked": {
+              "type": "boolean",
+              "description": "Optional flag indicating if the exit is currently locked."
+            },
+            "isBlocked": {
+              "type": "boolean",
+              "description": "Optional flag indicating if the exit is currently blocked (other than being locked)."
+            }
+          },
+          "required": [
+            "direction",
+            "locationId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "items": {
+        "type": "array",
+        "description": "An optional list of objects describing items visible in the location.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The unique identifier of the item entity instance."
+            },
+            "name": {
+              "type": "string",
+              "description": "The display name of the item."
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional brief description or appearance modifier for the item in this context."
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "entities": {
+        "type": "array",
+        "description": "An optional list of objects describing other entities (NPCs, players) visible in the location.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The unique identifier of the entity."
+            },
+            "name": {
+              "type": "string",
+              "description": "The display name of the entity."
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional brief description or appearance modifier for the entity in this context."
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "connections": {
+        "type": "array",
+        "description": "An optional list of objects describing interactive connection entities (doors, passages) visible in the location.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The unique identifier of the connection entity."
+            },
+            "name": {
+              "type": "string",
+              "description": "The display name of the connection."
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional brief description or state information for the connection."
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "exits"
+    ],
+    "additionalProperties": false
+  }
+}

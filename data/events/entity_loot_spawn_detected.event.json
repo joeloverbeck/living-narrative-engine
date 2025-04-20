@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:entity_loot_spawn_requested",
+  "description": "Signals a request to potentially spawn loot in a specific location following an entity's death.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "deceasedEntityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that died, whose loot is requested.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "locationId": {
+        "type": "string",
+        "description": "The unique identifier of the location where the loot should potentially be spawned.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "killerEntityId": {
+        "description": "The unique identifier of the killer, if available (optional, may influence loot).",
+        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+      }
+    },
+    "required": [
+      "deceasedEntityId",
+      "locationId"
+    ],
+    "additionalProperties": false
+  }
+}

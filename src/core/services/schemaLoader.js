@@ -162,6 +162,8 @@ class SchemaLoader {
         // AC: After loading, verifies that all essential schemas are now loaded.
         const requiredSchemaIds = [
             this.#config.getManifestSchemaId(),
+            this.#config.getContentTypeSchemaId('events'),
+            this.#config.getContentTypeSchemaId('actions'),
             this.#config.getContentTypeSchemaId('entities'),
             this.#config.getContentTypeSchemaId('items'),
             this.#config.getContentTypeSchemaId('locations'),

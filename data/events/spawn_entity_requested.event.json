@@ -1,0 +1,81 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:spawn_entity_requested",
+  "description": "Signals a request to spawn a new entity into the game world, typically triggered by an item effect.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string",
+        "description": "The ID of the entity that initiated the item use action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemInstanceId": {
+        "type": "string",
+        "description": "The instance ID of the item used.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemDefinitionId": {
+        "type": "string",
+        "description": "The definition ID of the item used.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "sourceItemName": {
+        "type": "string",
+        "description": "The display name of the item used."
+      },
+      "validatedTargetId": {
+        "description": "The ID of the entity/connection targeted by the item use command (if any). Might influence spawn location.",
+        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+      },
+      "validatedTargetType": {
+        "type": "string",
+        "description": "The type of the target specified in the command.",
+        "enum": [
+          "entity",
+          "connection",
+          "none"
+        ]
+      },
+      "entityDefinitionId": {
+        "type": "string",
+        "description": "The definition ID of the entity to be spawned (e.g., 'goblin_warrior', 'item_gold_coins') (sourced from effect parameters).",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "quantity": {
+        "type": "number",
+        "description": "Optional. The number of entities to spawn (sourced from effect parameters). Defaults to 1.",
+        "default": 1
+      },
+      "spawnLocationId": {
+        "description": "Optional. Explicit location ID where the entity should spawn. Used if spawnLocationSpecifier is 'explicit_location'.",
+        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+      },
+      "spawnLocationSpecifier": {
+        "type": "string",
+        "description": "Optional. Specifies how to determine the spawn location ('user_location', 'target_location' if target is valid, or 'explicit_location' requires `spawnLocationId`) (sourced from effect parameters). Defaults to 'user_location'.",
+        "enum": [
+          "user_location",
+          "target_location",
+          "explicit_location"
+        ],
+        "default": "user_location"
+      },
+      "initialStateOverrides": {
+        "type": "object",
+        "description": "Optional. Key-value pairs to override components or state of the spawned entity upon creation (e.g., setting initial health, inventory items) (sourced from effect parameters).",
+        "additionalProperties": true
+      }
+    },
+    "required": [
+      "userId",
+      "itemInstanceId",
+      "itemDefinitionId",
+      "sourceItemName",
+      "validatedTargetId",
+      "validatedTargetType",
+      "entityDefinitionId"
+    ],
+    "additionalProperties": false
+  }
+}

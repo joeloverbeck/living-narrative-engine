@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:look",
+  "id": "action:look",
   "commandVerb": "look",
   "name": "Look (at Location)",
   "target_domain": "none",

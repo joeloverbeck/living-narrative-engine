@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:unlock",
+  "id": "action:unlock",
   "commandVerb": "unlock",
   "name": "Unlock",
   "target_domain": "environment",

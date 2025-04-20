@@ -21,7 +21,20 @@
  * @typedef {import('../../../data/schemas/objective.schema.json').ObjectiveDefinition} ObjectiveDefinition
  * @typedef {import('../../../data/schemas/interaction-test.schema.json').InteractionTestDefinition} InteractionTestDefinition // Adjust if schema name differs
  * @typedef {object} WorldManifest // Define structure if possible
+ *
  **/
+
+// --- EVENT-MIGR-010 Start: Add EventDefinition typedef ---
+/**
+ * Represents the structure of a loaded event definition.
+ * Matches the structure defined in event-definition.schema.json.
+ * @typedef {object} EventDefinition
+ * @property {string} id - The unique, namespaced identifier for this event type (e.g., 'event:apply_heal_requested'). Required.
+ * @property {string} [description] - Optional. A human-readable explanation of what this event signifies.
+ * @property {object | null} [payloadSchema] - Optional. A JSON Schema object defining the structure of the data payload associated with this event. Null or omitted if no payload.
+ */
+
+// --- EVENT-MIGR-010 End ---
 
 /**
  * Provides typed access to loaded game data stored within an IDataRegistry.
@@ -181,6 +194,33 @@ export class GameDataRepository {
     }
 
     // --- Manifest Data Accessors ---
+
+    // --- EVENT-MIGR-010 Start: Add Event Definition Accessors ---
+
+    /**
+     * Retrieves an event definition by its ID.
+     * Relies on event definitions being loaded into the registry under the 'events' key.
+     * @param {string} eventId - The unique ID of the event definition (e.g., 'event:some_event').
+     * @returns {EventDefinition | undefined} The event definition or undefined if not found.
+     * @fulfills {AC1} - GameDataRepository class has the getEventDefinition method.
+     * @fulfills {AC3} - Method correctly retrieves data from the IDataRegistry using the key 'events'.
+     */
+    getEventDefinition(eventId) {
+        return this.#registry.get('events', eventId);
+    }
+
+    /**
+     * Retrieves all loaded event definitions.
+     * Relies on event definitions being loaded into the registry under the 'events' key.
+     * @returns {EventDefinition[]} An array of all loaded event definitions. Might be empty.
+     * @fulfills {AC2} - GameDataRepository class has the getAllEventDefinitions method.
+     * @fulfills {AC3} - Method correctly retrieves data from the IDataRegistry using the key 'events'.
+     */
+    getAllEventDefinitions() {
+        return this.#registry.getAll('events');
+    }
+
+    // --- EVENT-MIGR-010 End ---
 
     /**
      * Gets the starting player ID defined in the world manifest.

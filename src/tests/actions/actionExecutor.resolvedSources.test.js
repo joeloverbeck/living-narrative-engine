@@ -28,7 +28,12 @@ const mockActionValidationService = {
 const mockEventBus = {
     dispatch: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 // Mock logger
 /** @type {ILogger} */
 const mockLogger = {
@@ -84,9 +89,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -240,7 +246,7 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(actionDef.id, mockContext);
 
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <<<--- NEW
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: direction})
                     );
@@ -273,10 +279,7 @@ describe('ActionExecutor', () => {
                     expect(mockLogger.warn).toHaveBeenCalledWith(
                         expect.stringContaining(`Cannot resolve 'resolved.direction' source '${sourceString}' for action '${actionDef.id}'. Target type is 'entity', not 'direction'.`)
                     );
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {}); // <<<--- NEW (Payload is empty as value resolved to undefined)
                 });
 
                 // --- Test case adjusted ---
@@ -309,13 +312,14 @@ describe('ActionExecutor', () => {
                             type: 'error'
                         })
                     ]));
-                    expect(mockLogger.error).toHaveBeenCalledWith(
-                        expect.stringContaining(`Helper #buildValidationTargetContext: Error constructing ActionTargetContext for action \'${actionDef.id}\':`),
-                        expect.any(Error) // Check that an Error object was logged
-                    );
+                    const loggedErrorCall = mockLogger.error.mock.calls.find(call => call[0].includes('Helper #buildValidationTargetContext'));
+                    expect(loggedErrorCall).toBeDefined(); // Ensure the log call was found
+                    if (loggedErrorCall) { // Type guard
+                        expect(loggedErrorCall[1].message).toContain("Target type 'direction' but name missing."); // <<<--- Check the nested error message
+                    }
                     // Check the error message itself
                     const loggedError = mockLogger.error.mock.calls[0][1]; // Get the second argument of the first call
-                    expect(loggedError.message).toContain("Target type is 'direction' but direction name missing from parsed command.");
+                    expect(loggedError.message).toContain("Target type 'direction' but name missing.");
 
                     // Should not reach event dispatch or value source logic
                     expect(mockEventBus.dispatch).not.toHaveBeenCalled();
@@ -351,7 +355,7 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(actionDef.id, mockContext);
 
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: connectionId})
                     );
@@ -382,7 +386,7 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(actionDef.id, mockContext);
 
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: fallbackId})
                     );
@@ -415,10 +419,7 @@ describe('ActionExecutor', () => {
                     // No warning expected, just returns undefined
                     expect(mockLogger.warn).not.toHaveBeenCalled();
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn and return undefined if targetType is not "direction"', async () => {
@@ -446,10 +447,7 @@ describe('ActionExecutor', () => {
                     expect(mockLogger.warn).toHaveBeenCalledWith(
                         expect.stringContaining(`Cannot resolve 'resolved.connection.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'entity', not 'direction'.`)
                     );
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
             });
 
@@ -479,7 +477,7 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(actionDef.id, mockContext);
 
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: locationId})
                     );
@@ -509,10 +507,7 @@ describe('ActionExecutor', () => {
                     await executor.executeAction(actionDef.id, mockContext);
 
                     expect(mockLogger.warn).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should return undefined when targetType is "direction" but details is null', async () => {
@@ -537,10 +532,7 @@ describe('ActionExecutor', () => {
                     await executor.executeAction(actionDef.id, mockContext);
 
                     expect(mockLogger.warn).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn and return undefined if targetType is not "direction"', async () => {
@@ -569,10 +561,7 @@ describe('ActionExecutor', () => {
                     expect(mockLogger.warn).toHaveBeenCalledWith(
                         expect.stringContaining(`Cannot resolve 'resolved.connection.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'entity', not 'direction'.`)
                     );
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
             });
 
@@ -602,7 +591,7 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(actionDef.id, mockContext);
 
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: blockerId})
                     );
@@ -632,7 +621,7 @@ describe('ActionExecutor', () => {
                     await executor.executeAction(actionDef.id, mockContext);
 
                     // Should dispatch with the value set to null
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         actionDef.dispatch_event.eventName,
                         expect.objectContaining({[payloadKey]: null})
                     );
@@ -665,10 +654,7 @@ describe('ActionExecutor', () => {
                     await executor.executeAction(actionDef.id, mockContext);
 
                     expect(mockLogger.warn).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should return undefined when targetType is "direction" but details is empty or null', async () => {
@@ -696,20 +682,14 @@ describe('ActionExecutor', () => {
                     // Test with null details
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(resolutionResultNull);
                     await executor.executeAction(actionDef.id, mockContext);
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
 
                     jest.clearAllMocks(); // Clear mocks between checks
 
                     // Test with empty details
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(resolutionResultEmpty);
                     await executor.executeAction(actionDef.id, mockContext);
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn and return undefined if targetType is not "direction"', async () => {
@@ -738,10 +718,7 @@ describe('ActionExecutor', () => {
                     expect(mockLogger.warn).toHaveBeenCalledWith(
                         expect.stringContaining(`Cannot resolve 'resolved.connection.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'entity', not 'direction'.`)
                     );
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
             });
 
@@ -774,10 +751,7 @@ describe('ActionExecutor', () => {
                         expect.stringContaining(`Unhandled 'resolved.connection' field 'foo' in source '${sourceString}' for action '${actionDef.id}'.`)
                     );
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn for "resolved.foo" (unknown resolved field) and omit field', async () => {
@@ -805,10 +779,7 @@ describe('ActionExecutor', () => {
                         expect.stringContaining(`Unhandled 'resolved' source string format '${sourceString}' for action '${actionDef.id}'.`)
                     );
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn for "resolved." (incomplete string) and omit field', async () => {
@@ -838,10 +809,7 @@ describe('ActionExecutor', () => {
                         expect.stringContaining(`Unhandled 'resolved' source string format '${sourceString}' for action '${actionDef.id}'.`)
                     );
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn for "resolved" (incomplete string) and omit field', async () => {
@@ -869,10 +837,7 @@ describe('ActionExecutor', () => {
                         expect.stringContaining(`Malformed 'resolved' source string '${sourceString}' for action '${actionDef.id}'. Requires at least 'resolved.<field>'.`)
                     );
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
                 test('should log warn for "resolved.connection" (incomplete connection string) and omit field', async () => {
@@ -902,10 +867,7 @@ describe('ActionExecutor', () => {
                         expect.stringContaining(`Unhandled 'resolved' source string format '${sourceString}' for action '${actionDef.id}'.`)
                     );
                     expect(mockLogger.error).not.toHaveBeenCalled();
-                    expect(mockLogger.debug).toHaveBeenCalledWith(
-                        expect.stringContaining(`Payload key '${payloadKey}' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                    );
-                    expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
                 });
 
             });

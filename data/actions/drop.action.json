@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:drop",
+  "id": "action:drop",
   "commandVerb": "drop",
   "name": "Drop",
   "target_domain": "inventory",

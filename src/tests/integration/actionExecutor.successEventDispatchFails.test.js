@@ -68,7 +68,12 @@ const mockEventBus = {
     unsubscribe: jest.fn(),
     listenerCount: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 /** @type {jest.Mocked<ILogger>} */
 const mockLogger = {
     debug: jest.fn(),
@@ -104,9 +109,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 /**
@@ -143,7 +149,7 @@ const createMockActionContext = (actionId = 'test:action', playerEntity, current
             error: null,
         },
         gameDataRepository: mockGameDataRepository,
-        dispatch: mockEventBus.dispatch,
+        dispatch: mockValidatedDispatcher.dispatchValidated,
     };
     return baseContext;
 };
@@ -237,7 +243,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
 
         // 6. Define the error to be rejected by dispatch and mock eventBus.dispatch.
         expectedDispatchError = new Error('Dispatch Failed');
-        mockEventBus.dispatch.mockRejectedValue(expectedDispatchError);
+        mockValidatedDispatcher.dispatchValidated.mockRejectedValue(expectedDispatchError);
 
         // 7. Prepare the mockContext.
         mockContext = createMockActionContext(actionId, mockPlayerEntity, mockLocationEntity, 'target object');
@@ -278,10 +284,10 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
         );
 
         // Assert: eventBus.dispatch was called exactly once.
-        expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
+        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
         // Assert: eventBus.dispatch was called with the correct eventName and payload.
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
             eventName,
             expectedPayload
         );
@@ -291,7 +297,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
         // Assert: Mock Logger.error was called, logging the dispatch error.
         expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only this error should be logged
         expect(mockLogger.error).toHaveBeenCalledWith(
-            `Helper #prepareAndDispatchEvent: Error dispatching event '${eventName}' for action '${actionId}':`,
+            `Helper #prepareAndDispatchEvent: Unexpected error calling ValidatedEventDispatcher for event '${eventName}' (Action: '${actionId}'):`,
             expectedDispatchError // Check that the specific error object was logged
         );
         // Verify other logs
@@ -299,11 +305,6 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
         expect(mockLogger.info).toHaveBeenCalledTimes(2); // Constructor
         // Debug: Start, Def found, Resol result, TargetCtx created, Validation result, Prepare dispatch, Dispatching = 7
         expect(mockLogger.debug).toHaveBeenCalledTimes(15);
-        // With this:
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            `Helper #prepareAndDispatchEvent: Error dispatching event '${eventName}' for action '${actionId}':`,
-            expect.objectContaining({message: expectedDispatchError.message}) // Verify an object with the correct message was logged
-        );
 
 
         // Assert: Returns ActionResult with success: false.
@@ -313,15 +314,17 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
         // Assert: ActionResult.messages contains an appropriate error message indicating dispatch failure.
         expect(result.messages).toEqual(expect.arrayContaining([
             expect.objectContaining({
-                text: expect.stringContaining(`Internal error dispatching event '${eventName}' for action '${actionId}'.`),
+                text: expect.stringContaining(`Internal error processing event '${eventName}' for action '${actionId}'.`),
                 type: 'error'
             })
         ]));
 
         // Assert: ActionResult._internalDetails.dispatchError contains the error message from the mock error.
         expect(result._internalDetails).toBeDefined();
-        expect(result._internalDetails).toHaveProperty('dispatchError');
-        expect(result._internalDetails.dispatchError).toBe(expectedDispatchError.message); // 'Dispatch Failed'
+        // FIX: Change 'dispatchError' to 'dispatcherError'
+        expect(result._internalDetails).toHaveProperty('dispatcherError');
+        // FIX: Change 'dispatchError' to 'dispatcherError'
+        expect(result._internalDetails.dispatcherError).toBe(expectedDispatchError.message); // 'Dispatch Failed'
 
     });
 

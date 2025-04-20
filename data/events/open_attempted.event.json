@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:open_attempted",
+  "description": "Signals that an actor is attempting to open a target entity. Fired *before* any state checks (like already open or locked).",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The unique identifier of the entity attempting the open action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetEntityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity being targeted for opening.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "actorId",
+      "targetEntityId"
+    ],
+    "additionalProperties": false
+  }
+}

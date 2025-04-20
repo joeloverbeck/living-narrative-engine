@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:examine_intended",
+  "description": "Signals intent to get detailed information about a specific target entity.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The unique ID of the entity initiating the examine action (usually player).",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetEntityId": {
+        "type": "string",
+        "description": "The unique ID of the specific entity being examined. Unique resolution happens in the handler.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "actorId",
+      "targetEntityId"
+    ],
+    "additionalProperties": false
+  }
+}

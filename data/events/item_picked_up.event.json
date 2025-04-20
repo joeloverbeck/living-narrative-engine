@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:item_picked_up",
+  "description": "Signals that an entity has successfully taken an item from a location. The UI message has already been dispatched. This event triggers the necessary state changes in inventory and world state.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "pickerId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that picked up the item.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemId": {
+        "type": "string",
+        "description": "The unique identifier of the item instance that was picked up.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "locationId": {
+        "type": "string",
+        "description": "The unique identifier of the location from which the item was picked up.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "pickerId",
+      "itemId",
+      "locationId"
+    ],
+    "additionalProperties": false
+  }
+}

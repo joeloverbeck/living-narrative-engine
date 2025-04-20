@@ -1,23 +1,22 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:take",
-  "commandVerb": "take",
-  "name": "Take",
+  "id": "action:attack",
+  "commandVerb": "attack",
+  "name": "Attack",
   "target_domain": "environment",
   "actor_required_components": [],
   "actor_forbidden_components": [],
   "target_required_components": [
-    "Item"
+    "Health"
   ],
   "target_forbidden_components": [],
   "prerequisites": [],
-  "template": "take {target}",
+  "template": "attack {target}",
   "dispatch_event": {
-    "eventName": "event:item_picked_up",
+    "eventName": "event:attack_intended",
     "payload": {
-      "pickerId": "actor.id",
-      "itemId": "target.id",
-      "locationId": "context.currentLocation.id"
+      "attackerId": "actor.id",
+      "targetId": "target.id"
     }
   }
 }

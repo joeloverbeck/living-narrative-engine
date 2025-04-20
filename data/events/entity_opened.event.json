@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:entity_opened",
+  "description": "Signals that an entity (e.g., door, container) was successfully opened by an actor.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that initiated the open action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetEntityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that was successfully opened.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetDisplayName": {
+        "type": "string",
+        "description": "The display name of the entity that was opened, for easy reference in logs or messages."
+      }
+    },
+    "required": [
+      "actorId",
+      "targetEntityId",
+      "targetDisplayName"
+    ],
+    "additionalProperties": false
+  }
+}

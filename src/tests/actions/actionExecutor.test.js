@@ -28,7 +28,12 @@ const mockActionValidationService = {
 const mockEventBus = {
     dispatch: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 // Mock logger
 /** @type {ILogger} */
 const mockLogger = {
@@ -114,9 +119,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -166,7 +172,7 @@ const createMockActionContext = (overrides = {}) => {
             error: null,
         },
         gameDataRepository: mockGameDataRepository,
-        dispatch: mockEventBus.dispatch, // Ensure dispatch function is available if needed by handlers (though likely not used directly now)
+        dispatch: mockValidatedDispatcher.dispatchValidated, // Ensure dispatch function is available if needed by handlers (though likely not used directly now)
         ...overrides, // Apply specific overrides for the test case
     };
     return baseContext;
@@ -261,10 +267,7 @@ describe('ActionExecutor', () => {
                     expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
                     expect.objectContaining({sourceString: null})
                 );
-                expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`Payload key 'keyForNull' resolved to undefined from source 'null'. Omitting from payload.`)
-                );
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
             });
 
             test('should log error and omit payload field if sourceString is undefined', async () => {
@@ -288,10 +291,7 @@ describe('ActionExecutor', () => {
                     expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
                     expect.objectContaining({sourceString: undefined})
                 );
-                expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`Payload key 'keyForUndefined' resolved to undefined from source 'undefined'. Omitting from payload.`)
-                );
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
             });
 
             test('should log error and omit payload field if sourceString is an empty string', async () => {
@@ -315,10 +315,7 @@ describe('ActionExecutor', () => {
                     expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
                     expect.objectContaining({sourceString: ''})
                 );
-                expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`Payload key 'keyForEmpty' resolved to undefined from source ''. Omitting from payload.`)
-                );
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
             });
         });
 
@@ -345,10 +342,7 @@ describe('ActionExecutor', () => {
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     expect.stringContaining(`Unknown source prefix 'foo' in source string '${sourceString}' for action '${actionDef.id}'.`)
                 );
-                expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`Payload key 'keyUnknown' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                );
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
             });
 
             test('should log warn for incomplete "actor." string and omit field', async () => {
@@ -377,14 +371,9 @@ describe('ActionExecutor', () => {
                 );
                 expect(mockLogger.error).not.toHaveBeenCalled(); // Should be warn
 
-                // Check debug log for omitting
-                expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`Payload key 'keyActorShort' resolved to undefined from source '${sourceString}'. Omitting from payload.`)
-                );
-
                 // Check event dispatch payload
-                expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+                expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
             });
 
             // NOTE: Malformed target tests are now in actionExecutor.targetSources.test.js

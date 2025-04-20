@@ -1,6 +1,6 @@
 {
   "$schema": "../schemas/action-definition.schema.json",
-  "id": "core:wait",
+  "id": "action:wait",
   "commandVerb": "wait",
   "name": "Wait",
   "target_domain": "none",

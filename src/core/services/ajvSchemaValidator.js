@@ -183,6 +183,39 @@ class AjvSchemaValidator {
             return false; // Treat schema access error as "not loaded"
         }
     }
+
+    /**
+     * Directly validates data against the schema identified by schemaId.
+     * Returns a ValidationResult indicating success or failure.
+     * This combines getting the validator and executing it.
+     *
+     * @param {string} schemaId - The unique identifier for the schema.
+     * @param {any} data - The data to validate.
+     * @returns {ValidationResult} An object indicating if the data is valid and containing errors if not.
+     */
+    validate(schemaId, data) {
+        // Reuse getValidator logic to find the validation function
+        const validatorFunction = this.getValidator(schemaId);
+
+        if (!validatorFunction) {
+            // Schema not found or failed compilation previously
+            // Log a warning consistent with getValidator/isSchemaLoaded might be good
+            console.warn(`AjvSchemaValidator: validate called for schemaId '${schemaId}', but no validator function could be retrieved.`);
+            return {
+                isValid: false,
+                errors: [{ // Provide a structured error indicating the schema wasn't found/valid
+                    instancePath: "",
+                    schemaPath: "",
+                    keyword: "schemaNotFound",
+                    params: {schemaId: schemaId},
+                    message: `Schema with id '${schemaId}' not found or is invalid.`
+                }]
+            };
+        }
+
+        // If validator function exists, execute it (it already includes error handling)
+        return validatorFunction(data);
+    }
 }
 
 // AC: ajvSchemaValidator.js exists and exports the AjvSchemaValidator class.

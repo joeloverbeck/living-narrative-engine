@@ -1,0 +1,37 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json#",
+  "id": "event:display_message",
+  "description": "Used extensively throughout action handlers and systems to send textual feedback to the user interface.",
+  "payloadSchema": {
+    "type": "object",
+    "description": "Payload for the event:display_message event.",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The message content to display to the user."
+      },
+      "type": {
+        "type": "string",
+        "description": "A category hint for the message. Used for formatting or filtering in the UI.",
+        "enum": [
+          "info",
+          "warning",
+          "error",
+          "success",
+          "combat",
+          "combat_hit",
+          "combat_critical",
+          "sound",
+          "prompt",
+          "internal",
+          "debug"
+        ]
+      }
+    },
+    "required": [
+      "text",
+      "type"
+    ],
+    "additionalProperties": false
+  }
+}

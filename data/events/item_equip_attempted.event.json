@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:item_equip_attempted",
+  "description": "Signals that a player has validated their intent to equip a specific item instance from their inventory into a specific equipment slot. Note: Payloads use IDs for decoupling.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "playerEntityId": {
+        "type": "string",
+        "description": "The unique ID of the player entity attempting to equip.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemInstanceIdToEquip": {
+        "type": "string",
+        "description": "The unique ID of the item instance being equipped.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetSlotId": {
+        "type": "string",
+        "description": "The identifier of the equipment slot the item is intended for (e.g., 'core:slot_main_hand').",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "playerEntityId",
+      "itemInstanceIdToEquip",
+      "targetSlotId"
+    ],
+    "additionalProperties": false
+  }
+}

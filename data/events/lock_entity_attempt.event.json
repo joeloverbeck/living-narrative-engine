@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:lock_entity_attempt",
+  "description": "Signals that an entity is attempting to lock another entity (e.g., a door, a chest). Fired before validation or state changes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string",
+        "description": "The unique identifier of the entity attempting the lock action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetEntityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity being targeted for locking.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "keyItemId": {
+        "description": "The unique identifier of the item instance being used for the attempt, if any.",
+        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+      }
+    },
+    "required": [
+      "userId",
+      "targetEntityId",
+      "keyItemId"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -10,6 +10,7 @@ const EXPECTED_BASE_DATA_PATH = './data';
 // Source: const SCHEMA_FILES = [...]
 const EXPECTED_SCHEMA_FILES = [
     'common.schema.json',
+    'event-definition.schema.json',
     'action-definition.schema.json',
     'entity.schema.json',
     'trigger.schema.json',

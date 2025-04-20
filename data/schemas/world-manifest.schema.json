@@ -47,6 +47,15 @@
           },
           "default": []
         },
+        "events": {
+          "type": "array",
+          "description": "Relative paths to event definition files (JSON).",
+          "items": {
+            "type": "string",
+            "description": "Path relative to the world's root directory, e.g., 'data/events/move_attempted.event.json'."
+          },
+          "default": []
+        },
         "entities": {
           "type": "array",
           "description": "Relative paths to entity definition files (JSON), typically covering players, NPCs, or other non-item/non-location entities.",

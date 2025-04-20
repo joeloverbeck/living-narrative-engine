@@ -13,6 +13,7 @@ const BASE_DATA_PATH = './data';
 
 const SCHEMA_FILES = [
     'common.schema.json',
+    'event-definition.schema.json',
     'action-definition.schema.json',
     'entity.schema.json',
     'trigger.schema.json',
@@ -36,6 +37,7 @@ const SCHEMA_FILES = [
 const CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action-definition.schema.json',
+    events: 'http://example.com/schemas/event-definition.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
     items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
     locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"

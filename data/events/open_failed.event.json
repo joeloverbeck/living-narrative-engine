@@ -1,0 +1,41 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:open_failed",
+  "description": "Signals that an attempt to open an entity failed for a specific reason.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that initiated the failed open action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetEntityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that failed to open.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetDisplayName": {
+        "type": "string",
+        "description": "The display name of the entity that failed to open."
+      },
+      "reasonCode": {
+        "type": "string",
+        "description": "A code indicating the specific reason for the failure.",
+        "enum": [
+          "ALREADY_OPEN",
+          "LOCKED",
+          "TARGET_NOT_OPENABLE",
+          "OTHER"
+        ]
+      }
+    },
+    "required": [
+      "actorId",
+      "targetEntityId",
+      "targetDisplayName",
+      "reasonCode"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -67,7 +67,12 @@ const mockEventBus = {
     unsubscribe: jest.fn(),
     listenerCount: jest.fn(),
 };
-
+const mockValidatedDispatcher = {
+    // Mock the method used by ActionExecutor.
+    // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
+    // You can override this in specific tests if needed.
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+};
 /** @type {jest.Mocked<ILogger>} */
 const mockLogger = {
     debug: jest.fn(),
@@ -103,9 +108,10 @@ const createExecutor = (logger = mockLogger) => {
         gameDataRepository: mockGameDataRepository,
         targetResolutionService: mockTargetResolutionService,
         actionValidationService: mockActionValidationService,
-        eventBus: mockEventBus,
+        eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
         logger: logger,
-        payloadValueResolverService: resolverServiceInstance
+        payloadValueResolverService: resolverServiceInstance,
+        validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
     });
 };
 
@@ -271,7 +277,7 @@ describe('ActionExecutor: Integration Test - Success (No Event Dispatch) (Sub-Ta
         // Assert: Mock Logger.debug was called indicating the action is valid but has no event.
         // Check all debug calls to find the specific one
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`ActionExecutor: Action '${actionId}' is valid but has no 'dispatch_event' defined. Action flow complete.`)
+            expect.stringContaining(`ActionExecutor: Action '${actionId}' valid but no 'dispatch_event'. Action flow complete.`) // <-- Corrected: Removed "is" and "defined"
         );
         // Verify other expected log calls
         expect(mockLogger.info).toHaveBeenCalledTimes(2); // Constructor

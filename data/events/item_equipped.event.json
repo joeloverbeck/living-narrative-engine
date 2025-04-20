@@ -1,0 +1,37 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:item_equipped",
+  "description": "Signals that an item has been successfully removed from an entity's inventory and placed into an equipment slot. This event confirms the state change is complete. Note: Payloads use IDs for decoupling.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The unique ID of the entity whose equipment changed.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemId": {
+        "type": "string",
+        "description": "The unique identifier of the item instance that was equipped.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "slotId": {
+        "type": "string",
+        "description": "The identifier of the equipment slot the item was placed into.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemInstanceId": {
+        "type": "string",
+        "description": "The unique ID of the item instance that was equipped. (Same as itemId, potentially redundant but matches JSDoc).",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "entityId",
+      "itemId",
+      "slotId",
+      "itemInstanceId"
+    ],
+    "additionalProperties": false
+  }
+}

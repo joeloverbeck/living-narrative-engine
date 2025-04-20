@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json#",
+  "id": "event:update_available_actions",
+  "description": "Communicates the list of currently available actions for the player to the UI, allowing dynamic rendering of action elements.",
+  "payloadSchema": {
+    "type": "object",
+    "description": "Payload for the event:update_available_actions event.",
+    "properties": {
+      "actions": {
+        "type": "array",
+        "description": "An array of strings, where each string represents an available action command (e.g., \"look\", \"go north\", \"take potion\", \"attack goblin\").",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "actions"
+    ],
+    "additionalProperties": false
+  }
+}

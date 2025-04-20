@@ -1,0 +1,82 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:remove_status_effect_requested",
+  "description": "Signals a request to remove a status effect (or stacks) from an entity, typically triggered by an item effect.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string",
+        "description": "The ID of the entity that initiated the item use action.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemInstanceId": {
+        "type": "string",
+        "description": "The instance ID of the item used.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "itemDefinitionId": {
+        "type": "string",
+        "description": "The definition ID of the item used.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "sourceItemName": {
+        "type": "string",
+        "description": "The display name of the item used."
+      },
+      "validatedTargetId": {
+        "description": "The ID of the entity/connection targeted by the item use command (if any).",
+        "$ref": "./common.schema.json#/definitions/nullableNamespacedId"
+      },
+      "validatedTargetType": {
+        "type": "string",
+        "description": "The type of the target specified in the command.",
+        "enum": [
+          "entity",
+          "connection",
+          "none"
+        ]
+      },
+      "effectId": {
+        "type": "string",
+        "description": "The unique identifier of the status effect definition to remove (e.g., 'poisoned', 'cursed'). Can also be a category like 'all_negative' (sourced from effect parameters)."
+      },
+      "stacksToRemove": {
+        "oneOf": [
+          {
+            "type": "number",
+            "description": "The number of stacks to remove."
+          },
+          {
+            "type": "string",
+            "enum": [
+              "all"
+            ],
+            "description": "'all' removes all stacks of the specified effect."
+          }
+        ],
+        "description": "Optional. The number of stacks to remove or 'all' (sourced from effect parameters). Defaults to 'all' if not specified.",
+        "default": "all"
+      },
+      "statusEffectTargetSpecifier": {
+        "type": "string",
+        "description": "Specifies who the effect should be removed from relative to the action ('user' = the entity using the item, 'target' = the validated target of the item use) (sourced from effect parameters).",
+        "enum": [
+          "user",
+          "target"
+        ]
+      }
+    },
+    "required": [
+      "userId",
+      "itemInstanceId",
+      "itemDefinitionId",
+      "sourceItemName",
+      "validatedTargetId",
+      "validatedTargetType",
+      "effectId",
+      "statusEffectTargetSpecifier"
+    ],
+    "additionalProperties": false
+  }
+}

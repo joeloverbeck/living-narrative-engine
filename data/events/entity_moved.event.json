@@ -1,0 +1,36 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:entity_moved",
+  "description": "Signals that an entity has successfully completed its move and its position has been updated.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The unique identifier of the entity that moved.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "newLocationId": {
+        "type": "string",
+        "description": "The unique identifier of the location the entity has arrived in.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "oldLocationId": {
+        "type": "string",
+        "description": "The unique identifier of the location the entity moved from.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "direction": {
+        "type": "string",
+        "description": "The direction the entity moved to arrive at the new location."
+      }
+    },
+    "required": [
+      "entityId",
+      "newLocationId",
+      "oldLocationId",
+      "direction"
+    ],
+    "additionalProperties": false
+  }
+}

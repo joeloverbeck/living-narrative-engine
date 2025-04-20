@@ -178,7 +178,8 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         const gameDataRepository = c.resolve('GameDataRepository');
         const targetResolutionService = c.resolve('TargetResolutionService');
         const actionValidationService = c.resolve('ActionValidationService');
-        const payloadValueResolverService = c.resolve('PayloadValueResolverService'); // <<<--- RESOLVE new service
+        const payloadValueResolverService = c.resolve('PayloadValueResolverService');
+        const schemaValidator = c.resolve('ISchemaValidator');
         const eventBus = c.resolve('EventBus');
 
         resolvedLogger.info("ContainerConfig: Creating ActionExecutor instance with dependencies...");
@@ -187,7 +188,8 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
             gameDataRepository,
             targetResolutionService,
             actionValidationService,
-            payloadValueResolverService, // <<<--- PASS new service instance
+            payloadValueResolverService,
+            schemaValidator,
             eventBus,
             logger: resolvedLogger // Pass the resolved logger
         });

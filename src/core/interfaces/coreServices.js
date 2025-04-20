@@ -40,6 +40,10 @@
  * Returns `undefined` if no schema with the given ID is loaded or compiled.
  * @property {(schemaId: string) => boolean} isSchemaLoaded
  * Checks if a schema with the specified ID has been successfully loaded and is ready for use.
+ * @property {(schemaId: string, data: any) => ValidationResult} validate
+ * Directly validates the provided data against the schema identified by `schemaId`.
+ * Returns a `ValidationResult` object indicating success or failure, including any validation errors.
+ * Returns a failure result if the schema itself is not found or invalid.
  */
 
 // --- Data Storage & Registry ---

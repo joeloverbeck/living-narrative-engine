@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "event:attack_intended",
+  "description": "Signals that an entity intends to perform an attack against a target after initial validation (target exists, has health, is not defeated). Does not guarantee the attack hits or deals damage yet.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "attackerId": {
+        "type": "string",
+        "description": "The unique identifier of the attacking entity.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      },
+      "targetId": {
+        "type": "string",
+        "description": "The unique identifier of the entity being targeted for the attack.",
+        "$ref": "./common.schema.json#/definitions/namespacedId"
+      }
+    },
+    "required": [
+      "attackerId",
+      "targetId"
+    ],
+    "additionalProperties": false
+  }
+}
