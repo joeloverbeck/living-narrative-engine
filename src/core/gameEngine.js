@@ -95,19 +95,19 @@ class GameEngine {
             // --- Refactoring: Resolve new dispatcher, remove direct schema validator if unused ---
             this.#validatedDispatcher = this.#container.resolve('ValidatedEventDispatcher');
             this.#logger.info("GameEngine: ValidatedEventDispatcher resolved.");
-            // this.#schemaValidator = this.#container.resolve('ISchemaValidator'); // Only resolve if needed elsewhere directly
-            // this.#logger.info("GameEngine: ISchemaValidator resolved."); // Adjust log if removed
-            // ------------------------------------------------------------------
 
             this.#container.resolve('DomRenderer'); // Resolve early for UI updates
             this.#logger.info("GameEngine: DomRenderer resolved.");
+
+            // --- Use ValidatedEventDispatcher WITH OPTION for early events ---
+            const earlyDispatchOptions = {allowSchemaNotFound: true}; // Define once
 
             // --- Use ValidatedEventDispatcher ---
             await this.#validatedDispatcher.dispatchValidated('ui:set_title', {text: "Initializing Engine..."});
             await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
                 text: "Initializing core systems...",
                 type: 'info'
-            });
+            }, earlyDispatchOptions);
 
 
             // --- Load Data (using WorldLoader) ---
@@ -115,7 +115,7 @@ class GameEngine {
             await this.#validatedDispatcher.dispatchValidated(EVENT_DISPLAY_MESSAGE, {
                 text: `Loading world data for '${worldName}' via WorldLoader...`,
                 type: 'info'
-            });
+            }, earlyDispatchOptions);
 
             const worldLoader = this.#container.resolve('WorldLoader');
             await worldLoader.loadWorld(worldName);

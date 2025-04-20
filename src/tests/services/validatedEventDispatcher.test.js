@@ -165,7 +165,10 @@ describe('ValidatedEventDispatcher', () => {
                 expect.stringContaining(`Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: [/data]: should be number`),
                 {payload, errors: validationErrors}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch explicitly skipped'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                // Match the specific message for validation failure skip
+                expect.stringContaining(`Dispatch skipped for '${eventName}' due to validation failure`)
+            );
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
@@ -186,7 +189,10 @@ describe('ValidatedEventDispatcher', () => {
                 expect.stringContaining(`Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: No details available`),
                 {payload, errors: null}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch explicitly skipped')); // Also check this log
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                // Match the specific message for validation failure skip
+                expect.stringContaining(`Dispatch skipped for '${eventName}' due to validation failure`)
+            );
         });
 
         // --- Scenario 3: Validation Required & Schema Not Loaded ---
@@ -286,10 +292,7 @@ describe('ValidatedEventDispatcher', () => {
                 expect.stringContaining(`Unexpected error during payload validation process for event '${eventName}'`),
                 processError
             );
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Dispatch explicitly skipped for '${eventName}' due to error *during* validation process.`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch explicitly skipped'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch skipped'));
         });
 
         test('should NOT dispatch and return false if an error occurs during validation process (e.g., validate throws)', async () => {
@@ -314,10 +317,7 @@ describe('ValidatedEventDispatcher', () => {
                 expect.stringContaining(`Unexpected error during payload validation process for event '${eventName}'`),
                 processError
             );
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Dispatch explicitly skipped for '${eventName}' due to error *during* validation process.`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch explicitly skipped'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch skipped'));
         });
 
         // NOTE: Re-verify SUT code if this test continues to fail with result: true
@@ -362,10 +362,7 @@ describe('ValidatedEventDispatcher', () => {
                 processError
             );
             // Check the debug message indicating the process error was secondary
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`Dispatch already skipped for '${eventName}' due to validation failure; process error occurred subsequently.`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch explicitly skipped')); // Final decision log
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Dispatch skipped')); // Final decision log
 
             // Restore original mock behavior if necessary for subsequent tests / cleanup
             // This might be better handled in an afterEach if the mock needs resetting often

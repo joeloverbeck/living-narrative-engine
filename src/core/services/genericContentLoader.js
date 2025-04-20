@@ -209,6 +209,29 @@ class GenericContentLoader {
                 this.#logger.warn(`GenericContentLoader: Duplicate ID detected for ${typeName}: '${dataId}' in file ${filename} (${path}). Overwriting previous definition stored in registry.`);
             }
 
+            // --- 6.5 Register Nested Payload Schema (for Events) ---
+            if (typeName === 'events' && data.payloadSchema && typeof data.payloadSchema === 'object') {
+                const payloadSchemaObject = data.payloadSchema;
+                const payloadSchemaId = `${dataId}#payload`; // e.g., "event:display_message#payload"
+
+                // Only add if not already present (optional, addSchema might handle duplicates)
+                if (!this.#validator.isSchemaLoaded(payloadSchemaId)) {
+                    this.#logger.debug(`GenericContentLoader: Registering nested payload schema with ID: ${payloadSchemaId}`);
+                    try {
+                        // Use the main validator instance to add this specific schema part
+                        await this.#validator.addSchema(payloadSchemaObject, payloadSchemaId);
+                        this.#logger.debug(`GenericContentLoader: Successfully added payload schema ${payloadSchemaId}`);
+                    } catch (addSchemaError) {
+                        // Log severely, as this could break runtime validation
+                        this.#logger.error(`GenericContentLoader: CRITICAL - Failed to add payload schema ${payloadSchemaId} for event ${dataId}:`, addSchemaError);
+                        // Decide if this should be a fatal error for the file/type
+                        throw new Error(`Failed to register payload schema ${payloadSchemaId} for event ${dataId}: ${addSchemaError.message}`);
+                    }
+                } else {
+                    this.#logger.debug(`GenericContentLoader: Payload schema ${payloadSchemaId} already loaded. Skipping addition.`);
+                }
+            }
+
             // --- 7. Store Data ---
             // AC: Successfully loaded and validated content data...is stored in the IDataRegistry
             // AC: Uses IDataRegistry to store the validated data using typeName and data.id.
