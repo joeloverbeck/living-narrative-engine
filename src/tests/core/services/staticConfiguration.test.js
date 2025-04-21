@@ -18,18 +18,7 @@ const EXPECTED_SCHEMA_FILES = [
     'quest.schema.json',
     'objective.schema.json',
     'world-manifest.schema.json',
-    'container.schema.json',
-    'lockable.schema.json',
-    'effect.schema.json',
-    'openable.schema.json',
-    'edible.schema.json',
-    'pushable.schema.json',
-    'liquid-container.schema.json',
-    'breakable.schema.json',
     'component-definition.schema.json',
-    'item-component.schema.json',
-    'usable.schema.json',
-    'equippable.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -84,7 +73,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('equippable.schema.json');
+            expect(files[files.length - 1]).toBe('component-definition.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {

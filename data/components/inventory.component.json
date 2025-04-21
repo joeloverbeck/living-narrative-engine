@@ -1,0 +1,23 @@
+{
+  "id": "component:inventory",
+  "description": "Holds a list of item entity IDs the entity carries.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Holds a list of item entity IDs the entity carries.",
+    "properties": {
+      "items": {
+        "type": "array",
+        "description": "Array of item entity identifier strings currently in the entity's inventory.",
+        "items": {
+          "$ref": "common.schema.json#/definitions/namespacedId"
+        },
+        "default": [],
+        "uniqueItems": false
+      }
+    },
+    "required": [
+      "items"
+    ],
+    "additionalProperties": false
+  }
+}

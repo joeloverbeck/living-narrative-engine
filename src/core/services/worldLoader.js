@@ -229,7 +229,7 @@ class WorldLoader {
         // Content check (Now reflects actual loaded content) << MODIFIED >>
         // AC: #logLoadSummary iterates common content types, calling registry.getAll() for each.
         const contentTypes = [
-            'actions', 'events', 'entities', 'items', 'locations', 'connections',
+            'actions', 'events', 'entities', 'components', 'items', 'locations', 'connections',
             'blockers', 'triggers', 'quests', 'objectives', 'interactionTests'
             // Add any other types handled by GenericContentLoader from your config
         ];

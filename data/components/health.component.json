@@ -1,0 +1,25 @@
+{
+  "id": "component:health",
+  "description": "Tracks the entity's health points.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Tracks the entity's health points.",
+    "properties": {
+      "current": {
+        "type": "integer",
+        "description": "Current HP (hit points). Cannot exceed max.",
+        "minimum": 0
+      },
+      "max": {
+        "type": "integer",
+        "description": "Maximum HP for the entity.",
+        "minimum": 1
+      }
+    },
+    "required": [
+      "current",
+      "max"
+    ],
+    "additionalProperties": false
+  }
+}

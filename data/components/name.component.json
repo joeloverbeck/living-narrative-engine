@@ -1,0 +1,17 @@
+{
+  "id": "component:name",
+  "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key').",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "value"
+    ],
+    "properties": {
+      "value": {
+        "type": "string",
+        "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key')."
+      }
+    }
+  }
+}

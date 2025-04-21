@@ -1,0 +1,38 @@
+{
+  "id": "component:container",
+  "description": "Defines the state for an entity that can hold other item entities.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "capacity": {
+        "type": "integer",
+        "description": "The maximum number of items the container can hold. Use -1 for infinite capacity.",
+        "minimum": -1,
+        "default": -1
+      },
+      "contains": {
+        "type": "array",
+        "description": "A list of the namespaced IDs of the item entities currently inside this container.",
+        "items": {
+          "$ref": "common.schema.json#/definitions/namespacedId"
+        },
+        "default": []
+      },
+      "allowedTags": {
+        "type": "array",
+        "description": "Optional. If present, only items possessing ANY of these tags can be placed inside.",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "uniqueItems": true,
+        "default": []
+      }
+    },
+    "required": [
+      "capacity",
+      "contains"
+    ],
+    "additionalProperties": false
+  }
+}

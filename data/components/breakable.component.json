@@ -1,0 +1,34 @@
+{
+  "id": "component:breakable",
+  "description": "Defines properties for entities that have health and can be broken or destroyed.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "currentHp": {
+        "type": "integer",
+        "description": "Current hit points.",
+        "minimum": 0
+      },
+      "maxHp": {
+        "type": "integer",
+        "description": "Maximum hit points.",
+        "minimum": 1
+      },
+      "isBroken": {
+        "type": "boolean",
+        "description": "Indicates if the entity has been destroyed.",
+        "default": false
+      },
+      "resistance": {
+        "type": "string",
+        "description": "Optional identifier for damage resistance type."
+      }
+    },
+    "required": [
+      "currentHp",
+      "maxHp",
+      "isBroken"
+    ],
+    "additionalProperties": false
+  }
+}

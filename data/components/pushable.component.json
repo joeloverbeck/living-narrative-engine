@@ -1,0 +1,9 @@
+{
+  "id": "component:pushable",
+  "description": "Marker component indicating an entity can be pushed.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

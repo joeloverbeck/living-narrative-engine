@@ -1,0 +1,23 @@
+{
+  "id": "component:lockable",
+  "description": "Defines the state for an entity that can be locked or unlocked, potentially requiring a key.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "isLocked": {
+        "type": "boolean",
+        "description": "Indicates whether the entity is currently locked (true) or unlocked (false).",
+        "default": true
+      },
+      "keyId": {
+        "$ref": "common.schema.json#/definitions/nullableNamespacedId",
+        "description": "Optional. The namespaced ID of the specific key item required to unlock this entity.",
+        "default": null
+      }
+    },
+    "required": [
+      "isLocked"
+    ],
+    "additionalProperties": false
+  }
+}
