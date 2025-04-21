@@ -1,20 +1,20 @@
 {
   "id": "core:player",
   "components": {
-    "Name": {
+    "component:name": {
       "value": "Player"
     },
-    "Position": {
+    "component:position": {
       "locationId": "demo:room_entrance"
     },
-    "Health": {
+    "component:health": {
       "current": 10,
       "max": 10
     },
-    "Inventory": {
+    "component:inventory": {
       "items": []
     },
-    "Stats": {
+    "component:stats": {
       "attributes": {
         "core:attr_strength": 8,
         "core:attr_agility": 10,
@@ -22,10 +22,10 @@
         "core:attr_constitution": 9
       }
     },
-    "Attack": {
+    "component:attack": {
       "damage": 3
     },
-    "Equipment": {
+    "component:equipment": {
       "slots": {
         "core:slot_head": null,
         "core:slot_body": null,
@@ -39,6 +39,9 @@
         "core:slot_ring2": null
       }
     },
-    "QuestLog": {}
+    "component:quest_log": {
+      "active_quests": [],
+      "completed_quests": []
+    }
   }
 }

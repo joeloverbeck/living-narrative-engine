@@ -101,6 +101,15 @@
           },
           "default": []
         },
+        "components": {
+          "type": "array",
+          "description": "Relative paths to component definition files (*.component.json).",
+          "items": {
+            "type": "string",
+            "description": "Filename relative to the component base directory, e.g., 'health.component.json'."
+          },
+          "default": []
+        },
         "triggers": {
           "type": "array",
           "description": "Relative paths to event trigger definition files (JSON).",

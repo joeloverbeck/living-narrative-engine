@@ -117,16 +117,14 @@ class WorldLoader {
     }
 
     /**
-     * Orchestrates the loading of all data for a specified world.
-     * This method coordinates schema loading, manifest loading/validation,
-     * component definition loading, and content loading based on the manifest.
+     * Orchestrates the loading of all data for a specified world IN THE CORRECT ORDER:
+     * Schemas -> Manifest -> Component Definitions -> Other Content Files.
      *
      * @param {string} worldName - The name of the world to load (e.g., 'demo').
      * @returns {Promise<void>} Resolves when loading is complete, rejects on critical error.
      * @throws {Error} If worldName is invalid or a critical loading step fails.
      */
-    async loadWorld(worldName) { // [cite: 98]
-        // AC: loadWorld throws an error for invalid worldName.
+    async loadWorld(worldName) {
         if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
             this.#logger.error("WorldLoader: Invalid 'worldName' provided to loadWorld.");
             throw new Error("WorldLoader: Invalid 'worldName' provided.");
@@ -134,40 +132,38 @@ class WorldLoader {
 
         this.#logger.info(`WorldLoader: Starting full data load for world: '${worldName}'...`);
 
-        try { // [cite: 98]
-            // 1. Clear registry
+        try {
+            // --- Step 1: Clear registry ---
             this.#registry.clear();
             this.#logger.info("WorldLoader: Cleared data registry.");
 
-            // 2. Load schemas
+            // --- Step 2: Load schemas ---
             this.#logger.info("WorldLoader: Initiating schema loading...");
-            await this.#schemaLoader.loadAndCompileAllSchemas(); // [cite: 98]
+            await this.#schemaLoader.loadAndCompileAllSchemas(); //
             this.#logger.info("WorldLoader: Schema loading completed.");
 
-            // --- INSERTION POINT ---
-            // 3. Load Component Definitions (as per ticket 2.1.8.3)
-            // >>> TICKET 2.1.8.4: Log Start <<<
-            this.#logger.info('WorldLoader: Starting component definition loading...');
-            await this.#componentDefinitionLoader.loadComponentDefinitions(); // [cite: 98, 101]
-            // >>> TICKET 2.1.8.4: Log Success <<<
-            this.#logger.info('WorldLoader: Component definition loading completed successfully.');
-            // loadComponentDefinitions already logs internal success/failure and registers schemas [cite: 101, 102]
-            // --- END INSERTION ---
-
-            // 4. Load and Validate Manifest (Renumbered from 3)
+            // --- Step 3: Load and Validate Manifest ---
             this.#logger.info(`WorldLoader: Loading manifest for world '${worldName}'...`);
-            const manifestData = await this.#manifestLoader.loadAndValidateManifest(worldName);
+            const manifestData = await this.#manifestLoader.loadAndValidateManifest(worldName); //
             this.#logger.info(`WorldLoader: Manifest for world '${worldName}' loaded and validated.`);
 
-            // 5. Store Manifest in Registry (Renumbered from 4)
-            this.#registry.setManifest(manifestData);
+            // --- Step 4: Store Manifest in Registry ---
+            this.#registry.setManifest(manifestData); //
             this.#logger.info(`WorldLoader: Stored manifest for world '${worldName}' in registry.`);
 
-            // 6. Load Content Files via GenericContentLoader (Renumbered from 5)
-            this.#logger.info("WorldLoader: Proceeding to load content based on manifest via GenericContentLoader...");
-            const manifest = this.#registry.getManifest();
+            // --- Step 5: Load Component Definitions (NOW uses the manifest) ---
+            this.#logger.info('WorldLoader: Starting component definition loading (using manifest)...');
+            // Assumes ComponentDefinitionLoader now reads from the registry
+            await this.#componentDefinitionLoader.loadComponentDefinitions(); //
+            this.#logger.info('WorldLoader: Component definition loading completed successfully.');
+
+            // --- Step 6: Load Other Content Files via GenericContentLoader ---
+            this.#logger.info("WorldLoader: Proceeding to load other content based on manifest via GenericContentLoader...");
+            // Get manifest again (or use manifestData directly if preferred)
+            const manifest = this.#registry.getManifest(); //
             if (!manifest) {
-                this.#logger.error("WorldLoader: Manifest disappeared from registry after loading. Critical error.");
+                // This check is now even more critical if ComponentDefinitionLoader depends on it
+                this.#logger.error("WorldLoader: Manifest disappeared from registry after loading and before component/content loading. Critical error.");
                 throw new Error("WorldLoader: Manifest disappeared from registry after loading. Critical error.");
             }
             const contentFiles = manifest.contentFiles;
@@ -177,37 +173,40 @@ class WorldLoader {
             }
 
             const contentPromises = [];
+            // Iterate through contentFiles, *excluding* 'components' as they were handled above
             for (const [typeName, filenames] of Object.entries(contentFiles)) {
+                // Skip the 'components' entry as it was handled by ComponentDefinitionLoader
+                if (typeName === 'components') { // <-- Add this check
+                    continue;                    // <-- Skip components here
+                }
+
                 if (Array.isArray(filenames)) {
                     contentPromises.push(
-                        this.#contentLoader.loadContentFiles(typeName, filenames) // [cite: 105]
+                        this.#contentLoader.loadContentFiles(typeName, filenames) //
                             .catch(error => {
                                 this.#logger.error(`WorldLoader: Error loading content type '${typeName}'.`, error);
-                                throw error;
+                                throw error; // Propagate error to halt Promise.all
                             })
                     );
                 } else {
                     this.#logger.warn(`WorldLoader: Expected an array for content type '${typeName}' in manifest contentFiles, but got ${typeof filenames}. Skipping.`);
                 }
             }
-            await Promise.all(contentPromises);
+            // Wait for all *other* content loading promises
+            await Promise.all(contentPromises); //
 
-            this.#logger.info("WorldLoader: All content loading tasks based on manifest completed.");
+            this.#logger.info("WorldLoader: All other content loading tasks based on manifest completed.");
             // --- End Content Loading ---
 
-
+            // --- Final Steps ---
             this.#logger.info(`WorldLoader: Data load orchestration for world '${worldName}' completed successfully.`);
-            this.#logLoadSummary(worldName); // Log summary
+            this.#logLoadSummary(worldName); // Log summary //
 
-        } catch (error) { // [cite: 98]
-            // >>> TICKET 2.1.8.4: Verify Failure Logging <<<
-            // The existing catch block handles failures from ANY step, including
-            // the awaited `loadComponentDefinitions`. The logged error will include
-            // the specific error thrown by that step, fulfilling the requirement.
+        } catch (error) {
+            // This catch block now handles errors from any step in the new order
             this.#logger.error(`WorldLoader: CRITICAL ERROR during loadWorld for '${worldName}'. Load process halted.`, error);
-            this.#registry.clear(); // Attempt to clear partial data
+            this.#registry.clear(); // Attempt to clear partial data //
             this.#logger.info("WorldLoader: Cleared data registry due to load error.");
-            // The thrown error provides context about the overall failure.
             throw new Error(`WorldLoader failed to load world '${worldName}': ${error.message}`);
         }
     }

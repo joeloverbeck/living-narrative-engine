@@ -105,32 +105,30 @@ class ComponentDefinitionLoader {
      * any file processing fails, or schema registration fails.
      */
     async loadComponentDefinitions() {
-        this.#logger.info("ComponentDefinitionLoader: Starting component definition loading, validation, schema registration, and metadata storage...");
-        this.#validatedDefinitions = null; // Reset from previous runs
+        this.#logger.info("ComponentDefinitionLoader: Starting component definition loading based on manifest...");
+        this.#validatedDefinitions = null;
 
-        let componentFilenames = []; // Initialize to empty array
+        let componentFilenames = [];
 
         try {
-            // --- 1. Discover Files (Placeholder from Ticket 2.1.4) ---
-            // This section should be replaced by the actual implementation of 2.1.4
-            const componentsBasePath = this.#config.getContentBasePath('components');
-            if (!componentsBasePath) {
-                this.#logger.error("ComponentDefinitionLoader: Could not determine component definition base path from configuration.");
-                throw new Error("Component definition base path not configured.");
+            // --- 1. Get Files from Loaded Manifest ---
+            const manifest = this.#registry.getManifest(); // Get the manifest loaded by WorldLoader
+            if (!manifest) {
+                throw new Error("ComponentDefinitionLoader: World manifest not found in registry. Ensure it was loaded before attempting to load components.");
             }
-            this.#logger.warn("ComponentDefinitionLoader: Using placeholder file discovery. Implement Ticket 2.1.4.");
-            // Placeholder: Simulate finding some files
-            // For testing, manually add some known files if filesystem discovery isn't implemented
-            // componentFilenames = ['core_health.component.json', 'core_edible.component.json'];
-            // componentFilenames = await fileSystem.listFiles(componentsBasePath, '*.component.json');
-            // --- End Placeholder ---
+            if (!manifest.contentFiles || !Array.isArray(manifest.contentFiles.components)) {
+                this.#logger.warn(`ComponentDefinitionLoader: World manifest for '${manifest.worldName}' does not contain a 'contentFiles.components' array. Assuming no world-specific components needed.`);
+                componentFilenames = []; // Treat as empty list
+            } else {
+                componentFilenames = manifest.contentFiles.components;
+            }
+            this.#logger.info(`ComponentDefinitionLoader: Found ${componentFilenames.length} component definition filenames listed in the manifest.`);
+            // --- End Manifest Reading ---
 
-            const fileCount = componentFilenames.length;
-            if (fileCount === 0) {
-                this.#logger.warn(`ComponentDefinitionLoader: No component definition files (*.component.json) found in configured directory (${componentsBasePath}). Nothing to load or register.`);
-                return; // Successfully did nothing
+            if (componentFilenames.length === 0) {
+                this.#logger.info(`ComponentDefinitionLoader: No component definition files listed in manifest. Nothing to load or register for this world.`);
+                return;
             }
-            this.#logger.info(`ComponentDefinitionLoader: Found ${fileCount} component definition files to process.`);
             this.#logger.debug("ComponentDefinitionLoader: Files to process:", componentFilenames);
 
 
@@ -231,11 +229,8 @@ class ComponentDefinitionLoader {
 
         } catch (error) {
             this.#logger.error("ComponentDefinitionLoader: Critical error during component definition loading/validation, schema registration, or metadata storage.", error);
-            // Error should have been logged by the specific failing step.
-            // Re-throw to ensure the main promise rejects and signals failure to WorldLoader etc.
-            throw error; // The error will include context from where it was originally thrown
+            throw error;
         } finally {
-            // Clean up the temporary storage regardless of success or failure
             this.#validatedDefinitions = null;
         }
     }
