@@ -1,5 +1,3 @@
-// src/core/services/staticConfiguration.js
-
 /**
  * @fileoverview Implements the IConfiguration interface by providing
  * hardcoded configuration values, primarily sourced from the legacy
@@ -7,18 +5,17 @@
  * static configuration provider during the refactoring process.
  */
 
-// --- Constants copied from GameDataRepository.js ---
+// --- Constants reflecting consolidated entity validation ---
 
 const BASE_DATA_PATH = './data';
 
+// Updated SCHEMA_FILES array: Removed item/location, added component schemas
 const SCHEMA_FILES = [
     'common.schema.json',
     'event-definition.schema.json',
     'action-definition.schema.json',
-    'entity.schema.json',
+    'entity.schema.json', // Main generic entity schema
     'interaction-test.schema.json',
-    'item.schema.json',
-    'location.schema.json',
     'connection.schema.json',
     'quest.schema.json',
     'objective.schema.json',
@@ -32,29 +29,31 @@ const SCHEMA_FILES = [
     'liquid-container.schema.json',
     'breakable.schema.json',
     'component-definition.schema.json',
+    // Added component schemas (assuming they are directly loaded/needed)
+    'item-component.schema.json', // From Ticket 1.2.2
+    'usable.schema.json', // From Ticket 1.2.3
+    'equippable.schema.json', // From Ticket 1.2.3
 ];
 
+// Updated CONTENT_TYPE_SCHEMAS map: items and locations now point to the generic entity schema ID
 const CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action-definition.schema.json',
     events: 'http://example.com/schemas/event-definition.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
-    items: 'http://example.com/schemas/item.schema.json', // For items listed under "items"
-    locations: 'http://example.com/schemas/location.schema.json', // For locations listed under "locations"
-    connections: 'http://example.com/schemas/connection.schema.json',
-    blockers: 'http://example.com/schemas/entity.schema.json',
-    objectives: 'http://example.com/schemas/objective.schema.json', // For objectives listed under "objectives"
-    quests: 'http://example.com/schemas/quest.schema.json', // For quests listed under "quests"
-    interactionTests: 'http://example.com/schemas/interaction-test.schema.json', // For tests listed under "interactionTests"
+    items: 'http://example.com/schemas/entity.schema.json', // Updated: Use generic entity schema
+    locations: 'http://example.com/schemas/entity.schema.json', // Updated: Use generic entity schema
+    connections: 'http://example.com/schemas/connection.schema.json', // Uses its own specific entity schema
+    blockers: 'http://example.com/schemas/entity.schema.json', // Assumed to be generic entities
+    objectives: 'http://example.com/schemas/objective.schema.json',
+    quests: 'http://example.com/schemas/quest.schema.json',
+    interactionTests: 'http://example.com/schemas/interaction-test.schema.json',
     manifest: 'http://example.com/schemas/world-manifest.schema.json', // Schema for the manifest itself
-    containers: 'http://example.com/schemas/container.schema.json',
-    lockables: 'http://example.com/schemas/lockable.schema.json',
-    openables: 'http://example.com/schemas/openable.schema.json',
-    edibles: 'http://example.com/schemas/edible.schema.json',
-    pushables: 'http://example.com/schemas/pushable.schema.json',
-    liquidContainers: 'http://example.com/schemas/liquid-container.schema.json',
-    breakables: 'http://example.com/schemas/breakable.schema.json',
+    // Component schemas (these are loaded but typically not assigned as a 'content type' schema directly)
+    // Keep other potential entity sub-type schemas if they exist and weren't consolidated yet
     components: 'http://example.com/schemas/component-definition.schema.json',
+    // Note: The specific component schemas like item-component, usable, equippable are in SCHEMA_FILES
+    // but usually don't need entries here unless there's a content type named 'item-components' etc.
 };
 
 // --- Static Configuration Class ---
@@ -79,21 +78,21 @@ class StaticConfiguration {
      * @type {string[]}
      * @description List of schema filenames to be loaded.
      */
-    #schemaFiles = SCHEMA_FILES;
+    #schemaFiles = SCHEMA_FILES; // Uses the updated array
 
     /**
      * @private
      * @type {Record<string, string>}
      * @description Mapping of content type names (from manifest) to their schema $ids.
      */
-    #contentTypeSchemas = CONTENT_TYPE_SCHEMAS;
+    #contentTypeSchemas = CONTENT_TYPE_SCHEMAS; // Uses the updated map
 
     /**
      * @private
      * @type {string}
      * @description The specific schema $id for validating world manifest files.
      */
-    #manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest; // Extracted as requested
+    #manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
 
     /**
      * Returns the root path where all game data (worlds, schemas, content) is located.
@@ -111,7 +110,7 @@ class StaticConfiguration {
      * @returns {string[]} A new array containing the schema filenames.
      */
     getSchemaFiles() {
-        // Return a copy as required by the ticket to prevent mutation
+        // Returns a copy of the updated #schemaFiles array
         return [...this.#schemaFiles];
     }
 
@@ -122,7 +121,7 @@ class StaticConfiguration {
      * @returns {string | undefined} The schema ID string if found, otherwise undefined.
      */
     getContentTypeSchemaId(typeName) {
-        // Object property access returns undefined if the key doesn't exist, fulfilling the requirement.
+        // Correctly uses the updated #contentTypeSchemas map
         return this.#contentTypeSchemas[typeName];
     }
 

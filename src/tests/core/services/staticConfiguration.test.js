@@ -14,8 +14,6 @@ const EXPECTED_SCHEMA_FILES = [
     'action-definition.schema.json',
     'entity.schema.json',
     'interaction-test.schema.json',
-    'item.schema.json',
-    'location.schema.json',
     'connection.schema.json',
     'quest.schema.json',
     'objective.schema.json',
@@ -29,6 +27,9 @@ const EXPECTED_SCHEMA_FILES = [
     'liquid-container.schema.json',
     'breakable.schema.json',
     'component-definition.schema.json',
+    'item-component.schema.json',
+    'usable.schema.json',
+    'equippable.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -37,21 +38,14 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
     actions: 'http://example.com/schemas/action-definition.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json',
     components: 'http://example.com/schemas/component-definition.schema.json',
-    items: 'http://example.com/schemas/item.schema.json',
-    locations: 'http://example.com/schemas/location.schema.json',
+    items: 'http://example.com/schemas/entity.schema.json',
+    locations: 'http://example.com/schemas/entity.schema.json',
     connections: 'http://example.com/schemas/connection.schema.json',
     blockers: 'http://example.com/schemas/entity.schema.json',
     objectives: 'http://example.com/schemas/objective.schema.json',
     quests: 'http://example.com/schemas/quest.schema.json',
     interactionTests: 'http://example.com/schemas/interaction-test.schema.json',
     manifest: 'http://example.com/schemas/world-manifest.schema.json',
-    containers: 'http://example.com/schemas/container.schema.json',
-    lockables: 'http://example.com/schemas/lockable.schema.json',
-    openables: 'http://example.com/schemas/openable.schema.json',
-    edibles: 'http://example.com/schemas/edible.schema.json',
-    pushables: 'http://example.com/schemas/pushable.schema.json',
-    liquidContainers: 'http://example.com/schemas/liquid-container.schema.json',
-    breakables: 'http://example.com/schemas/breakable.schema.json',
 };
 
 // Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
@@ -90,7 +84,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('component-definition.schema.json');
+            expect(files[files.length - 1]).toBe('equippable.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {

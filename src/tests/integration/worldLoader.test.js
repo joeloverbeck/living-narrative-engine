@@ -182,8 +182,22 @@ const testSchemas = {
         $id: "http://example.com/schemas/breakable.schema.json",
         type: "object",
         properties: {id: {type: "string"}}
-    } // Minimal stub
-
+    }, // Minimal stub
+    "item-component.schema.json": {
+        $id: "http://example.com/schemas/item-component.schema.json",
+        type: "object",
+        properties: {id: {type: "string"}}
+    }, // Minimal stub
+    "usable.schema.json": {
+        $id: "http://example.com/schemas/usable.schema.json",
+        type: "object",
+        properties: {id: {type: "string"}}
+    }, // Minimal stub
+    "equippable.schema.json": {
+        $id: "http://example.com/schemas/equippable.schema.json",
+        type: "object",
+        properties: {id: {type: "string"}}
+    }
 };
 
 const testManifest = {
