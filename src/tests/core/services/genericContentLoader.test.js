@@ -60,6 +60,7 @@ describe('GenericContentLoader', () => {
             addSchema: jest.fn(), // Not used by GenericContentLoader, but part of interface
             getValidator: jest.fn(),
             isSchemaLoaded: jest.fn(), // Not used directly by GenericContentLoader, but part of interface
+            validate: jest.fn(), // <--- ADD THIS LINE
         };
         mockDataRegistry = {
             store: jest.fn(),
@@ -204,7 +205,7 @@ describe('GenericContentLoader', () => {
 
         // Act & Assert
         await expect(contentLoader.loadContentFiles(typeName, filenames))
-            .rejects.toThrow(`Error processing ${typeName} file ${filenames[1]} at path ${item2Path}: Schema validation failed for ${typeName} file '${filenames[1]}'`);
+            .rejects.toThrow(`Error processing ${typeName} file ${filenames[1]} at path ${item2Path}: Primary schema validation failed for ${typeName} file '${filenames[1]}'`);
 
         // Assert
         // Verify Service Interactions
@@ -226,13 +227,13 @@ describe('GenericContentLoader', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing file: ${item1Path}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing file: ${item2Path}`));
         expect(mockLogger.error).toHaveBeenCalledWith(
-            `Schema validation failed for ${item2Path} (type ${typeName}) using schema ${ITEMS_SCHEMA_ID}:\n${JSON.stringify(validationErrors, null, 2)}`
+            `Primary schema validation failed for ${item2Path} (type ${typeName}) using schema ${ITEMS_SCHEMA_ID}:\n${JSON.stringify(validationErrors, null, 2)}` // Changed "Schema" to "Primary schema"
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
             expect.stringContaining(`Failed to load/process file ${filenames[1]} (type ${typeName}, path: ${item2Path})`),
             expect.any(Error) // Internal error wrapping the validation error
         );
-        expect(mockLogger.error.mock.calls[1][1].message).toContain(`Schema validation failed for ${typeName} file '${filenames[1]}'`);
+        expect(mockLogger.error.mock.calls[1][1].message).toContain(`Primary schema validation failed for ${typeName} file '${filenames[1]}'`);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
             expect.stringContaining(`Failed to load one or more files for content type '${typeName}'`),
@@ -474,13 +475,17 @@ describe('GenericContentLoader', () => {
     describe('Constructor Validation', () => {
         // Helper to create a valid base set of mocks
         const createValidMocks = () => ({
-            mockConfiguration: {getContentTypeSchemaId: jest.fn()}, // Add other methods if needed by constructor
+            mockConfiguration: {getContentTypeSchemaId: jest.fn()},
             mockPathResolver: {resolveContentPath: jest.fn()},
             mockDataFetcher: {fetch: jest.fn()},
-            mockSchemaValidator: {getValidator: jest.fn(), isSchemaLoaded: jest.fn()},
-            mockEventTypeValidator: {isValidEventType: jest.fn()},
+            mockSchemaValidator: {
+                getValidator: jest.fn(),
+                isSchemaLoaded: jest.fn(),
+                validate: jest.fn() // <--- ADD THIS LINE
+            },
+            mockEventTypeValidator: {isValidEventType: jest.fn()}, // This seems unused in the provided test snippets, but keep if needed elsewhere
             mockDataRegistry: {store: jest.fn(), get: jest.fn()},
-            mockLogger: {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()}, // Ensure debug is mocked if needed
+            mockLogger: {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
         });
 
         it('should throw if IConfiguration is missing or invalid', () => {

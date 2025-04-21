@@ -58,9 +58,10 @@ describe('GenericContentLoader - Fetch Error Test', () => {
             fetch: jest.fn(),
         };
         mockSchemaValidator = {
-            addSchema: jest.fn(), // Not used by GenericContentLoader, but part of interface
+            addSchema: jest.fn(),
             getValidator: jest.fn(),
-            isSchemaLoaded: jest.fn(), // Not used directly by GenericContentLoader, but part of interface
+            isSchemaLoaded: jest.fn(),
+            validate: jest.fn(), // <--- ADD THIS LINE
         };
         mockDataRegistry = {
             store: jest.fn(),
@@ -99,7 +100,7 @@ describe('GenericContentLoader - Fetch Error Test', () => {
             mockConfiguration,
             mockPathResolver,
             mockDataFetcher,
-            mockSchemaValidator,
+            mockSchemaValidator, // Now passing the complete mock
             mockDataRegistry,
             mockLogger
         );

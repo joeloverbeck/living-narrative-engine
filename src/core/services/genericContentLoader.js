@@ -19,7 +19,7 @@
 
 /**
  * Handles the generic loading process for content files (like actions, items, entities):
- * fetch -> parse -> validate (schema & conditional) -> store.
+ * fetch -> parse -> validate (schema & runtime component data) -> store.
  * Uses injected services for configuration, path resolution, fetching, validation, and storage.
  */
 class GenericContentLoader {
@@ -42,7 +42,7 @@ class GenericContentLoader {
      * @param {IConfiguration} configuration - Service to provide configuration values (schema IDs).
      * @param {IPathResolver} pathResolver - Service to resolve content filenames to paths.
      * @param {IDataFetcher} fetcher - Service to fetch raw content data.
-     * @param {ISchemaValidator} validator - Service for schema validation.
+     * @param {ISchemaValidator} validator - Service for schema validation (primary and runtime component).
      * @param {IDataRegistry} registry - Service to store loaded data.
      * @param {ILogger} logger - Service for logging messages.
      * @throws {Error} If any required dependency is not provided or invalid.
@@ -58,8 +58,9 @@ class GenericContentLoader {
         if (!fetcher || typeof fetcher.fetch !== 'function') {
             throw new Error("GenericContentLoader: Missing or invalid 'fetcher' dependency (IDataFetcher).");
         }
-        if (!validator || typeof validator.getValidator !== 'function' || typeof validator.isSchemaLoaded !== 'function') {
-            throw new Error("GenericContentLoader: Missing or invalid 'validator' dependency (ISchemaValidator).");
+        // Updated check to include 'validate' needed for runtime component validation
+        if (!validator || typeof validator.getValidator !== 'function' || typeof validator.isSchemaLoaded !== 'function' || typeof validator.validate !== 'function') {
+            throw new Error("GenericContentLoader: Missing or invalid 'validator' dependency (ISchemaValidator - requires getValidator, isSchemaLoaded, validate).");
         }
         if (!registry || typeof registry.store !== 'function' || typeof registry.get !== 'function') {
             throw new Error("GenericContentLoader: Missing or invalid 'registry' dependency (IDataRegistry).");
@@ -81,7 +82,7 @@ class GenericContentLoader {
 
     /**
      * Loads, validates, and stores all content files for a specific type name.
-     * Orchestrates the fetch -> parse -> validate -> store workflow for a list of files.
+     * Orchestrates the fetch -> parse -> validate (schema + runtime) -> store workflow for a list of files.
      *
      * @param {string} typeName - The type of content being loaded (e.g., 'actions', 'items', 'triggers').
      * @param {string[]} filenames - An array of filenames for this content type (from the manifest).
@@ -117,7 +118,6 @@ class GenericContentLoader {
         const validatorFn = this.#validator.getValidator(schemaId);
         if (!validatorFn) {
             // AC: Throws an error if the validator function cannot be retrieved.
-            // This should ideally not happen if WorldLoader ensures schemas are loaded first, but check defensively.
             const errorMsg = `GenericContentLoader: Schema validator function not found for schema ID '${schemaId}' (required for type '${typeName}'). Ensure schema was loaded correctly. Skipping loading for this type.`;
             this.#logger.error(errorMsg);
             throw new Error(`Validator function unavailable for schema '${schemaId}' (type '${typeName}')`);
@@ -135,7 +135,6 @@ class GenericContentLoader {
             this.#logger.info(`GenericContentLoader: Successfully finished loading content type '${typeName}'.`);
         } catch (error) {
             // AC: Errors during processing are logged gracefully.
-            // Error is already logged in #loadAndProcessFile, but log the overall failure for the type.
             this.#logger.error(`GenericContentLoader: Failed to load one or more files for content type '${typeName}'. See previous errors for details.`, error);
             // Re-throw to signal failure to WorldLoader for this type.
             throw error;
@@ -143,75 +142,106 @@ class GenericContentLoader {
     }
 
     /**
-     * Loads and processes a single content file.
+     * Loads and processes a single content file, including runtime component validation.
      * Helper method for loadContentFiles.
      * @private
-     * @param {string} typeName - The type of content.
+     * @param {string} typeName - The type of content (e.g., 'entities', 'items').
      * @param {string} filename - The filename to process.
-     * @param {string} schemaId - The schema ID to validate against.
-     * @param {(data: any) => ValidationResult} validatorFn - The schema validation function.
-     * @returns {Promise<void>} Resolves on success, rejects on failure for this file.
+     * @param {string} schemaId - The primary schema ID to validate the overall file structure against.
+     * @param {(data: any) => ValidationResult} validatorFn - The primary schema validation function.
+     * @returns {Promise<void>} Resolves on success (both validations pass, stored), rejects on failure for this file.
      */
     async #loadAndProcessFile(typeName, filename, schemaId, validatorFn) {
         let path = ''; // Declare path here to be available in catch block
         try {
             // --- 1. Resolve Path ---
-            // AC: Uses IPathResolver to get the full path for each file.
             if (/[\\/]/.test(filename)) {
                 this.#logger.warn(`GenericContentLoader: Filename '${filename}' for type '${typeName}' contains path separators. Ensure filenames in manifest are just the base filename.`);
-                // Proceed anyway, assuming resolver handles it, but warn.
             }
             path = this.#resolver.resolveContentPath(typeName, filename);
             this.#logger.debug(`GenericContentLoader: Processing file: ${path}`);
 
             // --- 2. Fetch Data ---
-            // AC: Uses IDataFetcher to fetch the content of each file.
-            // AC: Implements the core fetch, parse, schema validate logic.
             const data = await this.#fetcher.fetch(path); // Assumes fetcher parses JSON
 
-            // --- 3. Validate Schema ---
-            // AC: Uses the retrieved validator function to validate the fetched data.
-            const validationResult = validatorFn(data);
-            if (!validationResult.isValid) {
-                // AC: Logs an error and throws if schema validation fails.
-                const errorDetails = JSON.stringify(validationResult.errors, null, 2);
-                this.#logger.error(`Schema validation failed for ${path} (type ${typeName}) using schema ${schemaId}:\n${errorDetails}`);
-                throw new Error(`Schema validation failed for ${typeName} file '${filename}'.`);
+            // --- 3. Primary Schema Validation ---
+            // AC: Validation Trigger (after fetch, before registry storage)
+            const primaryValidationResult = validatorFn(data);
+            if (!primaryValidationResult.isValid) {
+                const errorDetails = JSON.stringify(primaryValidationResult.errors, null, 2);
+                this.#logger.error(`Primary schema validation failed for ${path} (type ${typeName}) using schema ${schemaId}:\n${errorDetails}`);
+                throw new Error(`Primary schema validation failed for ${typeName} file '${filename}'.`);
+            }
+            this.#logger.debug(`GenericContentLoader: Primary schema validation passed for ${path}.`);
+
+            // --- 4. Runtime Component Data Validation (Refined Ticket 2.2) ---
+            // AC: Target Service (within #loadAndProcessFile)
+            // Check if the data has a 'components' map. This applies mainly to entity types.
+            // Assumes entity types ('entities', 'items', 'locations', etc.) use the schema defining the 'components' map.
+            // Other types (actions, events) might not have this map.
+            if (data && typeof data.components === 'object' && data.components !== null) {
+                // AC: Component Iteration
+                this.#logger.debug(`GenericContentLoader: Performing runtime component validation for ${path}.`);
+                let allComponentsValid = true;
+                const componentEntries = Object.entries(data.components);
+
+                if (componentEntries.length > 0) {
+                    for (const [componentId, componentData] of componentEntries) {
+                        // AC: Runtime Validation Call
+                        // Use the injected ISchemaValidator directly via #validator.validate
+                        // This expects ComponentDefinitionLoader to have registered the component's dataSchema using its ID [cite: 43]
+                        const componentValidationResult = this.#validator.validate(componentId, componentData); // [cite: 43]
+
+                        // AC: Failure Handling
+                        if (!componentValidationResult.isValid) {
+                            allComponentsValid = false;
+                            const errorDetails = JSON.stringify(componentValidationResult.errors, null, 2);
+                            // AC: Failure Handling - Log clear error
+                            this.#logger.error(`Runtime component data validation failed for entity ${path} (ID: ${data.id || 'N/A'}), component '${componentId}'. Errors:\n${errorDetails}`); // [cite: 108]
+                            // No need to throw immediately, check all components first, then throw below if any failed.
+                        } else {
+                            this.#logger.debug(`   - Component '${componentId}' in ${filename} passed runtime validation.`);
+                        }
+                    }
+
+                    if (!allComponentsValid) {
+                        // AC: Failure Handling - Reject loading process
+                        throw new Error(`Runtime component data validation failed for one or more components in ${typeName} file '${filename}'. See logs for details.`); // [cite: 108]
+                    }
+                    this.#logger.debug(`GenericContentLoader: All runtime component validations passed for ${path}.`);
+                } else {
+                    this.#logger.debug(`GenericContentLoader: Entity ${path} has an empty 'components' map. Skipping runtime component validation loop.`);
+                }
+            } else {
+                // If there's no 'components' map, skip runtime component validation for this file.
+                this.#logger.debug(`GenericContentLoader: File ${path} does not contain a 'components' map. Skipping runtime component validation.`);
             }
 
-            // Add other conditional validations here if needed for other types
-
-            // --- 5. Extract ID ---
+            // --- 5. Extract ID (After all validations) ---
             const dataId = data?.id;
             if (!dataId || typeof dataId !== 'string' || dataId.trim() === '') {
-                // AC: Throws an error if the validated data lacks a valid 'id' property.
                 this.#logger.error(`Data in ${path} (type ${typeName}) is missing a valid required 'id' property.`);
                 throw new Error(`Data in ${path} (type ${typeName}) is missing a valid required 'id' property.`);
             }
 
             // --- 6. Check for Duplicates ---
-            // AC: Duplicate ID detection logs a warning before overwriting data.
             const existing = this.#registry.get(typeName, dataId);
             if (existing) {
                 this.#logger.warn(`GenericContentLoader: Duplicate ID detected for ${typeName}: '${dataId}' in file ${filename} (${path}). Overwriting previous definition stored in registry.`);
             }
 
-            // --- 6.5 Register Nested Payload Schema (for Events) ---
+            // --- 6.5 Register Nested Payload Schema (for Events - Unrelated to Ticket 2.2) ---
+            // (Keep existing logic for event payload schemas)
             if (typeName === 'events' && data.payloadSchema && typeof data.payloadSchema === 'object') {
                 const payloadSchemaObject = data.payloadSchema;
                 const payloadSchemaId = `${dataId}#payload`; // e.g., "event:display_message#payload"
-
-                // Only add if not already present (optional, addSchema might handle duplicates)
                 if (!this.#validator.isSchemaLoaded(payloadSchemaId)) {
                     this.#logger.debug(`GenericContentLoader: Registering nested payload schema with ID: ${payloadSchemaId}`);
                     try {
-                        // Use the main validator instance to add this specific schema part
                         await this.#validator.addSchema(payloadSchemaObject, payloadSchemaId);
                         this.#logger.debug(`GenericContentLoader: Successfully added payload schema ${payloadSchemaId}`);
                     } catch (addSchemaError) {
-                        // Log severely, as this could break runtime validation
                         this.#logger.error(`GenericContentLoader: CRITICAL - Failed to add payload schema ${payloadSchemaId} for event ${dataId}:`, addSchemaError);
-                        // Decide if this should be a fatal error for the file/type
                         throw new Error(`Failed to register payload schema ${payloadSchemaId} for event ${dataId}: ${addSchemaError.message}`);
                     }
                 } else {
@@ -219,18 +249,16 @@ class GenericContentLoader {
                 }
             }
 
-            // --- 7. Store Data ---
-            // AC: Successfully loaded and validated content data...is stored in the IDataRegistry
-            // AC: Uses IDataRegistry to store the validated data using typeName and data.id.
+            // --- 7. Store Data (Only if ALL validations passed) ---
+            // AC: Registry Storage - Only fully validated entities are stored [cite: 109]
+            // AC: Success Handling - Reaching this point means all checks passed [cite: 44]
             this.#registry.store(typeName, dataId, data);
-            this.#logger.debug(`GenericContentLoader: Stored ${typeName} with ID '${dataId}' from ${path}.`);
+            this.#logger.debug(`GenericContentLoader: Stored ${typeName} with ID '${dataId}' from ${path} after passing all validations.`);
 
         } catch (error) {
-            // AC: Errors during path resolution, fetch, parse, validation...are logged gracefully
-            // AC: Throws an error to halt processing for the type if a file fails critically.
+            // Errors from path resolution, fetch, parsing, primary schema validation, OR runtime component validation will land here.
             this.#logger.error(`GenericContentLoader: Failed to load/process file ${filename} (type ${typeName}, path: ${path || 'unknown'})`, error);
             // Re-throw the error to cause Promise.all in the caller to reject.
-            // Ensure the message includes context.
             throw new Error(`Error processing ${typeName} file ${filename} at path ${path || 'unknown'}: ${error.message}`);
         }
     }
