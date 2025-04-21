@@ -4,7 +4,6 @@
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
-/** @typedef {import('../../components/healthComponent.js').HealthComponent} HealthComponent */
 // No longer need direct EntityManager import
 
 /**
@@ -25,8 +24,7 @@ export const handleHealthBelowMaxCondition = (objectToCheck, context, conditionD
         return false; // Or throw error depending on desired strictness
     }
 
-    /** @type {HealthComponent | null} */
-        // Use the retrieved class with the entity's getComponent method
+    // Use the retrieved class with the entity's getComponent method
     const healthComponent = objectToCheck.getComponent(HealthComponentClass);
 
     if (!healthComponent || typeof healthComponent.current !== 'number' || typeof healthComponent.max !== 'number') {

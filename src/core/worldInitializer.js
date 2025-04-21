@@ -4,11 +4,8 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 
-// --- Component Class Imports ---
-import {PositionComponent} from '../components/positionComponent.js';
-import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
+import {PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
 // Note: We'll need type definitions for entity definitions from the repository
 /** @typedef {import('../../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
 
@@ -136,7 +133,7 @@ class WorldInitializer {
                         initialEntityCount++;
 
                         // Check for blockers associated with connections
-                        const passageDetailsComp = instance.getComponent(PassageDetailsComponent);
+                        const passageDetailsComp = instance.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
                         if (passageDetailsComp) {
                             const blockerId = passageDetailsComp.getBlockerId();
                             if (blockerId && typeof blockerId === 'string' && blockerId.trim() !== '') {

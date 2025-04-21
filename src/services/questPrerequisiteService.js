@@ -1,17 +1,7 @@
 // src/services/questPrerequisiteService.js
 
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
-/** @typedef {import('../components/statsComponent.js').StatsComponent} StatsComponent */
 /** @typedef {import('../../types/questTypes.js').QuestDefinition} QuestDefinition */ // Assuming type definition exists
-
-// Import required components for checking prerequisites
-import { QuestLogComponent } from "../components/questLogComponent.js";
-import { StatsComponent } from "../components/statsComponent.js";
-
-// Component keys used for retrieval from the entity
-const QUEST_LOG_COMPONENT_KEY = QuestLogComponent;
-const STATS_COMPONENT_KEY = StatsComponent;
 
 /**
  * Service responsible for checking if a player meets the prerequisites
@@ -53,8 +43,8 @@ class QuestPrerequisiteService {
         }
 
         // Retrieve necessary player components ONCE for efficiency
-        const questLog = playerEntity.getComponent(QUEST_LOG_COMPONENT_KEY);
-        const statsComp = playerEntity.getComponent(STATS_COMPONENT_KEY);
+        const questLog = playerEntity.getComponentData(QUEST_LOG_COMPONENT_KEY);
+        const statsComp = playerEntity.getComponentData(STATS_COMPONENT_KEY);
 
         // Iterate through each prerequisite condition
         for (const condition of conditionList) {
@@ -131,4 +121,4 @@ class QuestPrerequisiteService {
 }
 
 // Export the service class for use elsewhere
-export { QuestPrerequisiteService };
+export {QuestPrerequisiteService};

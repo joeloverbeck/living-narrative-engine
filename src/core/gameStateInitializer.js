@@ -4,10 +4,8 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */ // Keep for type checking if needed
 
-// --- Component Class Imports (needed for getComponent/addComponent) ---
-import {PositionComponent} from '../components/positionComponent.js';
+import {POSITION_COMPONENT_ID} from "../types/components.js";
 
 /**
  * Service responsible for setting up the initial game state using GameDataRepository.
@@ -78,7 +76,7 @@ class GameStateInitializer {
             console.log(`GameStateInitializer: Player entity '${player.id}' created and set.`);
 
             // --- 2. Retrieve Definition & Create Starting Location Entity ---
-            if (!this.#repository.getEntityDefinition(startingLocationId)){
+            if (!this.#repository.getEntityDefinition(startingLocationId)) {
                 throw new Error(`Starting location definition '${startingLocationId}' (from manifest) not found in loaded data.`);
             }
             const startLocation = this.#entityManager.createEntityInstance(startingLocationId);
@@ -89,18 +87,18 @@ class GameStateInitializer {
             console.log(`GameStateInitializer: Starting location '${startLocation.id}' created and set.`);
 
             // --- 3. Place Player in Starting Location ---
-            const playerPos = player.getComponent(PositionComponent);
+            const playerPos = player.getComponentData(POSITION_COMPONENT_ID);
             if (playerPos) {
                 playerPos.setLocation(startLocation.id, 0, 0); // Default to 0,0 in the location
-                console.log(`GameStateInitializer: Updated player's PositionComponent to location ${startLocation.id}`);
+                console.log(`GameStateInitializer: Updated player's position data to location ${startLocation.id}`);
             } else {
-                console.warn(`GameStateInitializer: Player '${player.id}' missing PositionComponent. Adding one for location ${startLocation.id}.`);
+                console.warn(`GameStateInitializer: Player '${player.id}' missing position data. Adding one for location ${startLocation.id}.`);
                 try {
                     // Assume addComponent can take key + data, relying on EntityManager's registry
-                    player.addComponent('Position', {locationId: startLocation.id, x: 0, y: 0});
-                    console.log(`GameStateInitializer: Added PositionComponent to player '${player.id}' for location ${startLocation.id}`);
+                    player.addComponent(POSITION_COMPONENT_ID, {locationId: startLocation.id, x: 0, y: 0});
+                    console.log(`GameStateInitializer: Added position data to player '${player.id}' for location ${startLocation.id}`);
                 } catch (addCompError) {
-                    console.error(`GameStateInitializer: Failed to add PositionComponent to player '${player.id}': ${addCompError.message}`, addCompError);
+                    console.error(`GameStateInitializer: Failed to add position data to player '${player.id}': ${addCompError.message}`, addCompError);
                     throw new Error(`Could not set player's initial position in ${startLocation.id}`);
                 }
             }

@@ -6,9 +6,7 @@
 // ** Import Core Classes/Types **
 import Entity from '../entities/entity.js';
 import EntityManager from '../entities/entityManager.js';
-import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
-import {PassageDetailsComponent} from "../components/passageDetailsComponent.js";
 import {CONNECTIONS_COMPONENT_TYPE_ID, PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
 
 // ** Added Type Imports for Dependencies **

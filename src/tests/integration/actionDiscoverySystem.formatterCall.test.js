@@ -15,23 +15,6 @@ import Entity from '../../entities/entity.js';
 // --- Functions used by SUT ---
 import * as actionFormatter from '../../services/actionFormatter.js'; // Import module to spy
 
-// --- Necessary Component Classes (Real Implementations) ---
-// (Import all necessary components as before)
-import Component from '../../components/component.js';
-import {NameComponent} from '../../components/nameComponent.js';
-import {DescriptionComponent} from '../../components/descriptionComponent.js';
-import {MetaDescriptionComponent} from '../../components/metaDescriptionComponent.js';
-import {ConnectionsComponent} from '../../components/connectionsComponent.js';
-import {PositionComponent} from '../../components/positionComponent.js';
-import {HealthComponent} from '../../components/healthComponent.js';
-import {InventoryComponent} from '../../components/inventoryComponent.js';
-import {StatsComponent} from '../../components/statsComponent.js';
-import {AttackComponent} from '../../components/attackComponent.js';
-import {EquipmentComponent} from '../../components/equipmentComponent.js';
-import {QuestLogComponent} from '../../components/questLogComponent.js';
-import {PassageDetailsComponent} from '../../components/passageDetailsComponent.js';
-import DefinitionRefComponent from '../../components/definitionRefComponent.js';
-
 // --- Mocked Dependencies ---
 const mockLogger = {
     info: jest.fn(),

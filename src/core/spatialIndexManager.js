@@ -1,10 +1,10 @@
 // src/core/spatialIndexManager.js
 
-import {PositionComponent} from '../components/positionComponent.js';
+import {POSITION_COMPONENT_ID} from "../types/components.js";
 
 /**
  * Manages a spatial index mapping location IDs to the entities present
- * based on their PositionComponent. Handles entities whose locationId might be null.
+ * based on their position data. Handles entities whose locationId might be null.
  */
 class SpatialIndexManager {
     constructor() {
@@ -163,9 +163,9 @@ class SpatialIndexManager {
     /**
      * Builds the spatial index from scratch using all active entities
      * managed by the provided EntityManager. Assumes entities have their
-     * PositionComponent correctly set. Clears the existing index first.
+     * position data correctly set. Clears the existing index first.
      * Only entities with a valid, non-null `locationId` string in their
-     * PositionComponent will be indexed.
+     * position data will be indexed.
      * @param {object} entityManager - The EntityManager instance holding active entities. Expected to have an `activeEntities` Map or similar iterable.
      */
     buildIndex(entityManager) {
@@ -185,7 +185,7 @@ class SpatialIndexManager {
                 continue;
             }
 
-            const positionComp = entity.getComponent(PositionComponent);
+            const positionComp = entity.getComponentData(POSITION_COMPONENT_ID);
             // addEntity internally checks if positionComp.locationId is a valid string
             if (positionComp) {
                 // Let addEntity handle the null/invalid check for locationId

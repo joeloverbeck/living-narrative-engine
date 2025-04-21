@@ -20,7 +20,6 @@ import {getDisplayName} from './messages.js'; // Adjusted path
 /** @typedef {import('../entities/entityManager.js').EntityManager} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/passageDetailsComponent.js').PassageDetailsComponent} PassageDetailsComponentType */
-/** @typedef {import('../components/itemComponent.js').ItemComponent} ItemComponent */ // Needed for filterPredicate example in JSDoc
 
 
 // --- Helper Function: formatExitString ---

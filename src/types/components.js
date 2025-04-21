@@ -11,3 +11,5 @@ export const INVENTORY_COMPONENT_ID = 'component:inventory';
 export const EQUIPMENT_COMPONENT_ID = 'component:equipment';
 export const EQUIPPABLE_COMPONENT_ID = 'component:equippable';
 export const HEALTH_COMPONENT_ID = 'component:health';
+export const QUEST_LOG_COMPONENT_ID = 'component:quest-log'
+export const STATS_COMPONENT_ID = 'component:stats';

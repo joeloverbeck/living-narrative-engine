@@ -2,7 +2,6 @@
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('./gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../../types/questTypes.js').QuestDefinition} QuestDefinition */ // Assuming type definition exists
 /** @typedef {import('../../types/questTypes.js').ObjectiveDefinition} ObjectiveDefinition */ // Assuming type definition exists
 /** @typedef {import('../../types/questTypes.js').EventListenerCondition} EventListenerCondition */ // Assuming type definition exists

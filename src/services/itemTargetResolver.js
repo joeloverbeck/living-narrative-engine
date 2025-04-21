@@ -1,9 +1,11 @@
 // src/services/itemTargetResolver.js
 // ─────────────────────────────────────────────────────────────────────────────
-import {PositionComponent} from '../components/positionComponent.js';
-import {ConnectionsComponent} from '../components/connectionsComponent.js';
-import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
 import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
+import {
+    CONNECTIONS_COMPONENT_TYPE_ID,
+    PASSAGE_DETAILS_COMPONENT_TYPE_ID,
+    POSITION_COMPONENT_ID
+} from "../types/components.js";
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -68,16 +70,16 @@ export class ItemTargetResolverService {
         if (explicitTargetConnectionEntityId) {
             const conn = this.#em.getEntityInstance(explicitTargetConnectionEntityId);
             if (conn) {
-                const userRoomId = userEntity.getComponent(PositionComponent)?.locationId;
+                const userRoomId = userEntity.getComponentData(POSITION_COMPONENT_ID)?.locationId;
                 const exits = this.#em
                     .getEntityInstance(userRoomId)
-                    ?.getComponent(ConnectionsComponent)
+                    ?.getComponentData(CONNECTIONS_COMPONENT_TYPE_ID)
                     ?.getAllConnections() ?? [];
 
                 const isExitHere = exits.some(e => (e.id ?? e.connectionEntityId) === conn.id);
                 if (!isExitHere) log('Connection is not an exit from this room.', 'warning');
                 else {
-                    const passage = conn.getComponent(PassageDetailsComponent);
+                    const passage = conn.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
                     const blockerId = passage?.blockerEntityId ?? null;
 
                     if (blockerId) {

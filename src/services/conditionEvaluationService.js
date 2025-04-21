@@ -7,7 +7,6 @@
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
 /** @typedef {import('../components/healthComponent.js').HealthComponent} HealthComponent */
-/** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('../components/component.js').default} Component */ // Generic component type
 
 // ----- NEW: Condition Data Access Interface -----

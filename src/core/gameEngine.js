@@ -8,7 +8,6 @@
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
 /** @typedef {import('./inputHandler.js').default} InputHandler */
 /** @typedef {import('./gameLoop.js').default} GameLoop */
-/** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('./gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('./worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('./services/worldLoader.js').default} WorldLoader */

@@ -32,9 +32,9 @@
 // --- Core Dependencies ---
 import {getEntityIdsForScopes} from './entityScopeService.js';
 import {findTarget} from '../utils/targetFinder.js';
-import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js'; // Assuming getDisplayName is here too
+import {TARGET_MESSAGES} from '../utils/messages.js'; // Assuming getDisplayName is here too
 import {resolveTargetConnection} from './connectionResolver.js';
-import {PassageDetailsComponent} from '../components/passageDetailsComponent.js';
+import {PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
 
 
 // --- Enum Definition ---
@@ -255,9 +255,9 @@ class TargetResolutionService {
                 } else {
                     // Unique Connection Found
                     // 4. Retrieve PassageDetailsComponent
-                    const passageDetails = resolvedConnectionEntity.getComponent(PassageDetailsComponent);
+                    const passageDetails = resolvedConnectionEntity.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
                     if (!passageDetails) {
-                        console.error(`TargetResolutionService: Resolved ConnectionEntity '${resolvedConnectionEntity.id}' for action '${actionDefinition.id}' is missing PassageDetailsComponent.`);
+                        console.error(`TargetResolutionService: Resolved ConnectionEntity '${resolvedConnectionEntity.id}' for action '${actionDefinition.id}' is missing the passage details.`);
                         return {
                             status: ResolutionStatus.ERROR, // Or INVALID_INPUT/NOT_FOUND? ERROR seems appropriate for missing component on resolved entity.
                             targetType: null,
@@ -266,7 +266,7 @@ class TargetResolutionService {
                             targetConnectionEntity: null,
                             candidateIds: [],
                             details: {
-                                missingComponent: 'PassageDetailsComponent',
+                                missingComponent: PASSAGE_DETAILS_COMPONENT_TYPE_ID,
                                 entityId: resolvedConnectionEntity.id
                             },
                             error: `Resolved connection '${resolvedConnectionEntity.id}' lacks required details.`
@@ -281,7 +281,7 @@ class TargetResolutionService {
                         targetLocationId = passageDetails.getOtherLocationId(currentLocation.id);
                         blockerEntityId = passageDetails.getBlockerId();
                     } catch (passageError) {
-                        console.error(`TargetResolutionService: Error processing PassageDetailsComponent for connection '${resolvedConnectionEntity.id}':`, passageError);
+                        console.error(`TargetResolutionService: Error processing passage details data for connection '${resolvedConnectionEntity.id}':`, passageError);
                         return {
                             status: ResolutionStatus.ERROR,
                             targetType: null,
@@ -393,25 +393,36 @@ class TargetResolutionService {
 
                 // 5. Filter by Components (Pre-filter)
                 const componentFilteredEntities = initialEntities.filter(entity => {
+                    // Check Required Components using the string compId
                     const hasAllRequired = target_required_components.every(compId => {
-                        const ComponentClass = entityManager.componentRegistry.get(compId);
-                        if (!ComponentClass) {
-                            console.error(`TargetResolutionService: Component class not found in registry for ID '${compId}' required by action '${actionDefinition.id}'.`);
-                            return false;
+                        // Directly use the string ID with hasComponent
+                        const hasComp = entity.hasComponent(compId);
+                        if (!hasComp) {
+                            // Optional: Log if needed, but the filtering logic is simpler
+                            // console.warn(`Entity ${entity.id} missing required component: ${compId}`);
                         }
-                        return entity.hasComponent(ComponentClass);
+                        return hasComp;
                     });
-                    if (!hasAllRequired) return false;
 
+                    // If required components are missing, filter out immediately
+                    if (!hasAllRequired) {
+                        return false;
+                    }
+
+                    // Check Forbidden Components using the string compId
+                    // Use .some() to see if *any* forbidden component is present
                     const hasAnyForbidden = target_forbidden_components.some(compId => {
-                        const ComponentClass = entityManager.componentRegistry.get(compId);
-                        if (!ComponentClass) {
-                            console.error(`TargetResolutionService: Component class not found in registry for ID '${compId}' forbidden by action '${actionDefinition.id}'.`);
-                            return false;
+                        // Directly use the string ID with hasComponent
+                        const hasComp = entity.hasComponent(compId);
+                        if (hasComp) {
+                            // Optional: Log if needed
+                            // console.warn(`Entity ${entity.id} has forbidden component: ${compId}`);
                         }
-                        return entity.hasComponent(ComponentClass);
+                        return hasComp;
                     });
-                    return !hasAnyForbidden;
+
+                    // Keep the entity only if it has all required AND does not have any forbidden
+                    return !hasAnyForbidden; // hasAllRequired is already checked above
                 });
 
                 // 6. Handle Empty Scope (Post-Component Filter)
