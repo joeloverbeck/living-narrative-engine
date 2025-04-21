@@ -1,22 +1,49 @@
 // src/systems/openableSystem.js
 
 // --- Component Imports ---
-import OpenableComponent from '../components/openableComponent.js';
-import LockableComponent from '../components/lockableComponent.js';
+// Note: While the test uses Component Classes, the system logic here
+// relies on component *data* retrieved via IDs. Ensure your EntityManager
+// and getComponentData implementation align with this.
+// import OpenableComponent from '../components/openableComponent.js'; // Keep if needed elsewhere, but not directly used by getComponentData(ID)
+// import LockableComponent from '../components/lockableComponent.js'; // Keep if needed elsewhere
 import {getDisplayName} from "../utils/messages.js";
+import {LOCKABLE_COMPONENT_ID, OPENABLE_COMPONENT_ID} from "../types/components.js"; // Assuming you have these constants defined
 
 // --- Utility Imports ---
+// (Add any other utility imports if necessary)
+
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 
+/**
+ * @typedef {object} OpenAttemptedEventPayload
+ * @property {string} actorId - The ID of the entity attempting the action.
+ * @property {string} targetEntityId - The ID of the entity being targeted.
+ */
+
+/**
+ * @typedef {object} OpenFailedEventPayload
+ * @property {string} actorId
+ * @property {string} targetEntityId
+ * @property {string} targetDisplayName
+ * @property {'ALREADY_OPEN' | 'LOCKED' | 'TARGET_NOT_OPENABLE' | 'OTHER'} reasonCode
+ */
+
+/**
+ * @typedef {object} EntityOpenedEventPayload
+ * @property {string} actorId
+ * @property {string} targetEntityId
+ * @property {string} targetDisplayName
+ */
+
 
 /**
  * System responsible for handling the state change logic for entities
- * possessing an OpenableComponent. It listens for 'event:open_attempted',
+ * possessing openable component data. It listens for 'event:open_attempted',
  * validates the attempt, checks for blocking states (like being locked),
- * modifies the OpenableComponent state, and dispatches events indicating
+ * modifies the component data, and dispatches events indicating
  * success ("event:entity_opened") or failure ('event:open_failed').
  */
 class OpenableSystem {
@@ -33,7 +60,7 @@ class OpenableSystem {
      * @throws {Error} If eventBus or entityManager is missing.
      */
     constructor({eventBus, entityManager}) {
-        // Constructor remains the same
+        // --- Dependency Validation ---
         if (!eventBus) {
             throw new Error("OpenableSystem requires options.eventBus.");
         }
@@ -41,10 +68,15 @@ class OpenableSystem {
             throw new Error("OpenableSystem requires options.entityManager.");
         }
 
+        // --- Assign Dependencies ---
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
 
-        // Basic logging for instantiation
+        // --- Binding Not Needed ---
+        // Private methods (#) are automatically bound to 'this'.
+        // The line below caused the 'TypeError: Private method is not writable'.
+        // this.#handleOpenAttempted = this.#handleOpenAttempted.bind(this); // REMOVED
+
         console.log("OpenableSystem: Instance created.");
     }
 
@@ -52,8 +84,9 @@ class OpenableSystem {
      * Initializes the system by subscribing to the 'event:open_attempted' event.
      */
     initialize() {
-        // Subscribe to the relevant event
-        this.#eventBus.subscribe('event:open_attempted', this.#handleOpenAttempted.bind(this));
+        // Subscribe to the relevant event using the private method directly.
+        // 'this' context will be correctly maintained.
+        this.#eventBus.subscribe('event:open_attempted', this.#handleOpenAttempted);
         console.log("OpenableSystem: Initialized and subscribed to 'event:open_attempted'.");
     }
 
@@ -63,43 +96,40 @@ class OpenableSystem {
      * Performs validation, state checks, modifies state, and dispatches events.
      *
      * @private
-     * @param {OpenAttemptedEventPayload} payload - The event data containing actorId and targetEntityId.
+     * @param {OpenAttemptedEventPayload} payload - The event data.
      */
     #handleOpenAttempted(payload) {
         const {actorId, targetEntityId} = payload;
 
-        // <<< ADD LOG 1 HERE >>>
+        // Optional: Add payload validation if needed
+
         console.log(`OpenableSystem: Received 'event:open_attempted'. Actor [${actorId}] Target [${targetEntityId}].`);
 
-        // Target Validation - Retrieve entities
         const targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
-        // Actor entity retrieval is not strictly needed for the core logic below, but might be useful for future enhancements (e.g., checking actor capabilities)
-        // const actorEntity = this.#entityManager.getEntityInstance(actorId);
 
-        // Target Validation - Check target existence
+        // --- Target Entity Existence Check ---
         if (!targetEntity) {
             console.error(`OpenableSystem: Failed to process open attempt. Target entity [${targetEntityId}] not found. Attempt by actor [${actorId}].`);
-            // No specific 'target not found' event is dispatched here, as the action handler already deals with target resolution.
-            // If the event fires, we assume the target *should* exist. Failure here indicates a deeper issue.
-            // We could potentially dispatch a generic 'open_failed' with an 'OTHER' reason?
             /** @type {OpenFailedEventPayload} */
             const failPayload = {
                 actorId: actorId,
                 targetEntityId: targetEntityId,
                 targetDisplayName: targetEntityId, // Best guess if entity is gone
-                reasonCode: 'OTHER' // Or a new code like 'TARGET_VANISHED'
+                reasonCode: 'OTHER'
             };
             this.#eventBus.dispatch('event:open_failed', failPayload);
-            return; // Stop processing this event
+            return;
         }
 
-        const targetDisplayName = getDisplayName(targetEntity); // Get name early for consistent logging/events
+        // --- Get Display Name ---
+        // Ensure getDisplayName handles potential missing NameComponent gracefully.
+        const targetDisplayName = getDisplayName(targetEntity);
 
-        // Target Validation - Check for OpenableComponent
-        const openableComponent = targetEntity.getComponent(OpenableComponent);
-        if (!openableComponent) {
-            console.warn(`OpenableSystem: Target entity [${targetDisplayName} (${targetEntityId})] lacks OpenableComponent. Cannot process open attempt by actor [${actorId}].`);
-            // Dispatch failure event - this is a valid failure case the system should report
+        // --- Target Validation - Check for Openable Component Data ---
+        // Assumes entity.getComponentData(COMPONENT_ID) returns the data object or null/undefined
+        const openableData = targetEntity.getComponentData(OPENABLE_COMPONENT_ID);
+        if (!openableData) {
+            console.warn(`OpenableSystem: Target entity [${targetDisplayName} (${targetEntityId})] lacks component data for '${OPENABLE_COMPONENT_ID}'. Cannot process open attempt by actor [${actorId}].`);
             /** @type {OpenFailedEventPayload} */
             const failPayload = {
                 actorId: actorId,
@@ -108,12 +138,11 @@ class OpenableSystem {
                 reasonCode: 'TARGET_NOT_OPENABLE'
             };
             this.#eventBus.dispatch('event:open_failed', failPayload);
-            return; // Stop processing this event
+            return;
         }
 
-        // State Checks & Failure - Already Open
-        if (openableComponent.isOpen === true) {
-            // Logging failure reason
+        // --- State Checks & Failure - Already Open ---
+        if (openableData.isOpen === true) {
             console.log(`OpenableSystem: Open failed for target [${targetDisplayName} (${targetEntityId})] by actor [${actorId}]. Reason: Already open.`);
             /** @type {OpenFailedEventPayload} */
             const failPayload = {
@@ -123,13 +152,12 @@ class OpenableSystem {
                 reasonCode: 'ALREADY_OPEN'
             };
             this.#eventBus.dispatch('event:open_failed', failPayload);
-            return; // Stop processing this event
+            return;
         }
 
-        // State Checks & Failure - Locked Check
-        const lockableComponent = targetEntity.getComponent(LockableComponent);
-        if (lockableComponent && lockableComponent.isLocked === true) {
-            // Logging failure reason
+        // --- State Checks & Failure - Locked Check ---
+        const lockableData = targetEntity.getComponentData(LOCKABLE_COMPONENT_ID);
+        if (lockableData && lockableData.isLocked === true) {
             console.log(`OpenableSystem: Open failed for target [${targetDisplayName} (${targetEntityId})] by actor [${actorId}]. Reason: Locked.`);
             /** @type {OpenFailedEventPayload} */
             const failPayload = {
@@ -139,39 +167,37 @@ class OpenableSystem {
                 reasonCode: 'LOCKED'
             };
             this.#eventBus.dispatch('event:open_failed', failPayload);
-            return; // Stop processing this event
+            return;
         }
 
         // --- Success Path ---
-        // Set State
-        openableComponent.setState(true);
-        console.log(`OpenableSystem: State set for [${targetEntityId}]. isOpen: ${openableComponent.isOpen}`); // Optional: Verify state change
+        // Modify the component data directly.
+        // Ensure your ECS design allows for direct mutation of component data,
+        // or replace this with the appropriate method (e.g., targetEntity.updateComponentData).
+        openableData.isOpen = true;
+        console.log(`OpenableSystem: State data updated for [${targetDisplayName} (${targetEntityId})]. isOpen: ${openableData.isOpen}`);
 
-
-        // Dispatch Success Event
+        // --- Dispatch Success Event ---
         /** @type {EntityOpenedEventPayload} */
         const successPayload = {
             actorId: actorId,
             targetEntityId: targetEntityId,
-            targetDisplayName: targetDisplayName // Use name retrieved earlier
+            targetDisplayName: targetDisplayName
         };
 
-        // <<< ADD LOG 2 HERE >>>
         console.log(`OpenableSystem: Attempting to dispatch '${"event:entity_opened"}' with payload:`, JSON.stringify(successPayload));
         this.#eventBus.dispatch("event:entity_opened", successPayload);
 
-        // Logging success
         console.log(`OpenableSystem: Successfully opened target [${targetDisplayName} (${targetEntityId})] by actor [${actorId}]. Event '${"event:entity_opened"}' dispatched.`);
-
-        // No return value needed for event handlers
     }
 
-    // The public `openEntity` method is removed as it's no longer the entry point.
-
-    // Optional: Add a shutdown method to unsubscribe if needed
+    /**
+     * Cleans up by unsubscribing the event listener.
+     */
     shutdown() {
+        // Unsubscribe the same private method instance used in subscribe.
         this.#eventBus.unsubscribe('event:open_attempted', this.#handleOpenAttempted);
-        console.log("OpenableSystem: Unsubscribed from 'event:open_attempted'.");
+        console.log("OpenableSystem: Unsubscribed from 'event:open_attempted'. System shutdown.");
     }
 
 } // End of OpenableSystem class

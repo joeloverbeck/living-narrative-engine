@@ -9,6 +9,7 @@ import EntityManager from '../entities/entityManager.js';
 import {ConnectionsComponent} from '../components/connectionsComponent.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
 import {PassageDetailsComponent} from "../components/passageDetailsComponent.js";
+import {CONNECTIONS_COMPONENT_TYPE_ID, PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
 
 // ** Added Type Imports for Dependencies **
 /** @typedef {import('../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -42,6 +43,7 @@ import {PassageDetailsComponent} from "../components/passageDetailsComponent.js"
  * **Internal:** Finds potential Connection entities based on direction and name matching.
  * @param {ActionContext} context - Needs `currentLocation`, `entityManager`.
  * @param {string} connectionTargetName - The user input.
+ * @param {ILogger} logger - The logger instance. // Added logger to signature description
  * @returns {PotentialConnectionMatches}
  */
 function findPotentialConnectionMatches(context, connectionTargetName, logger) {
@@ -58,33 +60,53 @@ function findPotentialConnectionMatches(context, connectionTargetName, logger) {
     };
 
     if (!currentLocation || !entityManager) {
-        // Use the passed logger (or fallback)
         logError("findPotentialConnectionMatches (in ConnectionResolver): Missing currentLocation or entityManager in context.");
         return results;
     }
-    const connectionsComponent = currentLocation.getComponent(ConnectionsComponent);
-    if (!connectionsComponent) {
-        // Use the passed logger (or fallback)
-        logWarn(`findPotentialConnectionMatches (in ConnectionResolver): ConnectionsComponent not found on location '${currentLocation.id}'`);
+
+    // --- *** MODIFIED PART 1: Get Connections Data *** ---
+    // Use getComponentData with the string type ID
+    const connectionsComponentData = currentLocation.getComponentData(CONNECTIONS_COMPONENT_TYPE_ID);
+
+    if (!connectionsComponentData) {
+        // Log is slightly different now, as we are looking for data, not a component instance
+        logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Connections component data (typeId: ${CONNECTIONS_COMPONENT_TYPE_ID}) not found on location '${currentLocation.id}'`);
         return results;
     }
-    const connectionMappings = connectionsComponent.getAllConnections();
-    if (connectionMappings.length === 0) return results;
 
+    // Access the connections map directly from the data object
+    const connectionsMap = connectionsComponentData.connections; // Assumes data structure { typeId: '...', connections: { ... } }
+
+    if (!connectionsMap || typeof connectionsMap !== 'object' || Object.keys(connectionsMap).length === 0) {
+        // No connections defined, return empty results
+        return results;
+    }
+    // --- *** END MODIFIED PART 1 *** ---
+
+
+    // --- *** MODIFIED PART 2: Iterate and Fetch Entities *** ---
     /** @type {FetchedConnectionData[]} */
     const fetchedConnectionsData = [];
-    for (const mapping of connectionMappings) {
-        const {direction, connectionEntityId} = mapping;
+    // Iterate over the key-value pairs (direction, entityId) of the map
+    for (const [direction, connectionEntityId] of Object.entries(connectionsMap)) {
+
+        // Add a check for valid entity ID format if necessary
+        if (typeof connectionEntityId !== 'string' || !connectionEntityId) {
+            logWarn(`findPotentialConnectionMatches: Invalid connectionEntityId ('${connectionEntityId}') found for direction '${direction}' in location '${currentLocation.id}'. Skipping.`);
+            continue;
+        }
+
         const connectionEntity = entityManager.getEntityInstance(connectionEntityId);
         if (connectionEntity) {
             fetchedConnectionsData.push({direction, connectionEntity});
         } else {
-            // Use the passed logger (or fallback)
-            logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}'`);
+            logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Could not find Connection entity '${connectionEntityId}' referenced in location '${currentLocation.id}' for direction '${direction}'`);
         }
     }
-    if (fetchedConnectionsData.length === 0 && connectionMappings.length > 0) { // Added condition to only warn if mappings existed
-        // Use the passed logger (or fallback)
+    // --- *** END MODIFIED PART 2 *** ---
+
+    // Check if any entities were actually fetched (handles cases where IDs exist but entities don't)
+    if (fetchedConnectionsData.length === 0 && Object.keys(connectionsMap).length > 0) {
         logWarn(`findPotentialConnectionMatches (in ConnectionResolver): Location '${currentLocation.id}' has connection mappings, but failed to fetch any corresponding Connection entities.`);
         return results;
     }
@@ -96,16 +118,25 @@ function findPotentialConnectionMatches(context, connectionTargetName, logger) {
     for (const item of fetchedConnectionsData) {
         let isDirectionMatch = false;
 
+        // Direction matching logic remains the same
         if (item.direction === lowerCaseTarget) {
             results.directionMatches.push(item);
             isDirectionMatch = true;
         }
 
-        const entityName = getDisplayName(item.connectionEntity)?.toLowerCase();
-        const blockerId = item.connectionEntity.getComponent(PassageDetailsComponent)?.blockerEntityId;
+        // --- *** MODIFIED PART 3: Get Blocker Data *** ---
+        // Get potential blocker info using getComponentData
+        const passageDetailsData = item.connectionEntity.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
+        const blockerId = passageDetailsData?.blockerEntityId; // Access property from data object
         const blockerEnt = blockerId ? context.entityManager.getEntityInstance(blockerId) : null;
-        const blockerName = blockerEnt ? getDisplayName(blockerEnt).toLowerCase() : null;
+        // --- *** END MODIFIED PART 3 *** ---
 
+        // Name matching logic - getDisplayName should ideally work with entities directly
+        // Ensure getDisplayName uses getComponentData(NAME_COMPONENT_TYPE_ID) internally
+        const entityName = getDisplayName(item.connectionEntity)?.toLowerCase();
+        const blockerName = blockerEnt ? getDisplayName(blockerEnt)?.toLowerCase() : null;
+
+        // Name matching condition remains the same logic
         if (!isDirectionMatch && ((entityName && entityName.includes(lowerCaseTarget)) || (blockerName && blockerName.includes(lowerCaseTarget)))) {
             if (!nameMatchEntityIds.has(item.connectionEntity.id)) {
                 results.nameMatches.push(item);

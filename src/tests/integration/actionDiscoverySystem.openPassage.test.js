@@ -113,97 +113,125 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
     let gameDataRepository;
     let entityManager;
     let actionValidationService;
-    let actionDiscoverySystem; // The System Under Test
-
+    let actionDiscoverySystem;
     let playerEntity;
     let roomEntity;
     let connectionEntity;
     let actionContext;
-
     let formatSpy;
 
+    // --- Mocks for Dependencies ---
+    const mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+    };
+
+    // Mock for ISchemaValidator
+    const mockValidator = {
+        // Provide a basic implementation that passes validation by default
+        // Adjust if your tests need specific validation outcomes
+        validate: jest.fn((componentTypeId, componentData) => {
+            // console.log(`Mock validate called for: ${componentTypeId}`); // Optional: for debugging
+            return {isValid: true, errors: []};
+        }),
+        // Add other methods if EntityManager uses them, though constructor only checks 'validate'
+    };
+
+    // Mock for ISpatialIndexManager
+    const mockSpatialIndexManager = {
+        addEntity: jest.fn(),
+        removeEntity: jest.fn(),
+        updateEntityLocation: jest.fn(),
+        getEntitiesInLocation: jest.fn((locationId) => new Set()), // Return empty set by default
+        buildIndex: jest.fn(),
+        clearIndex: jest.fn(),
+        // Add other methods if EntityManager uses them
+    };
+    // --- End Mocks ---
+
+
     beforeEach(() => {
-        // Reset mocks before each test
         jest.clearAllMocks();
 
         // 1. Instantiate Core Services & Mocks
-        registry = new InMemoryDataRegistry(); // Use the real implementation
-        // Logger is already mocked above
-
+        registry = new InMemoryDataRegistry();
         gameDataRepository = new GameDataRepository(registry, mockLogger);
-        entityManager = new EntityManager(gameDataRepository); // Pass repo
+        entityManager = new EntityManager(
+            registry,
+            mockValidator,
+            mockLogger,
+            mockSpatialIndexManager
+        );
         actionValidationService = new ActionValidationService({
             entityManager,
             gameDataRepository,
             logger: mockLogger
         });
-
         formatSpy = jest.spyOn(actionFormatter, 'formatActionCommand');
-
-        // Instantiate the System Under Test
         actionDiscoverySystem = new ActionDiscoverySystem({
             gameDataRepository,
             entityManager,
             actionValidationService,
             logger: mockLogger,
             formatActionCommandFn: formatSpy
-            // getEntityIdsForScopes and formatActionCommand are imported directly
         });
 
-        // 2. Register Components with EntityManager
-        entityManager.registerComponent('Name', NameComponent);
-        entityManager.registerComponent('Description', DescriptionComponent);
-        entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
-        entityManager.registerComponent('Connections', ConnectionsComponent);
-        entityManager.registerComponent('Position', PositionComponent);
-        entityManager.registerComponent('Health', HealthComponent);
-        entityManager.registerComponent('Inventory', InventoryComponent);
-        entityManager.registerComponent('Stats', StatsComponent);
-        entityManager.registerComponent('Attack', AttackComponent);
-        entityManager.registerComponent('Equipment', EquipmentComponent);
-        entityManager.registerComponent('QuestLog', QuestLogComponent);
-        entityManager.registerComponent('PassageDetails', PassageDetailsComponent);
-        entityManager.registerComponent('DefinitionRef', DefinitionRefComponent); // Auto-added
+        // -----------------------------------------------------------
+        // 2. REMOVED: Register Components section is deleted
+        //    entityManager no longer has registerComponent
+        // -----------------------------------------------------------
 
-        // 3. Load Test Definitions into Registry using the correct 'store' method
+        // 3. Load Test Definitions (Remains the same)
         registry.store('actions', goActionDef.id, goActionDef);
         registry.store('entities', playerDef.id, playerDef);
         registry.store('locations', roomDef.id, roomDef);
         registry.store('connections', connectionDef.id, connectionDef);
 
-        // 4. Create Entity Instances
+        // 4. Create Entity Instances (Remains the same)
         playerEntity = entityManager.createEntityInstance('core:player');
         roomEntity = entityManager.createEntityInstance('demo:room_entrance');
         connectionEntity = entityManager.createEntityInstance('demo:conn_entrance_hallway');
 
-        // Verify crucial setup steps
+        // Verification (Check if instances were created)
         if (!playerEntity || !roomEntity || !connectionEntity) {
             throw new Error("Failed to instantiate core entities for the test.");
         }
-        const playerPos = playerEntity.getComponent(PositionComponent);
-        const roomConn = roomEntity.getComponent(ConnectionsComponent);
-        const connDetails = connectionEntity.getComponent(PassageDetailsComponent);
 
-        if (!playerPos || !roomConn || !connDetails) {
-            throw new Error("Core components missing from instantiated entities.");
+        // -----------------------------------------------------------
+        // UPDATED Verification: Use getComponentData with string IDs
+        // -----------------------------------------------------------
+        const playerPosData = playerEntity.getComponentData('Position'); // Use string ID 'Position'
+        const roomConnData = roomEntity.getComponentData('Connections'); // Use string ID 'Connections'
+        const connDetailsData = connectionEntity.getComponentData('PassageDetails'); // Use string ID 'PassageDetails'
+
+        if (!playerPosData || !roomConnData || !connDetailsData) {
+            // Add check for component data existence if needed for robustness
+            console.error("Player Pos Data:", playerPosData);
+            console.error("Room Conn Data:", roomConnData);
+            console.error("Conn Details Data:", connDetailsData);
+            throw new Error("Core component data missing from instantiated entities.");
         }
-        expect(playerPos.locationId).toBe('demo:room_entrance');
-        expect(roomConn.getConnectionByDirection('north')).toBe('demo:conn_entrance_hallway');
-        expect(connDetails.blockerEntityId).toBeNull(); // Passage is open
+        expect(playerPosData.locationId).toBe('demo:room_entrance');
+        // Note: Accessing connections requires knowing the structure of Connections component data
+        expect(roomConnData.connections?.north).toBe('demo:conn_entrance_hallway'); // Adjust access based on actual data structure
+        expect(connDetailsData.blockerEntityId).toBeNull(); // Access data directly
 
 
-        // 5. Build Action Context
+        // 5. Build Action Context (Remains the same, ensure properties are correct)
         actionContext = {
             playerEntity: playerEntity,
+            // Pass the entity instance for currentLocation
             currentLocation: roomEntity,
             entityManager: entityManager,
             gameDataRepository: gameDataRepository,
-            // other context properties if needed by validators/formatters (e.g., eventBus, dispatch)
-            eventBus: null, // Placeholder if needed
-            dispatch: jest.fn(), // Placeholder if needed
-            parsedCommand: null // Not used directly by discovery, but part of full context
+            eventBus: null, // Placeholder
+            dispatch: jest.fn(), // Placeholder
+            parsedCommand: null // Placeholder
         };
     });
+
 
     it('should discover "go north" as a valid action when player is in entrance and passage is open', async () => {
         // --- Act ---
@@ -225,7 +253,9 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
         // 4. (Optional) Check logs to ensure expected flow happened
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Starting action discovery for actor: ${playerEntity.id}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing action definition: ${goActionDef.id}`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validation PASSED for action '${goActionDef.id}' for actor ${playerEntity.id} with target type direction`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining(`Validation FINAL RESULT: PASSED for action '${goActionDef.id}' (actor ${playerEntity.id}, contextType 'direction', targetId/Dir 'north')`)
+        );
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Found valid action (direction: north): go north`));
         expect(mockLogger.error).not.toHaveBeenCalled();
     });

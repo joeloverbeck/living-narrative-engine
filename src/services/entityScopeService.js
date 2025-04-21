@@ -1,11 +1,11 @@
 // src/services/entityScopeService.js
 
-import {InventoryComponent} from '../components/inventoryComponent.js'; // Adjust path as needed
-import {EquipmentComponent} from '../components/equipmentComponent.js'; // Adjust path as needed
-import {ItemComponent} from '../components/itemComponent.js'; // Adjust path as needed
-import {ConnectionsComponent} from '../components/connectionsComponent.js'; // Required for nearby_including_blockers
-import {PassageDetailsComponent} from '../components/passageDetailsComponent.js'; // Required for nearby_including_blockers
-import {PositionComponent} from '../components/positionComponent.js'; // Used by _handleLocation via SpatialIndex
+import {
+    CONNECTIONS_COMPONENT_TYPE_ID,
+    EQUIPMENT_COMPONENT_ID,
+    INVENTORY_COMPONENT_ID,
+    ITEM_COMPONENT_ID, PASSAGE_DETAILS_COMPONENT_TYPE_ID
+} from "../types/components.js"; // Used by _handleLocation via SpatialIndex
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -29,13 +29,22 @@ function _handleInventory(context) {
         console.warn("entityScopeService._handleInventory: Scope 'inventory' requested but playerEntity is missing in context.");
         return new Set();
     }
-    if (!playerEntity.hasComponent(InventoryComponent)) {
-        console.warn(`entityScopeService._handleInventory: Scope 'inventory' requested but player ${playerEntity.id} lacks InventoryComponent.`);
+    // Correct: Use string ID for check
+    if (!playerEntity.hasComponent(INVENTORY_COMPONENT_ID)) {
+        // Consider updating warning message to reflect check against ID, not class
+        console.warn(`entityScopeService._handleInventory: Scope 'inventory' requested but player ${playerEntity.id} lacks component data for ID "${INVENTORY_COMPONENT_ID}".`);
         return new Set();
     }
-    const inventory = playerEntity.getComponent(InventoryComponent);
-    // Convert the array from getItems() to a Set
-    return new Set(inventory.getItems());
+    // Correct: Use getComponentData with string ID
+    const inventoryData = playerEntity.getComponentData(INVENTORY_COMPONENT_ID);
+
+    // Correct: Access data property directly and validate structure
+    if (!inventoryData || !Array.isArray(inventoryData.items)) {
+        console.warn(`entityScopeService._handleInventory: Inventory data for player ${playerEntity.id} (component "${INVENTORY_COMPONENT_ID}") is missing or malformed.`);
+        return new Set();
+    }
+    // Correct: Use the items array from the data
+    return new Set(inventoryData.items);
 }
 
 /**
@@ -84,17 +93,32 @@ function _handleEquipment(context) {
         console.warn("entityScopeService._handleEquipment: Scope 'equipment' requested but playerEntity is missing in context.");
         return new Set();
     }
-    if (!playerEntity.hasComponent(EquipmentComponent)) {
-        console.warn(`entityScopeService._handleEquipment: Scope 'equipment' requested but player ${playerEntity.id} lacks EquipmentComponent.`);
+    // Use the correct imported constant EQUIPMENT_COMPONENT_ID
+    if (!playerEntity.hasComponent(EQUIPMENT_COMPONENT_ID)) {
+        // Update warning to use the constant ID string
+        console.warn(`entityScopeService._handleEquipment: Scope 'equipment' requested but player ${playerEntity.id} lacks component data for ID "${EQUIPMENT_COMPONENT_ID}".`);
         return new Set();
     }
-    const equipment = playerEntity.getComponent(EquipmentComponent);
+    // Get the raw data object
+    const equipmentData = playerEntity.getComponentData(EQUIPMENT_COMPONENT_ID);
     const equippedIds = new Set();
-    Object.values(equipment.getAllEquipped()).forEach(id => {
-        if (id) {
-            equippedIds.add(id);
-        }
-    });
+
+    // *** CORRECTED LOGIC ***
+    // Check if data and the 'slots' property exist and are an object
+    if (equipmentData && typeof equipmentData.slots === 'object' && equipmentData.slots !== null) {
+        // Iterate over the values (item IDs) in the slots object
+        Object.values(equipmentData.slots).forEach(itemId => {
+            // Add the ID if it's truthy (i.e., not null, undefined, empty string)
+            if (itemId) {
+                equippedIds.add(itemId);
+            }
+        });
+    } else {
+        // Add a warning if the data structure is unexpected
+        console.warn(`entityScopeService._handleEquipment: Equipment data or slots missing/malformed for player ${playerEntity.id} (component "${EQUIPMENT_COMPONENT_ID}").`);
+    }
+    // *** END CORRECTED LOGIC ***
+
     return equippedIds;
 }
 
@@ -110,16 +134,25 @@ function _handleLocationItems(context) {
         console.error("entityScopeService._handleLocationItems: entityManager is missing in context.");
         return new Set();
     }
-    const locationIds = _handleLocation(context);
+
+    // 1. Get IDs in location
+    const locationIds = _handleLocation(context); // Assumes _handleLocation works
     const itemIds = new Set();
 
+    // 2. Iterate
     for (const id of locationIds) {
+        // 3. Get instance
         const entity = entityManager.getEntityInstance(id);
-        if (entity && entity.hasComponent(ItemComponent)) {
+
+        // 4. Check instance and component existence using the correct TYPE ID
+        if (entity && entity.hasComponent(ITEM_COMPONENT_ID)) {
+            // 5. Add ID if it's an item
             itemIds.add(id);
         } else if (!entity) {
-            console.warn(`entityScopeService._handleLocationItems: Entity ID ${id} from location scope not found in entityManager when checking for ItemComponent.`);
+            // Handle dangling IDs (as your test checks)
+            console.warn(`entityScopeService._handleLocationItems: Entity ID ${id} from location scope not found in entityManager when checking for component ${ITEM_COMPONENT_ID}.`);
         }
+        // No 'else' needed here - if it's not an item, we just don't add it.
     }
     return itemIds;
 }
@@ -141,7 +174,7 @@ function _handleLocationNonItems(context) {
 
     for (const id of locationIds) {
         const entity = entityManager.getEntityInstance(id);
-        if (entity && !entity.hasComponent(ItemComponent)) {
+        if (entity && !entity.hasComponent(ITEM_COMPONENT_ID)) {
             nonItemIds.add(id);
         } else if (!entity) {
             console.warn(`entityScopeService._handleLocationNonItems: Entity ID ${id} from location scope not found in entityManager when checking for non-ItemComponent.`);
@@ -170,47 +203,74 @@ function _handleNearby(context) {
  * @private
  */
 function _handleNearbyIncludingBlockers(context) {
-    const aggregatedIds = new Set();
-    const nearbyIds = _handleNearby(context);
-    nearbyIds.forEach(id => aggregatedIds.add(id));
+    // Start by getting the nearby IDs (inventory + location)
+    const aggregatedIds = _handleNearby(context); // Use _handleNearby directly
 
     const {entityManager, currentLocation} = context;
     if (!entityManager) {
         console.warn("entityScopeService._handleNearbyIncludingBlockers: entityManager missing in context. Cannot check for blockers.");
-        return aggregatedIds;
+        return aggregatedIds; // Return nearby IDs if no EM
     }
     if (!currentLocation) {
         console.warn("entityScopeService._handleNearbyIncludingBlockers: currentLocation missing in context. Cannot check for blockers.");
-        return aggregatedIds;
-    }
-    if (!currentLocation.hasComponent(ConnectionsComponent)) {
-        return aggregatedIds;
+        return aggregatedIds; // Return nearby IDs if no location
     }
 
-    const connectionsComp = currentLocation.getComponent(ConnectionsComponent);
-    const connections = connectionsComp.getAllConnections();
+    // Check if location HAS the connections component data
+    if (!currentLocation.hasComponent(CONNECTIONS_COMPONENT_TYPE_ID)) {
+        return aggregatedIds; // No connections component, just return nearby IDs
+    }
 
-    for (const connection of connections) {
-        const passageEntity = entityManager.getEntityInstance(connection.connectionEntityId);
+    // Get the RAW DATA object for connections
+    const connectionsCompData = currentLocation.getComponentData(CONNECTIONS_COMPONENT_TYPE_ID);
+
+    // Validate the structure of the raw data BEFORE accessing properties
+    if (!connectionsCompData || typeof connectionsCompData.connections !== 'object' || connectionsCompData.connections === null) {
+        console.warn(`entityScopeService._handleNearbyIncludingBlockers: Connections component data missing or malformed for location ${currentLocation.id}. Cannot check for blockers.`);
+        return aggregatedIds; // Data malformed, return nearby IDs
+    }
+
+    // Access the 'connections' property from the data object
+    const connectionsMap = connectionsCompData.connections;
+
+    // Iterate over the VALUES of the connections map
+    // (assuming the values are objects like { connectionEntityId: '...', ... })
+    for (const connectionInfo of Object.values(connectionsMap)) {
+        // Add validation for connectionInfo structure if needed
+        if (!connectionInfo || typeof connectionInfo.connectionEntityId !== 'string') {
+            console.warn(`entityScopeService._handleNearbyIncludingBlockers: Malformed connection info found for location ${currentLocation.id}:`, connectionInfo);
+            continue; // Skip this malformed connection
+        }
+
+        const passageEntity = entityManager.getEntityInstance(connectionInfo.connectionEntityId);
         if (!passageEntity) {
-            console.warn(`entityScopeService._handleNearbyIncludingBlockers: Passage entity instance not found for ID '${connection.connectionEntityId}'. Skipping blocker check.`);
-            continue;
+            console.warn(`entityScopeService._handleNearbyIncludingBlockers: Passage entity instance not found for ID '${connectionInfo.connectionEntityId}'. Skipping blocker check.`);
+            continue; // Skip if passage entity doesn't exist
         }
-        if (!passageEntity.hasComponent(PassageDetailsComponent)) {
-            console.warn(`entityScopeService._handleNearbyIncludingBlockers: Passage entity '${passageEntity.id}' lacks PassageDetailsComponent. Cannot check for blocker.`);
-            continue;
+
+        // Check if passage HAS the details component DATA
+        if (!passageEntity.hasComponent(PASSAGE_DETAILS_COMPONENT_TYPE_ID)) {
+            // Updated warning to be more specific about missing *data*
+            console.warn(`entityScopeService._handleNearbyIncludingBlockers: Passage entity '${passageEntity.id}' lacks component data for ${PASSAGE_DETAILS_COMPONENT_TYPE_ID}. Cannot check for blocker.`);
+            continue; // Skip if details component data is missing
         }
-        const passageDetailsComp = passageEntity.getComponent(PassageDetailsComponent);
-        const blockerEntityId = passageDetailsComp.getBlockerId();
+
+        // Get the RAW DATA for passage details
+        const passageDetailsData = passageEntity.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
+
+        // Access the blocker ID directly from the data object, check if it's a non-empty string
+        const blockerEntityId = passageDetailsData?.blockerEntityId; // Use optional chaining
 
         if (typeof blockerEntityId === 'string' && blockerEntityId.trim() !== '') {
-            aggregatedIds.add(blockerEntityId);
+            aggregatedIds.add(blockerEntityId); // Add the blocker ID
+
+            // Optional: Keep the warning if the blocker *instance* itself is missing
             if (!entityManager.getEntityInstance(blockerEntityId)) {
                 console.warn(`entityScopeService._handleNearbyIncludingBlockers: Added blocker ID '${blockerEntityId}' but instance not found.`);
             }
         }
     }
-    return aggregatedIds;
+    return aggregatedIds; // Return the set containing nearby IDs + any valid blocker IDs
 }
 
 /**

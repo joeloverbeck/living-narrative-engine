@@ -4,7 +4,6 @@
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../services/questPrerequisiteService.js').QuestPrerequisiteService} QuestPrerequisiteService */
 /** @typedef {import('../services/QuestRewardService.js').QuestRewardService} QuestRewardService */
@@ -13,10 +12,8 @@
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */
 
-import {QuestLogComponent} from "../components/questLogComponent.js";
-
 // Assuming component keys match class names for getComponent lookup
-const QUEST_LOG_COMPONENT_KEY = QuestLogComponent; // Ensure this matches your component registration if not using class name
+const QUEST_LOG_COMPONENT_KEY = 'questLog' // Ensure this matches your component registration if not using class name
 
 /**
  * Manages the lifecycle and state of quests within the game.
@@ -139,7 +136,7 @@ class QuestSystem {
             console.error(`QuestSystem._handleQuestStarted: Player entity not found. Cannot process objectives for quest "${questId}".`);
             return;
         }
-        const questLogComponent = player.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLogComponent = player.getComponentData(QUEST_LOG_COMPONENT_KEY);
         if (!questLogComponent) {
             console.error(`QuestSystem._handleQuestStarted: Player ${player.id} missing QuestLogComponent. Cannot process objectives for quest "${questId}".`);
             return;
@@ -206,7 +203,7 @@ class QuestSystem {
             console.error(`QuestSystem.activateQuest: Cannot activate quest "${questId}". Player entity not found.`);
             return false;
         }
-        const questLog = player.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLog = player.getComponentData(QUEST_LOG_COMPONENT_KEY);
         if (!questLog) {
             console.error(`QuestSystem.activateQuest: Player ${player.id} missing QuestLogComponent.`);
             return false;
@@ -265,7 +262,7 @@ class QuestSystem {
             console.error(`QuestSystem._processObjectiveCompletion: Player not found. Cannot complete objective "${objectiveId}" for quest "${questId}".`);
             return;
         }
-        const questLogComponent = player.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLogComponent = player.getComponentData(QUEST_LOG_COMPONENT_KEY);
         if (!questLogComponent) {
             console.error(`QuestSystem._processObjectiveCompletion: Player ${player.id} missing QuestLogComponent. Cannot complete objective "${objectiveId}" for quest "${questId}".`);
             return;
@@ -344,7 +341,7 @@ class QuestSystem {
      */
     _checkQuestCompletion(questId) {
         const player = this.#gameStateManager.getPlayer();
-        const questLogComponent = player?.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLogComponent = player?.getComponentData(QUEST_LOG_COMPONENT_KEY);
         const questDefinition = this.#repository.getQuestDefinition(questId);
 
         if (!player || !questLogComponent || !questDefinition) {
@@ -394,7 +391,7 @@ class QuestSystem {
      */
     completeQuest(questId) {
         const player = this.#gameStateManager.getPlayer();
-        const questLogComponent = player?.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLogComponent = player?.getComponentData(QUEST_LOG_COMPONENT_KEY);
         const questDefinition = this.#repository.getQuestDefinition(questId);
 
         if (!player || !questLogComponent || !questDefinition) {
@@ -445,7 +442,7 @@ class QuestSystem {
      */
     failQuest(questId, reason = null) { //
         const player = this.#gameStateManager.getPlayer();
-        const questLogComponent = player?.getComponent(QUEST_LOG_COMPONENT_KEY);
+        const questLogComponent = player?.getComponentData(QUEST_LOG_COMPONENT_KEY);
         const questDefinition = this.#repository.getQuestDefinition(questId); // Needed for titleId
 
         if (!player || !questLogComponent) {

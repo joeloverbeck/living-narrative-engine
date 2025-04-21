@@ -1,11 +1,25 @@
 // src/utils/messages.js
 
-import {NameComponent} from "../components/nameComponent.js";
-// Assuming Entity type is available for JSDoc
+// IMPORT or DEFINE the component type ID string
+// Option 1: Assuming it's exported from a central types file (Recommended)
+import {NAME_COMPONENT_TYPE_ID} from '../types/components.js'; // Adjust path if needed
+
+// Option 2: Define it locally if not available via import (Ensure it matches!)
+// const NAME_COMPONENT_TYPE_ID = 'core:name';
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 
-// Helper to get NameComponent value or fallback (Unchanged)
-export const getDisplayName = (entity) => entity?.getComponent(NameComponent)?.value ?? entity?.id ?? 'unknown entity';
+// Helper to get Name component data value or fallback (Corrected)
+export const getDisplayName = (entity) => {
+    // Optional: Add a check if entity or the method exists, though ?. handles it
+    if (!entity || typeof entity.getComponentData !== 'function') {
+        return entity?.id || 'unknown entity'; // Fallback if not a valid entity
+    }
+    // Use getComponentData with the TYPE ID string
+    const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
+    // Access the 'value' property from the data object returned
+    return nameComponentData?.value ?? entity?.id ?? 'unknown entity';
+};
 
 /**
  * A collection of message templates for user feedback, particularly related to

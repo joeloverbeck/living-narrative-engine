@@ -58,8 +58,8 @@ import PayloadValueResolverService from "../../services/payloadValueResolverServ
 jest.mock('../../utils/messages.js', () => ({
     getDisplayName: jest.fn((entity) => {
         if (!entity) return 'mock unknown';
-        const nameComp = entity.getComponent(MockNameComponent);
-        return nameComp?.value ?? entity.id ?? 'mock unknown';
+        const nameCompData = entity.getComponentData('NameComponent'); // Use getComponentData with string ID
+        return nameCompData?.value ?? entity.id ?? 'mock unknown'; // Access .value from the data object
     }),
     TARGET_MESSAGES: {}, // Mock other exports as needed
 }));
@@ -273,7 +273,17 @@ describe('ActionExecutor', () => {
                     const locationId = 'loc_grand_hall';
                     const locationName = 'Grand Hall';
                     const location = new Entity(locationId);
-                    location.addComponent(new MockNameComponent(locationName));
+
+                    // --- CORRECTED LINE ---
+                    // Pass the string ID "NameComponent" and the data object
+                    // Using a plain object here is more idiomatic for how Entity stores raw data
+                    location.addComponent('NameComponent', {value: locationName});
+
+                    // --- ALTERNATIVE (Also works if MockNameComponent instance is needed elsewhere) ---
+                    // const nameCompData = new MockNameComponent(locationName);
+                    // location.addComponent('NameComponent', nameCompData);
+
+
                     mockContext = createMockActionContext({currentLocation: location});
                     mockActionDef = createMockActionDefinition({
                         id: 'test:context_loc_name_comp',
@@ -286,9 +296,11 @@ describe('ActionExecutor', () => {
 
                     await executor.executeAction(mockActionDef.id, mockContext, mockResolutionResult);
 
+                    // Ensure the mock getDisplayName is called correctly
                     expect(mockGetDisplayName).toHaveBeenCalledWith(location);
                     expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                         mockActionDef.dispatch_event.eventName,
+                        // The mock getDisplayName correctly extracts '.value'
                         expect.objectContaining({[payloadKey]: locationName})
                     );
                     expect(mockLogger.warn).not.toHaveBeenCalled();

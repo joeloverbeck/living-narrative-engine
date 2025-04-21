@@ -7,19 +7,19 @@ import {beforeEach, afterEach, describe, expect, jest, test} from '@jest/globals
 import {resolveTargetConnection} from '../../services/connectionResolver.js';
 
 // ** Import Dependencies for Mocking/Setup **
-// Assume Entity is a class we can instantiate or mock easily
-// If Entity has complex dependencies, you might need to mock its constructor or use a simplified mock object
 import Entity from '../../entities/entity.js'; // Adjust path if necessary
+// We might not need ConnectionsComponent instance directly anymore, but keep import if used elsewhere
 import {ConnectionsComponent} from '../../components/connectionsComponent.js'; // Adjust path
 import {NameComponent} from '../../components/nameComponent.js'; // Adjust path
 import {TARGET_MESSAGES} from '../../utils/messages.js'; // Adjust path
 import {getDisplayName} from '../../utils/messages.js';
 import ValidatedEventDispatcher from '../../services/validatedEventDispatcher.js'; // Adjust path if needed
 import {ILogger} from '../../core/interfaces/coreServices.js'; // Adjust path if needed
+import {CONNECTIONS_COMPONENT_TYPE_ID, NAME_COMPONENT_TYPE_ID} from '../../types/components.js'; // *** IMPORT TYPE ID ***
 
 // ** Import Types (for clarity, often optional in JS tests but good practice) **
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../components/connectionsComponent.js').ConnectionMapping} ConnectionMapping */
+/** @typedef {import('../components/connectionsComponent.js').ConnectionMapping} ConnectionMapping */ // Might be outdated if data structure changed
 
 
 // ========================================================================
@@ -29,36 +29,49 @@ import {ILogger} from '../../core/interfaces/coreServices.js'; // Adjust path if
 describe('ConnectionResolverService: resolveTargetConnection', () => {
 
     let mockContext;
-    let mockDispatch;
+    // let mockDispatch; // Replaced by mockValidatedDispatcher
     let mockEntityManager;
     let mockCurrentLocation;
-    let mockConnectionsComponentInstance;
-    let mockValidatedDispatcher; // <--- Add mock variable
-    let mockLogger;            // <--- Add mock variable
+    // let mockConnectionsComponentInstance; // Likely no longer needed for resolveTargetConnection tests
+    let mockValidatedDispatcher;
+    let mockLogger;
 
     // --- Helper Function to Create Mock Entities ---
     /**
-     * Creates a mock Entity with a NameComponent and mocks its getComponent method.
+     * Creates a mock Entity with a NameComponent and mocks its getComponentData method.
      * Adds the entity to the mockEntityManager.
      * @param {string} id - Entity ID.
-     * @param {string} name - Display Name for the NameComponent.
+     * @param {string} name - Display Name for the NameComponent data.
      * @returns {Entity} The mock entity instance.
      */
     const createMockConnectionEntity = (id, name) => {
-        const entity = new Entity(id); // Or use a simpler mock object if Entity is complex
-        const mockNameComp = {value: name}; // Simple NameComponent mock data
+        const entity = new Entity(id);
+        const mockNameCompData = {typeId: NAME_COMPONENT_TYPE_ID, value: name};
 
-        // Mock the getComponent method for this specific entity instance
-        entity.getComponent = jest.fn((componentConstructor) => {
-            if (componentConstructor === NameComponent) {
-                // Return an object mimicking the NameComponent interface needed by getDisplayName
-                return mockNameComp;
+        // Mock getComponentData for this entity instance
+        entity.getComponentData = jest.fn((componentTypeId) => {
+            if (componentTypeId === NAME_COMPONENT_TYPE_ID) {
+                return mockNameCompData;
             }
-            return undefined; // Return undefined for other components by default
+            // Mock other component data if needed by tests (e.g., PassageDetailsComponent)
+            // if (componentTypeId === PASSAGE_DETAILS_COMPONENT_TYPE_ID) { ... }
+            return undefined;
         });
 
+        // Mock getComponent for compatibility if needed elsewhere, but prioritize getComponentData
+        entity.getComponent = jest.fn((componentConstructor) => {
+            if (componentConstructor === NameComponent) {
+                // Return an object mimicking the component *instance* if required
+                // This might be simpler: { value: name } if only value is accessed
+                return {value: name};
+            }
+            // if (componentConstructor === PassageDetailsComponent) { ... }
+            return undefined;
+        });
+
+
         // Add standard properties if needed by getDisplayName or other parts
-        entity.name = name; // Sometimes useful for debugging/logging
+        entity.name = name; // Useful for debugging/logging, but getDisplayName uses component data
 
         // Store in mock manager
         mockEntityManager.entities.set(id, entity);
@@ -78,56 +91,54 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
         };
 
         // --- Mock ValidatedEventDispatcher ---
-        // Assuming ValidatedEventDispatcher might need the eventBus or similar
-        // You might need to adjust this based on its actual constructor/dependencies
-        // For now, just mock the required 'dispatchValidated' method
         mockValidatedDispatcher = {
-            dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock it as an async function if it is one
-            // You might need a reference to the original mockDispatch or mockEventBus here
-            // depending on how ValidatedEventDispatcher works, e.g.:
-            // eventBus: mockEventBus // if needed by the dispatcher internally
+            dispatchValidated: jest.fn().mockResolvedValue(undefined),
         };
 
+        // --- Mock EntityManager ---
         mockEntityManager = {
             entities: new Map(),
             getEntityInstance: jest.fn((entityId) => mockEntityManager.entities.get(entityId)),
-            // Add other methods if findPotentialConnectionMatches ever needs them
         };
 
-        // Mock ConnectionsComponent instance - we'll mock its methods
-        mockConnectionsComponentInstance = {
-            // Mock the method that the service uses
-            getAllConnections: jest.fn(() => []), // Default to empty connections
-            // Add other methods if needed
-        };
+        // --- Mock Current Location Entity (Updated for getComponentData) ---
+        mockCurrentLocation = new Entity('loc-current');
 
-        // Mock Current Location Entity
-        mockCurrentLocation = new Entity('loc-current'); // Or simple object
-        mockCurrentLocation.getComponent = jest.fn((componentConstructor) => {
-            if (componentConstructor === ConnectionsComponent) {
-                // Return the mock instance by default
-                return mockConnectionsComponentInstance;
+        // *** KEY CHANGE: Mock getComponentData ***
+        mockCurrentLocation.getComponentData = jest.fn((componentTypeId) => {
+            if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                // Return the expected data structure by default (empty connections map)
+                // Specific tests will override this mock implementation.
+                return {
+                    typeId: CONNECTIONS_COMPONENT_TYPE_ID, // Optional: include if structure has it
+                    connections: {}, // Default connections map
+                };
             }
-            return undefined;
+            return undefined; // Default for other components
         });
 
-        // Mock ActionContext
+        // Keep getComponent mock for potential compatibility or other uses, but it's
+        // not the primary method used by the connection resolver logic anymore.
+        // mockConnectionsComponentInstance = { getAllConnections: jest.fn(() => []) }; // Keep if needed
+        mockCurrentLocation.getComponent = jest.fn((componentConstructor) => {
+            // if (componentConstructor === ConnectionsComponent) {
+            //     return mockConnectionsComponentInstance; // Return if instance is needed elsewhere
+            // }
+            return undefined;
+        });
+        // --- End Updated Mock ---
+
+
+        // --- Mock ActionContext ---
         mockContext = {
-            // eventBus: mockEventBus, // Keep if ValidatedDispatcher needs it, or remove
             entityManager: mockEntityManager,
-            currentLocation: mockCurrentLocation,
+            currentLocation: mockCurrentLocation, // Use the updated mock
             playerEntity: new Entity('player-test'),
-            validatedDispatcher: mockValidatedDispatcher, // <--- Add mock
-            logger: mockLogger,                        // <--- Add mock
+            validatedDispatcher: mockValidatedDispatcher,
+            logger: mockLogger,
         };
 
-        // Ensure getDisplayName mock points to the real implementation
-        // (We generally don't mock getDisplayName itself, but rely on mocked NameComponents)
-        // jest.mock('../utils/messages', () => ({
-        //   ...jest.requireActual('../utils/messages'), // Keep original TARGET_MESSAGES etc.
-        //   getDisplayName: jest.fn((entity) => entity?.getComponent(NameComponent)?.value || entity?.id || 'mock display name')
-        // }));
-        // Note: Above mocking is complex; usually better to rely on real getDisplayName + mocked data.
+        // No need to mock getDisplayName, rely on mocked getComponentData in createMockConnectionEntity
     });
 
     // ========================================================================
@@ -136,41 +147,27 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
 
     // --- Scenario: Valid Input Required ---
     describe('Input Validation', () => {
+        // Tests remain largely the same, ensure async/await is used
         test.each([
             [null],
             [undefined],
             [''],
             ['   '],
-            // Add cases specifically testing logger/dispatcher presence if needed
-            // [{/* missing logger */}, 'some input'],
-            // [{/* missing dispatcher */}, 'some input']
-        ])('should return null and not dispatch for invalid input: %p', async (invalidInput) => { // <-- Add async
-            // Call the function and wait for the promise to resolve
-            const result = await resolveTargetConnection(mockContext, invalidInput); // <-- Add await
-
-            // Assert on the resolved value
+        ])('should return null and not dispatch for invalid input: %p', async (invalidInput) => {
+            const result = await resolveTargetConnection(mockContext, invalidInput);
             expect(result).toBeNull();
-
-            // Check that the dispatcher was NOT called
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled(); // <-- Check the new dispatcher mock
-
-            // Optionally check if logger.warn was called for empty string cases
-            if (typeof invalidInput === 'string' && invalidInput.trim() === '') {
-                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Invalid or empty connectionTargetName"));
-            } else if (invalidInput === null || invalidInput === undefined) {
-                // For null/undefined input, the check might happen even earlier
-                // depending on how connectionTargetName is used before trimming.
-                // If trimmedTargetName handles it, the warn might still be called.
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            // Logger checks remain the same
+            if (invalidInput === null || invalidInput === undefined || (typeof invalidInput === 'string' && invalidInput.trim() === '')) {
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Invalid or empty connectionTargetName"));
             }
         });
 
-        // Add specific tests for context validation failure if desired
         test('should return null if context is invalid (missing logger)', async () => {
             const invalidContext = {...mockContext, logger: undefined};
             const result = await resolveTargetConnection(invalidContext, 'north');
             expect(result).toBeNull();
-            // Check console.error might be tricky/flaky in Jest, focus on return value
+            // console.error assertion is tricky, relying on null return is better
         });
 
         test('should return null if context is invalid (missing validatedDispatcher)', async () => {
@@ -185,25 +182,35 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
         let northEntity;
         beforeEach(() => {
             northEntity = createMockConnectionEntity('conn-n', 'North Passage');
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'north', connectionEntityId: northEntity.id}
-            ]);
+
+            // *** UPDATE MOCK: Mock getComponentData for this scenario ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'north': northEntity.id // Map direction key to entity ID
+                        }
+                    };
+                }
+                return undefined;
+            });
         });
 
         test.each([
             ['north'],
             ['NORTH'],
             [' north '],
-        ])('should return the correct entity for unique direction "%s"', async (input) => { // <-- Add async
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+        ])('should return the correct entity for unique direction "%s"', async (input) => {
+            const result = await resolveTargetConnection(mockContext, input);
 
-            expect(result).toBe(northEntity); // Assertion remains the same, but now checks the resolved value
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled(); // <-- Check the new dispatcher mock
-            // Verify internal calls (optional but good for sanity check)
-            expect(mockCurrentLocation.getComponent).toHaveBeenCalledWith(ConnectionsComponent);
-            expect(mockConnectionsComponentInstance.getAllConnections).toHaveBeenCalled();
+            expect(result).toBe(northEntity); // Should now receive the entity
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            // Verify internal calls (Updated)
+            expect(mockCurrentLocation.getComponentData).toHaveBeenCalledWith(CONNECTIONS_COMPONENT_TYPE_ID); // Check getComponentData call
+            // expect(mockConnectionsComponentInstance.getAllConnections).not.toHaveBeenCalled(); // Ensure old path isn't used
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(northEntity.id);
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: north -> ${northEntity.id}`)); // <-- Check logger call
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: north -> ${northEntity.id}`));
         });
     });
 
@@ -211,31 +218,53 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
     describe('Ambiguous Direction Match', () => {
         let westEntity1;
         let westEntity2;
+
+        // Use helper function to find potential matches directly for this complex case
+        // This avoids needing a complex mock for getComponentData that accurately reflects
+        // how multiple entities might map to the same direction keyword.
+        let mockFindMatchesFn;
+
         beforeEach(() => {
             westEntity1 = createMockConnectionEntity('conn-w1', 'West Archway');
             westEntity2 = createMockConnectionEntity('conn-w2', 'West Tunnel');
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'west', connectionEntityId: westEntity1.id},
-                {direction: 'west', connectionEntityId: westEntity2.id} // Same direction, different entities
-            ]);
+
+            // *** UPDATE MOCK: Mock the helper function directly ***
+            mockFindMatchesFn = jest.fn().mockImplementation((context, targetName, logger) => {
+                // Simulate finding two entities matching the direction 'west'
+                if (targetName === 'west') {
+                    return {
+                        directionMatches: [
+                            {direction: 'west', connectionEntity: westEntity1},
+                            {direction: 'west', connectionEntity: westEntity2}
+                        ],
+                        nameMatches: [] // No name matches in this specific scenario
+                    };
+                }
+                // Fallback for other inputs if needed, though test uses 'west'
+                return {directionMatches: [], nameMatches: []};
+            });
         });
 
-        test('should return null and dispatch AMBIGUOUS_DIRECTION message', async () => { // <-- Add async
+        test('should return null and dispatch AMBIGUOUS_DIRECTION message', async () => {
             const input = 'west';
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            // Pass the mocked findMatchesFn to the resolver
+            const result = await resolveTargetConnection(mockContext, input, 'go', mockFindMatchesFn);
 
-            expect(result).toBeNull();
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(result).toBeNull(); // Still expect null for ambiguity
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
-            // --- Updated Check for Dispatch ---
+            // Check the dispatched message
             const expectedMsg = TARGET_MESSAGES.AMBIGUOUS_DIRECTION(input, [getDisplayName(westEntity1), getDisplayName(westEntity2)]);
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                "event:display_message", // Or the specific event string if different
+                "event:display_message",
                 {text: expectedMsg, type: 'warning'}
             );
-            // --- End Updated Check ---
 
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Ambiguous direction match for '${input}'`)); // <-- Check logger
+            // Verify logs and mock call
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Ambiguous direction match for '${input}'`));
+            expect(mockFindMatchesFn).toHaveBeenCalledWith(mockContext, input.trim().toLowerCase(), mockLogger);
+            // Ensure the actual findPotentialConnectionMatches wasn't called (because we provided a mock)
+            // This requires spying on the original module if you want to be absolutely sure.
         });
     });
 
@@ -244,23 +273,38 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
         let doorEntity;
         beforeEach(() => {
             doorEntity = createMockConnectionEntity('conn-door', 'Ornate Door');
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'east', connectionEntityId: doorEntity.id} // Direction doesn't match 'door'
-            ]);
+
+            // *** UPDATE MOCK: Mock getComponentData for this scenario ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'east': doorEntity.id // Direction doesn't match 'door'
+                        }
+                    };
+                }
+                return undefined;
+            });
+            // Mock PassageDetailsComponent data if needed for name matching via blocker
+            // doorEntity.getComponentData.mockImplementation(...) for PASSAGE_DETAILS_COMPONENT_TYPE_ID
         });
 
         test.each([
-            ['door'],
+            ['door'], // Assumes 'Ornate Door' contains 'door'
             ['DOOR'],
-            [' ornate '], // This might fail if your name matching isn't robust enough for partials like this - adjust test or logic if needed
+            [' ornate '], // Assumes matching logic handles surrounding spaces and partials
             ['Ornate Door'],
-        ])('should return the correct entity for unique name match "%s"', async (input) => { // <-- Add async
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+        ])('should return the correct entity for unique name match "%s"', async (input) => {
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBe(doorEntity);
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled(); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            expect(mockCurrentLocation.getComponentData).toHaveBeenCalledWith(CONNECTIONS_COMPONENT_TYPE_ID);
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(doorEntity.id);
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique name match: ${getDisplayName(doorEntity)} (${doorEntity.id})`)); // <-- Check logger
+            // Check getComponentData was called on the entity itself for name lookup
+            expect(doorEntity.getComponentData).toHaveBeenCalledWith(NAME_COMPONENT_TYPE_ID);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique name match: ${getDisplayName(doorEntity)} (${doorEntity.id})`));
         });
     });
 
@@ -269,55 +313,80 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
         let pathEntity1;
         let pathEntity2;
         beforeEach(() => {
-            pathEntity1 = createMockConnectionEntity('conn-p1', 'Narrow Path');
-            pathEntity2 = createMockConnectionEntity('conn-p2', 'Winding Path');
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'north', connectionEntityId: pathEntity1.id}, // Directions don't match 'path'
-                {direction: 'south', connectionEntityId: pathEntity2.id}
-            ]);
+            pathEntity1 = createMockConnectionEntity('conn-p1', 'Narrow Path'); // Matches 'path'
+            pathEntity2 = createMockConnectionEntity('conn-p2', 'Winding Path'); // Matches 'path'
+
+            // *** UPDATE MOCK: Mock getComponentData for this scenario ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'north': pathEntity1.id, // Directions don't match 'path'
+                            'south': pathEntity2.id
+                        }
+                    };
+                }
+                return undefined;
+            });
         });
 
-        test('should return null and dispatch TARGET_AMBIGUOUS_CONTEXT message', async () => { // <-- Add async
+        test('should return null and dispatch TARGET_AMBIGUOUS_CONTEXT message', async () => {
             const input = 'path';
             const actionVerb = 'examine'; // Example verb
-            const result = await resolveTargetConnection(mockContext, input, actionVerb); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input, actionVerb);
 
             expect(result).toBeNull();
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
-            const expectedEntities = [pathEntity1, pathEntity2];
+            const expectedEntities = [pathEntity1, pathEntity2]; // Order might depend on iteration order in findPotential...
             const expectedMsg = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(actionVerb, input, expectedEntities);
+            // Note: The order in the message might vary based on Object.entries iteration.
+            // Consider using expect.arrayContaining or sorting names if order is not guaranteed/important.
+            const receivedCall = mockValidatedDispatcher.dispatchValidated.mock.calls[0];
+            expect(receivedCall[0]).toBe("event:display_message");
+            expect(receivedCall[1].type).toBe('warning');
+            // Check text content flexibly for names
+            expect(receivedCall[1].text).toContain(`Which '${input}' did you want to ${actionVerb}?`);
+            expect(receivedCall[1].text).toContain(getDisplayName(pathEntity1));
+            expect(receivedCall[1].text).toContain(getDisplayName(pathEntity2));
 
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <-- Check new dispatcher
-                "event:display_message", // Assuming this is your event type constant
-                {text: expectedMsg, type: 'warning'}
-            );
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Ambiguous name match for '${input}'`)); // <-- Check logger
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Ambiguous name match for '${input}'`));
         });
     });
 
     // --- Scenario: Prioritization (Direction > Name) ---
     describe('Prioritization (Direction over Name)', () => {
-        let eastDirEntity; // Matches direction 'east'
-        let upNameEntity; // Matches name 'east' (e.g., "East Window")
+        let eastDirEntity;
+        let upNameEntity; // Has 'East' in its name
         beforeEach(() => {
-            eastDirEntity = createMockConnectionEntity('conn-e', 'Corridor');
-            // Ensure the name actually contains the target word for the test case
+            eastDirEntity = createMockConnectionEntity('conn-e', 'Corridor'); // Matches direction 'east'
             upNameEntity = createMockConnectionEntity('conn-u', 'East Window'); // Name contains 'East'
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'east', connectionEntityId: eastDirEntity.id}, // Direction match
-                {direction: 'up', connectionEntityId: upNameEntity.id}     // Name match for 'east'
-            ]);
+
+            // *** UPDATE MOCK: Mock getComponentData for this scenario ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'east': eastDirEntity.id, // Direction match for 'east'
+                            'up': upNameEntity.id     // Name match for 'east' exists via 'East Window'
+                        }
+                    };
+                }
+                return undefined;
+            });
         });
 
-        test('should return the entity matched by direction when input matches both', async () => { // <-- Add async
+        test('should return the entity matched by direction when input matches both', async () => {
             const input = 'east';
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBe(eastDirEntity); // Prioritizes direction match
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled(); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
             // Check logger confirms direction match was chosen
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: ${eastDirEntity.direction || 'east'} -> ${eastDirEntity.id}`));
+            // Note: The logger message uses match.direction which comes from the data map key ('east')
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: east -> ${eastDirEntity.id}`));
         });
     });
 
@@ -325,95 +394,115 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
     describe('No Match', () => {
         beforeEach(() => {
             const northEntity = createMockConnectionEntity('conn-n', 'North Exit');
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'north', connectionEntityId: northEntity.id}
-            ]);
+
+            // *** UPDATE MOCK: Mock getComponentData for this scenario ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'north': northEntity.id
+                        }
+                    };
+                }
+                return undefined;
+            });
         });
 
-        test('should return null and dispatch TARGET_NOT_FOUND_CONTEXT message', async () => { // <-- Add async
+        test('should return null and dispatch TARGET_NOT_FOUND_CONTEXT message', async () => {
             const input = 'teleporter'; // Doesn't match 'north' or 'North Exit'
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBeNull();
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <-- Check new dispatcher
-                "event:display_message", // Assuming this is your event type constant
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+                "event:display_message",
                 {text: expectedMsg, type: 'info'}
             );
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`)); // <-- Check logger
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
         });
     });
 
     // --- Scenario: Edge Cases ---
     describe('Edge Cases', () => {
-        test('should return null and dispatch Not Found if location lacks ConnectionsComponent', async () => { // <-- Add async
-            // Override default mock for this test
-            mockCurrentLocation.getComponent.mockReturnValue(undefined);
+        test('should return null and dispatch Not Found if location lacks ConnectionsComponent data', async () => {
+            // *** UPDATE MOCK: Override getComponentData to return undefined ***
+            mockCurrentLocation.getComponentData.mockReturnValue(undefined);
+
             const input = 'north';
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBeNull();
-            // Note: In the actual code, findPotentialConnectionMatches might return early
-            // and the "Not Found" message might not be dispatched if the component is missing.
-            // Let's check the logger/dispatcher based on the code path.
-            // findPotentialConnectionMatches logs a warning in this case.
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("ConnectionsComponent not found on location"));
+            // Check findPotentialConnectionMatches logs warning about missing data
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Connections component data (typeId: ${CONNECTIONS_COMPONENT_TYPE_ID}) not found on location`));
             // The main function then finds 0 matches and dispatches Not Found.
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 "event:display_message",
                 {text: expectedMsg, type: 'info'}
             );
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`)); // <-- Check logger
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
         });
 
-        test('should return null and dispatch Not Found if ConnectionsComponent map is empty', async () => { // <-- Add async
-            // Default setup already has getAllConnections return []
+        test('should return null and dispatch Not Found if Connections map is empty', async () => {
+            // Default beforeEach already sets up getComponentData to return { connections: {} }
             const input = 'south';
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBeNull();
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 "event:display_message",
                 {text: expectedMsg, type: 'info'}
             );
             // Verify internal calls
-            expect(mockCurrentLocation.getComponent).toHaveBeenCalledWith(ConnectionsComponent);
-            expect(mockConnectionsComponentInstance.getAllConnections).toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`)); // <-- Check logger
+            expect(mockCurrentLocation.getComponentData).toHaveBeenCalledWith(CONNECTIONS_COMPONENT_TYPE_ID);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
         });
 
-        test('should return null and dispatch Not Found if connection ID is dangling', async () => { // <-- Add async
+        test('should return null and dispatch Not Found if connection ID is dangling', async () => {
             const danglingId = 'conn-dangling';
-            mockConnectionsComponentInstance.getAllConnections.mockReturnValue([
-                {direction: 'up', connectionEntityId: danglingId}
-            ]);
-            // Ensure entityManager returns null for this specific ID
-            mockEntityManager.getEntityInstance.mockImplementation((id) => {
-                if (id === danglingId) return null;
-                return mockEntityManager.entities.get(id); // Fallback for other IDs
+
+            // *** UPDATE MOCK: Mock getComponentData with the dangling ID ***
+            mockCurrentLocation.getComponentData.mockImplementation((componentTypeId) => {
+                if (componentTypeId === CONNECTIONS_COMPONENT_TYPE_ID) {
+                    return {
+                        typeId: CONNECTIONS_COMPONENT_TYPE_ID,
+                        connections: {
+                            'up': danglingId
+                        }
+                    };
+                }
+                return undefined;
             });
 
+            // Ensure entityManager returns null for this specific ID
+            // (beforeEach already sets up getEntityInstance mock, just need to ensure it returns null for the ID)
+            mockEntityManager.getEntityInstance.mockImplementation((id) => {
+                if (id === danglingId) return null; // Explicitly return null for the dangling ID
+                return mockEntityManager.entities.get(id); // Fallback for other valid IDs
+            });
+
+
             const input = 'up';
-            const result = await resolveTargetConnection(mockContext, input); // <-- Add await
+            const result = await resolveTargetConnection(mockContext, input);
 
             expect(result).toBeNull();
             // Check that findPotentialConnectionMatches logged a warning about the missing entity
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Could not find Connection entity '${danglingId}'`));
             // Check that the main function dispatched the "Not Found" message
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith( // <-- Check new dispatcher
+            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 "event:display_message",
                 {text: expectedMsg, type: 'info'}
             );
-            // Verify the dangling ID was requested
+            // Verify the dangling ID was requested from entity manager
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(danglingId);
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`)); // <-- Check logger
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
         });
     });
 

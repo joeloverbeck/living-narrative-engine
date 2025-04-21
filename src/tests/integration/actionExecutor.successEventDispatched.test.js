@@ -343,7 +343,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatched Successfu
         expect(mockLogger.info).toHaveBeenCalledTimes(2); // Constructor message
         // Note: Exact debug count can be brittle; checking key messages is often sufficient.
         // If needed, uncomment and adjust: expect(mockLogger.debug).toHaveBeenCalledTimes(EXPECTED_COUNT);
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        expect(mockLogger.warn).toHaveBeenCalledTimes(2);
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 

@@ -69,7 +69,6 @@ class InMemoryDataRegistry {
         const typeMap = this.data.get(type);
 
         // Store the data object using its id as the key.
-        // Map.set automatically handles overwriting if the key already exists.
         typeMap.set(id, data);
     }
 
@@ -81,12 +80,7 @@ class InMemoryDataRegistry {
      * @returns {object | undefined} The data object if found, otherwise undefined.
      */
     get(type, id) {
-        // Get the map for the type.
         const typeMap = this.data.get(type);
-
-        // If typeMap exists, retrieve the data using the id.
-        // If typeMap doesn't exist or the id is not found within it,
-        // typeMap.get(id) will correctly return undefined.
         return typeMap ? typeMap.get(id) : undefined;
     }
 
@@ -98,32 +92,75 @@ class InMemoryDataRegistry {
      * if the type is unknown or has no data stored.
      */
     getAll(type) {
-        // Get the map for the type.
         const typeMap = this.data.get(type);
-
-        // If typeMap exists, convert its values (the data objects) to an array.
-        // If typeMap doesn't exist, return an empty array.
         return typeMap ? Array.from(typeMap.values()) : [];
     }
 
+    // =======================================================
+    // --- ADD THE MISSING DEFINITION GETTER METHODS ---
+    // =======================================================
+
+    /**
+     * Retrieves a specific entity definition by its ID.
+     * @param {string} entityId - The ID of the entity definition.
+     * @returns {object | undefined} The entity definition object or undefined.
+     */
+    getEntityDefinition(entityId) {
+        // Try common categories where entity-like definitions might be stored
+        return this.get('entities', entityId)
+            || this.get('locations', entityId)
+            || this.get('connections', entityId)
+            || this.get('items', entityId) // Add other relevant categories
+            || undefined; // Return undefined if not found in any category
+    }
+
+    /**
+     * Retrieves a specific action definition by its ID.
+     * @param {string} actionId - The ID of the action definition.
+     * @returns {object | undefined} The action definition object or undefined.
+     */
+    getActionDefinition(actionId) {
+        return this.get('actions', actionId);
+    }
+
+    /**
+     * Retrieves all loaded action definitions.
+     * @returns {object[]} An array of all action definition objects.
+     */
+    getAllActionDefinitions() {
+        return this.getAll('actions');
+    }
+
+    /**
+     * Retrieves a specific location definition by its ID.
+     * Note: Assumes locations are stored under the 'locations' type OR 'entities' type.
+     * Adjust the types checked ('locations', 'entities') if you store them differently.
+     * @param {string} locationId - The ID of the location definition.
+     * @returns {object | undefined} The location definition object or undefined.
+     */
+    getLocationDefinition(locationId) {
+        // Check both 'locations' and 'entities' types, returning the first match found.
+        // Prioritize 'locations' if it exists as a distinct type.
+        return this.get('locations', locationId) ?? this.get('entities', locationId);
+    }
+
+    // =======================================================
+    // --- END ADDED METHODS ---
+    // =======================================================
+
+
     /**
      * Removes all stored typed data objects and resets the manifest to null.
-     * This is typically used when loading a new world or resetting the game state.
      */
     clear() {
-        // Clear the main data map, removing all type categories and their contents.
         this.data.clear();
-
-        // Reset the manifest reference to null.
         this.manifest = null;
-
-        // console.log("InMemoryDataRegistry: Cleared all data and manifest."); // Optional: Add logging
+        // console.log("InMemoryDataRegistry: Cleared all data and manifest.");
     }
 
     /**
      * Retrieves the currently loaded world manifest object.
-     *
-     * @returns {object | null} The stored manifest object, or null if no manifest has been set or after clear() has been called.
+     * @returns {object | null} The stored manifest object, or null.
      */
     getManifest() {
         return this.manifest;
@@ -131,16 +168,11 @@ class InMemoryDataRegistry {
 
     /**
      * Stores the world manifest object. Overwrites any previously stored manifest.
-     *
-     * @param {object} data - The manifest object to store. Should be a non-null object.
-     * Use clear() to unset the manifest.
+     * @param {object} data - The manifest object to store. Must be a non-null object.
      */
     setManifest(data) {
-        // Basic validation: Ensure we are setting a non-null object.
         if (typeof data !== 'object' || data === null) {
             console.error('InMemoryDataRegistry.setManifest: Attempted to set invalid manifest data. Must be a non-null object.');
-            // Consider throwing an error depending on desired strictness
-            // throw new Error('Invalid manifest data: Must be a non-null object.');
             return;
         }
         this.manifest = data;

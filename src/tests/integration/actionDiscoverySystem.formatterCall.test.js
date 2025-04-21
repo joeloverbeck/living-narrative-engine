@@ -40,6 +40,20 @@ const mockLogger = {
     debug: jest.fn(),
 };
 
+// ADD MOCKS FOR THE OTHER EntityManager DEPENDENCIES
+const mockValidator = {
+    validate: jest.fn((schemaId, data) => ({isValid: true, errors: []})), // Simple mock validator
+};
+
+const mockSpatialIndexManager = {
+    addEntity: jest.fn(),
+    removeEntity: jest.fn(),
+    updateEntityLocation: jest.fn(),
+    getEntitiesInLocation: jest.fn(() => new Set()),
+    buildIndex: jest.fn(),
+    clearIndex: jest.fn(),
+};
+
 // --- Test Data Definitions (Copied from original) ---
 const connectionDef = {
     id: "demo:conn_entrance_hallway",
@@ -126,49 +140,52 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call', () => {
     let realIsValid; // To store the original isValid method
 
     beforeEach(() => {
-        // Reset mocks (important even in isolated file)
+        // Reset mocks
         jest.clearAllMocks();
 
         // 1. Instantiate Core Services & Mocks
         registry = new InMemoryDataRegistry();
         gameDataRepository = new GameDataRepository(registry, mockLogger);
-        entityManager = new EntityManager(gameDataRepository);
+        entityManager = new EntityManager(
+            registry,
+            mockValidator,
+            mockLogger,
+            mockSpatialIndexManager
+        );
         actionValidationService = new ActionValidationService({
             entityManager,
             gameDataRepository,
             logger: mockLogger
         });
 
-        // 2. Register Components
-        entityManager.registerComponent('Name', NameComponent);
-        entityManager.registerComponent('Description', DescriptionComponent);
-        entityManager.registerComponent('MetaDescription', MetaDescriptionComponent);
-        entityManager.registerComponent('Connections', ConnectionsComponent);
-        entityManager.registerComponent('Position', PositionComponent);
-        entityManager.registerComponent('Health', HealthComponent);
-        entityManager.registerComponent('Inventory', InventoryComponent);
-        entityManager.registerComponent('Stats', StatsComponent);
-        entityManager.registerComponent('Attack', AttackComponent);
-        entityManager.registerComponent('Equipment', EquipmentComponent);
-        entityManager.registerComponent('QuestLog', QuestLogComponent);
-        entityManager.registerComponent('PassageDetails', PassageDetailsComponent);
-        entityManager.registerComponent('DefinitionRef', DefinitionRefComponent);
-
-        // 3. Load Test Definitions
+        // 2. Load Test Definitions into the REGISTRY
+        // Store ACTIONS separately (EntityManager doesn't load these)
         registry.store('actions', goActionDef.id, goActionDef);
-        registry.store('entities', playerDef.id, playerDef);
-        registry.store('locations', roomDef.id, roomDef);
-        registry.store('connections', connectionDef.id, connectionDef);
 
-        // 4. Create Entity Instances
+        // Store ALL definitions needed for ENTITY INSTANTIATION under 'entities'
+        registry.store('entities', playerDef.id, playerDef);
+        registry.store('entities', roomDef.id, roomDef);         // <-- Store room as 'entities'
+        registry.store('entities', connectionDef.id, connectionDef); // <-- Store connection as 'entities'
+
+        // 4. Create Entity Instances using EntityManager
         playerEntity = entityManager.createEntityInstance('core:player');
         roomEntity = entityManager.createEntityInstance('demo:room_entrance');
         connectionEntity = entityManager.createEntityInstance('demo:conn_entrance_hallway');
 
+        // Check if entities were created successfully
+        if (!playerEntity || !roomEntity || !connectionEntity) {
+            // Add more detail to the error to see WHICH one failed
+            console.error('DEBUG: playerEntity:', playerEntity);
+            console.error('DEBUG: roomEntity:', roomEntity);
+            console.error('DEBUG: connectionEntity:', connectionEntity);
+            throw new Error('Failed to create one or more entity instances in test setup. Check definitions and EntityManager logic. See console logs.');
+        }
+
+
         // 5. Build Action Context
         actionContext = {
             playerEntity: playerEntity,
-            currentLocation: roomEntity,
+            currentLocation: roomEntity, // This is still conceptually the room entity
             entityManager: entityManager,
             gameDataRepository: gameDataRepository,
             eventBus: null,
@@ -176,16 +193,13 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call', () => {
             parsedCommand: null
         };
 
-        // --- Setup Spies and Mocks specifically for the formatter test ---
+        // --- Setup Spies and Mocks ---
         formatSpy = jest.spyOn(actionFormatter, 'formatActionCommand');
-
-        realIsValid = actionValidationService.isValid; // Store real method before mocking
+        realIsValid = actionValidationService.isValid;
         isValidMock = jest.spyOn(actionValidationService, 'isValid').mockImplementation((actionDef, actor, targetContext) => {
             if (actionDef.id === 'core:go' && targetContext.type === 'direction' && targetContext.direction === 'north') {
-                // Force validation TRUE for the specific case needed to reach the formatter
                 return true;
             }
-            // Call the real implementation for all other cases (like initial actor check)
             return realIsValid.call(actionValidationService, actionDef, actor, targetContext);
         });
 
@@ -194,10 +208,8 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call', () => {
             entityManager,
             actionValidationService,
             logger: mockLogger,
-            formatActionCommandFn: formatSpy // <-- Inject the spy HERE
+            formatActionCommandFn: formatSpy
         });
-
-        // --- End Spies/Mocks Setup ---
     });
 
     // Restore mocks after each test in this suite

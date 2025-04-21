@@ -1,170 +1,332 @@
 // src/entities/entityManager.js
 
 import Entity from "./entity.js";
-import SpatialIndexManager from "../core/spatialIndexManager.js";
-import {PositionComponent} from "../components/positionComponent.js";
-// **** Added Import ****
-import DefinitionRefComponent from "../components/definitionRefComponent.js";
+import {POSITION_COMPONENT_ID} from "../types/components.js";
 
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+// --- JSDoc Imports for Type Hinting ---
+/** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../core/interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
+
+/** @typedef {import('../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
 
 /**
- * Manages the creation and tracking of Entity instances from data definitions.
- * It uses a registry to map JSON component names to JavaScript component classes.
- * Component classes must be manually registered after instantiation.
- * It also maintains a spatial index for efficient location queries.
+ * Manages the lifecycle and component data manipulation of Entity instances.
+ * It orchestrates entity creation using validated definitions from the IDataRegistry,
+ * handles dynamic component addition/removal with runtime validation via ISchemaValidator,
+ * and ensures the ISpatialIndexManager is updated accordingly.
+ * This class operates purely on component data (plain objects) and their type IDs,
+ * remaining agnostic to specific component logic or classes.
  */
 class EntityManager {
     /**
      * @private
-     * @type {GameDataRepository} // <-- UPDATED Type
+     * @type {IDataRegistry}
+     * @description Service to retrieve validated game data definitions.
      */
-    #repository;
+    #registry;
 
-    /** @type {Map<string, Function>} */
-    componentRegistry = new Map();
-    /** @type {Map<string, Entity>} */
+    /**
+     * @private
+     * @type {ISchemaValidator}
+     * @description Service to validate component data against registered schemas.
+     */
+    #validator;
+
+    /**
+     * @private
+     * @type {ILogger}
+     * @description Service for logging messages.
+     */
+    #logger;
+
+    /**
+     * @private
+     * @type {ISpatialIndexManager}
+     * @description Service to manage the spatial index based on entity positions.
+     */
+    #spatialIndexManager;
+
+    /**
+     * Stores the active, instantiated Entity objects, keyed by their unique instance ID.
+     * @type {Map<string, Entity>}
+     */
     activeEntities = new Map();
-    /** @type {SpatialIndexManager} */
-    spatialIndexManager = new SpatialIndexManager();
 
     /**
-     * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
-     * @param {GameDataRepository} repository - The game data repository instance.
+     * Creates a new EntityManager instance.
+     * @param {IDataRegistry} registry - The data registry service.
+     * @param {ISchemaValidator} validator - The schema validation service.
+     * @param {ILogger} logger - The logging service.
+     * @param {ISpatialIndexManager} spatialIndexManager - The spatial index management service.
+     * @throws {Error} If any required dependency is not provided or invalid.
      */
-    constructor(repository) { // <-- UPDATED Parameter name
-        if (!repository) {
-            // Updated error message to reflect new dependency
-            throw new Error("EntityManager requires a GameDataRepository instance.");
+    constructor(registry, validator, logger, spatialIndexManager) {
+        // AC: Constructor accepts IDataRegistry, ISchemaValidator, ILogger, ISpatialIndexManager.
+        if (!registry || typeof registry.getEntityDefinition !== 'function') { // Check specific method needed
+            throw new Error("EntityManager requires a valid IDataRegistry instance with getEntityDefinition.");
         }
-        this.#repository = repository; // <-- UPDATED Assignment
-        console.log("EntityManager initialized with GameDataRepository. Components need manual registration. Spatial index ready.");
+        if (!validator || typeof validator.validate !== 'function') {
+            throw new Error("EntityManager requires a valid ISchemaValidator instance with validate.");
+        }
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.warn !== 'function') {
+            throw new Error("EntityManager requires a valid ILogger instance.");
+        }
+        if (!spatialIndexManager || typeof spatialIndexManager.addEntity !== 'function' || typeof spatialIndexManager.removeEntity !== 'function' || typeof spatialIndexManager.updateEntityLocation !== 'function') {
+            throw new Error("EntityManager requires a valid ISpatialIndexManager instance.");
+        }
+
+        this.#registry = registry;
+        this.#validator = validator;
+        this.#logger = logger;
+        this.#spatialIndexManager = spatialIndexManager;
+        // Removed componentRegistry initialization
+        // Removed GameDataRepository dependency (replaced by IDataRegistry)
+
+        this.#logger.info("EntityManager initialized with required services (IDataRegistry, ISchemaValidator, ILogger, ISpatialIndexManager).");
     }
 
-    /**
-     * Manually registers a component class with its corresponding JSON key.
-     * This MUST be called externally (e.g., in main.js) for each component type.
-     * @param {string} jsonKey - The key used for this component in the JSON definitions (e.g., "Health").
-     * @param {Function} componentClass - The component class constructor (e.g., HealthComponent imported from its file).
-     */
-    registerComponent(jsonKey, componentClass) {
-        if (typeof jsonKey !== 'string' || !jsonKey) {
-            throw new Error("Invalid jsonKey provided for component registration.");
-        }
-        if (typeof componentClass !== 'function' || !componentClass.prototype) {
-            console.error(`Invalid componentClass provided for jsonKey "${jsonKey}":`, componentClass);
-            throw new Error(`Invalid componentClass provided for jsonKey "${jsonKey}". Expected a class constructor.`);
-        }
-        if (this.componentRegistry.has(jsonKey)) {
-            console.warn(`Component registry already has key "${jsonKey}". Overwriting with ${componentClass.name}.`);
-        }
-        this.componentRegistry.set(jsonKey, componentClass);
-        console.log(`Registered component: JSON key "${jsonKey}" -> Class ${componentClass.name}`);
-    }
+    // REMOVED: registerComponent method is deleted as per AC 3.
 
     /**
      * Creates a new Entity instance based on its definition ID.
-     * Retrieves the definition from GameDataRepository, instantiates the Entity,
-     * finds corresponding Component classes from the registry,
-     * instantiates components with data, and attaches them to the Entity.
+     * Retrieves the *pre-validated* definition from IDataRegistry, instantiates the Entity,
+     * copies the component *data* (plain objects) from the definition to the entity instance,
+     * and updates the spatial index if a valid position component is present.
      *
-     * **Crucially, it now also automatically adds a DefinitionRefComponent.**
-     *
-     * Updates the spatial index if the new entity has a PositionComponent.
-     *
-     * Optionally stores the instance in an internal map.
-     * If an instance for the ID already exists in the active map (and forceNew is false),
-     * it returns the existing instance without creating a new one.
-     *
-     * @param {string} entityId - The unique ID of the entity definition to instantiate.
+     * @param {string} entityId - The unique ID of the entity definition to instantiate (also used as the instance ID).
      * @param {boolean} [forceNew=false] - If true, always creates a new instance even if one exists in activeEntities.
      * @returns {Entity | null} The created or existing Entity instance, or null if definition not found or instantiation fails.
+     * @implements {AC 4}
      */
     createEntityInstance(entityId, forceNew = false) {
-        if (!forceNew && this.activeEntities.has(entityId)) {
-            // Return existing instance if found and not forcing new
-            return this.activeEntities.get(entityId);
-        }
-
-        const entityDefinition = this.#repository.getEntityDefinition(entityId); // <-- UPDATED
-
-        if (!entityDefinition) {
-            console.error(`EntityManager: Entity definition not found for ID: ${entityId}`);
+        if (typeof entityId !== 'string' || !entityId) {
+            this.#logger.error(`EntityManager.createEntityInstance: Invalid entityId provided: ${entityId}`);
             return null;
         }
 
-        // Basic validation of components object from definition
+        if (!forceNew && this.activeEntities.has(entityId)) {
+            this.#logger.debug(`EntityManager.createEntityInstance: Returning existing instance for ID: ${entityId}`);
+            return this.activeEntities.get(entityId);
+        }
+
+        // AC: Retrieve validated entity definition from IDataRegistry
+        const entityDefinition = this.#registry.getEntityDefinition(entityId);
+
+        if (!entityDefinition) {
+            this.#logger.error(`EntityManager.createEntityInstance: Entity definition not found in IDataRegistry for ID: ${entityId}`);
+            return null;
+        }
+
+        // Basic validation (already performed by GenericContentLoader, but good defense)
         if (entityDefinition.components && typeof entityDefinition.components !== 'object') {
-            console.warn(`EntityManager: Entity definition for ${entityId} has an invalid 'components' field (must be an object). Treating as no components.`);
-            entityDefinition.components = null; // Ensure it's null or empty object if invalid
+            this.#logger.warn(`EntityManager.createEntityInstance: Entity definition for ${entityId} has an invalid 'components' field (must be an object). Treating as no components.`);
+            entityDefinition.components = {}; // Ensure it's an empty object if invalid
+        } else if (!entityDefinition.components) {
+            entityDefinition.components = {}; // Ensure components object exists
         }
 
         try {
-            // Note: The Entity constructor uses the definition ID (entityId) as the instance ID here.
-            // This might need review if multiple simultaneous instances of the same definition require unique IDs.
+            this.#logger.debug(`EntityManager.createEntityInstance: Creating new entity instance for ID: ${entityId}`);
+            // AC: Create new Entity(entityId) instance
             const entity = new Entity(entityId);
 
-            // Instantiate and add components specified in the JSON definition
-            if (entityDefinition.components) {
-                for (const jsonKey in entityDefinition.components) {
-                    const componentData = entityDefinition.components[jsonKey];
-                    const ComponentClass = this.componentRegistry.get(jsonKey);
-
-                    if (ComponentClass) {
-                        try {
-                            // Basic validation that we retrieved a class constructor
-                            if (typeof ComponentClass !== 'function' || !ComponentClass.prototype) {
-                                throw new Error(`Registry entry for "${jsonKey}" is not a valid class/constructor.`);
-                            }
-                            // Instantiate the component with its data
-                            const componentInstance = new ComponentClass(componentData);
-                            entity.addComponent(componentInstance);
-                        } catch (compError) {
-                            console.error(`EntityManager: Error instantiating component ${jsonKey} (Class: ${ComponentClass ? ComponentClass.name : 'N/A'}) for entity ${entityId}:`, compError);
-                            throw compError; // Re-throw to halt entity creation on component error
-                        }
-                    } else {
-                        console.warn(`EntityManager: No registered component class found for JSON key "${jsonKey}" in entity ${entityId}. Skipping component.`);
-                    }
-                }
-            } // <<< End of processing definition components
-
-            // Add DefinitionRefComponent *only if one doesn't already exist*.
-            // In this context, entityId often serves as the definition ID used for lookup.
-            if (!entity.getComponent(DefinitionRefComponent)) {
-                // Only add if the component is missing after processing definition/initial components
-                entity.addComponent(new DefinitionRefComponent(entityId));
-                // Optional: Log this default addition for clarity during debugging
-                // console.log(`EntityManager: Added default DefinitionRefComponent(${entityId}) to entity ${entity.id}`);
+            // AC: Populate entity's components Map by copying data (no class instantiation)
+            for (const [componentTypeId, componentData] of Object.entries(entityDefinition.components)) {
+                // Data is assumed pre-validated by GenericContentLoader before registry storage.
+                // Directly add the data object to the entity.
+                // Consider cloning here if entityDefinition data might be mutated elsewhere, though typically registry data is treated as immutable.
+                // const clonedData = JSON.parse(JSON.stringify(componentData)); // Optional deep clone
+                entity.addComponent(componentTypeId, componentData); // Use entity's method
             }
+            this.#logger.debug(`EntityManager.createEntityInstance: Populated components for entity ${entityId} from definition.`);
 
+            // AC: Handle forceNew and activeEntities map
             // Add to active entities map *before* adding to spatial index
-            // Uses definition ID as the key for the active map.
             if (!forceNew) {
                 this.activeEntities.set(entityId, entity);
+                this.#logger.debug(`EntityManager.createEntityInstance: Added entity ${entityId} to activeEntities map.`);
             }
 
-            // ---- Spatial Index Update ----
-            // Add the entity to the spatial index if it has a position.
-            const positionComp = entity.getComponent(PositionComponent);
-            if (positionComp && positionComp.locationId) {
-                // Uses definition ID (entityId) as the key for the spatial index entry.
-                this.spatialIndexManager.addEntity(entityId, positionComp.locationId);
+            // AC: Spatial Index Update
+            // Check for position component *after* all components are added
+            const positionData = entity.getComponentData(POSITION_COMPONENT_ID);
+            if (positionData) {
+                const locationId = positionData.locationId;
+                // SpatialIndexManager.addEntity handles the check for valid string internally
+                this.#spatialIndexManager.addEntity(entityId, locationId);
+                if (typeof locationId === 'string' && locationId.trim() !== '') {
+                    this.#logger.debug(`EntityManager.createEntityInstance: Added entity ${entityId} to spatial index at location ${locationId}.`);
+                } else {
+                    this.#logger.debug(`EntityManager.createEntityInstance: Entity ${entityId} has position component but invalid/null locationId (${locationId}). Not added to spatial index.`);
+                }
+            } else {
+                this.#logger.debug(`EntityManager.createEntityInstance: Entity ${entityId} has no position component. Not added to spatial index.`);
             }
-            // ---- End Spatial Index Update ----
 
-            console.log(`Successfully created instance for entity ${entityId}`);
-            return entity; // Return the fully constructed entity
+            this.#logger.info(`EntityManager.createEntityInstance: Successfully created instance for entity ${entityId}`);
+            return entity;
 
         } catch (error) {
-            console.error(`EntityManager: Failed to create entity instance for ID ${entityId}:`, error);
-            // Clean up if partially added to activeEntities map in case of error during component creation
+            this.#logger.error(`EntityManager.createEntityInstance: Failed to create entity instance for ID ${entityId}:`, error);
+            // Clean up if partially added to activeEntities map
             if (!forceNew && this.activeEntities.has(entityId)) {
                 this.activeEntities.delete(entityId);
             }
-            return null; // Return null on failure
+            return null;
         }
     }
+
+    /**
+     * Dynamically adds a component data object to an existing entity.
+     * Validates the component data against its schema before adding.
+     * Updates the spatial index if the position component is added or modified.
+     *
+     * @param {string} entityId - The ID of the entity to modify.
+     * @param {string} componentTypeId - The unique string ID of the component type to add (e.g., "core:health").
+     * @param {object} componentData - The plain JavaScript object containing the component's data.
+     * @returns {boolean} True if the component was successfully added, false otherwise.
+     * @throws {Error} If the entity is not found, or if component data validation fails.
+     * @implements {AC 5}
+     */
+    addComponent(entityId, componentTypeId, componentData) {
+        // AC: Retrieve entity instance
+        const entity = this.activeEntities.get(entityId);
+        if (!entity) {
+            this.#logger.error(`EntityManager.addComponent: Entity not found with ID: ${entityId}`);
+            throw new Error(`EntityManager.addComponent: Entity not found with ID: ${entityId}`);
+            // return false; // Or throw? Ticket says throw on failure.
+        }
+
+        // AC: Validate Data using ISchemaValidator.validate
+        const validationResult = this.#validator.validate(componentTypeId, componentData);
+        if (!validationResult.isValid) {
+            // AC: On Validation Failure: Throws descriptive error
+            const errorDetails = JSON.stringify(validationResult.errors, null, 2);
+            this.#logger.error(`EntityManager.addComponent: Component data validation failed for type '${componentTypeId}' on entity '${entityId}'. Errors:\n${errorDetails}`);
+            throw new Error(`EntityManager.addComponent: Component data validation failed for type '${componentTypeId}' on entity '${entityId}'.`);
+            // return false;
+        }
+        this.#logger.debug(`EntityManager.addComponent: Component data validation passed for type '${componentTypeId}' on entity '${entityId}'.`);
+
+        let oldLocationId = null; // Variable to store location before change
+        // AC: Retrieve Old State (for Spatial Index)
+        if (componentTypeId === POSITION_COMPONENT_ID) {
+            const currentPositionData = entity.getComponentData(POSITION_COMPONENT_ID);
+            oldLocationId = currentPositionData?.locationId; // Will be undefined if no component or no locationId prop
+            this.#logger.debug(`EntityManager.addComponent: Old location for entity ${entityId} was ${oldLocationId ?? 'null/undefined'}.`);
+        }
+
+        // AC: Call entity's addComponent method (consider cloning)
+        try {
+            // Simple deep clone for plain objects to prevent external mutation issues [cite: 155, 156]
+            const clonedData = JSON.parse(JSON.stringify(componentData));
+            entity.addComponent(componentTypeId, clonedData);
+            this.#logger.debug(`EntityManager.addComponent: Successfully added/updated component '${componentTypeId}' data on entity '${entityId}'.`);
+        } catch (error) {
+            this.#logger.error(`EntityManager.addComponent: Error calling entity.addComponent for ${componentTypeId} on ${entityId}:`, error);
+            // Depending on Entity.addComponent's potential errors, might re-throw or return false
+            throw error; // Re-throw entity-level errors
+        }
+
+
+        // AC: Trigger Side Effects (Spatial Index)
+        if (componentTypeId === POSITION_COMPONENT_ID) {
+            const newPositionData = entity.getComponentData(POSITION_COMPONENT_ID); // Get the data that was *just* added
+            const newLocationId = newPositionData?.locationId; // Could still be null/undefined in the new data
+            this.#logger.debug(`EntityManager.addComponent: New location for entity ${entityId} is ${newLocationId ?? 'null/undefined'}. Updating spatial index.`);
+            // SpatialIndexManager handles logic based on old/new being valid strings or null/undefined
+            this.#spatialIndexManager.updateEntityLocation(entityId, oldLocationId, newLocationId);
+        }
+
+        // Other side effects (e.g., event dispatching) would go here
+
+        return true; // Indicate success
+    }
+
+    /**
+     * Removes a component data object from an existing entity.
+     * Updates the spatial index if the position component is removed.
+     *
+     * @param {string} entityId - The ID of the entity to modify.
+     * @param {string} componentTypeId - The unique string ID of the component type to remove.
+     * @returns {boolean} True if the component was found and removed, false otherwise.
+     * @implements {AC 6}
+     */
+    removeComponent(entityId, componentTypeId) {
+        // AC: Retrieve entity instance
+        const entity = this.activeEntities.get(entityId);
+        if (!entity) {
+            this.#logger.warn(`EntityManager.removeComponent: Entity not found with ID: ${entityId}. Cannot remove component.`);
+            return false;
+        }
+
+        let oldLocationId = null;
+        // AC: Retrieve Old State (for Spatial Index) *before* removing
+        if (componentTypeId === POSITION_COMPONENT_ID) {
+            const currentPositionData = entity.getComponentData(POSITION_COMPONENT_ID);
+            oldLocationId = currentPositionData?.locationId;
+            this.#logger.debug(`EntityManager.removeComponent: Removing position component from entity ${entityId}. Old location was ${oldLocationId ?? 'null/undefined'}.`);
+        }
+
+        // AC: Call entity's removeComponent method
+        const removed = entity.removeComponent(componentTypeId);
+
+        if (removed) {
+            this.#logger.debug(`EntityManager.removeComponent: Successfully removed component '${componentTypeId}' from entity '${entityId}'.`);
+            // AC: Trigger Side Effects (Spatial Index)
+            if (componentTypeId === POSITION_COMPONENT_ID) {
+                // Pass the retrieved oldLocationId. SpatialIndexManager handles if it was null/invalid.
+                this.#spatialIndexManager.removeEntity(entityId, oldLocationId);
+                this.#logger.debug(`EntityManager.removeComponent: Updated spatial index for entity ${entityId} removal from location ${oldLocationId ?? 'null/undefined'}.`);
+            }
+            // Other side effects here
+        } else {
+            this.#logger.debug(`EntityManager.removeComponent: Component '${componentTypeId}' not found on entity '${entityId}'. Nothing removed.`);
+        }
+
+        return removed;
+    }
+
+    /**
+     * Retrieves the raw data object for a specific component type from an entity.
+     * Delegates directly to the Entity instance.
+     *
+     * @param {string} entityId - The ID of the entity.
+     * @param {string} componentTypeId - The unique string ID of the component type.
+     * @returns {object | undefined} The component data object if found, otherwise undefined.
+     * @implements {AC 7}
+     */
+    getComponentData(entityId, componentTypeId) {
+        const entity = this.activeEntities.get(entityId);
+        if (!entity) {
+            // this.#logger.warn(`EntityManager.getComponentData: Entity not found with ID: ${entityId}`); // Can be noisy
+            return undefined;
+        }
+        // AC: Delegates directly to entity.getComponentData
+        return entity.getComponentData(componentTypeId);
+    }
+
+    /**
+     * Checks if an entity has data associated with a specific component type ID.
+     * Delegates directly to the Entity instance.
+     *
+     * @param {string} entityId - The ID of the entity.
+     * @param {string} componentTypeId - The unique string ID of the component type.
+     * @returns {boolean} True if the entity has the component data, false otherwise.
+     * @implements {AC 8}
+     */
+    hasComponent(entityId, componentTypeId) {
+        const entity = this.activeEntities.get(entityId);
+        if (!entity) {
+            // this.#logger.warn(`EntityManager.hasComponent: Entity not found with ID: ${entityId}`); // Can be noisy
+            return false;
+        }
+        // AC: Delegates directly to entity.hasComponent
+        return entity.hasComponent(componentTypeId);
+    }
+
 
     /**
      * Retrieves an active entity instance by ID.
@@ -176,31 +338,37 @@ class EntityManager {
     }
 
     /**
-     * Removes an entity instance from the active map AND the spatial index.
+     * Removes an entity instance entirely from the active map AND the spatial index.
      * @param {string} entityId
      * @returns {boolean} True if the entity was found and removed, false otherwise.
      */
     removeEntityInstance(entityId) {
         const entity = this.activeEntities.get(entityId);
         if (entity) {
-            // ---- Spatial Index Update ----
-            const positionComp = entity.getComponent(PositionComponent);
-            if (positionComp && positionComp.locationId) {
-                this.spatialIndexManager.removeEntity(entityId, positionComp.locationId);
-            }
-            // ---- End Spatial Index Update ----
+            // Determine location *before* removing from active map
+            let oldLocationId = null;
+            const positionData = entity.getComponentData(POSITION_COMPONENT_ID);
+            oldLocationId = positionData?.locationId;
 
+            // Remove from spatial index first
+            if (oldLocationId) {
+                this.#spatialIndexManager.removeEntity(entityId, oldLocationId);
+                this.#logger.debug(`EntityManager.removeEntityInstance: Removed entity ${entityId} from spatial index (location: ${oldLocationId}).`);
+            }
+
+            // Then remove from active map
             const deleted = this.activeEntities.delete(entityId);
             if (deleted) {
-                console.log(`EntityManager: Removed entity instance ${entityId}`);
+                this.#logger.info(`EntityManager.removeEntityInstance: Removed entity instance ${entityId} from active map.`);
             }
+            // Trigger other cleanup events/side-effects for entity removal if needed
             return deleted;
         }
-        console.warn(`EntityManager: Attempted to remove non-existent entity instance ${entityId}`);
+        this.#logger.warn(`EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance ${entityId}`);
         return false;
     }
 
-    // --- Methods for Spatial Index ---
+    // --- Methods Delegating to Spatial Index Manager ---
 
     /**
      * Retrieves all entity IDs present in a specific location using the spatial index.
@@ -208,39 +376,19 @@ class EntityManager {
      * @returns {Set<string>} A *copy* of the Set of entity IDs in the location, or an empty Set.
      */
     getEntitiesInLocation(locationId) {
-        return this.spatialIndexManager.getEntitiesInLocation(locationId);
+        return this.#spatialIndexManager.getEntitiesInLocation(locationId);
     }
 
-    /**
-     * Notifies the EntityManager (and SpatialIndexManager) that an entity's
-     * position (specifically its locationId) has changed.
-     * This MUST be called by any system that modifies PositionComponent.locationId.
-     * @param {string} entityId - The ID of the entity that moved.
-     * @param {string | null | undefined} oldLocationId - The entity's previous location ID.
-     * @param {string | null | undefined} newLocationId - The entity's new location ID.
-     */
-    notifyPositionChange(entityId, oldLocationId, newLocationId) {
-        // Basic validation
-        const entity = this.activeEntities.get(entityId);
-        if (!entity) {
-            console.warn(`EntityManager.notifyPositionChange: Entity ${entityId} not found in active entities. Cannot update spatial index.`);
-            return;
-        }
-        const currentPos = entity.getComponent(PositionComponent);
-        if (!currentPos || currentPos.locationId !== newLocationId) {
-            // Log discrepancy but trust reported values for the update
-            console.warn(`EntityManager.notifyPositionChange: Discrepancy for entity ${entityId}. Reported new location ${newLocationId} but component has ${currentPos?.locationId}. Updating index based on reported values.`);
-        }
-
-        this.spatialIndexManager.updateEntityLocation(entityId, oldLocationId, newLocationId);
-    }
+    // REMOVED: notifyPositionChange - Logic now handled within addComponent/removeComponent
 
     /**
      * Builds the spatial index based on the current state of active entities.
-     * Should be called after initial entity loading/creation.
+     * Delegates to the spatial index manager.
      */
     buildInitialSpatialIndex() {
-        this.spatialIndexManager.buildIndex(this);
+        this.#logger.info("EntityManager: Delegating initial spatial index build...");
+        // Pass 'this' (the EntityManager instance) which has the activeEntities map
+        this.#spatialIndexManager.buildIndex(this);
     }
 
     /**
@@ -249,11 +397,9 @@ class EntityManager {
      */
     clearAll() {
         this.activeEntities.clear();
-        this.spatialIndexManager.clearIndex();
-        console.log("EntityManager: Cleared all active entities and spatial index.");
+        this.#spatialIndexManager.clearIndex(); // Delegate clearing
+        this.#logger.info("EntityManager: Cleared all active entities and delegated spatial index clearing.");
     }
-
-    // --- End Spatial Index Methods ---
 }
 
 export default EntityManager;

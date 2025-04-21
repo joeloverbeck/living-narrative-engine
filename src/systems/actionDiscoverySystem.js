@@ -68,7 +68,6 @@ export class ActionDiscoverySystem {
         // For this implementation, we'll assume they export the functions.
         this.#getEntityIdsForScopesFn = getEntityIdsForScopes; // Or entityScopeService.getEntityIdsForScopes if it's a method
         this.#formatActionCommandFn = formatActionCommandFn;
-        this.#formatActionCommandFn = formatActionCommand;   // Or actionFormatter.formatActionCommand if it's a method
         this.#logger = logger;
 
         this.#logger.info("ActionDiscoverySystem initialized.");
@@ -81,6 +80,8 @@ export class ActionDiscoverySystem {
      * @returns {Promise<string[]>} A promise resolving to a flat array of valid command strings.
      */
     async getValidActions(actorEntity, context) {
+        // --- ADD THIS LINE ---
+        this.#logger.debug(`--- MARKER 2: GETVALIDACTIONS ENTRY for ${actorEntity.id} ---`);
         this.#logger.debug(`Starting action discovery for actor: ${actorEntity.id}`);
         const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
         // Assumes validCommandStrings is initialized (per Ticket 4.3.4)
@@ -138,57 +139,56 @@ export class ActionDiscoverySystem {
                     // --- 2b. Domain: 'direction' ---
                 // --- 2b. Domain: 'direction' ---
                 else if (domain === 'direction') {
-                    const connectionsComp = context.currentLocation?.getComponent(ConnectionsComponent);
-                    // --- START DEBUGGING ---
-                    console.log(`DEBUG: Checking connections for location: ${context.currentLocation?.id}`);
-                    if (!connectionsComp) {
-                        console.log("DEBUG: ConnectionsComponent not found on currentLocation!");
+                    // --- CORRECTED LOGIC ---
+                    // Get the raw data using EntityManager and the component type ID string
+                    const connectionsData = this.#entityManager.getComponentData(context.currentLocation.id, 'Connections'); // Use 'Connections' ID
+
+                    this.#logger.debug(`Checking connections data for location: ${context.currentLocation?.id}`, connectionsData);
+
+                    let potentialDirections = [];
+                    // Check if data exists and has the expected structure
+                    if (connectionsData && connectionsData.connections && typeof connectionsData.connections === 'object') {
+                        // Get the direction names (keys) from the nested 'connections' object
+                        potentialDirections = Object.keys(connectionsData.connections);
+                        this.#logger.debug(`Extracted potentialDirections: ${potentialDirections.join(', ')}`);
                     } else {
-                        console.log("DEBUG: ConnectionsComponent found. Calling getAllConnections...");
-                        let rawConnections;
-                        try {
-                            // Assuming getAllConnections exists and returns an array or similar iterable
-                            rawConnections = connectionsComp.getAllConnections();
-                            console.log("DEBUG: Raw connections data:", JSON.stringify(rawConnections)); // Log the raw data
-                        } catch (e) {
-                            console.error("DEBUG: Error calling or processing getAllConnections!", e);
-                            rawConnections = []; // Prevent further errors
-                        }
+                        this.#logger.debug(`Connections data not found or invalid structure on currentLocation ${context.currentLocation?.id}.`);
+                    }
+                    // --- END CORRECTION ---
 
-                        const potentialDirections = Array.isArray(rawConnections)
-                            ? rawConnections.map(c => c?.direction).filter(d => d) // Safely map and filter out undefined/null directions
-                            : []; // Default to empty if not an array
-                        console.log("DEBUG: Mapped potentialDirections:", potentialDirections); // Log the final directions array
-                        // --- END DEBUGGING ---
 
-                        if (potentialDirections.length === 0) {
-                            this.#logger.debug(`    - No potential direction targets found for action ${actionDef.id}.`);
-                            continue;
-                        }
-
+                    if (potentialDirections.length === 0) {
+                        this.#logger.debug(`    - No potential direction targets found for action ${actionDef.id}.`);
+                        // Note: In the original code, there was no 'continue' here,
+                        // the loop below would simply not execute. Keep it that way.
+                        // continue;
+                    } else {
                         this.#logger.debug(`    - Found ${potentialDirections.length} potential direction targets. Checking validation...`);
+                    }
 
-                        for (const direction of potentialDirections) {
-                            console.log(`DEBUG: Loop - Processing direction: ${direction}`); // Add log inside loop
-                            const targetContext = ActionTargetContext.forDirection(direction);
-                            // Validate with the specific direction context
-                            if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) {
-                                console.log(`DEBUG: Loop - isValid TRUE for ${direction}. Calling formatter.`); // Add log before formatter
-                                console.log(`DEBUG: Loop - isValid TRUE for ${direction}. Calling formatter.`);
-                                console.log('DEBUG: Is #formatActionCommandFn a mock?', typeof this.#formatActionCommandFn.mock === 'object');
-                                const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager);
-                                if (command !== null) {
-                                    validCommandStrings.add(command);
-                                    this.#logger.debug(`    * Found valid action (direction: ${direction}): ${command}`);
-                                } else {
-                                    this.#logger.warn(`    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`);
-                                }
+
+                    for (const direction of potentialDirections) { // Should now loop with 'north'
+                        this.#logger.debug(`    -> Processing direction: ${direction}`);
+                        const targetContext = ActionTargetContext.forDirection(direction);
+                        // Validate with the specific direction context
+                        if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) { // Should call the mock which returns true for 'north'
+                            this.#logger.debug(`      - isValid TRUE for ${direction}. Calling formatter.`); // Expect this log for 'north'
+
+                            // Call the spy function injected via constructor
+                            const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager);
+
+                            if (command !== null) {
+                                validCommandStrings.add(command);
+                                this.#logger.debug(`    * Found valid action (direction: ${direction}): ${command}`);
                             } else {
-                                console.log(`DEBUG: Loop - isValid FALSE for ${direction}.`); // Add log if isValid is false
+                                this.#logger.warn(`    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`);
                             }
+                        } else {
+                            // This branch should NOT be taken for 'north' due to the mock returning true
+                            this.#logger.debug(`      - isValid FALSE for ${direction}.`);
                         }
-                    } // End else (connectionsComp found)
-                }
+                    }
+                } // End domain === 'direction'
                 // --- 2c. Domain: Entity Scopes (inventory, environment, etc.) ---
                 else {
                     // Actor check already passed, now find and validate potential entity targets

@@ -66,37 +66,113 @@ describe('TargetResolutionService', () => {
 
     // Helper to create basic mock entities
     const createMockEntity = (id, name = 'Mock Entity') => {
+        // 1. Create a REAL Entity instance
         const entity = new Entity(id);
-        // Use the *real* addComponent initially to set NameComponent for easier setup
-        entity.addComponent(new NameComponent({value: name}));
+        const nameComponentData = {value: name}; // Define the data object
 
-        // Add simplified mocks AFTER initial setup
-        const components = new Map(entity.components); // Copy initial components
-        entity.components = components; // Store components directly for easier mocking access
+        // 2. Call the REAL entity.addComponent correctly for initial setup
+        //    Uses the component's class name as the string type ID and the data object.
+        try {
+            entity.addComponent(NameComponent.name, nameComponentData);
+        } catch (e) {
+            // Log error during setup if needed, helps debugging tests
+            console.error(`Error adding initial NameComponent (${NameComponent.name}) to mock entity ${id}:`, e);
+            // Optionally re-throw or handle differently depending on test requirements
+            throw e;
+        }
+
+        // 3. Prepare the internal state for the MOCKED methods
+        //    This map will store component INSTANCES keyed by their STRING TYPE ID (class name).
+        const components = new Map();
+        //    Manually add the initial NameComponent instance to the mock map
+        //    (We store the instance here to match the original mock's likely intent,
+        //     even though the real Entity stores data. Adjust if tests need data.)
+        components.set(NameComponent.name, new NameComponent(nameComponentData)); // Store instance by String ID
+
+        // 4. Mock the entity's component methods AFTER initial setup
 
         entity.addComponent = jest.fn((componentInstance) => {
-            const componentClass = componentInstance.constructor;
-            if (components.has(componentClass)) {
-                // Allow overwriting in tests if needed, with a warning
-                // console.warn(`Mock Entity ${id}: Overwriting component ${componentClass.name}`);
+            // This mock assumes component INSTANCES are passed in tests using it.
+            // If tests pass ('TypeIdString', {data}), this mock needs adjustment.
+            if (!componentInstance || typeof componentInstance !== 'object') {
+                console.warn(`Mock Entity ${id}: addComponent called with invalid instance:`, componentInstance);
+                return;
             }
-            components.set(componentClass, componentInstance);
+            const componentClass = componentInstance.constructor;
+            if (!componentClass || typeof componentClass.name !== 'string') {
+                console.warn(`Mock Entity ${id}: addComponent called with instance lacking valid constructor/name:`, componentInstance);
+                return;
+            }
+            const componentTypeId = componentClass.name; // Use class name as the string ID key
+
+            if (components.has(componentTypeId)) {
+                // Keep the overwrite behavior from the original mock setup
+                // console.warn(`Mock Entity ${id}: Overwriting component ${componentTypeId}`);
+            }
+            // Store the INSTANCE keyed by the STRING ID
+            components.set(componentTypeId, componentInstance);
         });
-        entity.getComponent = jest.fn((componentClass) => {
-            return components.get(componentClass);
+
+        entity.getComponent = jest.fn((componentClassOrTypeId) => {
+            // Accepts either a class constructor or a string ID
+            let componentTypeId;
+            if (typeof componentClassOrTypeId === 'function' && componentClassOrTypeId.name) {
+                componentTypeId = componentClassOrTypeId.name; // Get ID from class
+            } else if (typeof componentClassOrTypeId === 'string') {
+                componentTypeId = componentClassOrTypeId; // Use string ID directly
+            } else {
+                // console.warn(`Mock Entity ${id}: getComponent called with invalid type:`, componentClassOrTypeId);
+                return undefined; // Invalid input
+            }
+            // Retrieve the INSTANCE using the STRING ID
+            return components.get(componentTypeId);
         });
-        entity.hasComponent = jest.fn((componentClass) => {
-            // Ensure componentClass is valid before checking map
-            if (typeof componentClass !== 'function') {
-                // console.warn(`Mock Entity ${id}: hasComponent called with invalid type:`, componentClass);
+
+        entity.hasComponent = jest.fn((componentClassOrTypeId) => {
+            // Accepts either a class constructor or a string ID
+            let componentTypeId;
+            if (typeof componentClassOrTypeId === 'function' && componentClassOrTypeId.name) {
+                componentTypeId = componentClassOrTypeId.name; // Get ID from class
+            } else if (typeof componentClassOrTypeId === 'string') {
+                componentTypeId = componentClassOrTypeId; // Use string ID directly
+            } else {
+                // console.warn(`Mock Entity ${id}: hasComponent called with invalid type:`, componentClassOrTypeId);
+                return false; // Invalid input
+            }
+
+            // Basic validation for the derived/provided string ID
+            if (typeof componentTypeId !== 'string' || !componentTypeId) {
+                // console.warn(`Mock Entity ${id}: hasComponent derived invalid string ID:`, componentTypeId, 'from:', componentClassOrTypeId);
                 return false;
             }
-            return components.has(componentClass);
+            // Check presence using the STRING ID
+            return components.has(componentTypeId);
         });
-        entity.removeComponent = jest.fn((componentClass) => {
-            if (typeof componentClass !== 'function') return false;
-            return components.delete(componentClass);
+
+        entity.removeComponent = jest.fn((componentClassOrTypeId) => {
+            // Accepts either a class constructor or a string ID
+            let componentTypeId;
+            if (typeof componentClassOrTypeId === 'function' && componentClassOrTypeId.name) {
+                componentTypeId = componentClassOrTypeId.name; // Get ID from class
+            } else if (typeof componentClassOrTypeId === 'string') {
+                componentTypeId = componentClassOrTypeId; // Use string ID directly
+            } else {
+                // console.warn(`Mock Entity ${id}: removeComponent called with invalid type:`, componentClassOrTypeId);
+                return false; // Invalid input
+            }
+
+            // Basic validation for the derived/provided string ID
+            if (typeof componentTypeId !== 'string' || !componentTypeId) {
+                return false;
+            }
+            // Delete using the STRING ID
+            return components.delete(componentTypeId);
         });
+
+        // NOTE: getComponentData is NOT mocked by this helper. If tests need it,
+        // you would add a mock similar to getComponent but perhaps returning
+        // componentInstance.data if component instances store their data, or accessing
+        // the original componentData objects if you change the map to store those.
 
         return entity;
     };
@@ -130,8 +206,10 @@ describe('TargetResolutionService', () => {
         };
         mockPlayerEntity = createMockEntity('player-1', 'Player');
         mockCurrentLocation = createMockEntity('loc-1', 'Test Location');
-        // Add ConnectionsComponent to mock location for direction tests
-        mockCurrentLocation.addComponent(new ConnectionsComponent({connections: {}}));
+// Add ConnectionsComponent to mock location for direction tests
+        const connectionsData = {connections: {}}; // Define data
+// --- FIX ---
+        mockCurrentLocation.addComponent(ConnectionsComponent.name, connectionsData);
 
 
         // Add player/location to mock entity manager map

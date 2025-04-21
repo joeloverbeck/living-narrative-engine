@@ -123,7 +123,7 @@ describe('QuestSystem - Automatic Completion Check via _processObjectiveCompleti
         // --- Create FRESH instances for each test ---
         mockPlayerEntity = new Entity('player'); // Create NEW Entity
         mockQuestLogComponent = new QuestLogComponent(); // Create NEW Component
-        mockPlayerEntity.addComponent(mockQuestLogComponent); // Add fresh component to fresh entity
+        mockPlayerEntity.addComponent('questLog', mockQuestLogComponent); // Provide string ID and component instance
 
         // --- Reset and Configure Mocks relying on fresh instances ---
         // Reset mockEntityManager completely and set its implementation for THIS test

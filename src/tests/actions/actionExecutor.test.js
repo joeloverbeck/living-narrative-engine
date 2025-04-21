@@ -131,7 +131,12 @@ const createMockActionContext = (overrides = {}) => {
     // Base player entity setup used across tests unless overridden
     const player = new Entity('player1');
     // Note: We don't add MockNameComponent by default to test fallback logic easily
-    player.addComponent(new MockComponentA()); // Add ComponentA by default
+
+    // --- FIX ---
+    // Create an instance to hold the data
+    const mockCompAInstance = new MockComponentA();
+    // Add component using a string ID and the instance data
+    player.addComponent('MockComponentA', mockCompAInstance); // Use class name as string ID
 
     const location = new Entity('room1');
     location.mockName = 'The Room'; // Used for context.* tests later
@@ -142,37 +147,34 @@ const createMockActionContext = (overrides = {}) => {
         currentLocation: location,
         entityManager: {
             componentRegistry: {
+                // ... (rest of registry mock) ...
                 get: jest.fn((name) => {
-                    // Return mock classes based on string name
+                    // This registry correctly returns CONSTRUCTORS/CLASSES
                     if (name === 'ComponentA') return MockComponentA;
                     if (name === 'ComponentB') return MockComponentB;
                     if (name === 'NameComponent') return MockNameComponent;
                     if (name === 'StatsComponent') return MockStatsComponent;
-                    if (name === 'HealthComponent') return MockHealthComponent; // <-- Added
-                    // Return undefined for unknown component names
+                    if (name === 'HealthComponent') return MockHealthComponent;
                     return undefined;
                 }),
             },
             getEntityInstance: jest.fn((id) => {
                 if (id === 'player1') return player;
                 if (id === 'room1') return location;
-                // Add mock entity resolution if target tests need it later
-                // For target tests, we'll rely on resolutionResult.targetEntity directly,
-                // so this mock doesn't need complex target resolution for now.
                 return undefined;
             }),
         },
         eventBus: mockEventBus,
         parsedCommand: {
             actionId: 'test:action',
-            directObjectPhrase: null, // Assume 'none' target domain default
+            directObjectPhrase: null,
             indirectObjectPhrase: null,
             preposition: null,
             originalInput: 'do test action',
             error: null,
         },
         gameDataRepository: mockGameDataRepository,
-        dispatch: mockValidatedDispatcher.dispatchValidated, // Ensure dispatch function is available if needed by handlers (though likely not used directly now)
+        dispatch: mockValidatedDispatcher.dispatchValidated,
         ...overrides, // Apply specific overrides for the test case
     };
     return baseContext;

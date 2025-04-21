@@ -2,67 +2,132 @@
 
 /**
  * Represents a game entity (player, NPC, item, etc.).
- * An entity is primarily an identifier associated with a collection of components.
+ * An entity is primarily an identifier associated with a collection of
+ * raw component data objects, indexed by their unique component type ID string.
+ * It acts as a lightweight data container; component logic resides in Systems.
+ * @module core/entities/entity
  */
 class Entity {
     /**
+     * The unique identifier for this entity instance.
+     * @type {string}
+     * @readonly
+     */
+    id;
+
+    /**
+     * Stores the raw data for each component associated with this entity.
+     * The key is the component's unique type ID string (e.g., "core:health"),
+     * and the value is the plain JavaScript object holding the component's data.
+     * @private
+     * @type {Map<string, object>}
+     */
+    #components; // Changed from 'components' to '#components' for encapsulation
+
+    /**
+     * Creates a new Entity instance.
      * @param {string} id - The unique identifier for this entity instance.
+     * @throws {Error} If no ID is provided.
      */
     constructor(id) {
-        if (!id) {
-            throw new Error("Entity must have an ID.");
+        if (!id || typeof id !== 'string') {
+            throw new Error("Entity must have a valid string ID.");
         }
         this.id = id;
-        /** @type {Map<Function, object>} */
-        this.components = new Map(); // Map Component Class -> Component Instance
-        console.log(`Entity created: ${this.id}`);
+        this.#components = new Map();
+        // console.log(`Entity created: ${this.id}`); // Keep or remove logging as desired
     }
 
     /**
-     * Adds a component instance to this entity.
-     * @param {object} componentInstance - An instance of a component class.
-     * @throws {Error} If a component of the same type already exists.
+     * Adds or updates the raw data for a specific component type on this entity.
+     * If a component with the same typeId already exists, its data will be overwritten.
+     *
+     * @param {string} componentTypeId - The unique string identifier for the component type (e.g., "core:position").
+     * @param {object} componentData - The plain JavaScript object containing the component's data.
+     * @throws {Error} If componentTypeId is not a non-empty string.
+     * @throws {Error} If componentData is not an object.
      */
-    addComponent(componentInstance) {
-        const componentClass = componentInstance.constructor;
-        if (this.components.has(componentClass)) {
-            console.warn(`Entity ${this.id} already has component ${componentClass.name}. Overwriting.`);
-            // throw new Error(`Entity ${this.id} already has component ${componentClass.name}`);
+    addComponent(componentTypeId, componentData) {
+        if (!componentTypeId || typeof componentTypeId !== 'string') {
+            throw new Error(`Invalid componentTypeId provided to addComponent for entity ${this.id}. Expected non-empty string.`);
         }
-        this.components.set(componentClass, componentInstance);
-        // console.log(`Added component ${componentClass.name} to entity ${this.id}`);
+        if (typeof componentData !== 'object' || componentData === null) {
+            throw new Error(`Invalid componentData provided for component ${componentTypeId} on entity ${this.id}. Expected an object.`);
+        }
+
+        if (this.#components.has(componentTypeId)) {
+            // Optional: Log overwrite, can be commented out for performance
+            // console.warn(`Entity ${this.id}: Overwriting component data for type ID "${componentTypeId}".`);
+        }
+        this.#components.set(componentTypeId, componentData);
+        // console.log(`Entity ${this.id}: Added/Updated component "${componentTypeId}"`); // Keep or remove logging
     }
 
     /**
-     * Retrieves the component instance of a specific class type.
-     * @param {Function} ComponentClass - The class constructor of the component to retrieve.
-     * @returns {object | undefined} The component instance, or undefined if not found.
+     * Retrieves the raw data object for a specific component type.
+     *
+     * @param {string} componentTypeId - The unique string identifier for the component type.
+     * @returns {object | undefined} The component data object if found, otherwise undefined.
      */
-    getComponent(ComponentClass) {
-        return this.components.get(ComponentClass);
+    getComponentData(componentTypeId) {
+        return this.#components.get(componentTypeId);
     }
 
     /**
-     * Checks if the entity has a component of a specific class type.
-     * @param {Function} ComponentClass - The class constructor of the component to check for.
-     * @returns {boolean} True if the entity has the component, false otherwise.
+     * Checks if the entity has data associated with a specific component type ID.
+     *
+     * @param {string} componentTypeId - The unique string identifier for the component type.
+     * @returns {boolean} True if the entity has data for this component type, false otherwise.
      */
-    hasComponent(ComponentClass) {
-        return this.components.has(ComponentClass);
+    hasComponent(componentTypeId) {
+        return this.#components.has(componentTypeId);
     }
 
     /**
-     * Removes a component instance of a specific class type.
-     * @param {Function} ComponentClass - The class constructor of the component to remove.
-     * @returns {boolean} True if the component was removed, false otherwise.
+     * Removes the data associated with a specific component type ID from the entity.
+     *
+     * @param {string} componentTypeId - The unique string identifier for the component type to remove.
+     * @returns {boolean} True if component data was found and removed, false otherwise.
      */
-    removeComponent(ComponentClass) {
-        return this.components.delete(ComponentClass);
+    removeComponent(componentTypeId) {
+        const deleted = this.#components.delete(componentTypeId);
+        // if (deleted) {
+        //     console.log(`Entity ${this.id}: Removed component "${componentTypeId}"`); // Keep or remove logging
+        // }
+        return deleted;
     }
 
+    /**
+     * Returns a string representation of the entity, listing its component type IDs.
+     * @returns {string}
+     */
     toString() {
-        const componentNames = Array.from(this.components.keys()).map(cls => cls.name).join(', ');
-        return `Entity[${this.id}] Components: ${componentNames || 'None'}`;
+        const componentTypeIds = Array.from(this.#components.keys()).join(', ');
+        return `Entity[${this.id}] Components: ${componentTypeIds || 'None'}`;
+    }
+
+    /**
+     * Gets an iterable of all component type IDs currently attached to the entity.
+     * @returns {IterableIterator<string>} An iterator over the component type IDs.
+     */
+    get componentTypeIds() {
+        return this.#components.keys();
+    }
+
+    /**
+     * Gets an iterable of all component data objects currently attached to the entity.
+     * @returns {IterableIterator<object>} An iterator over the component data objects.
+     */
+    get allComponentData() {
+        return this.#components.values();
+    }
+
+    /**
+     * Gets an iterable of [componentTypeId, componentData] pairs.
+     * @returns {IterableIterator<[string, object]>} An iterator over the [ID, data] pairs.
+     */
+    get componentEntries() {
+        return this.#components.entries();
     }
 }
 

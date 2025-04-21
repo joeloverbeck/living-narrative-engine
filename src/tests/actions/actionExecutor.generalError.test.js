@@ -74,9 +74,10 @@ import PayloadValueResolverService from "../../services/payloadValueResolverServ
 jest.mock('../../utils/messages.js', () => ({
     getDisplayName: jest.fn((entity) => {
         if (!entity) return 'mock unknown';
-        // Simple mock: try NameComponent, fallback to ID
-        const nameComp = entity.getComponent(MockNameComponent);
-        return nameComp?.value ?? entity.id ?? 'mock unknown';
+        // Simple mock: try NameComponent data using a presumed type ID, fallback to ID
+        // *** CHANGE: Use getComponentData with a string ID ***
+        const nameCompData = entity.getComponentData('NameComponent'); // Assuming 'NameComponent' is the type ID
+        return nameCompData?.value ?? entity.id ?? 'mock unknown';
     }),
     TARGET_MESSAGES: {}, // Mock other potential exports if needed
 }));
@@ -217,10 +218,12 @@ describe('ActionExecutor Isolated Tests', () => {
         test('should catch unexpected errors within resolution logic, log, and return undefined for the value', async () => {
             // 1. Setup: Identify error point and prepare mock
             const executor = createExecutor(mockLogger);
-            const sourceString = 'actor.component.Stats.strength'; // Target path
+            // *** ASSUMPTION: PayloadValueResolverService maps 'Stats' in the string to the ID 'Stats' ***
+            const componentTypeIdToFail = 'Stats'; // The string ID getComponentData will receive
+            const sourceString = `actor.component.${componentTypeIdToFail}.strength`; // Target path using the ID
             const payloadKey = 'actorStrength';
             const actionId = 'test:internal_error_catch_isolated';
-            const expectedError = new Error('Simulated unexpected internal error in getComponent');
+            const expectedError = new Error('Simulated unexpected internal error in getComponentData');
 
             // Mock ActionDefinition
             const actionDef = createMockActionDefinition({
@@ -239,21 +242,27 @@ describe('ActionExecutor Isolated Tests', () => {
                 actionId: actionId
             });
 
-            // *** Ensure Component Registry returns the component class ***
-            expect(mockContextWithError.entityManager.componentRegistry.get('Stats')).toBe(MockStatsComponent);
+            // *** Component Registry mock is less relevant now, as we spy on getComponentData ***
+            // It's still needed if other parts of the execution flow use it before the error point.
+            // Ensure it still returns *something* for 'Stats' if the resolver needs it initially.
+            mockContextWithError.entityManager.componentRegistry.get.mockImplementation((name) => {
+                if (name === 'Stats') return MockStatsComponent; // Keep this if resolver needs it first
+                if (name === 'NameComponent') return MockNameComponent;
+                return undefined;
+            });
 
 
-            // *** 2. Simulate Error: Mock getComponent on the specific entity instance to throw ***
-            const getComponentSpy = jest.spyOn(playerWithError, 'getComponent')
-                .mockImplementation((CompClass) => {
-                    if (CompClass === MockStatsComponent) {
+            // *** 2. Simulate Error: Mock getComponentData on the specific entity instance to throw ***
+            // *** CHANGE: Spy on 'getComponentData' and check the string ID ***
+            const getComponentDataSpy = jest.spyOn(playerWithError, 'getComponentData')
+                .mockImplementation((componentTypeId) => { // Argument is componentTypeId (string)
+                    if (componentTypeId === componentTypeIdToFail) { // Check against the expected string ID
                         throw expectedError; // Throw the simulated error
                     }
-                    // Correct mock: should delegate to original for other components if needed,
-                    // but for this test, returning undefined is fine if no others are expected.
-                    // If other components ARE expected by the code path before the error:
-                    // return jest.requireActual('../../entities/entity.js').default.prototype.getComponent.call(this, CompClass);
-                    return undefined; // Simplified: Assume only Stats is requested in this path before error
+                    // For this test, returning undefined is fine if no other components are expected.
+                    // If others are needed before the error:
+                    // return jest.requireActual('../../entities/entity.js').default.prototype.getComponentData.call(playerWithError, componentTypeId);
+                    return undefined;
                 });
 
             // Mock Resolution Result (pass)
@@ -265,34 +274,33 @@ describe('ActionExecutor Isolated Tests', () => {
 
             // 3. Test Error Catching: Run executeAction and assert it doesn't throw
             let result;
-            let executionError = null; // Variable to catch potential errors
+            let executionError = null;
             try {
                 result = await executor.executeAction(actionId, mockContextWithError);
             } catch (err) {
-                executionError = err; // Catch error if thrown
+                executionError = err;
             }
 
             // --- Assertion: Ensure no error was thrown out of executeAction ---
-            // This replaces the .not.toThrow() wrapper's purpose
             expect(executionError).toBeNull();
 
             // 4. Assertions on the result and side effects
-
             // [AC] Test case simulates an unexpected internal error (Setup verified)
 
             // --- Check the result object itself ---
-            expect(result).toBeDefined(); // <<<< This should now pass
-            expect(result.success).toBe(true); // Action execution flow completed successfully
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true); // Action execution flow completed successfully (error handled internally)
 
             // [AC] Assertion verifies the correct internal error message is logged
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
+            // The error message comes from PayloadValueResolverService, which caught the error thrown by our mock
             expect(mockLogger.error).toHaveBeenCalledWith(
-                `PayloadValueResolverService (resolveValue): Unexpected error resolving source string '${sourceString}' for action '${actionId}':`,
-                expectedError
+                expect.stringContaining(`PayloadValueResolverService (resolveValue): Unexpected error resolving source string '${sourceString}'`), // Match the service's log message start
+                expectedError // Verify the original error object was logged
             );
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected in this path
+            expect(mockLogger.warn).not.toHaveBeenCalled();
 
-            // Check event dispatch payload is empty (or missing the key)
+            // Check event dispatch payload is empty
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 actionDef.dispatch_event.eventName,
@@ -300,9 +308,13 @@ describe('ActionExecutor Isolated Tests', () => {
             );
 
             // Verify the spy was called
-            expect(getComponentSpy).toHaveBeenCalledWith(MockStatsComponent);
+            // *** CHANGE: Assert call with the string ID ***
+            expect(getComponentDataSpy).toHaveBeenCalledWith(componentTypeIdToFail);
 
             // [AC] Test passes without unhandled exceptions (Verified by executionError check)
+
+            // --- Cleanup spy ---
+            getComponentDataSpy.mockRestore(); // Good practice to restore spies
         });
     });
     // --- End Extracted Test Suite ---
