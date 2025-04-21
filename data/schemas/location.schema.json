@@ -36,7 +36,7 @@
           "description": "Component providing concise keywords for generating dynamic descriptions via an LLM (used in Phase 3+)."
         },
         "Connections": {
-          "$ref": "#/definitions/ConnectionsComponent",
+          "$ref": "common.schema.json#/definitions/LocationConnections",
           "description": "Component defining the exits or links from this location by referencing Connection entities."
         }
       },
@@ -54,37 +54,6 @@
           "description": "Ensures that the location has at least a meta-description for AI generation."
         }
       ]
-    }
-  },
-  "definitions": {
-    "ConnectionsComponent": {
-      "type": "object",
-      "description": "Component defining the exits or links from this location by referencing Connection entities.",
-      "additionalProperties": false,
-      "required": [
-        "connections"
-      ],
-      "properties": {
-        "connections": {
-          "type": "object",
-          "description": "A map where keys are direction strings (e.g., 'north', 'enter door') and values are the namespaced IDs of the corresponding Connection entities.",
-          "additionalProperties": {
-            "$ref": "./common.schema.json#/definitions/namespacedId",
-            "description": "The namespacedId of the Connection entity representing this exit."
-          },
-          "propertyNames": {
-            "type": "string",
-            "description": "The direction command used to traverse this connection (e.g., 'north', 'climb ladder')."
-          },
-          "examples": [
-            {
-              "north": "conn:roomA_to_roomB",
-              "climb ladder": "conn:roomA_to_attic",
-              "enter door": "conn:roomA_to_closet"
-            }
-          ]
-        }
-      }
     }
   }
 }

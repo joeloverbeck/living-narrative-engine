@@ -239,9 +239,9 @@
       "additionalProperties": false
     },
     "ConnectionsComponent": {
-      "$comment": "This is a basic version. location.schema.json defines a more complex version specific to locations.",
+      "$comment": "This is a basic version for simple connections (e.g., between zones). For location-specific connections using Connection entities, see LocationConnections.",
       "type": "object",
-      "description": "Defines simple directional exits from one location to another.",
+      "description": "Defines simple directional exits from one location to another location ID directly.",
       "properties": {
         "exits": {
           "type": "object",
@@ -264,6 +264,36 @@
         "exits"
       ],
       "additionalProperties": false
+    },
+    "LocationConnections": {
+      "type": "object",
+      "description": "Component specific to Locations, defining exits by referencing Connection entities (like doors, passages).",
+      "additionalProperties": false,
+      "required": [
+        "connections"
+      ],
+      "properties": {
+        "connections": {
+          "type": "object",
+          "description": "A map where keys are direction strings (e.g., 'north', 'enter door') and values are the namespaced IDs of the corresponding Connection entities.",
+          "additionalProperties": {
+            "$ref": "#/definitions/namespacedId",
+            /* Corrected internal ref */
+            "description": "The namespacedId of the Connection entity representing this exit."
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "The direction command used to traverse this connection (e.g., 'north', 'climb ladder')."
+          },
+          "examples": [
+            {
+              "north": "conn:roomA_to_roomB",
+              "climb ladder": "conn:roomA_to_attic",
+              "enter door": "conn:roomA_to_closet"
+            }
+          ]
+        }
+      }
     },
     "EquipmentComponent": {
       "type": "object",
