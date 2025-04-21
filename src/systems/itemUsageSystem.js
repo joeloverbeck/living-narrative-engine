@@ -12,9 +12,6 @@ import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.UsableComponent} UsableComponentData */
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.EffectObject} EffectObjectData */
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../services/conditionEvaluationService.js').ConditionEvaluationOptions} ConditionEvaluationOptions */

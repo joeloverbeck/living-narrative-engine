@@ -6,7 +6,6 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../components/connectionsComponent.js').Connection} Connection */
 /** @typedef {import('../actions/actionTypes.js').ActionMessage} ActionMessage */
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../components/healthComponent.js').HealthComponent} HealthComponent */
 /** @typedef {import('../components/positionComponent.js').PositionComponent} PositionComponent */
 /** @typedef {import('../components/component.js').default} Component */ // Generic component type

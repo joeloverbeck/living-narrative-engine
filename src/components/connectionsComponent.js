@@ -5,7 +5,6 @@ import Component from "./component.js";
 /**
  * @description Component for Location entities defining the exits or links
  * from this location by mapping direction strings to Connection entity IDs.
- * It aligns with the structure defined in location.schema.json.
  * This component *only* stores the mapping and does not manage the runtime state
  * (e.g., locked, hidden, blocked) of the connections themselves.
  *

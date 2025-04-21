@@ -2,7 +2,6 @@
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
 /** @typedef {import('../../components/healthComponent.js').HealthComponent} HealthComponent */

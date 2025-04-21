@@ -278,7 +278,6 @@
           "description": "A map where keys are direction strings (e.g., 'north', 'enter door') and values are the namespaced IDs of the corresponding Connection entities.",
           "additionalProperties": {
             "$ref": "#/definitions/namespacedId",
-            /* Corrected internal ref */
             "description": "The namespacedId of the Connection entity representing this exit."
           },
           "propertyNames": {

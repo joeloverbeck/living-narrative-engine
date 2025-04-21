@@ -1,7 +1,5 @@
 // src/utils/conditionParamUtils.js
 
-/** @typedef {import('../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
-
 // =========================================================================
 // Parameter Getter Functions (Moved from conditionUtils.js)
 // =========================================================================

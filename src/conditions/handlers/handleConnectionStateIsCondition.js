@@ -3,7 +3,6 @@
 // --- Necessary Imports ---
 // JSDoc Type Imports
 /** @typedef {import('../../components/connectionsComponent.js').Connection} Connection */ // Keep for backward compatibility reference
-/** @typedef {import('../../../data/schemas/item.schema.json').definitions.ConditionObject} ConditionObjectData */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionHandlerFunction} ConditionHandlerFunction */
 /** @typedef {import('../../entities/entity.js').default} Entity */ // Needed for type checking
