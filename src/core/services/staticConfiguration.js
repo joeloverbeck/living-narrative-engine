@@ -31,6 +31,7 @@ const SCHEMA_FILES = [
     'pushable.schema.json',
     'liquid-container.schema.json',
     'breakable.schema.json',
+    'component-definition.schema.json',
 ];
 
 const CONTENT_TYPE_SCHEMAS = {
@@ -53,6 +54,7 @@ const CONTENT_TYPE_SCHEMAS = {
     pushables: 'http://example.com/schemas/pushable.schema.json',
     liquidContainers: 'http://example.com/schemas/liquid-container.schema.json',
     breakables: 'http://example.com/schemas/breakable.schema.json',
+    components: 'http://example.com/schemas/component-definition.schema.json',
 };
 
 // --- Static Configuration Class ---

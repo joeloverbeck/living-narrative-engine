@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/component-definition.schema.json",
+  "title": "Component Definition",
+  "description": "Defines the structure for a single component type definition file, specifying its ID and the schema for its data payload.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/definitions/namespacedId",
+      "description": "The unique, namespaced identifier for this component type (e.g., 'core:health', 'game:openable'). This is used as the key in an entity's component map."
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable description of what this component represents or does."
+    },
+    "dataSchema": {
+      "type": "object",
+      "description": "A JSON Schema object defining the structure of the data this component holds. Can be an empty object schema for 'tag' components.",
+      "additionalProperties": true,
+      "default": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "id",
+    "dataSchema"
+  ],
+  "additionalProperties": false
+}

@@ -108,6 +108,11 @@ const testSchemas = {
         type: "object",
         properties: {id: {type: "string"}}
     }, // Minimal stub
+    "component-definition.schema.json": {
+        $id: "http://example.com/schemas/component-definition.schema.json",
+        type: "object",
+        properties: {id: {type: "string"}}
+    }, // Minimal stub
     "trigger.schema.json": {
         $id: "http://example.com/schemas/trigger.schema.json",
         type: "object",

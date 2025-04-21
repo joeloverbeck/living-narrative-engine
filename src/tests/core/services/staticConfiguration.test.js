@@ -28,6 +28,7 @@ const EXPECTED_SCHEMA_FILES = [
     'pushable.schema.json',
     'liquid-container.schema.json',
     'breakable.schema.json',
+    'component-definition.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -35,6 +36,7 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action-definition.schema.json',
     entities: 'http://example.com/schemas/entity.schema.json',
+    components: 'http://example.com/schemas/component-definition.schema.json',
     items: 'http://example.com/schemas/item.schema.json',
     locations: 'http://example.com/schemas/location.schema.json',
     connections: 'http://example.com/schemas/connection.schema.json',
@@ -88,7 +90,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('breakable.schema.json');
+            expect(files[files.length - 1]).toBe('component-definition.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {
