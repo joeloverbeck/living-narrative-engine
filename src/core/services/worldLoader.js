@@ -1,16 +1,18 @@
-//src/core/services/worldLoader.js
+// src/core/services/worldLoader.js
 
 /**
  * @fileoverview Defines the WorldLoader class, responsible for orchestrating
- * the loading of all world-specific data (schemas, manifest, content files)
+ * the loading of all world-specific data (schemas, manifest, component definitions, content files)
  * using injected core services.
  */
 
 // --- Import Concrete Classes & Interfaces ---
 // Use direct imports for concrete classes used internally
-import SchemaLoader from './schemaLoader.js'; // Corrected import path assuming it's SchemaLoader.js
+import SchemaLoader from './schemaLoader.js';
 import ManifestLoader from './manifestLoader.js';
 import GenericContentLoader from './genericContentLoader.js';
+// --- NEW: Import ComponentDefinitionLoader for type hinting ---
+/** @typedef {import('./componentDefinitionLoader.js').default} ComponentDefinitionLoader */
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataFetcher} IDataFetcher // Not directly used, but passed down
@@ -27,8 +29,10 @@ import GenericContentLoader from './genericContentLoader.js';
 /**
  * Orchestrates the process of loading game data for a specific world.
  * It uses injected services for fetching, validation, storage, configuration,
- * path resolution, logging, schema loading, manifest loading, and content loading.
- * Delegates specific loading tasks to SchemaLoader, ManifestLoader, and GenericContentLoader.
+ * path resolution, logging, schema loading, manifest loading, component definition loading,
+ * and content loading.
+ * Delegates specific loading tasks to SchemaLoader, ManifestLoader, ComponentDefinitionLoader,
+ * and GenericContentLoader.
  */
 class WorldLoader {
     /** @private @type {IDataRegistry} */
@@ -46,22 +50,25 @@ class WorldLoader {
     /** @private @type {IConfiguration} */
     #config; // Keep for summary check
 
+    // --- Declare private field for ComponentDefinitionLoader ---
+    /** @private @type {ComponentDefinitionLoader} */
+    #componentDefinitionLoader;
+
     /**
      * Constructs a WorldLoader instance.
-     * Note: Removed direct dependencies like fetcher, resolver, config if they are only used by sub-loaders.
-     * Kept validator and config for the summary log.
+     * Includes the new ComponentDefinitionLoader dependency.
      *
      * @param {IDataRegistry} registry - Service to store and retrieve loaded data.
      * @param {ILogger} logger - Service for logging messages.
      * @param {SchemaLoader} schemaLoader - Service dedicated to loading schemas.
      * @param {ManifestLoader} manifestLoader - Service dedicated to loading the world manifest.
-     * @param {GenericContentLoader} contentLoader - Service dedicated to loading content files.
+     * @param {GenericContentLoader} contentLoader - Service dedicated to loading generic content files.
+     * @param {ComponentDefinitionLoader} componentDefinitionLoader - Service dedicated to loading component definitions.
      * @param {ISchemaValidator} validator - Validator service (needed for summary).
      * @param {IConfiguration} configuration - Configuration service (needed for summary).
      * @throws {Error} If any required dependency is not provided or invalid.
      */
-    constructor(registry, logger, schemaLoader, manifestLoader, contentLoader, validator, configuration) { // Dependencies adjusted
-        // AC: WorldLoader constructor is updated to accept an instance of GenericContentLoader.
+    constructor(registry, logger, schemaLoader, manifestLoader, contentLoader, componentDefinitionLoader, validator, configuration) { // Dependencies adjusted
         // Validation...
         if (!registry || typeof registry.clear !== 'function' || typeof registry.setManifest !== 'function' || typeof registry.getManifest !== 'function') {
             throw new Error("WorldLoader: Missing or invalid 'registry' dependency (IDataRegistry).");
@@ -78,6 +85,13 @@ class WorldLoader {
         if (!contentLoader || typeof contentLoader.loadContentFiles !== 'function') {
             throw new Error("WorldLoader: Missing or invalid 'contentLoader' dependency (GenericContentLoader).");
         }
+
+        // --- Add validation for ComponentDefinitionLoader ---
+        if (!componentDefinitionLoader || typeof componentDefinitionLoader.loadComponentDefinitions !== 'function') { // [cite: 117]
+            throw new Error("WorldLoader constructor requires a valid ComponentDefinitionLoader instance with a loadComponentDefinitions method."); // [cite: 117]
+        }
+        // --- End Validation ---
+
         // Keep validator/config validation if needed for summary or future use
         if (!validator || typeof validator.isSchemaLoaded !== 'function') {
             throw new Error("WorldLoader: Missing or invalid 'validator' dependency (ISchemaValidator) needed for summary.");
@@ -87,29 +101,31 @@ class WorldLoader {
         }
 
         // Dependency Storage...
-        // AC: Constructor stores injected services internally.
         this.#registry = registry;
         this.#logger = logger;
         this.#schemaLoader = schemaLoader;
         this.#manifestLoader = manifestLoader;
-        this.#contentLoader = contentLoader; // AC: Stores the injected GenericContentLoader.
+        this.#contentLoader = contentLoader;
+        // --- Assign ComponentDefinitionLoader to private field ---
+        this.#componentDefinitionLoader = componentDefinitionLoader; // [cite: 117]
+        // --- End Assignment ---
         this.#validator = validator; // Store for summary
         this.#config = configuration; // Store for summary
 
 
-        this.#logger.info("WorldLoader: Instance created and core services injected (including GenericContentLoader).");
+        this.#logger.info("WorldLoader: Instance created and core services injected (including ComponentDefinitionLoader).");
     }
 
     /**
      * Orchestrates the loading of all data for a specified world.
      * This method coordinates schema loading, manifest loading/validation,
-     * and content loading based on the manifest.
+     * component definition loading, and content loading based on the manifest.
      *
      * @param {string} worldName - The name of the world to load (e.g., 'demo').
      * @returns {Promise<void>} Resolves when loading is complete, rejects on critical error.
      * @throws {Error} If worldName is invalid or a critical loading step fails.
      */
-    async loadWorld(worldName) {
+    async loadWorld(worldName) { // [cite: 98]
         // AC: loadWorld throws an error for invalid worldName.
         if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
             this.#logger.error("WorldLoader: Invalid 'worldName' provided to loadWorld.");
@@ -118,68 +134,62 @@ class WorldLoader {
 
         this.#logger.info(`WorldLoader: Starting full data load for world: '${worldName}'...`);
 
-        try {
+        try { // [cite: 98]
             // 1. Clear registry
-            // AC: Calls registry.clear() at the beginning.
             this.#registry.clear();
             this.#logger.info("WorldLoader: Cleared data registry.");
 
             // 2. Load schemas
-            // AC: Calls schemaLoader.loadAndCompileAllSchemas().
             this.#logger.info("WorldLoader: Initiating schema loading...");
-            await this.#schemaLoader.loadAndCompileAllSchemas();
+            await this.#schemaLoader.loadAndCompileAllSchemas(); // [cite: 98]
             this.#logger.info("WorldLoader: Schema loading completed.");
 
-            // 3. Load and Validate Manifest
-            // AC: Calls manifestLoader.loadAndValidateManifest(worldName).
+            // --- INSERTION POINT ---
+            // 3. Load Component Definitions (as per ticket 2.1.8.3)
+            // >>> TICKET 2.1.8.4: Log Start <<<
+            this.#logger.info('WorldLoader: Starting component definition loading...');
+            await this.#componentDefinitionLoader.loadComponentDefinitions(); // [cite: 98, 101]
+            // >>> TICKET 2.1.8.4: Log Success <<<
+            this.#logger.info('WorldLoader: Component definition loading completed successfully.');
+            // loadComponentDefinitions already logs internal success/failure and registers schemas [cite: 101, 102]
+            // --- END INSERTION ---
+
+            // 4. Load and Validate Manifest (Renumbered from 3)
             this.#logger.info(`WorldLoader: Loading manifest for world '${worldName}'...`);
             const manifestData = await this.#manifestLoader.loadAndValidateManifest(worldName);
             this.#logger.info(`WorldLoader: Manifest for world '${worldName}' loaded and validated.`);
 
-            // 4. Store Manifest in Registry
-            // AC: Calls registry.setManifest(manifestData).
+            // 5. Store Manifest in Registry (Renumbered from 4)
             this.#registry.setManifest(manifestData);
             this.#logger.info(`WorldLoader: Stored manifest for world '${worldName}' in registry.`);
 
-            // 5. Load Content Files via GenericContentLoader << --- MODIFIED SECTION --- >>
+            // 6. Load Content Files via GenericContentLoader (Renumbered from 5)
             this.#logger.info("WorldLoader: Proceeding to load content based on manifest via GenericContentLoader...");
-            // AC: Retrieves the manifest from the registry (or uses the loaded data).
-            const manifest = this.#registry.getManifest(); // Re-get manifest (or use manifestData directly)
+            const manifest = this.#registry.getManifest();
             if (!manifest) {
-                // Should not happen if step 3 succeeded, but check defensively
                 this.#logger.error("WorldLoader: Manifest disappeared from registry after loading. Critical error.");
                 throw new Error("WorldLoader: Manifest disappeared from registry after loading. Critical error.");
             }
-            // AC: Accesses the `contentFiles` property of the manifest.
             const contentFiles = manifest.contentFiles;
             if (!contentFiles || typeof contentFiles !== 'object') {
-                // This check might be redundant if ManifestLoader already validated it, but good defense.
                 this.#logger.error(`WorldLoader: Manifest for world '${worldName}' is missing the required 'contentFiles' object after load.`);
                 throw new Error(`WorldLoader: Manifest for world '${worldName}' is missing the required 'contentFiles' object after load.`);
             }
 
-            // AC: WorldLoader.loadWorld calls genericContentLoader.loadContentFiles for each content type...
-            // Load content types sequentially for simplicity and clearer logging between types
-            // AC: Iterates over the entries in the `contentFiles` object.
             const contentPromises = [];
             for (const [typeName, filenames] of Object.entries(contentFiles)) {
                 if (Array.isArray(filenames)) {
-                    // AC: Calls genericContentLoader.loadContentFiles(typeName, filenames).
-                    // Push the promise returned by loadContentFiles onto the array
                     contentPromises.push(
-                        this.#contentLoader.loadContentFiles(typeName, filenames)
+                        this.#contentLoader.loadContentFiles(typeName, filenames) // [cite: 105]
                             .catch(error => {
-                                // Catch error here to log typeName context, then rethrow
                                 this.#logger.error(`WorldLoader: Error loading content type '${typeName}'.`, error);
-                                throw error; // Re-throw to fail Promise.all
+                                throw error;
                             })
                     );
                 } else {
                     this.#logger.warn(`WorldLoader: Expected an array for content type '${typeName}' in manifest contentFiles, but got ${typeof filenames}. Skipping.`);
                 }
             }
-            // AC: Waits for all promises returned by loadContentFiles to settle using Promise.all.
-            // Wait for all content loading promises to complete. Promise.all rejects on first error.
             await Promise.all(contentPromises);
 
             this.#logger.info("WorldLoader: All content loading tasks based on manifest completed.");
@@ -188,71 +198,84 @@ class WorldLoader {
 
             this.#logger.info(`WorldLoader: Data load orchestration for world '${worldName}' completed successfully.`);
             this.#logLoadSummary(worldName); // Log summary
-            // AC: Resolves the promise upon successful completion of all steps.
 
-        } catch (error) {
-            // Catch errors from any step (Schema, Manifest, Content loading)
-            // AC: Catches errors from any of the loading steps.
+        } catch (error) { // [cite: 98]
+            // >>> TICKET 2.1.8.4: Verify Failure Logging <<<
+            // The existing catch block handles failures from ANY step, including
+            // the awaited `loadComponentDefinitions`. The logged error will include
+            // the specific error thrown by that step, fulfilling the requirement.
             this.#logger.error(`WorldLoader: CRITICAL ERROR during loadWorld for '${worldName}'. Load process halted.`, error);
-            // AC: Calls registry.clear() in the catch block on failure.
             this.#registry.clear(); // Attempt to clear partial data
             this.#logger.info("WorldLoader: Cleared data registry due to load error.");
-            // AC: Re-throws the caught error.
+            // The thrown error provides context about the overall failure.
             throw new Error(`WorldLoader failed to load world '${worldName}': ${error.message}`);
         }
     }
 
     /**
      * Logs a summary of loaded data from the registry.
+     * Includes the count of loaded component definitions.
      * @private
      */
     #logLoadSummary(worldName) {
-        // AC: Includes a private #logLoadSummary method.
         this.#logger.info(`--- WorldLoader Load Summary for '${worldName}' ---`);
         // Schema check
-        // AC: #logLoadSummary checks essential schemas using ISchemaValidator.
         const manifestSchemaId = this.#config.getManifestSchemaId();
-        if (manifestSchemaId && this.#validator.isSchemaLoaded(manifestSchemaId)) {
-            this.#logger.info("  - Schemas: Essential schemas appear loaded in validator.");
-        } else {
-            this.#logger.warn("  - Schemas: Essential schemas NOT detected in validator.");
+        const compDefSchemaId = this.#config.getContentTypeSchemaId('components'); // Check component def schema too
+        let schemasOk = true;
+        if (manifestSchemaId && !this.#validator.isSchemaLoaded(manifestSchemaId)) {
+            this.#logger.warn("  - Schemas: Essential Manifest schema NOT detected in validator.");
+            schemasOk = false;
         }
+        if (compDefSchemaId && !this.#validator.isSchemaLoaded(compDefSchemaId)) {
+            this.#logger.warn("  - Schemas: Essential Component Definition schema NOT detected in validator.");
+            schemasOk = false;
+        }
+        if (schemasOk) {
+            this.#logger.info("  - Schemas: Essential schemas (Manifest, Component Definition) appear loaded in validator.");
+        }
+
         // Manifest check
-        // AC: #logLoadSummary checks if the manifest is loaded via registry.getManifest().
         const loadedManifest = this.#registry.getManifest();
         if (loadedManifest) {
             this.#logger.info(`  - Manifest: Successfully loaded and stored for world '${loadedManifest.worldName || worldName}'.`);
         } else {
-            this.#logger.error("  - Manifest: NOT FOUND in registry after load attempt!"); // Should be error if load succeeded overall
+            this.#logger.error("  - Manifest: NOT FOUND in registry after load attempt!");
         }
 
-        // Content check (Now reflects actual loaded content) << MODIFIED >>
-        // AC: #logLoadSummary iterates common content types, calling registry.getAll() for each.
+        // --- TICKET 2.1.8.5 START ---
+        // Retrieve Component Definitions Count
+        const componentDefs = this.#registry.getAll('component_definitions'); // Retrieve definitions
+
+        // Log Component Definitions Count
+        // (Place this logically within the summary, e.g., after schemas or before other content)
+        this.#logger.info(`  - Component Definitions: ${componentDefs.length} loaded.`); // Add log line
+        // --- TICKET 2.1.8.5 END ---
+
+        // Content check (Excluding component definitions now logged separately)
         const contentTypes = [
-            'actions', 'events', 'entities', 'components', 'items', 'locations', 'connections',
+            // 'component_definitions', // Removed - now logged separately above
+            'actions', 'events', 'entities', 'items', 'locations', 'connections',
             'blockers', 'triggers', 'quests', 'objectives', 'interactionTests'
-            // Add any other types handled by GenericContentLoader from your config
         ];
         let totalContentCount = 0;
         this.#logger.info("  - Content (from Registry):");
         for (const type of contentTypes) {
-            const items = this.#registry.getAll(type); // AC: uses registry.getAll()
+            const items = this.#registry.getAll(type);
             const count = items.length;
             if (count > 0) {
-                // AC: Logs the count of loaded items for each type.
                 this.#logger.info(`    - ${type.charAt(0).toUpperCase() + type.slice(1)}: ${count}`);
                 totalContentCount += count;
             }
         }
         if (totalContentCount > 0) {
-            // AC: Logs the total count of loaded content items.
-            this.#logger.info(`  - Total Content Items Loaded: ${totalContentCount}`);
+            // Adjust total count message if desired, or keep it representing 'manifest content'
+            this.#logger.info(`  - Total Manifest Content Items Loaded: ${totalContentCount}`);
         } else {
-            this.#logger.info("  - No content items found loaded in the registry.");
+            this.#logger.info("  - No manifest content items found loaded in the registry.");
         }
         this.#logger.info(`-------------------------------------------`);
     }
 }
 
-// AC: worldLoader.js exists and exports the WorldLoader class.
 export default WorldLoader;

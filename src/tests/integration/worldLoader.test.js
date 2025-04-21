@@ -13,16 +13,14 @@ import AjvSchemaValidator from '../../core/services/ajvSchemaValidator.js';
 import SchemaLoader from '../../core/services/schemaLoader.js';
 import ManifestLoader from '../../core/services/manifestLoader.js';
 import GenericContentLoader from '../../core/services/genericContentLoader.js';
+import ComponentDefinitionLoader from '../../core/services/componentDefinitionLoader.js'; // *** ADDED IMPORT ***
 
 // --- Mock Interfaces (Types - not strictly needed for JS but good practice) ---
 /** @typedef {import('../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Test Data ---
-
-// NOTE: Schema $ids MUST match those defined in StaticConfiguration for this test
-// because we are using the real StaticConfiguration instance.
-
+// [ Test Data remains the same ]
 const testCommonSchema = {
     $schema: "http://json-schema.org/draft-07/schema#",
     $id: "http://example.com/schemas/common.schema.json", // Matches StaticConfiguration
@@ -245,6 +243,7 @@ describe('WorldLoader Integration Test', () => {
     let schemaLoader;
     let manifestLoader;
     let contentLoader;
+    let componentDefinitionLoader;
     let mockDataFetcher;
     let mockLogger;
 
@@ -254,11 +253,9 @@ describe('WorldLoader Integration Test', () => {
     beforeEach(() => {
         // --- Instantiate Real Dependencies ---
         realRegistry = new InMemoryDataRegistry();
-        realConfig = new StaticConfiguration(); // Using the real one as specified
+        realConfig = new StaticConfiguration();
         realResolver = new DefaultPathResolver(realConfig);
-        realValidator = new AjvSchemaValidator(); // Real Ajv validator
-        // Initialize event type validator if needed (not critical for this success path)
-        // realEventTypeValidator.initialize(['event:some_test_event']);
+        realValidator = new AjvSchemaValidator();
 
         // --- Create Mock Dependencies ---
         mockLogger = {
@@ -268,74 +265,139 @@ describe('WorldLoader Integration Test', () => {
             debug: jest.fn(),
         };
 
+        // --- Clear resolvedPaths for the new test ---
+        // It's good practice to clear this in case beforeEach runs multiple times within describe
+        resolvedPaths.manifest = null;
+        resolvedPaths.item1 = null;
+        resolvedPaths.entity1 = null;
+        resolvedPaths.playerEntity = null;
+        resolvedPaths.schemas = {}; // Clear the schemas map specifically
+
         // This is the core mock setup
         mockDataFetcher = {
-            // Store fetch calls for verification
             _calls: [],
             fetch: jest.fn(async (identifier) => {
-                mockDataFetcher._calls.push(identifier); // Track calls
+                mockDataFetcher._calls.push(identifier);
+                // *** DEBUG LOG 1: Log identifier received by fetcher ***
+                console.log(`\n MOCK_FETCH <<< Received: "${identifier}"`);
 
                 // Determine which test data to return based on the resolved path (identifier)
                 if (identifier === resolvedPaths.manifest) {
+                    console.log(` MOCK_FETCH >>> Matched Manifest`);
                     return Promise.resolve(testManifest);
                 }
                 if (identifier === resolvedPaths.item1) {
+                    console.log(` MOCK_FETCH >>> Matched Item1`);
                     return Promise.resolve(testItem1);
                 }
                 if (identifier === resolvedPaths.entity1) {
+                    console.log(` MOCK_FETCH >>> Matched Entity1`);
                     return Promise.resolve(testEntity1);
                 }
                 if (identifier === resolvedPaths.playerEntity) {
+                    console.log(` MOCK_FETCH >>> Matched PlayerEntity`);
                     return Promise.resolve(testPlayer);
                 }
 
-                // Find the schema filename that resolves to this identifier
-                const schemaFilename = Object.keys(resolvedPaths.schemas).find(
-                    filename => resolvedPaths.schemas[filename] === identifier
-                );
-                if (schemaFilename && testSchemas[schemaFilename]) {
-                    return Promise.resolve(testSchemas[schemaFilename]);
+                // --- REVISED SCHEMA LOOKUP ---
+                console.log(` MOCK_FETCH ??? Checking Schemas...`);
+                for (const filename in resolvedPaths.schemas) {
+                    const expectedPath = resolvedPaths.schemas[filename];
+                    // *** DEBUG LOG 2: Log the comparison happening ***
+                    console.log(` MOCK_FETCH CMP: Is "${identifier}" === "${expectedPath}" (for ${filename})?`);
+
+                    if (identifier === expectedPath) {
+                        console.log(` MOCK_FETCH >>> YES - Matched Schema: ${filename}`);
+                        if (testSchemas[filename]) {
+                            return Promise.resolve(testSchemas[filename]);
+                        } else {
+                            console.error(` MOCK_FETCH ERROR: Path match but no test data for ${filename}`);
+                            return Promise.reject(new Error(`MockDataFetcher: Inconsistency - path match but no test data for ${filename}`));
+                        }
+                    } else {
+                        // console.log(` MOCK_FETCH --- NO Match for ${filename}`); // Can be noisy, enable if needed
+                    }
+                }
+                console.log(` MOCK_FETCH ??? Finished checking schemas. No exact match found.`);
+                // --- END REVISED SCHEMA LOOKUP ---
+
+
+                // Check for Component Definitions Path
+                const componentsBasePath = realConfig.getContentBasePath('components');
+                if (componentsBasePath && identifier.startsWith(componentsBasePath)) {
+                    console.warn(` MOCK_FETCH WARN: Unhandled component path: ${identifier}`);
+                    return Promise.reject(new Error(`MockDataFetcher: Unhandled component path ${identifier}`));
                 }
 
-                // If no mapping found, reject or throw to indicate a problem in the test setup
-                console.error(`MockDataFetcher: No test data configured for path: ${identifier}`);
+
+                // If no mapping found after all checks
+                console.error(` MOCK_FETCH ERROR: Fallback - No handler for path: "${identifier}"`);
                 return Promise.reject(new Error(`MockDataFetcher: Unhandled path ${identifier}`));
             })
         };
 
         // Pre-calculate resolved paths using the real resolver and config
-        resolvedPaths.schemas = {};
+        console.log('\n--- Populating resolvedPaths in beforeEach ---');
         realConfig.getSchemaFiles().forEach(filename => {
             if (testSchemas[filename]) { // Only resolve paths for schemas we defined test data for
-                resolvedPaths.schemas[filename] = realResolver.resolveSchemaPath(filename);
+                const resolved = realResolver.resolveSchemaPath(filename);
+                // *** DEBUG LOG 3: Log the path being stored ***
+                console.log(` Storing: resolvedPaths.schemas["${filename}"] = "${resolved}"`);
+                resolvedPaths.schemas[filename] = resolved;
+            } else {
+                console.log(` Skipping: No test data for schema "${filename}"`);
             }
         });
         resolvedPaths.manifest = realResolver.resolveManifestPath('test-world');
+        console.log(` Storing: resolvedPaths.manifest = "${resolvedPaths.manifest}"`);
         resolvedPaths.item1 = realResolver.resolveContentPath('items', 'test-item-1.json');
+        console.log(` Storing: resolvedPaths.item1 = "${resolvedPaths.item1}"`);
         resolvedPaths.entity1 = realResolver.resolveContentPath('entities', 'test-entity-1.json');
+        console.log(` Storing: resolvedPaths.entity1 = "${resolvedPaths.entity1}"`);
         resolvedPaths.playerEntity = realResolver.resolveContentPath('entities', 'test-player.entity.json');
+        console.log(` Storing: resolvedPaths.playerEntity = "${resolvedPaths.playerEntity}"`);
+        console.log('--- Finished populating resolvedPaths ---');
+
+        // *** DEBUG LOG 4: Log the final state of resolvedPaths.schemas ***
+        console.log('--- Final resolvedPaths.schemas object: ---');
+        console.log(resolvedPaths.schemas);
+        console.log('------------------------------------------\n');
 
 
         // --- Instantiate Orchestrating Loaders with Real/Mock Dependencies ---
         schemaLoader = new SchemaLoader(realConfig, realResolver, mockDataFetcher, realValidator, mockLogger);
         manifestLoader = new ManifestLoader(realConfig, realResolver, mockDataFetcher, realValidator, mockLogger);
         contentLoader = new GenericContentLoader(realConfig, realResolver, mockDataFetcher, realValidator, realRegistry, mockLogger);
+        // *** ADDED: Instantiate ComponentDefinitionLoader ***
+        componentDefinitionLoader = new ComponentDefinitionLoader(
+            realConfig,         // configuration
+            realResolver,       // pathResolver
+            mockDataFetcher,    // fetcher
+            realValidator,      // validator
+            realRegistry,       // registry
+            mockLogger          // logger
+        );
 
         // --- Instantiate System Under Test (WorldLoader) ---
+        // *** UPDATED: Correct arguments passed to WorldLoader constructor ***
         worldLoader = new WorldLoader(
-            realRegistry,     // Correct 1st argument
-            mockLogger,         // Correct 2nd argument
-            schemaLoader,       // Correct 3rd argument
-            manifestLoader,     // Correct 4th argument
-            contentLoader,      // Correct 5th argument
-            realValidator,      // Correct 6th argument (used for summary)
-            realConfig          // Correct 7th argument (used for summary)
+            realRegistry,             // 1st: registry
+            mockLogger,               // 2nd: logger
+            schemaLoader,             // 3rd: schemaLoader
+            manifestLoader,           // 4th: manifestLoader
+            contentLoader,            // 5th: contentLoader
+            componentDefinitionLoader,// 6th: componentDefinitionLoader (NEW)
+            realValidator,            // 7th: validator (Shifted)
+            realConfig                // 8th: configuration (Shifted)
         );
     });
 
     it('should successfully load schemas, manifest, and content into the registry', async () => {
         // --- Act ---
+        console.log('\n===== TEST EXECUTION STARTS =====\n');
+        // --- Act ---
         await worldLoader.loadWorld('test-world');
+        console.log('\n===== TEST EXECUTION ENDS =====\n');
 
         // --- Assert ---
 
@@ -343,6 +405,7 @@ describe('WorldLoader Integration Test', () => {
         const loadedManifest = realRegistry.getManifest();
         const loadedItems = realRegistry.getAll('items');
         const loadedEntities = realRegistry.getAll('entities');
+        const loadedComponentDefs = realRegistry.getAll('component_definitions'); // *** ADDED CHECK ***
 
         expect(loadedManifest).toBeDefined();
         expect(loadedManifest).toEqual(testManifest); // Verify manifest content
@@ -352,6 +415,9 @@ describe('WorldLoader Integration Test', () => {
 
         expect(loadedEntities).toHaveLength(2); // testEntity1 + testPlayer
         expect(loadedEntities).toEqual(expect.arrayContaining([testEntity1, testPlayer])); // Verify entity content (order-independent)
+
+        // *** ADDED ASSERTION: Expect no component defs yet due to placeholder file discovery ***
+        expect(loadedComponentDefs).toEqual([]);
 
         // Check a type not in the manifest
         expect(realRegistry.getAll('locations')).toEqual([]);
@@ -367,20 +433,33 @@ describe('WorldLoader Integration Test', () => {
         expect(mockDataFetcher.fetch).toHaveBeenCalledWith(resolvedPaths.item1);
         expect(mockDataFetcher.fetch).toHaveBeenCalledWith(resolvedPaths.entity1);
         expect(mockDataFetcher.fetch).toHaveBeenCalledWith(resolvedPaths.playerEntity);
+        // NOTE: No fetch calls expected for component definitions yet
 
-        // Count fetch calls - schemas + 1 manifest + 3 content files = number of test schemas + 1 + 2 = 21 (18 schemas + 1 manifest + 2 content)
-        // console.log("Fetch calls:", mockDataFetcher._calls.length, "Expected:", Object.keys(resolvedPaths.schemas).length + 1 + 2);
-        // expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(Object.keys(resolvedPaths.schemas).length + 1 + 2); // Exact count based on test data
+        // Count fetch calls - number of test schemas + 1 manifest + 3 content files
+        // If ComponentDefinitionLoader's file discovery was active, this would change.
+        const expectedFetchCount = Object.keys(resolvedPaths.schemas).length + 1 + 3; // 18 schemas + 1 manifest + 3 content
+        // console.log("Fetch calls:", mockDataFetcher._calls.length, "Expected:", expectedFetchCount);
+        // Filter out potential debug calls if any were added to the mock
+        // expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(expectedFetchCount);
+
 
         // 3. Mock ILogger Interactions (Optional)
         expect(mockLogger.error).not.toHaveBeenCalled();
         // Check for specific success logs if desired
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("WorldLoader: Starting full data load for world: 'test-world'"));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Schema loading completed."));
+        // *** ADDED CHECK: Logs related to ComponentDefinitionLoader ***
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("WorldLoader: Starting component definition loading..."));
+        // Check for the warning because no files are found (due to placeholder discovery)
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("ComponentDefinitionLoader: No component definition files (*.component.json) found"));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("WorldLoader: Component definition loading completed successfully."));
+        // --- End Added Check ---
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Manifest for world 'test-world' loaded and validated."));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("All content loading tasks based on manifest completed."));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("WorldLoader: Data load orchestration for world 'test-world' completed successfully."));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("--- WorldLoader Load Summary for 'test-world' ---"));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Total Content Items Loaded: 3")); // 1 item + 2 entities
+        // *** UPDATED CHECK: Summary log should mention 0 component defs ***
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Component Definitions: 0 loaded."));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Total Manifest Content Items Loaded: 3")); // 1 item + 2 entities (still correct)
     });
 });

@@ -59,6 +59,7 @@ import TargetResolutionService from '../services/targetResolutionService.js';
 import PayloadValueResolverService from '../services/payloadValueResolverService.js';
 import ValidatedEventDispatcher from "../services/validatedEventDispatcher.js";
 import {formatActionCommand} from '../services/actionFormatter.js';
+import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -98,8 +99,43 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     container.register('ManifestLoader', (c) => new ManifestLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
+    container.register('ComponentDefinitionLoader', (c) => {
+        return new ComponentDefinitionLoader(
+            c.resolve('IConfiguration'),
+            c.resolve('IPathResolver'),
+            c.resolve('IDataFetcher'),
+            c.resolve('ISchemaValidator'),
+            c.resolve('IDataRegistry'),
+            c.resolve('ILogger')
+        );
+    }, {lifecycle: 'singleton'});
+
     // --- 4. World Orchestrator & Data Access ---
-    container.register('WorldLoader', (c) => new WorldLoader(c.resolve('IDataRegistry'), c.resolve('ILogger'), c.resolve('SchemaLoader'), c.resolve('ManifestLoader'), c.resolve('GenericContentLoader'), c.resolve('ISchemaValidator'), c.resolve('IConfiguration')), {lifecycle: 'singleton'});
+    container.register('WorldLoader', (c) => {
+        // Resolve all existing dependencies
+        const dataRegistry = c.resolve('IDataRegistry');
+        const logger = c.resolve('ILogger');
+        const schemaLoader = c.resolve('SchemaLoader');
+        const manifestLoader = c.resolve('ManifestLoader');
+        const genericContentLoader = c.resolve('GenericContentLoader');
+        // --> Resolve the new ComponentDefinitionLoader dependency [cite: 87]
+        const componentDefinitionLoader = c.resolve('ComponentDefinitionLoader');
+        const schemaValidator = c.resolve('ISchemaValidator');
+        const configuration = c.resolve('IConfiguration');
+
+        // Construct WorldLoader, passing dependencies in the correct order
+        return new WorldLoader(
+            dataRegistry,
+            logger,
+            schemaLoader,
+            manifestLoader,
+            genericContentLoader,
+            // --> Pass the resolved componentDefinitionLoader here [cite: 89]
+            componentDefinitionLoader,
+            schemaValidator,
+            configuration
+        );
+    }, {lifecycle: 'singleton'});
     container.register('GameDataRepository', (c) => new GameDataRepository(c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
     // --- 5. Entity Manager ---

@@ -17,7 +17,7 @@ describe('DefaultPathResolver', () => {
     // Base paths for mocking
     const MOCK_SCHEMA_BASE = '/mock/base/schemas';
     const MOCK_WORLD_BASE = '/mock/base/worlds';
-    const MOCK_CONTENT_BASE_FN = (typeName) => `/mock/base/content/${typeName}`;
+    const MOCK_CONTENT_BASE_FN = (typeName) => `/mock/base/content/${typeName}`; // Keep generic mock
 
     beforeEach(() => {
         // Create a fresh mock configuration before each test
@@ -37,6 +37,7 @@ describe('DefaultPathResolver', () => {
         // Default successful mock implementations
         mockConfig.getSchemaBasePath.mockReturnValue(MOCK_SCHEMA_BASE);
         mockConfig.getWorldBasePath.mockReturnValue(MOCK_WORLD_BASE);
+        // Use the generic mock implementation based on typeName
         mockConfig.getContentBasePath.mockImplementation(MOCK_CONTENT_BASE_FN);
     });
 
@@ -222,6 +223,21 @@ describe('DefaultPathResolver', () => {
             expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
         });
 
+        // --- Ticket 2.1.2 Test ---
+        it('should return the correct content path for component definitions (typeName = "components")', () => {
+            const typeName = 'components'; // Specific typeName for component definitions
+            const filename = 'core_health.component.json';
+            const expectedPath = `${MOCK_CONTENT_BASE_FN(typeName)}/${filename}`; // e.g., /mock/base/content/components/core_health.component.json
+            const actualPath = resolver.resolveContentPath(typeName, filename);
+
+            expect(actualPath).toBe(expectedPath);
+            // Verify the mock was called correctly for this typeName
+            expect(mockConfig.getContentBasePath).toHaveBeenCalledTimes(1);
+            expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
+        });
+        // --- End Ticket 2.1.2 Test ---
+
+
         it('should handle typeName and filename with spaces (trimming implicit)', () => {
             const typeName = ' spaced type ';
             const filename = ' spaced file.json ';
@@ -257,11 +273,17 @@ describe('DefaultPathResolver', () => {
         ])('should throw an Error for invalid filename (%s)', (desc, invalidFilename) => {
             const typeName = 'validType';
             const expectedErrorMsg = /Invalid or empty filename provided/;
-            expect(() => resolver.resolveContentPath(typeName, invalidFilename)).toThrow(expectedErrorMsg);
-            // Note: The typeName check happens *before* the filename check in the code
-            // So, getContentBasePath might still be called if the typeName *was* valid before the filename check failed.
-            // However, the primary check here is that the correct error is thrown *because* of the filename.
-            // Let's check the error message is correct, and we don't really care about the mock call here as much.
+
+            // Wrap the actual call and the check in the expect().toThrow block
+            expect(() => {
+                // Reset mock *just before* the call within this specific test context
+                mockConfig.getContentBasePath.mockClear();
+                resolver.resolveContentPath(typeName, invalidFilename);
+            }).toThrow(expectedErrorMsg);
+
+            // Verify that getContentBasePath was NOT called because the filename check failed first
+            // *AFTER* the call that threw the error.
+            expect(mockConfig.getContentBasePath).not.toHaveBeenCalled();
         });
 
         it('should throw typeName error if both typeName and filename are invalid (typeName checked first)', () => {
