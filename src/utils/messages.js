@@ -1,25 +1,58 @@
 // src/utils/messages.js
 
-// IMPORT or DEFINE the component type ID string
-// Option 1: Assuming it's exported from a central types file (Recommended)
-import {NAME_COMPONENT_TYPE_ID} from '../types/components.js'; // Adjust path if needed
-
-// Option 2: Define it locally if not available via import (Ensure it matches!)
-// const NAME_COMPONENT_TYPE_ID = 'core:name';
+// --- TICKET 4.4 REFACTOR: Import correct component IDs ---
+import {NAME_COMPONENT_TYPE_ID, DESCRIPTION_COMPONENT_ID} from '../types/components.js'; // Adjust path if needed
+// --- END TICKET 4.4 REFACTOR ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Added for potential future use, though not strictly needed for these helpers
 
-// Helper to get Name component data value or fallback (Corrected)
-export const getDisplayName = (entity) => {
-    // Optional: Add a check if entity or the method exists, though ?. handles it
+// --- TICKET 4.4 REFACTOR: Updated getDisplayName helper ---
+/**
+ * Gets the display name for an entity.
+ * Retrieves data from the 'core:name' component via entity.getComponentData.
+ * Falls back to entity ID or a default string if the component or name value is missing.
+ *
+ * @param {Entity | null | undefined} entity - The entity instance.
+ * @param {string} [fallback='unknown entity'] - The string to return if no name or ID is found.
+ * @returns {string} The entity's display name or a fallback string.
+ */
+export const getDisplayName = (entity, fallback = 'unknown entity') => {
     if (!entity || typeof entity.getComponentData !== 'function') {
-        return entity?.id || 'unknown entity'; // Fallback if not a valid entity
+        // Handle cases where entity is null, undefined, or not a valid Entity object
+        return entity?.id || fallback;
     }
-    // Use getComponentData with the TYPE ID string
+    // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
     const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
-    // Access the 'value' property from the data object returned
-    return nameComponentData?.value ?? entity?.id ?? 'unknown entity';
+    // AC: Default values or fallback logic are handled appropriately if components are missing.
+    // Assumes the name component data structure is { value: "Entity Name" }
+    return nameComponentData?.value ?? entity.id ?? fallback;
 };
+// --- END TICKET 4.4 REFACTOR ---
+
+// --- TICKET 4.4 REFACTOR: Added getDisplayDescription helper ---
+/**
+ * Gets the display description for an entity.
+ * Retrieves data from the 'core:description' component via entity.getComponentData.
+ * Falls back to a default "no description" string if the component or description value is missing.
+ *
+ * @param {Entity | null | undefined} entity - The entity instance.
+ * @param {string} [fallback='You see nothing particularly interesting.'] - The string to return if no description is found.
+ * @returns {string} The entity's display description or a fallback string.
+ */
+export const getDisplayDescription = (entity, fallback = 'You see nothing particularly interesting.') => {
+    if (!entity || typeof entity.getComponentData !== 'function') {
+        // Handle cases where entity is null, undefined, or not a valid Entity object
+        return fallback; // No ID fallback needed for description usually
+    }
+    // AC: Data is accessed using entity.getComponentData(entityId, "core:description") (via entity instance)
+    const descriptionComponentData = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
+    // AC: Default values or fallback logic are handled appropriately if components are missing.
+    // Assumes the description component data structure is { value: "Entity Description" }
+    return descriptionComponentData?.value ?? fallback;
+};
+// --- END TICKET 4.4 REFACTOR ---
+
 
 /**
  * A collection of message templates for user feedback, particularly related to
@@ -80,6 +113,7 @@ export const TARGET_MESSAGES = {
      * @returns {string}
      */
     AMBIGUOUS_PROMPT: (actionVerb, targetName, candidates) => { // Standardized params: targetTypeName -> targetName, matches -> candidates
+        // TICKET 4.4: Uses refactored getDisplayName
         const names = candidates.map(e => getDisplayName(e)).join(', ');
         return `Which '${targetName}' did you want to ${actionVerb}: ${names}?`;
     },
@@ -189,7 +223,11 @@ export const TARGET_MESSAGES = {
      * @param {Entity[]} candidates - Array of matching entities.
      * @returns {string}
      */
-    TARGET_AMBIGUOUS_CONTEXT: (actionVerb, targetName, candidates) => `Which '${targetName}' did you want to ${actionVerb}? (${candidates.map(m => getDisplayName(m)).join(', ')})`, // Standardized params
+    TARGET_AMBIGUOUS_CONTEXT: (actionVerb, targetName, candidates) => {
+        // TICKET 4.4: Uses refactored getDisplayName
+        const names = candidates.map(m => getDisplayName(m)).join(', ');
+        return `Which '${targetName}' did you want to ${actionVerb}? (${names})`;
+    },
 
     /**
      * Ambiguous direction prompt when input matches multiple connection direction keys.
@@ -235,34 +273,34 @@ export const TARGET_MESSAGES = {
     /** Feedback for trying to attack oneself. */
     ATTACK_SELF: "Trying to attack yourself? That's not productive.",
     /** Feedback when trying to attack a target that cannot be attacked (e.g., scenery, non-combatant).
-     * @param {string} targetName - The display name of the non-combatant target.
+     * @param {string} targetName - The display name of the non-combatant target. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    ATTACK_NON_COMBATANT: (targetName) => `You can't attack the ${targetName}.`, // Standardized param name
+    ATTACK_NON_COMBATANT: (targetName) => `You can't attack the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when trying to attack an already defeated target.
-     * @param {string} targetName - The display name of the defeated target.
+     * @param {string} targetName - The display name of the defeated target. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    ATTACK_DEFEATED: (targetName) => `The ${targetName} is already defeated.`, // Standardized param name
+    ATTACK_DEFEATED: (targetName) => `The ${targetName} is already defeated.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     // --- Equip ---
     /** Feedback when an item exists in inventory but lacks the EquippableComponent.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    EQUIP_CANNOT: (itemName) => `You cannot equip the ${itemName}.`, // Standardized param name
+    EQUIP_CANNOT: (itemName) => `You cannot equip the ${itemName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when the player lacks the required equipment slot for an item.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @param {string} slotId - The required equipment slot ID.
      * @returns {string}
      */
-    EQUIP_NO_SLOT: (itemName, slotId) => `You don't have a slot to equip the ${itemName} (${slotId}).`, // Standardized param name
+    EQUIP_NO_SLOT: (itemName, slotId) => `You don't have a slot to equip the ${itemName} (${slotId}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when the target equipment slot is already occupied.
-     * @param {string} currentItemName - The display name of the item currently in the slot.
+     * @param {string} currentItemName - The display name of the item currently in the slot. (Uses getDisplayName upstream)
      * @param {string} slotName - The user-friendly name of the slot (e.g., 'main hand').
      * @returns {string}
      */
-    EQUIP_SLOT_FULL: (currentItemName, slotName) => `You need to unequip the ${currentItemName} from your ${slotName} slot first.`,
+    EQUIP_SLOT_FULL: (currentItemName, slotName) => `You need to unequip the ${currentItemName} from your ${slotName} slot first.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     // --- Inventory ---
     /** Feedback when the player's inventory is empty (used by 'use' and potentially others). */
@@ -274,10 +312,16 @@ export const TARGET_MESSAGES = {
     /** Feedback when the player looks at themselves. */
     LOOK_SELF: "You look yourself over. You seem to be in one piece.",
     /** Default feedback when looking at an entity that has no specific DescriptionComponent text.
-     * @param {string} targetName - The display name of the target entity.
+     * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    LOOK_DEFAULT_DESCRIPTION: (targetName) => `You look closely at the ${targetName}, but see nothing particularly interesting.`, // Standardized param name
+    // TICKET 4.4: This message is a fallback if the *description* component is missing.
+    // The LOOK_DEFAULT_DESCRIPTION *itself* shouldn't call getDisplayDescription.
+    // Instead, the 'examine' or 'look' action handler should call getDisplayDescription(targetEntity)
+    // and use the result. If getDisplayDescription returns its *own* fallback, that's what's shown.
+    // This message is now more like a fallback for the *entire look action result*.
+    // Renaming might be clearer, but keeping name for now.
+    LOOK_DEFAULT_DESCRIPTION: (targetName) => `You look closely at the ${targetName}, but see nothing particularly interesting.`,
 
     // --- Move ---
     /** Feedback when the player's location is unknown during a move attempt. */
@@ -308,52 +352,52 @@ export const TARGET_MESSAGES = {
 
     // --- Movement Blocking ---
     /** Feedback when movement is blocked because the blocking entity is locked.
-     * @param {string} blockerName - The display name of the blocking entity.
+     * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`,
+    MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Generic feedback when movement is blocked by an entity (e.g., closed door).
-     * @param {string} blockerName - The display name of the blocking entity.
+     * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`,
+    MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when movement is blocked because the referenced blocker entity could not be found. */
     MOVE_BLOCKER_NOT_FOUND: () => "The way seems blocked by something that isn't there anymore.",
 
     /**
      * Feedback when an entity is successfully opened.
-     * @param {string} targetName - The display name of the opened entity.
+     * @param {string} targetName - The display name of the opened entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`,
+    OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     /**
      * Default feedback when opening an entity fails for an unspecified or default reason.
-     * @param {string} targetName - The display name of the entity that failed to open.
+     * @param {string} targetName - The display name of the entity that failed to open. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`,
+    OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     /**
      * Feedback when attempting to open an entity that is already open.
-     * @param {string} targetName - The display name of the already open entity.
+     * @param {string} targetName - The display name of the already open entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_ALREADY_OPEN: (targetName) => `The ${targetName} is already open.`,
+    OPEN_FAILED_ALREADY_OPEN: (targetName) => `The ${targetName} is already open.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     /**
      * Feedback when attempting to open an entity that is locked.
-     * @param {string} targetName - The display name of the locked entity.
+     * @param {string} targetName - The display name of the locked entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`,
+    OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     /**
      * Feedback when attempting to open an entity that lacks the OpenableComponent or capability.
-     * @param {string} targetName - The display name of the entity that cannot be opened.
+     * @param {string} targetName - The display name of the entity that cannot be opened. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_NOT_OPENABLE: (targetName) => `The ${targetName} cannot be opened.`,
+    OPEN_FAILED_NOT_OPENABLE: (targetName) => `The ${targetName} cannot be opened.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     // --- Unequip ---
     /** Feedback when trying to unequip from an explicitly named slot that is empty.
@@ -364,27 +408,27 @@ export const TARGET_MESSAGES = {
 
     // --- Use ---
     /** Feedback when an item's usage conditions are not met.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_CONDITION_FAILED: (itemName) => `You cannot use the ${itemName} under the current conditions.`,
+    USE_CONDITION_FAILED: (itemName) => `You cannot use the ${itemName} under the current conditions.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Generic feedback when an item cannot be used in the attempted manner.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_CANNOT: (itemName) => `You can't use the ${itemName} that way.`, // Standardized param name
+    USE_CANNOT: (itemName) => `You can't use the ${itemName} that way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when trying to use a healing item at full health. */
     USE_FULL_HEALTH: "You are already at full health.",
     /** Feedback when an item requires an explicit target but none was provided or resolved.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_REQUIRES_TARGET: (itemName) => `What do you want to use the ${itemName} on?`,
+    USE_REQUIRES_TARGET: (itemName) => `What do you want to use the ${itemName} on?`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     /** Feedback when the specific target is invalid for the item being used.
-     * @param {string} itemName - The display name of the item.
+     * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_INVALID_TARGET: (itemName) => `You can't use the ${itemName} on that.`,
+    USE_INVALID_TARGET: (itemName) => `You can't use the ${itemName} on that.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
     // Deprecated/Redundant based on other messages? Review usage.
     USE_INVALID_TARGET_CONNECTION: (id) => `The connection (${id}) you targeted is not valid here.`,
     USE_INVALID_TARGET_ENTITY: (id) => `The target (${id}) you specified is no longer valid.`,
@@ -395,18 +439,18 @@ export const TARGET_MESSAGES = {
     /**
      * Generic message for when an action cannot be performed on a specific target for a given reason.
      * @param {string} actionVerb - The verb of the action being attempted (e.g., 'attack', 'unlock').
-     * @param {string} targetName - The display name of the target entity.
+     * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @param {string} reason - The reason why the action cannot be performed.
      * @returns {string} Example: "You cannot attack the sturdy door (it is indestructible)."
      */
-    CANNOT_PERFORM_ACTION_ON: (actionVerb, targetName, reason) => `You cannot ${actionVerb} the ${targetName} (${reason}).`,
+    CANNOT_PERFORM_ACTION_ON: (actionVerb, targetName, reason) => `You cannot ${actionVerb} the ${targetName} (${reason}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
     /**
      * Generic message for when a resolved target is fundamentally invalid for the attempted action.
-     * @param {string} targetName - The display name of the target entity.
+     * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @param {string} actionVerb - The verb of the action being attempted.
      * @returns {string} Example: "The training dummy is not a valid target for equipping."
      */
-    TARGET_INVALID_FOR_ACTION: (targetName, actionVerb) => `The ${targetName} is not a valid target for ${actionVerb}.`,
+    TARGET_INVALID_FOR_ACTION: (targetName, actionVerb) => `The ${targetName} is not a valid target for ${actionVerb}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
 };

@@ -1,36 +1,54 @@
 // src/systems/inventorySystem.js
 
-// --- Component Imports ---
-import {InventoryComponent} from '../components/inventoryComponent.js';
-import {ItemComponent} from '../components/itemComponent.js';
-import {NameComponent} from '../components/nameComponent.js';
+// --- Component ID Constants ---
+import {
+    INVENTORY_COMPONENT_ID,
+    ITEM_COMPONENT_ID,
+    NAME_COMPONENT_TYPE_ID
+    // Note: A constant for 'component:description' is not defined in src/types/components.js
+    // Using a string literal for now, but ideally should be defined.
+} from '../types/components.js';
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */ // Added
-/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../entities/entity.js').default} Entity */ // Keep for getPlayer return type hint
+
+/**
+ * @typedef {object} ItemRenderData
+ * @property {string} id - The item instance ID.
+ * @property {string} name - The display name of the item.
+ * @property {any} icon - Placeholder for item icon data.
+ * @property {string} description - The description of the item.
+ */
+
+/**
+ * @typedef {object} InventoryRenderPayload
+ * @property {ItemRenderData[]} items - Array of item data for rendering.
+ */
 
 
 /**
- * Handles inventory-related events, including item pickup, drop, consumption,
- * and responding to UI requests for inventory rendering.
+ * Handles inventory-related events using ID-based component data access.
+ * Manages item pickup, drop, consumption, and inventory rendering requests
+ * by interacting with the EntityManager to fetch, modify, and save component data.
  */
 class InventorySystem {
     #eventBus;
     #entityManager;
-    #repository; // Renamed
+    #repository;
     #gameStateManager;
 
-    constructor({eventBus, entityManager, gameDataRepository, gameStateManager}) { // Updated param name
+    constructor({eventBus, entityManager, gameDataRepository, gameStateManager}) {
         if (!eventBus) throw new Error("InventorySystem requires options.eventBus.");
         if (!entityManager) throw new Error("InventorySystem requires options.entityManager.");
-        if (!gameDataRepository) throw new Error("InventorySystem requires options.gameDataRepository."); // Updated check
+        if (!gameDataRepository) throw new Error("InventorySystem requires options.gameDataRepository.");
         if (!gameStateManager) throw new Error("InventorySystem requires options.gameStateManager.");
 
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-        this.#repository = gameDataRepository; // Updated assignment
+        this.#repository = gameDataRepository;
         this.#gameStateManager = gameStateManager;
         console.log("InventorySystem: Instance created.");
     }
@@ -45,210 +63,229 @@ class InventorySystem {
         this.#eventBus.subscribe("event:item_consume_requested", this.#handleItemConsumeRequested.bind(this));
 
         // UI events
-        this.#eventBus.subscribe('ui:request_inventory_render', this.#handleInventoryRenderRequest.bind(this)); // Added
+        this.#eventBus.subscribe('ui:request_inventory_render', this.#handleInventoryRenderRequest.bind(this));
 
-        console.log("InventorySystem: Initialized and subscribed to '" + "event:item_picked_up" + "', '" + "event:item_drop_attempted" + "', '" + "event:item_consume_requested" + "', and 'ui:request_inventory_render'."); // Updated log
+        console.log("InventorySystem: Initialized and subscribed to 'event:item_picked_up', 'event:item_drop_attempted', 'event:item_consume_requested', and 'ui:request_inventory_render'.");
     }
 
     /**
      * Handles the "event:item_picked_up" event.
-     * Adds the item to the picker's inventory.
-     * Assumes the item's removal from the world/spatial index is handled elsewhere
-     * (e.g., by the system dispatching the event or another listener reacting to it).
+     * Adds the item to the picker's inventory component data.
      * @private
-     * @param {ItemPickedUpEventPayload} eventData - Data from the event. // Updated type hint
      */
     #handleItemPickedUp(eventData) {
-        // locationId is destructured but no longer used in this method after refactoring.
         const {pickerId, itemId} = eventData;
-        console.log(`InventorySystem: Handling ${"event:item_picked_up"} for item ${itemId} by ${pickerId}`); // Removed location from log
+        console.log(`InventorySystem (Pickup): Handling ${"event:item_picked_up"} for item ${itemId} by ${pickerId}`);
 
-        // --- 1. Validate Entities and Components ---
-        const pickerEntity = this.#entityManager.getEntityInstance(pickerId);
-        if (!pickerEntity) {
-            console.error(`InventorySystem: Picker entity '${pickerId}' not found.`);
-            return;
-        }
-
-        const itemEntity = this.#entityManager.getEntityInstance(itemId);
-        if (!itemEntity) {
-            // This might happen if the event fires slightly after the item is already removed by another system.
-            // Or if the removeEntityInstance call happens before all listeners finish.
-            // For robustness, log a warning but don't necessarily treat as a critical error unless it causes problems.
-            console.warn(`InventorySystem: Item entity '${itemId}' not found when handling pickup. It might have already been removed.`);
-            // Depending on game logic, we might still want to proceed to add to inventory if the item *should* exist conceptually.
-            // However, if the entity is gone, we might lack info (like stackability if not in definition).
-            // Sticking with the original logic: return if item entity not found at this point.
-            return;
-        }
-
-        const inventoryComp = pickerEntity.getComponent(InventoryComponent);
-        if (!inventoryComp) {
-            console.error(`InventorySystem: Picker entity '${pickerId}' has no InventoryComponent.`);
-            // Maybe dispatch a UI error? For now, just log and stop.
+        // --- 1. Validate Entities and Component Presence ---
+        // Check if picker *can* have an inventory (has the component).
+        if (!this.#entityManager.hasComponent(pickerId, INVENTORY_COMPONENT_ID)) { //
+            console.error(`InventorySystem (Pickup): Picker entity '${pickerId}' has no InventoryComponent data.`);
+            // Optional: Dispatch UI message "You cannot carry items!"
             // this.#eventBus.dispatch("event:display_message", { text: "You cannot carry items!", type: 'error' });
             return;
         }
 
-        // --- 2. Check Stacking / Duplicates ---
-        // Attempt to get definition first for authoritative data
-        const itemDef = this.#repository.getEntityDefinition(itemEntity.id);
-        const itemCompInstance = itemEntity.getComponent(ItemComponent);
-
-        // Determine stackability safely, defaulting to false
-        // Check definition first, then instance component as fallback
-        const isStackable = itemDef?.components?.Item?.stackable === true || itemCompInstance?.stackable === true;
-        const alreadyHas = inventoryComp.hasItem(itemId);
-
-        if (!isStackable && alreadyHas) {
-            console.warn(`InventorySystem: Picker '${pickerId}' already has non-stackable item '${itemId}'. Pickup skipped.`);
-            // Optionally dispatch a UI message:
-            // this.#eventBus.dispatch("event:display_message", { text: `You already have a ${itemDef?.components?.Name?.value ?? itemId}.`, type: 'info' });
-            return; // Stop processing
+        // Check if item entity still exists (might have been removed by another system).
+        const itemEntity = this.#entityManager.getEntityInstance(itemId); // Need instance for definition lookup fallback
+        if (!itemEntity) {
+            console.warn(`InventorySystem (Pickup): Item entity '${itemId}' not found when handling pickup. It might have already been removed.`);
+            return;
         }
 
-        // --- 3. Add Item to Inventory ---
-        // Assuming addItem handles stacking logic internally if needed (e.g., incrementing count vs. adding new entry)
-        inventoryComp.addItem(itemId); // Might need enhancement if stacking requires quantity logic here
-        console.log(`InventorySystem: Added '${itemId}' to inventory of '${pickerId}'.`);
+        // --- 2. Check Stacking / Duplicates ---
+        const itemDef = this.#repository.getEntityDefinition(itemId); //
+        const itemCompData = this.#entityManager.getComponentData(itemId, ITEM_COMPONENT_ID); // Fetch ItemComponent data
 
-        // Note: The actual removal of the item entity from the world (EntityManager.removeEntityInstance)
-        // is assumed to be handled by another system listening to "event:item_picked_up"
-        // or by the system that initially dispatched the event (e.g., InteractionSystem).
-        // This system (InventorySystem) is now *only* responsible for managing the inventory component state.
+        // Determine stackability (Definition > Instance Data Fallback)
+        const isStackable = itemDef?.components?.[ITEM_COMPONENT_ID]?.stackable === true || itemCompData?.stackable === true; //
+
+        // Fetch current inventory data to check for existing item
+        let inventoryData = this.#entityManager.getComponentData(pickerId, INVENTORY_COMPONENT_ID); //
+
+        // Initialize inventory data structure if it doesn't exist or is invalid
+        if (!inventoryData || typeof inventoryData !== 'object') { //
+            inventoryData = {items: []};
+            console.log(`InventorySystem (Pickup): Initialized inventory data for ${pickerId}.`); //
+        }
+        if (!Array.isArray(inventoryData.items)) { // Ensure 'items' array exists
+            inventoryData.items = [];
+            console.log(`InventorySystem (Pickup): Ensured 'items' array exists in inventory data for ${pickerId}.`); //
+        }
+
+        const alreadyHas = inventoryData.items.includes(itemId); // Check the data array
+
+        if (!isStackable && alreadyHas) {
+            console.warn(`InventorySystem (Pickup): Picker '${pickerId}' already has non-stackable item '${itemId}'. Pickup skipped.`);
+            // Optional: Dispatch UI message
+            // const itemNameData = this.#entityManager.getComponentData(itemId, NAME_COMPONENT_TYPE_ID);
+            // this.#eventBus.dispatch("event:display_message", { text: `You already have a ${itemNameData?.value ?? itemId}.`, type: 'info' });
+            return;
+        }
+
+        // --- 3. Add Item to Inventory Data ---
+        // Modify the items array (simple push for now, stacking logic would go here)
+        if (!alreadyHas) { // Avoid adding duplicates if stackable logic isn't fully implemented yet
+            inventoryData.items.push(itemId); //
+        }
+        // TODO: Implement stacking logic if required (e.g., find item entry, increment count)
+
+        // --- 4. Save Inventory Data Back ---
+        try {
+            // Use addComponent to overwrite/update the inventory data
+            this.#entityManager.addComponent(pickerId, INVENTORY_COMPONENT_ID, inventoryData); //
+            console.log(`InventorySystem (Pickup): Updated inventory data for '${pickerId}', added '${itemId}'. New items: [${inventoryData.items.join(', ')}]`); //
+        } catch (error) {
+            console.error(`InventorySystem (Pickup): Failed to save updated inventory data for ${pickerId}. Item ${itemId} might not be added. Error:`, error);
+            // Consider if error handling/rollback is needed
+        }
+
+        // Note: Item removal from world is handled elsewhere.
     }
+
 
     /**
      * Handles the "event:item_drop_attempted" event.
-     * Removes the specified item from the player's inventory state.
-     * Does not handle placing the item in the world.
+     * Removes the specified item from the player's inventory component data.
      * @private
-     * @param {ItemDropAttemptedEventPayload} eventData - Data from the event. // Updated type hint
      */
     #handleItemDropAttempted(eventData) {
-        const {playerId, itemInstanceId} = eventData; // locationId is available but not needed for inventory removal
+        const {playerId, itemInstanceId} = eventData;
         console.log(`InventorySystem (Drop): Handling ${"event:item_drop_attempted"} for player ${playerId}, item ${itemInstanceId}`);
 
-        // --- 1. Retrieve Player Entity and Inventory ---
-        const playerEntity = this.#entityManager.getEntityInstance(playerId);
-        if (!playerEntity) {
-            // Should generally not happen if event source (dropActionHandler) validated the player
-            console.error(`InventorySystem (Drop): Player entity '${playerId}' not found when handling drop event.`);
-            return; // Cannot proceed without the player entity
+        // --- 1. Retrieve Inventory Data ---
+        let inventoryData = this.#entityManager.getComponentData(playerId, INVENTORY_COMPONENT_ID); //
+
+        // Check if player has inventory data and it's valid
+        if (!inventoryData || !Array.isArray(inventoryData.items)) { //
+            console.error(`InventorySystem (Drop): Player '${playerId}' has no valid InventoryComponent data when attempting to drop ${itemInstanceId}.`);
+            return;
         }
 
-        const inventoryComp = playerEntity.getComponent(InventoryComponent);
-        if (!inventoryComp) {
-            // Should also not happen if dropActionHandler validated it, but check defensively
-            console.error(`InventorySystem (Drop): Player entity '${playerId}' has no InventoryComponent when handling drop event.`);
-            return; // Cannot proceed without the inventory component
+        // --- 2. Check if Item Exists in Inventory ---
+        const itemIndex = inventoryData.items.indexOf(itemInstanceId); //
+        if (itemIndex === -1) {
+            console.warn(`InventorySystem (Drop): Consistency check failed. Player ${playerId}'s inventory data does not contain item ${itemInstanceId} when attempting drop. Event ignored.`);
+            return;
         }
 
-        // --- 2. Consistency Check ---
-        // Verify the item is still in the inventory before attempting removal.
-        // This handles potential race conditions or stale event data.
-        if (!inventoryComp.hasItem(itemInstanceId)) {
-            console.warn(`InventorySystem (Drop): Consistency check failed. Player ${playerId}'s inventory does not contain item ${itemInstanceId} when attempting drop. Event ignored.`);
-            // Log a warning as per AC, but do not crash.
-            return; // Stop processing this event
-        }
+        // --- 3. Remove Item from Inventory Data ---
+        let itemRemoved = false;
+        // Create a *new* array excluding the item or modify in place
+        inventoryData.items.splice(itemIndex, 1); // Modify in place
+        itemRemoved = true; // Track removal happened
 
-        // --- 3. Remove Item from Inventory ---
-        const removed = inventoryComp.removeItem(itemInstanceId);
-
-        // --- 4. Log Result ---
-        if (removed) {
-            console.log(`InventorySystem (Drop): Successfully removed item ${itemInstanceId} from player ${playerId}'s inventory.`);
+        // --- 4. Save Modified Data Back ---
+        if (itemRemoved) {
+            try {
+                // Use addComponent to overwrite the inventory data with the modified version
+                this.#entityManager.addComponent(playerId, INVENTORY_COMPONENT_ID, inventoryData); //
+                console.log(`InventorySystem (Drop): Successfully removed item ${itemInstanceId} from player ${playerId}'s inventory data. New items: [${inventoryData.items.join(', ')}]`); //
+            } catch (error) {
+                console.error(`InventorySystem (Drop): Failed to save updated inventory data for ${playerId} after removing ${itemInstanceId}. Error:`, error);
+                // Consider consequences of failed save (inventory state mismatch)
+            }
         } else {
-            // This case *shouldn't* be reachable if the 'hasItem' check above passed,
-            // but log an error defensively in case of unexpected component behavior.
-            console.error(`InventorySystem (Drop): Failed to remove item ${itemInstanceId} from player ${playerId}'s inventory, even though it passed the consistency check.`);
+            // This case should technically not be reached due to the check above, but log defensively.
+            console.error(`InventorySystem (Drop): Failed to remove item ${itemInstanceId} from player ${playerId}'s inventory data array, even though index was found.`);
         }
 
-        // Note: This system's responsibility ends here. Placing the item in the world
-        // or dispatching UI messages would be handled by other systems listening
-        // to "event:item_drop_attempted" or a subsequent event like "event:item_dropped".
+        // Note: Placing item in world is handled elsewhere.
     }
+
 
     /**
      * Handles the "event:item_consume_requested" event.
-     * Removes the specified item from the user's inventory.
+     * Removes the specified item from the user's inventory component data.
      * @private
-     * @param {ItemConsumeRequestedEventPayload} payload - Data from the event.
      */
     #handleItemConsumeRequested(payload) {
         const {userId, itemInstanceId} = payload;
         console.log(`InventorySystem (Consume): Handling ${"event:item_consume_requested"} for user ${userId}, item ${itemInstanceId}`);
 
-        const userEntity = this.#entityManager.getEntityInstance(userId);
-        if (!userEntity) {
-            console.error(`InventorySystem (Consume): User entity '${userId}' not found when handling consumption request.`);
-            return; // Cannot proceed without the user entity
+        // --- 1. Retrieve Inventory Data ---
+        let inventoryData = this.#entityManager.getComponentData(userId, INVENTORY_COMPONENT_ID); //
+
+        // Check if user has inventory data and it's valid
+        if (!inventoryData || !Array.isArray(inventoryData.items)) { //
+            console.error(`InventorySystem (Consume): User '${userId}' has no valid InventoryComponent data when attempting to consume ${itemInstanceId}.`);
+            return;
         }
 
-        const inventoryComp = userEntity.getComponent(InventoryComponent);
-        if (!inventoryComp) {
-            console.error(`InventorySystem (Consume): User entity '${userId}' has no InventoryComponent when handling consumption request.`);
-            return; // Cannot proceed without the inventory component
+        // --- 2. Check if Item Exists in Inventory ---
+        const itemIndex = inventoryData.items.indexOf(itemInstanceId); //
+        if (itemIndex === -1) {
+            console.warn(`InventorySystem (Consume): User ${userId}'s inventory data does not contain item ${itemInstanceId} when attempting consumption. Item might have already been removed or event is stale.`);
+            return;
         }
 
-        // Attempt removal
-        const removed = inventoryComp.removeItem(itemInstanceId);
+        // --- 3. Remove Item from Inventory Data ---
+        let itemRemoved = false;
+        inventoryData.items.splice(itemIndex, 1); // Modify in place
+        itemRemoved = true;
 
-        if (removed) {
-            console.log(`InventorySystem (Consume): Successfully consumed item ${itemInstanceId} from user ${userId}'s inventory.`);
+        // --- 4. Save Modified Data Back ---
+        if (itemRemoved) {
+            try {
+                this.#entityManager.addComponent(userId, INVENTORY_COMPONENT_ID, inventoryData); //
+                console.log(`InventorySystem (Consume): Successfully consumed (removed) item ${itemInstanceId} from user ${userId}'s inventory data. New items: [${inventoryData.items.join(', ')}]`); //
+            } catch (error) {
+                console.error(`InventorySystem (Consume): Failed to save updated inventory data for ${userId} after consuming ${itemInstanceId}. Error:`, error);
+            }
         } else {
-            // This might happen if the event fires twice due to some race condition,
-            // or if the item was removed by another means (e.g., a direct effect, another system reacting faster)
-            // between the usage action finishing and this handler executing. Log as a warning.
-            console.warn(`InventorySystem (Consume): Failed to remove item ${itemInstanceId} from user ${userId}'s inventory during consumption request. Item might have already been removed or never existed in inventory.`);
+            console.error(`InventorySystem (Consume): Failed to remove item ${itemInstanceId} from user ${userId}'s inventory data array during consumption, even though index was found.`);
         }
     }
 
+
     /**
      * Handles the 'ui:request_inventory_render' event.
-     * Fetches player inventory data and dispatches 'ui:render_inventory'.
-     * Logic moved from GameEngine.#handleInventoryRenderRequest.
+     * Fetches player inventory data using EntityManager and dispatches 'ui:render_inventory'.
      * @private
      * @param {object} [payload] - Optional payload from the event (currently unused).
      */
     #handleInventoryRenderRequest(payload = {}) {
-        // No need for #isInitialized check like in GameEngine
         console.log("InventorySystem: Handling 'ui:request_inventory_render'.");
 
         const player = this.#gameStateManager.getPlayer();
         if (!player) {
             console.error("InventorySystem: Cannot render inventory, player entity not found in GameStateManager.");
-            // Dispatch empty inventory event for UI consistency
             this.#eventBus.dispatch('ui:render_inventory', {items: []});
             return;
         }
 
-        const inventoryComp = player.getComponent(InventoryComponent);
-        if (!inventoryComp) {
-            console.log(`InventorySystem: Player ${player.id} has no InventoryComponent. Rendering empty inventory.`);
+        // Fetch inventory data using EntityManager
+        const inventoryData = this.#entityManager.getComponentData(player.id, INVENTORY_COMPONENT_ID); //
+
+        // Get item IDs from the data, default to empty array if no data or no items property
+        const itemIds = inventoryData?.items ?? []; //
+
+        if (!inventoryData || itemIds.length === 0) {
+            console.log(`InventorySystem: Player ${player.id} has no inventory items according to component data. Rendering empty inventory.`);
             this.#eventBus.dispatch('ui:render_inventory', {items: []});
             return;
         }
 
-        const itemIds = inventoryComp.getItems();
         const itemsData = [];
 
         for (const itemId of itemIds) {
-            const itemInstance = this.#entityManager.getEntityInstance(itemId);
-            if (!itemInstance) {
-                console.warn(`InventorySystem: Inventory contains item ID '${itemId}' but instance not found in EntityManager. Skipping.`);
+            // Fetch name data for each item using EntityManager
+            const nameData = this.#entityManager.getComponentData(itemId, NAME_COMPONENT_TYPE_ID); //
+            const itemName = nameData?.value ?? '(Unknown Item)'; // Access the 'value' property
+            const icon = null; // Placeholder
+
+            // Fetch description data using EntityManager
+            // Assuming 'component:description' is the intended ID. Define it in types/components.js!
+            const DESCRIPTION_COMPONENT_ID = 'component:description'; // Placeholder ID
+            const descriptionData = this.#entityManager.getComponentData(itemId, DESCRIPTION_COMPONENT_ID); //
+            const description = descriptionData?.value ?? ''; // Assuming description component has a 'value' field
+
+            // Check if the item entity instance still exists (optional, but good for robustness)
+            if (!this.#entityManager.getEntityInstance(itemId)) { //
+                console.warn(`InventorySystem: Inventory data for player ${player.id} contains item ID '${itemId}' but instance not found in EntityManager. Skipping render for this item.`);
                 continue;
             }
 
-            const nameComp = itemInstance.getComponent(NameComponent);
-            const itemName = nameComp ? nameComp.value : '(Unknown Item)';
-            const icon = null; // Placeholder for icon data
-
-            // Example: trying to get description - uses the component key 'Description'.
-            // Ensure a component with this key is registered if description is needed.
-            const descriptionComp = itemInstance.getComponent('Description');
-            const description = descriptionComp ? descriptionComp.value : '';
 
             itemsData.push({id: itemId, name: itemName, icon: icon, description: description});
         }
@@ -256,7 +293,7 @@ class InventorySystem {
         /** @type {InventoryRenderPayload} */
         const renderPayload = {items: itemsData};
         this.#eventBus.dispatch('ui:render_inventory', renderPayload);
-        console.log(`InventorySystem: Dispatched 'ui:render_inventory' with ${itemsData.length} items for player ${player.id}.`);
+        console.log(`InventorySystem: Dispatched 'ui:render_inventory' with ${itemsData.length} items from component data for player ${player.id}.`);
     }
 }
 

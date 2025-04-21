@@ -9,7 +9,7 @@
         "type": "array",
         "description": "Array of item entity identifier strings currently in the entity's inventory.",
         "items": {
-          "$ref": "common.schema.json#/definitions/namespacedId"
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
         },
         "default": [],
         "uniqueItems": false

@@ -1,28 +1,16 @@
 // src/systems/movementSystem.js
 
-// Assuming components are in ../components/
-
 // Core dependencies (adjust paths if necessary)
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
-// Entity definition (adjust path if necessary)
-/** @typedef {import('../entities/entity.js').default} Entity */
+// Component Type ID (Import the constant)
+import {POSITION_COMPONENT_ID} from "../types/components.js"; // Use the constant from types
 
 /**
- * @typedef {object} ExecuteMovePayload
- * @property {string} entityId - ID of the entity being moved.
- * @property {string} targetLocationId - ID of the destination location entity.
- * @property {string} previousLocationId - ID of the starting location entity.
- * @property {string} direction - The canonical, lowercase direction of movement (e.g., 'north', 'south').
- */
-
-import {PositionComponent} from "../components/positionComponent.js";
-
-/**
- * Handles the actual updating of an entity's position.
- * This system previously listened for "event:move_attempted" but now exposes
- * a synchronous `executeMove` method to be called after external validation.
+ * Handles the actual updating of an entity's position based on component data.
+ * This system exposes a synchronous `executeMove` method to be called after
+ * external validation, using the EntityManager for component data access and modification.
  */
 class MovementSystem {
     /** @type {EventBus} */
@@ -44,8 +32,6 @@ class MovementSystem {
         }
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
-
-        // console.log("MovementSystem: Instance created."); // Kept console log from original
     }
 
     /**
@@ -53,82 +39,83 @@ class MovementSystem {
      * This should be called after the system is instantiated.
      */
     initialize() {
-        console.log("MovementSystem: Initialized. Ready to execute moves via executeMove()."); // Kept console log
+        console.log("MovementSystem: Initialized. Ready to execute moves via executeMove().");
     }
 
     /**
      * Synchronously executes the final steps of an entity move, updating its
-     * position and notifying relevant systems. Assumes prior validation.
-     *
-     * Intended to be called by a coordinator/handler *after* checks like
-     * location existence and path blocking have passed.
+     * position component data via the EntityManager and notifying relevant systems.
+     * Assumes prior validation (e.g., path validity, target location existence).
      *
      * @param {ExecuteMovePayload} payload - The details of the move to execute.
-     * @returns {boolean} Returns `true` if the method completes without internal errors,
-     * and `false` if an error is caught during its execution or an internal safety check fails.
+     * @returns {boolean} Returns `true` if the method completes successfully,
+     * and `false` if an error occurs or an internal safety check fails.
      */
-    executeMove(payload) { // AC1 (Ticket): Method Definition, AC2 (Ticket): Signature
-        // AC4 (Ticket): Basic Body Structure (try...catch)
+    executeMove(payload) {
         try {
-            // --- Implementation for TRG-7.3 Start ---
+            // Step 1: Fetch Position Component Data using EntityManager
+            // AC1: Uses entityManager.getComponentData(entityId, 'core:position') (using POSITION_COMPONENT_ID)
+            const positionData = this.#entityManager.getComponentData(payload.entityId, POSITION_COMPONENT_ID);
 
-            // AC1: Retrieve entity instance
-            // Step 1: Fetch the entity trying to move
-            const entity = this.#entityManager.getEntityInstance(payload.entityId);
-
-            // AC2: Retrieve entity's PositionComponent (handle if entity is null)
-            // Step 2: Get the entity's position component
-            const positionComp = entity ? entity.getComponent(PositionComponent) : null;
-
-            // AC3: Perform final internal safety checks
-            // Step 3a: Check if the entity actually exists
-            if (!entity) {
-                console.error(`MovementSystem.executeMove: Failed to find entity with ID [${payload.entityId}]. Cannot execute move.`);
-                return false; // Stop execution if entity not found
+            // Step 2: Perform final internal safety checks using positionData
+            // AC1 (Task): Update safety checks to use positionData
+            if (!positionData) {
+                console.error(`MovementSystem.executeMove: Entity [${payload.entityId}] lacks component data for '${POSITION_COMPONENT_ID}'. Cannot execute move.`);
+                return false; // Stop execution if component data missing
             }
-            // Step 3b: Check if the entity has a position component
-            if (!positionComp) {
-                console.error(`MovementSystem.executeMove: Entity [${payload.entityId}] lacks a PositionComponent. Cannot execute move.`);
-                return false; // Stop execution if component missing
-            }
-            // Step 3c (Optional but Recommended): Verify entity is at the expected starting location
-            if (positionComp.locationId !== payload.previousLocationId) {
-                console.warn(`MovementSystem.executeMove: State mismatch for entity [${payload.entityId}]. Expected previous location [${payload.previousLocationId}], but found [${positionComp.locationId}]. Aborting move execution.`);
+            // AC1 (Task): Update state mismatch check to use positionData
+            if (positionData.locationId !== payload.previousLocationId) {
+                console.warn(`MovementSystem.executeMove: State mismatch for entity [${payload.entityId}]. Expected previous location [${payload.previousLocationId}], but found [${positionData.locationId}]. Aborting move execution.`);
                 return false; // Stop execution due to state inconsistency
             }
+            // Note: The check for entity existence (!entity) from the original code is implicitly
+            // handled by getComponentData returning undefined if the entity doesn't exist.
 
-            // AC4: Update PositionComponent's locationId
-            // Step 4: Perform the actual state change - update the location ID
-            positionComp.locationId = payload.targetLocationId;
+            // Step 3: Update Position Component Data via EntityManager
+            // AC2: Uses entityManager.addComponent(entityId, 'core:position', updatedData) (using POSITION_COMPONENT_ID)
+            // AC1 (Task): Replace direct mutation with EntityManager update
+            const updatedPositionData = {...positionData}; // Create a copy
+            updatedPositionData.locationId = payload.targetLocationId;
+            // Optionally reset x, y coordinates if movement between locations implies this:
+            // updatedPositionData.x = 0; // Example reset
+            // updatedPositionData.y = 0; // Example reset
 
-            // AC5: Notify EntityManager of the position change
-            // Step 5: Inform the EntityManager about the successful move for its tracking
-            this.#entityManager.notifyPositionChange(payload.entityId, payload.previousLocationId, payload.targetLocationId);
+            let updateSuccessful = false;
+            try {
+                // Call EntityManager to update the component data. addComponent handles spatial index.
+                updateSuccessful = this.#entityManager.addComponent(payload.entityId, POSITION_COMPONENT_ID, updatedPositionData);
 
-            // AC6: Prepare event payload for entity_moved
-            // Step 6a: Create the payload for the success event
+                if (!updateSuccessful) {
+                    // EntityManager.addComponent returns boolean and logs/throws on internal error
+                    // Log here for specific context if needed, but EntityManager should handle primary logging.
+                    console.error(`MovementSystem.executeMove: EntityManager.addComponent reported failure for '${POSITION_COMPONENT_ID}' on entity [${payload.entityId}].`);
+                    return false;
+                }
+            } catch (error) {
+                // Catch potential errors thrown by addComponent (e.g., validation)
+                console.error(`MovementSystem.executeMove: Error calling EntityManager.addComponent for '${POSITION_COMPONENT_ID}' on entity [${payload.entityId}]:`, error);
+                return false;
+            }
+
+            // Step 4: Remove direct EntityManager notification
+            // AC3: The direct call to entityManager.notifyPositionChange within MovementSystem is removed.
+            // REMOVED: this.#entityManager.notifyPositionChange(payload.entityId, payload.previousLocationId, payload.targetLocationId);
+            // This notification is now handled internally by EntityManager.addComponent when POSITION_COMPONENT_ID changes.
+
+            // Step 5: Dispatch success event via EventBus
+            // AC5 (Acceptance Criteria): Movement execution continues to function correctly, including triggering the "event:entity_moved" event on success.
             const movedEventPayload = {
                 entityId: payload.entityId,
-                newLocationId: payload.targetLocationId, // Use the target ID as the new location
-                oldLocationId: payload.previousLocationId, // Include where the entity came from
-                direction: payload.direction // Pass along the direction used
+                newLocationId: payload.targetLocationId,
+                oldLocationId: payload.previousLocationId,
+                direction: payload.direction
             };
-
-            // AC7: Dispatch "event:entity_moved" via EventBus
-            // Step 6b: Announce the successful move to the rest of the game
             this.#eventBus.dispatch("event:entity_moved", movedEventPayload);
 
-            // AC8: Verified no external validation logic added here.
-            // AC9: Inline comments added for steps 1-7.
-
-            // --- Implementation for TRG-7.3 End ---
-
-            // AC10: Success Return (Try Block)
-            // If all steps above completed without returning false or throwing, the move was successful.
+            // If all steps above completed successfully.
             return true;
 
         } catch (error) {
-            // AC7 (Ticket): Error Handling (Catch Block)
             // Log unexpected errors during the execution process
             console.error('MovementSystem: Unexpected error during executeMove:', {payload, error});
             return false; // Indicate failure due to unexpected error
@@ -137,5 +124,4 @@ class MovementSystem {
 
 } // End of MovementSystem class
 
-// AC8 (Ticket): Syntax Check - Ensure the file has no syntax errors. (Assumed OK based on structure)
 export default MovementSystem;

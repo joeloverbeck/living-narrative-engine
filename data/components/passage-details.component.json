@@ -12,11 +12,11 @@
     ],
     "properties": {
       "locationAId": {
-        "$ref": "common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique identifier of the first location connected by this passage."
       },
       "locationBId": {
-        "$ref": "common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique identifier of the second location connected by this passage."
       },
       "directionAtoB": {
@@ -28,7 +28,7 @@
         "description": "The command or label used to travel from location B to location A (e.g., 'south', 'exit doorway', 'climb down')."
       },
       "blockerEntityId": {
-        "$ref": "common.schema.json#/definitions/nullableNamespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
         "default": null,
         "description": "Optional identifier of an entity (like a door or barrier) that blocks this passage. Its state (e.g., locked, open) controls traversability."
       },

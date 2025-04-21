@@ -1,29 +1,21 @@
 {
   "id": "demo:enemy_goblin",
   "components": {
-    "Name": {
+    "component:name": {
       "value": "Goblin"
     },
-    "Description": {
+    "component:description": {
       "text": "A small, wiry goblin with beady eyes and sharp teeth. It looks agitated."
     },
-    "Position": {
+    "component:position": {
       "locationId": "demo:room_hallway"
     },
-    "Health": {
+    "component:health": {
       "current": 5,
       "max": 5
     },
-    "Attack": {
+    "component:attack": {
       "damage": 2
-    },
-    "Stats": {
-      "attributes": {
-        "core:attr_strength": 6,
-        "core:attr_agility": 12,
-        "core:attr_intelligence": 5,
-        "core:attr_constitution": 7
-      }
     }
   }
 }

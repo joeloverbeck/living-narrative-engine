@@ -6,7 +6,7 @@
     "type": "object",
     "properties": {
       "locationId": {
-        "$ref": "./common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location entity where the entity resides."
       },
       "x": {

@@ -2,12 +2,9 @@
 
 // --- Import Interfaces ---
 /** @typedef {import('./eventBus.js').default} EventBus */
-/** @typedef {import('./services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../types/eventPayloads.js').LocationDisplayPayload} LocationDisplayPayload */
-/** @typedef {import('../types/eventPayloads.js').InventoryRenderPayload} InventoryRenderPayload */
-/** @typedef {import('../types/eventPayloads.js').ItemUIData} ItemUIData */
-/** @typedef {import('../types/eventPayloads.js').UIUpdateActionsPayload} UIUpdateActionsPayload */
 
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.
@@ -298,22 +295,37 @@ class DomRenderer {
         this.#outputDiv.scrollTop = this.#outputDiv.scrollHeight;
     }
 
-    /** @param {LocationDisplayPayload} locationData */
+    /**
+     * Renders the location details based on the provided payload.
+     * NOTE (Ticket 4.4): This method receives pre-processed data in `locationData`.
+     * The system *generating* this payload (e.g., LookSystem, MovementSystem) needs to be refactored
+     * to use `entityManager.getComponentData('core:name')` and `entityManager.getComponentData('core:description')`
+     * (or the `getDisplayName`/`getDisplayDescription` helpers) to populate the `name`, `description`,
+     * `items[].name`, and `entities[].name` fields before dispatching the 'event:display_location' event.
+     * This renderer itself just displays the provided strings.
+     *
+     * @param {LocationDisplayPayload} locationData
+     */
     renderLocation(locationData) {
         let outputHtml = "";
+        // TICKET 4.4 NOTE: Uses locationData.name (assumed pre-fetched using core:name)
         outputHtml += `<h2 class="location__name">${locationData.name || 'Unnamed Location'}</h2>`;
+        // TICKET 4.4 NOTE: Uses locationData.description (assumed pre-fetched using core:description)
         outputHtml += `<p class="location__description">${locationData.description || 'You see nothing remarkable.'}</p>`;
 
         if (locationData.items && locationData.items.length > 0) {
-            const itemNames = locationData.items.map(item => item.name).join(', ');
+            // TICKET 4.4 NOTE: Uses item.name from payload (assumed pre-fetched using core:name)
+            const itemNames = locationData.items.map(item => item.name || 'unnamed item').join(', ');
             outputHtml += `<p class="location__items">Items here: ${itemNames}</p>`;
         }
         if (locationData.entities && locationData.entities.length > 0) {
-            const entityNames = locationData.entities.map(entity => entity.name).join(', ');
+            // TICKET 4.4 NOTE: Uses entity.name from payload (assumed pre-fetched using core:name)
+            const entityNames = locationData.entities.map(entity => entity.name || 'unnamed entity').join(', ');
             outputHtml += `<p class="location__entities">Others here: ${entityNames}</p>`;
         }
         if (locationData.exits && locationData.exits.length > 0) {
-            const exitDescriptions = locationData.exits.map(exit => exit.description).join('<br>  ');
+            // TICKET 4.4 NOTE: Uses exit.description from payload (likely pre-fetched using core:description or similar for connections)
+            const exitDescriptions = locationData.exits.map(exit => exit.description || 'an exit').join('<br>  ');
             outputHtml += `<p class="location__exits">Exits:<br>  ${exitDescriptions}</p>`;
         } else {
             outputHtml += `<p class="location__exits">Exits: None</p>`;
@@ -348,7 +360,16 @@ class DomRenderer {
         }
     }
 
-    /** @private @param {ItemUIData[]} itemsData */
+    /**
+     * Updates the inventory UI based on the provided item data payload.
+     * NOTE (Ticket 4.4): This method receives pre-processed data in `itemsData`.
+     * The system generating the `InventoryRenderPayload` (e.g., InventorySystem) needs to be refactored
+     * to use `entityManager.getComponentData('core:name')` (or `getDisplayName`)
+     * to populate the `name` field for each item in the payload before dispatching the 'event:render_inventory' event.
+     *
+     * @private
+     * @param {ItemUIData[]} itemsData - Array of item data for UI rendering.
+     */
     #updateInventoryUI(itemsData) {
         if (!this.#inventoryList) {
             this.#logger.error("DomRenderer: Cannot update inventory UI, list element is null.");
@@ -367,10 +388,12 @@ class DomRenderer {
                 li.classList.add('inventory-item');
                 li.dataset.itemId = item.id;
 
+                const itemName = item.name || '(Unnamed Item)'; // TICKET 4.4 NOTE: Uses name from payload
+
                 if (item.icon) {
                     const img = document.createElement('img');
                     img.src = item.icon;
-                    img.alt = item.name;
+                    img.alt = itemName; // Use fetched name
                     img.classList.add('inventory-item-icon');
                     li.appendChild(img);
                 } else {
@@ -382,13 +405,13 @@ class DomRenderer {
 
                 const nameSpan = document.createElement('span');
                 nameSpan.classList.add('inventory-item-name');
-                nameSpan.textContent = item.name || '(Unnamed Item)';
+                nameSpan.textContent = itemName; // Use fetched name
                 li.appendChild(nameSpan);
 
                 const dropButton = document.createElement('button');
                 dropButton.textContent = 'Drop';
                 dropButton.classList.add('inventory-item-drop-button');
-                dropButton.dataset.itemName = item.name || '(Unnamed Item)';
+                dropButton.dataset.itemName = itemName; // Use fetched name for command context
 
                 // --- EVENT-MIGR-018: Refactor click listener for validation ---
                 dropButton.addEventListener('click', async (event) => { // Make listener async
@@ -400,7 +423,7 @@ class DomRenderer {
                         return;
                     }
                     const itemIdToDrop = parentLi.dataset.itemId;
-                    const itemNameToDrop = clickedButton.dataset.itemName;
+                    const itemNameToDrop = clickedButton.dataset.itemName; // Gets name from dataset (which came from payload)
                     if (!itemIdToDrop || !itemNameToDrop) {
                         this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.');
                         return;
@@ -432,7 +455,7 @@ class DomRenderer {
                         currentSelected.classList.remove('selected');
                     }
                     li.classList.add('selected');
-                    this.#logger.debug(`Selected item: ${item.name} (ID: ${item.id})`);
+                    this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`); // Use fetched name
                 });
 
                 this.#inventoryList.appendChild(li);

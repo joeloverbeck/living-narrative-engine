@@ -4,36 +4,8 @@
   "dataSchema": {
     "type": "object",
     "required": [
-      "tags"
     ],
     "properties": {
-      "tags": {
-        "type": "array",
-        "description": "Keywords identifying the item's type, material, or purpose (e.g., 'key', 'potion', 'weapon', 'metal', 'quest_item'). Used for filtering and identification.",
-        "items": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "minItems": 1,
-        "uniqueItems": true
-      },
-      "stackable": {
-        "type": "boolean",
-        "description": "Whether multiple instances stack in inventory.",
-        "default": false
-      },
-      "value": {
-        "type": "integer",
-        "description": "Optional base monetary or point value.",
-        "minimum": 0,
-        "default": 0
-      },
-      "weight": {
-        "type": "number",
-        "description": "Optional weight value, affecting inventory capacity.",
-        "minimum": 0,
-        "default": 0
-      }
     },
     "additionalProperties": false
   }

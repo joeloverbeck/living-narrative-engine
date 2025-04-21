@@ -14,30 +14,8 @@
     "component:inventory": {
       "items": []
     },
-    "component:stats": {
-      "attributes": {
-        "core:attr_strength": 8,
-        "core:attr_agility": 10,
-        "core:attr_intelligence": 10,
-        "core:attr_constitution": 9
-      }
-    },
     "component:attack": {
       "damage": 3
-    },
-    "component:equipment": {
-      "slots": {
-        "core:slot_head": null,
-        "core:slot_body": null,
-        "core:slot_legs": null,
-        "core:slot_feet": null,
-        "core:slot_main_hand": null,
-        "core:slot_off_hand": null,
-        "core:slot_ranged": null,
-        "core:slot_amulet": null,
-        "core:slot_ring1": null,
-        "core:slot_ring2": null
-      }
     },
     "component:quest_log": {
       "active_quests": [],

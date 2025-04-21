@@ -19,70 +19,10 @@
  */
 
 /**
- * @typedef {object} NameComponentData
- * @description Data structure for NameComponent.
- * @property {string} value - The primary display name or title of the entity.
- */
-
-/**
- * @typedef {object} DescriptionComponentData
- * @description Data structure for DescriptionComponent.
- * @property {string} text - A static description text for the entity.
- */
-
-/**
- * @typedef {object} MetaDescriptionComponentData
- * @description Data structure for MetaDescriptionComponent.
- * @property {string[]} keywords - List of keywords for LLM description generation.
- * @property {string} [style_hint] - Optional hint for LLM writing style.
- */
-
-/**
- * @typedef {object} PositionComponentData
- * @description Data structure for PositionComponent.
- * @property {NamespacedId} locationId - The ID of the location entity where the entity resides.
- * @property {number} [x=0] - Optional x-coordinate within the location.
- * @property {number} [y=0] - Optional y-coordinate within the location.
- */
-
-/**
- * @typedef {object} HealthComponentData
- * @description Data structure for HealthComponent.
- * @property {number} current - Current HP (integer). Cannot exceed max. Minimum 0.
- * @property {number} max - Maximum HP (integer). Minimum 1.
- */
-
-/**
- * @typedef {object} InventoryComponentData
- * @description Data structure for InventoryComponent.
- * @property {NamespacedId[]} [items=[]] - Array of item entity IDs currently in inventory.
- */
-
-/**
  * @typedef {object} AttackComponentData
  * @description Data structure for AttackComponent.
  * @property {number} damage - Base damage (integer). Minimum 0.
  * @property {string} [attack_verb="attacks"] - Optional verb used in combat messages.
- */
-
-/**
- * @typedef {{[skillId: NamespacedId]: number}} SkillsMap
- */
-
-/**
- * @typedef {object} SkillComponentData
- * @description Data structure for SkillComponent.
- * @property {SkillsMap} skills - Map of skill IDs to their integer value.
- */
-
-/**
- * @typedef {{[attributeId: NamespacedId]: number}} AttributesMap
- */
-
-/**
- * @typedef {object} StatsComponentData
- * @description Data structure for StatsComponent.
- * @property {AttributesMap} attributes - Map of attribute IDs to their integer value.
  */
 
 /**

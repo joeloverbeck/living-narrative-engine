@@ -83,6 +83,24 @@
       "demo_door_exit_north.blocker.json",
       "demo_door_treasure_room.blocker.json"
     ],
+    "components": [
+      "breakable.component.json",
+      "container.component.json",
+      "description.component.json",
+      "edible.component.json",
+      "health.component.json",
+      "inventory.component.json",
+      "item.component.json",
+      "lockable.component.json",
+      "name.component.json",
+      "openable.component.json",
+      "passage-details.component.json",
+      "position.component.json",
+      "pushable.component.json",
+      "liquid-container.component.json",
+      "attack.component.json",
+      "quest-log.component.json"
+    ],
     "objectives": [
       "story_a_obj_defeat_boss.objective.json",
       "demo_obj_unlock_exit_door.objective.json"

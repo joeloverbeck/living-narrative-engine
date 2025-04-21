@@ -1,0 +1,19 @@
+{
+  "id": "component:attack",
+  "description": "Defines the entity's base attack capability.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Defines the entity's base attack capability.",
+    "properties": {
+      "damage": {
+        "type": "integer",
+        "description": "Base damage or attack strength value.",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "damage"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -14,7 +14,7 @@
         "type": "array",
         "description": "A list of the namespaced IDs of the item entities currently inside this container.",
         "items": {
-          "$ref": "common.schema.json#/definitions/namespacedId"
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
         },
         "default": []
       },

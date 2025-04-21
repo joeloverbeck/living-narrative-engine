@@ -1,8 +1,7 @@
 // src/systems/worldPresenceSystem.js
 
-import {PositionComponent} from '../components/positionComponent.js';
 import {getDisplayName} from "../utils/messages.js";
-
+import {POSITION_COMPONENT_ID} from "../types/components.js"; // Added import for component ID
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
@@ -11,7 +10,7 @@ import {getDisplayName} from "../utils/messages.js";
 
 /**
  * Handles world-state interactions resulting from events, such as removing items
- * from their location when picked up.
+ * from their location when picked up or adding them when dropped.
  */
 class WorldPresenceSystem {
     #eventBus;
@@ -42,44 +41,33 @@ class WorldPresenceSystem {
     initialize() {
         this.#eventBus.subscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this));
         this.#eventBus.subscribe("event:item_drop_attempted", this.#handleItemDropAttempted.bind(this));
-        console.log("WorldPresenceSystem: Initialized and subscribed to '" + "event:item_picked_up" + "'.");
-
         this.#eventBus.subscribe("event:spawn_entity_requested", this._handleSpawnEntityRequested.bind(this));
         console.log("WorldPresenceSystem: Initialized and subscribed to item pickup/drop and entity spawn events.");
     }
 
     /**
      * Handles the "event:item_picked_up" event.
-     * Updates the item's PositionComponent to remove it from its world location
-     * and notifies the EntityManager to update the spatial index.
+     * Updates the item's 'core:position' component data via the EntityManager
+     * to remove it from its world location.
      *
      * @private
-     * @param {ItemPickedUpEventPayload} eventData - Data from the event.
      */
     #handleItemPickedUp(eventData) {
-        // Task 3: Implement the handler function
-        const {pickerId, itemId, locationId} = eventData; // locationId from event might be useful for validation
+        const {pickerId, itemId, locationId} = eventData; // locationId from event for validation
 
         console.log(`WorldPresenceSystem: Handling ${"event:item_picked_up"} for item ${itemId} picked by ${pickerId} from reported location ${locationId}`);
 
-        // Get the item entity
-        const itemEntity = this.#entityManager.getEntityInstance(itemId);
-        if (!itemEntity) {
-            // Handle cases where the entity might not be found (e.g., race condition, already removed?)
-            console.error(`WorldPresenceSystem: Cannot find item entity instance with ID: ${itemId}. Cannot update world position.`);
-            return; // Stop processing
-        }
+        // Get the current position component data using EntityManager
+        const positionData = this.#entityManager.getComponentData(itemId, POSITION_COMPONENT_ID);
 
-        // Get the PositionComponent
-        const positionComp = itemEntity.getComponent(PositionComponent);
-        if (!positionComp) {
+        if (!positionData) {
             // Handle cases where the item surprisingly has no position (shouldn't happen for a world item being picked up)
-            console.warn(`WorldPresenceSystem: Picked-up item entity ${itemId} does not have a PositionComponent. Cannot update world position.`);
+            console.warn(`WorldPresenceSystem: Picked-up item ${itemId} does not have '${POSITION_COMPONENT_ID}' component data. Cannot update world position.`);
             return; // Stop processing
         }
 
         // Store its current locationId before changing it
-        const oldLocationId = positionComp.locationId;
+        const oldLocationId = positionData.locationId;
 
         // Optional Validation: Check if the component's location matches the event's reported location
         if (oldLocationId !== locationId) {
@@ -88,141 +76,143 @@ class WorldPresenceSystem {
         }
 
         // If the item is somehow already not in a location, log and potentially stop.
-        if (oldLocationId === null) {
-            console.warn(`WorldPresenceSystem: Item ${itemId} already has a null locationId when handling pickup. Assuming it's already removed from world state.`);
+        if (oldLocationId === null || oldLocationId === undefined) {
+            console.warn(`WorldPresenceSystem: Item ${itemId} already has a null/undefined locationId when handling pickup. Assuming it's already removed from world state.`);
             return; // Nothing to update in the world state.
         }
 
-        try {
-            // Set the PositionComponent's locationId to null
-            // Resetting coordinates is good practice, though less critical when locationId is null.
-            positionComp.setLocation(null, 0, 0);
-            console.log(`WorldPresenceSystem: Set PositionComponent locationId to null for item ${itemId}.`);
+        // Prepare the updated component data
+        const updatedPositionData = {...positionData}; // Shallow copy
+        updatedPositionData.locationId = null;
+        updatedPositionData.x = 0; // Explicitly reset coordinates
+        updatedPositionData.y = 0;
 
-            // Notify the EntityManager about the change for spatial index update
-            this.#entityManager.notifyPositionChange(itemId, oldLocationId, null);
-            console.log(`WorldPresenceSystem: Successfully processed world state update for picked-up item ${itemId}. Notified EntityManager.`);
+        try {
+            // Use EntityManager to add/update the component data.
+            // EntityManager's addComponent handles spatial index updates internally.
+            const added = this.#entityManager.addComponent(itemId, POSITION_COMPONENT_ID, updatedPositionData);
+            if (!added) {
+                // This case should ideally be covered by the catch block if addComponent throws
+                // but adding a check for robustness in case addComponent returns false without throwing.
+                console.error(`WorldPresenceSystem: Failed to update '${POSITION_COMPONENT_ID}' via EntityManager for item pickup [${itemId}]. addComponent returned false.`);
+                return; // Stop processing
+            }
+            console.log(`WorldPresenceSystem: Updated '${POSITION_COMPONENT_ID}' component data via EntityManager to remove item ${itemId} from world.`);
+            // REMOVED: this.#entityManager.notifyPositionChange(itemId, oldLocationId, null);
+
+            console.log(`WorldPresenceSystem: Successfully processed world state update for picked-up item ${itemId}. EntityManager handled spatial index.`);
 
         } catch (error) {
-            console.error(`WorldPresenceSystem: Error updating position or notifying EntityManager for item ${itemId}:`, error);
-            // Attempt to revert? Difficult state to manage. Logged error is main recourse.
-            // Maybe try to restore old location? positionComp.setLocation(oldLocationId, oldX, oldY); // Requires storing old coords too
+            // Catch errors from addComponent (e.g., validation failure, entity not found)
+            console.error(`WorldPresenceSystem: Error updating '${POSITION_COMPONENT_ID}' via EntityManager for item pickup [${itemId}]:`, error);
+            // Reverting is complex; focus on logging. The EntityManager might have already partially updated state.
         }
     }
 
     /**
      * Handles the "event:item_drop_attempted" event.
-     * Updates the item's PositionComponent to place it into the specified world location
-     * and notifies the EntityManager to update the spatial index. Dispatches UI feedback.
+     * Updates the item's 'core:position' component data via the EntityManager
+     * to place it into the specified world location. Dispatches UI feedback.
      *
      * @private
-     * @param {ItemDropAttemptedEventPayload} eventData - Data from the event.
      */
     #handleItemDropAttempted(eventData) {
         const {playerId, itemInstanceId, locationId: newLocationId} = eventData;
-        const itemId = itemInstanceId; // Alias for clarity within this handler
+        const itemId = itemInstanceId; // Alias for clarity
 
         console.log(`WorldPresenceSystem: Handling ${"event:item_drop_attempted"} for item ${itemId} dropped by player ${playerId} into location ${newLocationId}`);
 
-        // 1. Get the item entity
+        // No need to get itemEntity instance if we operate solely via EntityManager methods and item ID
+        // However, we still need it for the display name. If getDisplayName needs the entity, keep it.
         const itemEntity = this.#entityManager.getEntityInstance(itemId);
         if (!itemEntity) {
-            // Handle cases where the entity might not be found (should not happen if action handler validated)
-            console.error(`WorldPresenceSystem: Cannot find item entity instance with ID: ${itemId}. Cannot process drop.`);
-            // Consider dispatching an internal error message?
-            // this.#eventBus.dispatch("event:display_message", { text: "Internal error: Dropped item disappeared.", type: 'error' });
-            return; // Stop processing
+            console.error(`WorldPresenceSystem: Cannot find item entity instance with ID: ${itemId} required for display name. Cannot process drop fully.`);
+            this.#eventBus.dispatch("event:display_message", {
+                text: "Internal error: Cannot identify dropped item.",
+                type: 'error'
+            });
+            return;
         }
 
-        // 2. Get or add a PositionComponent
-        let positionComp = itemEntity.getComponent(PositionComponent);
-        let oldLocationId = null; // Assume coming from inventory initially
+        // Check current position data using EntityManager
+        const currentPositionData = this.#entityManager.getComponentData(itemId, POSITION_COMPONENT_ID);
+        const oldLocationId = currentPositionData?.locationId ?? null; // Store old location, default to null if no component/locationId
 
-        if (positionComp) {
-            // Item already has a position component (perhaps it was already on the ground?)
-            // Store its current location *before* changing it.
-            oldLocationId = positionComp.locationId;
-            console.log(`WorldPresenceSystem: Item ${itemId} already has PositionComponent. Old location: ${oldLocationId}`);
+        if (currentPositionData) {
+            console.log(`WorldPresenceSystem: Item ${itemId} has existing '${POSITION_COMPONENT_ID}' data. Old location: ${oldLocationId}`);
         } else {
-            // Item lacks a position component (likely coming from inventory)
-            console.log(`WorldPresenceSystem: Item ${itemId} lacks PositionComponent. Adding new one.`);
-            try {
-                positionComp = new PositionComponent({locationId: null, x: 0, y: 0}); // Start with null location
-                itemEntity.addComponent(positionComp);
-                console.log(`WorldPresenceSystem: Added PositionComponent to item ${itemId}.`);
-                // oldLocationId remains null, which is correct for coming from inventory.
-            } catch (error) {
-                console.error(`WorldPresenceSystem: Failed to create or add PositionComponent for item ${itemId}:`, error);
-                // Dispatch error?
-                this.#eventBus.dispatch("event:display_message", {text: "Internal error placing item.", type: 'error'});
-                return; // Cannot proceed without a position component
-            }
+            console.log(`WorldPresenceSystem: Item ${itemId} lacks '${POSITION_COMPONENT_ID}' data. Will be added.`);
+            // oldLocationId is correctly null here
         }
+        // REMOVED: Logic for creating new PositionComponent and adding via entity.addComponent
 
-        // 3. Set the new location and coordinates
+        // Prepare the new position data object
+        const newPositionData = {
+            locationId: newLocationId,
+            x: 0, // Default coordinates, could be enhanced
+            y: 0
+        };
+
         try {
-            // Use default coordinates (0,0) for now. Could enhance later to use player coords.
-            positionComp.setLocation(newLocationId, 0, 0);
-            console.log(`WorldPresenceSystem: Set PositionComponent locationId to ${newLocationId} for dropped item ${itemId}.`);
+            // Use EntityManager to add/update the component data.
+            // EntityManager's addComponent handles spatial index updates internally.
+            const added = this.#entityManager.addComponent(itemId, POSITION_COMPONENT_ID, newPositionData);
+            if (!added) {
+                // Handle case where addComponent might return false without throwing
+                console.error(`WorldPresenceSystem: Failed to add/update '${POSITION_COMPONENT_ID}' via EntityManager for item drop [${itemId}]. addComponent returned false.`);
+                this.#eventBus.dispatch("event:display_message", {text: "Internal error placing item.", type: 'error'});
+                return; // Stop processing
+            }
+            console.log(`WorldPresenceSystem: Set '${POSITION_COMPONENT_ID}' component data via EntityManager for dropped item ${itemId} to location ${newLocationId}.`);
+            // REMOVED: this.#entityManager.notifyPositionChange(itemId, oldLocationId, newLocationId);
 
-            // 4. Notify the EntityManager about the change for spatial index update
-            this.#entityManager.notifyPositionChange(itemId, oldLocationId, newLocationId);
-            console.log(`WorldPresenceSystem: Notified EntityManager of position change for item ${itemId} (from ${oldLocationId} to ${newLocationId}).`);
-
-            // 5. Dispatch the final UI success message
+            // Dispatch success messages and events
             const itemName = getDisplayName(itemEntity); // Get item name for message
             const successMessage = `You drop the ${itemName}.`;
-            this.#eventBus.dispatch("event:display_message", {text: successMessage, type: 'info'}); // Or 'action_feedback' type?
+            this.#eventBus.dispatch("event:display_message", {text: successMessage, type: 'info'});
 
-            // 6. (Optional) Dispatch a follow-up event
             this.#eventBus.dispatch("event:item_dropped", {
                 playerId: playerId,
                 itemId: itemId,
                 locationId: newLocationId
             });
 
-            console.log(`WorldPresenceSystem: Successfully processed drop for item ${itemId}.`);
+            console.log(`WorldPresenceSystem: Successfully processed drop for item ${itemId}. EntityManager handled spatial index.`);
 
         } catch (error) {
-            console.error(`WorldPresenceSystem: Error updating position, notifying EntityManager, or dispatching events for dropped item ${itemId}:`, error);
-            // Attempt to revert? Very tricky. Log and maybe send UI error.
+            // Catch errors from addComponent (validation, entity not found, etc.)
+            console.error(`WorldPresenceSystem: Error adding/updating '${POSITION_COMPONENT_ID}' via EntityManager for item drop [${itemId}]:`, error);
             this.#eventBus.dispatch("event:display_message", {
-                text: `Error dropping item: ${error.message}`,
+                text: `Error dropping item: ${error.message || 'Internal error.'}`, // Provide a fallback message
                 type: 'error'
             });
-
-            // Attempt to revert the position component state if possible?
-            // Only revert if we know the old state and the setLocation succeeded but notify/dispatch failed.
-            if (positionComp && positionComp.locationId === newLocationId) { // Check if setLocation was the successful part
-                try {
-                    console.warn(`WorldPresenceSystem: Attempting to revert PositionComponent for ${itemId} back to ${oldLocationId}`);
-                    positionComp.setLocation(oldLocationId, 0, 0); // Revert coords too? Needs more state tracking.
-                    // Also need to revert the spatial index change if notifyPositionChange was called but failed *after* index update
-                    // This highlights the need for transactional updates or robust error handling/recovery.
-                } catch (revertError) {
-                    console.error(`WorldPresenceSystem: Failed to revert position component state for ${itemId}:`, revertError);
-                }
-            }
+            // Reverting is complex here. The EntityManager might be in an inconsistent state.
+            // Logged error is the main recourse.
         }
     }
 
     /**
      * Stub handler for spawning entity requests.
      * @private
-     * @param {SpawnEntityRequestedEventPayload} payload
      */
     _handleSpawnEntityRequested(payload) {
         console.log(`[WorldPresenceSystem] Stub Handler: Received event '${"event:spawn_entity_requested"}' with payload:`, payload);
         // Phase 1: Implement actual entity spawning logic here.
         // This will likely involve using EntityManager.createEntityInstanceFromDefinition,
-        // setting its PositionComponent based on the payload, and potentially adding to spatial index.
+        // setting its PositionComponent data via addComponent if needed based on payload,
+        // and EntityManager will handle adding to spatial index.
     }
 
 
     // Optional: Add a method to unsubscribe if needed during engine shutdown/restart
     shutdown() {
-        this.#eventBus.unsubscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this)); // Ensure correct binding if using bind in subscribe
-        this.#eventBus.unsubscribe("event:item_drop_attempted", this.#handleItemDropAttempted);
+        // Ensure correct binding if using bind in subscribe
+        // Note: If initialize uses .bind(this), shutdown likely doesn't need it if passing the bound function reference
+        // However, double-check EventBus implementation details. If storing the raw function, bind here too.
+        // For simplicity, assuming bind was used in subscribe and is needed here too:
+        this.#eventBus.unsubscribe("event:item_picked_up", this.#handleItemPickedUp.bind(this));
+        this.#eventBus.unsubscribe("event:item_drop_attempted", this.#handleItemDropAttempted.bind(this));
+        this.#eventBus.unsubscribe("event:spawn_entity_requested", this._handleSpawnEntityRequested.bind(this));
         console.log("WorldPresenceSystem: Unsubscribed from events.");
     }
 }

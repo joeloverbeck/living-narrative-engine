@@ -6,21 +6,9 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../core/appContainer.js').default} AppContainer */ // Optional, if needed elsewhere
 
-// --- Component Imports ---
-import OpenableComponent from '../components/openableComponent.js';
-import LockableComponent from '../components/lockableComponent.js';
-import BreakableComponent from '../components/breakableComponent.js';
-
 // --- Utility Imports ---
-import {getDisplayName} from '../utils/messages.js'; // Adjust path if necessary
-
-/**
- * @typedef {object} BlockerCheckPayload
- * @property {string} entityId - The ID of the entity attempting the action.
- * @property {string} previousLocationId - The current location ID of the acting entity.
- * @property {string} direction - The direction of intended movement or interaction.
- * @property {string} [blockerEntityId] - Optional ID of the entity potentially blocking the path/interaction.
- */
+import {getDisplayName} from '../utils/messages.js';
+import {LOCKABLE_COMPONENT_ID, OPENABLE_COMPONENT_ID} from "../types/components.js"; // Adjust path if necessary
 
 /**
  * @typedef {object} BlockerCheckResult
@@ -69,16 +57,15 @@ class BlockerSystem {
     /**
      * Synchronously checks if a potential blocker entity prevents movement or interaction.
      * This method examines the state of Openable, Lockable, and Breakable components
-     * on the specified blocker entity.
+     * on the specified blocker entity using ID-based component data access.
      * It does NOT dispatch any events; it returns the result directly to the caller.
      *
-     * @param {BlockerCheckPayload} payload - The details of the movement/interaction attempt.
      * @returns {BlockerCheckResult} An object detailing whether the path is blocked and why.
      */
     checkMovementBlock(payload) {
         const {blockerEntityId, entityId, previousLocationId, direction} = payload;
 
-        // --- AC 6: Check for Blocker ID ---
+        // --- Check for Blocker ID ---
         if (!blockerEntityId) {
             // If no specific blocker is identified for this direction/action,
             // this system has nothing to check. Return non-blocking.
@@ -91,10 +78,10 @@ class BlockerSystem {
             };
         }
 
-        // --- AC 6: Fetch Blocker Entity ---
+        // --- Fetch Blocker Entity Instance (still needed for display name) ---
         const blockerEntity = this.#entityManager.getEntityInstance(blockerEntityId);
 
-        // --- AC 6 / AC 7: Handle Missing Blocker Entity ---
+        // --- Handle Missing Blocker Entity ---
         if (!blockerEntity) {
             // A blocker ID was provided, but the entity doesn't exist. Treat as blocked.
             console.warn(`BlockerSystem: Blocker entity ID "${blockerEntityId}" specified for check by actor ${entityId}, but entity instance not found.`);
@@ -107,67 +94,51 @@ class BlockerSystem {
             };
         }
 
-        // --- AC 6 / AC 7: Evaluate Blocker State ---
+        // --- Evaluate Blocker State using Component Data ---
         const blockerDisplayName = getDisplayName(blockerEntity); // Get name early for messages
         let isBlocked = false;
         let isLockedReason = false;
         let blockReasonDetail = ""; // Build up the specific reason detail
 
-        // Check OpenableComponent
-        const openable = blockerEntity.getComponent(OpenableComponent);
-        if (openable && openable.isOpen === false) {
+        // --- Check Openable Component Data ---
+        // Replace const openable = blockerEntity.getComponent(OpenableComponent);
+        const openableData = this.#entityManager.getComponentData(blockerEntityId, OPENABLE_COMPONENT_ID); // Use ID
+        if (openableData && openableData.isOpen === false) {
             isBlocked = true;
             blockReasonDetail = `The ${blockerDisplayName} (${blockerEntityId}) is closed.`;
         }
 
-        // Check LockableComponent (takes precedence for reason code if blocking)
-        const lockable = blockerEntity.getComponent(LockableComponent);
-        if (lockable && lockable.isLocked === true) {
+        // --- Check Lockable Component Data (takes precedence for reason code if blocking) ---
+        // Replace const lockable = blockerEntity.getComponent(LockableComponent);
+        const lockableData = this.#entityManager.getComponentData(blockerEntityId, LOCKABLE_COMPONENT_ID); // Use ID
+        if (lockableData && lockableData.isLocked === true) {
             isBlocked = true;
             isLockedReason = true; // Mark as locked
             blockReasonDetail = `The ${blockerDisplayName} (${blockerEntityId}) is locked.`; // Locked message overrides closed
         }
 
-        // Check BreakableComponent (blocks if NOT broken)
-        const breakable = blockerEntity.getComponent(BreakableComponent);
-        if (breakable && breakable.isBroken === false) {
-            // Only set block state if not already blocked by open/lock state,
-            // but ensure the detail reflects the state if relevant.
-            // However, a non-broken but open/unlocked entity might still be considered 'blocking' structurally.
-            // Let's assume if it's not broken, it *could* block if closed/locked. If it's already blocked, don't overwrite the reason.
-            if (!isBlocked) {
-                isBlocked = true; // It's intact, so it *can* block (even if currently open/unlocked). This interpretation might need refinement based on game rules.
-                // If we only want to block if *specifically* closed/locked/intact-and-supposed-to-block, the logic might differ.
-                // For now, let's assume intact means it potentially blocks. Refine if needed.
-                // If it was already blocked (closed/locked), keep that detail. If not, use a generic intact detail.
-                blockReasonDetail = blockReasonDetail || `The ${blockerDisplayName} (${blockerEntityId}) is intact.`;
-            }
-        }
-
-
-        // --- AC 7: Return Result ---
+        // --- Return Result ---
         if (isBlocked) {
             const reasonCode = isLockedReason ? 'DIRECTION_LOCKED' : 'DIRECTION_BLOCKED';
-            // console.debug(`BlockerSystem Check: Blocked. Actor: ${entityId}, Blocker: ${blockerDisplayName} (${blockerEntityId}), Reason: ${reasonCode}`);
             return {
                 blocked: true,
                 reasonCode: reasonCode,
                 blockerDisplayName: blockerDisplayName,
-                blockerEntityId: blockerEntity.id,
+                blockerEntityId: blockerEntity.id, // Use ID from the entity instance
                 details: blockReasonDetail // Use the constructed detail message
             };
         } else {
             // The blocker entity was found, but its state allows passage.
-            // console.debug(`BlockerSystem Check: Allowed. Actor: ${entityId}, Blocker: ${blockerDisplayName} (${blockerEntityId}) state allows passage.`);
             return {
                 blocked: false,
                 reasonCode: null,
                 blockerDisplayName: blockerDisplayName,
-                blockerEntityId: blockerEntity.id,
+                blockerEntityId: blockerEntity.id, // Use ID from the entity instance
                 details: `The ${blockerDisplayName} (${blockerEntity.id}) allows passage.`
             };
         }
     }
+
     // Add other methods as needed for different blocking scenarios (e.g., interaction attempts in future tickets)
 }
 

@@ -10,7 +10,7 @@
         "default": true
       },
       "keyId": {
-        "$ref": "common.schema.json#/definitions/nullableNamespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
         "description": "Optional. The namespaced ID of the specific key item required to unlock this entity.",
         "default": null
       }

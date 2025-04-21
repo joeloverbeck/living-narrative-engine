@@ -18,35 +18,6 @@
       "stackable": false,
       "value": 5,
       "weight": 0.1
-    },
-    "Usable": {
-      "target_required": true,
-      "usability_conditions": [],
-      "target_conditions": [
-        {
-          "condition_type": "target_has_property",
-          "property_path": "id",
-          "expected_value": "demo:door_exit_north",
-          "failure_message": "This key doesn't seem to fit this lock."
-        },
-        {
-          "condition_type": "target_has_property",
-          "property_path": "Lockable.isLocked",
-          "expected_value": true,
-          "failure_message": "The door is already unlocked."
-        }
-      ],
-      "effects": [
-        {
-          "type": "trigger_event",
-          "parameters": {
-            "eventName": "event:unlock_entity_attempt",
-            "payload": {}
-          }
-        }
-      ],
-      "consume_on_use": false,
-      "failure_message_default": "You can't use the key like that."
     }
   }
 }

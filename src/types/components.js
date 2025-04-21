@@ -1,6 +1,8 @@
 // src/types/components.js
 
+export const DEFINITION_REF_COMPONENT_ID = 'component:definition-ref';
 export const NAME_COMPONENT_TYPE_ID = 'component:name';
+export const DESCRIPTION_COMPONENT_ID = 'component:description';
 export const ITEM_COMPONENT_ID = 'component:item';
 export const POSITION_COMPONENT_ID = "component:position"; // Define constant for clarity
 export const CONNECTIONS_COMPONENT_TYPE_ID = 'component:connections';
@@ -13,3 +15,4 @@ export const EQUIPPABLE_COMPONENT_ID = 'component:equippable';
 export const HEALTH_COMPONENT_ID = 'component:health';
 export const QUEST_LOG_COMPONENT_ID = 'component:quest-log'
 export const STATS_COMPONENT_ID = 'component:stats';
+export const CONTAINER_COMPONENT_ID = 'component:container';
