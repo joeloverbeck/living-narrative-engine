@@ -11,96 +11,16 @@
     },
     "components": {
       "type": "object",
-      "description": "Object containing the components that make up this entity. Each key is a component type name (string) and its value is the component data object.",
-      "properties": {
-        "DefinitionRef": {
-          "$ref": "./common.schema.json#/definitions/DefinitionRefComponent",
-          "description": "(Optional) Holds a reference ID to a definition (e.g., linking an item instance entity to its item definition). Definition imported from common schema."
-        },
-        "Name": {
-          "$ref": "./common.schema.json#/definitions/NameComponent",
-          "description": "(Recommended) The display name of the entity. Definition imported from common schema."
-        },
-        "Description": {
-          "$ref": "./common.schema.json#/definitions/DescriptionComponent",
-          "description": "(Optional) Static text description of the entity. Definition imported from common schema."
-        },
-        "MetaDescription": {
-          "$ref": "./common.schema.json#/definitions/MetaDescriptionComponent",
-          "description": "(Optional) Data used for LLM-generated descriptions. Definition imported from common schema."
-        },
-        "Position": {
-          "$ref": "./common.schema.json#/definitions/PositionComponent",
-          "description": "(Optional) Component for entities whose location is relevant. Definition imported from common schema."
-        },
-        "Health": {
-          "$ref": "./common.schema.json#/definitions/HealthComponent",
-          "description": "(Optional) Component for entities that have health points. Definition imported from common schema."
-        },
-        "Inventory": {
-          "$ref": "./common.schema.json#/definitions/InventoryComponent",
-          "description": "(Optional) Component for entities that can carry items. Definition imported from common schema."
-        },
-        "Attack": {
-          "$ref": "./common.schema.json#/definitions/AttackComponent",
-          "description": "(Optional) Component for entities that can perform basic attacks. Definition imported from common schema."
-        },
-        "Skills": {
-          "$ref": "./common.schema.json#/definitions/SkillComponent",
-          "description": "(Optional) Component tracking entity skill levels. Definition imported from common schema."
-        },
-        "Stats": {
-          "$ref": "./common.schema.json#/definitions/StatsComponent",
-          "description": "(Optional) Component tracking entity core attributes (Strength, Agility etc.). Definition imported from common schema."
-        },
-        "EntitiesPresent": {
-          "$ref": "./common.schema.json#/definitions/EntitiesPresentComponent",
-          "description": "(Optional, usually for locations/containers) Lists IDs of entities within. Definition imported from common schema."
-        },
-        "Connections": {
-          "$ref": "./common.schema.json#/definitions/ConnectionsComponent",
-          "description": "(Optional, primarily for locations) Defines simple exits to other locations. See location.schema.json for a more detailed structure used by locations. Definition imported from common schema."
-        },
-        "Equipment": {
-          "$ref": "./common.schema.json#/definitions/EquipmentComponent",
-          "description": "(Optional) Component for entities that can equip items. Definition imported from common schema."
-        },
-        "QuestLog": {
-          "$ref": "./common.schema.json#/definitions/QuestLogComponent",
-          "description": "(Optional) Allows the entity (typically player) to track quest status and objectives. Definition imported from common schema."
-        },
-        "Openable": {
-          "$ref": "./common.schema.json#/definitions/OpenableComponent",
-          "description": "(Optional) Component for entities that can be opened/closed. Definition imported from common schema."
-        },
-        "Lockable": {
-          "$ref": "./common.schema.json#/definitions/LockableComponent",
-          "description": "(Optional) Component for entities that can be locked/unlocked. Definition imported from common schema."
-        },
-        "Container": {
-          "$ref": "./common.schema.json#/definitions/ContainerComponent",
-          "description": "(Optional) Component for entities that can hold items. Definition imported from common schema."
-        },
-        "Edible": {
-          "$ref": "./common.schema.json#/definitions/EdibleComponent",
-          "description": "(Optional) Marker component indicating an entity can be eaten. Definition imported from common schema."
-        },
-        "LiquidContainer": {
-          "$ref": "./common.schema.json#/definitions/LiquidContainerComponent",
-          "description": "(Optional) Component for entities that can contain liquids. Definition imported from common schema."
-        },
-        "Pushable": {
-          "$ref": "./common.schema.json#/definitions/PushableComponent",
-          "description": "(Optional) Component for entities that can be pushed. Definition imported from common schema."
-        },
-        "Breakable": {
-          "$ref": "./common.schema.json#/definitions/BreakableComponent",
-          "description": "(Optional) Component for entities that can be damaged and potentially destroyed. Definition imported from common schema."
-        }
-      },
+      "description": "Object map containing the components that define this entity. Keys MUST be component type namespaced IDs (e.g., 'core:name') conforming to the 'namespacedId' format. Values MUST be objects containing the specific data for that component type. The structure of each value object is validated at runtime against the schema associated with its corresponding key (component ID).",
       "minProperties": 1,
-      "additionalProperties": true,
-      "$comment": "Allowing additional properties enables custom components defined by mods or specific game logic."
+      "propertyNames": {
+        "$ref": "./common.schema.json#/definitions/namespacedId",
+        "description": "Component keys must be valid namespaced IDs referencing the component type."
+      },
+      "additionalProperties": {
+        "type": "object",
+        "description": "Component data. The structure is validated at runtime against the schema for the component type ID used as the key."
+      }
     }
   },
   "required": [
