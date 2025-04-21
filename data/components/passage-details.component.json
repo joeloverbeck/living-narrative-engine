@@ -1,0 +1,78 @@
+{
+  "id": "component:passage-details",
+  "description": "Core component defining the details of a bi-directional passage (connection) between two locations.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Defines the structure for the data payload of the PassageDetails component.",
+    "required": [
+      "locationAId",
+      "locationBId",
+      "directionAtoB",
+      "directionBtoA"
+    ],
+    "properties": {
+      "locationAId": {
+        "$ref": "common.schema.json#/definitions/namespacedId",
+        "description": "The unique identifier of the first location connected by this passage."
+      },
+      "locationBId": {
+        "$ref": "common.schema.json#/definitions/namespacedId",
+        "description": "The unique identifier of the second location connected by this passage."
+      },
+      "directionAtoB": {
+        "type": "string",
+        "description": "The command or label used to travel from location A to location B (e.g., 'north', 'enter doorway', 'climb ladder')."
+      },
+      "directionBtoA": {
+        "type": "string",
+        "description": "The command or label used to travel from location B to location A (e.g., 'south', 'exit doorway', 'climb down')."
+      },
+      "blockerEntityId": {
+        "$ref": "common.schema.json#/definitions/nullableNamespacedId",
+        "default": null,
+        "description": "Optional identifier of an entity (like a door or barrier) that blocks this passage. Its state (e.g., locked, open) controls traversability."
+      },
+      "type": {
+        "type": "string",
+        "default": "passage",
+        "description": "The type of connection (e.g., 'doorway', 'path', 'archway', 'window', 'teleporter').",
+        "examples": [
+          "passage",
+          "doorway",
+          "path",
+          "archway",
+          "stairs",
+          "ladder",
+          "teleporter",
+          "window"
+        ]
+      },
+      "isHidden": {
+        "type": "boolean",
+        "default": false,
+        "description": "If true, this connection is not initially apparent and might require discovery."
+      },
+      "state": {
+        "type": "string",
+        "description": "Optional current state of the connection itself (e.g., 'open', 'closed', 'collapsed', 'jammed', 'phase-aligned'). Distinct from the blocker entity's state.",
+        "examples": [
+          "open",
+          "closed",
+          "collapsed",
+          "jammed",
+          "phase-aligned",
+          "electrified"
+        ]
+      },
+      "descriptionOverrideAtoB": {
+        "type": "string",
+        "description": "Optional specific description of the passage entrance/view when looking from Location A towards B (e.g., 'You see a dark archway leading north.'). Overrides default descriptions."
+      },
+      "descriptionOverrideBtoA": {
+        "type": "string",
+        "description": "Optional specific description of the passage entrance/view when looking from Location B towards A (e.g., 'The archway south seems to lead back to the main hall.'). Overrides default descriptions."
+      }
+    },
+    "additionalProperties": false
+  }
+}

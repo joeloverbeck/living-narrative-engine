@@ -14,46 +14,38 @@
 
 const BASE_DATA_PATH = './data';
 
-// Updated SCHEMA_FILES array: Includes component-definition schema, specific component schemas removed
-// as they are now defined via component definition files themselves.
+// Updated SCHEMA_FILES array:
+// - Removed 'connection.schema.json'
+// - component-definition.schema.json is essential for loading component definitions.
 const SCHEMA_FILES = [
     'common.schema.json',
-    'event-definition.schema.json', // Needed for event definition loading
-    'action-definition.schema.json', // Needed for action definition loading
-    'entity.schema.json',            // Main generic entity schema (for items, locations, NPCs etc.)
-    'interaction-test.schema.json',  // Needed for interaction test loading
-    'connection.schema.json',        // Needed for connection loading
-    'quest.schema.json',             // Needed for quest loading
-    'objective.schema.json',         // Needed for objective loading
-    'world-manifest.schema.json',    // Needed for manifest loading
+    'event-definition.schema.json',
+    'action-definition.schema.json',
+    'entity.schema.json',            // Main generic entity schema (for items, locations, NPCs, connections, etc.)
+    'interaction-test.schema.json',
+    // 'connection.schema.json',     // REMOVED
+    'quest.schema.json',
+    'objective.schema.json',
+    'world-manifest.schema.json',
     'component-definition.schema.json' // Core schema for validating component definition files
-    // Individual component schemas (like health, openable, etc.) are NO LONGER listed here.
-    // Their structure is defined within their respective *.component.json files.
 ];
 
 // Updated CONTENT_TYPE_SCHEMAS map:
-// - items, locations, blockers etc. point to the generic entity schema ID.
-// - Added 'components' entry pointing to the component-definition schema ID.
-//   This is used to validate the *definition* files themselves.
+// - 'connections' now points to the generic 'entity.schema.json' ID.
 const CONTENT_TYPE_SCHEMAS = {
     common: 'http://example.com/schemas/common.schema.json',
     actions: 'http://example.com/schemas/action-definition.schema.json',
     events: 'http://example.com/schemas/event-definition.schema.json',
-    entities: 'http://example.com/schemas/entity.schema.json', // For player/NPC entities listed under "entities"
-    items: 'http://example.com/schemas/entity.schema.json',    // Updated: Use generic entity schema
-    locations: 'http://example.com/schemas/entity.schema.json',// Updated: Use generic entity schema
-    connections: 'http://example.com/schemas/connection.schema.json', // Uses its own specific schema
-    blockers: 'http://example.com/schemas/entity.schema.json', // Assumed to be generic entities
+    entities: 'http://example.com/schemas/entity.schema.json',   // For player/NPC entities
+    items: 'http://example.com/schemas/entity.schema.json',      // Items are generic entities
+    locations: 'http://example.com/schemas/entity.schema.json',  // Locations are generic entities
+    connections: 'http://example.com/schemas/entity.schema.json',// UPDATED: Connections are generic entities
+    blockers: 'http://example.com/schemas/entity.schema.json',   // Blockers are generic entities
     objectives: 'http://example.com/schemas/objective.schema.json',
     quests: 'http://example.com/schemas/quest.schema.json',
     interactionTests: 'http://example.com/schemas/interaction-test.schema.json',
-    manifest: 'http://example.com/schemas/world-manifest.schema.json', // Schema for the manifest itself
-    /**
-     * Schema ID used specifically for validating component *definition* files
-     * (*.component.json) during the loading process. It validates the structure
-     * containing 'id', 'description', and 'dataSchema'.
-     */
-    components: 'http://example.com/schemas/component-definition.schema.json'
+    manifest: 'http://example.com/schemas/world-manifest.schema.json',
+    components: 'http://example.com/schemas/component-definition.schema.json' // Schema for component definition files
 };
 
 // --- Static Configuration Class ---
@@ -83,9 +75,7 @@ class StaticConfiguration {
     /**
      * @private
      * @type {Record<string, string>}
-     * @description Mapping of content type names (from manifest or loader context) to their schema $ids.
-     * Used for validating manifest-listed content files (items, actions, etc.)
-     * and also for validating component definition files themselves (using 'components' key).
+     * @description Mapping of content type names to their schema $ids.
      */
     #contentTypeSchemas = CONTENT_TYPE_SCHEMAS; // Uses the updated map
 
@@ -97,80 +87,66 @@ class StaticConfiguration {
     #manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
 
     /**
-     * Returns the root path where all game data (worlds, schemas, content, components) is located.
+     * Returns the root path where all game data is located.
      * @override
-     * @returns {string} The base data path (e.g., './data').
+     * @returns {string}
      */
     getBaseDataPath() {
         return this.#baseDataPath;
     }
 
     /**
-     * Returns a list of core schema filenames that should be loaded by SchemaLoader.
-     * Returns a copy to prevent external modification of the internal list.
-     * Note: This list does NOT include individual component data schemas, only foundational ones
-     * like entity.schema.json, common.schema.json, and component-definition.schema.json.
+     * Returns a list of core schema filenames.
      * @override
-     * @returns {string[]} A new array containing the core schema filenames.
+     * @returns {string[]}
      */
     getSchemaFiles() {
-        // Returns a copy of the updated #schemaFiles array
-        return [...this.#schemaFiles];
+        return [...this.#schemaFiles]; // Return a copy
     }
 
     /**
-     * Returns the schema ID (e.g., the `$id` value) associated with a given content type name.
-     * This is used to determine which schema to use for validating:
-     * 1. Content files listed in the world manifest (e.g., 'items', 'actions').
-     * 2. Component definition files themselves (when typeName is 'components').
-     *
+     * Returns the schema ID associated with a given content type name.
      * @override
-     * @param {string} typeName - The content type name (e.g., 'entities', 'items', 'actions', 'components').
-     * @returns {string | undefined} The schema ID string if found, otherwise undefined.
+     * @param {string} typeName
+     * @returns {string | undefined}
      */
     getContentTypeSchemaId(typeName) {
-        // Correctly uses the updated #contentTypeSchemas map
         return this.#contentTypeSchemas[typeName];
     }
 
     /**
-     * Returns the schema ID used specifically for validating world manifest files.
+     * Returns the schema ID used for validating world manifest files.
      * @override
-     * @returns {string} The manifest schema ID.
+     * @returns {string}
      */
     getManifestSchemaId() {
         return this.#manifestSchemaId;
     }
 
     /**
-     * Returns the path where core schema files are stored, relative to the base data path.
+     * Returns the path where core schema files are stored.
      * @override
-     * @returns {string} The schema base path (e.g., './data/schemas').
+     * @returns {string}
      */
     getSchemaBasePath() {
         return `${this.#baseDataPath}/schemas`;
     }
 
     /**
-     * Returns the base path where content definition files for a specific type are stored,
-     * relative to the base data path. This is used for:
-     * 1. Locating content files listed in the manifest (e.g., typeName 'items' -> './data/items').
-     * 2. Locating component definition files (e.g., typeName 'components' -> './data/components').
-     *
+     * Returns the base path where content definition files for a specific type are stored.
      * @override
-     * @param {string} typeName - The content type name (e.g., 'items', 'actions', 'components').
-     * @returns {string} The content base path for the given type (e.g., './data/items', './data/components').
+     * @param {string} typeName
+     * @returns {string}
      */
     getContentBasePath(typeName) {
-        // This generic implementation now correctly handles 'components' alongside other types.
+        // Handles 'components' -> './data/components', 'items' -> './data/items', etc.
         return `${this.#baseDataPath}/${typeName}`;
     }
 
     /**
-     * Returns the path where world manifest files (`.world.json`) are stored,
-     * relative to the base data path.
+     * Returns the path where world manifest files are stored.
      * @override
-     * @returns {string} The world base path (e.g., './data/worlds').
+     * @returns {string}
      */
     getWorldBasePath() {
         return `${this.#baseDataPath}/worlds`;

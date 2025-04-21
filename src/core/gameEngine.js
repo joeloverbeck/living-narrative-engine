@@ -17,9 +17,6 @@
 // --- Refactoring: Import new service ---
 /** @typedef {import('./services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
-// --- Component Class Imports ---
-import RegistryInitializer from './registryInitializer.js';
-
 /**
  * Encapsulates core game systems, manages initialization using a dependency container,
  * orchestrates the game start, and uses ValidatedEventDispatcher for event dispatches.
@@ -130,16 +127,7 @@ class GameEngine {
             // --- Resolve Managers needed for setup ---
             await this.#validatedDispatcher.dispatchValidated('event:set_title', {text: "Initializing Systems..."});
 
-            const entityManager = this.#container.resolve('EntityManager');
-            const actionExecutor = this.#container.resolve('ActionExecutor');
             this.#logger.info("GameEngine: EntityManager, and ActionExecutor resolved.");
-
-            // ---> Initialize Registries <---
-            this.#logger.info("GameEngine: Initializing component and action handler registries...");
-            const registryInitializer = new RegistryInitializer();
-            registryInitializer.initializeRegistries(entityManager, actionExecutor);
-            this.#logger.info("GameEngine: Component and Action Handler registries initialized via RegistryInitializer.");
-
 
             // --- Initialize Systems that Require it ---
             const systemsToInitialize = [
