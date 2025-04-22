@@ -12,11 +12,11 @@
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../core/services/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
+/** @typedef {import('../services/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */ // <<< Ensure this type import exists
 
 // --- Dependency Imports ---
 // Assuming these exist and provide the necessary classes/functions
 import {ActionTargetContext} from "../models/actionTargetContext.js";
-import {getEntityIdsForScopes} from '../services/entityScopeService.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
 
 
@@ -46,26 +46,34 @@ export class ActionDiscoverySystem {
      * @param {ActionValidationService} dependencies.actionValidationService
      * @param {ILogger} dependencies.logger
      * @param {formatActionCommandFn} dependencies.formatActionCommandFn
+     * @param {getEntityIdsForScopesFn} dependencies.getEntityIdsForScopesFn // <<< ADDED DEPENDENCY
      */
     constructor({
                     gameDataRepository,
                     entityManager,
                     actionValidationService,
                     logger,
-                    formatActionCommandFn
+                    formatActionCommandFn,
+                    getEntityIdsForScopesFn // <<< ADDED PARAMETER
                 }) {
+        // --- Existing validation checks ---
         if (!gameDataRepository || !entityManager || !actionValidationService || !logger || !formatActionCommandFn) {
             throw new Error("ActionDiscoverySystem requires GameDataRepository, EntityManager, ActionValidationService, ILogger, and formatActionCommandFn instances.");
         }
+        // --- ADD VALIDATION for the new dependency ---
+        if (!getEntityIdsForScopesFn || typeof getEntityIdsForScopesFn !== 'function') {
+            throw new Error("ActionDiscoverySystem requires a valid getEntityIdsForScopesFn function.");
+        }
+        // --- End validation checks ---
+
         this.#gameDataRepository = gameDataRepository;
         this.#entityManager = entityManager;
         this.#actionValidationService = actionValidationService;
-        // Assuming entityScopeService and actionFormatter are modules exporting the functions directly
-        // If they are classes, you'd likely store the instance and call methods on it.
-        // For this implementation, we'll assume they export the functions.
-        this.#getEntityIdsForScopesFn = getEntityIdsForScopes; // Or entityScopeService.getEntityIdsForScopes if it's a method
-        this.#formatActionCommandFn = formatActionCommandFn;
         this.#logger = logger;
+        this.#formatActionCommandFn = formatActionCommandFn; // Use injected formatter
+
+        // --- USE THE INJECTED SCOPE FUNCTION ---
+        this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn; // <<< CORRECT ASSIGNMENT
 
         this.#logger.info("ActionDiscoverySystem initialized.");
     }
@@ -82,6 +90,7 @@ export class ActionDiscoverySystem {
         this.#logger.debug(`Starting action discovery for actor: ${actorEntity.id}`);
         const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
         // Assumes validCommandStrings is initialized (per Ticket 4.3.4)
+        console.log('>>> DEBUG ADS: Processing Action Definition IDs:', JSON.stringify(allActionDefinitions.map(a => a.id))); // <-- Add this
         const validCommandStrings = new Set(); // Use a Set to automatically handle duplicates
 
         // --- 1. Iterate through all Action Definitions ---
@@ -169,9 +178,9 @@ export class ActionDiscoverySystem {
                         const targetContext = ActionTargetContext.forDirection(direction);
                         // Validate with the specific direction context
                         if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) { // Should call the mock which returns true for 'north'
-                            this.#logger.debug(`      - isValid TRUE for ${direction}. Calling formatter.`); // Expect this log for 'north'
-
-                            // Call the spy function injected via constructor
+                            this.#logger.debug(`      - isValid TRUE for ${direction}. Calling formatter.`);
+                            // ---> ADD THIS LINE <---
+                            console.log('>>> DEBUG ADS: targetContext JUST BEFORE formatter call:', JSON.stringify(targetContext));
                             const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager);
 
                             if (command !== null) {

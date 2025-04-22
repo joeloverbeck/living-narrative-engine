@@ -1,88 +1,97 @@
 // src/services/actionValidationService.js
 
 // --- Type Imports ---
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('../types/actionDefinition.js').ConditionObject} ConditionObject */
-/** @typedef {import('../types/common.js').NamespacedId} NamespacedId */
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('../logic/defs.js').JsonLogicEntityContext} JsonLogicEntityContext */
-/** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
-// --- ADDED JSDoc Type Import (No change from previous step, but confirms presence) ---
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../validation/componentRequirementChecker.js').ComponentRequirementChecker} ComponentRequirementChecker */
+/** @typedef {import('../validation/domainContextCompatibilityChecker.js').DomainContextCompatibilityChecker} DomainContextCompatibilityChecker */
+/** @typedef {import('../validation/prerequisiteChecker.js').PrerequisiteChecker} PrerequisiteChecker */
+/** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
 // --- Model Imports ---
-import { ActionTargetContext } from '../models/ActionTargetContext.js';
+import {ActionTargetContext} from '../models/actionTargetContext.js'; // Already present
 
 // --- Helper Imports ---
-import { createComponentAccessor } from '../logic/contextAssembler.js';
-// --- ADDED Import (No change from previous step, but confirms presence) ---
-import { ComponentRequirementChecker } from '../validation/componentRequirementChecker.js'; // Adjust path if needed
+// Checkers are injected via constructor.
 
 /**
  * Service responsible for validating if a specific action is currently valid
  * for a given actor and target context, based on the game state and action definitions.
- * It checks component requirements (using ComponentRequirementChecker), domain compatibility,
- * and prerequisites (using JSON Logic).
+ * It orchestrates checks by delegating to specialized services:
+ * - ComponentRequirementChecker (for actor and target components)
+ * - DomainContextCompatibilityChecker (for target domain/context type match)
+ * - PrerequisiteChecker (for JSON Logic prerequisites)
  */
 export class ActionValidationService {
     /** @private @type {EntityManager} */
     #entityManager;
-    /** @private @type {GameDataRepository} */
-    #gameDataRepository;
+    // REMOVED: #gameDataRepository field
     /** @private @type {ILogger} */
     #logger;
-    /** @private @type {JsonLogicEvaluationService} */
-    #jsonLogicEvaluationService;
-    // --- ADDED Private Field (No change from previous step, but confirms presence) ---
+    // REMOVED: #jsonLogicEvaluationService field
     /** @private @type {ComponentRequirementChecker} */
     #componentRequirementChecker;
+    /** @private @type {DomainContextCompatibilityChecker} */
+    #domainContextCompatibilityChecker;
+    /** @private @type {PrerequisiteChecker} */
+    #prerequisiteChecker;
+
 
     /**
      * Creates an instance of ActionValidationService.
      * @param {object} dependencies - The required dependencies.
      * @param {EntityManager} dependencies.entityManager - Service to access entity instances and component data.
-     * @param {GameDataRepository} dependencies.gameDataRepository - Service to access game data definitions (like actions).
      * @param {ILogger} dependencies.logger - Logger service instance.
-     * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService - Service to evaluate JSON Logic rules.
-     * @param {ComponentRequirementChecker} dependencies.componentRequirementChecker - Service to check entity component requirements. // <-- Confirmed JSDoc update
+     * @param {ComponentRequirementChecker} dependencies.componentRequirementChecker - Service to check entity component requirements.
+     * @param {DomainContextCompatibilityChecker} dependencies.domainContextCompatibilityChecker - Service to check domain/context compatibility.
+     * @param {PrerequisiteChecker} dependencies.prerequisiteChecker - Service to check action prerequisites.
      * @throws {Error} If any required dependency is missing or invalid.
      */
-    constructor({entityManager, gameDataRepository, logger, jsonLogicEvaluationService, componentRequirementChecker}) { // <-- Confirmed param addition
+    constructor({
+                    entityManager,
+                    logger,
+                    componentRequirementChecker,
+                    domainContextCompatibilityChecker,
+                    prerequisiteChecker
+                }) {
+        // --- Dependency Validation ---
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
             throw new Error("ActionValidationService requires a valid EntityManager instance.");
         }
-        if (!gameDataRepository || typeof gameDataRepository.getAction !== 'function') {
-            throw new Error("ActionValidationService requires a valid GameDataRepository instance.");
-        }
+        // REMOVED: Dependency check for gameDataRepository
         if (!logger || typeof logger.debug !== 'function' || typeof logger.error !== 'function') {
             throw new Error("ActionValidationService requires a valid ILogger instance.");
         }
-        if (!jsonLogicEvaluationService || typeof jsonLogicEvaluationService.evaluate !== 'function') {
-            throw new Error("ActionValidationService requires a valid JsonLogicEvaluationService instance.");
-        }
-        // --- ADDED Null/Type Check for new dependency (No change from previous step, but confirms presence) ---
+        // REMOVED: Dependency check for jsonLogicEvaluationService
         if (!componentRequirementChecker || typeof componentRequirementChecker.check !== 'function') {
             throw new Error("ActionValidationService requires a valid ComponentRequirementChecker instance.");
         }
+        if (!domainContextCompatibilityChecker || typeof domainContextCompatibilityChecker.check !== 'function') {
+            throw new Error("ActionValidationService requires a valid DomainContextCompatibilityChecker instance.");
+        }
+        if (!prerequisiteChecker || typeof prerequisiteChecker.check !== 'function') {
+            throw new Error("ActionValidationService requires a valid PrerequisiteChecker instance.");
+        }
 
+        // --- Assign Dependencies ---
         this.#entityManager = entityManager;
-        this.#gameDataRepository = gameDataRepository;
         this.#logger = logger;
-        this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
-        // --- Assign injected dependency (No change from previous step, but confirms presence) ---
         this.#componentRequirementChecker = componentRequirementChecker;
-        this.#logger.info("ActionValidationService initialized.");
+        this.#domainContextCompatibilityChecker = domainContextCompatibilityChecker;
+        this.#prerequisiteChecker = prerequisiteChecker;
+
+        this.#logger.info("ActionValidationService initialized with required dependencies (EntityManager, 3 Checkers, Logger).");
     }
 
     /**
-     * Checks if a given action is valid for the specified actor and target context
-     * based on the current game state and the action's definition.
-     * Performs checks in order: Actor components, Domain/Context compatibility,
-     * Target entity resolution & components (if applicable), Prerequisites (using JSON Logic).
+     * Checks if a given action is valid for the specified actor and target context.
+     * Orchestrates validation by calling specialized checker services in sequence:
+     * 1. Actor Component Check
+     * 2. Domain/Context Compatibility Check
+     * 3. Target Resolution & Component Check (if applicable)
+     * 4. Prerequisite Check
      *
      * @param {ActionDefinition} actionDefinition - The definition object of the action to validate. Must be valid.
      * @param {Entity} actorEntity - The entity instance performing the action. Must be valid.
@@ -91,177 +100,183 @@ export class ActionValidationService {
      * @throws {Error} If critical input parameters (actionDefinition, actorEntity, targetContext) are missing or structurally invalid.
      */
     isValid(actionDefinition, actorEntity, targetContext) {
-        // --- Critical Input Validation ---
+        // --- ADD Log: Entry ---
+        console.log(`[AVS.isValid] START: Action '${actionDefinition?.id}', Actor '${actorEntity?.id}', Target Type '${targetContext?.type}', Target ID/Dir '${targetContext?.entityId ?? targetContext?.direction ?? 'N/A'}'`);
+
+        // --- Critical Input Validation --- (Keep existing)
         if (!actionDefinition || typeof actionDefinition.id !== 'string' || !actionDefinition.id.trim()) {
-            const errorMsg = "ActionValidationService.isValid: Missing or invalid actionDefinition (must have non-empty string 'id').";
+            const errorMsg = "ActionValidationService.isValid: Missing or invalid actionDefinition.";
             this.#logger.error(errorMsg, {actionDefinition});
+            console.error("[AVS.isValid] CRITICAL FAILURE: Invalid actionDefinition input."); // Added console log
             throw new Error(errorMsg);
         }
         if (!actorEntity || typeof actorEntity.id !== 'string' || !actorEntity.id.trim() || typeof actorEntity.hasComponent !== 'function') {
             const errorMsg = `ActionValidationService.isValid: Missing or invalid actorEntity object for action '${actionDefinition.id}'.`;
             this.#logger.error(errorMsg, {actorEntity});
+            console.error("[AVS.isValid] CRITICAL FAILURE: Invalid actorEntity input."); // Added console log
             throw new Error(errorMsg);
         }
-        if (!targetContext || typeof targetContext.type !== 'string' || !(targetContext instanceof ActionTargetContext)) {
-            const errorMsg = `ActionValidationService.isValid: Missing or invalid targetContext object for action '${actionDefinition.id}' actor '${actorEntity.id}'. Expected instance of ActionTargetContext.`;
+        if (!targetContext || !(targetContext instanceof ActionTargetContext)) {
+            const errorMsg = `ActionValidationService.isValid: Missing or invalid targetContext object for action '${actionDefinition.id}'. Expected instance of ActionTargetContext.`;
             this.#logger.error(errorMsg, {targetContext});
+            console.error("[AVS.isValid] CRITICAL FAILURE: Invalid targetContext input."); // Added console log
             throw new Error(errorMsg);
         }
         // --- End Input Validation ---
 
         const actionId = actionDefinition.id;
         const actorId = actorEntity.id;
-        // Use a slightly more specific context description for the checker calls
-        const actorContextDesc = `action '${actionId}' actor requirements`;
-        const targetContextDesc = `action '${actionId}' target requirements`;
-        let targetEntity = null;
+        let targetEntity = null; // Resolved in Step 3 if needed
 
-        this.#logger.debug(`Validating action '${actionId}' for actor ${actorId} with target context: type='${targetContext.type}', entityId='${targetContext.entityId ?? 'N/A'}', direction='${targetContext.direction ?? 'N/A'}'`);
+        this.#logger.debug(`START Validation: Action '${actionId}' for actor '${actorId}', contextType '${targetContext.type}', targetId/Dir '${targetContext.entityId ?? targetContext.direction ?? 'N/A'}'`);
 
         try {
+            // --- ADD Log: Entering Try Block ---
+            console.log(`[AVS.isValid] Entering TRY block for action '${actionId}'`);
+
             // --- STEP 1: Actor Component Requirement Checks ---
-            // --- UPDATED: Use injected checker ---
-            if (!this.#componentRequirementChecker.check(
+            this.#logger.debug(` -> STEP 1: Checking Actor Components...`);
+            const step1Passed = this.#componentRequirementChecker.check(
                 actorEntity,
                 actionDefinition.actor_required_components,
                 actionDefinition.actor_forbidden_components,
-                'actor',            // entityRole
-                actorContextDesc    // contextDescription
-            )) {
-                // Failure reason logged within the checker's check method
-                // Log adjusted to reflect failure is logged internally by the checker
-                // this.#logger.debug(`Action Validation Failed (Step 1): Actor ${actorId} failed component checks for ${actorContextDesc}.`);
-                return false; // Actor doesn't meet requirements
+                'actor',
+                `action '${actionId}' actor requirements`
+            );
+            // --- ADD Log: After Step 1 Check ---
+            console.log(`[AVS.isValid] Step 1 (Actor Components) Result: ${step1Passed}`);
+            if (!step1Passed) {
+                this.#logger.debug(` <- STEP 1 FAILED: Actor Component Check.`);
+                return false; // Exit early
             }
-            this.#logger.debug(` -> Step 1 PASSED: Actor ${actorId} meets component requirements for ${actionId}.`);
+            this.#logger.debug(` -> STEP 1 PASSED.`);
 
 
             // --- STEP 2: Target Domain / Context Type Compatibility Checks ---
+            this.#logger.debug(` -> STEP 2: Checking Domain/Context Compatibility...`);
+            let step2aPassed = true; // Assume pass initially
+
+            // --- MODIFICATION START ---
             const expectedDomain = actionDefinition.target_domain || 'none';
-            const contextType = targetContext.type;
-
-            // (This section remains unchanged)
-            if (contextType !== 'none') {
-                const entityDomains = ['self', 'inventory', 'equipment', 'environment', 'location', 'location_items', 'location_non_items', 'nearby', 'nearby_including_blockers'];
-                const directionDomains = ['direction'];
-                const noTargetDomains = ['none'];
-
-                if (noTargetDomains.includes(expectedDomain) ) {
-                    this.#logger.debug(`Validation failed (Step 2): Action '${actionId}' (domain '${expectedDomain}') is incompatible with provided context type '${contextType}'.`);
-                    return false;
+            // Only run the domain compatibility check if:
+            // 1. The target context is NOT 'none' (meaning we are checking a specific target)
+            // OR 2. The target context IS 'none', AND the action's expected domain is also 'none'.
+            if (targetContext.type !== 'none' || expectedDomain === 'none') {
+                step2aPassed = this.#domainContextCompatibilityChecker.check(actionDefinition, targetContext);
+                console.log(`[AVS.isValid] Step 2a (Domain/Context Compatibility) Result [Check Ran]: ${step2aPassed}`);
+                if (!step2aPassed) {
+                    this.#logger.debug(` <- STEP 2 FAILED: Domain/Context Check (Initial Compatibility).`);
+                    return false; // Exit early if check ran and failed
                 }
-                if (directionDomains.includes(expectedDomain) && contextType !== 'direction' ) {
-                    this.#logger.debug(`Validation failed (Step 2): Action '${actionId}' (domain '${expectedDomain}') requires 'direction' context, but got '${contextType}'.`);
-                    return false;
-                }
-                if (entityDomains.includes(expectedDomain) && contextType !== 'entity' ) {
-                    this.#logger.debug(`Validation failed (Step 2): Action '${actionId}' (domain '${expectedDomain}') requires 'entity' context, but got '${contextType}'.`);
-                    return false;
-                }
-                if (expectedDomain === 'self' && contextType === 'entity' && targetContext.entityId !== actorId) {
-                    this.#logger.debug(`Validation failed (Step 2): Action '${actionId}' (domain 'self') requires target to be actor ${actorId}, but context targets entity ${targetContext.entityId}.`);
-                    return false;
-                }
+            } else {
+                // If context is 'none' but domain requires something else (e.g., 'environment'),
+                // skip this check during the initial phase. It will be checked properly later
+                // when isValid is called again with the specific target context ('entity', 'direction').
+                console.log(`[AVS.isValid] Step 2a (Domain/Context Compatibility) SKIPPED (Initial actor check vs non-'none' domain)`);
+                // step2aPassed remains true because the check was intentionally skipped here.
             }
-            this.#logger.debug(` -> Step 2 PASSED: Domain ('${expectedDomain}') and Context Type ('${contextType}') are compatible for ${actionId}.`);
+
+
+            let step2bPassed = true; // Assume pass unless 'self' check fails
+            if (expectedDomain === 'self' && targetContext.type === 'entity' && targetContext.entityId !== actorId) {
+                step2bPassed = false;
+                // --- ADD Log: After Step 2b Check ---
+                console.log(`[AVS.isValid] Step 2b ('self' domain check) Result: ${step2bPassed} (Target: ${targetContext.entityId}, Actor: ${actorId})`);
+                this.#logger.debug(` <- STEP 2 FAILED: Domain/Context Check ('self' target mismatch). Action requires target self (${actorId}), but context target is ${targetContext.entityId}.`);
+                return false; // Exit early
+            }
+
+            // --- ADD Log: After Step 2b Check (if not failed) ---
+            if (step2bPassed) console.log(`[AVS.isValid] Step 2b ('self' domain check) Result: ${step2bPassed} (Not applicable or passed)`);
+            this.#logger.debug(` -> STEP 2 PASSED.`);
 
 
             // --- STEP 3: Target Entity Resolution and Component Checks (Conditional) ---
-            if (contextType === 'entity') {
+            this.#logger.debug(` -> STEP 3: Resolving/Checking Target Entity (if applicable)...`);
+            if (targetContext.type === 'entity') {
+                // --- ADD Log: Entering Step 3 Logic ---
+                console.log(`[AVS.isValid] Entering Step 3 logic (targetContext.type is 'entity')`);
+
                 const targetEntityId = targetContext.entityId;
                 if (!targetEntityId) {
-                    this.#logger.error(`Action Validation Internal Error (Step 3): Context type is 'entity' but entityId is missing for action '${actionId}'. Should have been caught by ActionTargetContext constructor.`);
-                    return false;
+                    // --- ADD Log: Missing targetEntityId ---
+                    console.error(`[AVS.isValid] Step 3 Error: Context type is 'entity' but entityId is missing for action '${actionId}'.`);
+                    this.#logger.error(`Action Validation Internal Error (Step 3): Context type is 'entity' but entityId is missing for action '${actionId}'.`);
+                    return false; // Exit early
                 }
-                targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
-                if (!targetEntity) {
-                    this.#logger.debug(`Action Validation Failed (Step 3a): Target entity ID '${targetEntityId}' (specified in context for action '${actionId}') was not found or is not currently active.`);
-                    return false;
-                }
-                this.#logger.debug(` -> Step 3a PASSED: Resolved target entity ${targetEntityId} for ${actionId}.`);
 
-                // --- UPDATED: Use injected checker ---
-                // Corresponds to Step 3b in the ticket
-                if (!this.#componentRequirementChecker.check(
+                // Step 3a: Resolve Target Entity (Uses EntityManager directly)
+                // --- ADD Log: Before getEntityInstance ---
+                console.log(`[AVS.isValid] Step 3a: Attempting to resolve target entity ID: '${targetEntityId}'`);
+                targetEntity = this.#entityManager.getEntityInstance(targetEntityId); // Use direct dependency
+                // --- ADD Log: After getEntityInstance ---
+                console.log(`[AVS.isValid] Step 3a: Resolved targetEntity: ${targetEntity ? `'${targetEntity.id}'` : 'null'}`);
+
+                if (!targetEntity) {
+                    // --- ADD Log: Target Resolution Failed ---
+                    console.log(`[AVS.isValid] Step 3a: Target entity resolution FAILED.`);
+                    this.#logger.debug(` <- STEP 3a FAILED: Target entity '${targetEntityId}' not found or inactive.`);
+                    return false; // Exit early
+                }
+                this.#logger.debug(` -> STEP 3a PASSED: Target entity '${targetEntityId}' resolved.`);
+
+                // Step 3b: Target Component Check (Delegate to checker)
+                const step3bPassed = this.#componentRequirementChecker.check(
                     targetEntity,
                     actionDefinition.target_required_components,
                     actionDefinition.target_forbidden_components,
-                    'target',           // entityRole
-                    targetContextDesc   // contextDescription
-                )) {
-                    // Failure reason logged within the checker's check method
-                    // Log adjusted to reflect failure is logged internally by the checker
-                    // this.#logger.debug(`Action Validation Failed (Step 3b): Target ${targetEntityId} failed component checks for ${targetContextDesc}.`);
-                    return false; // Target doesn't meet requirements
+                    'target',
+                    `action '${actionId}' target requirements`
+                );
+                // --- ADD Log: After Step 3b Check ---
+                console.log(`[AVS.isValid] Step 3b (Target Components) Result: ${step3bPassed}`);
+                if (!step3bPassed) {
+                    this.#logger.debug(` <- STEP 3b FAILED: Target Component Check.`);
+                    return false; // Exit early
                 }
-                this.#logger.debug(` -> Step 3b PASSED: Target ${targetEntityId} meets component requirements for ${actionId}.`);
-            } else {
-                this.#logger.debug(` -> Step 3 SKIPPED: No target entity resolution/component checks needed for context type '${contextType}' in action '${actionId}'.`);
-            }
+                this.#logger.debug(` -> STEP 3b PASSED.`);
+                this.#logger.debug(` -> STEP 3 PASSED (Target resolved & components OK).`);
 
-
-            // =========================================================================
-            // --- START: Assemble JsonLogicEvaluationContext ---
-            /** @type {JsonLogicEvaluationContext} */
-            const evaluationContext = { actor: null, target: null, event: {}, context: {}, globals: {}, entities: {} };
-            if (actorEntity && actorEntity.id) {
-                evaluationContext.actor = { id: actorEntity.id, components: createComponentAccessor(actorEntity.id, this.#entityManager, this.#logger) };
-                this.#logger.debug(`Assembled actor context for JsonLogic evaluation. Actor ID: ${evaluationContext.actor.id}`);
             } else {
-                this.#logger.warn(`Actor entity [${actorEntity?.id ?? 'ID missing or entity null'}] is unexpectedly invalid during JsonLogic context assembly for action '${actionId}'. Actor context will be null.`);
+                // --- ADD Log: Skipped Step 3 ---
+                console.log(`[AVS.isValid] Step 3 SKIPPED (Context type: '${targetContext.type}')`);
+                this.#logger.debug(` -> STEP 3 SKIPPED (Context type: '${targetContext.type}').`);
             }
-            if (targetEntity && targetEntity.id) {
-                evaluationContext.target = { id: targetEntity.id, components: createComponentAccessor(targetEntity.id, this.#entityManager, this.#logger) };
-                this.#logger.debug(`Assembled target context for JsonLogic evaluation. Target ID: ${evaluationContext.target.id}`);
-            } else {
-                this.#logger.debug(`No valid targetEntity found or resolved for action '${actionId}', target context remains null.`);
-            }
-            evaluationContext.event = { type: 'ACTION_VALIDATION', payload: { actionId: actionDefinition.id } };
-            this.#logger.debug(`JsonLogicEvaluationContext fully assembled. Keys: ${Object.keys(evaluationContext).join(', ')}`);
-            // =========================================================================
-            // --- END: Assemble JsonLogicEvaluationContext ---
-            // =========================================================================
-
 
             // --- STEP 4: Prerequisite Checks ---
-            const prerequisites = actionDefinition.prerequisites || [];
-            if (prerequisites.length > 0) {
-                this.#logger.debug(` -> Step 4: Checking ${prerequisites.length} prerequisite(s) for ${actionId}...`);
-                for (const prerequisite of prerequisites) {
-                    const rule = prerequisite.logic;
-                    if (!rule) {
-                        this.#logger.warn(`Action Validation: Skipping prerequisite in action '${actionId}' due to missing 'logic' property. Considering this a failure.`, { prerequisite });
-                        return false;
-                    }
-                    this.#logger.debug(` -> Evaluating prerequisite rule: Type='${prerequisite.condition_type || 'N/A'}', Negate=${prerequisite.negate || false} for action '${actionId}'...`);
-                    const prerequisitePassed = this.#jsonLogicEvaluationService.evaluate(rule, evaluationContext);
-                    this.#logger.debug(`    Rule evaluation result: ${prerequisitePassed}`);
-                    if (!prerequisitePassed) {
-                        const failureMsg = prerequisite.failure_message || `Prerequisite type '${prerequisite.condition_type || 'N/A'}' not met.`;
-                        this.#logger.debug(`Action Validation Failed (Step 4): Prerequisite check FAILED for action '${actionId}'. Reason: ${failureMsg}`);
-                        return false;
-                    }
-                }
-                this.#logger.debug(` -> Step 4 PASSED: All ${prerequisites.length} prerequisite(s) met for ${actionId}.`);
-            } else {
-                this.#logger.debug(` -> Step 4 PASSED: No prerequisites defined for ${actionId}.`);
+            // Delegate check to the specialized service, passing resolved targetEntity
+            this.#logger.debug(` -> STEP 4: Checking Prerequisites...`);
+            // --- ADD Log: Before Prerequisite Check ---
+            console.log(`[AVS.isValid] Step 4: About to call prerequisiteChecker.check for action '${actionId}'`);
+            const step4Passed = this.#prerequisiteChecker.check(actionDefinition, actorEntity, targetEntity); // Assuming PrerequisiteChecker also has console logs now
+            // --- ADD Log: After Prerequisite Check ---
+            console.log(`[AVS.isValid] Step 4 (Prerequisites) Result: ${step4Passed}`);
+            if (!step4Passed) {
+                this.#logger.debug(` <- STEP 4 FAILED: Prerequisite Check.`);
+                return false; // Exit early
             }
-            // --- End Prerequisite Checks ---
+            this.#logger.debug(` -> STEP 4 PASSED.`);
 
 
             // --- STEP 5: Placeholder for Additional Domain-Specific Validation ---
-            this.#logger.debug(` -> Step 5 PASSED: Placeholder for additional domain-specific checks for ${actionId}.`);
+            this.#logger.debug(` -> STEP 5: Placeholder check...`);
+            console.log(`[AVS.isValid] Step 5: Placeholder check passed.`); // Added console log
+            this.#logger.debug(` -> STEP 5 PASSED.`);
 
 
-            // If execution reaches this point, all checks have passed.
-            this.#logger.debug(`Validation FINAL RESULT: PASSED for action '${actionId}' (actor ${actorId}, contextType '${targetContext.type}', targetId/Dir '${targetContext.entityId ?? targetContext.direction ?? 'N/A'}').`);
-            return true; // Action is valid
+            // --- All Checks Passed ---
+            // --- ADD Log: All Passed ---
+            console.log(`[AVS.isValid] END: PASSED for action '${actionId}'.`);
+            this.#logger.debug(`END Validation: PASSED for action '${actionId}'.`);
+            return true;
 
         } catch (error) {
-            // Catch unexpected errors during the validation process
-            this.#logger.error(`Unexpected error during action validation process for action '${actionId}' (actor '${actorId}'):`, error);
-            return false; // Treat any unexpected error as a validation failure
+            // --- ADD Log: Caught Error ---
+            console.error(`[AVS.isValid] !!! CAUGHT UNEXPECTED ERROR during validation for action '${actionId}' (actor '${actorId}'):`, error);
+            this.#logger.error(`Unexpected error during validation process for action '${actionId}' (actor '${actorId}'):`, error);
+            this.#logger.debug(`END Validation: FAILED due to unexpected error.`);
+            return false; // Exit due to error
         }
     }
 
-}
+} // End of ActionValidationService class
