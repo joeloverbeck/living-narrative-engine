@@ -8,9 +8,11 @@ import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
 // --- Core Dependencies (Real Implementations) ---
 import EntityManager from '../../entities/entityManager.js';
 import {GameDataRepository} from '../../core/services/gameDataRepository.js';
-import {ActionValidationService, ActionTargetContext} from '../../services/actionValidationService.js';
+import {ActionValidationService} from '../../services/actionValidationService.js';
+import {ActionTargetContext} from "../../models/actionTargetContext.js";
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js'; // Using the provided real implementation
 import Entity from '../../entities/entity.js';
+import { ComponentRequirementChecker } from '../../validation/componentRequirementChecker.js';
 
 // --- Functions used by SUT ---
 import * as actionFormatter from '../../services/actionFormatter.js'; // Import module to spy
@@ -103,6 +105,7 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
     let connectionEntity;
     let actionContext;
     let formatSpy;
+    let componentRequirementChecker;
 
     // --- Mocks for Dependencies ---
     const mockLogger = {
@@ -133,6 +136,13 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
         clearIndex: jest.fn(),
         // Add other methods if EntityManager uses them
     };
+
+    const mockJsonLogicEvaluationService = {
+        // Mock the methods ActionValidationService uses.
+        // Assuming it needs an 'evaluate' method:
+        evaluate: jest.fn().mockReturnValue(true), // Default: Assume rules pass unless specified otherwise
+        // Add mocks for other methods if needed
+    };
     // --- End Mocks ---
 
 
@@ -148,10 +158,15 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
             mockLogger,
             mockSpatialIndexManager
         );
+        componentRequirementChecker = new ComponentRequirementChecker({ logger: mockLogger });
+
+
         actionValidationService = new ActionValidationService({
             entityManager,
             gameDataRepository,
-            logger: mockLogger
+            logger: mockLogger,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            componentRequirementChecker
         });
         formatSpy = jest.spyOn(actionFormatter, 'formatActionCommand');
         actionDiscoverySystem = new ActionDiscoverySystem({

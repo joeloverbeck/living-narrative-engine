@@ -6,7 +6,7 @@ import ActionExecutor from '../../actions/actionExecutor.js';
 import Entity from '../../entities/entity.js';
 import {ResolutionStatus} from '../../services/targetResolutionService.js';
 // Import the actual class to check the instance type passed to the mock
-import {ActionTargetContext} from '../../services/actionValidationService.js';
+import {ActionTargetContext} from "../../models/actionTargetContext.js";
 
 // Import types for JSDoc
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */

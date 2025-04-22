@@ -54,12 +54,14 @@ import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerSer
 import GameStateInitializer from './gameStateInitializer.js';
 import WorldInitializer from './worldInitializer.js';
 import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
-import {ActionValidationService} from "../services/actionValidationService.js";
+import {ActionValidationService} from "../services/actionValidationService.js"; // <-- Existing import
 import TargetResolutionService from '../services/targetResolutionService.js';
 import PayloadValueResolverService from '../services/payloadValueResolverService.js';
 import ValidatedEventDispatcher from "../services/validatedEventDispatcher.js";
+import JsonLogicEvaluationService from '../logic/jsonLogicEvaluationService.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
 import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
+import { ComponentRequirementChecker } from '../validation/componentRequirementChecker.js'; // <-- ADDED Import
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -118,7 +120,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         const schemaLoader = c.resolve('SchemaLoader');
         const manifestLoader = c.resolve('ManifestLoader');
         const genericContentLoader = c.resolve('GenericContentLoader');
-        // --> Resolve the new ComponentDefinitionLoader dependency [cite: 87]
         const componentDefinitionLoader = c.resolve('ComponentDefinitionLoader');
         const schemaValidator = c.resolve('ISchemaValidator');
         const configuration = c.resolve('IConfiguration');
@@ -130,7 +131,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
             schemaLoader,
             manifestLoader,
             genericContentLoader,
-            // --> Pass the resolved componentDefinitionLoader here [cite: 89]
             componentDefinitionLoader,
             schemaValidator,
             configuration
@@ -145,6 +145,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         c.resolve('ILogger').info("ContainerConfig: EntityManager instance created.");
         return entityManager;
     }, {lifecycle: 'singleton'});
+
 
     // --- 6. Renderer ---
     container.register('DomRenderer', (c) => new DomRenderer(
@@ -164,43 +165,61 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }), {lifecycle: 'singleton'});
 
     container.register('ItemTargetResolverService', (c) => {
-        // Resolve the NEW dependencies
         const resolvedLogger = c.resolve('ILogger');
-        const validatedDispatcher = c.resolve('ValidatedEventDispatcher'); // Resolve the validated dispatcher
-
+        const validatedDispatcher = c.resolve('ValidatedEventDispatcher');
         resolvedLogger.info("ContainerConfig: Creating ItemTargetResolverService instance with dependencies...");
-        // Pass NEW dependencies to constructor
         return new ItemTargetResolverService({
-            entityManager: c.resolve('EntityManager'), // eventBus: c.resolve('EventBus'), // No longer inject raw EventBus
-            validatedDispatcher: validatedDispatcher, // Inject ValidatedEventDispatcher instead
-            conditionEvaluationService: c.resolve('ConditionEvaluationService'), logger: resolvedLogger // Inject ILogger
+            entityManager: c.resolve('EntityManager'),
+            validatedDispatcher: validatedDispatcher,
+            conditionEvaluationService: c.resolve('ConditionEvaluationService'), logger: resolvedLogger
         });
     }, {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered ItemTargetResolverService (with validated dispatcher and logger).");
 
-    // +++ ADD TargetResolutionService Registration +++
     container.register('TargetResolutionService', (c) => {
         c.resolve('ILogger').info("ContainerConfig: Creating TargetResolutionService instance...");
-        // Assuming TargetResolutionService constructor currently takes no args based on provided code.
-        // If it needed dependencies later (e.g., EntityManager), inject them here.
         const service = new TargetResolutionService();
         c.resolve('ILogger').info("ContainerConfig: TargetResolutionService instance created.");
         return service;
     }, {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered TargetResolutionService."); // Use logger instance
+    logger.info("ContainerConfig: Registered TargetResolutionService.");
 
-    // --- Action Validation Service ---
+    container.register('JsonLogicEvaluationService', (c) => {
+        const serviceLogger = c.resolve('ILogger');
+        serviceLogger.info("ContainerConfig: Creating JsonLogicEvaluationService instance...");
+        const service = new JsonLogicEvaluationService({
+            logger: serviceLogger
+            // Note: EntityManager dependency removed based on JsonLogicEvaluationService's own constructor. Re-add if needed.
+        });
+        serviceLogger.info("ContainerConfig: JsonLogicEvaluationService instance created.");
+        return service;
+    }, {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered JsonLogicEvaluationService.");
+
+    // +++ ADD ComponentRequirementChecker Registration (Ensure it's before ActionValidationService) +++
+    container.register('ComponentRequirementChecker', (c) => {
+        const checkerLogger = c.resolve('ILogger');
+        checkerLogger.info("ContainerConfig: Creating ComponentRequirementChecker instance...");
+        const checker = new ComponentRequirementChecker({ logger: checkerLogger });
+        checkerLogger.info("ContainerConfig: ComponentRequirementChecker instance created.");
+        return checker;
+    }, {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered ComponentRequirementChecker.");
+
+    // --- Action Validation Service (UPDATED) ---
     container.register('ActionValidationService', (c) => new ActionValidationService({
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository'),
-        logger: c.resolve('ILogger')
+        logger: c.resolve('ILogger'),
+        jsonLogicEvaluationService: c.resolve('JsonLogicEvaluationService'),
+        componentRequirementChecker: c.resolve('ComponentRequirementChecker') // <-- INJECTED CHECKER
     }), {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered ActionValidationService."); // Use logger instance
+    logger.info("ContainerConfig: Registered ActionValidationService (with ComponentRequirementChecker)."); // <-- Updated log
 
     container.register('PayloadValueResolverService', (c) => {
         const serviceLogger = c.resolve('ILogger');
         serviceLogger.info("ContainerConfig: Creating PayloadValueResolverService instance...");
-        const service = new PayloadValueResolverService({logger: serviceLogger}); // Pass logger
+        const service = new PayloadValueResolverService({logger: serviceLogger});
         serviceLogger.info("ContainerConfig: PayloadValueResolverService instance created.");
         return service;
     }, {lifecycle: 'singleton'});
@@ -216,10 +235,8 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
 
     // --- 8. Action Executor ---
     container.register('ActionExecutor', (c) => {
-        const resolvedLogger = c.resolve('ILogger'); // Resolve once
+        const resolvedLogger = c.resolve('ILogger');
         resolvedLogger.info("ContainerConfig: Resolving dependencies for ActionExecutor...");
-
-        // Resolve all required dependencies
         const gameDataRepository = c.resolve('GameDataRepository');
         const targetResolutionService = c.resolve('TargetResolutionService');
         const actionValidationService = c.resolve('ActionValidationService');
@@ -227,9 +244,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         const schemaValidator = c.resolve('ISchemaValidator');
         const eventBus = c.resolve('EventBus');
         const validatedDispatcher = c.resolve('ValidatedEventDispatcher');
-
         resolvedLogger.info("ContainerConfig: Creating ActionExecutor instance with dependencies...");
-        // Pass dependencies as an object to the constructor
         const actionExecutor = new ActionExecutor({
             gameDataRepository,
             targetResolutionService,
@@ -237,10 +252,9 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
             payloadValueResolverService,
             schemaValidator,
             eventBus,
-            logger: resolvedLogger, // Pass the resolved logger
+            logger: resolvedLogger,
             validatedDispatcher: validatedDispatcher
         });
-
         resolvedLogger.info("ContainerConfig: ActionExecutor instance created.");
         return actionExecutor;
     }, {lifecycle: 'singleton'});
@@ -287,105 +301,28 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }), {lifecycle: 'singleton'});
 
     // --- 14. Core Systems ---
-    // (Registrations for other systems remain unchanged from the input, assuming they are correct)
-    container.register('GameRuleSystem', (c) => new GameRuleSystem({
-        eventBus: c.resolve('EventBus'),
-        gameStateManager: c.resolve('GameStateManager'),
-        actionExecutor: c.resolve('ActionExecutor'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('EquipmentEffectSystem', (c) => new EquipmentEffectSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('EquipmentSlotSystem', (c) => new EquipmentSlotSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('InventorySystem', (c) => new InventorySystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository'),
-        gameStateManager: c.resolve('GameStateManager')
-    }), {lifecycle: 'singleton'});
-    container.register('CombatSystem', (c) => new CombatSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('DeathSystem', (c) => new DeathSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('WorldPresenceSystem', (c) => new WorldPresenceSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('ItemUsageSystem', (c) => new ItemUsageSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        conditionEvaluationService: c.resolve('ConditionEvaluationService'),
-        itemTargetResolverService: c.resolve('ItemTargetResolverService'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('BlockerSystem', (c) => new BlockerSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('MovementSystem', (c) => new MovementSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('MoveCoordinatorSystem', (c) => new MoveCoordinatorSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        blockerSystem: c.resolve('BlockerSystem'),
-        movementSystem: c.resolve('MovementSystem')
-    }), {lifecycle: 'singleton'});
-    container.register('QuestSystem', (c) => new QuestSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameStateManager: c.resolve('GameStateManager'),
-        questPrerequisiteService: c.resolve('QuestPrerequisiteService'),
-        questRewardService: c.resolve('QuestRewardService'),
-        objectiveEventListenerService: c.resolve('ObjectiveEventListenerService'),
-        objectiveStateCheckerService: c.resolve('ObjectiveStateCheckerService'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('QuestStartTriggerSystem', (c) => new QuestStartTriggerSystem({
-        eventBus: c.resolve('EventBus'),
-        gameStateManager: c.resolve('GameStateManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('PerceptionSystem', (c) => new PerceptionSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('NotificationUISystem', (c) => new NotificationUISystem({
-        eventBus: c.resolve('EventBus'), gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('OpenableSystem', (c) => new OpenableSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('HealthSystem', (c) => new HealthSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('StatusEffectSystem', (c) => new StatusEffectSystem({
-        eventBus: c.resolve('EventBus'),
-        entityManager: c.resolve('EntityManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
-    container.register('LockSystem', (c) => new LockSystem({
-        eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
-    container.register('ActionDiscoverySystem', (c) => new ActionDiscoverySystem({
-        gameDataRepository: c.resolve('GameDataRepository'),
-        entityManager: c.resolve('EntityManager'),
-        actionValidationService: c.resolve('ActionValidationService'),
-        logger: c.resolve('ILogger'),
-        formatActionCommandFn: formatActionCommand
-    }), {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered ActionDiscoverySystem."); // Use logger instance
+    // (Registrations for other systems remain unchanged)
+    container.register('GameRuleSystem', (c) => new GameRuleSystem({ eventBus: c.resolve('EventBus'), gameStateManager: c.resolve('GameStateManager'), actionExecutor: c.resolve('ActionExecutor'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('EquipmentEffectSystem', (c) => new EquipmentEffectSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('EquipmentSlotSystem', (c) => new EquipmentSlotSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('InventorySystem', (c) => new InventorySystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository'), gameStateManager: c.resolve('GameStateManager') }), {lifecycle: 'singleton'});
+    container.register('CombatSystem', (c) => new CombatSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('DeathSystem', (c) => new DeathSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('WorldPresenceSystem', (c) => new WorldPresenceSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('ItemUsageSystem', (c) => new ItemUsageSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), conditionEvaluationService: c.resolve('ConditionEvaluationService'), itemTargetResolverService: c.resolve('ItemTargetResolverService'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('BlockerSystem', (c) => new BlockerSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('MovementSystem', (c) => new MovementSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('MoveCoordinatorSystem', (c) => new MoveCoordinatorSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), blockerSystem: c.resolve('BlockerSystem'), movementSystem: c.resolve('MovementSystem') }), {lifecycle: 'singleton'});
+    container.register('QuestSystem', (c) => new QuestSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameStateManager: c.resolve('GameStateManager'), questPrerequisiteService: c.resolve('QuestPrerequisiteService'), questRewardService: c.resolve('QuestRewardService'), objectiveEventListenerService: c.resolve('ObjectiveEventListenerService'), objectiveStateCheckerService: c.resolve('ObjectiveStateCheckerService'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('QuestStartTriggerSystem', (c) => new QuestStartTriggerSystem({ eventBus: c.resolve('EventBus'), gameStateManager: c.resolve('GameStateManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('PerceptionSystem', (c) => new PerceptionSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('NotificationUISystem', (c) => new NotificationUISystem({ eventBus: c.resolve('EventBus'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('OpenableSystem', (c) => new OpenableSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('HealthSystem', (c) => new HealthSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('StatusEffectSystem', (c) => new StatusEffectSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager'), gameDataRepository: c.resolve('GameDataRepository') }), {lifecycle: 'singleton'});
+    container.register('LockSystem', (c) => new LockSystem({ eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager') }), {lifecycle: 'singleton'});
+    container.register('ActionDiscoverySystem', (c) => new ActionDiscoverySystem({ gameDataRepository: c.resolve('GameDataRepository'), entityManager: c.resolve('EntityManager'), actionValidationService: c.resolve('ActionValidationService'), logger: c.resolve('ILogger'), formatActionCommandFn: formatActionCommand }), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered ActionDiscoverySystem.");
 
 
     // --- 15. Input Handler ---
@@ -397,7 +334,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         inputHandler: c.resolve('InputHandler'),
         commandParser: c.resolve('CommandParser'),
         actionExecutor: c.resolve('ActionExecutor'),
-        eventBus: c.resolve('EventBus'), // Keep EventBus injection
+        eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository'),
         actionDiscoverySystem: c.resolve('ActionDiscoverySystem'),
@@ -406,5 +343,5 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }), {lifecycle: 'singleton'});
 
 
-    logger.info("ContainerConfig: Service registration complete."); // Use logger instance
+    logger.info("ContainerConfig: Service registration complete.");
 }

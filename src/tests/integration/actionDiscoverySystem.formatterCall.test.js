@@ -8,12 +8,14 @@ import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
 // --- Core Dependencies (Real Implementations) ---
 import EntityManager from '../../entities/entityManager.js';
 import {GameDataRepository} from '../../core/services/gameDataRepository.js';
-import {ActionValidationService, ActionTargetContext} from '../../services/actionValidationService.js';
+import {ActionValidationService} from '../../services/actionValidationService.js';
+import {ActionTargetContext} from "../../models/actionTargetContext.js";
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js'; // Using the provided real implementation
 import Entity from '../../entities/entity.js';
 
 // --- Functions used by SUT ---
-import * as actionFormatter from '../../services/actionFormatter.js'; // Import module to spy
+import * as actionFormatter from '../../services/actionFormatter.js';
+import {ComponentRequirementChecker} from "../../validation/componentRequirementChecker.js"; // Import module to spy
 
 // --- Mocked Dependencies ---
 const mockLogger = {
@@ -35,6 +37,13 @@ const mockSpatialIndexManager = {
     getEntitiesInLocation: jest.fn(() => new Set()),
     buildIndex: jest.fn(),
     clearIndex: jest.fn(),
+};
+
+const mockJsonLogicEvaluationService = {
+    // Mock the methods ActionValidationService uses.
+    // Assuming it needs an 'evaluate' method:
+    evaluate: jest.fn().mockReturnValue(true), // Default: Assume rules pass unless specified otherwise
+    // Add mocks for other methods if needed
 };
 
 // --- Test Data Definitions (Copied from original) ---
@@ -116,6 +125,7 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call', () => {
     let roomEntity;
     let connectionEntity;
     let actionContext;
+    let componentRequirementChecker;
 
     // Spies needed for this specific test
     let formatSpy;
@@ -135,10 +145,15 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call', () => {
             mockLogger,
             mockSpatialIndexManager
         );
+
+        componentRequirementChecker = new ComponentRequirementChecker({ logger: mockLogger });
+
         actionValidationService = new ActionValidationService({
             entityManager,
             gameDataRepository,
-            logger: mockLogger
+            logger: mockLogger,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            componentRequirementChecker
         });
 
         // 2. Load Test Definitions into the REGISTRY

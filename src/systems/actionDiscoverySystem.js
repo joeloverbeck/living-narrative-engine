@@ -15,7 +15,7 @@
 
 // --- Dependency Imports ---
 // Assuming these exist and provide the necessary classes/functions
-import {ActionTargetContext} from '../services/actionValidationService.js';
+import {ActionTargetContext} from "../models/actionTargetContext.js";
 import {getEntityIdsForScopes} from '../services/entityScopeService.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
 

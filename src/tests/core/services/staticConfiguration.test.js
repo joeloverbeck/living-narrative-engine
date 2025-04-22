@@ -18,6 +18,8 @@ const EXPECTED_SCHEMA_FILES = [
     'objective.schema.json',
     'world-manifest.schema.json',
     'component-definition.schema.json',
+    'json-logic.schema.json',
+    'system-rule.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -72,7 +74,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('component-definition.schema.json');
+            expect(files[files.length - 1]).toBe('system-rule.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {

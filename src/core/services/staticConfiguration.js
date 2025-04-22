@@ -27,7 +27,9 @@ const SCHEMA_FILES = [
     'quest.schema.json',
     'objective.schema.json',
     'world-manifest.schema.json',
-    'component-definition.schema.json' // Core schema for validating component definition files
+    'component-definition.schema.json', // Core schema for validating component definition files
+    'json-logic.schema.json',
+    'system-rule.schema.json'
 ];
 
 // Updated CONTENT_TYPE_SCHEMAS map:

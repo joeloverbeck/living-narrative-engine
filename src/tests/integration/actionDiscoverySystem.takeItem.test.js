@@ -9,7 +9,7 @@ import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
 import EntityManager from '../../entities/entityManager.js';
 import {GameDataRepository} from '../../core/services/gameDataRepository.js';
 import {ActionValidationService} from '../../services/actionValidationService.js';
-import {ActionTargetContext} from '../../services/actionValidationService.js'; // Import needed for spy check
+import {ActionTargetContext} from "../../models/actionTargetContext.js";
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js';
 import Entity from '../../entities/entity.js';
 
@@ -25,6 +25,7 @@ import {
     NAME_COMPONENT_TYPE_ID,
     POSITION_COMPONENT_ID
 } from "../../types/components.js";
+import {ComponentRequirementChecker} from "../../validation/componentRequirementChecker";
 
 // --- Mocked Dependencies ---
 const mockLogger = {
@@ -45,6 +46,13 @@ const mockSpatialIndexManager = {
     getEntitiesInLocation: jest.fn(), // Configured per test
     buildIndex: jest.fn(),
     clearIndex: jest.fn(),
+};
+
+const mockJsonLogicEvaluationService = {
+    // Mock the methods ActionValidationService uses.
+    // Assuming it needs an 'evaluate' method:
+    evaluate: jest.fn().mockReturnValue(true), // Default: Assume rules pass unless specified otherwise
+    // Add mocks for other methods if needed
 };
 
 // --- Test Data Definitions ---
@@ -119,6 +127,7 @@ describe('ActionDiscoverySystem Integration Test - Take Item', () => {
     let keyEntity;
     let roomEntity;
     let actionContext;
+    let componentRequirementChecker;
 
     beforeEach(() => {
         // Reset mocks and spies
@@ -139,11 +148,14 @@ describe('ActionDiscoverySystem Integration Test - Take Item', () => {
         // Spy on entityManager methods *after* instance creation
         getInstanceSpy = jest.spyOn(entityManager, 'getEntityInstance');
 
+        componentRequirementChecker = new ComponentRequirementChecker({ logger: mockLogger });
 
         actionValidationService = new ActionValidationService({
             entityManager,
             gameDataRepository,
-            logger: mockLogger
+            logger: mockLogger,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            componentRequirementChecker
         });
         // Spy on validation service methods *after* instance creation
         validationSpy = jest.spyOn(actionValidationService, 'isValid');

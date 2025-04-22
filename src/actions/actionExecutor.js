@@ -8,19 +8,21 @@
 /** @typedef {import('../services/targetResolutionService.js').ResolutionStatus} ResolutionStatus */
 /** @typedef {import('../services/targetResolutionService.js').TargetResolutionResult} TargetResolutionResult */
 /** @typedef {import('../services/actionValidationService.js').ActionValidationService} ActionValidationService */
-/** @typedef {import('../services/actionValidationService.js').ActionTargetContext} ActionTargetContext */
+// --- UPDATED JSDoc import path ---
+/** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../services/payloadValueResolverService.js').default} PayloadValueResolverService */
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../entities/entity.js').default} Entity */
 // --- Refactoring: Import new service ---
-/** @typedef {import('../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 
 // Import necessary modules/classes used
 import {ResolutionStatus} from '../services/targetResolutionService.js';
-import {ActionTargetContext} from '../services/actionValidationService.js';
+// --- UPDATED ES Module import path ---
+import { ActionTargetContext } from '../models/ActionTargetContext.js';
 
 /**
  * Manages and executes game actions based on definitions.
@@ -130,6 +132,7 @@ class ActionExecutor {
             }
 
             // Step 4: Build Validation Target Context
+            // Use the imported ActionTargetContext from the new location
             const targetContext = this.#buildValidationTargetContext(resolutionResult, context, actionId);
 
             // Step 5: Validate Action
@@ -192,6 +195,7 @@ class ActionExecutor {
         const {playerEntity, parsedCommand} = context;
         let targetContext;
         try {
+            // Uses ActionTargetContext imported from '../models/ActionTargetContext.js'
             switch (targetType) {
                 case 'entity':
                     if (!targetId) throw new Error("Target type 'entity' but targetId missing.");

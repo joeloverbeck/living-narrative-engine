@@ -5,40 +5,6 @@
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies requirements, targeting, prerequisites, output format, and optional event dispatching for actions.",
   "type": "object",
   "definitions": {
-    "ConditionObject": {
-      "type": "object",
-      "description": "A single prerequisite condition. Specific parameters depend on 'condition_type'. Extensible.",
-      "required": [
-        "condition_type"
-      ],
-      "properties": {
-        "condition_type": {
-          "type": "string",
-          "description": "Identifier for the type of condition check (e.g., 'placeholder', 'placeholder_fail', 'actor_has_component', 'target_has_component', 'actor_stat_check', 'target_state_check', 'world_state_check')."
-        },
-        "negate": {
-          "type": "boolean",
-          "description": "If true, the result of the condition check is inverted.",
-          "default": false
-        },
-        "failure_message": {
-          "type": "string",
-          "description": "Optional message to provide if this specific condition fails."
-        },
-        "force_fail": {
-          "type": "boolean",
-          "description": "Optional flag specifically for placeholder testing to force a failure result.",
-          "default": false
-        },
-        "details": {
-          "type": "object",
-          "description": "Optional object to hold specific parameters needed by the condition type (e.g., componentId, statId, minValue). Structure depends on condition_type.",
-          "additionalProperties": true
-        }
-      },
-      "additionalProperties": true,
-      "$comment": "Allows specific condition types to add their own parameters within 'details' or as direct properties. Specific condition types will define their own required properties beyond 'condition_type'."
-    }
   },
   "properties": {
     "id": {
@@ -109,9 +75,9 @@
     },
     "prerequisites": {
       "type": "array",
-      "description": "Optional. List of additional conditions (beyond basic component checks) that must all be met for the action to be valid. Evaluated AFTER component requirements.",
+      "description": "Optional. List of conditions that must all evaluate to true for the action to be valid. Each condition is a standard JSON Logic object (see common/json-logic.schema.json) evaluated by the ConditionEvaluatorService using the appropriate actor/target context. Evaluated AFTER basic component requirements.",
       "items": {
-        "$ref": "#/definitions/ConditionObject"
+        "$ref": "./json-logic.schema.json#"
       },
       "default": []
     },
