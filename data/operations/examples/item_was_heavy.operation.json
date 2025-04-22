@@ -1,0 +1,23 @@
+{
+  "type": "IF",
+  "comment": "Log a message if the item picked up was heavy",
+  "parameters": {
+    "condition": {
+      "==": [
+        {
+          "var": "context.itemWasHeavy"
+        },
+        true
+      ]
+    },
+    "then_actions": [
+      {
+        "type": "LOG",
+        "parameters": {
+          "message": "Actor {actor.id} picked up a heavy item: {event.payload.itemId}. Consider encumbrance.",
+          "level": "warn"
+        }
+      }
+    ]
+  }
+}

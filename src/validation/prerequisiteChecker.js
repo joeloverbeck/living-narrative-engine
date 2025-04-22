@@ -60,39 +60,39 @@ export class PrerequisiteChecker {
      * @param {Entity} actorEntity - The entity performing the action.
      * @param {Entity | null} targetEntity - The entity being targeted (if any, null otherwise).
      * @returns {boolean} True if all prerequisites pass (or if there are none), false if any prerequisite fails. (AC3)
-     * @throws {Error} If critical inputs (actionDefinition, actorEntity) are invalid. Rethrows errors from context assembly if they occur.
+     * @throws {Error} Rethrows errors from context assembly if they occur (handled via catch).
      */
     check(actionDefinition, actorEntity, targetEntity) {
-        console.log(`PrereqChecker.check: Entered for action ${actionDefinition.id}, actor ${actorEntity.id}, target ${targetEntity ? targetEntity.id : 'null'}`);
-        // --- Input Validation (Basic) ---
-        // More robust validation might be needed depending on how this is called
+        // --- Input Validation (Moved UP) ---
+        // Validate before accessing any properties
         if (!actionDefinition || !actionDefinition.id) {
-            this.#logger.error("PrerequisiteChecker.check: Called with invalid actionDefinition.");
-            // Or throw, depending on desired strictness
+            this.#logger.error("PrerequisiteChecker.check: Called with invalid actionDefinition.", {actionDefinition});
             return false;
         }
         if (!actorEntity || !actorEntity.id) {
-            this.#logger.error(`PrerequisiteChecker.check: Called with invalid actorEntity for action '${actionDefinition.id}'.`);
-            // Or throw
+            // Log action ID here since we know actionDefinition is valid at this point
+            this.#logger.error(`PrerequisiteChecker.check: Called with invalid actorEntity for action '${actionDefinition.id}'.`, {actorEntity});
             return false;
         }
         // targetEntity can legitimately be null
 
+        // --- Safe to Extract IDs Now ---
         const actionId = actionDefinition.id;
         const actorId = actorEntity.id;
         const targetId = targetEntity ? targetEntity.id : null; // Extract ID, handle null target
 
+        // --- Use Logger Exclusively (Removed console.log) ---
         this.#logger.debug(`PrerequisiteChecker: Starting check for action '${actionId}', actor '${actorId}', target '${targetId ?? 'None'}'.`);
 
         try {
             // --- Assemble Evaluation Context using createJsonLogicContext --- (AC3)
-            // Create a minimal event object for the context assembler
             const validationEvent = {
                 type: 'ACTION_VALIDATION',
                 payload: {actionId: actionId}
             };
 
-            console.log('PrereqChecker.check: About to assemble context...');
+            // Removed console.log
+            this.#logger.debug(`PrerequisiteChecker: Assembling context for action '${actionId}'...`);
 
             /** @type {JsonLogicEvaluationContext} */
             const evaluationContext = createJsonLogicContext(
@@ -103,9 +103,7 @@ export class PrerequisiteChecker {
                 this.#logger         // Use injected dependency
             );
 
-            console.log('PrereqChecker.check: Context assembly successful. Context keys:', Object.keys(evaluationContext || {}));
-
-            // Note: The context assembler handles logging related to context creation internally.
+            // Removed console.log - contextAssembler should handle its own debug logging via the passed logger if needed
 
             // --- Iterate Through Prerequisites --- (AC3)
             const prerequisites = actionDefinition.prerequisites || [];
@@ -118,32 +116,29 @@ export class PrerequisiteChecker {
             this.#logger.debug(`PrerequisiteChecker: Checking ${prerequisites.length} prerequisite(s) for action '${actionId}'...`);
 
             for (const prerequisite of prerequisites) {
-                // Assuming structure: { logic: {...}, condition_type?: string, failure_message?: string, negate?: boolean }
                 const rule = prerequisite.logic;
 
                 if (!rule || typeof rule !== 'object') {
-                    // Validate the rule structure minimally
                     this.#logger.warn(`PrerequisiteChecker: Skipping prerequisite in action '${actionId}' due to missing or invalid 'logic' property. Considering this a failure.`, {prerequisite});
                     return false; // Treat missing/invalid logic as failure
                 }
 
-                // Log rule details cautiously for complex rules
                 const ruleSummary = JSON.stringify(rule).substring(0, 100) + (JSON.stringify(rule).length > 100 ? '...' : '');
                 this.#logger.debug(` -> Evaluating prerequisite rule: Type='${prerequisite.condition_type || 'N/A'}', Negate=${prerequisite.negate || false}. Rule snippet: ${ruleSummary}`);
 
-                console.log('PrereqChecker.check: About to call evaluate for rule:', JSON.stringify(rule));
+                // Removed console.log
 
                 // --- Call Evaluation Service --- (AC3)
                 let prerequisitePassed = this.#jsonLogicEvaluationService.evaluate(rule, evaluationContext);
 
-                // Handle optional negation if present in definition (though negation is often better handled *within* JSON Logic)
+                // Handle optional negation
                 if (prerequisite.negate === true) {
+                    const originalResult = prerequisitePassed; // Store original for logging
                     prerequisitePassed = !prerequisitePassed;
-                    this.#logger.debug(`    Result negated due to 'negate: true'. Final result: ${prerequisitePassed}`);
+                    this.#logger.debug(`    Rule evaluation result: ${originalResult}. Result negated due to 'negate: true'. Final result: ${prerequisitePassed}`);
                 } else {
                     this.#logger.debug(`    Rule evaluation result: ${prerequisitePassed}`);
                 }
-
 
                 if (!prerequisitePassed) {
                     const failureMsg = prerequisite.failure_message || `Prerequisite check failed (type: ${prerequisite.condition_type || 'N/A'}).`;
@@ -157,14 +152,10 @@ export class PrerequisiteChecker {
             return true;
 
         } catch (error) {
-            console.error('!!! PrereqChecker.check: Caught error:', error);
+            // --- Use Logger Exclusively (Removed console.error) ---
             // Catch errors during context assembly or unexpected issues during evaluation
-            this.#logger.error(`PrerequisiteChecker: Unexpected error during prerequisite check for action '${actionId}':`, error);
+            this.#logger.error(`PrerequisiteChecker: Unexpected error during prerequisite check for action '${actionId}':`, error); // Log the error object itself
             return false; // Treat unexpected errors as failure
         }
     }
 } // End of PrerequisiteChecker class
-
-// AC1: PrerequisiteChecker class exists in src/validation/prerequisiteChecker.js. Checked.
-// AC2: Checker accepts dependencies via constructor. Checked.
-// AC3: Orchestration logic (context assembly, loop, evaluation call) in 'check' method, returns boolean. Checked.

@@ -1,0 +1,14 @@
+{
+  "type": "MODIFY_COMPONENT",
+  "parameters": {
+    "entity_ref": "target",
+    "component_type": "core:health",
+    "operation": "update",
+    "data": {
+      "current": {
+        "source": "context",
+        "variable": "newHealthValue"
+      }
+    }
+  }
+}

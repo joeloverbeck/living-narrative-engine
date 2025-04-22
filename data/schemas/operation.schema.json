@@ -1,0 +1,424 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operation.schema.json",
+  "title": "Operation Schema",
+  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events) or control the flow of execution (conditional logic). Based on the 'type' field, the 'parameters' object must conform to a specific structure. [cite: 369, 370, 371, 612, 613, 614, 615, 617]",
+  "type": "object",
+  "$ref": "#/$defs/Operation",
+  "$defs": {
+    "Operation": {
+      "type": "object",
+      "description": "A single operation within an action sequence.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Required. The identifier determining the type of operation and the expected structure of the 'parameters' object. [cite: 618]",
+          "enum": [
+            "QUERY_COMPONENT",
+            "MODIFY_COMPONENT",
+            "DISPATCH_EVENT",
+            "IF",
+            "LOG"
+          ]
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime. [cite: 372, 470, 471, 472, 474, 620]"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Required. Container for parameters specific to the operation 'type'. The structure is validated conditionally based on the 'type' value. [cite: 370, 371]"
+        }
+      },
+      "required": [
+        "type",
+        "parameters"
+      ],
+      "additionalProperties": false,
+      "$comment": "Using allOf with if/then for conditional validation based on 'type', as recommended for better error reporting and potential performance with Ajv. [cite: 394, 401, 404, 405, 406, 408, 412, 414, 415, 430, 525] Strict top-level properties enforced by additionalProperties: false. [cite: 381, 383, 458]",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "QUERY_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/QueryComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MODIFY_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ModifyComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DISPATCH_EVENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/DispatchEventParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "IF"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/IfParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "LOG"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/LogParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
+        }
+      ],
+      "examples": [
+        {
+          "type": "QUERY_COMPONENT",
+          "comment": "Get the Health component of the actor entity",
+          "parameters": {
+            "entity_ref": "actor",
+            "component_type": "core:health",
+            "result_variable": "actorHealth"
+          }
+        },
+        {
+          "type": "MODIFY_COMPONENT",
+          "parameters": {
+            "entity_ref": "target",
+            "component_type": "game:status_effect",
+            "operation": "add",
+            "data": {
+              "duration": 10,
+              "effect_id": "poison",
+              "potency": 2
+            }
+          }
+        },
+        {
+          "type": "DISPATCH_EVENT",
+          "parameters": {
+            "event_type": "event:quest_updated",
+            "payload_mapping": {
+              "questId": {
+                "source": "event",
+                "path": "payload.questId"
+              },
+              "newState": {
+                "source": "literal",
+                "type": "string",
+                "value": "completed"
+              },
+              "completedBy": {
+                "source": "entity",
+                "ref": "actor",
+                "path": "id"
+              }
+            }
+          }
+        },
+        {
+          "type": "IF",
+          "parameters": {
+            "condition": {
+              "==": [
+                {
+                  "var": "context.targetHealth.current"
+                },
+                0
+              ]
+            },
+            "then_actions": [
+              {
+                "type": "DISPATCH_EVENT",
+                "parameters": {
+                  "event_type": "event:entity_destroyed",
+                  "payload_mapping": {
+                    "entityId": {
+                      "source": "entity",
+                      "ref": "target",
+                      "path": "id"
+                    }
+                  }
+                }
+              }
+            ],
+            "else_actions": [
+              {
+                "type": "LOG",
+                "parameters": {
+                  "message": "Target {target.id} still alive with {context.targetHealth.current} HP.",
+                  "level": "info"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "LOG",
+          "parameters": {
+            "message": "Actor {actor.id} used item {event.payload.itemId}.",
+            "level": "debug"
+          }
+        }
+      ]
+    },
+    "QueryComponentParameters": {
+      "type": "object",
+      "description": "Parameters for the QUERY_COMPONENT operation. [cite: 623]",
+      "properties": {
+        "entity_ref": {
+          "type": "string",
+          "description": "Required. Specifies the entity whose component is being queried. Resolved by PayloadValueResolverService (e.g., 'actor', 'target', 'event.payload.entityId'). [cite: 625, 626]"
+        },
+        "component_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. The namespaced ID of the component type to retrieve (e.g., 'core:position', 'game:inventory'). [cite: 627]"
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Required. The name of the variable within the rule's temporary execution context where the fetched component data (or null if not found) will be stored. [cite: 628, 665, 666, 667]"
+        }
+      },
+      "required": [
+        "entity_ref",
+        "component_type",
+        "result_variable"
+      ],
+      "additionalProperties": false,
+      "$comment": "Ensures no extraneous properties are added to query parameters. [cite: 460, 461]"
+    },
+    "ModifyComponentParameters": {
+      "type": "object",
+      "description": "Parameters for the MODIFY_COMPONENT operation. [cite: 631]",
+      "properties": {
+        "entity_ref": {
+          "type": "string",
+          "description": "Required. Specifies the target entity for the modification. Resolved by PayloadValueResolverService. [cite: 632]"
+        },
+        "component_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. The namespaced ID of the component type to add, remove, or update. [cite: 633]"
+        },
+        "operation": {
+          "type": "string",
+          "description": "Required. Defines the modification type. [cite: 634]",
+          "enum": [
+            "add",
+            "remove",
+            "update"
+          ]
+        },
+        "data": {
+          "type": "object",
+          "description": "Component data. Required for 'add' and 'update' operations. Structure depends on the component_type. Values within can be literals or dynamically resolved via PayloadValueResolverService syntax. [cite: 637, 640, 641, 642, 643]",
+          "additionalProperties": true,
+          "$comment": "Allows any valid component data structure. Validation against the specific component's schema should happen at runtime by the interpreter or EntityManager."
+        }
+      },
+      "required": [
+        "entity_ref",
+        "component_type",
+        "operation"
+      ],
+      "additionalProperties": false,
+      "$comment": "Ensures no extraneous properties are added to modify parameters. The 'data' field is conditionally required based on 'operation', handled by implementation logic rather than schema complexity here, but specified in descriptions. [cite: 637, 640]",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "add"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "data"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "update"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "data"
+            ]
+          }
+        }
+      ]
+    },
+    "DispatchEventParameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_EVENT operation. [cite: 644]",
+      "properties": {
+        "event_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. The namespaced ID of the event to dispatch onto the EventBus (e.g., 'event:damage_applied', 'ui:message_sent'). [cite: 646]"
+        },
+        "payload_mapping": {
+          "type": "object",
+          "description": "Optional. Defines the payload for the dispatched event. Keys are payload field names. Values use PayloadValueResolverService syntax to source data from context (event, entities, query results, literals). If omitted, an empty payload is dispatched. [cite: 647, 648, 649]",
+          "additionalProperties": {
+            "type": [
+              "object",
+              "string",
+              "number",
+              "boolean",
+              "array",
+              "null"
+            ],
+            "$comment": "Allows resolved literal values or nested objects for resolver syntax."
+          }
+        }
+      },
+      "required": [
+        "event_type"
+      ],
+      "additionalProperties": false,
+      "$comment": "Ensures no extraneous properties are added to dispatch parameters."
+    },
+    "IfParameters": {
+      "type": "object",
+      "description": "Parameters for the IF operation, enabling conditional execution. [cite: 650]",
+      "properties": {
+        "condition": {
+          "$ref": "./json-logic.schema.json#",
+          "description": "Required. A JSON Logic object defining the condition to evaluate. Can access the same context as rule conditions (event, entities, query results). [cite: 651, 652]"
+        },
+        "then_actions": {
+          "type": "array",
+          "description": "Required. An array of Operation objects to execute sequentially if the condition is true. [cite: 653]",
+          "items": {
+            "$ref": "#/$defs/Operation",
+            "$comment": "Recursive reference to the Operation schema. [cite: 435, 436, 438, 440, 441, 512]"
+          },
+          "minItems": 1
+        },
+        "else_actions": {
+          "type": "array",
+          "description": "Optional. An array of Operation objects to execute sequentially if the condition is false. [cite: 654]",
+          "items": {
+            "$ref": "#/$defs/Operation",
+            "$comment": "Recursive reference to the Operation schema. [cite: 435, 436, 438, 440, 441, 512]"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "condition",
+        "then_actions"
+      ],
+      "additionalProperties": false,
+      "$comment": "Ensures no extraneous properties are added to IF parameters."
+    },
+    "LogParameters": {
+      "type": "object",
+      "description": "Parameters for the LOG operation, used for debugging. [cite: 656]",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Required. The message template to log. Can contain placeholders (e.g., '{actor.id}', '{context.variableName}') resolved via PayloadValueResolverService. [cite: 658, 659]"
+        },
+        "level": {
+          "type": "string",
+          "description": "Optional. Specifies the logging level. [cite: 660]",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "additionalProperties": false,
+      "$comment": "Ensures no extraneous properties are added to log parameters."
+    }
+  }
+}

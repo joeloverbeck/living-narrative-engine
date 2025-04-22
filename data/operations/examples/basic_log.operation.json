@@ -1,0 +1,7 @@
+{
+  "type": "LOG",
+  "parameters": {
+    "message": "Interaction rule processed successfully.",
+    "level": "info"
+  }
+}

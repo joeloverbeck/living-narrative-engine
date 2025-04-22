@@ -1,0 +1,143 @@
+[
+  {
+    "rule_id": "LogPlayerMovement",
+    "event_type": "event:entity_moved",
+    "condition": {
+      "==": [
+        {
+          "var": "event.payload.entityId"
+        },
+        "core:player"
+      ]
+    },
+    "actions": [
+      {
+        "type": "LOG",
+        "comment": "Log a message indicating the player entity moved.",
+        "parameters": {
+          "message": "Player entity ({event.payload.entityId}) moved from {event.payload.oldLocationId} to {event.payload.newLocationId}.",
+          "level": "info"
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "ApplyPoisonOnSpecificWeaponHit",
+    "event_type": "event:damage_applied",
+    "condition": {
+      "and": [
+        {
+          "==": [
+            {
+              "var": "event.payload.weaponType"
+            },
+            "game:weapon_poison_dagger"
+          ]
+        },
+        {
+          ">": [
+            {
+              "var": "event.payload.damageAmount"
+            },
+            0
+          ]
+        }
+      ]
+    },
+    "actions": [
+      {
+        "type": "LOG",
+        "parameters": {
+          "message": "Checking if target {event.payload.targetId} should be poisoned by weapon {event.payload.weaponType}.",
+          "level": "debug"
+        }
+      },
+      {
+        "type": "QUERY_COMPONENT",
+        "comment": "Check if the target already has the 'Poisoned' status effect.",
+        "parameters": {
+          "entity_ref": "event.payload.targetId",
+          "component_type": "game:status_effect_poisoned",
+          "result_variable": "targetHasPoison"
+        }
+      },
+      {
+        "type": "IF",
+        "comment": "Only apply poison if the target doesn't already have it.",
+        "parameters": {
+          "condition": {
+            "==": [
+              {
+                "var": "context.targetHasPoison"
+              },
+              null
+            ]
+          },
+          "then_actions": [
+            {
+              "type": "MODIFY_COMPONENT",
+              "comment": "Add the 'Poisoned' status effect component.",
+              "parameters": {
+                "entity_ref": "event.payload.targetId",
+                "component_type": "game:status_effect_poisoned",
+                "operation": "add",
+                "data": {
+                  "duration": 10,
+                  "potency": {
+                    "var": "event.payload.weaponPotency"
+                  },
+                  "source_entity_id": {
+                    "var": "event.payload.sourceEntityId"
+                  }
+                }
+              }
+            },
+            {
+              "type": "LOG",
+              "parameters": {
+                "message": "Applied poison effect to target {event.payload.targetId} from weapon {event.payload.weaponType}.",
+                "level": "info"
+              }
+            },
+            {
+              "type": "DISPATCH_EVENT",
+              "comment": "Notify that a status effect was applied.",
+              "parameters": {
+                "event_type": "event:status_effect_applied",
+                "payload_mapping": {
+                  "targetEntityId": {
+                    "source": "event",
+                    "path": "payload.targetId"
+                  },
+                  "effectType": {
+                    "source": "literal",
+                    "type": "string",
+                    "value": "game:status_effect_poisoned"
+                  },
+                  "duration": {
+                    "source": "literal",
+                    "type": "number",
+                    "value": 10
+                  },
+                  "sourceEntityId": {
+                    "source": "event",
+                    "path": "payload.sourceEntityId"
+                  }
+                }
+              }
+            }
+          ],
+          "else_actions": [
+            {
+              "type": "LOG",
+              "parameters": {
+                "message": "Target {event.payload.targetId} already has poison effect. Not applying again.",
+                "level": "debug"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]
