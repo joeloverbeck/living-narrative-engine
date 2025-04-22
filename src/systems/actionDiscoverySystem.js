@@ -11,7 +11,6 @@
 /** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../components/connectionsComponent.js').ConnectionsComponent} ConnectionsComponent */ // Needed for 'direction' domain
 /** @typedef {import('../core/services/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
 
 // --- Dependency Imports ---
@@ -19,8 +18,6 @@
 import {ActionTargetContext} from '../services/actionValidationService.js';
 import {getEntityIdsForScopes} from '../services/entityScopeService.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
-// Import ConnectionsComponent to access its methods if needed for directions
-import {ConnectionsComponent} from '../components/connectionsComponent.js';
 
 
 /**
