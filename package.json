@@ -9,10 +9,12 @@
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
     "babel-jest": "^29.7.0",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "whatwg-fetch": "^3.6.20"
   },
   "scripts": {
-    "test": "jest",
-    "coverage": "jest --coverage"
+    "test": "jest --env=jsdom",
+    "coverage": "jest --coverage --env=jsdom"
   }
 }

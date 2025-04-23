@@ -11,8 +11,8 @@ describe('WorkspaceDataFetcher', () => {
     beforeEach(() => {
         // Create a new instance for each test to ensure isolation
         fetcher = new WorkspaceDataFetcher();
-        // Spy on the global fetch function before each test
-        fetchSpy = jest.spyOn(global, 'fetch');
+        // Spy on window.fetch because we are in the jsdom environment
+        fetchSpy = jest.spyOn(window, 'fetch');
     });
 
     // Task 1: Setup Mocking (Teardown)

@@ -9,7 +9,7 @@
 
 // Assume ActionDefinition type exists from GameDataRepository types
 // Use the actual schema definition which includes 'commandVerb'
-/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 /**
  * Defines the list of prepositions recognized by the parser. (No changes needed)
@@ -22,9 +22,9 @@ const SUPPORTED_PREPOSITIONS = Object.freeze([
 class CommandParser {
     /**
      * @private
-     * @type {GameDataRepository} // <-- UPDATED Type
+     * @type {GameDataRepository}
      */
-    #repository; // <-- UPDATED Property Name
+    #repository;
 
     /**
      * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
@@ -42,7 +42,7 @@ class CommandParser {
             console.error("CommandParser Critical Error: GameDataRepository instance is missing the required 'getAllActionDefinitions' method.");
             throw new Error("CommandParser requires GameDataRepository with 'getAllActionDefinitions'.");
         }
-        this.#repository = repository; // <-- UPDATED Assignment
+        this.#repository = repository;
     }
 
     /**

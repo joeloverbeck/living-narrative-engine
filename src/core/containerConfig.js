@@ -44,6 +44,7 @@ import SchemaLoader from './services/schemaLoader.js';
 import WorkspaceDataFetcher from './services/workspaceDataFetcher.js';
 import StaticConfiguration from './services/staticConfiguration.js';
 import WorldLoader from './services/worldLoader.js';
+import WelcomeMessageService from '../services/welcomeMessageService.js';
 
 // Other Services (Existing application services)
 import ConditionEvaluationService from "../services/conditionEvaluationService.js";
@@ -58,12 +59,15 @@ import {ActionValidationService} from "../services/actionValidationService.js"; 
 import TargetResolutionService from '../services/targetResolutionService.js';
 import PayloadValueResolverService from '../services/payloadValueResolverService.js';
 import ValidatedEventDispatcher from "../services/validatedEventDispatcher.js";
+import SystemInitializer from './initializers/systemInitializer.js';
 import JsonLogicEvaluationService from '../logic/jsonLogicEvaluationService.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
 import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
 import {ComponentRequirementChecker} from '../validation/componentRequirementChecker.js'; // <-- ADDED Import
 import {DomainContextCompatibilityChecker} from '../validation/domainContextCompatibilityChecker.js'; // <-- Ensure this is imported
 import {PrerequisiteChecker} from '../validation/prerequisiteChecker.js'; // <-- Ensure this is imported
+// --- ADDED IMPORT --- (Ticket: Feat(Core): Register InputSetupService)
+import InputSetupService from './setup/inputSetupService.js'; // <-- AC2: Import statement added
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
 
@@ -234,6 +238,16 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     }), {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered ValidatedEventDispatcher.");
 
+    container.register('WelcomeMessageService', (c) => {
+        return new WelcomeMessageService({
+            eventBus: c.resolve('EventBus'),
+            gameDataRepository: c.resolve('GameDataRepository'),
+            validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
+            logger: c.resolve('ILogger')
+        });
+    }, { lifecycle: 'singleton' }); // Register as singleton
+    logger.info("ContainerConfig: Registered WelcomeMessageService.");
+
     // --- 8. Action Executor ---
     container.register('ActionExecutor', (c) => {
         const resolvedLogger = c.resolve('ILogger');
@@ -287,21 +301,48 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         gameStateManager: c.resolve('GameStateManager')
     }), {lifecycle: 'singleton'});
 
-    // --- 12. Game State Initializer Service ---
+    // --- 12. Game State & World Initializers ---
+    // === TICKET 7.2 MODIFICATION START ===
     container.register('GameStateInitializer', (c) => new GameStateInitializer({
         entityManager: c.resolve('EntityManager'),
         gameStateManager: c.resolve('GameStateManager'),
-        gameDataRepository: c.resolve('GameDataRepository')
+        gameDataRepository: c.resolve('GameDataRepository'),
+        // --- Added Dependencies ---
+        validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
+        logger: c.resolve('ILogger')
+        // --- End Added Dependencies ---
     }), {lifecycle: 'singleton'});
+    // === TICKET 7.2 MODIFICATION END ===
+    logger.info("ContainerConfig: Registered GameStateInitializer (updated dependencies)."); // Log message updated
 
-    // --- 13. World Initializer Service ---
     container.register('WorldInitializer', (c) => new WorldInitializer({
         entityManager: c.resolve('EntityManager'),
         gameStateManager: c.resolve('GameStateManager'),
         gameDataRepository: c.resolve('GameDataRepository')
     }), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered WorldInitializer."); // Added log for consistency
 
-    // --- 14. Core Systems ---
+    container.register(
+        'SystemInitializer',
+        c => new SystemInitializer(c, c.resolve('ILogger')),
+        // Defaults to 'singleton' lifecycle
+    );
+    logger.info("ContainerConfig: Registered SystemInitializer."); // Added log for consistency
+
+    // --- ADDED REGISTRATION --- (Ticket: Feat(Core): Register InputSetupService)
+    // AC3: Located near other setup/initializer services
+    // AC4: Added registration block
+    container.register('InputSetupService', (c) => new InputSetupService({
+        container: c, // Pass the container itself
+        logger: c.resolve('ILogger'),
+        validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
+        gameLoop: c.resolve('GameLoop')
+    }), { lifecycle: 'singleton' });
+    // AC5: Added log message
+    logger.info("ContainerConfig: Registered InputSetupService.");
+
+
+    // --- 14. Core Systems --- // Renumbered for clarity
     // (Registrations for other systems remain unchanged)
     container.register('GameRuleSystem', (c) => new GameRuleSystem({
         eventBus: c.resolve('EventBus'),
@@ -411,10 +452,11 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     logger.info("ContainerConfig: Registered ActionDiscoverySystem.");
 
 
-    // --- 15. Input Handler ---
+    // --- 15. Input Handler --- // Renumbered for clarity
     container.register('InputHandler', (c) => new InputHandler(c.resolve('inputElement'), null, c.resolve('EventBus')), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered InputHandler."); // Added log for consistency
 
-    // --- 16. Game Loop ---
+    // --- 16. Game Loop --- // Renumbered for clarity
     container.register('GameLoop', (c) => new GameLoop({
         gameStateManager: c.resolve('GameStateManager'),
         inputHandler: c.resolve('InputHandler'),
@@ -427,6 +469,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
         logger: c.resolve('ILogger')
     }), {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered GameLoop."); // Added log for consistency
 
 
     logger.info("ContainerConfig: Service registration complete.");
