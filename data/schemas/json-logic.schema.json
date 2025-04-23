@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/common/json-logic.schema.json",
+  "title": "JSON Logic Rule",
+  "description": "A JSON Schema representing a JSON Logic rule object. Defines the structure for logic operations based on the specification at https://jsonlogic.com/",
+  "$comment": "This schema defines the recursive structure of JSON Logic rules, allowing for complex logical, arithmetic, array, and data access operations. It primarily validates the {\"operator\": [arguments...]} structure where arguments can be primitives, arrays, or nested rules. It also accommodates shorthand like {\"var\": \"path\"}.",
+  "definitions": {
+    "primitive": {
+      "description": "Allowed primitive types in JSON Logic arguments.",
+      "type": ["boolean", "string", "number", "null"]
+    },
+    "rule_logic": {
+      "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a nested rule object.",
+      "anyOf": [
+        { "$ref": "#/definitions/primitive" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/definitions/rule_logic" }
+        },
+        { "$ref": "#" }
+      ]
+    }
+  },
+  "type": "object",
+  "minProperties": 1,
+  "maxProperties": 1,
+  "patternProperties": {
+    "^.+$": {
+      "description": "The arguments for the operator. Typically an array, but can be a primitive for specific operator shorthands (like 'var').",
+      "anyOf": [
+        { "$ref": "#/definitions/primitive" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/definitions/rule_logic" }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

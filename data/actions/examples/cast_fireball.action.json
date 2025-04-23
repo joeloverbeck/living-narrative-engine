@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/action-definition.schema.json",
+  "id": "example:action_cast_fireball",
+  "commandVerb": "cast",
+  "name": "Cast Fireball",
+  "target_domain": "environment",
+  "actor_required_components": [
+    "core:ManaPool"
+  ],
+  "actor_forbidden_components": [],
+  "target_required_components": [
+    "core:Health"
+  ],
+  "target_forbidden_components": [],
+  "prerequisites": [
+    {
+      "and": [
+        {
+          "and": [
+            {"!!": {"var": "actor.components.core:ManaPool"}},
+            {">": [{"var": "actor.components.core:ManaPool.current"}, 10]}
+          ]
+        },
+        {
+          "!": {"var": "target.components.example:FireImmunity"}
+        }
+      ]
+    }
+  ],
+  "template": "cast fireball {target}",
+  "dispatch_event": {
+    "eventName": "event:spell_cast_attempted",
+    "payload": {
+      "casterId": "actor.id",
+      "targetId": "target.id",
+      "spellId": "literal.string.fireball",
+      "manaCost": "literal.number.10"
+    }
+  }
+}

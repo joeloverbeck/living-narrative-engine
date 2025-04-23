@@ -1,0 +1,31 @@
+{
+  "$schema": "../../schemas/action-definition.schema.json",
+  "id": "example:action_phase_shift",
+  "commandVerb": "phase",
+  "name": "Phase Shift",
+  "target_domain": "self",
+  "actor_required_components": [
+    "example:PhasingEnergy"
+  ],
+  "actor_forbidden_components": [
+    "example:PhasedOut"
+  ],
+  "target_required_components": [],
+  "target_forbidden_components": [],
+  "prerequisites": [
+    {
+      "and": [
+        {"!!": {"var": "actor.components.example:PhasingEnergy"}},
+        {">": [{"var": "actor.components.example:PhasingEnergy.current"}, 5]}
+      ]
+    }
+  ],
+  "template": "phase shift",
+  "dispatch_event": {
+    "eventName": "event:phase_shift_attempted",
+    "payload": {
+      "entityId": "actor.id",
+      "energyCost": "literal.number.5"
+    }
+  }
+}

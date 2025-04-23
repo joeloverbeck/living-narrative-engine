@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/system-rule.schema.json",
+  "title": "System Rule Schema",
+  "description": "Defines the structure for a System Rule, which represents a piece of data-driven game logic based on the Event-Condition-Action (ECA) pattern. A rule listens for a specific event, optionally checks conditions, and executes a sequence of actions.",
+  "type": "object",
+  "$ref": "#/$defs/SystemRule",
+  "$defs": {
+    "SystemRule": {
+      "type": "object",
+      "description": "A single Event-Condition-Action (ECA) rule that defines a response to a game event.",
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "description": "Optional unique identifier for the rule, useful for debugging and logging.",
+          "$comment": "While optional in schema, strongly recommended for traceability."
+        },
+        "event_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. Specifies the namespaced ID of the event that triggers this rule's evaluation."
+        },
+        "condition": {
+          "type": "object",
+          "description": "Optional. Specifies the condition (using JSON Logic format) that must evaluate to true for the `actions` to execute. If omitted, the actions are always executed upon event trigger.",
+          "$ref": "./json-logic.schema.json#",
+          "$comment": "References the standard JSON Logic structure."
+        },
+        "actions": {
+          "type": "array",
+          "description": "Required. Ordered list of Operation objects to execute sequentially if the rule's event_type matches and its condition (if any) evaluates to true. Operations define interactions like querying/modifying components or dispatching new events.",
+          "minItems": 1,
+          "items": {
+            "$ref": "operation.schema.json#/$defs/Operation",
+            "description": "A single Operation object conforming to the structure defined in operation.schema.json. Defines a specific step like QUERY_COMPONENT, MODIFY_COMPONENT, IF, DISPATCH_EVENT, etc."
+          }
+        }
+      },
+      "required": [
+        "event_type",
+        "actions"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
