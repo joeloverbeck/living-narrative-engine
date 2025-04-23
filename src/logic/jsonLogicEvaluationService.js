@@ -31,7 +31,7 @@ class JsonLogicEvaluationService {
      * @param {ILogger} dependencies.logger - Logging service.
      * @throws {Error} If required dependencies are missing or invalid.
      */
-    constructor({ logger }) {
+    constructor({logger}) {
         // AC.2: Uses injected ILogger
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
             throw new Error("JsonLogicEvaluationService requires a valid ILogger instance.");
@@ -54,7 +54,7 @@ class JsonLogicEvaluationService {
         const ruleSummary = JSON.stringify(rule).substring(0, 150) + (JSON.stringify(rule).length > 150 ? '...' : '');
         this.#logger.debug(`Evaluating rule: ${ruleSummary}`);
         console.log("Context for evaluation:"); // Use console.log/dir for better inspection
-        console.dir(context, { depth: 5 }); // Inspect context structure
+        console.dir(context, {depth: 5}); // Inspect context structure
 
         // Task 2: Implement try...catch around the library call
         // AC.3.d: Catch potential exceptions
@@ -62,6 +62,13 @@ class JsonLogicEvaluationService {
             // Task 2: Call the library's apply function
             // AC.3.c: Calls jsonLogic.apply(rule, context)
             const result = jsonLogic.apply(rule, context);
+
+
+            // --- DEBUG LOGGING ---
+            console.log(`[DEBUG] Rule: ${JSON.stringify(rule)}`);
+            console.log(`[DEBUG] Raw jsonLogic.apply result:`, result);
+            console.log(`[DEBUG] typeof result: ${typeof result}`);
+            // --- END DEBUG LOGGING ---
 
             // Task 2 / AC.3.f: Validate return type
             if (typeof result !== 'boolean') {
