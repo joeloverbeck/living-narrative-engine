@@ -3,9 +3,13 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./defs.js').GameEvent} GameEvent */ // Assuming GameEvent is defined here or adjust path
+/** @typedef {import('./defs.js').GameEvent} GameEvent */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('./defs.js').JsonLogicEntityContext} JsonLogicEntityContext */
+// +++ Add imports for the new function's parameters +++
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+
 
 /** @typedef {string | number | null | undefined} EntityId */
 
@@ -31,17 +35,17 @@ export function createComponentAccessor(entityId, entityManager, logger) {
         // --- GET Trap (Correct logic + Optional Logging) ---
         get: function (target, prop, receiver) {
             // <<<--- ADD TEMPORARY LOGGING HERE --->>>
-            console.log(`!!! ComponentAccessor GET Trap: EntityID=${entityId}, Prop=${String(prop)}`);
+            // console.log(`!!! ComponentAccessor GET Trap: EntityID=${entityId}, Prop=${String(prop)}`);
             // <<<------------------------------------>>>
             if (typeof prop === 'string') {
                 if (prop === 'isProxy' || prop === 'then' || typeof prop === 'symbol') {
                     // console.log(`!!! ComponentAccessor GET Trap: Skipping special prop ${String(prop)}`);
                     return undefined;
                 }
-                logger.debug(`ComponentAccessor: GET trap for prop [${String(prop)}] on entity [${entityId}]`);
+                // logger.debug(`ComponentAccessor: GET trap for prop [${String(prop)}] on entity [${entityId}]`); // Can be noisy
                 try {
                     // <<<--- ADD TEMPORARY LOGGING HERE --->>>
-                    console.log(`!!! ComponentAccessor GET Trap: Calling getComponentData(${entityId}, ${String(prop)})`);
+                    // console.log(`!!! ComponentAccessor GET Trap: Calling getComponentData(${entityId}, ${String(prop)})`);
                     // <<<------------------------------------>>>
                     const componentData = entityManager.getComponentData(entityId, prop);
                     // console.log(`!!! ComponentAccessor GET Trap: Data for ${String(prop)}:`, componentData); // Be careful logging potentially large objects
@@ -65,11 +69,11 @@ export function createComponentAccessor(entityId, entityManager, logger) {
         has: function (target, prop) {
             if (typeof prop === 'string') {
                 // --- Correct logic for 'has' trap ---
-                logger.debug(`ComponentAccessor: HAS trap for prop [${String(prop)}] on entity [${entityId}]`);
+                // logger.debug(`ComponentAccessor: HAS trap for prop [${String(prop)}] on entity [${entityId}]`); // Can be noisy
                 try {
                     // Check existence using the correct EntityManager method
                     const exists = entityManager.hasComponent(entityId, prop);
-                    logger.debug(`ComponentAccessor: Existence check for [${String(prop)}]: ${exists}`);
+                    // logger.debug(`ComponentAccessor: Existence check for [${String(prop)}]: ${exists}`); // Can be noisy
                     return exists; // Return boolean
                 } catch (error) {
                     logger.error(`ComponentAccessor: Error checking component existence [${String(prop)}] for entity [${entityId}]:`, error);
@@ -82,7 +86,7 @@ export function createComponentAccessor(entityId, entityManager, logger) {
 
         // --- OWNKEYS Trap (Existing logic is likely okay) ---
         ownKeys: function (target) {
-            logger.debug(`ComponentAccessor: ownKeys trap invoked for entity [${entityId}]. Returning empty array.`);
+            // logger.debug(`ComponentAccessor: ownKeys trap invoked for entity [${entityId}]. Returning empty array.`); // Can be noisy
             return []; // Returning empty is often safest unless full enumeration is needed
         },
 
@@ -90,17 +94,21 @@ export function createComponentAccessor(entityId, entityManager, logger) {
         getOwnPropertyDescriptor: function (target, prop) {
             // Now that 'this.has' is fixed, this *might* work correctly.
             // It attempts to create a descriptor if the component exists.
-            if (typeof prop === 'string' && this.has(target, prop)) { // 'this.has' now returns boolean
-                logger.debug(`ComponentAccessor: getOwnPropertyDescriptor trap for existing prop [${String(prop)}]`);
+            // Note: Directly calling 'has' might cause issues in strict environments, use Reflect.has if needed
+            const exists = Reflect.has(this, prop); // Safer way to call the trap internally
+
+            if (typeof prop === 'string' && exists) { // Use the result of the 'has' trap
+                // logger.debug(`ComponentAccessor: getOwnPropertyDescriptor trap for existing prop [${String(prop)}]`); // Can be noisy
                 return {
                     // Using 'get' trap ensures consistency if data fetching is complex
-                    get: () => this.get(target, prop, null),
+                    // Note: Using 'this.get' might also be problematic, use Reflect.get
+                    get: () => Reflect.get(this, prop, null), // Safer way to call the trap
                     set: undefined, // Read-only
                     enumerable: true, // Important for introspection
                     configurable: true // Usually true for proxy properties
                 };
             }
-            logger.debug(`ComponentAccessor: getOwnPropertyDescriptor trap for non-string or non-existent prop [${String(prop)}]`);
+            // logger.debug(`ComponentAccessor: getOwnPropertyDescriptor trap for non-string or non-existent prop [${String(prop)}]`); // Can be noisy
             // Fallback for non-string or non-existent properties
             return Reflect.getOwnPropertyDescriptor(target, prop);
         }
@@ -151,9 +159,6 @@ export function createJsonLogicContext(event, actorId, targetId, entityManager, 
     // --- Populate Actor --- (AC.4, AC.5, AC.9)
     if (actorId && (typeof actorId === 'string' || typeof actorId === 'number')) {
         try {
-            // Note: EntityManager.getEntityInstance might not be strictly necessary
-            // if JsonLogicEntityContext only needs the ID and the component accessor,
-            // but checking existence first is safer.
             const actorEntity = entityManager.getEntityInstance(actorId);
             if (actorEntity) {
                 logger.debug(`Found actor entity [${actorId}]. Creating context entry.`);
@@ -165,7 +170,9 @@ export function createJsonLogicContext(event, actorId, targetId, entityManager, 
                 logger.warn(`Actor entity not found for ID [${actorId}]. Setting actor context to null.`);
             }
         } catch (error) {
-            throw error;
+            // Log specific error during actor lookup? Or let it propagate?
+            logger.error(`Error processing actor ID [${actorId}] in createJsonLogicContext:`, error);
+            throw error; // Re-throw for now
         }
     } else if (actorId) {
         logger.warn(`Invalid actorId type provided: [${typeof actorId}]. Setting actor context to null.`);
@@ -174,48 +181,30 @@ export function createJsonLogicContext(event, actorId, targetId, entityManager, 
     // --- Populate Target --- (AC.4, AC.5, AC.9)
     if (targetId && (typeof targetId === 'string' || typeof targetId === 'number')) {
         try {
-            // <<<--- ADD LOG 1 --->>>
-            console.log(`!!! contextAssembler: Attempting to find target entity. ID = ${targetId}`);
             const targetEntity = entityManager.getEntityInstance(targetId);
-            // <<<--- ADD LOG 2 --->>>
-            console.log(`!!! contextAssembler: Result of getEntityInstance(targetId):`, targetEntity ? `Found (ID: ${targetEntity.id})` : 'NOT Found (null/undefined)');
 
             if (targetEntity) {
                 logger.debug(`Found target entity [${targetId}]. Creating context entry.`);
-                // <<<--- ADD LOG 3 --->>>
-                console.log(`!!! contextAssembler: Calling createComponentAccessor for target ID: ${targetEntity.id}`);
                 const componentsProxy = createComponentAccessor(targetEntity.id, entityManager, logger);
-                // <<<--- ADD LOG 4 --->>>
-                // Check if it's actually a proxy (might log {} or Proxy {})
-                console.log(`!!! contextAssembler: Result of createComponentAccessor:`, componentsProxy);
-
                 evaluationContext.target = {
                     id: targetEntity.id,
                     components: componentsProxy // Assign the proxy
                 };
-                // <<<--- ADD LOG 5 --->>>
-                console.log(`!!! contextAssembler: Assigned target to evaluationContext:`, evaluationContext.target);
 
             } else {
-                // <<<--- ADD LOG 6 --->>>
-                console.log(`!!! contextAssembler: Target entity NOT found, target context will be null.`);
                 logger.warn(`Target entity not found for ID [${targetId}]. Setting target context to null.`);
                 // evaluationContext.target remains null
             }
         } catch (error) {
-            // <<<--- ADD LOG 7 --->>>
-            console.log(`!!! contextAssembler: ERROR during target processing for ID ${targetId}:`, error);
-            throw error;
+            logger.error(`Error processing target ID [${targetId}] in createJsonLogicContext:`, error);
+            throw error; // Re-throw for now
         }
     } else if (targetId) {
-        // <<<--- ADD LOG 8 --->>>
-        console.log(`!!! contextAssembler: Invalid targetId type: ${typeof targetId}. Target context will be null.`);
         logger.warn(`Invalid targetId type provided: [${typeof targetId}]. Setting target context to null.`);
         // evaluationContext.target remains null
     } else {
-        // <<<--- ADD LOG 9 --->>>
-        console.log(`!!! contextAssembler: No targetId provided. Target context is null.`);
-        // evaluationContext.target remains null
+        // No targetId provided, target context remains null (this is normal)
+        logger.debug("No targetId provided, target context remains null.");
     }
 
     logger.debug("JsonLogicEvaluationContext assembled successfully.");

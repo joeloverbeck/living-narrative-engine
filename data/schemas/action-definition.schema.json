@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/action-definition.schema.json",
   "title": "Action Definition Schema",
-  "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies requirements, targeting, prerequisites, output format, and optional event dispatching for actions.",
+  "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting, JSON Logic prerequisites, output format, and optional event dispatching for actions. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",
   "definitions": {
   },
@@ -41,41 +41,10 @@
         "direction"
       ]
     },
-    "actor_required_components": {
-      "type": "array",
-      "description": "Optional. List of component identifiers (namespaced IDs) that the acting entity must possess.",
-      "items": {
-        "$ref": "./common.schema.json#/definitions/namespacedId"
-      },
-      "default": []
-    },
-    "actor_forbidden_components": {
-      "type": "array",
-      "description": "Optional. List of component identifiers (namespaced IDs) that the acting entity must NOT possess.",
-      "items": {
-        "$ref": "./common.schema.json#/definitions/namespacedId"
-      },
-      "default": []
-    },
-    "target_required_components": {
-      "type": "array",
-      "description": "Optional. List of component identifiers (namespaced IDs) that the target entity must possess (if target_domain is applicable).",
-      "items": {
-        "$ref": "./common.schema.json#/definitions/namespacedId"
-      },
-      "default": []
-    },
-    "target_forbidden_components": {
-      "type": "array",
-      "description": "Optional. List of component identifiers (namespaced IDs) that the target entity must NOT possess (if target_domain is applicable).",
-      "items": {
-        "$ref": "./common.schema.json#/definitions/namespacedId"
-      },
-      "default": []
-    },
     "prerequisites": {
       "type": "array",
-      "description": "Optional. List of conditions that must all evaluate to true for the action to be valid. Each condition is a standard JSON Logic object (see common/json-logic.schema.json) evaluated by the ConditionEvaluatorService using the appropriate actor/target context. Evaluated AFTER basic component requirements.",
+      "description": "Optional. Defines all conditional requirements beyond basic target domain checks. It is an array of standard JSON Logic objects evaluated by JsonLogicEvaluationService. The evaluation context includes 'actor' and 'target'. This field replaces the removed component requirement fields (actor_required_components, etc.).",
+      "$comment": "This 'prerequisites' array, using JSON Logic, replaces the deprecated actor_required_components, actor_forbidden_components, target_required_components, and target_forbidden_components fields.",
       "items": {
         "$ref": "./json-logic.schema.json#"
       },

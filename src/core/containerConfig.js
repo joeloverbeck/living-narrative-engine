@@ -65,7 +65,6 @@ import {formatActionCommand} from '../services/actionFormatter.js';
 import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
 import {ComponentRequirementChecker} from '../validation/componentRequirementChecker.js'; // <-- ADDED Import
 import {DomainContextCompatibilityChecker} from '../validation/domainContextCompatibilityChecker.js'; // <-- Ensure this is imported
-import {PrerequisiteChecker} from '../validation/prerequisiteChecker.js'; // <-- Ensure this is imported
 // --- ADDED IMPORT --- (Ticket: Feat(Core): Register InputSetupService)
 import InputSetupService from './setup/inputSetupService.js'; // <-- AC2: Import statement added
 
@@ -199,13 +198,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     container.register('DomainContextCompatibilityChecker', (c) => new DomainContextCompatibilityChecker({logger: c.resolve('ILogger')}), {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered DomainContextCompatibilityChecker.");
 
-    container.register('PrerequisiteChecker', (c) => new PrerequisiteChecker({
-        jsonLogicEvaluationService: c.resolve('JsonLogicEvaluationService'), // PrerequisiteChecker needs JsonLogicEvaluationService
-        entityManager: c.resolve('EntityManager'),                            // PrerequisiteChecker needs EntityManager
-        logger: c.resolve('ILogger')
-    }), {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered PrerequisiteChecker.");
-
     // --- Action Validation Service (UPDATED REGISTRATION according to Ticket 7 AC1) ---
     container.register('ActionValidationService', (c) => {
         logger.info("ContainerConfig: Creating ActionValidationService instance with direct dependencies...");
@@ -214,7 +206,6 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
             logger: c.resolve('ILogger'),                                   // Directly needed
             componentRequirementChecker: c.resolve('ComponentRequirementChecker'), // Directly needed (Checker 1)
             domainContextCompatibilityChecker: c.resolve('DomainContextCompatibilityChecker'), // Directly needed (Checker 2)
-            prerequisiteChecker: c.resolve('PrerequisiteChecker')           // Directly needed (Checker 3)
         });
         logger.info("ContainerConfig: ActionValidationService instance created.");
         return service;
@@ -245,7 +236,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
             validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
             logger: c.resolve('ILogger')
         });
-    }, { lifecycle: 'singleton' }); // Register as singleton
+    }, {lifecycle: 'singleton'}); // Register as singleton
     logger.info("ContainerConfig: Registered WelcomeMessageService.");
 
     // --- 8. Action Executor ---
@@ -337,7 +328,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         logger: c.resolve('ILogger'),
         validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
         gameLoop: c.resolve('GameLoop')
-    }), { lifecycle: 'singleton' });
+    }), {lifecycle: 'singleton'});
     // AC5: Added log message
     logger.info("ContainerConfig: Registered InputSetupService.");
 

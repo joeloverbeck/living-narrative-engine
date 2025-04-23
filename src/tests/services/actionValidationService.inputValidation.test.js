@@ -7,14 +7,12 @@ import {ActionValidationService} from '../../services/actionValidationService.js
 import {ActionTargetContext} from "../../models/actionTargetContext.js";
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
 // --- Mock JsonLogicEvaluationService ---
-import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Keep if used directly elsewhere, but not needed for AVS constructor
-import {ComponentRequirementChecker} from "../../validation/componentRequirementChecker.js";
-// --- ADDED IMPORTS FOR MISSING CHECKERS ---
+// Import is not strictly needed if only mock is used, but keep for clarity or potential direct use elsewhere
+// --- Import Checkers ---
 import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js';
-import {PrerequisiteChecker} from '../../validation/prerequisiteChecker.js';
-// ------------------------------------------
 
 
+// --- Mock Logger ---
 // Assuming a simple mock logger, replace with your actual logger/mocking library if needed
 const mockLogger = {
     log: jest.fn(),
@@ -25,7 +23,6 @@ const mockLogger = {
 };
 
 // --- Mock Component Classes ---
-// (Keep existing mock component classes)
 class MockComponentA {
 }
 
@@ -36,9 +33,11 @@ class MockComponentC {
 }
 
 class MockComponentRequired {
-} // Used for Actor required
+}
+
 class MockComponentForbidden {
-} // Used for Actor forbidden
+}
+
 class MockTargetComponentRequired {
 }
 
@@ -46,7 +45,7 @@ class MockTargetComponentForbidden {
 }
 
 class MockComponentX {
-} // Another component for variety
+}
 
 // --- Mock EntityManager ---
 const mockEntityManager = {
@@ -74,9 +73,11 @@ const mockEntityManager = {
     hasComponent: jest.fn((entityId, componentTypeId) => {
         const entity = mockEntityManager.activeEntities.get(entityId);
         if (!entity) return false;
+        // Prefer entity's own mocked hasComponent if available (set by createMockEntity)
         if (typeof entity.hasComponent === 'function' && entity.hasComponent.mock) {
             return entity.hasComponent(componentTypeId);
         }
+        // Fallback for simpler cases or direct checks on the map
         const componentMap = entity.components;
         return componentMap?.has(componentTypeId) ?? false;
     }),
@@ -100,26 +101,23 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
     }
     const entity = {
         id: id,
+        // Mock the hasComponent method directly on the entity instance
         hasComponent: jest.fn((componentId) => componentIdSet.has(componentId)),
         getComponent: jest.fn((componentId) => internalComponentDataMap.get(componentId)),
         addComponent: jest.fn(),
         removeComponent: jest.fn(),
-        components: internalComponentDataMap
+        components: internalComponentDataMap // Keep this for potential direct access if needed
     };
-    mockEntityManager.addMockEntityForLookup(entity);
+    mockEntityManager.addMockEntityForLookup(entity); // Ensure it's findable by ID
     return entity;
 };
 
-
-// --- Mock GameDataRepository (Minimal) ---
-// NOTE: No longer needed for AVS instantiation, but keep if needed elsewhere in test suite
-const mockGameDataRepository = {
-    getAction: jest.fn(),
-    getEntityDefinition: jest.fn(),
-};
+// --- Mock createActionValidationContext Function ---
+// This function is required by the ActionValidationService constructor
+const mockCreateActionValidationContext = jest.fn();
 
 // --- Mock JsonLogicEvaluationService ---
-// NOTE: No longer needed directly by AVS constructor, but needed for PrerequisiteChecker
+// This service is required by the ActionValidationService constructor
 const mockJsonLogicEvaluationService = {
     evaluate: jest.fn(),
     addOperation: jest.fn(),
@@ -147,121 +145,134 @@ afterAll(() => {
 describe('ActionValidationService - Input Validation and Errors', () => {
     let service;
     let mockActor;
-    // --- Declare variables for checkers ---
-    let componentRequirementChecker;
+    // Declare variables for checkers and other dependencies needed for AVS
     let domainContextCompatibilityChecker;
-    let prerequisiteChecker;
-    // ------------------------------------
+    // Note: ComponentRequirementChecker and PrerequisiteChecker are NOT direct dependencies of AVS constructor
+    // let componentRequirementChecker;
+    // let prerequisiteChecker;
+
 
     beforeEach(() => {
+        // Reset mocks and state before each test
         jest.clearAllMocks();
         mockEntityManager.activeEntities.clear();
+        // Ensure getEntityInstance returns entities added via addMockEntityForLookup
         mockEntityManager.getEntityInstance.mockImplementation((id) => mockEntityManager.activeEntities.get(id));
+        // Clear the new mock function's history
+        mockCreateActionValidationContext.mockClear();
+        // Clear JsonLogic evaluation history
+        mockJsonLogicEvaluationService.evaluate.mockClear();
 
-        // --- Instantiate ALL required Checkers ---
-        componentRequirementChecker = new ComponentRequirementChecker({logger: mockLogger});
+
+        // --- Instantiate Dependencies NEEDED by ActionValidationService ---
         domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({logger: mockLogger});
-        prerequisiteChecker = new PrerequisiteChecker({
-            jsonLogicEvaluationService: mockJsonLogicEvaluationService, // Pass mock service
-            entityManager: mockEntityManager, // Pass mock entity manager
-            logger: mockLogger // Pass mock logger
-        });
-        // -----------------------------------------
+        // The other checkers (ComponentRequirementChecker, PrerequisiteChecker) might be instantiated here
+        // if they were needed by *other* tests within this describe block, but not for AVS instantiation.
+        // componentRequirementChecker = new ComponentRequirementChecker({logger: mockLogger});
+        // prerequisiteChecker = new PrerequisiteChecker({
+        //     jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+        //     entityManager: mockEntityManager,
+        //     logger: mockLogger
+        // });
 
-        // --- CORRECTED ActionValidationService Instantiation ---
+        // --- CORRECT ActionValidationService Instantiation ---
         service = new ActionValidationService({
-            entityManager: mockEntityManager, // Pass the mock EntityManager instance
-            logger: mockLogger, // Pass the mock logger instance
-            componentRequirementChecker, // Pass the ComponentRequirementChecker instance
-            domainContextCompatibilityChecker, // Pass the DomainContextCompatibilityChecker instance
-            prerequisiteChecker // Pass the PrerequisiteChecker instance
+            entityManager: mockEntityManager,           // Pass the mock EntityManager instance
+            logger: mockLogger,                       // Pass the mock logger instance
+            domainContextCompatibilityChecker: domainContextCompatibilityChecker, // Pass the DomainContextCompatibilityChecker instance
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService, // Pass the JsonLogicEvaluationService mock
+            createActionValidationContextFunction: mockCreateActionValidationContext // Pass the mock function
         });
         // ------------------------------------------------------
 
-        mockActor = createMockEntity('actor-throw'); // Create a default actor for these tests
+        // Create a default actor for use in tests
+        mockActor = createMockEntity('actor-default');
 
-        // Default JsonLogic mock to true (good practice)
+        // --- Default Mock Behaviors ---
+        // Good practice: JsonLogic prerequisites often default to passing unless tested otherwise
         mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
+        // Provide a default return value for the context creation function if its result might be needed
+        // Adjust the structure based on what createActionValidationContext actually returns
+        mockCreateActionValidationContext.mockReturnValue({
+            actor: {id: mockActor.id, /* other actor context data */},
+            target: null, // Default to no target context data
+            world: { /* world state data */}
+        });
     });
 
 
     test('isValid throws Error if missing or invalid actionDefinition', () => {
         const context = ActionTargetContext.noTarget();
-        // Adjust error message based on the *actual* code in ActionValidationService.js (assuming it checks for non-empty string ID)
-        const expectedErrorMsgPart = "ActionValidationService.isValid: Missing or invalid actionDefinition."; // Simplified based on provided code
+        // Use the exact error message thrown by the service's constructor check
+        const expectedErrorMsg = "ActionValidationService.isValid: invalid actionDefinition";
 
-        // Check null actionDefinition
-        expect(() => service.isValid(null, mockActor, context)).toThrow(expectedErrorMsgPart);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsgPart,
-            expect.objectContaining({actionDefinition: null})
-        );
-        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled(); // Verify prerequisite check not reached
+        // Test cases for invalid actionDefinition
+        expect(() => service.isValid(null, mockActor, context)).toThrow(expectedErrorMsg);
+        expect(() => service.isValid(undefined, mockActor, context)).toThrow(expectedErrorMsg);
+        expect(() => service.isValid({}, mockActor, context)).toThrow(expectedErrorMsg); // Missing id
+        expect(() => service.isValid({id: null}, mockActor, context)).toThrow(expectedErrorMsg);
+        expect(() => service.isValid({id: ''}, mockActor, context)).toThrow(expectedErrorMsg); // Empty id
+        expect(() => service.isValid({id: '   '}, mockActor, context)).toThrow(expectedErrorMsg); // Whitespace id (due to trim())
+        expect(() => service.isValid({id: 123}, mockActor, context)).toThrow('actionDefinition?.id?.trim is not a function'); // Non-string id
 
-        mockLogger.error.mockClear(); // Clear mock calls
+        // Optional: Verify logger was called if desired (though throwing is the primary check)
+        // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
 
-        // Check empty id - adjusted check based on actual constructor code
-        expect(() => service.isValid({id: ''}, mockActor, context)).toThrow(expectedErrorMsgPart);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsgPart,
-            expect.objectContaining({actionDefinition: {id: ''}})
-        );
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled(); // Verify prerequisite check not reached
+        // Verify prerequisite/evaluation logic was not reached
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     });
 
     test('isValid throws Error if missing or invalid actorEntity', () => {
-        const actionDef = {id: 'test:action-throw', target_domain: 'none', template: 't'};
+        // A minimal valid action definition for this test
+        const actionDef = {id: 'test:action-basic', target_domain: 'none', template: 't'};
         const context = ActionTargetContext.noTarget();
-        // Adjust expected message based on actual code
-        const expectedErrorMsg = `ActionValidationService.isValid: Missing or invalid actorEntity object for action '${actionDef.id}'.`;
+        // Use the exact error message thrown by the service's constructor check
+        const expectedErrorMsg = "ActionValidationService.isValid: invalid actorEntity";
 
-        // Check null actorEntity
+        // Test cases for invalid actorEntity
         expect(() => service.isValid(actionDef, null, context)).toThrow(expectedErrorMsg);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expect.objectContaining({actorEntity: null})
-        );
-        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(() => service.isValid(actionDef, undefined, context)).toThrow(expectedErrorMsg);
+        expect(() => service.isValid(actionDef, {}, context)).toThrow(expectedErrorMsg); // Missing id
+        expect(() => service.isValid(actionDef, {id: null}, context)).toThrow(expectedErrorMsg);
+        expect(() => service.isValid(actionDef, {id: ''}, context)).toThrow(expectedErrorMsg); // Empty id
+        expect(() => service.isValid(actionDef, {id: '  '}, context)).toThrow(expectedErrorMsg); // Whitespace id (due to trim())
+        expect(() => service.isValid(actionDef, {id: 456}, context)).toThrow('actorEntity?.id?.trim is not a function'); // Non-string id
+        // Although the check is just for 'id', ensure it handles non-objects gracefully if possible
+        expect(() => service.isValid(actionDef, "not an object", context)).toThrow(expectedErrorMsg);
 
-        mockLogger.error.mockClear();
+        // Optional: Check logger call
+        // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
 
-        // Check invalid actorEntity structure (missing id or hasComponent function)
-        const invalidActor = {some: 'property'};
-        expect(() => service.isValid(actionDef, invalidActor, context)).toThrow(expectedErrorMsg);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expect.objectContaining({actorEntity: invalidActor})
-        );
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
+        // Verify prerequisite/evaluation logic was not reached
         expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     });
 
     test('isValid throws Error if missing or invalid targetContext', () => {
-        const actionDef = {id: 'test:action-throw', target_domain: 'none', template: 't'};
-        // Adjust expected message based on actual code
-        const expectedErrorMsg = `ActionValidationService.isValid: Missing or invalid targetContext object for action '${actionDef.id}'. Expected instance of ActionTargetContext.`;
+        // A minimal valid action definition for this test
+        const actionDef = {id: 'test:action-basic', target_domain: 'none', template: 't'};
+        // Use the exact error message thrown by the service's constructor check
+        const expectedErrorMsg = "ActionValidationService.isValid: targetContext must be ActionTargetContext";
 
-
-        // Check null targetContext
+        // Test cases for invalid targetContext
         expect(() => service.isValid(actionDef, mockActor, null)).toThrow(expectedErrorMsg);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expect.objectContaining({targetContext: null})
-        );
-        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(() => service.isValid(actionDef, mockActor, undefined)).toThrow(expectedErrorMsg);
 
-        mockLogger.error.mockClear();
+        // Check invalid targetContext structure (plain object, not an instance of ActionTargetContext)
+        const invalidContextObject = {type: 'entity', entityId: 'some-id'};
+        expect(() => service.isValid(actionDef, mockActor, invalidContextObject)).toThrow(expectedErrorMsg);
 
-        // Check invalid targetContext structure (not an instance of ActionTargetContext)
-        const invalidContext = {type: 'entity', entityId: 'some-id'}; // Plain object, not instance
-        expect(() => service.isValid(actionDef, mockActor, invalidContext)).toThrow(expectedErrorMsg);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedErrorMsg,
-            expect.objectContaining({targetContext: invalidContext})
-        );
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
+        // Check other non-instance values
+        expect(() => service.isValid(actionDef, mockActor, "not a context")).toThrow(expectedErrorMsg);
+        expect(() => service.isValid(actionDef, mockActor, 123)).toThrow(expectedErrorMsg);
+
+
+        // Optional: Check logger call
+        // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
+
+        // Verify prerequisite/evaluation logic was not reached
         expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     });
-
-});
+}); // End describe block

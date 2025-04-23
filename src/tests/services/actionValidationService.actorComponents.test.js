@@ -6,7 +6,6 @@
 
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from "@jest/globals";
 
-// --- Mock JsonLogicEvaluationService --- V3.3 Add
 // --- Service Under Test ---
 import {ActionValidationService} from '../../services/actionValidationService.js';
 
@@ -16,18 +15,21 @@ import {ActionTargetContext} from '../../models/actionTargetContext.js';
 // import { Entity } from '../../entities/entity.js'; // Optional: if needed for typing or complex mocks
 
 // --- Mocks Needed ---
-// No need to import the actual checker classes if we mock their interface directly
+// Mocks are defined and instantiated in beforeEach
 
 // --- Test Suite ---
-describe('ActionValidationService: Actor Component Checks', () => {
+// NOTE: The tests below have been rewritten to match the provided ActionValidationService.isValid implementation,
+// which focuses on domain compatibility, entity resolution, and JsonLogic prerequisites,
+// rather than the direct component checks implied by the original file name.
+describe('ActionValidationService: Core Validation Logic', () => {
 
     // --- Mock Variables ---
     // Declare variables in the describe scope to be accessible in all tests
     let mockEntityManager;
     let mockLogger;
-    let mockComponentRequirementChecker;
     let mockDomainContextCompatibilityChecker;
-    let mockPrerequisiteChecker;
+    let mockJsonLogicEvaluationService; // <-- Correct dependency
+    let mockCreateActionValidationContext; // <-- Correct dependency
     let actionValidationService; // Instance of the service under test
 
     // --- Mock Entity Helper ---
@@ -37,8 +39,11 @@ describe('ActionValidationService: Actor Component Checks', () => {
         return {
             id: id,
             hasComponent: jest.fn((componentId) => componentSet.has(componentId)),
-            // Add other methods/properties if ActionValidationService or its dependencies need them
-            // getComponent: jest.fn((componentId) => componentSet.has(componentId) ? { /* mock component data */ } : undefined),
+            // Add other methods/properties if needed by createActionValidationContext or JsonLogic
+            getComponent: jest.fn((componentId) => componentSet.has(componentId) ? {id: componentId, /* mock component data */} : undefined),
+            // Example properties that might be used in JsonLogic context
+            name: `Mock Entity ${id}`,
+            locationId: 'location1',
         };
     };
 
@@ -55,107 +60,285 @@ describe('ActionValidationService: Actor Component Checks', () => {
         };
 
         // Mock EntityManager
+        const mockEntities = new Map(); // Store mock entities for consistent resolution
         mockEntityManager = {
-            getEntityInstance: jest.fn(),
-            // Define default behavior if needed, e.g., return a mock entity
-            // getEntityInstance: jest.fn(id => createMockEntity(id)),
+            getEntityInstance: jest.fn((id) => mockEntities.get(id)),
+            // Helper to add entities for testing resolution
+            _addEntity: (entity) => mockEntities.set(entity.id, entity),
         };
 
-        // Mock ComponentRequirementChecker
-        mockComponentRequirementChecker = {
-            // Default to success; individual tests can override this mock
-            check: jest.fn().mockReturnValue(true),
-        };
-
-        // Mock DomainContextCompatibilityChecker
+        // Mock DomainContextCompatibilityChecker (Required by constructor)
         mockDomainContextCompatibilityChecker = {
-            // Default to success; tests focusing on this step would override
-            check: jest.fn().mockReturnValue(true),
+            check: jest.fn().mockReturnValue(true), // Default to success
         };
 
-        // Mock PrerequisiteChecker
-        mockPrerequisiteChecker = {
-            // Default to success; tests focusing on this step would override
-            check: jest.fn().mockReturnValue(true),
+        // Mock JsonLogicEvaluationService (Required by constructor)
+        mockJsonLogicEvaluationService = {
+            evaluate: jest.fn().mockReturnValue(true), // Default to success
         };
+
+        // Mock createActionValidationContext function (Required by constructor)
+        mockCreateActionValidationContext = jest.fn().mockImplementation(
+            (actor, targetCtx, entityManager, logger) => {
+                // Create a realistic-looking context for JsonLogic evaluation
+                let targetEntity = null;
+                if (targetCtx.type === 'entity' && targetCtx.entityId) {
+                    targetEntity = entityManager.getEntityInstance(targetCtx.entityId);
+                }
+                // Basic context structure - customize if your JsonLogic needs more
+                return {
+                    actor: {
+                        id: actor.id,
+                        // Include relevant actor props for rules
+                        name: actor.name,
+                        locationId: actor.locationId,
+                        // Potentially add components if rules check them:
+                        // components: Array.from(actor.componentSet || []), // Assuming componentSet exists
+                    },
+                    target: targetEntity ? {
+                        id: targetEntity.id,
+                        name: targetEntity.name,
+                        locationId: targetEntity.locationId,
+                        // components: Array.from(targetEntity.componentSet || []),
+                    } : null,
+                    // Add world state or other relevant data if needed by rules
+                    world: {
+                        timeOfDay: 'day',
+                    },
+                    // Include target context details if rules need them
+                    targetContext: {
+                        type: targetCtx.type,
+                        entityId: targetCtx.entityId,
+                        direction: targetCtx.direction,
+                    }
+                };
+            }
+        );
 
         // --- Instantiate the Service Under Test ---
-        // This is where the dependencies are injected
+        // Provide the correct dependencies based on the constructor signature
         actionValidationService = new ActionValidationService({
             entityManager: mockEntityManager,
             logger: mockLogger,
-            componentRequirementChecker: mockComponentRequirementChecker,
             domainContextCompatibilityChecker: mockDomainContextCompatibilityChecker,
-            prerequisiteChecker: mockPrerequisiteChecker,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            createActionValidationContextFunction: mockCreateActionValidationContext,
         });
     });
 
     // --- Test Cases ---
 
-    it('should return true when actor has all required components and none of the forbidden ones', () => {
+    it('should return true when domain is compatible, target resolves (if any), and prerequisites pass', () => {
         // Arrange
-        const actor = createMockEntity('actor1', ['requiredComp1', 'otherComp']);
-        const actionDefinition = {
-            id: 'action:requiresOk',
-            actor_required_components: ['requiredComp1'],
-            actor_forbidden_components: ['forbiddenComp'],
-            // Other properties needed for later checks can be minimal here
-            target_domain: 'none',
-            prerequisites: [],
-        };
-        const targetContext = new ActionTargetContext('none');
+        const actor = createMockEntity('actor1');
+        const target = createMockEntity('target1');
+        mockEntityManager._addEntity(actor); // Ensure actor resolves if needed by context
+        mockEntityManager._addEntity(target); // Ensure target resolves
 
-        // Configure the mock specifically for the actor check in this test
-        // Simulate the component checker succeeding for the actor
-        mockComponentRequirementChecker.check.mockImplementation((entity, required, forbidden, entityRole) => {
-            if (entity.id === 'actor1' && entityRole === 'actor') {
-                // You could add detailed checks here if needed, but often just returning true/false is enough
-                // For this test, we expect it to pass for the actor
-                return true;
-            }
-            return true; // Assume other checks (like target) pass by default
-        });
+        const actionDefinition = {
+            id: 'action:success',
+            target_domain: 'entity', // Expects an entity target
+            prerequisites: [
+                {logic: {'==': [{var: 'actor.id'}, 'actor1']}} // Example simple rule
+            ],
+        };
+        const targetContext = ActionTargetContext.forEntity('target1');
+
+        // Mocks are default success, no need to change for this case
 
         // Act
         const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
 
         // Assert
         expect(isValid).toBe(true);
-        // Verify that the component checker was called correctly for the actor
-        expect(mockComponentRequirementChecker.check).toHaveBeenCalledWith(
-            actor, // The entity instance
-            actionDefinition.actor_required_components, // Required list
-            actionDefinition.actor_forbidden_components, // Forbidden list
-            'actor', // The role being checked
-            expect.stringContaining(`action '${actionDefinition.id}' actor requirements`) // Context description
+        // Verify mocks were called correctly
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalledWith(actionDefinition, targetContext);
+        expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('target1'); // Target resolution
+        expect(mockCreateActionValidationContext).toHaveBeenCalled();
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+            actionDefinition.prerequisites[0].logic, // The rule
+            expect.any(Object) // The generated context
         );
-        // Check that subsequent checkers were also called (since the first step passed)
-        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalled();
-        expect(mockPrerequisiteChecker.check).toHaveBeenCalled(); // Called even if targetEntity is null
-        // Verify logger was called appropriately (optional, but good practice)
+        // Check logging
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('START Validation'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 PASSED'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('END Validation: PASSED'));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 PASSED')); // Domain check
+        // Note: The current service logs "END Validation: PASSED" even before prerequisite check if none exist,
+        // or after they pass. It doesn't explicitly log "STEP 2 PASSED".
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`END Validation: PASSED for action '${actionDefinition.id}'`));
+        expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should return false when actor is missing a required component', () => {
+    it('should return false when domain/context compatibility check fails', () => {
         // Arrange
-        const actor = createMockEntity('actor1', ['otherComp']); // Missing 'requiredComp1'
+        const actor = createMockEntity('actor1');
         const actionDefinition = {
-            id: 'action:missingRequired',
-            actor_required_components: ['requiredComp1'],
-            actor_forbidden_components: [],
-            target_domain: 'none',
+            id: 'action:domainFail',
+            target_domain: 'entity', // Expects an entity
             prerequisites: [],
         };
-        const targetContext = new ActionTargetContext('none');
+        // Target context is 'direction', incompatible with 'entity' domain
+        const targetContext = ActionTargetContext.forDirection('north');
 
-        // Configure the mock: simulate the component checker failing for the actor
-        mockComponentRequirementChecker.check.mockImplementation((entity, required, forbidden, entityRole) => {
-            if (entity.id === 'actor1' && entityRole === 'actor') {
-                return false; // Simulate failure for the actor check
-            }
-            return true; // Should not be reached if actor check fails first
+        // Configure mock failure
+        mockDomainContextCompatibilityChecker.check.mockReturnValue(false);
+
+        // Act
+        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
+
+        // Assert
+        expect(isValid).toBe(false);
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalledWith(actionDefinition, targetContext);
+        // Subsequent steps should not be called
+        expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 FAILED (domain/context)'));
+    });
+
+    it('should return false for a "self" target domain when target context is a different entity', () => {
+        // Arrange
+        const actor = createMockEntity('actor1');
+        const otherEntity = createMockEntity('actor2');
+        mockEntityManager._addEntity(actor);
+        mockEntityManager._addEntity(otherEntity);
+
+        const actionDefinition = {
+            id: 'action:selfTargetFail',
+            target_domain: 'self', // Action targets the actor itself
+            prerequisites: [],
+        };
+        // Target context incorrectly points to another entity
+        const targetContext = ActionTargetContext.forEntity('actor2');
+
+        // Domain check might pass if targetContext 'entity' matches domain 'self' (implementation dependent)
+        // But the specific self-check *within* isValid should fail.
+        mockDomainContextCompatibilityChecker.check.mockReturnValue(true); // Assume basic domain check passes
+
+        // Act
+        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
+
+        // Assert
+        expect(isValid).toBe(false);
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalledWith(actionDefinition, targetContext); // Called before self-check
+        // Subsequent steps should not be called after the self-check fails
+        expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalledWith('actor2'); // Check if it resolves before the check (it doesn't in the provided code)
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 FAILED (self mismatch)'));
+    });
+
+
+    it('should return false when a required target entity cannot be resolved', () => {
+        // Arrange
+        const actor = createMockEntity('actor1');
+        mockEntityManager._addEntity(actor);
+        // Do NOT add target 'target_missing' to entityManager
+
+        const actionDefinition = {
+            id: 'action:targetMissing',
+            target_domain: 'entity',
+            prerequisites: [{logic: {'==': [1, 1]}}], // Prerequisites exist but shouldn't be reached
+        };
+        const targetContext = ActionTargetContext.forEntity('target_missing');
+
+        // Assume domain check passes
+        mockDomainContextCompatibilityChecker.check.mockReturnValue(true);
+
+        // Act
+        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
+
+        // Assert
+        expect(isValid).toBe(false);
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalled();
+        expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('target_missing'); // Attempt to resolve
+        // Context creation and evaluation should not happen
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        // Check for specific error log
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`Required target entity 'target_missing' could not be resolved`)
+        );
+    });
+
+
+    it('should return false when a prerequisite evaluation fails', () => {
+        // Arrange
+        const actor = createMockEntity('actor1');
+        mockEntityManager._addEntity(actor);
+        const actionDefinition = {
+            id: 'action:prereqFail',
+            target_domain: 'none', // No target needed
+            prerequisites: [
+                {logic: {'<': [{var: 'actor.level'}, 5]}, failure_message: "Actor level too low"} // Example rule
+            ],
+        };
+        const targetContext = ActionTargetContext.noTarget();
+
+        // Configure prerequisite failure
+        mockJsonLogicEvaluationService.evaluate.mockReturnValue(false); // Simulate rule failing
+
+        // Act
+        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
+
+        // Assert
+        expect(isValid).toBe(false);
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalled(); // Domain check should pass
+        expect(mockCreateActionValidationContext).toHaveBeenCalled(); // Context needed for evaluation
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+            actionDefinition.prerequisites[0].logic,
+            expect.any(Object)
+        );
+        // Check logging for prerequisite failure
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 2 FAILED: Prerequisite check FAILED'));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Reason: ${actionDefinition.prerequisites[0].failure_message}`));
+    });
+
+    it('should return true when there are no prerequisites defined', () => {
+        // Arrange
+        const actor = createMockEntity('actor1');
+        mockEntityManager._addEntity(actor);
+        const actionDefinition = {
+            id: 'action:noPrereqs',
+            target_domain: 'none',
+            prerequisites: [], // No prerequisites
+            // or prerequisites: undefined / null (service handles this)
+        };
+        const targetContext = ActionTargetContext.noTarget();
+
+        // Act
+        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
+
+        // Assert
+        expect(isValid).toBe(true);
+        expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalled();
+        // Context might still be built if targetContext.type !== 'none', but not strictly needed if no prereqs
+        // Based on current logic: context IS built if targetContext.type !== 'none' OR prerequisites.length > 0
+        // So for target_domain 'none' and no prereqs, it might not be built. Let's test that edge case:
+        // For this specific case ('none' target, empty prereqs), context creation might be skipped.
+        // Let's refine the check based on the service's `mustBuildCtx` logic:
+        // const mustBuildCtx = targetContext.type !== 'none' || prerequisites.length > 0;
+        // In this case, mustBuildCtx is false.
+        expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('No prerequisites to evaluate. Skipping STEP 2.'));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`END Validation: PASSED for action '${actionDefinition.id}'`));
+    });
+
+    it('should return false and log error if context creation fails', () => {
+        // Arrange
+        const actor = createMockEntity('actor1');
+        mockEntityManager._addEntity(actor);
+        const actionDefinition = {
+            id: 'action:contextFail',
+            target_domain: 'direction', // Requires context
+            prerequisites: [{logic: {'==': [1, 1]}}], // Requires context
+        };
+        const targetContext = ActionTargetContext.forDirection('east');
+
+        // Configure context creation mock to throw an error
+        const contextError = new Error('Failed to build context!');
+        mockCreateActionValidationContext.mockImplementation(() => {
+            throw contextError;
         });
 
         // Act
@@ -163,106 +346,18 @@ describe('ActionValidationService: Actor Component Checks', () => {
 
         // Assert
         expect(isValid).toBe(false);
-        // Verify the component checker was called for the actor
-        expect(mockComponentRequirementChecker.check).toHaveBeenCalledWith(
-            actor,
-            actionDefinition.actor_required_components,
-            actionDefinition.actor_forbidden_components,
-            'actor',
-            expect.stringContaining(`action '${actionDefinition.id}' actor requirements`)
-        );
-        // Verify subsequent checks were *not* called because the first one failed
-        expect(mockDomainContextCompatibilityChecker.check).not.toHaveBeenCalled();
-        expect(mockPrerequisiteChecker.check).not.toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('START Validation'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 FAILED: Actor Component Check'));
-        // Ensure no PASS message was logged
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('END Validation: PASSED'));
-    });
-
-    it('should return false when actor has a forbidden component', () => {
-        // Arrange
-        const actor = createMockEntity('actor1', ['requiredComp1', 'forbiddenComp']); // Has 'forbiddenComp'
-        const actionDefinition = {
-            id: 'action:hasForbidden',
-            actor_required_components: ['requiredComp1'],
-            actor_forbidden_components: ['forbiddenComp'],
-            target_domain: 'none',
-            prerequisites: [],
-        };
-        const targetContext = new ActionTargetContext('none');
-
-        // Configure the mock: simulate the component checker failing for the actor
-        mockComponentRequirementChecker.check.mockImplementation((entity, required, forbidden, entityRole) => {
-            if (entity.id === 'actor1' && entityRole === 'actor') {
-                return false; // Simulate failure for the actor check
-            }
-            return true;
-        });
-
-        // Act
-        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
-
-        // Assert
-        expect(isValid).toBe(false);
-        expect(mockComponentRequirementChecker.check).toHaveBeenCalledWith(
-            actor,
-            actionDefinition.actor_required_components,
-            actionDefinition.actor_forbidden_components,
-            'actor',
-            expect.stringContaining(`action '${actionDefinition.id}' actor requirements`)
-        );
-        expect(mockDomainContextCompatibilityChecker.check).not.toHaveBeenCalled();
-        expect(mockPrerequisiteChecker.check).not.toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 FAILED: Actor Component Check'));
-    });
-
-    it('should return true when there are no actor component requirements', () => {
-        // Arrange
-        const actor = createMockEntity('actor1', ['anyComp']);
-        const actionDefinition = {
-            id: 'action:noActorReqs',
-            // actor_required_components: undefined, // Or [] or null
-            // actor_forbidden_components: undefined, // Or [] or null
-            target_domain: 'none',
-            prerequisites: [],
-        };
-        const targetContext = new ActionTargetContext('none');
-
-        // Simulate component checker success (it should pass if lists are empty/null)
-        mockComponentRequirementChecker.check.mockImplementation((entity, required, forbidden, entityRole) => {
-            if (entity.id === 'actor1' && entityRole === 'actor') {
-                // Check if the actual componentRequirementChecker handles null/undefined correctly
-                // Assuming it does, it should return true here.
-                return true;
-            }
-            return true;
-        });
-
-
-        // Act
-        const isValid = actionValidationService.isValid(actionDefinition, actor, targetContext);
-
-        // Assert
-        expect(isValid).toBe(true);
-        expect(mockComponentRequirementChecker.check).toHaveBeenCalledWith(
-            actor,
-            undefined, // How your checker receives empty lists (undefined, null, or [])
-            undefined, // Adjust based on actionDefinition and checker implementation
-            'actor',
-            expect.stringContaining(`action '${actionDefinition.id}' actor requirements`)
-        );
         expect(mockDomainContextCompatibilityChecker.check).toHaveBeenCalled();
-        expect(mockPrerequisiteChecker.check).toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('STEP 1 PASSED'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('END Validation: PASSED'));
+        expect(mockCreateActionValidationContext).toHaveBeenCalled(); // It was attempted
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled(); // Should not be reached
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            'Error assembling evaluation context',
+            expect.objectContaining({error: contextError.message})
+        );
     });
 
-    // --- Add more tests as needed ---
-    // - Tests for target component checks (Step 3) -> might go in a separate file like `.targetComponents.test.js`
-    // - Tests for domain/context compatibility (Step 2) -> might go in `.domainContext.test.js`
-    // - Tests for prerequisites (Step 4) -> might go in `.prerequisites.test.js`
-    // - Tests for edge cases (invalid inputs - already partially handled by service constructor/method checks)
-    // - Tests where target resolution fails (Step 3a)
+    // --- Add more tests for edge cases as needed ---
+    // e.g., prerequisite with negate: true
+    // e.g., prerequisites property exists but is not an array
+    // e.g., invalid actionDefinition or actorEntity (should throw error)
 
 });
