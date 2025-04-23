@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/event-definition.schema.json",
+  "id": "event:engine_initialized",
+  "description": "Fired once the core GameEngine completes its asynchronous initialization successfully, just before the game loop potentially starts. Signals that core systems and initial world data are ready.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "inputWorldName": {
+        "type": "string",
+        "description": "The original world name string provided during the initialization request, potentially used for fallback messages or context."
+      }
+    },
+    "required": [
+      "inputWorldName"
+    ],
+    "additionalProperties": false
+  }
+}
