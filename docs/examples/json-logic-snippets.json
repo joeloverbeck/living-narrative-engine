@@ -1,0 +1,396 @@
+{
+  "Pattern_1_Component_Existence_Actor": {
+    "description": "Pattern 1: Checks if the actor entity possesses the 'core:health' component. Uses '!!' to ensure a boolean result.",
+    "pattern_link": "Category: Component Existence & State - 1. Component Existence Check (Actor/Target)",
+    "rule": {
+      "!!": {
+        "var": "actor.components.core:health"
+      }
+    }
+  },
+  "Pattern_1_Component_Existence_Target": {
+    "description": "Pattern 1: Checks if the target entity possesses the 'game:is_container' component.",
+    "pattern_link": "Category: Component Existence & State - 1. Component Existence Check (Actor/Target)",
+    "rule": {
+      "!!": {
+        "var": "target.components.game:is_container"
+      }
+    }
+  },
+  "Pattern_2_Component_Value_Numeric_TargetHealth": {
+    "description": "Pattern 2: Compares a numeric value - checks if target's current health is less than or equal to 0.",
+    "pattern_link": "Category: Component Existence & State - 2. Component Value Comparison (Numeric)",
+    "rule": {
+      "<=": [
+        {
+          "var": "target.components.core:health.current"
+        },
+        0
+      ]
+    }
+  },
+  "Pattern_2_Component_Value_Numeric_ActorGold": {
+    "description": "Pattern 2: Compares a numeric value - checks if actor has more than 5 gold (assuming game:inventory.currency.gold path).",
+    "pattern_link": "Category: Component Existence & State - 2. Component Value Comparison (Numeric)",
+    "rule": {
+      ">": [
+        {
+          "var": "actor.components.game:inventory.currency.gold"
+        },
+        5
+      ]
+    }
+  },
+  "Pattern_2_Component_Value_Numeric_ContextVar": {
+    "description": "Pattern 2: Compares a numeric value - checks if context variable 'rollResult' is greater than or equal to 10.",
+    "pattern_link": "Category: Component Existence & State - 2. Component Value Comparison (Numeric)",
+    "rule": {
+      ">=": [
+        {
+          "var": "context.rollResult"
+        },
+        10
+      ]
+    }
+  },
+  "Pattern_3_Component_Value_String_TargetState": {
+    "description": "Pattern 3: Compares a string value - checks if the target's 'game:lockable' component state is 'locked'.",
+    "pattern_link": "Category: Component Existence & State - 3. Component Value Comparison (String)",
+    "rule": {
+      "==": [
+        {
+          "var": "target.components.game:lockable.state"
+        },
+        "locked"
+      ]
+    }
+  },
+  "Pattern_3_Component_Value_String_ActorClass": {
+    "description": "Pattern 3: Compares a string value - checks if the actor's class ID is 'core:class_mage' (assuming core:class.id path).",
+    "pattern_link": "Category: Component Existence & State - 3. Component Value Comparison (String)",
+    "rule": {
+      "==": [
+        {
+          "var": "actor.components.core:class.id"
+        },
+        "core:class_mage"
+      ]
+    }
+  },
+  "Pattern_4_Component_Value_Boolean_TargetOpen": {
+    "description": "Pattern 4: Checks a boolean value - checks if the target 'game:openable' component's isOpen property is true.",
+    "pattern_link": "Category: Component Existence & State - 4. Component Value Check (Boolean)",
+    "rule": {
+      "==": [
+        {
+          "var": "target.components.game:openable.isOpen"
+        },
+        true
+      ]
+    }
+  },
+  "Pattern_4_Component_Value_Boolean_TargetOpen_Shorthand": {
+    "description": "Pattern 4: Checks a boolean value (shorthand) - checks truthiness of target 'game:openable' component's isOpen property.",
+    "pattern_link": "Category: Component Existence & State - 4. Component Value Check (Boolean)",
+    "rule": {
+      "var": "target.components.game:openable.isOpen"
+    }
+  },
+  "Pattern_4_Component_Value_Boolean_ActorHidden": {
+    "description": "Pattern 4: Checks a boolean value (shorthand) - checks if the actor is hidden (assuming game:status_hidden.isActive).",
+    "pattern_link": "Category: Component Existence & State - 4. Component Value Check (Boolean)",
+    "rule": {
+      "var": "actor.components.game:status_hidden.isActive"
+    }
+  },
+  "Pattern_5_Item_In_Inventory_ComponentCheck": {
+    "description": "Pattern 5: Checks for item presence - simplified check if actor has the 'game:quest_item_key' component.",
+    "pattern_link": "Category: Component Existence & State - 5. Check for Specific Item in Inventory (Simplified)",
+    "rule": {
+      "!!": {
+        "var": "actor.components.game:quest_item_key"
+      }
+    }
+  },
+  "Pattern_5_Item_In_Inventory_StructureCheck": {
+    "description": "Pattern 5: Checks for item presence - checks within inventory component structure (assuming map 'items.item:special_orb').",
+    "pattern_link": "Category: Component Existence & State - 5. Check for Specific Item in Inventory (Simplified)",
+    "rule": {
+      "!!": {
+        "var": "actor.components.game:inventory.items.item:special_orb"
+      }
+    }
+  },
+  "Pattern_6_Event_Type_Check": {
+    "description": "Pattern 6: Checks if the triggering event's type is exactly 'event:entity_dies'.",
+    "pattern_link": "Category: Event Data Checks - 6. Event Type Check",
+    "rule": {
+      "==": [
+        {
+          "var": "event.type"
+        },
+        "event:entity_dies"
+      ]
+    }
+  },
+  "Pattern_7_Event_Payload_InteractionType": {
+    "description": "Pattern 7: Checks a value in the event payload - was the interactionType 'USE'?",
+    "pattern_link": "Category: Event Data Checks - 7. Event Payload Value Check",
+    "rule": {
+      "==": [
+        {
+          "var": "event.payload.interactionType"
+        },
+        "USE"
+      ]
+    }
+  },
+  "Pattern_7_Event_Payload_DamageAmount": {
+    "description": "Pattern 7: Checks a value in the event payload - was the damageAmount greater than 10?",
+    "pattern_link": "Category: Event Data Checks - 7. Event Payload Value Check",
+    "rule": {
+      ">": [
+        {
+          "var": "event.payload.damageAmount"
+        },
+        10
+      ]
+    }
+  },
+  "Pattern_7_Event_Payload_Direction": {
+    "description": "Pattern 7: Checks a value in the event payload - did the move event specify 'north'?",
+    "pattern_link": "Category: Event Data Checks - 7. Event Payload Value Check",
+    "rule": {
+      "==": [
+        {
+          "var": "event.payload.direction"
+        },
+        "north"
+      ]
+    }
+  },
+  "Pattern_8_Context_Variable_Existence_Strict": {
+    "description": "Pattern 8: Checks if a context variable 'findTargetHealth' exists (is not null).",
+    "pattern_link": "Category: Context Variable Checks - 8. Context Variable Existence Check",
+    "rule": {
+      "!=": [
+        {
+          "var": "context.findTargetHealth"
+        },
+        null
+      ]
+    }
+  },
+  "Pattern_8_Context_Variable_Existence_Shorthand": {
+    "description": "Pattern 8: Checks if a context variable 'findTargetHealth' exists (is truthy).",
+    "pattern_link": "Category: Context Variable Checks - 8. Context Variable Existence Check",
+    "rule": {
+      "!!": {
+        "var": "context.findTargetHealth"
+      }
+    }
+  },
+  "Pattern_9_Context_Variable_Value_Health": {
+    "description": "Pattern 9: Checks a value within a context variable - is the queried health component's current value <= 0?",
+    "pattern_link": "Category: Context Variable Checks - 9. Context Variable Value Check",
+    "rule": {
+      "<=": [
+        {
+          "var": "context.targetHealthComponent.current"
+        },
+        0
+      ]
+    }
+  },
+  "Pattern_9_Context_Variable_Value_Inventory": {
+    "description": "Pattern 9: Checks a value within a context variable - does queried inventory show >= 1 keys (assuming items.key_count)?",
+    "pattern_link": "Category: Context Variable Checks - 9. Context Variable Value Check",
+    "rule": {
+      ">=": [
+        {
+          "var": "context.actorInventory.items.key_count"
+        },
+        1
+      ]
+    }
+  },
+  "Pattern_10_Entity_ID_Check_Target": {
+    "description": "Pattern 10: Checks the ID of the target entity.",
+    "pattern_link": "Category: Entity Identity & Context State - 10. Entity ID Check",
+    "rule": {
+      "==": [
+        {
+          "var": "target.id"
+        },
+        "npc:shopkeeper"
+      ]
+    }
+  },
+  "Pattern_10_Entity_ID_Check_Actor": {
+    "description": "Pattern 10: Checks the ID of the actor entity.",
+    "pattern_link": "Category: Entity Identity & Context State - 10. Entity ID Check",
+    "rule": {
+      "==": [
+        {
+          "var": "actor.id"
+        },
+        "core:player"
+      ]
+    }
+  },
+  "Pattern_11_Entity_Existence_Target": {
+    "description": "Pattern 11: Checks if the 'target' object itself exists in the evaluation context (is not null).",
+    "pattern_link": "Category: Entity Identity & Context State - 11. Actor/Target Existence Check",
+    "rule": {
+      "!=": [
+        {
+          "var": "target"
+        },
+        null
+      ]
+    }
+  },
+  "Pattern_11_Entity_Existence_Actor": {
+    "description": "Pattern 11: Checks if the 'actor' object itself exists in the evaluation context (is not null).",
+    "pattern_link": "Category: Entity Identity & Context State - 11. Actor/Target Existence Check",
+    "rule": {
+      "!=": [
+        {
+          "var": "actor"
+        },
+        null
+      ]
+    }
+  },
+  "Pattern_12_Logical_AND_TargetLockableAndLocked": {
+    "description": "Pattern 12: Combines conditions with AND - checks if target has 'game:lockable' and its state is 'locked'.",
+    "pattern_link": "Category: Compound Logic - 12. Logical AND",
+    "rule": {
+      "and": [
+        {
+          "!!": {
+            "var": "target.components.game:lockable"
+          }
+        },
+        {
+          "==": [
+            {
+              "var": "target.components.game:lockable.state"
+            },
+            "locked"
+          ]
+        }
+      ]
+    }
+  },
+  "Pattern_12_Logical_AND_UnlockDoorScenario": {
+    "description": "Pattern 12: Combines conditions with AND - Actor has key, target is specific door, door is locked.",
+    "pattern_link": "Category: Compound Logic - 12. Logical AND",
+    "rule": {
+      "and": [
+        {
+          "!!": {
+            "var": "actor.components.game:quest_item_key"
+          }
+        },
+        {
+          "==": [
+            {
+              "var": "target.id"
+            },
+            "blocker:main_gate_door"
+          ]
+        },
+        {
+          "==": [
+            {
+              "var": "target.components.game:lockable.state"
+            },
+            "locked"
+          ]
+        }
+      ]
+    }
+  },
+  "Pattern_13_Logical_OR_ActorAffliction": {
+    "description": "Pattern 13: Combines conditions with OR - checks if actor has 'effect:poison' OR 'effect:disease' component.",
+    "pattern_link": "Category: Compound Logic - 13. Logical OR",
+    "rule": {
+      "or": [
+        {
+          "!!": {
+            "var": "actor.components.effect:poison"
+          }
+        },
+        {
+          "!!": {
+            "var": "actor.components.effect:disease"
+          }
+        }
+      ]
+    }
+  },
+  "Pattern_14_Logical_NOT_TargetNotLocked_Strict": {
+    "description": "Pattern 14: Inverts a condition - checks if target is NOT locked (using 'not'). Note: '!=' is often preferred.",
+    "pattern_link": "Category: Compound Logic - 14. Logical NOT",
+    "rule": {
+      "not": [
+        {
+          "==": [
+            {
+              "var": "target.components.game:lockable.state"
+            },
+            "locked"
+          ]
+        }
+      ]
+    }
+  },
+  "Pattern_14_Logical_NOT_TargetNotLocked_Preferred": {
+    "description": "Pattern 14: Inverts a condition - checks if target is NOT locked (using '!=').",
+    "pattern_link": "Category: Compound Logic - 14. Logical NOT",
+    "rule": {
+      "!=": [
+        {
+          "var": "target.components.game:lockable.state"
+        },
+        "locked"
+      ]
+    }
+  },
+  "Pattern_14_Logical_NOT_ActorNotBurdened": {
+    "description": "Pattern 14: Inverts a condition - checks if actor does NOT have the 'status:burdened' component (using '!').",
+    "pattern_link": "Category: Compound Logic - 14. Logical NOT",
+    "rule": {
+      "!": {
+        "var": "actor.components.status:burdened"
+      }
+    }
+  },
+  "Pattern_15_Quest_State_ActiveQuestCheck": {
+    "description": "Pattern 15 (Legacy): Checks if 'main:quest_1' is in the actor's active quests list (using 'in').",
+    "pattern_link": "Category: Quest/Objective State (Conceptual - Phasing Out) - 15. Quest State Check (Legacy Pattern)",
+    "rule": {
+      "in": [
+        "main:quest_1",
+        {
+          "var": "actor.components.core:quest_log.active_quests"
+        }
+      ]
+    }
+  },
+  "Pattern_15_Quest_State_NotCompletedQuestCheck": {
+    "description": "Pattern 15 (Legacy): Checks if 'main:quest_2' is NOT in the actor's completed quests list (using '!' and 'in').",
+    "pattern_link": "Category: Quest/Objective State (Conceptual - Phasing Out) - 15. Quest State Check (Legacy Pattern)",
+    "rule": {
+      "!": {
+        "in": [
+          "main:quest_2",
+          {
+            "var": "actor.components.core:quest_log.completed_quests"
+          }
+        ]
+      }
+    }
+  }
+}

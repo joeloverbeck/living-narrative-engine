@@ -29,7 +29,8 @@ const SCHEMA_FILES = [
     'world-manifest.schema.json',
     'component-definition.schema.json', // Core schema for validating component definition files
     'json-logic.schema.json',
-    'system-rule.schema.json'
+    'system-rule.schema.json',
+    'operation.schema.json',
 ];
 
 // Updated CONTENT_TYPE_SCHEMAS map:
