@@ -58,8 +58,19 @@ are some of the most commonly used operators:
 
 * **`in`**: Checks if a value is present within an array or a substring within a string.
     * Syntax: `{ "in": [ value_to_find, { "var": "array_or_string_source" } ] }`
-    * Example: `{ "in": [ "main:quest_1", { "var": "actor.components.core:quest_log.active_quests" } ] }` checks if "
-      main:quest_1" is in the list of active quests.
+    * Example (Array): `{ "in": [ "quest_id", { "var": "actor.components.quest_log.active" } ] }` checks if `"quest_id"`
+      is in the `active` array (assuming `active` is an array).
+    * Example (String): `{ "in": [ "keyword", { "var": "event.payload.description" } ] }` checks if the string
+      `"keyword"` is present within the value of `event.payload.description`. Returns `true` if found, `false`
+      otherwise.
+    * **Note on Empty String Search (`""`)**: When searching for an empty string within another string, the behavior
+      observed with the underlying `json-logic-js` library is nuanced and crucial to understand:
+        * `{"in": ["", "some string"]}` evaluates to `true`. (An empty string is considered to be "in" any non-empty
+          string).
+        * `{"in": ["", ""]}` evaluates to `false`. (An empty string is considered *not* to be "in" another empty
+          string).
+          This differs slightly from JavaScript's native `string.includes('')` which returns `true` even for
+          `("").includes("")`. Be mindful of this specific edge case when writing rules.
 
 ## Evaluation Context
 

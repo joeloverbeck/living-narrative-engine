@@ -147,7 +147,9 @@ export function createJsonLogicContext(event, actorId, targetId, entityManager, 
     const evaluationContext = {
         event: { // AC.3: Populate event property
             type: event.type,
-            payload: event.payload || {} // Ensure payload is at least an empty object
+            // Before: payload: event.payload || {}
+            // After: Represent a truly missing payload as null, otherwise use the provided payload (even if it's {} or other falsy value except undefined)
+            payload: event.payload === undefined ? null : event.payload
         },
         actor: null,  // Initialize as null
         target: null, // Initialize as null

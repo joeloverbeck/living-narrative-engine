@@ -106,20 +106,20 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
             expect(context.event.payload).toEqual({key: 'value', num: 123});
         });
 
-        test('should populate event.payload as {} if input payload is absent', () => {
+        test('should populate event.payload as null if input payload is absent', () => {
             const event = {type: 'TEST_NO_PAYLOAD'};
             const context = createJsonLogicContext(event, null, null, mockEntityManager, mockLogger);
-            expect(context.event.payload).toEqual({});
+            expect(context.event.payload).toEqual(null);
         });
 
-        test('should populate event.payload as {} if input payload is null/undefined', () => {
+        test('should populate event.payload as null if input payload is null/undefined', () => {
             const eventWithNull = {type: 'TEST_NULL_PAYLOAD', payload: null};
             const contextNull = createJsonLogicContext(eventWithNull, null, null, mockEntityManager, mockLogger);
-            expect(contextNull.event.payload).toEqual({});
+            expect(contextNull.event.payload).toEqual(null);
 
             const eventWithUndefined = {type: 'TEST_UNDEF_PAYLOAD', payload: undefined};
             const contextUndef = createJsonLogicContext(eventWithUndefined, null, null, mockEntityManager, mockLogger);
-            expect(contextUndef.event.payload).toEqual({});
+            expect(contextUndef.event.payload).toEqual(null);
         });
     });
 

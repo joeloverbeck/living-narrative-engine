@@ -301,6 +301,24 @@ Here are 15 common patterns identified for use in `SystemRule` root conditions, 
     { "!" : { "in": [ "main:quest_2", { "var": "actor.components.core:quest_log.completed_quests" } ] } }
     ```
 
+**Category: String Operations**
+
+**16. Substring Check**
+
+* **Description:** Checks if a specific substring exists within a string value obtained from the context (e.g., event
+  payload, component property).
+* **Context Access:** `event.payload`, `actor.components`, `target.components`, `context`
+* **Example (Does the event message contain "Error"?):**
+    ```json
+    { "in": [ "Error", { "var": "event.payload.message" } ] }
+    ```
+* **Example (Does the target's description component contain "locked"?):**
+    ```json
+    { "in": [ "locked", { "var": "target.components.description.text" } ] }
+    ```
+* *(Note: For the specific behavior when searching for an empty string `""`, refer to the main JSON Logic Usage
+  documentation.)*
+
 ---
 
 This list covers a wide range of common scenarios for conditional game logic using JSON Logic within the defined
