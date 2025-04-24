@@ -1,26 +1,22 @@
-// test/core/services/worldLoader.test.js
+// tests/core/services/worldLoader.test.js
 
 import WorldLoader from '../../../core/services/worldLoader.js';
-import {beforeEach, describe, expect, jest, test} from "@jest/globals";
-// Import other necessary classes if needed for type checking mocks, though often not required with jest.fn()
-// import SchemaLoader from '../../../src/core/services/schemaLoader.js';
-// import ManifestLoader from '../../../src/core/services/manifestLoader.js';
-// ... etc.
+import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 
-// Mock dependencies
+// ── Mock dependencies ──────────────────────────────────────────────────
 const mockRegistry = {
     clear: jest.fn(),
     setManifest: jest.fn(),
     getManifest: jest.fn(),
-    store: jest.fn(), // Added for completeness as ComponentDefinitionLoader uses it
-    getAll: jest.fn().mockReturnValue([]), // Added for logLoadSummary call
+    store: jest.fn(),
+    getAll: jest.fn().mockReturnValue([]),
 };
 
 const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    debug: jest.fn(), // Added for completeness
+    debug: jest.fn(),
 };
 
 const mockSchemaLoader = {
@@ -39,17 +35,21 @@ const mockComponentDefinitionLoader = {
     loadComponentDefinitions: jest.fn(),
 };
 
+const mockRuleLoader = {
+    loadAll: jest.fn().mockResolvedValue(undefined),
+    loadedEventCount: 0,
+};
+
 const mockValidator = {
     isSchemaLoaded: jest.fn(),
-    addSchema: jest.fn(), // Added for completeness as ComponentDefinitionLoader uses it
-    getValidator: jest.fn(), // Added for completeness as ComponentDefinitionLoader uses it
-    validate: jest.fn(), // Added for completeness
+    addSchema: jest.fn(),
+    getValidator: jest.fn(),
+    validate: jest.fn(),
 };
 
 const mockConfiguration = {
     getManifestSchemaId: jest.fn(),
     getContentTypeSchemaId: jest.fn(),
-    // Mock other IConfiguration methods used indirectly if necessary
     getBaseDataPath: jest.fn().mockReturnValue('/fake/data'),
     getSchemaFiles: jest.fn().mockReturnValue([]),
     getSchemaBasePath: jest.fn().mockReturnValue('/fake/data/schemas'),
@@ -57,62 +57,56 @@ const mockConfiguration = {
     getWorldBasePath: jest.fn().mockReturnValue('/fake/data/worlds'),
 };
 
-// --- Test Suite ---
+// ── Test constants ─────────────────────────────────────────────────────
+const testWorldName = 'test-world';
+const essentialSchemaIds = {
+    manifest: 'schema://core/manifest',
+    components: 'schema://content/components',
+    // other schema IDs are included for completeness but are not “essential”
+    events: 'schema://content/events',
+    actions: 'schema://content/actions',
+    entities: 'schema://content/entities',
+    items: 'schema://content/items',
+    locations: 'schema://content/locations',
+    connections: 'schema://content/connections',
+    triggers: 'schema://content/triggers',
+};
 
+// ── Suite ──────────────────────────────────────────────────────────────
 describe('WorldLoader', () => {
     let worldLoader;
-    const testWorldName = 'test-world';
-    const essentialSchemaIds = {
-        manifest: 'schema://core/manifest',
-        events: 'schema://content/events',
-        actions: 'schema://content/actions',
-        entities: 'schema://content/entities',
-        items: 'schema://content/items',
-        locations: 'schema://content/locations',
-        connections: 'schema://content/connections',
-        triggers: 'schema://content/triggers',
-        components: 'schema://content/components', // Definition schema
-        // Add any other IDs returned by getContentTypeSchemaId in the real implementation
-    };
-    const criticalContentTypes = [
-        'events', 'actions', 'entities', 'items', 'locations',
-        'connections', 'triggers', 'components'
-    ];
 
-    // Reset mocks before each test
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Configure standard successful schema loading
+        // Success-path defaults
         mockSchemaLoader.loadAndCompileAllSchemas.mockResolvedValue(undefined);
 
-        // Configure IConfiguration to return the essential IDs
-        mockConfiguration.getManifestSchemaId.mockReturnValue(essentialSchemaIds.manifest);
-        mockConfiguration.getContentTypeSchemaId.mockImplementation(typeName => {
-            return essentialSchemaIds[typeName];
-        });
+        mockConfiguration.getManifestSchemaId.mockReturnValue(
+            essentialSchemaIds.manifest,
+        );
+        mockConfiguration.getContentTypeSchemaId.mockImplementation(
+            (type) => essentialSchemaIds[type],
+        );
 
-        // Mock manifest loader to return basic valid manifest on success
         mockManifestLoader.loadAndValidateManifest.mockResolvedValue({
             worldName: testWorldName,
             contentFiles: {
-                // Add dummy entries if needed by later steps being tested
                 components: ['comp1.component.json'],
                 items: ['item1.json'],
             },
         });
-        // Mock registry getManifest to return the manifest *after* setManifest is called
-        mockRegistry.getManifest.mockReturnValue(null); // Default state
-        mockRegistry.setManifest.mockImplementation((manifestData) => {
-            mockRegistry.getManifest.mockReturnValue(manifestData);
-        });
+        mockRegistry.getManifest.mockReturnValue(null);
+        mockRegistry.setManifest.mockImplementation((m) =>
+            mockRegistry.getManifest.mockReturnValue(m),
+        );
 
-        // Configure other loaders to succeed by default
-        mockComponentDefinitionLoader.loadComponentDefinitions.mockResolvedValue(undefined);
+        mockComponentDefinitionLoader.loadComponentDefinitions.mockResolvedValue(
+            undefined,
+        );
         mockContentLoader.loadContentFiles.mockResolvedValue(undefined);
 
-
-        // Instantiate WorldLoader with mocked dependencies
+        // Instantiate SUT
         worldLoader = new WorldLoader(
             mockRegistry,
             mockLogger,
@@ -120,160 +114,156 @@ describe('WorldLoader', () => {
             mockManifestLoader,
             mockContentLoader,
             mockComponentDefinitionLoader,
+            mockRuleLoader, // ← NEW DEP
             mockValidator,
-            mockConfiguration
+            mockConfiguration,
         );
     });
 
-    describe('loadWorld - Essential Schema Verification', () => {
-
-        test('AC1 & AC5: should proceed successfully if all essential schemas are loaded', async () => {
-            // Arrange: Configure ISchemaValidator to report all essential schemas as loaded
-            mockValidator.isSchemaLoaded.mockReturnValue(true); // Simple mock for this case
-
-            // Act
-            await expect(worldLoader.loadWorld(testWorldName)).resolves.toBeUndefined();
-
-            // Assert
-            // 1. Check call order (Schema -> Verify -> Manifest)
-            expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalled(); // Verification step ran
-            expect(mockManifestLoader.loadAndValidateManifest).toHaveBeenCalledTimes(1);
-
-            // Verify the calls happened in the correct order
-            // (Jest doesn't have a built-in easy way to check exact async call order across mocks,
-            // but checking they were all called implies the flow likely continued correctly without error)
-            // We can infer order: If manifestLoader was called, schemaLoader must have been called first
-            // and the essential schema check must have passed.
-
-            // 2. Check specific essential schemas were checked
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.manifest);
-            for (const type of criticalContentTypes) {
-                expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds[type]);
-            }
-
-            // 3. Check no missing schema error was logged or thrown
-            expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Essential prerequisite schema missing'));
-            expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during loadWorld'));
-
-            // 4. Check subsequent steps were called (ManifestLoader already checked)
-            expect(mockRegistry.setManifest).toHaveBeenCalledTimes(1);
-            expect(mockComponentDefinitionLoader.loadComponentDefinitions).toHaveBeenCalledTimes(1);
-            // Check GenericContentLoader was called for types *other* than components
-            expect(mockContentLoader.loadContentFiles).toHaveBeenCalledWith('items', ['item1.json']);
-            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalledWith('components', expect.anything());
-
-            // 5. Check registry clear was only called once at the start
-            expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
-        });
-
-        test('AC2, AC3 & AC4: should throw error and log if an essential schema is missing', async () => {
-            const missingSchemaId = essentialSchemaIds.entities; // Choose one schema to be missing
-
-            // Arrange: Configure ISchemaValidator to report one schema as missing
-            mockValidator.isSchemaLoaded.mockImplementation(schemaId => {
-                return schemaId !== missingSchemaId; // Returns false only for the missing one
-            });
-
-            // Act & Assert: Expect loadWorld to reject with a specific error
-            await expect(worldLoader.loadWorld(testWorldName)).rejects.toThrow(
-                `WorldLoader failed to load world '${testWorldName}': WorldLoader: Essential prerequisite schema(s) missing after schema loading. Cannot proceed.`
-            );
-
-            // Assert: Check logging and call order
-            // 1. Check SchemaLoader was called
-            expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
-
-            // 2. Check ISchemaValidator was called (at least until the missing one was found)
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.manifest); // Example check
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(missingSchemaId);
-
-            // 3. Check the specific error message was logged for the missing schema
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                `WorldLoader: Essential prerequisite schema missing: ID '${missingSchemaId}'`
-            );
-
-            // 4. Check the overall critical error was logged
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`CRITICAL ERROR during loadWorld for '${testWorldName}'. Load process halted.`),
-                expect.any(Error) // Checks that an error object was passed as the second arg
-            );
-
-            // 5. Check subsequent loading steps were *NOT* called
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled();
-            expect(mockRegistry.setManifest).not.toHaveBeenCalled();
-            expect(mockComponentDefinitionLoader.loadComponentDefinitions).not.toHaveBeenCalled();
-            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled();
-
-            // 6. Check registry was cleared twice (start and error handler)
-            expect(mockRegistry.clear).toHaveBeenCalledTimes(2);
-        });
-
-        test('AC2, AC3 & AC4: should throw error and log if multiple essential schemas are missing', async () => {
-            const missingSchemaId1 = essentialSchemaIds.actions;
-            const missingSchemaId2 = essentialSchemaIds.locations;
-            const missingSchemas = [missingSchemaId1, missingSchemaId2];
-
-            // Arrange: Configure ISchemaValidator
-            mockValidator.isSchemaLoaded.mockImplementation(schemaId => {
-                return !missingSchemas.includes(schemaId);
-            });
-
-            // Act & Assert: Expect loadWorld to reject
-            await expect(worldLoader.loadWorld(testWorldName)).rejects.toThrow(
-                `WorldLoader failed to load world '${testWorldName}': WorldLoader: Essential prerequisite schema(s) missing after schema loading. Cannot proceed.`
-            );
-
-            // Assert: Check logging and call order
-            expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalled();
-
-            // Check *both* missing schemas were logged individually
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                `WorldLoader: Essential prerequisite schema missing: ID '${missingSchemaId1}'`
-            );
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                `WorldLoader: Essential prerequisite schema missing: ID '${missingSchemaId2}'`
-            );
-
-            // Check the overall critical error was logged
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`CRITICAL ERROR during loadWorld for '${testWorldName}'. Load process halted.`),
-                expect.any(Error)
-            );
-
-            // Check subsequent loading steps were *NOT* called
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled();
-            expect(mockRegistry.setManifest).not.toHaveBeenCalled();
-            expect(mockComponentDefinitionLoader.loadComponentDefinitions).not.toHaveBeenCalled();
-            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled();
-
-            // Check registry was cleared twice
-            expect(mockRegistry.clear).toHaveBeenCalledTimes(2);
-        });
-
-        test('AC4: Verification should happen AFTER schema loading and BEFORE manifest loading', async () => {
-            // Arrange: Configure ISchemaValidator to report all essential schemas as loaded
+    // ── Happy path ─────────────────────────────────────────────────────
+    describe('loadWorld – essential schema verification', () => {
+        test('AC1 & AC5: proceeds successfully when all essential schemas are loaded', async () => {
             mockValidator.isSchemaLoaded.mockReturnValue(true);
 
-            // Act
+            await expect(
+                worldLoader.loadWorld(testWorldName),
+            ).resolves.toBeUndefined();
+
+            // Schema compilation → essential check → manifest load
+            expect(
+                mockSchemaLoader.loadAndCompileAllSchemas,
+            ).toHaveBeenCalledTimes(1);
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledTimes(2);
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+                essentialSchemaIds.manifest,
+            );
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+                essentialSchemaIds.components,
+            );
+
+            expect(
+                mockManifestLoader.loadAndValidateManifest,
+            ).toHaveBeenCalledTimes(1);
+
+            // Down-stream loaders
+            expect(mockRuleLoader.loadAll).toHaveBeenCalledTimes(1);
+            expect(
+                mockComponentDefinitionLoader.loadComponentDefinitions,
+            ).toHaveBeenCalledTimes(1);
+            expect(mockContentLoader.loadContentFiles).toHaveBeenCalledWith(
+                'items',
+                ['item1.json'],
+            );
+            expect(
+                mockContentLoader.loadContentFiles,
+            ).not.toHaveBeenCalledWith('components', expect.anything());
+
+            // Registry cleared once at start
+            expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
+            // No error logs
+            expect(mockLogger.error).not.toHaveBeenCalled();
+        });
+
+        // ── Single missing essential schema ────────────────────────────
+        test('AC2/3/4: throws and logs when an essential schema is missing', async () => {
+            const missingSchemaId = essentialSchemaIds.components;
+
+            mockValidator.isSchemaLoaded.mockImplementation(
+                (id) => id !== missingSchemaId,
+            );
+
+            await expect(
+                worldLoader.loadWorld(testWorldName),
+            ).rejects.toThrow(
+                `WorldLoader failed to load world '${testWorldName}': Essential schemas missing – aborting world load.`,
+            );
+
+            expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+                essentialSchemaIds.manifest,
+            );
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+                missingSchemaId,
+            );
+
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `WorldLoader: Essential schema missing: ${missingSchemaId}`,
+            );
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                'WorldLoader: CRITICAL load failure.',
+                expect.any(Error),
+            );
+
+            // Nothing after manifest should run
+            expect(
+                mockManifestLoader.loadAndValidateManifest,
+            ).not.toHaveBeenCalled();
+            expect(mockRuleLoader.loadAll).not.toHaveBeenCalled();
+            expect(
+                mockComponentDefinitionLoader.loadComponentDefinitions,
+            ).not.toHaveBeenCalled();
+            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled();
+
+            // Registry cleared twice (start + catch)
+            expect(mockRegistry.clear).toHaveBeenCalledTimes(2);
+        });
+
+        // ── Two missing essential schemas ──────────────────────────────
+        test('AC2/3/4: throws and logs when multiple essential schemas are missing', async () => {
+            const missingSchemaId1 = essentialSchemaIds.manifest;
+            const missingSchemaId2 = essentialSchemaIds.components;
+            const missingSet = new Set([missingSchemaId1, missingSchemaId2]);
+
+            mockValidator.isSchemaLoaded.mockImplementation(
+                (id) => !missingSet.has(id),
+            );
+
+            await expect(
+                worldLoader.loadWorld(testWorldName),
+            ).rejects.toThrow(
+                `WorldLoader failed to load world '${testWorldName}': Essential schemas missing – aborting world load.`,
+            );
+
+            expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalled();
+
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `WorldLoader: Essential schema missing: ${missingSchemaId1}`,
+            );
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `WorldLoader: Essential schema missing: ${missingSchemaId2}`,
+            );
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                'WorldLoader: CRITICAL load failure.',
+                expect.any(Error),
+            );
+
+            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled();
+            expect(mockRuleLoader.loadAll).not.toHaveBeenCalled();
+            expect(mockComponentDefinitionLoader.loadComponentDefinitions).not.toHaveBeenCalled();
+            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled();
+
+            expect(mockRegistry.clear).toHaveBeenCalledTimes(2);
+        });
+
+        // ── Call-order verification ────────────────────────────────────
+        test('AC4: verification happens after schema load, before manifest, and rules load after manifest', async () => {
+            mockValidator.isSchemaLoaded.mockReturnValue(true);
+
             await worldLoader.loadWorld(testWorldName);
 
-            // Assert: Use Jest's mock call order inspection
-            const schemaLoaderCallOrder = mockSchemaLoader.loadAndCompileAllSchemas.mock.invocationCallOrder[0];
-            // Find the first call to isSchemaLoaded (it's called multiple times)
-            const firstValidatorCallOrder = mockValidator.isSchemaLoaded.mock.invocationCallOrder[0];
-            const manifestLoaderCallOrder = mockManifestLoader.loadAndValidateManifest.mock.invocationCallOrder[0];
+            const orderSchema = mockSchemaLoader.loadAndCompileAllSchemas.mock
+                .invocationCallOrder[0];
+            const orderValidator = mockValidator.isSchemaLoaded.mock
+                .invocationCallOrder[0];
+            const orderManifest =
+                mockManifestLoader.loadAndValidateManifest.mock
+                    .invocationCallOrder[0];
+            const orderRules = mockRuleLoader.loadAll.mock.invocationCallOrder[0];
 
-            expect(schemaLoaderCallOrder).toBeDefined();
-            expect(firstValidatorCallOrder).toBeDefined();
-            expect(manifestLoaderCallOrder).toBeDefined();
-
-            // Verify the sequence
-            expect(schemaLoaderCallOrder).toBeLessThan(firstValidatorCallOrder);
-            expect(firstValidatorCallOrder).toBeLessThan(manifestLoaderCallOrder);
+            expect(orderSchema).toBeLessThan(orderValidator);
+            expect(orderValidator).toBeLessThan(orderManifest);
+            expect(orderManifest).toBeLessThan(orderRules);
         });
     });
-
-    // Add other tests for WorldLoader constructor or other methods if needed
 });

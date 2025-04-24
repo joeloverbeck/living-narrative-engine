@@ -66,6 +66,7 @@ import {formatActionCommand} from '../services/actionFormatter.js';
 import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
 import {DomainContextCompatibilityChecker} from '../validation/domainContextCompatibilityChecker.js';
 import InputSetupService from './setup/inputSetupService.js';
+import RuleLoader from "./services/ruleLoader.js";
 
 // --- PrerequisiteEvaluationService import needed for registration ---
 import {PrerequisiteEvaluationService} from '../services/prerequisiteEvaluationService.js';
@@ -108,11 +109,27 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     // --- 3. Data Loaders (Depend on core services) ---
     container.register('SchemaLoader', (c) => new SchemaLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ManifestLoader', (c) => new ManifestLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
+    container.register('RuleLoader', (c) => new RuleLoader(c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('EventBus'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ComponentDefinitionLoader', (c) => new ComponentDefinitionLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
     // --- 4. World Orchestrator & Data Access ---
-    container.register('WorldLoader', (c) => new WorldLoader(c.resolve('IDataRegistry'), c.resolve('ILogger'), c.resolve('SchemaLoader'), c.resolve('ManifestLoader'), c.resolve('GenericContentLoader'), c.resolve('ComponentDefinitionLoader'), c.resolve('ISchemaValidator'), c.resolve('IConfiguration')), {lifecycle: 'singleton'});
+    container.register(
+        'WorldLoader',
+        (c) =>
+            new WorldLoader(
+                c.resolve('IDataRegistry'),
+                c.resolve('ILogger'),
+                c.resolve('SchemaLoader'),
+                c.resolve('ManifestLoader'),
+                c.resolve('GenericContentLoader'),
+                c.resolve('ComponentDefinitionLoader'),
+                c.resolve('RuleLoader'),
+                c.resolve('ISchemaValidator'),
+                c.resolve('IConfiguration')
+            ),
+        {lifecycle: 'singleton'}
+    );
     container.register('GameDataRepository', (c) => new GameDataRepository(c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
     // --- 5. Entity Manager ---
