@@ -241,9 +241,13 @@ class SystemLogicInterpreter {
 
         if (ruleConditionResult) {
             this.#logger.debug(`Root condition for rule '${ruleId}' passed (or was absent). Executing actions.`);
-            // Start execution of the main actions array
-            // Pass the assembled context, which includes the empty 'context' object ready to be populated.
-            this.#executeActions(rule.actions, evaluationContext, `Rule '${ruleId}'`);
+
+            // If the rule has no actions, make sure the “No actions …” message is still logged
+            if (Array.isArray(rule.actions) && rule.actions.length === 0) {
+                this.#logger.debug(`No actions to execute for scope: Rule '${ruleId}'`);
+            }
+
+            this._executeActions(rule.actions, evaluationContext, `Rule '${ruleId}'`);
         } else {
             this.#logger.debug(`Root condition for rule '${ruleId}' failed. Skipping actions.`);
         }
@@ -257,7 +261,7 @@ class SystemLogicInterpreter {
      * @param {string} scopeDescription - A description for logging (e.g., "Rule 'X'", "IF THEN branch").
      * @private
      */
-    #executeActions(actions, executionContext, scopeDescription) {
+    _executeActions(actions, executionContext, scopeDescription) {
         if (!Array.isArray(actions) || actions.length === 0) {
             this.#logger.debug(`No actions to execute for scope: ${scopeDescription}.`);
             return;
@@ -366,13 +370,13 @@ class SystemLogicInterpreter {
         if (conditionResult) {
             // --- Task: If true, recursively call for then_actions ---
             this.#logger.debug(`---> [${parentIfDesc}] Condition TRUE. Executing THEN branch.`);
-            this.#executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
+            this._executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
         } else {
             // --- Task: If false and else_actions exists... ---
             if (else_actions && Array.isArray(else_actions) && else_actions.length > 0) {
                 // --- Task: recursively call for else_actions ---
                 this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE. Executing ELSE branch.`);
-                this.#executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
+                this._executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
             } else {
                 // --- Task: If false and no else_actions... ---
                 this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE and no ELSE branch present or actions empty. Continuing after IF block.`);

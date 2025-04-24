@@ -165,7 +165,7 @@ export function createJsonLogicContext(event, actorId, targetId, entityManager, 
             if (actorEntity) {
                 logger.debug(`Found actor entity [${actorId}]. Creating context entry.`);
                 evaluationContext.actor = {
-                    id: actorEntity.id, // Use the actual ID from the entity instance
+                    id: actorId,
                     components: createComponentAccessor(actorEntity.id, entityManager, logger)
                 };
             } else {

@@ -1,7 +1,10 @@
 # JSON Logic Usage
 
-This document explains how to use JSON Logic within the game engine to define conditional logic for various game
-systems.
+> **New!** If you only need the boolean **`and / or / not`** cheatsheet, jump to  
+> [`docs/composite-logical-operators.md`](composite-logical-operators.md).
+
+This document explains how to use JSON Logic within the game engine to define conditional
+logic for various game systems.
 
 ## Introduction
 
@@ -21,8 +24,12 @@ write engine code directly.
 
 ## Basic Syntax
 
-JSON Logic rules are JSON objects where the keys are operators and the values are the arguments for that operator. Here
-are some of the most commonly used operators:
+JSON Logic rules are JSON objects where the keys are operators and the values are the
+arguments for that operator.
+
+* **Logical (`and`, `or`, `not`, `!`)** – see the dedicated
+  _Composite Logical Operators_ guide for full behaviour, including the engine-specific
+  “vacuous truth/falsity” rules for `{"and":[]}` → `true` and `{"or":[]}` → `false`.
 
 * **`var`**: Retrieves data from the evaluation context. Missing variables typically resolve to `null`.
     * Syntax: `{ "var": "path.to.data" }`

@@ -2,36 +2,77 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/common/json-logic.schema.json",
   "title": "JSON Logic Rule",
-  "description": "A JSON Schema representing a JSON Logic rule object. Defines the structure for logic operations based on the specification at https://jsonlogic.com/",
-  "$comment": "This schema defines the recursive structure of JSON Logic rules, allowing for complex logical, arithmetic, array, and data access operations. It primarily validates the {\"operator\": [arguments...]} structure where arguments can be primitives, arrays, or nested rules. It also accommodates shorthand like {\"var\": \"path\"}.",
+  "description": "A JSON Schema representing a JSON Logic rule object with explicit support for composite logical operators (and, or, not, !). It validates the standard {\"operator\": [arguments...]} structure while enforcing arrays for \"and\"/\"or\", and a single nested rule for \"not\"/\"!\". Other JSON‑Logic operators remain unrestricted and may accept primitives or arrays of nested rules.",
+  "$comment": "Updated for Ticket: Schema: Define Composite Logical Operators (and, or, not) for Conditions. Ensures recursive validation of composite logic while preserving existing operator flexibility.",
   "definitions": {
     "primitive": {
       "description": "Allowed primitive types in JSON Logic arguments.",
-      "type": ["boolean", "string", "number", "null"]
+      "type": [
+        "boolean",
+        "string",
+        "number",
+        "null"
+      ]
     },
     "rule_logic": {
       "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a nested rule object.",
       "anyOf": [
-        { "$ref": "#/definitions/primitive" },
+        {
+          "$ref": "#/definitions/primitive"
+        },
         {
           "type": "array",
-          "items": { "$ref": "#/definitions/rule_logic" }
+          "items": {
+            "$ref": "#/definitions/rule_logic"
+          }
         },
-        { "$ref": "#" }
+        {
+          "$ref": "#"
+        }
       ]
     }
   },
   "type": "object",
   "minProperties": 1,
   "maxProperties": 1,
+  "properties": {
+    "and": {
+      "type": "array",
+      "description": "Logical AND – evaluates to true iff every nested condition is true.",
+      "items": {
+        "$ref": "#/definitions/rule_logic"
+      },
+      "minItems": 1
+    },
+    "or": {
+      "type": "array",
+      "description": "Logical OR – evaluates to true if any nested condition is true.",
+      "items": {
+        "$ref": "#/definitions/rule_logic"
+      },
+      "minItems": 1
+    },
+    "not": {
+      "$ref": "#/definitions/rule_logic",
+      "description": "Logical NOT – inverts the truthiness of the nested condition."
+    },
+    "!": {
+      "$ref": "#/definitions/rule_logic",
+      "description": "Alias for logical NOT (JSON‑Logic shorthand)."
+    }
+  },
   "patternProperties": {
-    "^.+$": {
-      "description": "The arguments for the operator. Typically an array, but can be a primitive for specific operator shorthands (like 'var').",
+    "^(?!(and|or|not|!)$).+$": {
+      "description": "Arguments for any non‑composite operator. Typically an array but may be a primitive for shorthand operators like 'var'.",
       "anyOf": [
-        { "$ref": "#/definitions/primitive" },
+        {
+          "$ref": "#/definitions/primitive"
+        },
         {
           "type": "array",
-          "items": { "$ref": "#/definitions/rule_logic" }
+          "items": {
+            "$ref": "#/definitions/rule_logic"
+          }
         }
       ]
     }

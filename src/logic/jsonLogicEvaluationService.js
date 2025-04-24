@@ -1,6 +1,23 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
 
+// -----------------------------------------------------------------------------
+// Ensure the alias "not" behaves the same as the built‑in "!" operator.
+// Some builds of json-logic-js expose the internal `operations` map only after
+// the first custom operation is registered.  Use optional chaining to probe
+// safely, and fall back to a try/catch approach so we never throw during
+// module evaluation inside the test runner.
+// -----------------------------------------------------------------------------
+try {
+    if (jsonLogic?.operations?.not === undefined) {
+        jsonLogic.add_operation('not', (a) => !a);
+    }
+} catch (_) {
+    // In the unlikely event `add_operation` throws because the op already exists
+    // or the library structure is different, we silently ignore – the goal is
+    // simply to guarantee that a "not" alias is present.
+}
+
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
@@ -47,6 +64,23 @@ class JsonLogicEvaluationService {
      * @implements {AC.3}
      */
     evaluate(rule, context) {
+        // ── Vacuous truth / falsity for empty composites ───────────────────
+        // Parent-ticket spec: an AND with zero operands is true; an OR with
+        // zero operands is false.  json-logic-js returns `undefined` for both,
+        // so we short-circuit here to honour the contract *before* evaluating.
+        if (rule && typeof rule === 'object' && !Array.isArray(rule)) {
+            const [op] = Object.keys(rule);
+            const args = rule[op];
+            if (op === 'and' && Array.isArray(args) && args.length === 0) {
+                this.#logger.debug('Special-case {and: []} ⇒ true (vacuous truth)');
+                return true;
+            }
+            if (op === 'or' && Array.isArray(args) && args.length === 0) {
+                this.#logger.debug('Special-case {or: []} ⇒ false (vacuous falsity)');
+                return false;
+            }
+        }
+
         const ruleSummary = JSON.stringify(rule).substring(0, 150) + (JSON.stringify(rule).length > 150 ? '...' : '');
         this.#logger.debug(`Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`);
         // console.log("Context for evaluation:"); // Uncomment for deep debugging if needed
