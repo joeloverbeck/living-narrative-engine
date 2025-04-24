@@ -4,13 +4,13 @@
   "commandVerb": "attack",
   "name": "Attack",
   "target_domain": "environment",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "Health"
+  "prerequisites": [
+    {
+      "!!": {
+        "var": "target.components.component:health"
+      }
+    }
   ],
-  "target_forbidden_components": [],
-  "prerequisites": [],
   "template": "attack {target}",
   "dispatch_event": {
     "eventName": "event:attack_intended",

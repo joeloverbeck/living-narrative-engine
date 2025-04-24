@@ -4,10 +4,6 @@
   "commandVerb": "look",
   "name": "Look (at Location)",
   "target_domain": "none",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [],
-  "target_forbidden_components": [],
   "prerequisites": [],
   "template": "look",
   "dispatch_event": {

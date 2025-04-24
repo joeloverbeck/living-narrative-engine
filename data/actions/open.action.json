@@ -4,16 +4,27 @@
   "commandVerb": "open",
   "name": "Open",
   "target_domain": "environment",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "Openable"
+  "prerequisites": [
+    {
+      "and": [
+        {
+          "!!": {
+            "var": "target.components.component:openable"
+          }
+        },
+        {
+          "!": {
+            "var": "target.components.component:open"
+          }
+        },
+        {
+          "!": {
+            "var": "target.components.component:locked"
+          }
+        }
+      ]
+    }
   ],
-  "target_forbidden_components": [
-    "Open",
-    "Locked"
-  ],
-  "prerequisites": [],
   "template": "open {target}",
   "dispatch_event": {
     "eventName": "event:open_attempted",

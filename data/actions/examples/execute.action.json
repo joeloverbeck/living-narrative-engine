@@ -4,30 +4,40 @@
   "commandVerb": "execute",
   "name": "Execute",
   "target_domain": "environment",
-  "actor_required_components": [
-    "core:Rage"
-  ],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "core:Health"
-  ],
-  "target_forbidden_components": [],
   "prerequisites": [
     {
       "and": [
         {
-          "and": [
-            {"!!": {"var": "actor.components.core:Rage"}},
-            {">=": [{"var": "actor.components.core:Rage.current"}, 50]}
+          "!!": {
+            "var": "actor.components.core:Rage"
+          }
+        },
+        {
+          "!!": {
+            "var": "target.components.core:Health"
+          }
+        },
+        {
+          ">=": [
+            {
+              "var": "actor.components.core:Rage.current"
+            },
+            50
           ]
         },
         {
-          "and": [
-            {"!!": {"var": "target.components.core:Health"}},
-            {"<=": [
-              {"var": "target.components.core:Health.current"},
-              {"*": [{"var": "target.components.core:Health.max"}, 0.20]}
-            ]}
+          "<=": [
+            {
+              "var": "target.components.core:Health.current"
+            },
+            {
+              "*": [
+                {
+                  "var": "target.components.core:Health.max"
+                },
+                0.20
+              ]
+            }
           ]
         }
       ]

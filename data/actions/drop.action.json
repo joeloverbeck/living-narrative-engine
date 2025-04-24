@@ -4,15 +4,22 @@
   "commandVerb": "drop",
   "name": "Drop",
   "target_domain": "inventory",
-  "actor_required_components": [
-    "Inventory"
+  "prerequisites": [
+    {
+      "and": [
+        {
+          "!!": {
+            "var": "actor.components.component:inventory"
+          }
+        },
+        {
+          "!!": {
+            "var": "target.components.component:item"
+          }
+        }
+      ]
+    }
   ],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "Item"
-  ],
-  "target_forbidden_components": [],
-  "prerequisites": [],
   "template": "drop {target}",
   "dispatch_event": {
     "eventName": "event:item_drop_attempted",

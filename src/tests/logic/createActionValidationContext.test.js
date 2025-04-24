@@ -11,19 +11,16 @@ import {createActionValidationContext} from '../../logic/createActionValidationC
 // --- Dependencies to Mock/Use ---
 import Entity from '../../entities/entity.js'; // Needed to create mock entity instances
 import {ActionTargetContext} from '../../models/actionTargetContext.js'; // Needed for test inputs
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */ // Added typedef for clarity
 
 // --- Mocking Dependencies ---
 
 // Mock EntityManager
-// We provide a factory function to jest.mock to control the mock instance per test run
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
-    getComponentData: jest.fn(), // Needed by createComponentAccessor
-    hasComponent: jest.fn(),     // Needed by createComponentAccessor
-    // Add other methods if they were potentially called, though unlikely for this function
+    getComponentData: jest.fn(),
+    hasComponent: jest.fn(),
 };
-// Note: We don't need a full jest.mock for EntityManager itself,
-// as we'll pass our mock object directly to the function.
 
 // Mock ILogger
 const mockLogger = {
@@ -33,17 +30,17 @@ const mockLogger = {
     info: jest.fn(),
 };
 
-// Mock createComponentAccessor (from contextAssembler.js)
-// We mock the *module* containing the function
+// Mock createComponentAccessor
 jest.mock('../../logic/contextAssembler.js', () => ({
-    createComponentAccessor: jest.fn(), // Mock the specific exported function
+    createComponentAccessor: jest.fn(),
 }));
-// Import the *mocked* version after jest.mock()
 import {createComponentAccessor} from '../../logic/contextAssembler.js';
 
 // --- Test Suite ---
 
 describe('Unit Test: createActionValidationContext', () => {
+    /** @type {ActionDefinition} */ // <<< ADDED: Type for mock action definition
+    let mockActionDefinition;
     /** @type {Entity} */
     let mockActorEntity;
     /** @type {ActionTargetContext} */
@@ -55,58 +52,58 @@ describe('Unit Test: createActionValidationContext', () => {
 
     // --- Test Setup ---
     beforeEach(() => {
-        // Reset mocks before each test to ensure isolation
         jest.clearAllMocks();
 
-        // Recreate mock entities/contexts for clean state
-        mockActorEntity = new Entity('actor-1');
-        // Add dummy components if needed for hasComponent checks within accessor creation? Not directly tested here.
-        // mockActorEntity.addComponent('core:test', { value: 1 });
+        // <<< ADDED: Mock Action Definition
+        mockActionDefinition = {
+            id: 'test:action-mock',
+            // Add other properties if needed by the function or rules later
+            prerequisites: [],
+            effects: [],
+        };
 
-        // Default target context (can be overridden in tests)
+        mockActorEntity = new Entity('actor-1');
         mockTargetContext = ActionTargetContext.noTarget();
 
-        // Default mock return values for createComponentAccessor
         mockActorAccessor = {id: 'actor-1-accessor-proxy', isProxy: true};
         mockTargetAccessor = {id: 'target-1-accessor-proxy', isProxy: true};
 
-        // Provide default implementation for createComponentAccessor mock
-        // Use mockImplementation to dynamically return different values based on entityId
         createComponentAccessor.mockImplementation((entityId, _entityManager, _logger) => {
-            if (entityId === 'actor-1') {
-                return mockActorAccessor;
-            } else if (entityId === 'target-1') {
-                return mockTargetAccessor;
-            }
-            // Return a generic proxy or throw if unexpected ID is requested
+            if (entityId === 'actor-1') return mockActorAccessor;
+            if (entityId === 'target-1') return mockTargetAccessor;
             return {id: `${entityId}-accessor-proxy`, isProxy: true};
         });
 
-        // Default mock implementation for EntityManager
-        mockEntityManager.getEntityInstance.mockImplementation((entityId) => {
-            // Default: return undefined (entity not found)
-            return undefined;
-        });
+        mockEntityManager.getEntityInstance.mockImplementation((entityId) => undefined);
         mockEntityManager.getComponentData.mockImplementation((_entityId, _componentTypeId) => undefined);
         mockEntityManager.hasComponent.mockImplementation((_entityId, _componentTypeId) => false);
     });
 
     afterEach(() => {
-        // Optional: Verify no unexpected error logs occurred if not testing errors
         // expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     // --- Test Cases ---
 
     describe('AC-3.1: Basic Structure', () => {
+        // THIS TEST WAS FAILING
         test('should return an object with the correct top-level keys and default values', () => {
             // Arrange
-            mockActorEntity = new Entity('actor-basic');
-            mockTargetContext = ActionTargetContext.noTarget();
-            createComponentAccessor.mockReturnValueOnce({mocked: 'actorAccessor'}); // Need one for the actor
+            // Use mocks from beforeEach, override if necessary
+            mockActorEntity = new Entity('actor-basic'); // Override actor for this test
+            mockTargetContext = ActionTargetContext.noTarget(); // Explicitly no target
+
+            // Create a specific accessor mock *for this specific actor ID* if needed
+            const specificActorAccessor = {mocked: 'actorBasicAccessor'};
+            createComponentAccessor.mockImplementation((entityId) => {
+                if (entityId === 'actor-basic') return specificActorAccessor;
+                return {id: `${entityId}-proxy`, isProxy: true};
+            });
+
 
             // Act
             const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED: Pass actionDefinition first
                 mockActorEntity,
                 mockTargetContext,
                 mockEntityManager,
@@ -117,30 +114,44 @@ describe('Unit Test: createActionValidationContext', () => {
             expect(context).toBeDefined();
             expect(context).toHaveProperty('actor');
             expect(context).toHaveProperty('target');
-            expect(context).toHaveProperty('event');
+            expect(context).toHaveProperty('event'); // <<< ADDED: Check new property
             expect(context).toHaveProperty('context');
             expect(context).toHaveProperty('globals');
             expect(context).toHaveProperty('entities');
 
-            expect(context.event).toBeNull();
+            // Check defaults
             expect(context.context).toEqual({});
             expect(context.globals).toEqual({});
             expect(context.entities).toEqual({});
 
-            // Actor should be populated, target null in this case
+            // Check actor (should be populated)
             expect(context.actor).not.toBeNull();
+            expect(context.actor.id).toBe('actor-basic');
+            expect(context.actor.components).toBe(specificActorAccessor);
+
+            // Check target (should be null for noTarget context)
             expect(context.target).toBeNull();
+
+            // <<< ADDED: Check event structure <<<
+            expect(context.event).not.toBeNull();
+            expect(context.event.eventType).toBe('action:attempt');
+            expect(context.event.actionId).toBe(mockActionDefinition.id);
+            expect(context.event.actorId).toBe(mockActorEntity.id);
+            expect(context.event.targetContext).toBe(mockTargetContext); // Contains the original target context
+            expect(context.event.actionDefinition).toBe(mockActionDefinition); // Contains the definition object
         });
     });
 
     describe('AC-3.2: Actor Population', () => {
+        // THIS TEST WAS FAILING
         test('should populate context.actor with ID and components from createComponentAccessor', () => {
-            // Arrange: Setup already done in beforeEach
+            // Arrange: Setup already done in beforeEach, uses actor-1
 
             // Act
             const context = createActionValidationContext(
-                mockActorEntity,
-                mockTargetContext, // No target needed for this test
+                mockActionDefinition, // <<< FIXED: Pass actionDefinition first
+                mockActorEntity,      // actor-1 from beforeEach
+                mockTargetContext,    // noTarget from beforeEach
                 mockEntityManager,
                 mockLogger
             );
@@ -151,14 +162,15 @@ describe('Unit Test: createActionValidationContext', () => {
             expect(context.actor.id).toBe('actor-1');
 
             // Verify createComponentAccessor was called correctly for the actor
-            expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only called for actor
+            expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only called for actor (target is 'none')
             expect(createComponentAccessor).toHaveBeenCalledWith(
-                'actor-1',
+                'actor-1', // Correct actor ID
                 mockEntityManager,
                 mockLogger
             );
 
             // Verify the returned accessor was assigned
+            // It should be the mockActorAccessor defined in beforeEach for 'actor-1'
             expect(context.actor.components).toBe(mockActorAccessor);
         });
     });
@@ -170,14 +182,15 @@ describe('Unit Test: createActionValidationContext', () => {
             const mockTargetEntity = new Entity(targetId);
             mockTargetContext = ActionTargetContext.forEntity(targetId);
 
-            // Mock EntityManager to find the target entity
             mockEntityManager.getEntityInstance.mockImplementation((id) => {
                 if (id === targetId) return mockTargetEntity;
+                if (id === 'actor-1') return mockActorEntity; // Ensure actor can also be "found" if needed by accessor
                 return undefined;
             });
 
             // Act
             const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
                 mockActorEntity,
                 mockTargetContext,
                 mockEntityManager,
@@ -185,34 +198,29 @@ describe('Unit Test: createActionValidationContext', () => {
             );
 
             // Assert
-            // Verify EntityManager was called
-            expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
+            expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1); // Only called for target
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(targetId);
 
-            // Verify target context structure
             expect(context.target).toBeDefined();
             expect(context.target).not.toBeNull();
-            expect(context.target.id).toBe(targetId); // Should use the ID from the resolved entity
+            expect(context.target.id).toBe(targetId);
 
-            // Verify createComponentAccessor was called for both actor and target
-            expect(createComponentAccessor).toHaveBeenCalledTimes(2);
+            expect(createComponentAccessor).toHaveBeenCalledTimes(2); // Actor + Target
             expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
             expect(createComponentAccessor).toHaveBeenCalledWith(targetId, mockEntityManager, mockLogger);
 
-            // Verify the target accessor was assigned
-            expect(context.target.components).toBe(mockTargetAccessor);
+            expect(context.target.components).toBe(mockTargetAccessor); // From beforeEach mock
         });
 
-        test('AC-3.4: should set context.target to null when target is Entity but Not Found', () => {
+        test('AC-3.4: should represent non-found target when target is Entity but Not Found', () => {
             // Arrange
             const targetId = 'target-nonexistent';
             mockTargetContext = ActionTargetContext.forEntity(targetId);
-
-            // Mock EntityManager to NOT find the target entity (default beforeEach behavior)
-            mockEntityManager.getEntityInstance.mockImplementation((id) => undefined);
+            // EntityManager mock from beforeEach already returns undefined
 
             // Act
             const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
                 mockActorEntity,
                 mockTargetContext,
                 mockEntityManager,
@@ -220,40 +228,38 @@ describe('Unit Test: createActionValidationContext', () => {
             );
 
             // Assert
-            // Verify EntityManager was called
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
             expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(targetId);
 
-            // Verify target is null
-            expect(context.target).toBeNull();
+            // Updated expectation based on revised logic: Target IS populated but components are null
+            expect(context.target).toEqual({id: targetId, components: null});
 
-            // Verify createComponentAccessor was only called for the actor
-            expect(createComponentAccessor).toHaveBeenCalledTimes(1);
+            expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only for actor
             expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
         });
 
+
         test('AC-3.5: should set context.target to null when targetContext type is entity but entityId is missing/invalid', () => {
-            // Arrange
-            // Manually construct invalid target contexts
             const testCases = [
                 {type: 'entity', entityId: null},
                 {type: 'entity', entityId: undefined},
                 {type: 'entity', entityId: ''},
-                {type: 'entity'}, // entityId property missing
+                {type: 'entity'},
             ];
 
-            // Act & Assert for each case
             testCases.forEach(invalidContext => {
-                // Clear mocks specific to the loop
-                jest.clearAllMocks();
-                createComponentAccessor.mockImplementation((entityId) => {
+                jest.clearAllMocks(); // Clear for loop iteration
+                createComponentAccessor.mockImplementation((entityId) => { // Reset mock impl for loop
                     if (entityId === 'actor-1') return mockActorAccessor;
                     return {isProxy: true};
                 });
+                mockEntityManager.getEntityInstance.mockClear(); // Clear calls for loop
+
 
                 const context = createActionValidationContext(
+                    mockActionDefinition, // <<< FIXED
                     mockActorEntity,
-                    // @ts-ignore - Intentionally testing invalid structure
+                    // @ts-ignore
                     invalidContext,
                     mockEntityManager,
                     mockLogger
@@ -261,19 +267,20 @@ describe('Unit Test: createActionValidationContext', () => {
 
                 // Assert
                 expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
-                expect(context.target).toBeNull();
-                // Accessor only called for actor
-                expect(createComponentAccessor).toHaveBeenCalledTimes(1);
+                expect(context.target).toBeNull(); // Invalid entityId -> null target
+                expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only actor
                 expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
             });
         });
 
-        test('AC-3.6: should set context.target to null when target is Direction', () => {
+        test('AC-3.6: should represent direction target when target is Direction', () => {
             // Arrange
-            mockTargetContext = ActionTargetContext.forDirection('north');
+            const direction = 'north';
+            mockTargetContext = ActionTargetContext.forDirection(direction);
 
             // Act
             const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
                 mockActorEntity,
                 mockTargetContext,
                 mockEntityManager,
@@ -282,18 +289,20 @@ describe('Unit Test: createActionValidationContext', () => {
 
             // Assert
             expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
-            expect(context.target).toBeNull();
-            // Accessor only called for actor
-            expect(createComponentAccessor).toHaveBeenCalledTimes(1);
+            // Updated expectation based on revised logic
+            expect(context.target).toEqual({id: null, direction: direction, components: null});
+            expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only actor
             expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
         });
 
+
         test('AC-3.7: should set context.target to null when target is None', () => {
             // Arrange
-            mockTargetContext = ActionTargetContext.noTarget(); // Already default
+            mockTargetContext = ActionTargetContext.noTarget(); // Default from beforeEach
 
             // Act
             const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
                 mockActorEntity,
                 mockTargetContext,
                 mockEntityManager,
@@ -303,19 +312,42 @@ describe('Unit Test: createActionValidationContext', () => {
             // Assert
             expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
             expect(context.target).toBeNull();
-            // Accessor only called for actor
-            expect(createComponentAccessor).toHaveBeenCalledTimes(1);
+            expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only actor
             expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
         });
     });
 
     describe('AC-3.8: Error Handling (Inputs)', () => {
+        // <<< NEW Test for invalid actionDefinition
+        test('should throw error if actionDefinition is missing or invalid', () => {
+            const invalidDefs = [null, undefined, {}, {id: ''}, {id: '  '}];
+            invalidDefs.forEach(invalidDef => {
+                expect(() => {
+                    createActionValidationContext(
+                        // @ts-ignore
+                        invalidDef, // <<< Testing the FIRST argument
+                        mockActorEntity,
+                        mockTargetContext,
+                        mockEntityManager,
+                        mockLogger
+                    );
+                }).toThrow("createActionValidationContext: invalid actionDefinition");
+            });
+        });
+
+
         test('should throw error if actorEntity is missing or invalid', () => {
             const invalidActors = [null, undefined, {}, {id: ''}, {id: 'valid', hasComponent: 'not-a-function'}];
             invalidActors.forEach(invalidActor => {
                 expect(() => {
-                    // @ts-ignore - Intentionally passing invalid type
-                    createActionValidationContext(invalidActor, mockTargetContext, mockEntityManager, mockLogger);
+                    createActionValidationContext(
+                        mockActionDefinition, // <<< FIXED: Valid first arg
+                        // @ts-ignore
+                        invalidActor,       // <<< Testing the SECOND argument
+                        mockTargetContext,
+                        mockEntityManager,
+                        mockLogger
+                    );
                 }).toThrow("createActionValidationContext: invalid actorEntity");
             });
         });
@@ -324,8 +356,14 @@ describe('Unit Test: createActionValidationContext', () => {
             const invalidTargets = [null, undefined, {}, {type: null}];
             invalidTargets.forEach(invalidTarget => {
                 expect(() => {
-                    // @ts-ignore - Intentionally passing invalid type
-                    createActionValidationContext(mockActorEntity, invalidTarget, mockEntityManager, mockLogger);
+                    createActionValidationContext(
+                        mockActionDefinition, // <<< FIXED
+                        mockActorEntity,
+                        // @ts-ignore
+                        invalidTarget,      // <<< Testing the THIRD argument
+                        mockEntityManager,
+                        mockLogger
+                    );
                 }).toThrow("createActionValidationContext: invalid targetContext");
             });
         });
@@ -334,8 +372,14 @@ describe('Unit Test: createActionValidationContext', () => {
             const invalidManagers = [null, undefined, {}, {getEntityInstance: 'not-a-function'}];
             invalidManagers.forEach(invalidManager => {
                 expect(() => {
-                    // @ts-ignore - Intentionally passing invalid type
-                    createActionValidationContext(mockActorEntity, mockTargetContext, invalidManager, mockLogger);
+                    createActionValidationContext(
+                        mockActionDefinition, // <<< FIXED
+                        mockActorEntity,
+                        mockTargetContext,
+                        // @ts-ignore
+                        invalidManager,     // <<< Testing the FOURTH argument
+                        mockLogger
+                    );
                 }).toThrow("createActionValidationContext: invalid entityManager");
             });
         });
@@ -346,15 +390,21 @@ describe('Unit Test: createActionValidationContext', () => {
             ];
             invalidLoggers.forEach(invalidLogger => {
                 expect(() => {
-                    // @ts-ignore - Intentionally passing invalid type
-                    createActionValidationContext(mockActorEntity, mockTargetContext, mockEntityManager, invalidLogger);
+                    createActionValidationContext(
+                        mockActionDefinition, // <<< FIXED
+                        mockActorEntity,
+                        mockTargetContext,
+                        mockEntityManager,
+                        // @ts-ignore
+                        invalidLogger       // <<< Testing the FIFTH argument
+                    );
                 }).toThrow("createActionValidationContext: invalid logger");
             });
         });
     });
 
     describe('AC-3.9: Error Handling (Internal - Optional)', () => {
-        test('should re-throw error if entityManager.getEntityInstance throws', () => {
+        test('should log error but represent target as {id, null} if entityManager.getEntityInstance throws', () => {
             // Arrange
             const targetId = 'target-error';
             mockTargetContext = ActionTargetContext.forEntity(targetId);
@@ -364,19 +414,31 @@ describe('Unit Test: createActionValidationContext', () => {
                 if (id === targetId) {
                     throw internalError;
                 }
+                // Allow actor lookup if needed by its accessor
+                if (id === 'actor-1') return mockActorEntity;
                 return undefined;
             });
 
-            // Act & Assert
-            expect(() => {
-                createActionValidationContext(mockActorEntity, mockTargetContext, mockEntityManager, mockLogger);
-            }).toThrow(`Failed processing target entity ${targetId}: ${internalError.message}`);
-
-            // Verify logger was called before throw
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Error processing target ID [${targetId}]`),
-                expect.any(Error) // Check that an Error object was logged
+            // Act
+            const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
+                mockActorEntity,
+                mockTargetContext,
+                mockEntityManager,
+                mockLogger
             );
+
+            // Assert: Should not throw, should log error and return specific structure
+            expect(context.target).toEqual({id: targetId, components: null}); // Represents failed lookup
+            expect(mockLogger.error).toHaveBeenCalledTimes(1);
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Error looking up target entity ID [${targetId}]`),
+                internalError // Check that the original Error object was logged
+            );
+            // Actor accessor should still be created
+            expect(createComponentAccessor).toHaveBeenCalledTimes(1);
+            expect(createComponentAccessor).toHaveBeenCalledWith('actor-1', mockEntityManager, mockLogger);
+            expect(context.actor.components).toBe(mockActorAccessor);
         });
 
         test('should re-throw error if createComponentAccessor throws for Actor', () => {
@@ -386,22 +448,29 @@ describe('Unit Test: createActionValidationContext', () => {
                 if (entityId === mockActorEntity.id) {
                     throw internalError;
                 }
-                return {isProxy: true}; // Should not be reached in this test path
+                // Should not be reached for target in this specific test path (target=none)
+                return {isProxy: true};
             });
 
             // Act & Assert
             expect(() => {
-                createActionValidationContext(mockActorEntity, mockTargetContext, mockEntityManager, mockLogger);
-            }).toThrow(`Accessor generation failed`);
+                createActionValidationContext(
+                    mockActionDefinition, // <<< FIXED
+                    mockActorEntity,
+                    mockTargetContext, // Target = none
+                    mockEntityManager,
+                    mockLogger
+                );
+            }).toThrow(`Accessor generation failed`); // Should re-throw the original error
 
             // Verify logger was called before throw
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expect.stringContaining(`Error creating component accessor for actor ID [${mockActorEntity.id}]`),
-                expect.any(Error) // Check that an Error object was logged
+                internalError // Check that the original Error object was logged
             );
         });
 
-        test('should re-throw error if createComponentAccessor throws for Target', () => {
+        test('should represent target as {id, null} and log error if createComponentAccessor throws for Target', () => {
             // Arrange
             const targetId = 'target-1';
             const mockTargetEntity = new Entity(targetId);
@@ -411,6 +480,7 @@ describe('Unit Test: createActionValidationContext', () => {
             // Mock EntityManager to find the target entity
             mockEntityManager.getEntityInstance.mockImplementation((id) => {
                 if (id === targetId) return mockTargetEntity;
+                if (id === 'actor-1') return mockActorEntity;
                 return undefined;
             });
 
@@ -423,20 +493,26 @@ describe('Unit Test: createActionValidationContext', () => {
                 return {isProxy: true};
             });
 
-            // Act & Assert
-            expect(() => {
-                createActionValidationContext(mockActorEntity, mockTargetContext, mockEntityManager, mockLogger);
-            }).toThrow(`Target accessor generation failed`); // Should be wrapped by the target processing block's catch
-
-            // Verify logger was called before throw within the target processing block
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Error processing target ID [${targetId}]`), // The error originates here
-                expect.any(Error) // Check that an Error object was logged (specifically, the error from createComponentAccessor)
+            // Act
+            const context = createActionValidationContext(
+                mockActionDefinition, // <<< FIXED
+                mockActorEntity,
+                mockTargetContext,
+                mockEntityManager,
+                mockLogger
             );
-            // Ensure the actor accessor *was* created without error log for it
+
+            // Assert: Should not throw, should log and represent target state
+            expect(context.target).toEqual({id: targetId, components: null}); // Represents target entity found, but accessor failed
+            expect(mockLogger.error).toHaveBeenCalledTimes(1);
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Error creating component accessor for target ID [${targetId}]`),
+                internalError
+            );
+            // Ensure the actor accessor *was* created successfully
             expect(createComponentAccessor).toHaveBeenCalledWith(mockActorEntity.id, mockEntityManager, mockLogger);
-            expect(createComponentAccessor).toHaveBeenCalledWith(targetId, mockEntityManager, mockLogger);
-            expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only one error logged
+            expect(createComponentAccessor).toHaveBeenCalledWith(targetId, mockEntityManager, mockLogger); // It was called, but threw
+            expect(context.actor.components).toBe(mockActorAccessor); // Actor part is fine
         });
     });
 

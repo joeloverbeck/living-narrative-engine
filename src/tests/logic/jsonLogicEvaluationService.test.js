@@ -3,10 +3,10 @@
 /**
  * @jest-environment node
  */
-import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import {describe, expect, test, jest, beforeEach} from '@jest/globals';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 // --- Task 1: Import necessary modules (Ticket 2.6.3) ---
-import { createJsonLogicContext } from '../../logic/contextAssembler.js'; // Adjust path
+import {createJsonLogicContext} from '../../logic/contextAssembler.js'; // Adjust path
 import Entity from '../../entities/entity.js'; // Adjust path
 
 // --- JSDoc Imports for Type Hinting ---
@@ -68,7 +68,7 @@ describe('JsonLogicEvaluationService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // Instantiate service with the mock logger
-        service = new JsonLogicEvaluationService({ logger: mockLogger });
+        service = new JsonLogicEvaluationService({logger: mockLogger});
         mockLogger.info.mockClear(); // Clear constructor log call
 
         // Reset EntityManager mocks before each test
@@ -91,7 +91,7 @@ describe('JsonLogicEvaluationService', () => {
     describe('Constructor', () => {
         test('should instantiate successfully with a valid logger', () => {
             expect(() => {
-                new JsonLogicEvaluationService({ logger: mockLogger });
+                new JsonLogicEvaluationService({logger: mockLogger});
             }).not.toThrow();
             expect(mockLogger.info).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('JsonLogicEvaluationService initialized.');
@@ -100,7 +100,7 @@ describe('JsonLogicEvaluationService', () => {
         test('should throw an error if logger dependency is missing or invalid', () => {
             const expectedErrorMsg = 'JsonLogicEvaluationService requires a valid ILogger instance.';
             expect(() => new JsonLogicEvaluationService({})).toThrow(expectedErrorMsg);
-            expect(() => new JsonLogicEvaluationService({ logger: null })).toThrow(expectedErrorMsg);
+            expect(() => new JsonLogicEvaluationService({logger: null})).toThrow(expectedErrorMsg);
             // ... other invalid logger checks
         });
     });
@@ -112,32 +112,38 @@ describe('JsonLogicEvaluationService', () => {
     // We might rename the describe block slightly for clarity.
     describe('evaluate() method (Unit Tests with Mocked Apply)', () => {
         /** @type {JSONLogicRule} */
-        const sampleRule = { "==": [{ "var": "event.type" }, "TEST_EVENT"] };
+        const sampleRule = {"==": [{"var": "event.type"}, "TEST_EVENT"]};
         /** @type {JsonLogicEvaluationContext} */
         const sampleContext = {
-            event: { type: 'TEST_EVENT', payload: { data: 'sample' } },
+            event: {type: 'TEST_EVENT', payload: {data: 'sample'}},
             actor: null, target: null, context: {}, globals: {}, entities: {}
         };
+        const expectedRuleSummary = JSON.stringify(sampleRule); // Simplified for example
+        const expectedContextKeys = "event, actor, target, context, globals, entities"; // Based on sampleContext
 
-        // Temporarily mock jsonLogic.apply specifically for these unit tests
         let applySpy;
         beforeEach(() => {
-            // Use spyOn for temporary mocking within this describe block
             applySpy = jest.spyOn(jsonLogic, 'apply');
         });
-        afterEach(() => {
-            // Restore the original implementation after tests in this block
+        afterEach(() => { // Make sure spy is restored
             if (applySpy) applySpy.mockRestore();
         });
-
 
         test('should call jsonLogic.apply and return true when apply returns true', () => {
             applySpy.mockReturnValue(true);
             const result = service.evaluate(sampleRule, sampleContext);
             expect(applySpy).toHaveBeenCalledTimes(1);
             expect(applySpy).toHaveBeenCalledWith(sampleRule, sampleContext);
-            expect(result).toBe(true);
-            expect(mockLogger.debug).toHaveBeenCalledWith('Rule evaluation result: true');
+            expect(result).toBe(true); // Correct
+
+            // --- MODIFIED DEBUG CHECK ---
+            // Check for the actual debug messages logged
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Rule evaluation raw result: true, Final boolean: true` // Check actual log message
+            );
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
@@ -146,27 +152,78 @@ describe('JsonLogicEvaluationService', () => {
             const result = service.evaluate(sampleRule, sampleContext);
             expect(applySpy).toHaveBeenCalledTimes(1);
             expect(applySpy).toHaveBeenCalledWith(sampleRule, sampleContext);
-            expect(result).toBe(false);
-            expect(mockLogger.debug).toHaveBeenCalledWith('Rule evaluation result: false');
+            expect(result).toBe(false); // Correct
+
+            // --- MODIFIED DEBUG CHECK ---
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Rule evaluation raw result: false, Final boolean: false` // Check actual log message
+            );
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
         test('should return false and log error if jsonLogic.apply throws', () => {
             const mockError = new Error('Internal json-logic error');
-            applySpy.mockImplementation(() => { throw mockError; });
+            applySpy.mockImplementation(() => {
+                throw mockError;
+            });
             const result = service.evaluate(sampleRule, sampleContext);
-            expect(result).toBe(false);
+            expect(result).toBe(false); // Correct (catch block returns false)
             expect(applySpy).toHaveBeenCalledTimes(1);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error evaluating JSON Logic rule:'), mockError);
+            // Check that error IS logged
+            expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Error evaluating JSON Logic rule: ${expectedRuleSummary}`), // Check message format
+                mockError // Check error object
+            );
         });
 
-        test('should return false and log error if jsonLogic.apply returns non-boolean', () => {
-            applySpy.mockReturnValue(42); // Non-boolean return
+        // --- MODIFIED Non-Boolean Test ---
+        test('should return true (via truthiness) and NOT log error if jsonLogic.apply returns truthy non-boolean (42)', () => {
+            const nonBooleanValue = 42;
+            applySpy.mockReturnValue(nonBooleanValue);
             const result = service.evaluate(sampleRule, sampleContext);
-            expect(result).toBe(false);
+
+            // Expect truthiness conversion: !!42 is true
+            expect(result).toBe(true); // MODIFIED: Expect true based on !!42
             expect(applySpy).toHaveBeenCalledTimes(1);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('JSON Logic evaluation returned non-boolean type (number)'));
+
+            // Expect error NOT to be logged
+            expect(mockLogger.error).not.toHaveBeenCalled(); // MODIFIED: Error should not be logged
+
+            // Check debug logs (optional but good practice)
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: true`
+            );
         });
+
+        // Optional: Add a test for a FALSY non-boolean value if desired
+        test('should return false (via truthiness) and NOT log error if jsonLogic.apply returns falsy non-boolean (0)', () => {
+            const nonBooleanValue = 0;
+            applySpy.mockReturnValue(nonBooleanValue);
+            const result = service.evaluate(sampleRule, sampleContext);
+
+            // Expect truthiness conversion: !!0 is false
+            expect(result).toBe(false); // MODIFIED: Expect false based on !!0
+            expect(applySpy).toHaveBeenCalledTimes(1);
+
+            // Expect error NOT to be logged
+            expect(mockLogger.error).not.toHaveBeenCalled(); // MODIFIED: Error should not be logged
+
+            // Check debug logs
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: false`
+            );
+        });
+
 
     }); // End describe evaluate() (Unit Tests)
 
@@ -184,11 +241,11 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Equality Test ---
         describe('Equality Rule: {"==": [{"var": "event.payload.value"}, 10]}', () => {
-            const rule = { "==": [{ "var": "event.payload.value" }, 10] };
+            const rule = {"==": [{"var": "event.payload.value"}, 10]};
 
             test('should return true when event.payload.value is 10', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: { value: 10 } };
+                const event = {type: 'TEST_EVENT', payload: {value: 10}};
                 // No actor/target needed for this rule
                 const actorId = null;
                 const targetId = null;
@@ -204,7 +261,7 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when event.payload.value is 5', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: { value: 5 } };
+                const event = {type: 'TEST_EVENT', payload: {value: 5}};
                 const actorId = null;
                 const targetId = null;
 
@@ -217,7 +274,7 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when event.payload.value is missing', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: {} }; // value is missing
+                const event = {type: 'TEST_EVENT', payload: {}}; // value is missing
                 const actorId = null;
                 const targetId = null;
 
@@ -231,9 +288,9 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Inequality Test ---
         describe('Inequality Rule: {"!=": [{"var": "actor.id"}, "player"]}', () => {
-            const rule = { "!=": [{ "var": "actor.id" }, "player"] };
+            const rule = {"!=": [{"var": "actor.id"}, "player"]};
             /** @type {GameEvent} */
-            const event = { type: 'OTHER_EVENT', payload: {} };
+            const event = {type: 'OTHER_EVENT', payload: {}};
             const targetId = null;
 
             test('should return false when actor.id is "player"', () => {
@@ -292,12 +349,12 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Comparison Test ---
         describe('Comparison Rule: {">": [{"var": "target.components.Health.current"}, 50]}', () => {
-            const rule = { ">": [{ "var": "target.components.Health.current" }, 50] };
+            const rule = {">": [{"var": "target.components.Health.current"}, 50]};
             const componentTypeId = 'Health';
             const targetId = 'enemy1';
             const mockTarget = createMockEntity(targetId);
             /** @type {GameEvent} */
-            const event = { type: 'DAMAGE_EVENT', payload: {} };
+            const event = {type: 'DAMAGE_EVENT', payload: {}};
             const actorId = 'player'; // Assume an actor exists but isn't used by rule
 
 
@@ -311,7 +368,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return true when target Health.current is 75 (> 50)', () => {
-                const healthData = { current: 75, max: 100 };
+                const healthData = {current: 75, max: 100};
 
                 // Setup EM mock for component data
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
@@ -336,7 +393,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return false when target Health.current is 50 (not > 50)', () => {
-                const healthData = { current: 50, max: 100 };
+                const healthData = {current: 50, max: 100};
 
                 // Setup EM mock for component data
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
@@ -357,7 +414,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return false when target Health.current is 30 (<= 50)', () => {
-                const healthData = { current: 30, max: 100 };
+                const healthData = {current: 30, max: 100};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === targetId && compId === componentTypeId) return healthData;
                     return undefined;
@@ -421,10 +478,12 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Logical AND Test ---
         describe('Logical AND Rule: {"and": [{"==": [{"var": "event.type"}, "TEST_EVENT"]}, {">": [{"var": "actor.components.Stamina.current"}, 0]}]}', () => {
-            const rule = { "and": [
-                    { "==": [{ "var": "event.type" }, "TEST_EVENT"] },
-                    { ">": [{ "var": "actor.components.Stamina.current" }, 0] }
-                ]};
+            const rule = {
+                "and": [
+                    {"==": [{"var": "event.type"}, "TEST_EVENT"]},
+                    {">": [{"var": "actor.components.Stamina.current"}, 0]}
+                ]
+            };
             const staminaComponentId = 'Stamina';
             const actorId = 'player';
             const mockActor = createMockEntity(actorId);
@@ -441,8 +500,8 @@ describe('JsonLogicEvaluationService', () => {
             // Test cases for AND (True/True, True/False, False/True, False/False)
             test('should return true when event.type is "TEST_EVENT" AND actor Stamina > 0', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: {} };
-                const staminaData = { current: 10, max: 100 };
+                const event = {type: 'TEST_EVENT', payload: {}};
+                const staminaData = {current: 10, max: 100};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === actorId && compId === staminaComponentId) return staminaData;
                     return undefined;
@@ -459,8 +518,8 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when event.type is "TEST_EVENT" BUT actor Stamina is 0', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: {} };
-                const staminaData = { current: 0, max: 100 }; // Stamina NOT > 0
+                const event = {type: 'TEST_EVENT', payload: {}};
+                const staminaData = {current: 0, max: 100}; // Stamina NOT > 0
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === actorId && compId === staminaComponentId) return staminaData;
                     return undefined;
@@ -477,8 +536,8 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when event.type is NOT "TEST_EVENT" even if actor Stamina > 0', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'WRONG_EVENT', payload: {} }; // Event type mismatch
-                const staminaData = { current: 10, max: 100 }; // Stamina > 0
+                const event = {type: 'WRONG_EVENT', payload: {}}; // Event type mismatch
+                const staminaData = {current: 10, max: 100}; // Stamina > 0
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === actorId && compId === staminaComponentId) return staminaData;
                     return undefined;
@@ -495,8 +554,8 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when event.type is NOT "TEST_EVENT" AND actor Stamina is 0', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'WRONG_EVENT', payload: {} };
-                const staminaData = { current: 0, max: 100 };
+                const event = {type: 'WRONG_EVENT', payload: {}};
+                const staminaData = {current: 0, max: 100};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === actorId && compId === staminaComponentId) return staminaData;
                     return undefined;
@@ -513,7 +572,7 @@ describe('JsonLogicEvaluationService', () => {
 
             test('should return false when actor Stamina component is missing', () => {
                 /** @type {GameEvent} */
-                const event = { type: 'TEST_EVENT', payload: {} }; // Event type matches
+                const event = {type: 'TEST_EVENT', payload: {}}; // Event type matches
                 // Stamina component missing
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => undefined);
                 mockEntityManager.hasComponent.mockImplementation(() => false);
@@ -530,15 +589,17 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Logical OR Test ---
         describe('Logical OR Rule: {"or": [{"==": [{"var": "target.components.Status.effect"}, "POISON"]}, {"==": [{"var": "target.components.Status.effect"}, "STUN"]}]}', () => {
-            const rule = { "or": [
-                    { "==": [{ "var": "target.components.Status.effect" }, "POISON"] },
-                    { "==": [{ "var": "target.components.Status.effect" }, "STUN"] }
-                ]};
+            const rule = {
+                "or": [
+                    {"==": [{"var": "target.components.Status.effect"}, "POISON"]},
+                    {"==": [{"var": "target.components.Status.effect"}, "STUN"]}
+                ]
+            };
             const statusComponentId = 'Status';
             const targetId = 'monster';
             const mockTarget = createMockEntity(targetId);
             /** @type {GameEvent} */
-            const event = { type: 'CHECK_STATUS', payload: {} };
+            const event = {type: 'CHECK_STATUS', payload: {}};
             const actorId = 'player';
 
             beforeEach(() => {
@@ -556,7 +617,7 @@ describe('JsonLogicEvaluationService', () => {
 
             // Test cases for OR (True/True, True/False, False/True, False/False)
             test('should return true when target Status.effect is "POISON"', () => {
-                const statusData = { effect: 'POISON', duration: 5 };
+                const statusData = {effect: 'POISON', duration: 5};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === targetId && compId === statusComponentId) return statusData;
                     return undefined;
@@ -568,7 +629,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return true when target Status.effect is "STUN"', () => {
-                const statusData = { effect: 'STUN', duration: 2 };
+                const statusData = {effect: 'STUN', duration: 2};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === targetId && compId === statusComponentId) return statusData;
                     return undefined;
@@ -580,7 +641,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return false when target Status.effect is "BURN" (neither POISON nor STUN)', () => {
-                const statusData = { effect: 'BURN', duration: 3 };
+                const statusData = {effect: 'BURN', duration: 3};
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === targetId && compId === statusComponentId) return statusData;
                     return undefined;
@@ -606,7 +667,7 @@ describe('JsonLogicEvaluationService', () => {
             });
 
             test('should return false when target Status.effect property is missing', () => {
-                const statusData = { duration: 3 }; // effect property is missing
+                const statusData = {duration: 3}; // effect property is missing
                 mockEntityManager.getComponentData.mockImplementation((id, compId) => {
                     if (id === targetId && compId === statusComponentId) return statusData;
                     return undefined;
@@ -627,9 +688,9 @@ describe('JsonLogicEvaluationService', () => {
 
         // --- Logical NOT Test ---
         describe('Logical NOT Rule: {"!": {"==": [{"var": "context.queryResult"}, null]}}', () => {
-            const rule = { "!": { "==": [{ "var": "context.queryResult" }, null] } };
+            const rule = {"!": {"==": [{"var": "context.queryResult"}, null]}};
             /** @type {GameEvent} */
-            const event = { type: 'CONTEXT_TEST', payload: {} };
+            const event = {type: 'CONTEXT_TEST', payload: {}};
             const actorId = null;
             const targetId = null;
 
@@ -638,7 +699,7 @@ describe('JsonLogicEvaluationService', () => {
                 // because createJsonLogicContext initializes context: {}
                 const baseContext = createJsonLogicContext(event, actorId, targetId, mockEntityManager, mockLogger);
                 // Manually add the property that the rule expects
-                baseContext.context.queryResult = { id: 'item1', value: 100 };
+                baseContext.context.queryResult = {id: 'item1', value: 100};
 
                 // Rule: ! (queryResult == null) -> ! (false) -> true
                 const result = service.evaluate(rule, baseContext);
@@ -685,7 +746,8 @@ describe('JsonLogicEvaluationService', () => {
         test('should call jsonLogic.add_operation with name and function', () => {
             const operationName = 'customOp';
             const operationFunc = jest.fn();
-            addOpSpy.mockImplementation(() => {}); // Mock implementation
+            addOpSpy.mockImplementation(() => {
+            }); // Mock implementation
 
             service.addOperation(operationName, operationFunc);
 
@@ -699,7 +761,9 @@ describe('JsonLogicEvaluationService', () => {
             const operationName = 'failingOp';
             const operationFunc = jest.fn();
             const mockError = new Error('Failed to add');
-            addOpSpy.mockImplementation(() => { throw mockError; });
+            addOpSpy.mockImplementation(() => {
+                throw mockError;
+            });
 
             service.addOperation(operationName, operationFunc);
 

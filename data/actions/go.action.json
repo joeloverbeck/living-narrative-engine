@@ -4,10 +4,6 @@
   "commandVerb": "go",
   "name": "Go",
   "target_domain": "direction",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [],
-  "target_forbidden_components": [],
   "prerequisites": [],
   "template": "go {direction}",
   "dispatch_event": {

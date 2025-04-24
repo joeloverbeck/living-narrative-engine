@@ -554,6 +554,29 @@ Combines conditions with `AND` - Actor has key, target is specific door, door is
       ]
     }
 
+Combines conditions with AND - demonstrating interaction with JavaScript truthiness for [].
+
+```json
+{
+  "and": [
+    true,
+    []
+  ]
+}
+```
+
+#### Evaluation:
+
+The and operator evaluates operands from left to right (true, then []).
+Since [] is truthy in standard JavaScript, and no falsy value was found, the and operator (mimicking JS behavior for
+determining return value) returns the last evaluated operand: [].
+(This behavior is nuanced: while [] is truthy here for and's return logic, dedicated boolean operations in json-logic-js
+like !![] or using [] in an if condition treat it as falsy).
+Service Coercion: The JsonLogicEvaluationService receives the raw result [] from jsonLogic.apply and applies boolean
+coercion using !!.
+Since [] is truthy in JavaScript, !![] evaluates to true.
+Service Output: true
+
 Combines conditions with `OR` - checks if actor has 'effect:poison' OR 'effect:disease' component.
 
     {

@@ -1,11 +1,13 @@
 // src/actions/actionTypes.js
 
 // Ensure necessary imports for type hinting (won't be executed at runtime)
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // <<< ADDED GameDataRepository Import (Adjust path if needed)
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 // Added EventBus based on its use in ActionContext
 /** @typedef {import('../core/eventBus.js').default} EventBus */
+// --- ADDED Import for ActionTargetContext ---
+/** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
 
 /**
@@ -71,6 +73,21 @@
  * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For handlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
  * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., "event:display_message", "event:move_failed"). **NOTE:** Usage varies; some handlers still return messages. This might be refined later.
  */
+
+// +++ TICKET 6: Add ActionAttemptPseudoEvent Typedef +++
+/**
+ * Represents the context of an action being attempted, passed to the
+ * context creation function for prerequisite evaluation. This is *not*
+ * an event dispatched on the EventBus, but an informational object.
+ *
+ * @typedef {object} ActionAttemptPseudoEvent
+ * @property {'action:attempt'} eventType - Discriminator indicating the nature of this object.
+ * @property {string} actionId - The ID of the action being attempted (e.g., 'core:move').
+ * @property {string} actorId - The ID of the entity attempting the action.
+ * @property {ActionTargetContext} targetContext - The resolved target context for this specific attempt.
+ * @property {ActionDefinition} actionDefinition - The full definition of the action being attempted. // Added for more context
+ */
+// +++ END TICKET 6 +++
 
 // ---- Placeholder Export ----
 // This file primarily exists for JSDoc type definitions.

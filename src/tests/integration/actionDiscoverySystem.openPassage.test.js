@@ -10,33 +10,27 @@ import EntityManager from '../../entities/entityManager.js';
 import {GameDataRepository} from '../../core/services/gameDataRepository.js';
 import {ActionValidationService} from '../../services/actionValidationService.js';
 import {ActionTargetContext} from "../../models/actionTargetContext.js";
-import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js'; // Using the provided real implementation
-// Import checkers needed by ActionValidationService or other parts
-import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js';
-// ComponentRequirementChecker might be needed indirectly or by other tests, keep its setup for now
-import {ComponentRequirementChecker} from '../../validation/componentRequirementChecker.js';
-
+import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js';
+import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js'; // Real Checker
+import {PrerequisiteEvaluationService} from '../../services/prerequisiteEvaluationService.js'; // Real PES
+import {ActionValidationContextBuilder} from '../../services/actionValidationContextBuilder.js'; // <<< CORRECT: Import Real Builder
 
 // --- Functions used by SUT ---
 import * as actionFormatter from '../../services/actionFormatter.js'; // Import module to spy
 
 // --- Mocked Dependencies ---
-// Using a simple object mock for the logger interface
 const mockLogger = {
     info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
 };
 
-// Mock for ISchemaValidator
 const mockValidator = {
     validate: jest.fn((componentTypeId, componentData) => {
         return {isValid: true, errors: []};
     }),
 };
 
-// Mock for getEntityIdsForScopesFn (dependency of ActionDiscoverySystem)
 const mockGetEntityIdsForScopesFn = jest.fn();
 
-// Mock for ISpatialIndexManager (dependency of EntityManager)
 const mockSpatialIndexManager = {
     addEntity: jest.fn(),
     removeEntity: jest.fn(),
@@ -46,27 +40,13 @@ const mockSpatialIndexManager = {
     clearIndex: jest.fn(),
 };
 
-// Mock for JsonLogicEvaluationService (dependency of ActionValidationService)
+// Mock for JsonLogicEvaluationService (dependency of PrerequisiteEvaluationService)
 const mockJsonLogicEvaluationService = {
     evaluate: jest.fn().mockReturnValue(true), // Default: Assume rules pass
 };
 
-// --- ADD MOCK for createActionValidationContextFunction ---
-// (dependency of ActionValidationService)
-const mockCreateActionValidationContextFn = jest.fn().mockImplementation(
-    (actor, targetCtx, entityManager, logger) => {
-        // Return a basic context object structure sufficient for mock evaluation
-        // Adjust if your actual JsonLogic rules require more complex context
-        return {
-            actor: {id: actor.id},
-            target: targetCtx.type === 'entity' ? {id: targetCtx.entityId} :
-                targetCtx.type === 'direction' ? {direction: targetCtx.direction} :
-                    {},
-            // Add other context properties if needed by prerequisite rules
-        };
-    }
-);
-// ---------------------------------------------------------
+// --- REMOVED mockCreateActionValidationContextFn - Obsolete Dependency ---
+
 
 // --- Test Data Definitions ---
 const connectionDef = {
@@ -106,7 +86,7 @@ const playerDef = {
                 "core:attr_intelligence": 10,
                 "core:attr_constitution": 9
             }
-        }, "Attack": {"damage": 3}, "Equipment": {"slots": { /* ... empty slots ... */}}, "QuestLog": {}
+        }, "Attack": {"damage": 3}, "Equipment": {"slots": {}}, "QuestLog": {}
     }
 };
 
@@ -119,7 +99,7 @@ const goActionDef = {
     "actor_forbidden_components": [],
     "target_required_components": [],
     "target_forbidden_components": [],
-    "prerequisites": [], // Assume no prerequisites for this test case simplicity
+    "prerequisites": [],
     "template": "go {direction}",
 };
 
@@ -129,7 +109,9 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
     let registry;
     let gameDataRepository;
     let entityManager;
-    let actionValidationService;
+    let actionValidationContextBuilder; // <<< CORRECT: Added declaration
+    let prerequisiteEvaluationService;
+    let actionValidationService; // Real AVS instance
     let actionDiscoverySystem;
     let playerEntity;
     let roomEntity;
@@ -137,11 +119,7 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
     let actionContext;
     let formatSpy;
 
-    // --- Declare variables for checkers ---
-    let componentRequirementChecker; // Keep if needed elsewhere, not directly by AVS constructor
-    let domainContextCompatibilityChecker;
-    // ------------------------------------
-
+    let domainContextCompatibilityChecker; // Real Checker instance
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -151,22 +129,30 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
         gameDataRepository = new GameDataRepository(registry, mockLogger);
         entityManager = new EntityManager(registry, mockValidator, mockLogger, mockSpatialIndexManager);
 
-        // --- Instantiate Checkers needed by ActionValidationService ---
-        // ComponentRequirementChecker might be needed by other systems or indirectly, so instantiate it
-        componentRequirementChecker = new ComponentRequirementChecker({logger: mockLogger});
+        // Instantiate REAL Checkers/Builders needed by dependencies
         domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({logger: mockLogger});
-        // ------------------------------------------------------------
+        // <<< CORRECT: Instantiate the real ActionValidationContextBuilder >>>
+        actionValidationContextBuilder = new ActionValidationContextBuilder({
+            entityManager: entityManager,
+            logger: mockLogger
+        });
+
+        // --- Instantiate PrerequisiteEvaluationService ---
+        // <<< CORRECT: Inject the real actionValidationContextBuilder >>>
+        prerequisiteEvaluationService = new PrerequisiteEvaluationService({
+            logger: mockLogger,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            actionValidationContextBuilder: actionValidationContextBuilder // Inject the instance
+        });
 
         // --- CORRECTED ActionValidationService Instantiation ---
-        // Ensure ALL dependencies required by its constructor are provided.
+        // <<< CORRECT: Remove obsolete createActionValidationContextFunction dependency >>>
         actionValidationService = new ActionValidationService({
-            entityManager,                          // Pass the EntityManager instance
-            logger: mockLogger,                     // Pass the logger instance
-            domainContextCompatibilityChecker,      // Pass the DomainContextCompatibilityChecker instance
-            jsonLogicEvaluationService: mockJsonLogicEvaluationService, // <<< CORRECTLY PASSING DEPENDENCY
-            createActionValidationContextFunction: mockCreateActionValidationContextFn // <<< CORRECTLY PASSING DEPENDENCY
+            entityManager,
+            logger: mockLogger,
+            domainContextCompatibilityChecker,
+            prerequisiteEvaluationService: prerequisiteEvaluationService // Pass the correctly instantiated PES
         });
-        // ------------------------------------------------------
 
         mockGetEntityIdsForScopesFn.mockClear();
         mockGetEntityIdsForScopesFn.mockReturnValue(new Set()); // Default: return empty set
@@ -177,42 +163,38 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
         actionDiscoverySystem = new ActionDiscoverySystem({
             gameDataRepository,
             entityManager,
-            actionValidationService, // Pass the correctly instantiated service
+            actionValidationService, // Pass the correctly instantiated real service
             logger: mockLogger,
-            formatActionCommandFn: formatSpy, // Pass the spy/mock formatter function
-            getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn // Pass the mock scope function
+            formatActionCommandFn: formatSpy,
+            getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn
         });
 
         // 2. Load Test Definitions into the registry
         registry.store('actions', goActionDef.id, goActionDef);
         registry.store('entities', playerDef.id, playerDef);
-        registry.store('locations', roomDef.id, roomDef); // Assuming locations are stored under 'locations' type
-        registry.store('connections', connectionDef.id, connectionDef); // Assuming connections are stored under 'connections' type
+        registry.store('locations', roomDef.id, roomDef);
+        registry.store('connections', connectionDef.id, connectionDef);
 
         // 3. Create Entity Instances from definitions
         playerEntity = entityManager.createEntityInstance('core:player');
         roomEntity = entityManager.createEntityInstance('demo:room_entrance');
         connectionEntity = entityManager.createEntityInstance('demo:conn_entrance_hallway');
 
-        // Verification: Ensure entities and key components were loaded correctly
         if (!playerEntity || !roomEntity || !connectionEntity) {
             throw new Error("Failed to instantiate core entities for the test.");
         }
-
         const playerPosData = playerEntity.getComponentData('Position');
         const roomConnData = roomEntity.getComponentData('Connections');
         const connDetailsData = connectionEntity.getComponentData('PassageDetails');
-
         if (!playerPosData || !roomConnData || !connDetailsData) {
             console.error("Player Pos Data:", playerPosData);
             console.error("Room Conn Data:", roomConnData);
             console.error("Conn Details Data:", connDetailsData);
             throw new Error("Core component data missing from instantiated entities.");
         }
-        // Assert initial state is as expected for the test scenario
         expect(playerPosData.locationId).toBe('demo:room_entrance');
         expect(roomConnData.connections?.north).toBe('demo:conn_entrance_hallway');
-        expect(connDetailsData.blockerEntityId).toBeNull(); // Passage is open
+        expect(connDetailsData.blockerEntityId).toBeNull();
 
         // 4. Build Action Context required by ActionDiscoverySystem.getValidActions
         actionContext = {
@@ -220,17 +202,15 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
             currentLocation: roomEntity,
             entityManager: entityManager,
             gameDataRepository: gameDataRepository,
-            eventBus: null, // Mock or null if not used by the discovery process itself
-            dispatch: jest.fn(), // Mock or null if not used
-            parsedCommand: null // Not relevant for action discovery
+            eventBus: null,
+            dispatch: jest.fn(),
+            parsedCommand: null
         };
     });
 
 
     it('should discover "go north" as a valid action when player is in entrance and passage is open', async () => {
         // Arrange (Done in beforeEach)
-        // Configure mocks if specific behavior is needed beyond defaults
-        // e.g., mockJsonLogicEvaluationService.evaluate.mockReturnValueOnce(true); // Already default
 
         // --- Act ---
         const validActions = await actionDiscoverySystem.getValidActions(playerEntity, actionContext);
@@ -238,40 +218,38 @@ describe('ActionDiscoverySystem Integration Test - Go North', () => {
         // --- Assert ---
         expect(validActions).toBeDefined();
         expect(Array.isArray(validActions)).toBe(true);
-
-        // Check that the expected formatted command string is present
         expect(validActions).toContain('go north');
-
-        // Optional: Check if it's the *only* action (adjust if other actions are expected)
-        // expect(validActions).toHaveLength(1);
-
-        // Ensure no errors were logged
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it('should correctly identify the direction and call validation service with the right context', async () => {
-        // Arrange (Done in beforeEach)
-        // Spy on the validation service's isValid method AFTER it has been instantiated
+        // Arrange
         const isValidSpy = jest.spyOn(actionValidationService, 'isValid');
 
         // --- Act ---
         await actionDiscoverySystem.getValidActions(playerEntity, actionContext);
 
         // --- Assert ---
-        // Verify that actionValidationService.isValid was called for the 'go' action
-        // with the player as the actor, and a target context representing the 'north' direction.
+        // First call is the initial actor check (target = none)
         expect(isValidSpy).toHaveBeenCalledWith(
-            expect.objectContaining({id: 'core:go'}), // The action definition for 'go'
-            playerEntity, // The actor entity
+            expect.objectContaining({id: 'core:go'}), // Action Def
+            playerEntity, // Actor
+            expect.objectContaining({type: 'none'}) // Initial Target Context
+        );
+
+        // Second call is the specific direction check
+        expect(isValidSpy).toHaveBeenCalledWith(
+            expect.objectContaining({id: 'core:go'}),
+            playerEntity,
             expect.objectContaining({ // The ActionTargetContext for the direction 'north'
                 type: 'direction',
                 direction: 'north',
-                entityId: null // Explicitly check that entityId is null for direction context
+                entityId: null
             })
         );
 
-        // Optional: Check how many times it was called if specific number is expected
-        // expect(isValidSpy).toHaveBeenCalledTimes(1); // Assuming 'go' is the only action processed with a direction target
+        // Verify call count if necessary (depends on how many actions are processed)
+        // expect(isValidSpy).toHaveBeenCalledTimes(2);
 
         isValidSpy.mockRestore(); // Clean up the spy
     });

@@ -12,8 +12,9 @@ import {ActionValidationService} from '../../services/actionValidationService.js
 import {ActionTargetContext} from "../../models/actionTargetContext.js";
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js';
 import Entity from '../../entities/entity.js';
-// Import checkers needed by ActionValidationService's dependencies OR directly
-import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js'; // Needed by AVS constructor
+import {PrerequisiteEvaluationService} from '../../services/prerequisiteEvaluationService.js'; // Real PES
+import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js'; // Real Checker
+import {ActionValidationContextBuilder} from '../../services/actionValidationContextBuilder.js'; // <<< CORRECT: Import Real Builder
 
 // --- Functions used by SUT ---
 import * as actionFormatter from '../../services/actionFormatter.js'; // Import module to spy
@@ -46,30 +47,12 @@ const mockSpatialIndexManager = {
 
 const mockGetEntityIdsForScopesFn = jest.fn();
 
-// Mock for PrerequisiteChecker dependency (and now directly for ActionValidationService)
+// Mock for JsonLogicEvaluationService (dependency of PrerequisiteEvaluationService)
 const mockJsonLogicEvaluationService = {
     evaluate: jest.fn().mockReturnValue(true), // Assume prerequisites pass by default unless overridden
 };
 
-// --- ADD MOCK FOR THE MISSING FUNCTION DEPENDENCY for ActionValidationService ---
-const mockCreateActionValidationContext = jest.fn((actor, targetCtx, entityManager, logger) => {
-    // Return a basic context structure sufficient for the tests.
-    // Adjust if your prerequisite logic needs more detail.
-    const context = {
-        actor: {id: actor.id, components: actor.getAllComponents()}, // Example structure
-        target: null,
-        // Add more details based on what your actual function does and prerequisites test.
-    };
-    if (targetCtx.type === 'entity' && targetCtx.entityId) {
-        const targetEntity = entityManager.getEntityInstance(targetCtx.entityId);
-        context.target = {id: targetCtx.entityId, components: targetEntity?.getAllComponents() || {}};
-    } else if (targetCtx.type === 'direction' && targetCtx.direction) {
-        context.target = {type: 'direction', value: targetCtx.direction};
-    }
-    // console.log('>>> mockCreateActionValidationContext called, returning:', JSON.stringify(context));
-    return context;
-});
-// --- END ADD ---
+// --- REMOVED mockCreateActionValidationContext - Obsolete Dependency ---
 
 // --- Test Data Definitions ---
 const connectionDef = {
@@ -94,9 +77,7 @@ const roomDef = {
         "MetaDescription": {"keywords": ["entrance"]},
         "Connections": {
             "connections": {
-                "north": {
-                    "connectionEntityId": "demo:conn_entrance_hallway",
-                }
+                "north": "demo:conn_entrance_hallway"
             }
         }
     }
@@ -122,7 +103,6 @@ const goActionDef = {
     "actor_forbidden_components": [],
     "target_required_components": [],
     "target_forbidden_components": [],
-    // Keep prerequisites potentially empty, as ActionValidationService needs the property
     "prerequisites": [],
     "template": "go {direction}",
 };
@@ -134,10 +114,13 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
     let registry;
     let gameDataRepository;
     let entityManager;
+    let actionValidationContextBuilder; // <<< CORRECT: Added declaration
+    let prerequisiteEvaluationService;
     let realActionValidationService; // Instance of the real service
     let actionDiscoverySystem;
     let playerEntity;
     let roomEntity;
+    let connectionEntity;
 
     // Spies/Mocks needed across tests
     let formatSpy;
@@ -156,37 +139,45 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
             mockSpatialIndexManager
         );
 
-        // Instantiate REAL Checkers needed by ActionValidationService *or its dependencies*
-        // Note: These are not directly passed to AVS constructor anymore based on its definition
-        // const componentRequirementChecker = new ComponentRequirementChecker({logger: mockLogger});
-        const domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({logger: mockLogger}); // This one IS needed
-        // const prerequisiteChecker = new PrerequisiteChecker({ // This is NOT directly needed by AVS constructor
-        //     jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-        //     entityManager: entityManager,
-        //     logger: mockLogger
-        // });
+        // Instantiate REAL Checkers/Builders needed by dependencies
+        const domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({logger: mockLogger});
+        // <<< CORRECT: Instantiate the real ActionValidationContextBuilder >>>
+        actionValidationContextBuilder = new ActionValidationContextBuilder({
+            entityManager: entityManager,
+            logger: mockLogger
+        });
 
-        // Instantiate the REAL ActionValidationService - PASS THE CORRECT DEPENDENCIES
-        // based on the ActionValidationService constructor definition provided
+        // --- Instantiate PrerequisiteEvaluationService ---
+        // <<< CORRECT: Inject the real actionValidationContextBuilder >>>
+        prerequisiteEvaluationService = new PrerequisiteEvaluationService({
+            logger: mockLogger,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            actionValidationContextBuilder: actionValidationContextBuilder // Inject the instance
+        });
+
+        // Instantiate the REAL ActionValidationService
+        // <<< CORRECT: Remove obsolete createActionValidationContextFunction dependency >>>
         realActionValidationService = new ActionValidationService({
             entityManager,
             logger: mockLogger,
-            domainContextCompatibilityChecker, // Pass the instance created above
-            jsonLogicEvaluationService: mockJsonLogicEvaluationService, // Pass the mock defined earlier
-            createActionValidationContextFunction: mockCreateActionValidationContext // Pass the new mock function
+            domainContextCompatibilityChecker,
+            prerequisiteEvaluationService: prerequisiteEvaluationService // Pass the correctly instantiated PES
         });
 
         // 2. Load Definitions into Registry
         registry.store('actions', goActionDef.id, goActionDef);
         registry.store('entities', playerDef.id, playerDef);
-        registry.store('entities', roomDef.id, roomDef);
-        registry.store('entities', connectionDef.id, connectionDef);
+        registry.store('locations', roomDef.id, roomDef);
+        registry.store('connections', connectionDef.id, connectionDef);
 
         // 3. Create Entity Instances
         playerEntity = entityManager.createEntityInstance(playerDef.id);
         roomEntity = entityManager.createEntityInstance(roomDef.id);
-        if (!playerEntity || !roomEntity) {
-            throw new Error('Failed to create player or room entity instance.');
+        connectionEntity = entityManager.createEntityInstance(connectionDef.id);
+
+        if (!playerEntity || !roomEntity || !connectionEntity) {
+            console.error("Player:", playerEntity, "Room:", roomEntity, "Connection:", connectionEntity);
+            throw new Error('Failed to create player, room or connection entity instance.');
         }
 
         // 4. Spy on Formatter (before creating ActionDiscoverySystem)
@@ -197,13 +188,12 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
         mockGetEntityIdsForScopesFn.mockReturnValue(new Set()); // Default: return empty set
 
         // 6. Instantiate System Under Test (ActionDiscoverySystem)
-        // Pass the correctly instantiated realActionValidationService
         actionDiscoverySystem = new ActionDiscoverySystem({
             gameDataRepository,
             entityManager,
-            actionValidationService: realActionValidationService, // Use the instance created above
+            actionValidationService: realActionValidationService, // Use the real AVS instance
             logger: mockLogger,
-            formatActionCommandFn: formatSpy, // Pass the spy directly as the function dependency
+            formatActionCommandFn: formatSpy,
             getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn
         });
 
@@ -225,23 +215,16 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
         // Spy on the isValid method AFTER the instance is created and available
         isValidMock = jest.spyOn(realActionValidationService, 'isValid')
             .mockImplementation((actionDef, actor, targetContext) => {
-                // Log calls to the mock for debugging test flow
-                // console.log(`>>> MOCK isValid called [Test 1]: action='${actionDef.id}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? targetContext.direction ?? 'none'}'`);
-
                 // For the initial check ('none' context), let the real logic run.
-                // Assumes the actionDef has no actor requirements/prereqs that would fail here.
                 if (targetContext.type === 'none' && actionDef.id === 'core:go') {
-                    // console.log('>>> TEST 1: Mock allowing real call for initial check');
                     return realIsValidImplementation(actionDef, actor, targetContext);
                 }
                 // For the specific direction check ('north'), force it to FAIL for this test's purpose.
                 if (targetContext.type === 'direction' && targetContext.direction === 'north' && actionDef.id === 'core:go') {
-                    // console.log('>>> TEST 1: Mock forcing direction check to FALSE');
                     return false; // Force failure to prevent formatter call
                 }
-                // Fallback for any other unexpected calls (e.g., other directions if they existed)
-                // console.log('>>> TEST 1: Mock allowing real call for unexpected case');
-                return realIsValidImplementation(actionDef, actor, targetContext); // Or return false if preferred
+                // Fallback for any other unexpected calls
+                return realIsValidImplementation(actionDef, actor, targetContext);
             });
 
         // --- Act ---
@@ -268,10 +251,6 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
         // 2. Verify formatter was NOT called because we forced the second validation to fail.
         expect(formatSpy).not.toHaveBeenCalled();
 
-        // Optional: Check if context creator was called (likely once by the first real isValid call)
-        // Depends on ActionValidationService internal logic regarding empty prerequisites array.
-        // If actionDef.prerequisites is [], it might optimize out the call.
-        // expect(mockCreateActionValidationContext).toHaveBeenCalledTimes(1);
     });
 
     // --- Test Case 2: Force Validation Success to Test Formatter Call ---
@@ -283,21 +262,15 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
         // Spy and MOCK the implementation to FORCE the desired validation results
         isValidMock = jest.spyOn(realActionValidationService, 'isValid')
             .mockImplementation((actionDef, actor, targetContext) => {
-                // Log calls to the mock for debugging test flow
-                // console.log(`>>> MOCK isValid called [Test 2]: action='${actionDef.id}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? targetContext.direction ?? 'none'}'`);
-
                 // Force initial check to PASS to prevent 'continue' in ActionDiscoverySystem
                 if (targetContext.type === 'none' && actionDef.id === 'core:go') {
-                    // console.log(">>> TEST 2: Mocking initial check to TRUE");
                     return true;
                 }
                 // Force direction check for 'north' to PASS to trigger formatter call
                 if (targetContext.type === 'direction' && targetContext.direction === 'north' && actionDef.id === 'core:go') {
-                    // console.log(">>> TEST 2: Mocking 'north' direction check to TRUE");
                     return true;
                 }
                 // All other checks fail for simplicity in this specific test
-                // console.log(`>>> TEST 2: Mocking other check (${actionDef.id}/${targetContext.type}) to FALSE`);
                 return false;
             });
 
@@ -316,7 +289,6 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
             playerEntity,
             expectedDirectionContext // Check for the specific 'north' direction context
         );
-        // Should have been called exactly twice in this scenario (none, north)
         expect(isValidMock).toHaveBeenCalledTimes(2);
 
         // 2. Verify the formatter WAS called because the direction validation was mocked to true
@@ -324,9 +296,8 @@ describe('ActionDiscoverySystem Integration Test - Formatter Call Scenarios', ()
         expect(formatSpy).toHaveBeenCalledWith(
             expect.objectContaining({id: 'core:go'}), // The action definition
             expectedDirectionContext,                    // The exact context that passed validation
-            entityManager,                               // The entity manager
-            // If formatActionCommand takes an options object, match it if necessary
-            // expect.any(Object) or { debug: false } etc.
+            entityManager                               // The entity manager
+            // Add options object check if needed based on formatter signature
         );
     });
 });

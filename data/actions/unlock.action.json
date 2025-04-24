@@ -4,12 +4,12 @@
   "commandVerb": "unlock",
   "name": "Unlock",
   "target_domain": "environment",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "Lockable"
+  "prerequisites": [
+    {
+      "!!": {
+        "var": "target.components.component:lockable"
+      }
+    }
   ],
-  "target_forbidden_components": [],
-  "prerequisites": [],
   "template": "unlock {target}"
 }

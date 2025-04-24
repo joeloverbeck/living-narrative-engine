@@ -4,13 +4,13 @@
   "commandVerb": "take",
   "name": "Take",
   "target_domain": "environment",
-  "actor_required_components": [],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "Item"
+  "prerequisites": [
+    {
+      "!!": {
+        "var": "target.components.component:item"
+      }
+    }
   ],
-  "target_forbidden_components": [],
-  "prerequisites": [],
   "template": "take {target}",
   "dispatch_event": {
     "eventName": "event:item_picked_up",

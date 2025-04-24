@@ -4,25 +4,31 @@
   "commandVerb": "cast",
   "name": "Cast Fireball",
   "target_domain": "environment",
-  "actor_required_components": [
-    "core:ManaPool"
-  ],
-  "actor_forbidden_components": [],
-  "target_required_components": [
-    "core:Health"
-  ],
-  "target_forbidden_components": [],
   "prerequisites": [
     {
       "and": [
         {
-          "and": [
-            {"!!": {"var": "actor.components.core:ManaPool"}},
-            {">": [{"var": "actor.components.core:ManaPool.current"}, 10]}
+          "!!": {
+            "var": "actor.components.core:ManaPool"
+          }
+        },
+        {
+          "!!": {
+            "var": "target.components.core:Health"
+          }
+        },
+        {
+          ">": [
+            {
+              "var": "actor.components.core:ManaPool.current"
+            },
+            10
           ]
         },
         {
-          "!": {"var": "target.components.example:FireImmunity"}
+          "!": {
+            "var": "target.components.example:FireImmunity"
+          }
         }
       ]
     }

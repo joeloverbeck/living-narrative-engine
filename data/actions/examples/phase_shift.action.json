@@ -4,19 +4,27 @@
   "commandVerb": "phase",
   "name": "Phase Shift",
   "target_domain": "self",
-  "actor_required_components": [
-    "example:PhasingEnergy"
-  ],
-  "actor_forbidden_components": [
-    "example:PhasedOut"
-  ],
-  "target_required_components": [],
-  "target_forbidden_components": [],
   "prerequisites": [
     {
       "and": [
-        {"!!": {"var": "actor.components.example:PhasingEnergy"}},
-        {">": [{"var": "actor.components.example:PhasingEnergy.current"}, 5]}
+        {
+          "!!": {
+            "var": "actor.components.example:PhasingEnergy"
+          }
+        },
+        {
+          "!": {
+            "var": "actor.components.example:PhasedOut"
+          }
+        },
+        {
+          ">": [
+            {
+              "var": "actor.components.example:PhasingEnergy.current"
+            },
+            5
+          ]
+        }
       ]
     }
   ],
