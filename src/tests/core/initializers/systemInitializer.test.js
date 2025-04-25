@@ -1,8 +1,8 @@
-// src/core/initializers/systemInitializer.test.js
+// src/tests/core/initializers/systemInitializer.test.js
 
 // --- Imports ---
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-// Assuming tests are in src/tests/** adjust path as needed
+import {describe, it, expect, beforeEach, jest} from '@jest/globals';
+// Adjust path as needed
 import SystemInitializer from '../../../core/initializers/systemInitializer.js';
 
 // --- Type Imports for Mocks ---
@@ -10,18 +10,11 @@ import SystemInitializer from '../../../core/initializers/systemInitializer.js';
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../systems/interfaces/ISystem.js').ISystem} ISystem */
 
-// --- Constant: Expected number of systems based on the REAL static list ---
-const EXPECTED_SYSTEM_COUNT = 21; // Based on SystemInitializer.#systemsToInitialize
-
-// --- Keys from the ACTUAL #systemsToInitialize list for targeted testing ---
-const HAPPY_KEY_1 = 'GameRuleSystem';
-const HAPPY_KEY_2 = 'MovementSystem';
-const NO_INIT_KEY = 'InventorySystem'; // *Assumption*: This system doesn't have/need initialize
-const FAIL_RESOLVE_KEY = 'CombatSystem';
-const FAIL_INIT_KEY = 'HealthSystem';
+// --- Constant for the tag ---
+const INITIALIZATION_TAG = 'initializableSystem';
 
 // --- Test Suite ---
-describe('SystemInitializer', () => {
+describe('SystemInitializer (Tag-Based)', () => {
 
     /** @type {jest.Mocked<AppContainer>} */
     let mockContainer;
@@ -30,22 +23,23 @@ describe('SystemInitializer', () => {
     /** @type {SystemInitializer} */
     let systemInitializer;
 
-    // --- Mocks for systems returned for SPECIFIC keys ---
-    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }>} */
-    let mockSystemHappy1;
-    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }>} */
-    let mockSystemHappy2;
-    /** @type {jest.Mocked<ISystem & { someProperty?: string }>} */
+    // --- Mocks for systems to be returned by resolveByTag ---
+    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }> & { name?: string }} */
+    let mockSystemGood1;
+    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }> & { name?: string }} */
+    let mockSystemGood2;
+    /** @type {jest.Mocked<ISystem & { someOtherMethod?: () => void }> & { name?: string }} */
     let mockSystemNoInit;
-    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }>} */
+    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }> & { name?: string }} */
     let mockSystemFailInit;
-    /** @type {jest.Mocked<ISystem & { initialize?: () => Promise<void> }>} */
-    let mockSystemGeneric;
-
+    /** @type {jest.Mocked<ISystem & { initialize?: string }> & { name?: string }} */ // Initialize is not a function
+    let mockSystemBadInitType;
+    /** @type {null} */ // Simulate container returning null/undefined
+    let mockSystemNull;
 
     // Errors used in tests
-    const resolveError = new Error(`Mock resolve error for ${FAIL_RESOLVE_KEY}`);
-    const initError = new Error(`Mock initialization error for ${FAIL_INIT_KEY}`);
+    const initError = new Error(`Mock initialization error`);
+    const resolveTagError = new Error(`Mock container resolveByTag error`);
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -58,40 +52,50 @@ describe('SystemInitializer', () => {
             debug: jest.fn(),
         };
 
-        // Mock AppContainer
+        // Mock AppContainer with resolveByTag
         mockContainer = {
-            resolve: jest.fn(),
+            resolve: jest.fn(), // Keep resolve mock for potential other uses or future tests
             register: jest.fn(),
             disposeSingletons: jest.fn(),
             reset: jest.fn(),
+            // AC4: Mock the container's tag resolution mechanism
+            resolveByTag: jest.fn(),
         };
 
-        // Create Mock System Instances
-        mockSystemHappy1 = { initialize: jest.fn().mockResolvedValue(undefined) };
-        mockSystemHappy2 = { initialize: jest.fn().mockResolvedValue(undefined) };
-        mockSystemNoInit = { someProperty: 'value' }; // No initialize method intentionally
-        mockSystemFailInit = { initialize: jest.fn().mockRejectedValue(initError) };
-        mockSystemGeneric = { initialize: jest.fn().mockResolvedValue(undefined) };
+        // Create Mock System Instances with identifiable names
+        mockSystemGood1 = {
+            name: 'SystemGood1',
+            initialize: jest.fn().mockResolvedValue(undefined),
+            constructor: {name: 'SystemGood1'}
+        };
+        mockSystemGood2 = {
+            name: 'SystemGood2',
+            initialize: jest.fn().mockResolvedValue(undefined),
+            constructor: {name: 'SystemGood2'}
+        };
+        mockSystemNoInit = {name: 'SystemNoInit', someOtherMethod: jest.fn(), constructor: {name: 'SystemNoInit'}}; // No initialize method intentionally
+        mockSystemFailInit = {
+            name: 'SystemFailInit',
+            initialize: jest.fn().mockRejectedValue(initError),
+            constructor: {name: 'SystemFailInit'}
+        };
+        mockSystemBadInitType = {
+            name: 'SystemBadInitType',
+            initialize: 'not a function',
+            constructor: {name: 'SystemBadInitType'}
+        };
+        mockSystemNull = null;
 
 
-        // Configure the main mockContainer.resolve using ACTUAL keys
-        // This setup remains the same - it always includes the error conditions
-        mockContainer.resolve.mockImplementation((key) => {
-            switch (key) {
-                case HAPPY_KEY_1:
-                    return mockSystemHappy1;
-                case HAPPY_KEY_2:
-                    return mockSystemHappy2;
-                case NO_INIT_KEY:
-                    return mockSystemNoInit;
-                case FAIL_RESOLVE_KEY:
-                    throw resolveError;
-                case FAIL_INIT_KEY:
-                    return mockSystemFailInit;
-                default:
-                    return { initialize: jest.fn().mockResolvedValue(undefined), name: `Generic_${key}` };
-            }
-        });
+        // Default setup for resolveByTag (can be overridden in tests)
+        mockContainer.resolveByTag.mockReturnValue([
+            mockSystemGood1,
+            mockSystemNoInit,
+            mockSystemFailInit,
+            mockSystemGood2,
+            mockSystemBadInitType,
+            mockSystemNull
+        ]);
 
         // Instantiate SystemInitializer
         systemInitializer = new SystemInitializer(mockContainer, mockLogger);
@@ -99,23 +103,31 @@ describe('SystemInitializer', () => {
 
     // --- Constructor Tests ---
     describe('Constructor', () => {
-        // ... (constructor tests remain the same) ...
         it('should throw an error if AppContainer is not provided', () => {
             expect(() => new SystemInitializer(null, mockLogger))
-                .toThrow('SystemInitializer requires an AppContainer instance.');
-            expect(() => new SystemInitializer(undefined, mockLogger))
                 .toThrow('SystemInitializer requires an AppContainer instance.');
         });
 
         it('should throw an error if ILogger is not provided', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-            expect(() => new SystemInitializer(mockContainer, null))
-                .toThrow('SystemInitializer requires an ILogger instance.');
-            expect(() => new SystemInitializer(mockContainer, undefined))
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
+            // Pass a container *with* resolveByTag for this specific test
+            const tempContainer = {resolveByTag: jest.fn()};
+            expect(() => new SystemInitializer(tempContainer, null))
                 .toThrow('SystemInitializer requires an ILogger instance.');
             expect(consoleErrorSpy).toHaveBeenCalledWith("SystemInitializer requires an ILogger instance.");
             consoleErrorSpy.mockRestore();
         });
+
+        // AC3a Test: Ensure constructor checks for resolveByTag
+        it('should throw an error if AppContainer does not support resolveByTag', () => {
+            const invalidContainer = {resolve: jest.fn()}; // Missing resolveByTag
+            expect(() => new SystemInitializer(invalidContainer, mockLogger))
+                .toThrow("SystemInitializer requires an AppContainer instance that supports 'resolveByTag'.");
+            // Check logger was called if provided (even though it throws)
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("supports 'resolveByTag'"));
+        });
+
 
         it('should create an instance and log debug message when valid dependencies are provided', () => {
             expect(systemInitializer).toBeInstanceOf(SystemInitializer);
@@ -125,135 +137,136 @@ describe('SystemInitializer', () => {
     });
 
 
-    // --- initializeSystems Method Tests ---
-    describe('initializeSystems', () => {
+    // --- initializeAll Method Tests ---
+    describe('initializeAll', () => { // Method name updated
 
-        it('[AC: Happy Path] should resolve, initialize systems, and log correctly despite background errors', async () => {
+        it('[AC4: Happy Path] should resolve by tag, call initialize() only on valid systems, and log correctly', async () => {
             // --- Act ---
-            await systemInitializer.initializeSystems();
+            await systemInitializer.initializeAll();
 
             // --- Assert ---
             // Log start and end
-            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: Starting system initialization loop...");
-            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: System initialization loop completed.");
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Starting initialization for systems tagged with '${INITIALIZATION_TAG}'...`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Querying container for tag '${INITIALIZATION_TAG}'...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Found 6 systems tagged with '${INITIALIZATION_TAG}'.`); // Based on default mock return
+            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: Initialization loop for tagged systems completed.");
 
-            // Resolve calls
-            expect(mockContainer.resolve).toHaveBeenCalledTimes(EXPECTED_SYSTEM_COUNT);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(HAPPY_KEY_1);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(HAPPY_KEY_2);
+            // Verify resolveByTag was called correctly
+            expect(mockContainer.resolveByTag).toHaveBeenCalledTimes(1);
+            expect(mockContainer.resolveByTag).toHaveBeenCalledWith(INITIALIZATION_TAG);
 
-            // Initialize calls for happy path systems
-            expect(mockSystemHappy1.initialize).toHaveBeenCalledTimes(1);
-            expect(mockSystemHappy2.initialize).toHaveBeenCalledTimes(1);
-            // Verify the failing init system *was* also called, because the loop continues
-            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1);
+            // Verify initialize calls for the systems that *should* be called
+            expect(mockSystemGood1.initialize).toHaveBeenCalledTimes(1);
+            expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
+            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1); // Called, but expected to fail
 
-            // Logging for the specific happy path systems
-            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Attempting to resolve system: ${HAPPY_KEY_1}...`);
-            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${HAPPY_KEY_1}...`);
-            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${HAPPY_KEY_1} initialized successfully.`);
-            // ... (logs for HAPPY_KEY_2) ...
-            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Attempting to resolve system: ${HAPPY_KEY_2}...`);
-            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${HAPPY_KEY_2}...`);
-            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${HAPPY_KEY_2} initialized successfully.`);
+            // Verify initialize was NOT called for invalid/missing ones
+            expect(mockSystemNoInit.someOtherMethod).not.toHaveBeenCalled(); // Ensure no other method was called accidentally
+            // No initialize to check on mockSystemNoInit
+            // No initialize to check on mockSystemBadInitType (it's a string)
+            // No initialize to check on mockSystemNull
 
-            // Expect background errors TO HAVE OCCURRED due to the full loop run
-            expect(mockLogger.error).toHaveBeenCalledTimes(2); // 1 for resolve fail, 1 for init fail
-            expect(mockLogger.warn).not.toHaveBeenCalled();
-        });
+            // Logging for successful initializations
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${mockSystemGood1.constructor.name}...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${mockSystemGood1.constructor.name} initialized successfully.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${mockSystemGood2.constructor.name}...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${mockSystemGood2.constructor.name} initialized successfully.`);
 
-        it('[AC: System without initialize] should skip initialize and log debug, despite background errors', async () => {
-            // --- Act ---
-            await systemInitializer.initializeSystems();
-
-            // --- Assert ---
-            // Resolve calls
-            expect(mockContainer.resolve).toHaveBeenCalledTimes(EXPECTED_SYSTEM_COUNT);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(NO_INIT_KEY);
-
-            // Initialize calls - check others were called
-            expect(mockSystemHappy1.initialize).toHaveBeenCalledTimes(1);
-            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1); // This was called too
-
-            // Logging for the specific NO_INIT_KEY system
-            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Attempting to resolve system: ${NO_INIT_KEY}...`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Resolved system '${NO_INIT_KEY}' has no initialize() method, skipping call.`);
-            expect(mockLogger.info).not.toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${NO_INIT_KEY}...`);
-
-            // Expect background errors TO HAVE OCCURRED
-            expect(mockLogger.error).toHaveBeenCalledTimes(2); // 1 for resolve fail, 1 for init fail
-            expect(mockLogger.warn).not.toHaveBeenCalled();
-        });
-
-        it('[AC: Error during System Resolution] should log specific resolve error and continue', async () => {
-            // --- Act ---
-            let didThrow = false;
-            try {
-                await systemInitializer.initializeSystems();
-            } catch (e) { didThrow = true; }
-
-            // --- Assert ---
-            expect(didThrow).toBe(false);
-
-            // Resolve calls
-            expect(mockContainer.resolve).toHaveBeenCalledTimes(EXPECTED_SYSTEM_COUNT);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(FAIL_RESOLVE_KEY);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(HAPPY_KEY_1); // Verify continuation
-
-            // Initialize calls
-            expect(mockSystemHappy1.initialize).toHaveBeenCalledTimes(1);
-            expect(mockSystemHappy2.initialize).toHaveBeenCalledTimes(1);
-            // **Correction**: Check that the init for the *other* failing system WAS called
-            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1);
-
-            // Logging for the specific failure
-            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Attempting to resolve system: ${FAIL_RESOLVE_KEY}...`);
-            // Check specific error message for RESOLVE failure
+            // Logging for the failing initialization
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${mockSystemFailInit.constructor.name}...`);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                `SystemInitializer: Failed to resolve system '${FAIL_RESOLVE_KEY}'. Skipping initialization. Error: ${resolveError.message}`,
-                resolveError
-            );
-            // Check total errors (resolve fail + init fail)
-            expect(mockLogger.error).toHaveBeenCalledTimes(2);
-
-            // Check completion log
-            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: System initialization loop completed.");
-        });
-
-        it('[AC: Error during System Initialization] should log specific init error and continue', async () => {
-            // --- Act ---
-            let didThrow = false;
-            try {
-                await systemInitializer.initializeSystems();
-            } catch (e) { didThrow = true; }
-
-            // --- Assert ---
-            expect(didThrow).toBe(false);
-
-            // Resolve calls
-            expect(mockContainer.resolve).toHaveBeenCalledTimes(EXPECTED_SYSTEM_COUNT);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(FAIL_INIT_KEY);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(HAPPY_KEY_1); // Verify continuation
-
-            // Initialize calls
-            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1); // It WAS called
-            expect(mockSystemHappy1.initialize).toHaveBeenCalledTimes(1);
-            expect(mockSystemHappy2.initialize).toHaveBeenCalledTimes(1);
-
-
-            // Logging for the specific failure
-            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${FAIL_INIT_KEY}...`);
-            // Check specific error message for INIT failure
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                `SystemInitializer: Error during initialization of system '${FAIL_INIT_KEY}'. Continuing with others. Error: ${initError.message}`,
+                `SystemInitializer: Error during initialization of system '${mockSystemFailInit.constructor.name}'. Continuing with others. Error: ${initError.message}`,
                 initError
             );
-            expect(mockLogger.info).not.toHaveBeenCalledWith(`SystemInitializer: System ${FAIL_INIT_KEY} initialized successfully.`);
-            // Check total errors (resolve fail + init fail)
-            expect(mockLogger.error).toHaveBeenCalledTimes(2);
 
-            // Check completion log
-            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: System initialization loop completed.");
+            // Logging for skipped systems
+            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Resolved system '${mockSystemNoInit.constructor.name}' has no initialize() method or is not a function, skipping call.`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`SystemInitializer: Resolved system '${mockSystemBadInitType.constructor.name}' has no initialize() method or is not a function, skipping call.`);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`SystemInitializer: Encountered a null or undefined entry in resolved systems for tag '${INITIALIZATION_TAG}', skipping.`);
+
+
+            // Check total errors (only the init fail in this setup)
+            expect(mockLogger.error).toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn).toHaveBeenCalledTimes(1); // For the null entry
+        });
+
+        it('[AC4: Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
+            mockContainer.resolveByTag.mockReturnValue([]); // Override default
+
+            await systemInitializer.initializeAll();
+
+            expect(mockContainer.resolveByTag).toHaveBeenCalledWith(INITIALIZATION_TAG);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Starting initialization for systems tagged with '${INITIALIZATION_TAG}'...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Found 0 systems tagged with '${INITIALIZATION_TAG}'.`);
+            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: Initialization loop for tagged systems completed.");
+
+            // Ensure no initialize methods were called
+            expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
+            expect(mockSystemFailInit.initialize).not.toHaveBeenCalled();
+
+            expect(mockLogger.error).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+        });
+
+
+        it('[AC4: Error during resolveByTag] should log the error and re-throw', async () => {
+            mockContainer.resolveByTag.mockRejectedValue(resolveTagError); // Simulate container error
+
+            await expect(systemInitializer.initializeAll())
+                .rejects
+                .toThrow(`Failed to resolve initializable systems: ${resolveTagError.message}`);
+
+            expect(mockContainer.resolveByTag).toHaveBeenCalledWith(INITIALIZATION_TAG);
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `SystemInitializer: Failed to resolve systems by tag '${INITIALIZATION_TAG}'. Initialization cannot proceed. Error: ${resolveTagError.message}`,
+                resolveTagError
+            );
+
+            // Ensure the loop completion message is NOT logged
+            expect(mockLogger.info).not.toHaveBeenCalledWith("SystemInitializer: Initialization loop for tagged systems completed.");
+            // Ensure no initialization attempts were made
+            expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
+        });
+
+        it('[AC4: Error during System Initialization] should log specific init error and continue with others', async () => {
+            // Setup: Ensure resolveByTag returns the mock that throws on init
+            mockContainer.resolveByTag.mockReturnValue([mockSystemGood1, mockSystemFailInit, mockSystemGood2]);
+
+            let didThrow = false;
+            try {
+                await systemInitializer.initializeAll();
+            } catch (e) {
+                didThrow = true;
+            }
+
+            // Assert: Should not throw, should continue
+            expect(didThrow).toBe(false);
+
+            // Verify resolve was called
+            expect(mockContainer.resolveByTag).toHaveBeenCalledWith(INITIALIZATION_TAG);
+
+            // Verify all initialize methods were *attempted*
+            expect(mockSystemGood1.initialize).toHaveBeenCalledTimes(1);
+            expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1); // Attempted
+            expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
+
+            // Logging for the specific failure
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Initializing system: ${mockSystemFailInit.constructor.name}...`);
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `SystemInitializer: Error during initialization of system '${mockSystemFailInit.constructor.name}'. Continuing with others. Error: ${initError.message}`,
+                initError
+            );
+            expect(mockLogger.info).not.toHaveBeenCalledWith(`SystemInitializer: System ${mockSystemFailInit.constructor.name} initialized successfully.`);
+
+            // Logging for successful ones (verify continuation)
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${mockSystemGood1.constructor.name} initialized successfully.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: System ${mockSystemGood2.constructor.name} initialized successfully.`);
+
+            // Check total errors
+            expect(mockLogger.error).toHaveBeenCalledTimes(1);
+
+            // Check loop completion log
+            expect(mockLogger.info).toHaveBeenCalledWith("SystemInitializer: Initialization loop for tagged systems completed.");
         });
     });
 });

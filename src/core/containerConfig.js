@@ -74,6 +74,11 @@ import OperationInterpreter from '../logic/operationInterpreter.js';
 import {PrerequisiteEvaluationService} from '../services/prerequisiteEvaluationService.js';
 // --- ActionValidationContextBuilder needed by PES ---
 import {ActionValidationContextBuilder} from '../services/actionValidationContextBuilder.js';
+import QueryComponentHandler from "../logic/operationHandlers/queryComponentHandler.js";
+import ModifyComponentHandler from "../logic/operationHandlers/modifyComponentHandler.js";
+import DispatchEventHandler from "../logic/operationHandlers/dispatchEventHandler.js";
+import LogHandler from "../logic/operationHandlers/logHandler.js";
+import OperationRegistry from "../logic/operationRegistry.js";
 
 
 /** @typedef {import('../core/appContainer.js').default} AppContainer */
@@ -117,7 +122,7 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         c.resolve('ISchemaValidator'),
         c.resolve('IDataRegistry'),
         c.resolve('ILogger')
-    ), { lifecycle: 'singleton' });
+    ), {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered RuleLoader (with IDataRegistry dependency).");
     container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ComponentDefinitionLoader', (c) => new ComponentDefinitionLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
@@ -180,13 +185,12 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
 
 
     // --- PrerequisiteEvaluationService registration (Needs ActionValidationContextBuilder) ---
-    // Status: Correct - No change needed here for Refactor-AVS-3.4
     container.register('PrerequisiteEvaluationService', (c) => {
         logger.info("ContainerConfig: Creating PrerequisiteEvaluationService instance with required dependencies...");
         const service = new PrerequisiteEvaluationService({
             logger: c.resolve('ILogger'),
             jsonLogicEvaluationService: c.resolve('JsonLogicEvaluationService'),
-            actionValidationContextBuilder: c.resolve('ActionValidationContextBuilder') // <<< KEPT (PES needs this)
+            actionValidationContextBuilder: c.resolve('ActionValidationContextBuilder')
         });
         logger.info("ContainerConfig: PrerequisiteEvaluationService instance created (with ActionValidationContextBuilder).");
         return service;
@@ -198,30 +202,19 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     logger.info("ContainerConfig: Registered DomainContextCompatibilityChecker.");
 
 
-    // --- Action Validation Service (Refactored Dependency Injection) ---
-    // Status: Updated as per Refactor-AVS-3.4
+    // --- Action Validation Service ---
     container.register('ActionValidationService', (c) => {
-        // --- Refactor-AVS-3.4: Update log message ---
-        logger.info("ContainerConfig: Creating ActionValidationService instance with updated dependencies (removing context creation responsibility)...");
-        // --- End Refactor-AVS-3.4 ---
+        logger.info("ContainerConfig: Creating ActionValidationService instance...");
         const service = new ActionValidationService({
             entityManager: c.resolve('EntityManager'),
             logger: c.resolve('ILogger'),
             domainContextCompatibilityChecker: c.resolve('DomainContextCompatibilityChecker'),
-            prerequisiteEvaluationService: c.resolve('PrerequisiteEvaluationService'), // --- Refactor-AVS-3.4: REMOVE dependency as per ticket ---
-            // actionValidationContextBuilder: c.resolve('ActionValidationContextBuilder') // <<< REMOVED (AC4)
-            // --- End Refactor-AVS-3.4 ---
+            prerequisiteEvaluationService: c.resolve('PrerequisiteEvaluationService'),
         });
-        // --- Refactor-AVS-3.4: Update log message ---
-        // Updated log message to reflect the change
-        logger.info("ContainerConfig: ActionValidationService instance created (without context creation dependency).");
-        // --- End Refactor-AVS-3.4 ---
+        logger.info("ContainerConfig: ActionValidationService instance created.");
         return service;
     }, {lifecycle: 'singleton'});
-    // --- Refactor-AVS-3.4: Update log message ---
-    // Updated log message to reflect the change
-    logger.info("ContainerConfig: Registered ActionValidationService (without context creation dependency)."); // AC4
-    // --- End Refactor-AVS-3.4 ---
+    logger.info("ContainerConfig: Registered ActionValidationService.");
 
 
     container.register('PayloadValueResolverService', (c) => new PayloadValueResolverService({logger: c.resolve('ILogger')}), {lifecycle: 'singleton'});
@@ -233,13 +226,16 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         logger: c.resolve('ILogger')
     }), {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered ValidatedEventDispatcher.");
+
+    // --- Welcome Message Service ---
+    // AC2: Add tag 'initializableSystem'
     container.register('WelcomeMessageService', (c) => new WelcomeMessageService({
         eventBus: c.resolve('EventBus'),
         gameDataRepository: c.resolve('GameDataRepository'),
         validatedDispatcher: c.resolve('ValidatedEventDispatcher'),
         logger: c.resolve('ILogger')
-    }), {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered WelcomeMessageService.");
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
+    logger.info("ContainerConfig: Registered WelcomeMessageService (tagged).");
 
     // --- 8. Action Executor ---
     container.register('ActionExecutor', (c) => new ActionExecutor({
@@ -298,15 +294,16 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
 
     // --- 13. Game Loop & Input Setup ---
     // Register ActionDiscoverySystem *before* GameLoop needs it directly
+    // AC2: Add tag 'initializableSystem'
     container.register('ActionDiscoverySystem', (c) => new ActionDiscoverySystem({
         gameDataRepository: c.resolve('GameDataRepository'),
         entityManager: c.resolve('EntityManager'),
         actionValidationService: c.resolve('ActionValidationService'), // Resolves the AVS instance configured above
         logger: c.resolve('ILogger'),
-        formatActionCommandFn: formatActionCommand, // Assuming getEntityIdsForScopes is imported or defined elsewhere
+        formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: () => new Set() // Placeholder - Needs correct function reference
-    }), {lifecycle: 'singleton'});
-    logger.info("ContainerConfig: Registered ActionDiscoverySystem.");
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
+    logger.info("ContainerConfig: Registered ActionDiscoverySystem (tagged).");
 
     // Register InputHandler *before* GameLoop needs it directly
     container.register('InputHandler', (c) => new InputHandler(c.resolve('inputElement'), null, c.resolve('EventBus')), {lifecycle: 'singleton'});
@@ -337,60 +334,60 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
 
 
     // --- 14. Core Systems ---
-    // (System registrations remain the same)
+    // AC1 / AC2: Add tags: ['initializableSystem'] to relevant systems
     container.register('GameRuleSystem', (c) => new GameRuleSystem({
         eventBus: c.resolve('EventBus'),
         gameStateManager: c.resolve('GameStateManager'),
         actionExecutor: c.resolve('ActionExecutor'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('EquipmentEffectSystem', (c) => new EquipmentEffectSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('EquipmentSlotSystem', (c) => new EquipmentSlotSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('InventorySystem', (c) => new InventorySystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository'),
         gameStateManager: c.resolve('GameStateManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('CombatSystem', (c) => new CombatSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('DeathSystem', (c) => new DeathSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('WorldPresenceSystem', (c) => new WorldPresenceSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('ItemUsageSystem', (c) => new ItemUsageSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         conditionEvaluationService: c.resolve('ConditionEvaluationService'),
         itemTargetResolverService: c.resolve('ItemTargetResolverService'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('BlockerSystem', (c) => new BlockerSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('MovementSystem', (c) => new MovementSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('MoveCoordinatorSystem', (c) => new MoveCoordinatorSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         blockerSystem: c.resolve('BlockerSystem'),
         movementSystem: c.resolve('MovementSystem')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('QuestSystem', (c) => new QuestSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
@@ -400,66 +397,78 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
         objectiveEventListenerService: c.resolve('ObjectiveEventListenerService'),
         objectiveStateCheckerService: c.resolve('ObjectiveStateCheckerService'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('QuestStartTriggerSystem', (c) => new QuestStartTriggerSystem({
         eventBus: c.resolve('EventBus'),
         gameStateManager: c.resolve('GameStateManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('PerceptionSystem', (c) => new PerceptionSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('NotificationUISystem', (c) => new NotificationUISystem({
         eventBus: c.resolve('EventBus'), gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('OpenableSystem', (c) => new OpenableSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('HealthSystem', (c) => new HealthSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('StatusEffectSystem', (c) => new StatusEffectSystem({
         eventBus: c.resolve('EventBus'),
         entityManager: c.resolve('EntityManager'),
         gameDataRepository: c.resolve('GameDataRepository')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
     container.register('LockSystem', (c) => new LockSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
-    }), {lifecycle: 'singleton'});
+    }), {lifecycle: 'singleton', tags: ['initializableSystem']});
 
-    // --- AC1 (Dependency Injection): Register OperationInterpreter ---
+    // Log the addition of tags
+    logger.info("ContainerConfig: Added 'initializableSystem' tag to relevant system registrations.");
+
+    // --- 15. Operation Interpretation Layer ---
+    // AC1 (Dependency Injection): Register OperationInterpreter
     container.register('OperationInterpreter', (c) => {
-        logger.info("ContainerConfig: Creating OperationInterpreter instance...");
-        const interpreter = new OperationInterpreter({
+        logger.info("ContainerConfig: Creating OperationInterpreter instance with OperationRegistry and handlers...");
+        const registry = new OperationRegistry({logger: c.resolve('ILogger')});
+        const logHandler = new LogHandler({logger: c.resolve('ILogger')});
+        const dispatchEventHandler = new DispatchEventHandler({dispatcher: c.resolve('ValidatedEventDispatcher')});
+        const modifyComponentHandler = new ModifyComponentHandler({
+            entityManager: c.resolve('EntityManager'),
             logger: c.resolve('ILogger')
-            // Add other dependencies here if OperationInterpreter needs them later
         });
-        logger.info("ContainerConfig: OperationInterpreter instance created.");
+        const queryComponentHandler = new QueryComponentHandler({
+            entityManager: c.resolve('EntityManager'),
+            logger: c.resolve('ILogger')
+        });
+        registry.register("LOG", logHandler.execute.bind(logHandler));
+        registry.register("DISPATCH_EVENT", dispatchEventHandler.execute.bind(dispatchEventHandler));
+        registry.register("MODIFY_COMPONENT", modifyComponentHandler.execute.bind(modifyComponentHandler));
+        registry.register("QUERY_COMPONENT", queryComponentHandler.execute.bind(queryComponentHandler));
+        const interpreter = new OperationInterpreter({logger: c.resolve('ILogger'), registry: registry});
+        logger.info("ContainerConfig: OperationInterpreter instance created (handlers wired).");
         return interpreter;
-    }, { lifecycle: 'singleton' });
-    logger.info("ContainerConfig: Registered OperationInterpreter.");
+    }, {lifecycle: 'singleton'});
+    logger.info("ContainerConfig: Registered OperationInterpreter (with OperationRegistry & handlers).");
 
-
-    // --- Modify SystemLogicInterpreter Registration ---
-    // --- AC1 (Dependency Injection): Inject OperationInterpreter ---
+    // --- SystemLogicInterpreter Registration ---
     container.register('SystemLogicInterpreter', (c) => {
         logger.info("ContainerConfig: Creating SystemLogicInterpreter instance (with OperationInterpreter dependency)...");
-        // Resolve all required dependencies for SystemLogicInterpreter
         const deps = {
             logger: c.resolve('ILogger'),
             eventBus: c.resolve('EventBus'),
             dataRegistry: c.resolve('IDataRegistry'),
             jsonLogicEvaluationService: c.resolve('JsonLogicEvaluationService'),
             entityManager: c.resolve('EntityManager'),
-            operationInterpreter: c.resolve('OperationInterpreter') // <-- Inject the new dependency
+            operationInterpreter: c.resolve('OperationInterpreter')
         };
-        logger.debug("ContainerConfig: Dependencies resolved for SystemLogicInterpreter:", Object.keys(deps));
         const interpreter = new SystemLogicInterpreter(deps);
         logger.info("ContainerConfig: SystemLogicInterpreter instance created.");
         return interpreter;
-    }, { lifecycle: 'singleton' });
+    }, {lifecycle: 'singleton'});
     logger.info("ContainerConfig: Registered SystemLogicInterpreter (with OperationInterpreter).");
 
     logger.info("ContainerConfig: Service registration complete.");
