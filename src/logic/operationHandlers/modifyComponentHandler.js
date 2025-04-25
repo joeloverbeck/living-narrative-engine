@@ -1,216 +1,184 @@
 // src/logic/operationHandlers/modifyComponentHandler.js
 
-// --- JSDoc Imports for Type Hinting ---
+/* eslint-disable max-depth */
+// -----------------------------------------------------------------------------
+//  MODIFY_COMPONENT Handler — Ticket T-02
+//  Adds unified logic for component mutation (set / inc).
+// -----------------------------------------------------------------------------
+
+// --- Imports -----------------------------------------------------------------
+import resolvePath from '../../utils/resolvePath.js';
+
+// --- Type-hints --------------------------------------------------------------
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../defs.js').OperationParams} OperationParams */
 
 /**
  * @typedef {object} EntityRefObject
- * @property {string} entityId - The specific entity ID.
+ * @property {string} entityId
  */
 
 /**
  * @typedef {object} ModifyComponentOperationParams
- * @property {'actor' | 'target' | string | EntityRefObject} entity_ref - Reference to the target entity.
- * @property {string} component_type - The namespaced ID of the component type.
- * @property {'add' | 'remove' | 'update'} operation - The modification action.
- * @property {object} [data] - Component data, required for 'add' and 'update'.
+ * @property {'actor'|'target'|string|EntityRefObject} entity_ref
+ * @property {string}  component_type
+ * @property {string} [field]
+ * @property {'set'|'inc'} mode
+ * @property {*} value
  */
 
-/**
- * @class ModifyComponentHandler
- * Implements the OperationHandler interface for the "MODIFY_COMPONENT" operation type.
- * Uses the EntityManager to add, remove, or update component data on a specified entity.
- *
- * @implements {OperationHandler}
- */
-class ModifyComponentHandler {
-    /**
-     * @private
-     * @readonly
-     * @type {EntityManager}
-     */
-    #entityManager;
+// -----------------------------------------------------------------------------
+//  Helper utilities
+// -----------------------------------------------------------------------------
 
-    /**
-     * @private
-     * @readonly
-     * @type {ILogger}
-     */
-    #logger;
-
-    /**
-     * Creates an instance of ModifyComponentHandler.
-     * @param {object} dependencies - Dependencies object.
-     * @param {EntityManager} dependencies.entityManager - The entity management service.
-     * @param {ILogger} dependencies.logger - The logging service instance.
-     * @throws {Error} If entityManager or logger are missing or invalid.
-     */
-    constructor({ entityManager, logger }) {
-        if (!entityManager || typeof entityManager.addComponent !== 'function' || typeof entityManager.removeComponent !== 'function' /* || typeof entityManager.updateComponent !== 'function' */ ) {
-            // TODO: Add check for updateComponent if/when it exists in EntityManager
-            throw new Error('ModifyComponentHandler requires a valid EntityManager instance with at least addComponent and removeComponent methods.');
+/** Create missing chain and set value at leaf. */
+function setByPath(root, path, value) {
+    const parts = path.split('.').filter(Boolean);
+    let cur = root;
+    for (let i = 0; i < parts.length; i++) {
+        const key = parts[i];
+        if (i === parts.length - 1) {
+            cur[key] = value;
+            return true;
         }
-        if (!logger || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function') {
+        if (cur[key] == null) cur[key] = {};
+        if (typeof cur[key] !== 'object') return false;
+        cur = cur[key];
+    }
+    return false;
+}
+
+/** Increment numeric leaf value. */
+function incByPath(root, path, delta) {
+    const parentPath = path.split('.').slice(0, -1).join('.');
+    const leaf = path.split('.').slice(-1)[0];
+    const parentObj = parentPath ? resolvePath(root, parentPath) : root;
+    if (!parentObj || typeof parentObj !== 'object') return false;
+    if (typeof parentObj[leaf] !== 'number') return false;
+    parentObj[leaf] += delta;
+    return true;
+}
+
+// -----------------------------------------------------------------------------
+//  Handler implementation
+// -----------------------------------------------------------------------------
+class ModifyComponentHandler {
+    /** @type {ILogger}        */ #logger;
+    /** @type {EntityManager} */ #entityManager;
+
+    constructor({entityManager, logger}) {
+        // Validate logger FIRST so tests expecting logger–error path pass.
+        if (!logger || ['info', 'warn', 'error', 'debug'].some(m => typeof logger[m] !== 'function')) {
             throw new Error('ModifyComponentHandler requires a valid ILogger instance.');
         }
-        this.#entityManager = entityManager;
-        this.#logger = logger; // Use injected logger primarily
-    }
-
-    /**
-     * Resolves the target entity ID based on the entity_ref parameter and execution context.
-     * @private
-     * @param {ModifyComponentOperationParams['entity_ref']} entityRef - The entity reference from parameters.
-     * @param {ExecutionContext} executionContext - The execution context containing actor, target etc.
-     * @returns {string | null} The resolved entity ID or null if resolution fails.
-     */
-    #resolveEntityId(entityRef, executionContext) {
-        const evalContext = executionContext?.evaluationContext;
-
-        if (typeof entityRef === 'string') {
-            if (entityRef === 'actor') {
-                const actorId = evalContext?.actor?.id;
-                if (!actorId) {
-                    this.#logger.error("ModifyComponentHandler: Cannot resolve 'actor' entity ID. Actor missing or has no ID in evaluation context.", { context: evalContext });
-                    return null;
-                }
-                return actorId;
-            } else if (entityRef === 'target') {
-                const targetId = evalContext?.target?.id;
-                if (!targetId) {
-                    this.#logger.error("ModifyComponentHandler: Cannot resolve 'target' entity ID. Target missing or has no ID in evaluation context.", { context: evalContext });
-                    return null;
-                }
-                return targetId;
-            } else {
-                // Assume it might be a direct ID or a path to be resolved later if a resolver service is used
-                // For now, treat other strings as direct IDs if they are non-empty
-                if (entityRef.trim()) {
-                    this.#logger.debug(`ModifyComponentHandler: Interpreting entity_ref string "${entityRef}" as a direct entity ID.`);
-                    return entityRef.trim();
-                } else {
-                    this.#logger.error(`ModifyComponentHandler: Invalid empty string provided for entity_ref.`, { entityRef });
-                    return null;
-                }
-                // TODO: Integrate PayloadValueResolverService if complex paths like 'event.payload.entityId' are needed for entity_ref
-            }
-        } else if (typeof entityRef === 'object' && entityRef !== null && typeof entityRef.entityId === 'string' && entityRef.entityId.trim()) {
-            return entityRef.entityId.trim();
-        } else {
-            this.#logger.error('ModifyComponentHandler: Invalid entity_ref parameter. Must be "actor", "target", a non-empty entity ID string, or an object like { entityId: "..." }.', { entityRef });
-            return null;
+        if (!entityManager || typeof entityManager.addComponent !== 'function') {
+            throw new Error('ModifyComponentHandler requires a valid EntityManager instance.');
         }
+        this.#logger = logger;
+        this.#entityManager = entityManager;
     }
 
-    /**
-     * Executes the MODIFY_COMPONENT operation.
-     * Validates parameters, resolves the target entity ID, and calls the appropriate
-     * EntityManager method (addComponent, removeComponent).
-     * Handles potential errors during the process.
-     *
-     * @param {OperationParams | ModifyComponentOperationParams | null | undefined} params - The parameters for the operation.
-     * @param {ExecutionContext} executionContext - The context of the execution.
-     * @returns {void}
-     */
-    execute(params, executionContext) {
-        // Use logger from context if available, otherwise fallback to injected one
-        // This allows rules to potentially override logging behavior per execution if needed
-        const logger = executionContext?.logger ?? this.#logger;
+    /** Resolve entity_ref → entityId or null. */
+    #resolveEntityId(ref, ctx) {
+        const ec = ctx?.evaluationContext ?? {};
+        if (typeof ref === 'string') {
+            const t = ref.trim();
+            if (!t) return null;
+            if (t === 'actor') return ec.actor?.id ?? null;
+            if (t === 'target') return ec.target?.id ?? null;
+            return t;
+        }
+        if (ref && typeof ref === 'object' && typeof ref.entityId === 'string' && ref.entityId.trim()) {
+            return ref.entityId.trim();
+        }
+        return null;
+    }
 
-        // --- 1. Basic Parameter Validation ---
+    /** @implements {OperationHandler} */
+    execute(params, execCtx) {
+        const log = execCtx?.logger ?? this.#logger;
+
         if (!params || typeof params !== 'object') {
-            logger.error('ModifyComponentHandler: Missing or invalid parameters object.', { params });
+            log.warn('MODIFY_COMPONENT: params missing or invalid.', {params});
             return;
         }
 
-        const { entity_ref, component_type, operation, data } = params;
+        const {entity_ref, component_type, field, mode, value} = /** @type {ModifyComponentOperationParams} */ (params);
 
         if (!entity_ref) {
-            logger.error('ModifyComponentHandler: Missing required "entity_ref" parameter.', { params });
+            log.warn('MODIFY_COMPONENT: "entity_ref" required.');
             return;
         }
         if (typeof component_type !== 'string' || !component_type.trim()) {
-            logger.error('ModifyComponentHandler: Missing or invalid required "component_type" parameter (must be non-empty string).', { params });
+            log.warn('MODIFY_COMPONENT: invalid "component_type"');
             return;
         }
-        const trimmedComponentType = component_type.trim();
-
-        const validOperations = ['add', 'remove', 'update'];
-        if (typeof operation !== 'string' || !validOperations.includes(operation)) {
-            logger.error(`ModifyComponentHandler: Missing or invalid required "operation" parameter (must be one of: ${validOperations.join(', ')}).`, { params });
+        if (!['set', 'inc'].includes(mode)) {
+            log.warn('MODIFY_COMPONENT: mode must be "set" or "inc".');
+            return;
+        }
+        if (field != null && (typeof field !== 'string' || !field.trim())) {
+            log.warn('MODIFY_COMPONENT: field, when given, must be non-empty string.');
+            return;
+        }
+        if (mode === 'inc' && typeof value !== 'number') {
+            log.warn('MODIFY_COMPONENT: inc mode requires numeric value.');
             return;
         }
 
-        // --- 2. Conditional Data Validation ---
-        if ((operation === 'add' || operation === 'update') && (typeof data !== 'object' || data === null)) {
-            logger.error(`ModifyComponentHandler: Missing or invalid "data" parameter (must be an object) for operation "${operation}".`, { params });
-            return;
-        }
-        if (operation === 'remove' && data !== undefined) {
-            logger.warn(`ModifyComponentHandler: "data" parameter provided for operation "remove" will be ignored.`, { params });
-            // Proceed, but warn the user.
-        }
-
-
-        // --- 3. Resolve Entity ID ---
-        const entityId = this.#resolveEntityId(entity_ref, executionContext);
+        const entityId = this.#resolveEntityId(entity_ref, execCtx);
         if (!entityId) {
-            // Error already logged by #resolveEntityId
+            log.warn('MODIFY_COMPONENT: could not resolve entity id.', {entity_ref});
             return;
         }
 
-        // --- 4. Call EntityManager ---
-        logger.debug(`ModifyComponentHandler: Attempting operation "${operation}" for component "${trimmedComponentType}" on entity "${entityId}".`, { data: operation !== 'remove' ? data : undefined });
-
-        try {
-            let success = false;
-            switch (operation) {
-                case 'add':
-                case 'update':
-                    // Current EntityManager has addComponent which validates and adds/updates.
-                    // If distinct 'add' vs 'update' behavior is strictly needed (e.g., error if adding existing, error if updating non-existing),
-                    // the EntityManager would need separate methods or flags.
-                    // Assuming addComponent handles both add and potentially overwrite/update.
-                    // The ticket implies modification, so using addComponent seems the closest fit with the current EM.
-                    // EntityManager's addComponent now throws on validation failure or if entity not found.
-                    // Note: addComponent expects the data as the third argument.
-                    success = this.#entityManager.addComponent(entityId, trimmedComponentType, data);
-                    // addComponent currently returns boolean/throws, adapt if needed
-                    if (success) { // Check return value if it indicates success besides not throwing
-                        logger.debug(`ModifyComponentHandler: EntityManager.${operation === 'add' ? 'addComponent' : 'updateComponent (via addComponent)'} succeeded for "${trimmedComponentType}" on entity "${entityId}".`);
-                    } else {
-                        // This path might not be reachable if addComponent always throws on failure.
-                        logger.warn(`ModifyComponentHandler: EntityManager.addComponent call returned false (or non-truthy) for "${trimmedComponentType}" on entity "${entityId}", indicating potential issue not caught by exception.`);
-                    }
-                    break;
-
-                case 'remove':
-                    // removeComponent returns true if removed, false if not found. Doesn't throw for not found.
-                    success = this.#entityManager.removeComponent(entityId, trimmedComponentType);
-                    if (success) {
-                        logger.debug(`ModifyComponentHandler: EntityManager.removeComponent succeeded for "${trimmedComponentType}" on entity "${entityId}".`);
-                    } else {
-                        logger.warn(`ModifyComponentHandler: EntityManager.removeComponent returned false for "${trimmedComponentType}" on entity "${entityId}" (component likely wasn't present).`);
-                    }
-                    break;
-
-                // default case already handled by initial validation
+        // -------------------------------------------------------------------------
+        //  Whole-component replacement
+        // -------------------------------------------------------------------------
+        if (field == null) {
+            if (mode === 'inc') {
+                log.warn('MODIFY_COMPONENT: inc mode invalid without field.');
+                return;
             }
-
-        } catch (error) {
-            // Catch errors thrown by EntityManager (e.g., entity not found, validation failure in addComponent)
-            logger.error(`ModifyComponentHandler: Error during EntityManager operation "${operation}" for component "${trimmedComponentType}" on entity "${entityId}".`, {
-                error: error.message, // Log message for clarity
-                // stack: error.stack, // Optionally log stack
-                params: params,
-                resolvedEntityId: entityId
-            });
-            // Do not re-throw, allow execution to continue with next operation in the sequence.
+            if (typeof value !== 'object' || value === null) {
+                log.warn('MODIFY_COMPONENT: set whole component requires object value.');
+                return;
+            }
+            try {
+                this.#entityManager.addComponent(entityId, component_type.trim(), value);
+                log.debug(`MODIFY_COMPONENT: replaced component ${component_type} on ${entityId}`);
+            } catch (e) {
+                log.error(`MODIFY_COMPONENT: addComponent failed: ${e.message}`);
+            }
+            return;
         }
+
+        // -------------------------------------------------------------------------
+        //  Field-level mutation
+        // -------------------------------------------------------------------------
+        if (typeof this.#entityManager.getComponentData !== 'function') {
+            log.warn('MODIFY_COMPONENT: EntityManager lacks getComponentData; cannot mutate field.');
+            return;
+        }
+        const compData = this.#entityManager.getComponentData(entityId, component_type.trim());
+        if (compData === undefined) {
+            log.warn(`MODIFY_COMPONENT: component ${component_type} missing on ${entityId}`);
+            return;
+        }
+        if (typeof compData !== 'object' || compData === null) {
+            log.warn(`MODIFY_COMPONENT: component ${component_type} on ${entityId} not object.`);
+            return;
+        }
+
+        const path = field.trim();
+        if (mode === 'set') {
+            if (!setByPath(compData, path, value)) log.warn(`MODIFY_COMPONENT: set failed at path ${path}.`);
+            return;
+        }
+        // mode === inc
+        if (!incByPath(compData, path, /** @type {number} */ (value))) log.warn(`MODIFY_COMPONENT: inc failed at path ${path}.`);
     }
 }
 

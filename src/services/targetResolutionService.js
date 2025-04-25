@@ -34,7 +34,7 @@ import {getEntityIdsForScopes} from './entityScopeService.js';
 import {findTarget} from '../utils/targetFinder.js';
 import {TARGET_MESSAGES} from '../utils/messages.js'; // Assuming getDisplayName is here too
 import {resolveTargetConnection} from './connectionResolver.js';
-import {PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
+import {PASSAGE_DETAILS_COMPONENT_TYPE_ID} from '../types/components.js';
 
 
 // --- Enum Definition ---
@@ -45,18 +45,18 @@ import {PASSAGE_DETAILS_COMPONENT_TYPE_ID} from "../types/components.js";
  * @readonly
  */
 export const ResolutionStatus = Object.freeze({
-    /** Indicates exactly one valid target was found. */
-    FOUND_UNIQUE: 'FOUND_UNIQUE',
-    /** Indicates no potential targets matching the criteria were found. */
-    NOT_FOUND: 'NOT_FOUND',
-    /** Indicates multiple potential targets were found, making the request ambiguous. */
-    AMBIGUOUS: 'AMBIGUOUS',
-    /** Indicates potential targets were found initially, but filtering removed all candidates. */
-    FILTER_EMPTY: 'FILTER_EMPTY',
-    /** Indicates the input parameters (actionDefinition, context) were invalid or insufficient for resolution. */
-    INVALID_INPUT: 'INVALID_INPUT',
-    /** Indicates an unexpected error occurred during the resolution process. */
-    ERROR: 'ERROR'
+  /** Indicates exactly one valid target was found. */
+  FOUND_UNIQUE: 'FOUND_UNIQUE',
+  /** Indicates no potential targets matching the criteria were found. */
+  NOT_FOUND: 'NOT_FOUND',
+  /** Indicates multiple potential targets were found, making the request ambiguous. */
+  AMBIGUOUS: 'AMBIGUOUS',
+  /** Indicates potential targets were found initially, but filtering removed all candidates. */
+  FILTER_EMPTY: 'FILTER_EMPTY',
+  /** Indicates the input parameters (actionDefinition, context) were invalid or insufficient for resolution. */
+  INVALID_INPUT: 'INVALID_INPUT',
+  /** Indicates an unexpected error occurred during the resolution process. */
+  ERROR: 'ERROR'
 });
 
 
@@ -87,20 +87,20 @@ export const ResolutionStatus = Object.freeze({
  * @private
  */
 function _getMessageKeySuffix(domain) {
-    switch (domain) {
-        case 'inventory':
-            return 'INVENTORY';
-        case 'equipment':
-            return 'EQUIPMENT';
-        case 'environment':
-            return 'ENVIRONMENT';
-        case 'location_items':
-            return 'LOCATION_ITEMS'; // Example for potential future domains
-        case 'nearby_including_blockers':
-            return 'NEARBY_INCLUDING_BLOCKERS'; // Example
-        default:
-            return 'GENERIC'; // Fallback for unknown or less specific domains
-    }
+  switch (domain) {
+    case 'inventory':
+      return 'INVENTORY';
+    case 'equipment':
+      return 'EQUIPMENT';
+    case 'environment':
+      return 'ENVIRONMENT';
+    case 'location_items':
+      return 'LOCATION_ITEMS'; // Example for potential future domains
+    case 'nearby_including_blockers':
+      return 'NEARBY_INCLUDING_BLOCKERS'; // Example
+    default:
+      return 'GENERIC'; // Fallback for unknown or less specific domains
+  }
 }
 
 
@@ -112,17 +112,17 @@ function _getMessageKeySuffix(domain) {
  */
 class TargetResolutionService {
 
-    /**
+  /**
      * Creates an instance of TargetResolutionService.
      */
-    constructor() {
-        console.log("TargetResolutionService initialized.");
-        // Dependencies like EntityManager, GameDataRepository, etc., are expected
-        // to be available within the 'context' object passed to methods.
-        // Injecting connectionResolver is no longer needed as it's directly imported.
-    }
+  constructor() {
+    console.log('TargetResolutionService initialized.');
+    // Dependencies like EntityManager, GameDataRepository, etc., are expected
+    // to be available within the 'context' object passed to methods.
+    // Injecting connectionResolver is no longer needed as it's directly imported.
+  }
 
-    /**
+  /**
      * Core function to resolve the target for a given action definition and context.
      * Handles entity-based target domains: 'self', 'inventory', 'equipment', 'environment', etc.
      * Handles 'direction' domain using connectionResolver.
@@ -133,441 +133,441 @@ class TargetResolutionService {
      * @returns {Promise<TargetResolutionResult>} A promise that resolves with the TargetResolutionResult object.
      * @async
      */
-    async resolveActionTarget(actionDefinition, context) {
-        // --- Basic Input Validation ---
-        if (!actionDefinition || !context || !context.playerEntity || !context.entityManager || !context.eventBus || !context.parsedCommand) {
-            console.error("TargetResolutionService.resolveActionTarget: Invalid actionDefinition or context provided.", {
-                actionDefinition,
-                context
-            });
-            return {
-                status: ResolutionStatus.INVALID_INPUT,
-                targetType: null,
-                targetId: null,
-                targetEntity: null,
-                targetConnectionEntity: null,
-                candidateIds: [],
-                details: null,
-                error: "Invalid action definition or context."
-            };
-        }
-        // *** Direction domain also requires currentLocation ***
-        if (actionDefinition.target_domain === 'direction' && !context.currentLocation) {
-            console.error("TargetResolutionService.resolveActionTarget: Invalid context for 'direction' domain - currentLocation is missing.");
-            return {
-                status: ResolutionStatus.INVALID_INPUT,
-                targetType: null,
-                targetId: null,
-                targetEntity: null,
-                targetConnectionEntity: null,
-                candidateIds: [],
-                details: null,
-                error: "Context missing currentLocation for direction resolution."
-            };
-        }
+  async resolveActionTarget(actionDefinition, context) {
+    // --- Basic Input Validation ---
+    if (!actionDefinition || !context || !context.playerEntity || !context.entityManager || !context.eventBus || !context.parsedCommand) {
+      console.error('TargetResolutionService.resolveActionTarget: Invalid actionDefinition or context provided.', {
+        actionDefinition,
+        context
+      });
+      return {
+        status: ResolutionStatus.INVALID_INPUT,
+        targetType: null,
+        targetId: null,
+        targetEntity: null,
+        targetConnectionEntity: null,
+        candidateIds: [],
+        details: null,
+        error: 'Invalid action definition or context.'
+      };
+    }
+    // *** Direction domain also requires currentLocation ***
+    if (actionDefinition.target_domain === 'direction' && !context.currentLocation) {
+      console.error("TargetResolutionService.resolveActionTarget: Invalid context for 'direction' domain - currentLocation is missing.");
+      return {
+        status: ResolutionStatus.INVALID_INPUT,
+        targetType: null,
+        targetId: null,
+        targetEntity: null,
+        targetConnectionEntity: null,
+        candidateIds: [],
+        details: null,
+        error: 'Context missing currentLocation for direction resolution.'
+      };
+    }
 
-        const {target_domain, target_required_components = [], target_forbidden_components = []} = actionDefinition;
-        const {playerEntity, entityManager, eventBus, parsedCommand, currentLocation} = context; // Destructure currentLocation
+    const {target_domain, target_required_components = [], target_forbidden_components = []} = actionDefinition;
+    const {playerEntity, entityManager, eventBus, parsedCommand, currentLocation} = context; // Destructure currentLocation
 
-        // --- [START SUB-TICKET 1.3.4 IMPLEMENTATION] ---
-        // --- Handle 'none' Domain ---
-        // Check if the target domain is 'none'. If so, return immediately as no target
-        // resolution is needed. This signifies the action doesn't operate on a specific
-        // target within the game world (e.g., 'look', 'inventory').
-        if (target_domain === 'none') {
-            // Return a result indicating success ('FOUND_UNIQUE' because the concept of
-            // "no target" is uniquely resolved) with type 'none' and all target-specific
-            // fields set to null, as per the ticket requirements. No user-facing message
-            // is dispatched by the resolution service itself for this domain.
-            return {
-                status: ResolutionStatus.FOUND_UNIQUE,
-                targetType: 'none',
-                targetId: null,
-                targetEntity: null,
-                targetConnectionEntity: null,
-                candidateIds: [],
-                details: null,
-                error: null
-            };
-        }
-        // --- [END SUB-TICKET 1.3.4 IMPLEMENTATION] ---
-
-
-        // --- Handle 'self' Domain ---
-        if (target_domain === 'self') {
-            return {
-                status: ResolutionStatus.FOUND_UNIQUE,
-                targetType: 'self',
-                targetId: playerEntity.id,
-                targetEntity: playerEntity,
-                targetConnectionEntity: null,
-                candidateIds: [],
-                details: null,
-                error: null
-            };
-        }
-
-        // --- Handle 'direction' Domain (Sub-Ticket 1.3.3 Implementation) ---
-        if (target_domain === 'direction') {
-            try {
-                // 1. Get Target Name (Direction)
-                const targetName = parsedCommand.directObjectPhrase;
-                if (!targetName || targetName.trim() === '') {
-                    console.warn(`TargetResolutionService: Missing or empty direction name (directObjectPhrase) for action '${actionDefinition.id}'.`);
-                    // Dispatch a generic "which way?" message? Maybe later. For now, INVALID_INPUT.
-                    return {
-                        status: ResolutionStatus.INVALID_INPUT,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                        candidateIds: [],
-                        details: {message: "Direction name missing from command."},
-                        error: "Missing direction name."
-                    };
-                }
-                const trimmedTargetName = targetName.trim();
-
-                // 2. Resolve Connection
-                // connectionResolver.resolveTargetConnection handles finding the ConnectionEntity
-                // and dispatches its own NOT_FOUND / AMBIGUOUS messages via the eventBus within the context.
-                const resolvedConnectionEntity = resolveTargetConnection(context, trimmedTargetName, actionDefinition.name || actionDefinition.id);
-
-                // 3. Handle Resolution Result
-                if (resolvedConnectionEntity === null) {
-                    // Not Found or Ambiguous - message already dispatched by resolver.
-                    // We need to determine if it was NOT_FOUND or AMBIGUOUS.
-                    // Since resolveTargetConnection doesn't return status, we might need
-                    // to infer or slightly modify the resolver if we need precise status here.
-                    // For now, let's *assume* null means NOT_FOUND unless we enhance the resolver.
-                    // TODO: Potentially enhance resolveTargetConnection to return status or use a dedicated function.
-                    // Let's return NOT_FOUND for now, as AMBIGUOUS would have prompted the user.
-                    return {
-                        status: ResolutionStatus.NOT_FOUND, // Or AMBIGUOUS if we could determine that
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                        candidateIds: [], // TODO: Can we get candidate IDs from resolver? Maybe not easily.
-                        details: {searchedDirection: trimmedTargetName},
-                        error: null
-                    };
-                } else {
-                    // Unique Connection Found
-                    // 4. Retrieve PassageDetailsComponent
-                    const passageDetails = resolvedConnectionEntity.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
-                    if (!passageDetails) {
-                        console.error(`TargetResolutionService: Resolved ConnectionEntity '${resolvedConnectionEntity.id}' for action '${actionDefinition.id}' is missing the passage details.`);
-                        return {
-                            status: ResolutionStatus.ERROR, // Or INVALID_INPUT/NOT_FOUND? ERROR seems appropriate for missing component on resolved entity.
-                            targetType: null,
-                            targetId: null,
-                            targetEntity: null,
-                            targetConnectionEntity: null,
-                            candidateIds: [],
-                            details: {
-                                missingComponent: PASSAGE_DETAILS_COMPONENT_TYPE_ID,
-                                entityId: resolvedConnectionEntity.id
-                            },
-                            error: `Resolved connection '${resolvedConnectionEntity.id}' lacks required details.`
-                        };
-                    }
-
-                    // 5. Determine Target Location ID and Blocker ID
-                    let targetLocationId = null;
-                    let blockerEntityId = null;
-                    try {
-                        // Ensure currentLocation is available (checked at the start)
-                        targetLocationId = passageDetails.getOtherLocationId(currentLocation.id);
-                        blockerEntityId = passageDetails.getBlockerId();
-                    } catch (passageError) {
-                        console.error(`TargetResolutionService: Error processing passage details data for connection '${resolvedConnectionEntity.id}':`, passageError);
-                        return {
-                            status: ResolutionStatus.ERROR,
-                            targetType: null,
-                            targetId: null,
-                            targetEntity: null,
-                            targetConnectionEntity: null,
-                            candidateIds: [],
-                            details: {passageError: passageError.message, entityId: resolvedConnectionEntity.id},
-                            error: `Error processing passage details: ${passageError.message}`
-                        };
-                    }
+    // --- [START SUB-TICKET 1.3.4 IMPLEMENTATION] ---
+    // --- Handle 'none' Domain ---
+    // Check if the target domain is 'none'. If so, return immediately as no target
+    // resolution is needed. This signifies the action doesn't operate on a specific
+    // target within the game world (e.g., 'look', 'inventory').
+    if (target_domain === 'none') {
+      // Return a result indicating success ('FOUND_UNIQUE' because the concept of
+      // "no target" is uniquely resolved) with type 'none' and all target-specific
+      // fields set to null, as per the ticket requirements. No user-facing message
+      // is dispatched by the resolution service itself for this domain.
+      return {
+        status: ResolutionStatus.FOUND_UNIQUE,
+        targetType: 'none',
+        targetId: null,
+        targetEntity: null,
+        targetConnectionEntity: null,
+        candidateIds: [],
+        details: null,
+        error: null
+      };
+    }
+    // --- [END SUB-TICKET 1.3.4 IMPLEMENTATION] ---
 
 
-                    // 6. Return FOUND_UNIQUE Result
-                    return {
-                        status: ResolutionStatus.FOUND_UNIQUE,
-                        targetType: 'direction', // As per ticket, stick to 'direction' initially
-                        targetId: resolvedConnectionEntity.id, // ID of the ConnectionEntity
-                        targetEntity: null, // Not an entity target in the traditional sense
-                        targetConnectionEntity: resolvedConnectionEntity, // The resolved connection
-                        candidateIds: [],
-                        details: {targetLocationId: targetLocationId, blockerEntityId: blockerEntityId},
-                        error: null
-                    };
-                }
+    // --- Handle 'self' Domain ---
+    if (target_domain === 'self') {
+      return {
+        status: ResolutionStatus.FOUND_UNIQUE,
+        targetType: 'self',
+        targetId: playerEntity.id,
+        targetEntity: playerEntity,
+        targetConnectionEntity: null,
+        candidateIds: [],
+        details: null,
+        error: null
+      };
+    }
 
-            } catch (error) {
-                console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain 'direction':`, error);
-                // Dispatch a generic internal error message?
-                await eventBus.dispatch("event:display_message", {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-                return {
-                    status: ResolutionStatus.ERROR,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                    candidateIds: [],
-                    details: null,
-                    error: `Error during direction resolution: ${error.message}`
-                };
-            }
-        }
-
-
-        // --- Handle Other Entity-Based Domains (Existing Logic) ---
-        const entityDomains = ['inventory', 'equipment', 'environment', 'location_items', 'nearby_including_blockers']; // Add others if needed
-        if (entityDomains.includes(target_domain)) {
-            try {
-                // 1. Get Target Name
-                const targetName = parsedCommand.directObjectPhrase;
-                if (!targetName || targetName.trim() === '') {
-                    console.warn(`TargetResolutionService: Missing or empty target name (directObjectPhrase) for action '${actionDefinition.id}' in domain '${target_domain}'.`);
-                    return {
-                        status: ResolutionStatus.INVALID_INPUT,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                        candidateIds: [],
-                        details: {message: "Target name missing from command."},
-                        error: "Missing target name."
-                    };
-                }
-                const trimmedTargetName = targetName.trim();
-
-                // 2. Get Candidate IDs
-                const candidateIdSet = getEntityIdsForScopes([target_domain], context);
-
-                // 3. Handle Empty Scope (Initial)
-                if (candidateIdSet.size === 0) {
-                    const messageKeySuffix = _getMessageKeySuffix(target_domain);
-                    const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
-                    const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
-                    return {
-                        status: ResolutionStatus.FILTER_EMPTY,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                        candidateIds: [],
-                        details: {reason: "Initial scope empty"},
-                        error: null
-                    };
-                }
-
-                // 4. Get Entity Instances & Filter Nulls
-                const initialEntities = Array.from(candidateIdSet)
-                    .map(id => entityManager.getEntityInstance(id))
-                    .filter(entity => entity !== null && entity !== undefined);
-
-                if (initialEntities.length === 0) {
-                    console.warn(`TargetResolutionService: No valid entity instances found for IDs in scope '${target_domain}' for action '${actionDefinition.id}'.`);
-                    const messageKeySuffix = _getMessageKeySuffix(target_domain);
-                    const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
-                    const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
-                    return {
-                        status: ResolutionStatus.FILTER_EMPTY,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                        candidateIds: Array.from(candidateIdSet),
-                        details: {reason: "No instances found for scope IDs"},
-                        error: null
-                    };
-                }
-
-                // 5. Filter by Components (Pre-filter)
-                const componentFilteredEntities = initialEntities.filter(entity => {
-                    // Check Required Components using the string compId
-                    const hasAllRequired = target_required_components.every(compId => {
-                        // Directly use the string ID with hasComponent
-                        const hasComp = entity.hasComponent(compId);
-                        if (!hasComp) {
-                            // Optional: Log if needed, but the filtering logic is simpler
-                            // console.warn(`Entity ${entity.id} missing required component: ${compId}`);
-                        }
-                        return hasComp;
-                    });
-
-                    // If required components are missing, filter out immediately
-                    if (!hasAllRequired) {
-                        return false;
-                    }
-
-                    // Check Forbidden Components using the string compId
-                    // Use .some() to see if *any* forbidden component is present
-                    const hasAnyForbidden = target_forbidden_components.some(compId => {
-                        // Directly use the string ID with hasComponent
-                        const hasComp = entity.hasComponent(compId);
-                        if (hasComp) {
-                            // Optional: Log if needed
-                            // console.warn(`Entity ${entity.id} has forbidden component: ${compId}`);
-                        }
-                        return hasComp;
-                    });
-
-                    // Keep the entity only if it has all required AND does not have any forbidden
-                    return !hasAnyForbidden; // hasAllRequired is already checked above
-                });
-
-                // 6. Handle Empty Scope (Post-Component Filter)
-                if (componentFilteredEntities.length === 0) {
-                    const messageKeySuffix = _getMessageKeySuffix(target_domain);
-                    const messageFunc = TARGET_MESSAGES[`FILTER_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
-                    const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
-                    await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
-                    return {
-                        status: ResolutionStatus.FILTER_EMPTY, targetType: null, targetId: null, targetEntity: null,
-                        targetConnectionEntity: null, candidateIds: initialEntities.map(e => e.id),
-                        details: {reason: "All candidates filtered out by component requirements."}, error: null
-                    };
-                }
-
-
-                // 7. Name Matching using findTarget
-                const findResult = findTarget(trimmedTargetName, componentFilteredEntities);
-
-                // 8. Handle findTarget Results
-                switch (findResult.status) {
-                    case 'NOT_FOUND': {
-                        const messageKeySuffix = _getMessageKeySuffix(target_domain);
-                        // Attempt lookup with specific key and the intended (but non-existent) fallback key
-                        let messageFunc = TARGET_MESSAGES[`NOT_FOUND_${messageKeySuffix}`] || TARGET_MESSAGES.NOT_FOUND_GENERIC;
-
-                        // ---> ADD/MODIFY THIS SECTION <---
-                        // Check if the lookup failed and provide a guaranteed fallback
-                        if (typeof messageFunc !== 'function') {
-                            console.warn(`TargetResolutionService: Message function not found for keys NOT_FOUND_${messageKeySuffix} or NOT_FOUND_GENERIC. Using NOT_FOUND_NEARBY as fallback.`);
-                            messageFunc = TARGET_MESSAGES.NOT_FOUND_NEARBY; // Use a known valid fallback function
-
-                            // Optional: Add a check for the fallback itself in case messages.js is severely broken
-                            if (typeof messageFunc !== 'function') {
-                                console.error(`TargetResolutionService: CRITICAL - Fallback message function NOT_FOUND_NEARBY is also missing!`);
-                                // Dispatch internal error and return ERROR status to prevent further issues
-                                await eventBus.dispatch("event:display_message", {
-                                    text: TARGET_MESSAGES.INTERNAL_ERROR,
-                                    type: 'error'
-                                });
-                                return {
-                                    status: ResolutionStatus.ERROR,
-                                    error: "Internal configuration error: Missing essential message templates.",
-                                    targetType: null,
-                                    targetId: null,
-                                    targetEntity: null,
-                                    targetConnectionEntity: null,
-                                    candidateIds: [],
-                                    details: null
-                                };
-                            }
-                        }
-                        // ---> END OF ADDED/MODIFIED SECTION <---
-
-                        // Now we are reasonably sure messageFunc is a function
-                        const messageText = messageFunc(trimmedTargetName); // This line should no longer throw the TypeError
-                        await eventBus.dispatch("event:display_message", {text: messageText, type: 'info'});
-
-                        // Return the correct NOT_FOUND status
-                        return {
-                            status: ResolutionStatus.NOT_FOUND, // Should now return the correct status
-                            targetType: null,
-                            targetId: null,
-                            targetEntity: null,
-                            targetConnectionEntity: null,
-                            candidateIds: componentFilteredEntities.map(e => e.id), // Keep original candidates list
-                            details: {searchedName: trimmedTargetName},
-                            error: null
-                        };
-                    }
-                    case 'FOUND_AMBIGUOUS': {
-                        const ambiguousEntities = findResult.matches;
-                        const messageText = TARGET_MESSAGES.AMBIGUOUS_PROMPT(
-                            actionDefinition.name || actionDefinition.id,
-                            trimmedTargetName,
-                            ambiguousEntities
-                        );
-                        await eventBus.dispatch("event:display_message", {text: messageText, type: 'warning'});
-                        return {
-                            status: ResolutionStatus.AMBIGUOUS,
-                            targetType: 'entity',
-                            targetId: null,
-                            targetEntity: null,
-                            targetConnectionEntity: null,
-                            candidateIds: ambiguousEntities.map(e => e.id),
-                            details: {searchedName: trimmedTargetName},
-                            error: null
-                        };
-                    }
-                    case 'FOUND_UNIQUE': {
-                        const uniqueMatch = findResult.matches[0];
-                        return {
-                            status: ResolutionStatus.FOUND_UNIQUE,
-                            targetType: 'entity',
-                            targetId: uniqueMatch.id,
-                            targetEntity: uniqueMatch,
-                            targetConnectionEntity: null,
-                            candidateIds: [],
-                            details: null,
-                            error: null
-                        };
-                    }
-                    default:
-                        console.error(`TargetResolutionService: Unexpected status from findTarget: ${findResult.status}`);
-                        return {
-                            status: ResolutionStatus.ERROR,
-                            targetType: null,
-                            targetId: null,
-                            targetEntity: null,
-                            targetConnectionEntity: null,
-                            candidateIds: [],
-                            details: null,
-                            error: "Internal error during name matching."
-                        };
-                }
-
-            } catch (error) {
-                console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain '${target_domain}':`, error);
-                await eventBus.dispatch("event:display_message", {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
-                return {
-                    status: ResolutionStatus.ERROR,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                    candidateIds: [],
-                    details: null,
-                    error: `Error during resolution: ${error.message}`
-                };
-            }
-        }
-
-        // --- Fallback for unknown/unhandled domains ---
-        console.error(`TargetResolutionService: Unhandled target_domain '${target_domain}' for action "${actionDefinition.id}".`);
-        return {
-            status: ResolutionStatus.ERROR,
+    // --- Handle 'direction' Domain (Sub-Ticket 1.3.3 Implementation) ---
+    if (target_domain === 'direction') {
+      try {
+        // 1. Get Target Name (Direction)
+        const targetName = parsedCommand.directObjectPhrase;
+        if (!targetName || targetName.trim() === '') {
+          console.warn(`TargetResolutionService: Missing or empty direction name (directObjectPhrase) for action '${actionDefinition.id}'.`);
+          // Dispatch a generic "which way?" message? Maybe later. For now, INVALID_INPUT.
+          return {
+            status: ResolutionStatus.INVALID_INPUT,
             targetType: null,
             targetId: null,
             targetEntity: null,
             targetConnectionEntity: null,
             candidateIds: [],
-            details: {unhandledDomain: target_domain},
-            error: `Unhandled target domain: ${target_domain}`
+            details: {message: 'Direction name missing from command.'},
+            error: 'Missing direction name.'
+          };
+        }
+        const trimmedTargetName = targetName.trim();
+
+        // 2. Resolve Connection
+        // connectionResolver.resolveTargetConnection handles finding the ConnectionEntity
+        // and dispatches its own NOT_FOUND / AMBIGUOUS messages via the eventBus within the context.
+        const resolvedConnectionEntity = resolveTargetConnection(context, trimmedTargetName, actionDefinition.name || actionDefinition.id);
+
+        // 3. Handle Resolution Result
+        if (resolvedConnectionEntity === null) {
+          // Not Found or Ambiguous - message already dispatched by resolver.
+          // We need to determine if it was NOT_FOUND or AMBIGUOUS.
+          // Since resolveTargetConnection doesn't return status, we might need
+          // to infer or slightly modify the resolver if we need precise status here.
+          // For now, let's *assume* null means NOT_FOUND unless we enhance the resolver.
+          // TODO: Potentially enhance resolveTargetConnection to return status or use a dedicated function.
+          // Let's return NOT_FOUND for now, as AMBIGUOUS would have prompted the user.
+          return {
+            status: ResolutionStatus.NOT_FOUND, // Or AMBIGUOUS if we could determine that
+            targetType: null,
+            targetId: null,
+            targetEntity: null,
+            targetConnectionEntity: null,
+            candidateIds: [], // TODO: Can we get candidate IDs from resolver? Maybe not easily.
+            details: {searchedDirection: trimmedTargetName},
+            error: null
+          };
+        } else {
+          // Unique Connection Found
+          // 4. Retrieve PassageDetailsComponent
+          const passageDetails = resolvedConnectionEntity.getComponentData(PASSAGE_DETAILS_COMPONENT_TYPE_ID);
+          if (!passageDetails) {
+            console.error(`TargetResolutionService: Resolved ConnectionEntity '${resolvedConnectionEntity.id}' for action '${actionDefinition.id}' is missing the passage details.`);
+            return {
+              status: ResolutionStatus.ERROR, // Or INVALID_INPUT/NOT_FOUND? ERROR seems appropriate for missing component on resolved entity.
+              targetType: null,
+              targetId: null,
+              targetEntity: null,
+              targetConnectionEntity: null,
+              candidateIds: [],
+              details: {
+                missingComponent: PASSAGE_DETAILS_COMPONENT_TYPE_ID,
+                entityId: resolvedConnectionEntity.id
+              },
+              error: `Resolved connection '${resolvedConnectionEntity.id}' lacks required details.`
+            };
+          }
+
+          // 5. Determine Target Location ID and Blocker ID
+          let targetLocationId = null;
+          let blockerEntityId = null;
+          try {
+            // Ensure currentLocation is available (checked at the start)
+            targetLocationId = passageDetails.getOtherLocationId(currentLocation.id);
+            blockerEntityId = passageDetails.getBlockerId();
+          } catch (passageError) {
+            console.error(`TargetResolutionService: Error processing passage details data for connection '${resolvedConnectionEntity.id}':`, passageError);
+            return {
+              status: ResolutionStatus.ERROR,
+              targetType: null,
+              targetId: null,
+              targetEntity: null,
+              targetConnectionEntity: null,
+              candidateIds: [],
+              details: {passageError: passageError.message, entityId: resolvedConnectionEntity.id},
+              error: `Error processing passage details: ${passageError.message}`
+            };
+          }
+
+
+          // 6. Return FOUND_UNIQUE Result
+          return {
+            status: ResolutionStatus.FOUND_UNIQUE,
+            targetType: 'direction', // As per ticket, stick to 'direction' initially
+            targetId: resolvedConnectionEntity.id, // ID of the ConnectionEntity
+            targetEntity: null, // Not an entity target in the traditional sense
+            targetConnectionEntity: resolvedConnectionEntity, // The resolved connection
+            candidateIds: [],
+            details: {targetLocationId: targetLocationId, blockerEntityId: blockerEntityId},
+            error: null
+          };
+        }
+
+      } catch (error) {
+        console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain 'direction':`, error);
+        // Dispatch a generic internal error message?
+        await eventBus.dispatch('event:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        return {
+          status: ResolutionStatus.ERROR,
+          targetType: null,
+          targetId: null,
+          targetEntity: null,
+          targetConnectionEntity: null,
+          candidateIds: [],
+          details: null,
+          error: `Error during direction resolution: ${error.message}`
         };
+      }
     }
+
+
+    // --- Handle Other Entity-Based Domains (Existing Logic) ---
+    const entityDomains = ['inventory', 'equipment', 'environment', 'location_items', 'nearby_including_blockers']; // Add others if needed
+    if (entityDomains.includes(target_domain)) {
+      try {
+        // 1. Get Target Name
+        const targetName = parsedCommand.directObjectPhrase;
+        if (!targetName || targetName.trim() === '') {
+          console.warn(`TargetResolutionService: Missing or empty target name (directObjectPhrase) for action '${actionDefinition.id}' in domain '${target_domain}'.`);
+          return {
+            status: ResolutionStatus.INVALID_INPUT,
+            targetType: null,
+            targetId: null,
+            targetEntity: null,
+            targetConnectionEntity: null,
+            candidateIds: [],
+            details: {message: 'Target name missing from command.'},
+            error: 'Missing target name.'
+          };
+        }
+        const trimmedTargetName = targetName.trim();
+
+        // 2. Get Candidate IDs
+        const candidateIdSet = getEntityIdsForScopes([target_domain], context);
+
+        // 3. Handle Empty Scope (Initial)
+        if (candidateIdSet.size === 0) {
+          const messageKeySuffix = _getMessageKeySuffix(target_domain);
+          const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
+          const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
+          await eventBus.dispatch('event:display_message', {text: messageText, type: 'info'});
+          return {
+            status: ResolutionStatus.FILTER_EMPTY,
+            targetType: null,
+            targetId: null,
+            targetEntity: null,
+            targetConnectionEntity: null,
+            candidateIds: [],
+            details: {reason: 'Initial scope empty'},
+            error: null
+          };
+        }
+
+        // 4. Get Entity Instances & Filter Nulls
+        const initialEntities = Array.from(candidateIdSet)
+          .map(id => entityManager.getEntityInstance(id))
+          .filter(entity => entity !== null && entity !== undefined);
+
+        if (initialEntities.length === 0) {
+          console.warn(`TargetResolutionService: No valid entity instances found for IDs in scope '${target_domain}' for action '${actionDefinition.id}'.`);
+          const messageKeySuffix = _getMessageKeySuffix(target_domain);
+          const messageFunc = TARGET_MESSAGES[`SCOPE_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
+          const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
+          await eventBus.dispatch('event:display_message', {text: messageText, type: 'info'});
+          return {
+            status: ResolutionStatus.FILTER_EMPTY,
+            targetType: null,
+            targetId: null,
+            targetEntity: null,
+            targetConnectionEntity: null,
+            candidateIds: Array.from(candidateIdSet),
+            details: {reason: 'No instances found for scope IDs'},
+            error: null
+          };
+        }
+
+        // 5. Filter by Components (Pre-filter)
+        const componentFilteredEntities = initialEntities.filter(entity => {
+          // Check Required Components using the string compId
+          const hasAllRequired = target_required_components.every(compId => {
+            // Directly use the string ID with hasComponent
+            const hasComp = entity.hasComponent(compId);
+            if (!hasComp) {
+              // Optional: Log if needed, but the filtering logic is simpler
+              // console.warn(`Entity ${entity.id} missing required component: ${compId}`);
+            }
+            return hasComp;
+          });
+
+          // If required components are missing, filter out immediately
+          if (!hasAllRequired) {
+            return false;
+          }
+
+          // Check Forbidden Components using the string compId
+          // Use .some() to see if *any* forbidden component is present
+          const hasAnyForbidden = target_forbidden_components.some(compId => {
+            // Directly use the string ID with hasComponent
+            const hasComp = entity.hasComponent(compId);
+            if (hasComp) {
+              // Optional: Log if needed
+              // console.warn(`Entity ${entity.id} has forbidden component: ${compId}`);
+            }
+            return hasComp;
+          });
+
+          // Keep the entity only if it has all required AND does not have any forbidden
+          return !hasAnyForbidden; // hasAllRequired is already checked above
+        });
+
+        // 6. Handle Empty Scope (Post-Component Filter)
+        if (componentFilteredEntities.length === 0) {
+          const messageKeySuffix = _getMessageKeySuffix(target_domain);
+          const messageFunc = TARGET_MESSAGES[`FILTER_EMPTY_${messageKeySuffix}`] || TARGET_MESSAGES.SCOPE_EMPTY_GENERIC;
+          const messageText = messageFunc(actionDefinition.name || actionDefinition.id, target_domain);
+          await eventBus.dispatch('event:display_message', {text: messageText, type: 'info'});
+          return {
+            status: ResolutionStatus.FILTER_EMPTY, targetType: null, targetId: null, targetEntity: null,
+            targetConnectionEntity: null, candidateIds: initialEntities.map(e => e.id),
+            details: {reason: 'All candidates filtered out by component requirements.'}, error: null
+          };
+        }
+
+
+        // 7. Name Matching using findTarget
+        const findResult = findTarget(trimmedTargetName, componentFilteredEntities);
+
+        // 8. Handle findTarget Results
+        switch (findResult.status) {
+          case 'NOT_FOUND': {
+            const messageKeySuffix = _getMessageKeySuffix(target_domain);
+            // Attempt lookup with specific key and the intended (but non-existent) fallback key
+            let messageFunc = TARGET_MESSAGES[`NOT_FOUND_${messageKeySuffix}`] || TARGET_MESSAGES.NOT_FOUND_GENERIC;
+
+            // ---> ADD/MODIFY THIS SECTION <---
+            // Check if the lookup failed and provide a guaranteed fallback
+            if (typeof messageFunc !== 'function') {
+              console.warn(`TargetResolutionService: Message function not found for keys NOT_FOUND_${messageKeySuffix} or NOT_FOUND_GENERIC. Using NOT_FOUND_NEARBY as fallback.`);
+              messageFunc = TARGET_MESSAGES.NOT_FOUND_NEARBY; // Use a known valid fallback function
+
+              // Optional: Add a check for the fallback itself in case messages.js is severely broken
+              if (typeof messageFunc !== 'function') {
+                console.error('TargetResolutionService: CRITICAL - Fallback message function NOT_FOUND_NEARBY is also missing!');
+                // Dispatch internal error and return ERROR status to prevent further issues
+                await eventBus.dispatch('event:display_message', {
+                  text: TARGET_MESSAGES.INTERNAL_ERROR,
+                  type: 'error'
+                });
+                return {
+                  status: ResolutionStatus.ERROR,
+                  error: 'Internal configuration error: Missing essential message templates.',
+                  targetType: null,
+                  targetId: null,
+                  targetEntity: null,
+                  targetConnectionEntity: null,
+                  candidateIds: [],
+                  details: null
+                };
+              }
+            }
+            // ---> END OF ADDED/MODIFIED SECTION <---
+
+            // Now we are reasonably sure messageFunc is a function
+            const messageText = messageFunc(trimmedTargetName); // This line should no longer throw the TypeError
+            await eventBus.dispatch('event:display_message', {text: messageText, type: 'info'});
+
+            // Return the correct NOT_FOUND status
+            return {
+              status: ResolutionStatus.NOT_FOUND, // Should now return the correct status
+              targetType: null,
+              targetId: null,
+              targetEntity: null,
+              targetConnectionEntity: null,
+              candidateIds: componentFilteredEntities.map(e => e.id), // Keep original candidates list
+              details: {searchedName: trimmedTargetName},
+              error: null
+            };
+          }
+          case 'FOUND_AMBIGUOUS': {
+            const ambiguousEntities = findResult.matches;
+            const messageText = TARGET_MESSAGES.AMBIGUOUS_PROMPT(
+              actionDefinition.name || actionDefinition.id,
+              trimmedTargetName,
+              ambiguousEntities
+            );
+            await eventBus.dispatch('event:display_message', {text: messageText, type: 'warning'});
+            return {
+              status: ResolutionStatus.AMBIGUOUS,
+              targetType: 'entity',
+              targetId: null,
+              targetEntity: null,
+              targetConnectionEntity: null,
+              candidateIds: ambiguousEntities.map(e => e.id),
+              details: {searchedName: trimmedTargetName},
+              error: null
+            };
+          }
+          case 'FOUND_UNIQUE': {
+            const uniqueMatch = findResult.matches[0];
+            return {
+              status: ResolutionStatus.FOUND_UNIQUE,
+              targetType: 'entity',
+              targetId: uniqueMatch.id,
+              targetEntity: uniqueMatch,
+              targetConnectionEntity: null,
+              candidateIds: [],
+              details: null,
+              error: null
+            };
+          }
+          default:
+            console.error(`TargetResolutionService: Unexpected status from findTarget: ${findResult.status}`);
+            return {
+              status: ResolutionStatus.ERROR,
+              targetType: null,
+              targetId: null,
+              targetEntity: null,
+              targetConnectionEntity: null,
+              candidateIds: [],
+              details: null,
+              error: 'Internal error during name matching.'
+            };
+        }
+
+      } catch (error) {
+        console.error(`TargetResolutionService: Error resolving target for action '${actionDefinition.id}' in domain '${target_domain}':`, error);
+        await eventBus.dispatch('event:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        return {
+          status: ResolutionStatus.ERROR,
+          targetType: null,
+          targetId: null,
+          targetEntity: null,
+          targetConnectionEntity: null,
+          candidateIds: [],
+          details: null,
+          error: `Error during resolution: ${error.message}`
+        };
+      }
+    }
+
+    // --- Fallback for unknown/unhandled domains ---
+    console.error(`TargetResolutionService: Unhandled target_domain '${target_domain}' for action "${actionDefinition.id}".`);
+    return {
+      status: ResolutionStatus.ERROR,
+      targetType: null,
+      targetId: null,
+      targetEntity: null,
+      targetConnectionEntity: null,
+      candidateIds: [],
+      details: {unhandledDomain: target_domain},
+      error: `Unhandled target domain: ${target_domain}`
+    };
+  }
 
 } // End class TargetResolutionService
 

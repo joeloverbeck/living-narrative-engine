@@ -33,82 +33,82 @@ import {getDisplayName} from './messages.js'; // Adjusted path
  * @returns {string} - The formatted string description (e.g., "North: An open doorway").
  */
 export function formatExitString(direction, passageDetails, blockerEntity, effectivePassageState) {
-    const passageType = passageDetails.getType() || 'passage';
-    let description = '';
+  const passageType = passageDetails.getType() || 'passage';
+  let description = '';
 
-    switch (effectivePassageState) {
-        case 'open':
-            // If there's an explicit blocker that is openable and currently open, describe it.
-            if (blockerEntity && blockerEntity.hasComponent(OpenableComponent) && blockerEntity.getComponent(OpenableComponent).isOpen) {
-                const blockerName = getDisplayName(blockerEntity) || 'blocker';
-                description = `an open ${blockerName}`;
-            } else {
-                // Otherwise, describe the passage type generically as open.
-                switch (passageType.toLowerCase()) {
-                    case 'doorway':
-                        description = 'an open doorway';
-                        break;
-                    case 'path':
-                        description = 'a path';
-                        break;
-                    case 'gate':
-                        description = 'an open gate';
-                        break;
-                    case 'archway':
-                        description = 'an open archway';
-                        break;
-                    case 'passage': // Default case
-                    default:
-                        description = 'a passage';
-                        break;
-                }
-            }
+  switch (effectivePassageState) {
+    case 'open':
+      // If there's an explicit blocker that is openable and currently open, describe it.
+      if (blockerEntity && blockerEntity.hasComponent(OpenableComponent) && blockerEntity.getComponent(OpenableComponent).isOpen) {
+        const blockerName = getDisplayName(blockerEntity) || 'blocker';
+        description = `an open ${blockerName}`;
+      } else {
+        // Otherwise, describe the passage type generically as open.
+        switch (passageType.toLowerCase()) {
+          case 'doorway':
+            description = 'an open doorway';
             break;
-        case 'closed':
-            if (blockerEntity) {
-                const blockerName = getDisplayName(blockerEntity) || 'blocker';
-                description = `a closed ${blockerName}`;
-            } else {
-                // Fallback if state is 'closed' but no blocker entity provided (warn and use generic)
-                description = `a closed ${passageType}`;
-                console.warn(`[formatExitString] Blocker entity missing for 'closed' state on passage type '${passageType}' direction '${direction}'.`);
-            }
+          case 'path':
+            description = 'a path';
             break;
-        case 'locked':
-            if (blockerEntity) {
-                const blockerName = getDisplayName(blockerEntity) || 'blocker';
-                description = `a locked ${blockerName}`;
-            } else {
-                // Fallback if state is 'locked' but no blocker entity provided (warn and use generic)
-                description = `a locked ${passageType}`;
-                console.warn(`[formatExitString] Blocker entity missing for 'locked' state on passage type '${passageType}' direction '${direction}'.`);
-            }
+          case 'gate':
+            description = 'an open gate';
             break;
-        case 'impassable':
-            if (blockerEntity) {
-                const blockerName = getDisplayName(blockerEntity) || 'blocker';
-                // Capitalize for sentence structure "BlockerName blocks the passage"
-                const capitalizedBlockerName = blockerName.charAt(0).toUpperCase() + blockerName.slice(1);
-                description = `${capitalizedBlockerName} blocks the ${passageType}`;
-            } else {
-                // Fallback if state is 'impassable' but no blocker entity provided (warn and use generic)
-                description = `an impassable ${passageType}`;
-                console.warn(`[formatExitString] Blocker entity missing for 'impassable' state on passage type '${passageType}' direction '${direction}'.`);
-            }
+          case 'archway':
+            description = 'an open archway';
             break;
-        default:
-            // Fallback for unexpected state
-            description = `an unknown ${passageType}`;
-            console.warn(`[formatExitString] Unexpected effectivePassageState: ${effectivePassageState} for direction '${direction}'.`);
-    }
-
-    // Capitalize the description part unless it's the specific "Blocker blocks..." format
-    if (effectivePassageState !== 'impassable' || !blockerEntity) {
-        if (typeof description === 'string' && description.length > 0) {
-            description = description.charAt(0).toUpperCase() + description.slice(1);
+          case 'passage': // Default case
+          default:
+            description = 'a passage';
+            break;
         }
-    }
+      }
+      break;
+    case 'closed':
+      if (blockerEntity) {
+        const blockerName = getDisplayName(blockerEntity) || 'blocker';
+        description = `a closed ${blockerName}`;
+      } else {
+        // Fallback if state is 'closed' but no blocker entity provided (warn and use generic)
+        description = `a closed ${passageType}`;
+        console.warn(`[formatExitString] Blocker entity missing for 'closed' state on passage type '${passageType}' direction '${direction}'.`);
+      }
+      break;
+    case 'locked':
+      if (blockerEntity) {
+        const blockerName = getDisplayName(blockerEntity) || 'blocker';
+        description = `a locked ${blockerName}`;
+      } else {
+        // Fallback if state is 'locked' but no blocker entity provided (warn and use generic)
+        description = `a locked ${passageType}`;
+        console.warn(`[formatExitString] Blocker entity missing for 'locked' state on passage type '${passageType}' direction '${direction}'.`);
+      }
+      break;
+    case 'impassable':
+      if (blockerEntity) {
+        const blockerName = getDisplayName(blockerEntity) || 'blocker';
+        // Capitalize for sentence structure "BlockerName blocks the passage"
+        const capitalizedBlockerName = blockerName.charAt(0).toUpperCase() + blockerName.slice(1);
+        description = `${capitalizedBlockerName} blocks the ${passageType}`;
+      } else {
+        // Fallback if state is 'impassable' but no blocker entity provided (warn and use generic)
+        description = `an impassable ${passageType}`;
+        console.warn(`[formatExitString] Blocker entity missing for 'impassable' state on passage type '${passageType}' direction '${direction}'.`);
+      }
+      break;
+    default:
+      // Fallback for unexpected state
+      description = `an unknown ${passageType}`;
+      console.warn(`[formatExitString] Unexpected effectivePassageState: ${effectivePassageState} for direction '${direction}'.`);
+  }
 
-    // Combine direction and description
-    return `${direction}: ${description}`;
+  // Capitalize the description part unless it's the specific "Blocker blocks..." format
+  if (effectivePassageState !== 'impassable' || !blockerEntity) {
+    if (typeof description === 'string' && description.length > 0) {
+      description = description.charAt(0).toUpperCase() + description.slice(1);
+    }
+  }
+
+  // Combine direction and description
+  return `${direction}: ${description}`;
 }

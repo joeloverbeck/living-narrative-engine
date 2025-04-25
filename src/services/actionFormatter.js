@@ -21,106 +21,106 @@ import {getDisplayName} from '../utils/messages.js'; // Assuming path is correct
  * @throws {Error} If critical dependencies (entityManager, getDisplayName) are missing or invalid during processing.
  */
 export function formatActionCommand(actionDefinition, validatedTargetContext, entityManager, options = {}) {
-    const {debug = false} = options;
+  const {debug = false} = options;
 
-    // --- 1. Input Validation ---
-    if (!actionDefinition || !actionDefinition.template) {
-        console.error("formatActionCommand: Invalid or missing actionDefinition or template.", {actionDefinition});
-        return null;
-    }
-    if (!validatedTargetContext) {
-        console.error("formatActionCommand: Invalid or missing validatedTargetContext.", {validatedTargetContext});
-        return null;
-    }
-    if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-        console.error("formatActionCommand: Invalid or missing entityManager.", {entityManager});
-        // This is a critical dependency, throw an error or return null based on desired strictness
-        throw new Error("formatActionCommand requires a valid EntityManager instance.");
-    }
-    if (typeof getDisplayName !== 'function') {
-        console.error("formatActionCommand: getDisplayName utility function is not available.");
-        // This is a critical dependency
-        throw new Error("formatActionCommand requires the getDisplayName utility function.");
-    }
+  // --- 1. Input Validation ---
+  if (!actionDefinition || !actionDefinition.template) {
+    console.error('formatActionCommand: Invalid or missing actionDefinition or template.', {actionDefinition});
+    return null;
+  }
+  if (!validatedTargetContext) {
+    console.error('formatActionCommand: Invalid or missing validatedTargetContext.', {validatedTargetContext});
+    return null;
+  }
+  if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
+    console.error('formatActionCommand: Invalid or missing entityManager.', {entityManager});
+    // This is a critical dependency, throw an error or return null based on desired strictness
+    throw new Error('formatActionCommand requires a valid EntityManager instance.');
+  }
+  if (typeof getDisplayName !== 'function') {
+    console.error('formatActionCommand: getDisplayName utility function is not available.');
+    // This is a critical dependency
+    throw new Error('formatActionCommand requires the getDisplayName utility function.');
+  }
 
-    let command = actionDefinition.template;
-    const contextType = validatedTargetContext.type;
+  let command = actionDefinition.template;
+  const contextType = validatedTargetContext.type;
 
-    if (debug) {
-        console.log(`Formatting command for action: ${actionDefinition.id}, template: "${command}", targetType: ${contextType}`);
-    }
+  if (debug) {
+    console.log(`Formatting command for action: ${actionDefinition.id}, template: "${command}", targetType: ${contextType}`);
+  }
 
-    // --- 2. Placeholder Substitution based on Target Type ---
-    try {
-        switch (contextType) {
-            case 'entity': {
-                const targetId = validatedTargetContext.entityId;
-                if (!targetId) {
-                    console.warn(`formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionDefinition.id}. Template: "${command}"`);
-                    // Decide how to handle this - return template as-is, or indicate error?
-                    // Returning template as-is might be misleading if {target} exists.
-                    // Returning null or throwing might be safer. Let's return null for now.
-                    return null; // Indicate failure due to inconsistent context
-                }
-
-                let targetName = targetId; // Default fallback is the ID itself
-                const targetEntity = entityManager.getEntityInstance(targetId);
-
-                if (targetEntity) {
-                    // Use getDisplayName utility, which handles its own fallback to ID or 'unknown entity'
-                    targetName = getDisplayName(targetEntity);
-                    if (debug) {
-                        console.log(` -> Found entity ${targetId}, display name: "${targetName}"`);
-                    }
-                } else {
-                    // If entity instance lookup fails (shouldn't happen if context is truly validated, but good to check)
-                    console.warn(`formatActionCommand: Could not find entity instance for ID ${targetId} (action: ${actionDefinition.id}). Using ID as fallback name.`);
-                    // targetName remains targetId (our fallback)
-                }
-
-                // Replace {target} placeholder
-                command = command.replace('{target}', targetName);
-                break;
-            }
-
-            case 'direction': {
-                const direction = validatedTargetContext.direction;
-                if (!direction) {
-                    console.warn(`formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionDefinition.id}. Template: "${command}"`);
-                    return null; // Indicate failure
-                }
-                if (debug) {
-                    console.log(` -> Using direction: "${direction}"`);
-                }
-                // Replace {direction} placeholder
-                command = command.replace('{direction}', direction);
-                break;
-            }
-
-            case 'none':
-                // No placeholders expected, use the template directly.
-                if (debug) {
-                    console.log(` -> No target type, using template as is.`);
-                }
-                // Optional check: Warn if template *unexpectedly* contains placeholders?
-                if (command.includes('{target}') || command.includes('{direction}')) {
-                    console.warn(`formatActionCommand: Action ${actionDefinition.id} has target_domain 'none' but template "${command}" contains placeholders.`);
-                }
-                break;
-
-            default:
-                console.warn(`formatActionCommand: Unknown validatedTargetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`);
-                // Return template as-is for unknown types? Or null? Returning unmodified seems safer.
-                break;
+  // --- 2. Placeholder Substitution based on Target Type ---
+  try {
+    switch (contextType) {
+      case 'entity': {
+        const targetId = validatedTargetContext.entityId;
+        if (!targetId) {
+          console.warn(`formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionDefinition.id}. Template: "${command}"`);
+          // Decide how to handle this - return template as-is, or indicate error?
+          // Returning template as-is might be misleading if {target} exists.
+          // Returning null or throwing might be safer. Let's return null for now.
+          return null; // Indicate failure due to inconsistent context
         }
-    } catch (error) {
-        console.error(`formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`, error);
-        return null; // Return null on processing error
-    }
 
-    // --- 3. Return Formatted String ---
-    if (debug) {
-        console.log(` <- Final formatted command: "${command}"`);
+        let targetName = targetId; // Default fallback is the ID itself
+        const targetEntity = entityManager.getEntityInstance(targetId);
+
+        if (targetEntity) {
+          // Use getDisplayName utility, which handles its own fallback to ID or 'unknown entity'
+          targetName = getDisplayName(targetEntity);
+          if (debug) {
+            console.log(` -> Found entity ${targetId}, display name: "${targetName}"`);
+          }
+        } else {
+          // If entity instance lookup fails (shouldn't happen if context is truly validated, but good to check)
+          console.warn(`formatActionCommand: Could not find entity instance for ID ${targetId} (action: ${actionDefinition.id}). Using ID as fallback name.`);
+          // targetName remains targetId (our fallback)
+        }
+
+        // Replace {target} placeholder
+        command = command.replace('{target}', targetName);
+        break;
+      }
+
+      case 'direction': {
+        const direction = validatedTargetContext.direction;
+        if (!direction) {
+          console.warn(`formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionDefinition.id}. Template: "${command}"`);
+          return null; // Indicate failure
+        }
+        if (debug) {
+          console.log(` -> Using direction: "${direction}"`);
+        }
+        // Replace {direction} placeholder
+        command = command.replace('{direction}', direction);
+        break;
+      }
+
+      case 'none':
+        // No placeholders expected, use the template directly.
+        if (debug) {
+          console.log(' -> No target type, using template as is.');
+        }
+        // Optional check: Warn if template *unexpectedly* contains placeholders?
+        if (command.includes('{target}') || command.includes('{direction}')) {
+          console.warn(`formatActionCommand: Action ${actionDefinition.id} has target_domain 'none' but template "${command}" contains placeholders.`);
+        }
+        break;
+
+      default:
+        console.warn(`formatActionCommand: Unknown validatedTargetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`);
+        // Return template as-is for unknown types? Or null? Returning unmodified seems safer.
+        break;
     }
-    return command;
+  } catch (error) {
+    console.error(`formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`, error);
+    return null; // Return null on processing error
+  }
+
+  // --- 3. Return Formatted String ---
+  if (debug) {
+    console.log(` <- Final formatted command: "${command}"`);
+  }
+  return command;
 }

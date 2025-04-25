@@ -19,14 +19,14 @@
  * @implements {IPathResolver}
  */
 class DefaultPathResolver {
-    /**
+  /**
      * The configuration service instance used to retrieve base paths.
      * @private
      * @type {IConfiguration}
      */
-    #config;
+  #config;
 
-    /**
+  /**
      * Creates an instance of DefaultPathResolver.
      * Requires a service instance that conforms to the IConfiguration interface
      * to provide the necessary base path information.
@@ -34,22 +34,22 @@ class DefaultPathResolver {
      * @param {IConfiguration} configurationService - An object conforming to the IConfiguration interface.
      * @throws {Error} If a valid configuration service is not provided.
      */
-    constructor(configurationService) {
-        // Basic validation to ensure a seemingly valid configuration object is passed.
-        // Checks for the presence of expected methods defined in the IConfiguration interface.
-        // AC: Constructor accepts an IConfiguration service instance.
-        if (!configurationService ||
+  constructor(configurationService) {
+    // Basic validation to ensure a seemingly valid configuration object is passed.
+    // Checks for the presence of expected methods defined in the IConfiguration interface.
+    // AC: Constructor accepts an IConfiguration service instance.
+    if (!configurationService ||
             typeof configurationService.getSchemaBasePath !== 'function' ||
             typeof configurationService.getWorldBasePath !== 'function' ||
             typeof configurationService.getContentBasePath !== 'function') {
-            // AC: Constructor throws an error if the configuration service is invalid.
-            throw new Error('DefaultPathResolver: Constructor requires a valid IConfiguration service instance providing getSchemaBasePath, getWorldBasePath, and getContentBasePath methods.');
-        }
-        // AC: Constructor stores the configuration service instance internally.
-        this.#config = configurationService;
+      // AC: Constructor throws an error if the configuration service is invalid.
+      throw new Error('DefaultPathResolver: Constructor requires a valid IConfiguration service instance providing getSchemaBasePath, getWorldBasePath, and getContentBasePath methods.');
     }
+    // AC: Constructor stores the configuration service instance internally.
+    this.#config = configurationService;
+  }
 
-    /**
+  /**
      * Resolves a schema filename into a full fetchable path by prepending the
      * configured schema base path.
      * Example: 'common.schema.json' -> './data/schemas/common.schema.json'
@@ -59,20 +59,20 @@ class DefaultPathResolver {
      * @returns {string} The full, potentially relative, path to the schema file.
      * @throws {Error} If the filename is not a valid non-empty string.
      */
-    resolveSchemaPath(filename) {
-        // AC: resolveSchemaPath throws an error for invalid input.
-        if (typeof filename !== 'string' || filename.trim() === '') {
-            throw new Error('DefaultPathResolver.resolveSchemaPath: Invalid or empty filename provided.');
-        }
-        // AC: resolveSchemaPath calls config.getSchemaBasePath().
-        const basePath = this.#config.getSchemaBasePath();
-        // Simple concatenation. Assumes base path does not end with '/' and filename does not start with '/'.
-        // Handling potential double slashes could be added if basePath format is uncertain.
-        // AC: resolveSchemaPath returns the combined path correctly.
-        return `${basePath}/${filename}`;
+  resolveSchemaPath(filename) {
+    // AC: resolveSchemaPath throws an error for invalid input.
+    if (typeof filename !== 'string' || filename.trim() === '') {
+      throw new Error('DefaultPathResolver.resolveSchemaPath: Invalid or empty filename provided.');
     }
+    // AC: resolveSchemaPath calls config.getSchemaBasePath().
+    const basePath = this.#config.getSchemaBasePath();
+    // Simple concatenation. Assumes base path does not end with '/' and filename does not start with '/'.
+    // Handling potential double slashes could be added if basePath format is uncertain.
+    // AC: resolveSchemaPath returns the combined path correctly.
+    return `${basePath}/${filename}`;
+  }
 
-    /**
+  /**
      * Resolves a world name into the full fetchable path for its manifest file.
      * It constructs the standard manifest filename (e.g., 'demo.world.json') and
      * prepends the configured world base path.
@@ -83,20 +83,20 @@ class DefaultPathResolver {
      * @returns {string} The full, potentially relative, path to the world's manifest file.
      * @throws {Error} If the worldName is not a valid non-empty string.
      */
-    resolveManifestPath(worldName) {
-        // AC: resolveManifestPath throws an error for invalid input.
-        if (typeof worldName !== 'string' || worldName.trim() === '') {
-            throw new Error('DefaultPathResolver.resolveManifestPath: Invalid or empty worldName provided.');
-        }
-        // AC: resolveManifestPath calls config.getWorldBasePath().
-        const basePath = this.#config.getWorldBasePath();
-        const manifestFilename = `${worldName}.world.json`;
-        // AC: resolveManifestPath constructs the correct manifest filename.
-        // AC: resolveManifestPath returns the combined path correctly.
-        return `${basePath}/${manifestFilename}`;
+  resolveManifestPath(worldName) {
+    // AC: resolveManifestPath throws an error for invalid input.
+    if (typeof worldName !== 'string' || worldName.trim() === '') {
+      throw new Error('DefaultPathResolver.resolveManifestPath: Invalid or empty worldName provided.');
     }
+    // AC: resolveManifestPath calls config.getWorldBasePath().
+    const basePath = this.#config.getWorldBasePath();
+    const manifestFilename = `${worldName}.world.json`;
+    // AC: resolveManifestPath constructs the correct manifest filename.
+    // AC: resolveManifestPath returns the combined path correctly.
+    return `${basePath}/${manifestFilename}`;
+  }
 
-    /**
+  /**
      * Resolves a content type and filename into the full fetchable path for that
      * specific content definition file. It retrieves the base path specific to the
      * content type from the configuration and appends the filename.
@@ -108,23 +108,23 @@ class DefaultPathResolver {
      * @returns {string} The full, potentially relative, path to the content file.
      * @throws {Error} If typeName or filename are not valid non-empty strings.
      */
-    resolveContentPath(typeName, filename) {
-        // AC: resolveContentPath throws an error for invalid typeName.
-        if (typeof typeName !== 'string' || typeName.trim() === '') {
-            throw new Error('DefaultPathResolver.resolveContentPath: Invalid or empty typeName provided.');
-        }
-        // AC: resolveContentPath throws an error for invalid filename.
-        if (typeof filename !== 'string' || filename.trim() === '') {
-            throw new Error('DefaultPathResolver.resolveContentPath: Invalid or empty filename provided.');
-        }
-
-        // AC: resolveContentPath calls config.getContentBasePath(typeName).
-        const basePath = this.#config.getContentBasePath(typeName);
-        // Assumes getContentBasePath returns a valid path string for the given typeName.
-        // Error handling for invalid typeName could be added here or expected within the config service.
-        // AC: resolveContentPath returns the combined path correctly.
-        return `${basePath}/${filename}`;
+  resolveContentPath(typeName, filename) {
+    // AC: resolveContentPath throws an error for invalid typeName.
+    if (typeof typeName !== 'string' || typeName.trim() === '') {
+      throw new Error('DefaultPathResolver.resolveContentPath: Invalid or empty typeName provided.');
     }
+    // AC: resolveContentPath throws an error for invalid filename.
+    if (typeof filename !== 'string' || filename.trim() === '') {
+      throw new Error('DefaultPathResolver.resolveContentPath: Invalid or empty filename provided.');
+    }
+
+    // AC: resolveContentPath calls config.getContentBasePath(typeName).
+    const basePath = this.#config.getContentBasePath(typeName);
+    // Assumes getContentBasePath returns a valid path string for the given typeName.
+    // Error handling for invalid typeName could be added here or expected within the config service.
+    // AC: resolveContentPath returns the combined path correctly.
+    return `${basePath}/${filename}`;
+  }
 }
 
 // AC: defaultPathResolver.js exists and exports the DefaultPathResolver class.

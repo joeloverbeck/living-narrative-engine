@@ -32,50 +32,50 @@
  * getObjectPropertyByPath(myObj, null);         // Returns undefined
  */
 export const getObjectPropertyByPath = (obj, propertyPath) => {
-    // Validate inputs: object must exist and path must be a non-empty string
-    if (obj === null || typeof obj === 'undefined' || typeof propertyPath !== 'string' || propertyPath === '') {
+  // Validate inputs: object must exist and path must be a non-empty string
+  if (obj === null || typeof obj === 'undefined' || typeof propertyPath !== 'string' || propertyPath === '') {
+    return undefined;
+  }
+
+  const pathParts = propertyPath.split('.');
+  let current = obj;
+
+  for (let i = 0; i < pathParts.length; i++) {
+    const part = pathParts[i];
+
+    // Check for empty segments caused by double dots (e.g., "a..b") or leading/trailing dots
+    if (part === '') {
+      return undefined;
+    }
+
+    // Before attempting access, ensure 'current' is an object or array
+    // Allow traversal into arrays using numeric indices
+    const isObject = current !== null && typeof current === 'object'; // Includes arrays
+
+    if (!isObject) {
+      // Cannot traverse further into a primitive, null, or undefined value
+      return undefined;
+    }
+
+    // Check if the property exists on the current object/array
+    // Using `Object.prototype.hasOwnProperty.call` is safer for objects,
+    // but `part in current` works for both own properties and array indices.
+    // `current[part]` handles both object properties and array indices naturally.
+    if (part in current) {
+      current = current[part];
+      // If the value found is undefined, and it's not the last part of the path,
+      // we cannot continue traversal.
+      if (current === undefined && i < pathParts.length - 1) {
         return undefined;
+      }
+    } else {
+      // Property/index does not exist at this level
+      return undefined;
     }
+  }
 
-    const pathParts = propertyPath.split('.');
-    let current = obj;
-
-    for (let i = 0; i < pathParts.length; i++) {
-        const part = pathParts[i];
-
-        // Check for empty segments caused by double dots (e.g., "a..b") or leading/trailing dots
-        if (part === '') {
-            return undefined;
-        }
-
-        // Before attempting access, ensure 'current' is an object or array
-        // Allow traversal into arrays using numeric indices
-        const isObject = current !== null && typeof current === 'object'; // Includes arrays
-
-        if (!isObject) {
-            // Cannot traverse further into a primitive, null, or undefined value
-            return undefined;
-        }
-
-        // Check if the property exists on the current object/array
-        // Using `Object.prototype.hasOwnProperty.call` is safer for objects,
-        // but `part in current` works for both own properties and array indices.
-        // `current[part]` handles both object properties and array indices naturally.
-        if (part in current) {
-            current = current[part];
-            // If the value found is undefined, and it's not the last part of the path,
-            // we cannot continue traversal.
-            if (current === undefined && i < pathParts.length - 1) {
-                return undefined;
-            }
-        } else {
-            // Property/index does not exist at this level
-            return undefined;
-        }
-    }
-
-    // If the loop completes, 'current' holds the final value
-    return current;
+  // If the loop completes, 'current' holds the final value
+  return current;
 };
 
 // Add other generic object utilities here in the future if needed.

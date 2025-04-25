@@ -17,27 +17,27 @@
  * @returns {any | undefined | null} The parameter value or undefined/null if invalid/missing/explicitly null.
  */
 const getParam = (conditionData, name, type) => {
-    // Check if conditionData is actually an object before accessing properties
-    if (!conditionData || typeof conditionData !== 'object') {
-        return undefined;
-    }
+  // Check if conditionData is actually an object before accessing properties
+  if (!conditionData || typeof conditionData !== 'object') {
+    return undefined;
+  }
 
-    const value = conditionData[name];
+  const value = conditionData[name];
 
-    // Check for undefined or null first
-    if (value === undefined || value === null) {
-        // Allow 'any' type to return null if the value is explicitly null
-        // Return undefined if missing, null if explicitly null & type is 'any'
-        return (type === 'any' && value === null) ? null : undefined;
-    }
+  // Check for undefined or null first
+  if (value === undefined || value === null) {
+    // Allow 'any' type to return null if the value is explicitly null
+    // Return undefined if missing, null if explicitly null & type is 'any'
+    return (type === 'any' && value === null) ? null : undefined;
+  }
 
-    // Type checking based on the expected type
-    if (type === 'number' && typeof value !== 'number') return undefined;
-    if (type === 'string' && typeof value !== 'string') return undefined;
-    if (type === 'boolean' && typeof value !== 'boolean') return undefined;
-    // 'any' type accepts any value that passed the null/undefined check above
+  // Type checking based on the expected type
+  if (type === 'number' && typeof value !== 'number') return undefined;
+  if (type === 'string' && typeof value !== 'string') return undefined;
+  if (type === 'boolean' && typeof value !== 'boolean') return undefined;
+  // 'any' type accepts any value that passed the null/undefined check above
 
-    return value;
+  return value;
 };
 
 
@@ -49,8 +49,8 @@ const getParam = (conditionData, name, type) => {
  * @returns {number | null}
  */
 export const getNumberParam = (conditionData, name, defaultValue = null) => {
-    const val = getParam(conditionData, name, 'number');
-    return typeof val === 'number' ? val : defaultValue;
+  const val = getParam(conditionData, name, 'number');
+  return typeof val === 'number' ? val : defaultValue;
 };
 
 /**
@@ -61,8 +61,8 @@ export const getNumberParam = (conditionData, name, defaultValue = null) => {
  * @returns {string | null}
  */
 export const getStringParam = (conditionData, name, defaultValue = null) => {
-    const val = getParam(conditionData, name, 'string');
-    return typeof val === 'string' ? val : defaultValue;
+  const val = getParam(conditionData, name, 'string');
+  return typeof val === 'string' ? val : defaultValue;
 };
 
 /**
@@ -73,8 +73,8 @@ export const getStringParam = (conditionData, name, defaultValue = null) => {
  * @returns {boolean | null}
  */
 export const getBooleanParam = (conditionData, name, defaultValue = null) => {
-    const val = getParam(conditionData, name, 'boolean');
-    return typeof val === 'boolean' ? val : defaultValue;
+  const val = getParam(conditionData, name, 'boolean');
+  return typeof val === 'boolean' ? val : defaultValue;
 };
 
 /**
@@ -84,6 +84,6 @@ export const getBooleanParam = (conditionData, name, defaultValue = null) => {
  * @returns {any | undefined | null} The value, undefined if missing, or null if explicitly null.
  */
 export const getValueParam = (conditionData, name) => {
-    // Use 'any' type which handles explicit null correctly via getParam
-    return getParam(conditionData, name, 'any');
+  // Use 'any' type which handles explicit null correctly via getParam
+  return getParam(conditionData, name, 'any');
 };

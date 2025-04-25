@@ -1,8 +1,8 @@
 // main.js
 
 import GameEngine from './src/core/gameEngine.js';
-import AppContainer from "./src/core/appContainer.js";
-import {registerCoreServices} from "./src/core/containerConfig.js";
+import AppContainer from './src/core/appContainer.js';
+import {configureContainer} from './src/core/containerConfig.js';
 
 // --- Define the Active World ---
 const ACTIVE_WORLD = 'demo'; // Specify the world to load
@@ -10,7 +10,7 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
 // --- Bootstrap the Game Engine ---
 // Use an async IIFE (Immediately Invoked Function Expression) or top-level await
 (async () => {
-    console.log("main.js: Bootstrapping application...");
+    console.log('main.js: Bootstrapping application...');
 
     // --- Get Root DOM Elements ---
     const outputDiv = document.getElementById('output');
@@ -27,9 +27,9 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
             !titleElement ? 'h1 title' : null
         ].filter(Boolean).join(', ');
         const errorMsg = `Fatal Error: Cannot find required HTML elements: ${missing}. Application cannot start.`;
-        console.error("main.js:", errorMsg)
+        console.error('main.js:', errorMsg);
         if (errorDiv) errorDiv.textContent = errorMsg; else alert(errorMsg);
-        if (titleElement) titleElement.textContent = "Fatal Error!";
+        if (titleElement) titleElement.textContent = 'Fatal Error!';
         if (inputElement) inputElement.disabled = true;
         return; // Stop execution
     }
@@ -39,20 +39,20 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
     // --- Register Services ---
     try {
-        registerCoreServices(container, {outputDiv, inputElement, titleElement});
+        configureContainer(container, {outputDiv, inputElement, titleElement});
     } catch (registrationError) {
-        console.error("Fatal Error: Failed to register core services:", registrationError);
+        console.error('Fatal Error: Failed to register core services:', registrationError);
         const errorMsg = `Fatal Error during service registration: ${registrationError.message}. Check console.`;
         alert(errorMsg);
         // Use local variables for fallback UI update
-        if (titleElement) titleElement.textContent = "Fatal Registration Error!";
+        if (titleElement) titleElement.textContent = 'Fatal Registration Error!';
         if (inputElement) {
             inputElement.disabled = true;
-            inputElement.placeholder = "Registration Failed.";
+            inputElement.placeholder = 'Registration Failed.';
         }
         // Attempt to log using the container if logger registered, otherwise use console
         try {
-            container.resolve('ILogger').error("Fatal Error: Failed to register core services:", registrationError);
+            container.resolve('ILogger').error('Fatal Error: Failed to register core services:', registrationError);
         } catch (_) {
             // Ignore if logger itself failed or wasn't registered
         }
@@ -65,13 +65,13 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
     try {
         logger = container.resolve('ILogger'); // Resolve logger for use in this scope
     } catch (resolveError) {
-        console.error("Fatal Error: Could not resolve essential ILogger service:", resolveError);
+        console.error('Fatal Error: Could not resolve essential ILogger service:', resolveError);
         // Can't use logger here, fallback to console
-        alert("Fatal Error resolving logger. Check console.");
-        if (titleElement) titleElement.textContent = "Fatal Logger Error!";
+        alert('Fatal Error resolving logger. Check console.');
+        if (titleElement) titleElement.textContent = 'Fatal Logger Error!';
         if (inputElement) {
             inputElement.disabled = true;
-            inputElement.placeholder = "Logger Resolution Failed.";
+            inputElement.placeholder = 'Logger Resolution Failed.';
         }
         return; // Stop execution
     }
@@ -79,13 +79,13 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
     // --- Create Game Engine with Container ---
     try {
-        logger.info("main.js: Creating GameEngine instance...");
+        logger.info('main.js: Creating GameEngine instance...');
         gameEngine = new GameEngine({
             container: container
             // Pass logger explicitly if GameEngine needs it directly in constructor
             // logger: logger
         });
-        logger.info("main.js: GameEngine instance created.");
+        logger.info('main.js: GameEngine instance created.');
 
 
         // --- Start the Game ---
@@ -94,14 +94,14 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         // which includes errors propagated from gameEngine.#initialize() and world loading
         // AC2: Pass ACTIVE_WORLD to start()
         gameEngine.start(ACTIVE_WORLD).catch(startError => {
-            logger.error("Fatal Error: Unhandled error during game engine start:", startError);
+            logger.error('Fatal Error: Unhandled error during game engine start:', startError);
             const errorMsg = `Fatal Error during game start: ${startError.message}. Check console for details.`;
             alert(errorMsg); // Show simplified error to user
             // Use local variables for fallback UI update
-            if (titleElement) titleElement.textContent = "Fatal Start Error!";
+            if (titleElement) titleElement.textContent = 'Fatal Start Error!';
             if (inputElement) {
                 inputElement.disabled = true;
-                inputElement.placeholder = "Game Failed to Start";
+                inputElement.placeholder = 'Game Failed to Start';
             }
             // The engine's error handler might provide more specific UI updates
         });
@@ -117,14 +117,14 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
     } catch (engineCreationError) {
         // Catch errors during the GameEngine *constructor* itself
-        logger.error("Fatal Error: Failed to create GameEngine instance:", engineCreationError);
+        logger.error('Fatal Error: Failed to create GameEngine instance:', engineCreationError);
         const errorMsg = `Fatal Error creating game engine: ${engineCreationError.message}. Check console.`;
         alert(errorMsg);
         // Use local variables for fallback UI update
-        if (titleElement) titleElement.textContent = "Fatal Engine Error!";
+        if (titleElement) titleElement.textContent = 'Fatal Engine Error!';
         if (inputElement) {
             inputElement.disabled = true;
-            inputElement.placeholder = "Engine Creation Failed.";
+            inputElement.placeholder = 'Engine Creation Failed.';
         }
     }
 })(); // Execute the async function immediately

@@ -18,15 +18,15 @@ import {NAME_COMPONENT_TYPE_ID, DESCRIPTION_COMPONENT_ID} from '../types/compone
  * @returns {string} The entity's display name or a fallback string.
  */
 export const getDisplayName = (entity, fallback = 'unknown entity') => {
-    if (!entity || typeof entity.getComponentData !== 'function') {
-        // Handle cases where entity is null, undefined, or not a valid Entity object
-        return entity?.id || fallback;
-    }
-    // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
-    const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
-    // AC: Default values or fallback logic are handled appropriately if components are missing.
-    // Assumes the name component data structure is { value: "Entity Name" }
-    return nameComponentData?.value ?? entity.id ?? fallback;
+  if (!entity || typeof entity.getComponentData !== 'function') {
+    // Handle cases where entity is null, undefined, or not a valid Entity object
+    return entity?.id || fallback;
+  }
+  // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
+  const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
+  // AC: Default values or fallback logic are handled appropriately if components are missing.
+  // Assumes the name component data structure is { value: "Entity Name" }
+  return nameComponentData?.value ?? entity.id ?? fallback;
 };
 // --- END TICKET 4.4 REFACTOR ---
 
@@ -41,15 +41,15 @@ export const getDisplayName = (entity, fallback = 'unknown entity') => {
  * @returns {string} The entity's display description or a fallback string.
  */
 export const getDisplayDescription = (entity, fallback = 'You see nothing particularly interesting.') => {
-    if (!entity || typeof entity.getComponentData !== 'function') {
-        // Handle cases where entity is null, undefined, or not a valid Entity object
-        return fallback; // No ID fallback needed for description usually
-    }
-    // AC: Data is accessed using entity.getComponentData(entityId, "core:description") (via entity instance)
-    const descriptionComponentData = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
-    // AC: Default values or fallback logic are handled appropriately if components are missing.
-    // Assumes the description component data structure is { value: "Entity Description" }
-    return descriptionComponentData?.value ?? fallback;
+  if (!entity || typeof entity.getComponentData !== 'function') {
+    // Handle cases where entity is null, undefined, or not a valid Entity object
+    return fallback; // No ID fallback needed for description usually
+  }
+  // AC: Data is accessed using entity.getComponentData(entityId, "core:description") (via entity instance)
+  const descriptionComponentData = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
+  // AC: Default values or fallback logic are handled appropriately if components are missing.
+  // Assumes the description component data structure is { value: "Entity Description" }
+  return descriptionComponentData?.value ?? fallback;
 };
 // --- END TICKET 4.4 REFACTOR ---
 
@@ -66,45 +66,45 @@ export const getDisplayDescription = (entity, fallback = 'You see nothing partic
  * - AMBIGUOUS_PROMPT (used as the default for ambiguity)
  */
 export const TARGET_MESSAGES = {
-    // ==================================================
-    // == Target Finding & Resolution Default Messages ==
-    // ==================================================
-    // These are used as defaults by handleActionWithTargetResolution based on scope.
+  // ==================================================
+  // == Target Finding & Resolution Default Messages ==
+  // ==================================================
+  // These are used as defaults by handleActionWithTargetResolution based on scope.
 
-    /**
+  /**
      * Default: Target not found in the current location.
      * Scope: 'location', 'location_items', 'location_non_items' (and general fallback)
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_LOCATION: (targetName) => `You don't see any '${targetName}' here.`,
+  NOT_FOUND_LOCATION: (targetName) => `You don't see any '${targetName}' here.`,
 
-    /**
+  /**
      * Default: Target not found in the player's inventory.
      * Scope: 'inventory'
      * @param {string} targetName - The name of the item being looked for.
      * @returns {string}
      */
-    NOT_FOUND_INVENTORY: (targetName) => `You don't have a '${targetName}'.`,
+  NOT_FOUND_INVENTORY: (targetName) => `You don't have a '${targetName}'.`,
 
-    /**
+  /**
      * Default: Target not found among the player's equipped items.
      * Scope: 'equipment'
      * @param {string} targetName - The name of the item being looked for.
      * @returns {string}
      */
-    NOT_FOUND_EQUIPMENT: (targetName) => `You don't have '${targetName}' equipped.`, // Added for 'equipment' scope
+  NOT_FOUND_EQUIPMENT: (targetName) => `You don't have '${targetName}' equipped.`, // Added for 'equipment' scope
 
-    /**
+  /**
      * Default: Target not found nearby (e.g., in location, inventory, or as an interactive connection/blocker).
      * Scope: Used as a fallback or specifically for scopes like 'nearby_with_blockers'
      * where "nearby" is the appropriate user-facing term.
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_NEARBY: (targetName) => `You don't find any '${targetName}' nearby.`, // UPDATED COMMENT: Clarified usage relative to scope change
+  NOT_FOUND_NEARBY: (targetName) => `You don't find any '${targetName}' nearby.`, // UPDATED COMMENT: Clarified usage relative to scope change
 
-    /**
+  /**
      * Default: Ambiguous target prompt when multiple entities match.
      * Used by handleActionWithTargetResolution if no override is provided.
      * @param {string} actionVerb - The action being attempted (e.g., 'attack', 'take', 'use X on').
@@ -112,345 +112,345 @@ export const TARGET_MESSAGES = {
      * @param {Entity[]} candidates - Array of matching entities.
      * @returns {string}
      */
-    AMBIGUOUS_PROMPT: (actionVerb, targetName, candidates) => { // Standardized params: targetTypeName -> targetName, matches -> candidates
-        // TICKET 4.4: Uses refactored getDisplayName
-        const names = candidates.map(e => getDisplayName(e)).join(', ');
-        return `Which '${targetName}' did you want to ${actionVerb}: ${names}?`;
-    },
+  AMBIGUOUS_PROMPT: (actionVerb, targetName, candidates) => { // Standardized params: targetTypeName -> targetName, matches -> candidates
+    // TICKET 4.4: Uses refactored getDisplayName
+    const names = candidates.map(e => getDisplayName(e)).join(', ');
+    return `Which '${targetName}' did you want to ${actionVerb}: ${names}?`;
+  },
 
-    /**
+  /**
      * Default: Search scope (inventory/equipment) yielded no suitable entities after filtering.
      * Used by handleActionWithTargetResolution for 'inventory' or 'equipment' scopes.
      * @param {string} actionVerb - The action verb.
      * @returns {string}
      */
-    SCOPE_EMPTY_PERSONAL: (actionVerb) => `You have nothing suitable to ${actionVerb}.`, // Standardized JSDoc
+  SCOPE_EMPTY_PERSONAL: (actionVerb) => `You have nothing suitable to ${actionVerb}.`, // Standardized JSDoc
 
-    /**
+  /**
      * Default: Search scope (location/nearby/etc.) yielded no suitable entities after filtering.
      * Used by handleActionWithTargetResolution for scopes other than inventory/equipment.
      * @param {string} actionVerb - The action verb.
      * @param {string} scopeContext - A hint about the scope (e.g., 'location', 'nearby').
      * @returns {string}
      */
-    SCOPE_EMPTY_GENERIC: (actionVerb, scopeContext) => `You don't see anything suitable ${scopeContext} to ${actionVerb}.`, // Standardized JSDoc
+  SCOPE_EMPTY_GENERIC: (actionVerb, scopeContext) => `You don't see anything suitable ${scopeContext} to ${actionVerb}.`, // Standardized JSDoc
 
 
-    // ==================================================
-    // == Action-Specific Resolution Failure Overrides ==
-    // ==================================================
-    // These can be used in handleActionWithTargetResolution's `failureMessages` option
-    // or by action operationHandlers directly.
+  // ==================================================
+  // == Action-Specific Resolution Failure Overrides ==
+  // ==================================================
+  // These can be used in handleActionWithTargetResolution's `failureMessages` option
+  // or by action operationHandlers directly.
 
-    /**
+  /**
      * Target not found in the current location specifically for attacking.
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_ATTACKABLE: (targetName) => `There is no one called '${targetName}' here to attack.`, // Param name standardized
+  NOT_FOUND_ATTACKABLE: (targetName) => `There is no one called '${targetName}' here to attack.`, // Param name standardized
 
-    /**
+  /**
      * Target not found in the current location specifically for taking.
      * @param {string} targetName - The name of the item being looked for.
      * @returns {string}
      */
-    NOT_FOUND_TAKEABLE: (targetName) => `You don't see any '${targetName}' here to take.`, // Param name standardized
+  NOT_FOUND_TAKEABLE: (targetName) => `You don't see any '${targetName}' here to take.`, // Param name standardized
 
-    /**
+  /**
      * Target not found in the player's inventory that is suitable for equipping.
      * Used when resolving for the 'equip' action.
      * @param {string} targetName - The name of the item being looked for.
      * @returns {string}
      */
-    NOT_FOUND_EQUIPPABLE: (targetName) => `You don't have a '${targetName}' you can equip.`, // Param name standardized
+  NOT_FOUND_EQUIPPABLE: (targetName) => `You don't have a '${targetName}' you can equip.`, // Param name standardized
 
-    /**
+  /**
      * Target not found among the player's equipped items specifically for unequipping.
      * Used when resolving for the 'unequip' action by item name.
      * @param {string} targetName - The name of the item being looked for.
      * @returns {string}
      */
-    NOT_FOUND_UNEQUIPPABLE: (targetName) => `You don't have '${targetName}' equipped to unequip.`, // Param name standardized
+  NOT_FOUND_UNEQUIPPABLE: (targetName) => `You don't have '${targetName}' equipped to unequip.`, // Param name standardized
 
-    /**
+  /**
      * Target not found nearby (e.g., for 'use item on target'). Used by `useActionHandler`.
      * Consider using `NOT_FOUND_NEARBY` as the default if consistency is desired.
      * @param {string} targetName - The description/name of the target being looked for.
      * @returns {string}
      */
-    TARGET_NOT_FOUND_CONTEXT: (targetName) => `Could not find '${targetName}' nearby to target.`, // Param name standardized
+  TARGET_NOT_FOUND_CONTEXT: (targetName) => `Could not find '${targetName}' nearby to target.`, // Param name standardized
 
-    /**
+  /**
      * Target not found nearby specifically for examining. Used by `examineActionHandler`.
      * Consider using `NOT_FOUND_NEARBY` as the default if consistency is desired.
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_EXAMINABLE: (targetName) => `You don't see anything called '${targetName}' to examine nearby.`, // Param name standardized
+  NOT_FOUND_EXAMINABLE: (targetName) => `You don't see anything called '${targetName}' to examine nearby.`, // Param name standardized
 
-    /**
+  /**
      * Target not found nearby specifically for opening.
      * @param {string} targetName - The name of the target being looked for.
      * @returns {string}
      */
-    NOT_FOUND_OPENABLE: (targetName) => `You don't see anything called '${targetName}' that you can open nearby.`,
+  NOT_FOUND_OPENABLE: (targetName) => `You don't see anything called '${targetName}' that you can open nearby.`,
 
-    /**
+  /**
      * Feedback when the 'nearby' scope contains no entities suitable for opening.
      * Used by handleActionWithTargetResolution when filter empty.
      * @param {string} actionVerb - The action verb ('open').
      * @param {string} scopeContext - The scope hint ('nearby').
      * @returns {string}
      */
-    FILTER_EMPTY_OPENABLE: (actionVerb, scopeContext) => `There's nothing ${scopeContext} that you can ${actionVerb}.`,
+  FILTER_EMPTY_OPENABLE: (actionVerb, scopeContext) => `There's nothing ${scopeContext} that you can ${actionVerb}.`,
 
-    /**
+  /**
      * Feedback when a scope (like location for 'take') contains no items relevant to the action.
      * Used by TargetResolutionService when `filteredEntities.length === 0`.
      * Can be overridden by `emptyScopeMessage` in resolver config.
      * Example usage: `takeActionHandler` overrides this via resolver config using `failureMessages.filterEmpty`.
      */
-    TAKE_EMPTY_LOCATION: "There's nothing here to take.", // Keep as string override example
+  TAKE_EMPTY_LOCATION: "There's nothing here to take.", // Keep as string override example
 
-    // ================================
-    // Ambiguity Prompts (Specific)
-    // ================================
+  // ================================
+  // Ambiguity Prompts (Specific)
+  // ================================
 
-    /**
+  /**
      * Ambiguous target prompt specifically for using an item on a target.
      * @param {string} actionVerb - The combined verb phrase (e.g., "use Potion on").
      * @param {string} targetName - The ambiguous name/description of the target.
      * @param {Entity[]} candidates - Array of matching entities.
      * @returns {string}
      */
-    TARGET_AMBIGUOUS_CONTEXT: (actionVerb, targetName, candidates) => {
-        // TICKET 4.4: Uses refactored getDisplayName
-        const names = candidates.map(m => getDisplayName(m)).join(', ');
-        return `Which '${targetName}' did you want to ${actionVerb}? (${names})`;
-    },
+  TARGET_AMBIGUOUS_CONTEXT: (actionVerb, targetName, candidates) => {
+    // TICKET 4.4: Uses refactored getDisplayName
+    const names = candidates.map(m => getDisplayName(m)).join(', ');
+    return `Which '${targetName}' did you want to ${actionVerb}? (${names})`;
+  },
 
-    /**
+  /**
      * Ambiguous direction prompt when input matches multiple connection direction keys.
      * Used specifically by resolveTargetConnection.
      * @param {string} directionInput - The ambiguous direction string entered by the user (e.g., 'west').
      * @param {string[]} connectionNames - An array of display names for the matching connection entities (e.g., ['West Gate', 'Western Arch']).
      * @returns {string}
      */
-    AMBIGUOUS_DIRECTION: (directionInput, connectionNames) => {
-        const namesList = connectionNames && connectionNames.length > 0 ? connectionNames.join(', ') : 'unspecified options';
-        return `There are multiple ways to go '${directionInput}'. Which one did you mean: ${namesList}?`;
-    },
+  AMBIGUOUS_DIRECTION: (directionInput, connectionNames) => {
+    const namesList = connectionNames && connectionNames.length > 0 ? connectionNames.join(', ') : 'unspecified options';
+    return `There are multiple ways to go '${directionInput}'. Which one did you mean: ${namesList}?`;
+  },
 
-    // ================================
-    // General Prompts & Errors
-    // ================================
+  // ================================
+  // General Prompts & Errors
+  // ================================
 
-    /**
+  /**
      * Prompt when an action requires a target but none was provided.
      * @param {string} verb - The action verb (e.g., 'Attack', 'Take').
      * @returns {string} Example: "Attack what?"
      */
-    PROMPT_WHAT: (verb) => `${verb.charAt(0).toUpperCase() + verb.slice(1)} what?`,
+  PROMPT_WHAT: (verb) => `${verb.charAt(0).toUpperCase() + verb.slice(1)} what?`,
 
-    /** Generic internal error message for unexpected issues. */
-    INTERNAL_ERROR: "Internal error occurred.",
+  /** Generic internal error message for unexpected issues. */
+  INTERNAL_ERROR: 'Internal error occurred.',
 
-    /**
+  /**
      * Error indicating a required component is missing on the player or relevant entity.
      * @param {string} compName - Name of the missing component (e.g., 'Inventory', 'Position').
      * @returns {string}
      */
-    INTERNAL_ERROR_COMPONENT: (compName) => `(Internal Error: Player is missing ${compName} capability.)`,
+  INTERNAL_ERROR_COMPONENT: (compName) => `(Internal Error: Player is missing ${compName} capability.)`,
 
-    /** Internal error for unexpected target resolution status. */
-    INTERNAL_ERROR_RESOLUTION: (status) => `Internal error: Unexpected target resolution status (${status}).`,
+  /** Internal error for unexpected target resolution status. */
+  INTERNAL_ERROR_RESOLUTION: (status) => `Internal error: Unexpected target resolution status (${status}).`,
 
-    // ============================================
-    // Action Specific Validation & Feedback (Review JSDoc/Params)
-    // ============================================
+  // ============================================
+  // Action Specific Validation & Feedback (Review JSDoc/Params)
+  // ============================================
 
-    // --- Attack ---
-    /** Feedback for trying to attack oneself. */
-    ATTACK_SELF: "Trying to attack yourself? That's not productive.",
-    /** Feedback when trying to attack a target that cannot be attacked (e.g., scenery, non-combatant).
+  // --- Attack ---
+  /** Feedback for trying to attack oneself. */
+  ATTACK_SELF: "Trying to attack yourself? That's not productive.",
+  /** Feedback when trying to attack a target that cannot be attacked (e.g., scenery, non-combatant).
      * @param {string} targetName - The display name of the non-combatant target. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    ATTACK_NON_COMBATANT: (targetName) => `You can't attack the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when trying to attack an already defeated target.
+  ATTACK_NON_COMBATANT: (targetName) => `You can't attack the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when trying to attack an already defeated target.
      * @param {string} targetName - The display name of the defeated target. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    ATTACK_DEFEATED: (targetName) => `The ${targetName} is already defeated.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  ATTACK_DEFEATED: (targetName) => `The ${targetName} is already defeated.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    // --- Equip ---
-    /** Feedback when an item exists in inventory but lacks the EquippableComponent.
+  // --- Equip ---
+  /** Feedback when an item exists in inventory but lacks the EquippableComponent.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    EQUIP_CANNOT: (itemName) => `You cannot equip the ${itemName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when the player lacks the required equipment slot for an item.
+  EQUIP_CANNOT: (itemName) => `You cannot equip the ${itemName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when the player lacks the required equipment slot for an item.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @param {string} slotId - The required equipment slot ID.
      * @returns {string}
      */
-    EQUIP_NO_SLOT: (itemName, slotId) => `You don't have a slot to equip the ${itemName} (${slotId}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when the target equipment slot is already occupied.
+  EQUIP_NO_SLOT: (itemName, slotId) => `You don't have a slot to equip the ${itemName} (${slotId}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when the target equipment slot is already occupied.
      * @param {string} currentItemName - The display name of the item currently in the slot. (Uses getDisplayName upstream)
      * @param {string} slotName - The user-friendly name of the slot (e.g., 'main hand').
      * @returns {string}
      */
-    EQUIP_SLOT_FULL: (currentItemName, slotName) => `You need to unequip the ${currentItemName} from your ${slotName} slot first.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  EQUIP_SLOT_FULL: (currentItemName, slotName) => `You need to unequip the ${currentItemName} from your ${slotName} slot first.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    // --- Inventory ---
-    /** Feedback when the player's inventory is empty (used by 'use' and potentially others). */
-    NOTHING_CARRIED: "You aren't carrying anything.",
+  // --- Inventory ---
+  /** Feedback when the player's inventory is empty (used by 'use' and potentially others). */
+  NOTHING_CARRIED: "You aren't carrying anything.",
 
-    // --- Look ---
-    /** Feedback when the player's location is unknown. */
-    LOOK_LOCATION_UNKNOWN: "You can't see anything; your location is unknown.",
-    /** Feedback when the player looks at themselves. */
-    LOOK_SELF: "You look yourself over. You seem to be in one piece.",
-    /** Default feedback when looking at an entity that has no specific DescriptionComponent text.
+  // --- Look ---
+  /** Feedback when the player's location is unknown. */
+  LOOK_LOCATION_UNKNOWN: "You can't see anything; your location is unknown.",
+  /** Feedback when the player looks at themselves. */
+  LOOK_SELF: 'You look yourself over. You seem to be in one piece.',
+  /** Default feedback when looking at an entity that has no specific DescriptionComponent text.
      * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    // TICKET 4.4: This message is a fallback if the *description* component is missing.
-    // The LOOK_DEFAULT_DESCRIPTION *itself* shouldn't call getDisplayDescription.
-    // Instead, the 'examine' or 'look' action handler should call getDisplayDescription(targetEntity)
-    // and use the result. If getDisplayDescription returns its *own* fallback, that's what's shown.
-    // This message is now more like a fallback for the *entire look action result*.
-    // Renaming might be clearer, but keeping name for now.
-    LOOK_DEFAULT_DESCRIPTION: (targetName) => `You look closely at the ${targetName}, but see nothing particularly interesting.`,
+  // TICKET 4.4: This message is a fallback if the *description* component is missing.
+  // The LOOK_DEFAULT_DESCRIPTION *itself* shouldn't call getDisplayDescription.
+  // Instead, the 'examine' or 'look' action handler should call getDisplayDescription(targetEntity)
+  // and use the result. If getDisplayDescription returns its *own* fallback, that's what's shown.
+  // This message is now more like a fallback for the *entire look action result*.
+  // Renaming might be clearer, but keeping name for now.
+  LOOK_DEFAULT_DESCRIPTION: (targetName) => `You look closely at the ${targetName}, but see nothing particularly interesting.`,
 
-    // --- Move ---
-    /** Feedback when the player's location is unknown during a move attempt. */
-    MOVE_LOCATION_UNKNOWN: "Cannot move: your current location is unknown.",
-    /** Feedback when the player's position component is missing during a move attempt. */
-    MOVE_POSITION_UNKNOWN: "Cannot move: Your position is unknown.",
-    /** Prompt when the 'move' command is given without a direction. */
-    MOVE_NO_DIRECTION: "Move where? (Specify a direction like 'north', 'south', 'east', or 'west')",
-    /** Feedback when the current location has no defined exits. */
-    MOVE_NO_EXITS: "There are no obvious exits from here.",
-    /** Feedback when trying to move in a direction that is locked. Can be overridden by connection data.
+  // --- Move ---
+  /** Feedback when the player's location is unknown during a move attempt. */
+  MOVE_LOCATION_UNKNOWN: 'Cannot move: your current location is unknown.',
+  /** Feedback when the player's position component is missing during a move attempt. */
+  MOVE_POSITION_UNKNOWN: 'Cannot move: Your position is unknown.',
+  /** Prompt when the 'move' command is given without a direction. */
+  MOVE_NO_DIRECTION: "Move where? (Specify a direction like 'north', 'south', 'east', or 'west')",
+  /** Feedback when the current location has no defined exits. */
+  MOVE_NO_EXITS: 'There are no obvious exits from here.',
+  /** Feedback when trying to move in a direction that is locked. Can be overridden by connection data.
      * @param {string} direction - The direction attempted.
      * @returns {string}
      */
-    MOVE_LOCKED: (direction) => `The way ${direction} is locked.`,
-    /** Feedback when connection data for a direction is invalid (e.g., missing target).
+  MOVE_LOCKED: (direction) => `The way ${direction} is locked.`,
+  /** Feedback when connection data for a direction is invalid (e.g., missing target).
      * @param {string} direction - The direction attempted.
      * @returns {string}
      */
-    MOVE_INVALID_CONNECTION: (direction) => `The way ${direction} seems improperly constructed.`,
-    /** Feedback when the target location definition for a connection is missing or invalid.
+  MOVE_INVALID_CONNECTION: (direction) => `The way ${direction} seems improperly constructed.`,
+  /** Feedback when the target location definition for a connection is missing or invalid.
      * @param {string} direction - The direction attempted.
      * @returns {string}
      */
-    MOVE_BAD_TARGET_DEF: (direction) => `Something is wrong with the passage leading ${direction}.`,
-    /** Generic feedback when there's no valid connection in the specified direction. */
-    MOVE_CANNOT_GO_WAY: "You can't go that way.",
+  MOVE_BAD_TARGET_DEF: (direction) => `Something is wrong with the passage leading ${direction}.`,
+  /** Generic feedback when there's no valid connection in the specified direction. */
+  MOVE_CANNOT_GO_WAY: "You can't go that way.",
 
-    // --- Movement Blocking ---
-    /** Feedback when movement is blocked because the blocking entity is locked.
+  // --- Movement Blocking ---
+  /** Feedback when movement is blocked because the blocking entity is locked.
      * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Generic feedback when movement is blocked by an entity (e.g., closed door).
+  MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Generic feedback when movement is blocked by an entity (e.g., closed door).
      * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when movement is blocked because the referenced blocker entity could not be found. */
-    MOVE_BLOCKER_NOT_FOUND: () => "The way seems blocked by something that isn't there anymore.",
+  MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when movement is blocked because the referenced blocker entity could not be found. */
+  MOVE_BLOCKER_NOT_FOUND: () => "The way seems blocked by something that isn't there anymore.",
 
-    /**
+  /**
      * Feedback when an entity is successfully opened.
      * @param {string} targetName - The display name of the opened entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    /**
+  /**
      * Default feedback when opening an entity fails for an unspecified or default reason.
      * @param {string} targetName - The display name of the entity that failed to open. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    /**
+  /**
      * Feedback when attempting to open an entity that is already open.
      * @param {string} targetName - The display name of the already open entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_ALREADY_OPEN: (targetName) => `The ${targetName} is already open.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  OPEN_FAILED_ALREADY_OPEN: (targetName) => `The ${targetName} is already open.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    /**
+  /**
      * Feedback when attempting to open an entity that is locked.
      * @param {string} targetName - The display name of the locked entity. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    /**
+  /**
      * Feedback when attempting to open an entity that lacks the OpenableComponent or capability.
      * @param {string} targetName - The display name of the entity that cannot be opened. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    OPEN_FAILED_NOT_OPENABLE: (targetName) => `The ${targetName} cannot be opened.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  OPEN_FAILED_NOT_OPENABLE: (targetName) => `The ${targetName} cannot be opened.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    // --- Unequip ---
-    /** Feedback when trying to unequip from an explicitly named slot that is empty.
+  // --- Unequip ---
+  /** Feedback when trying to unequip from an explicitly named slot that is empty.
      * @param {string} slotName - The user-friendly name of the slot.
      * @returns {string}
      */
-    UNEQUIP_SLOT_EMPTY: (slotName) => `You have nothing equipped in your ${slotName} slot.`,
+  UNEQUIP_SLOT_EMPTY: (slotName) => `You have nothing equipped in your ${slotName} slot.`,
 
-    // --- Use ---
-    /** Feedback when an item's usage conditions are not met.
+  // --- Use ---
+  /** Feedback when an item's usage conditions are not met.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_CONDITION_FAILED: (itemName) => `You cannot use the ${itemName} under the current conditions.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Generic feedback when an item cannot be used in the attempted manner.
+  USE_CONDITION_FAILED: (itemName) => `You cannot use the ${itemName} under the current conditions.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Generic feedback when an item cannot be used in the attempted manner.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_CANNOT: (itemName) => `You can't use the ${itemName} that way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when trying to use a healing item at full health. */
-    USE_FULL_HEALTH: "You are already at full health.",
-    /** Feedback when an item requires an explicit target but none was provided or resolved.
+  USE_CANNOT: (itemName) => `You can't use the ${itemName} that way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when trying to use a healing item at full health. */
+  USE_FULL_HEALTH: 'You are already at full health.',
+  /** Feedback when an item requires an explicit target but none was provided or resolved.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_REQUIRES_TARGET: (itemName) => `What do you want to use the ${itemName} on?`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    /** Feedback when the specific target is invalid for the item being used.
+  USE_REQUIRES_TARGET: (itemName) => `What do you want to use the ${itemName} on?`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  /** Feedback when the specific target is invalid for the item being used.
      * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
      * @returns {string}
      */
-    USE_INVALID_TARGET: (itemName) => `You can't use the ${itemName} on that.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-    // Deprecated/Redundant based on other messages? Review usage.
-    USE_INVALID_TARGET_CONNECTION: (id) => `The connection (${id}) you targeted is not valid here.`,
-    USE_INVALID_TARGET_ENTITY: (id) => `The target (${id}) you specified is no longer valid.`,
+  USE_INVALID_TARGET: (itemName) => `You can't use the ${itemName} on that.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  // Deprecated/Redundant based on other messages? Review usage.
+  USE_INVALID_TARGET_CONNECTION: (id) => `The connection (${id}) you targeted is not valid here.`,
+  USE_INVALID_TARGET_ENTITY: (id) => `The target (${id}) you specified is no longer valid.`,
 
-    // ================================
-    // Generic Action Validation
-    // ================================
-    /**
+  // ================================
+  // Generic Action Validation
+  // ================================
+  /**
      * Generic message for when an action cannot be performed on a specific target for a given reason.
      * @param {string} actionVerb - The verb of the action being attempted (e.g., 'attack', 'unlock').
      * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @param {string} reason - The reason why the action cannot be performed.
      * @returns {string} Example: "You cannot attack the sturdy door (it is indestructible)."
      */
-    CANNOT_PERFORM_ACTION_ON: (actionVerb, targetName, reason) => `You cannot ${actionVerb} the ${targetName} (${reason}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  CANNOT_PERFORM_ACTION_ON: (actionVerb, targetName, reason) => `You cannot ${actionVerb} the ${targetName} (${reason}).`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
-    /**
+  /**
      * Generic message for when a resolved target is fundamentally invalid for the attempted action.
      * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
      * @param {string} actionVerb - The verb of the action being attempted.
      * @returns {string} Example: "The training dummy is not a valid target for equipping."
      */
-    TARGET_INVALID_FOR_ACTION: (targetName, actionVerb) => `The ${targetName} is not a valid target for ${actionVerb}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
+  TARGET_INVALID_FOR_ACTION: (targetName, actionVerb) => `The ${targetName} is not a valid target for ${actionVerb}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
 };

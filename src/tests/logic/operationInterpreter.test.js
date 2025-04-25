@@ -3,7 +3,7 @@
 /**
  * @jest-environment node
  */
-import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import {describe, expect, test, jest, beforeEach} from '@jest/globals';
 import OperationInterpreter from '../../logic/operationInterpreter.js'; // Adjust path if needed
 
 // --- JSDoc Imports ---
@@ -35,14 +35,14 @@ const mockHandlerWithError = jest.fn(() => {
 /** @type {Operation} */
 const logOperation = {
     type: 'LOG',
-    parameters: { message: 'Test log message', level: 'info' },
+    parameters: {message: 'Test log message', level: 'info'},
     comment: 'A test log operation'
 };
 
 /** @type {Operation} */
 const modifyOperation = {
     type: 'MODIFY_COMPONENT',
-    parameters: { target: 'actor', component: 'health', changes: { value: -10 } }
+    parameters: {target: 'actor', component: 'health', changes: {value: -10}}
 };
 
 /** @type {Operation} */
@@ -55,21 +55,21 @@ const unknownOperation = {
 const ifOperation = {
     type: 'IF',
     parameters: {
-        condition: { "==": [1, 1] },
-        then_actions: [{ type: 'LOG', parameters: { message: 'IF was true' } }]
+        condition: {'==': [1, 1]},
+        then_actions: [{type: 'LOG', parameters: {message: 'IF was true'}}]
     }
 };
 
 /** @type {Operation} */
 const errorOperation = {
     type: 'ERROR_OP',
-    parameters: { data: 123 }
+    parameters: {data: 123}
 };
 
 /** @type {ExecutionContext} */
 const mockExecutionContext = {
-    event: { type: 'TEST_EVENT', payload: {} },
-    actor: { id: 'player', name: 'Hero' },
+    event: {type: 'TEST_EVENT', payload: {}},
+    actor: {id: 'player', name: 'Hero'},
     target: null,
     context: {},
     // Potentially include references to core services if needed by operationHandlers
@@ -102,20 +102,20 @@ describe('OperationInterpreter', () => {
 
     // --- Constructor Tests ---
     test('constructor should throw if logger is missing or invalid', () => {
-        expect(() => new OperationInterpreter({ registry: mockRegistry })).toThrow('ILogger');
-        expect(() => new OperationInterpreter({ logger: {}, registry: mockRegistry })).toThrow('ILogger');
+        expect(() => new OperationInterpreter({registry: mockRegistry})).toThrow('ILogger');
+        expect(() => new OperationInterpreter({logger: {}, registry: mockRegistry})).toThrow('ILogger');
     });
 
     test('constructor should throw if registry is missing or invalid', () => {
-        expect(() => new OperationInterpreter({ logger: mockLogger })).toThrow('OperationRegistry');
-        expect(() => new OperationInterpreter({ logger: mockLogger, registry: {} })).toThrow('OperationRegistry');
+        expect(() => new OperationInterpreter({logger: mockLogger})).toThrow('OperationRegistry');
+        expect(() => new OperationInterpreter({logger: mockLogger, registry: {}})).toThrow('OperationRegistry');
     });
 
     test('constructor should initialize successfully with valid dependencies', () => {
         // Instantiation happens in beforeEach, check logger was called
-        expect(() => new OperationInterpreter({ logger: mockLogger, registry: mockRegistry })).not.toThrow();
+        expect(() => new OperationInterpreter({logger: mockLogger, registry: mockRegistry})).not.toThrow();
         // Check the init log message from the constructor itself
-        expect(mockLogger.info).toHaveBeenCalledWith("OperationInterpreter Initialized (using OperationRegistry).");
+        expect(mockLogger.info).toHaveBeenCalledWith('OperationInterpreter Initialized (using OperationRegistry).');
     });
 
     // --- execute() Tests ---
@@ -143,7 +143,9 @@ describe('OperationInterpreter', () => {
     test('execute should log an error and not throw if getHandler returns undefined', () => {
         mockRegistry.getHandler.mockReturnValue(undefined); // Simulate unknown type
 
-        interpreter.execute(unknownOperation, mockExecutionContext);
+        expect(() => { // Verify execute itself doesn't throw for this case
+            interpreter.execute(unknownOperation, mockExecutionContext);
+        }).not.toThrow();
 
         expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP'); // Called with trimmed type
         expect(mockLogHandler).not.toHaveBeenCalled(); // Ensure no handler was called
@@ -156,18 +158,24 @@ describe('OperationInterpreter', () => {
     });
 
     test('execute should log error if operation object is invalid (null)', () => {
-        interpreter.execute(null, mockExecutionContext);
+        expect(() => {
+            interpreter.execute(null, mockExecutionContext);
+        }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.anything());
     });
 
     test('execute should log error if operation.type is missing or empty', () => {
-        interpreter.execute({ parameters: {} }, mockExecutionContext); // Missing type
+        expect(() => {
+            interpreter.execute({parameters: {}}, mockExecutionContext); // Missing type
+        }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.anything());
         mockLogger.error.mockClear();
 
-        interpreter.execute({ type: ' ', parameters: {} }, mockExecutionContext); // Whitespace type
+        expect(() => {
+            interpreter.execute({type: ' ', parameters: {}}, mockExecutionContext); // Whitespace type
+        }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.anything());
 
@@ -179,7 +187,9 @@ describe('OperationInterpreter', () => {
         // Simulate IF not being registered (it shouldn't be for the interpreter)
         mockRegistry.getHandler.mockReturnValue(undefined);
 
-        interpreter.execute(ifOperation, mockExecutionContext);
+        expect(() => {
+            interpreter.execute(ifOperation, mockExecutionContext);
+        }).not.toThrow();
 
         // Verify it *tried* to look up 'IF'
         expect(mockRegistry.getHandler).toHaveBeenCalledTimes(1);
@@ -196,32 +206,38 @@ describe('OperationInterpreter', () => {
     });
 
     // --- AC Test: Error Handling for Handler Exceptions ---
-    test('execute should catch, log, and not re-throw errors from the handler function', () => {
+    // ****** TEST MODIFIED ******
+    test('execute should re-throw errors originating from the handler function', () => { // <-- Changed test name
         const error = new Error('Handler failed!');
-        mockHandlerWithError.mockImplementationOnce(() => { throw error; }); // Set specific mock behavior
+        mockHandlerWithError.mockImplementationOnce(() => {
+            throw error;
+        }); // Set specific mock behavior
         mockRegistry.getHandler.mockReturnValue(mockHandlerWithError);
 
-        // Execute should complete without throwing an error itself
-        expect(() => {
+        // Execute should now THROW the error from the handler
+        expect(() => {                                         // <-- Keep wrapper
             interpreter.execute(errorOperation, mockExecutionContext);
-        }).not.toThrow();
+        }).toThrow(error);                                      // <-- Changed assertion to .toThrow()
 
-        // Verify registry and handler were called
+        // Verify registry and handler were called (still correct)
         expect(mockRegistry.getHandler).toHaveBeenCalledWith('ERROR_OP');
         expect(mockHandlerWithError).toHaveBeenCalledTimes(1);
         expect(mockHandlerWithError).toHaveBeenCalledWith(errorOperation.parameters, mockExecutionContext);
 
-        // Verify the error was logged
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            'Error executing handler for operation type "ERROR_OP":', // Check message prefix
-            error // Check that the original error object was logged
-        );
+        // --- FIX: Adjust logging expectations ---
+        // Interpreter should NOT log the error itself anymore, it just re-throws.
+        // The caller (SystemLogicInterpreter) is responsible for logging the sequence-halting error.
+        expect(mockLogger.error).not.toHaveBeenCalled();        // <-- Changed assertion
 
-        // Verify the 'unknown type' error was NOT logged
+        // Verify the 'unknown type' error was NOT logged (still correct)
         expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Unknown operation type'));
-        // Check debug logs around handler call
+
+        // Check debug logs around handler call (still correct)
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "ERROR_OP"...');
+        // Check the debug log added before re-throwing (optional, good practice)
+        expect(mockLogger.debug).toHaveBeenCalledWith('Handler for operation type "ERROR_OP" threw an error. Rethrowing...');
+        // Verify it did NOT log 'finished successfully' (still correct)
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('finished successfully'));
     });
+    // ****** END MODIFIED TEST ******
 });

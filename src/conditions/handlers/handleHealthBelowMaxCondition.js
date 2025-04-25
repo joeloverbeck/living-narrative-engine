@@ -12,24 +12,24 @@
  * @type {ConditionHandlerFunction}
  */
 export const handleHealthBelowMaxCondition = (objectToCheck, context, conditionData) => {
-    const {dataAccess} = context; // Use dataAccess
+  const {dataAccess} = context; // Use dataAccess
 
-    // Ensure objectToCheck is an Entity
-    if (typeof objectToCheck?.getComponent !== 'function') return false;
+  // Ensure objectToCheck is an Entity
+  if (typeof objectToCheck?.getComponent !== 'function') return false;
 
-    // --- MODIFIED: Use dataAccess to get component class ---
-    const HealthComponentClass = dataAccess.getComponentClassByKey('Health');
-    if (!HealthComponentClass) {
-        console.warn("[ConditionHandler] Health component class not found via dataAccess.");
-        return false; // Or throw error depending on desired strictness
-    }
+  // --- MODIFIED: Use dataAccess to get component class ---
+  const HealthComponentClass = dataAccess.getComponentClassByKey('Health');
+  if (!HealthComponentClass) {
+    console.warn('[ConditionHandler] Health component class not found via dataAccess.');
+    return false; // Or throw error depending on desired strictness
+  }
 
-    // Use the retrieved class with the entity's getComponent method
-    const healthComponent = objectToCheck.getComponent(HealthComponentClass);
+  // Use the retrieved class with the entity's getComponent method
+  const healthComponent = objectToCheck.getComponent(HealthComponentClass);
 
-    if (!healthComponent || typeof healthComponent.current !== 'number' || typeof healthComponent.max !== 'number') {
-        return false;
-    }
+  if (!healthComponent || typeof healthComponent.current !== 'number' || typeof healthComponent.max !== 'number') {
+    return false;
+  }
 
-    return healthComponent.current < healthComponent.max;
+  return healthComponent.current < healthComponent.max;
 };

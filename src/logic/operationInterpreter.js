@@ -1,11 +1,13 @@
 // src/logic/operationInterpreter.js
-
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 // Assume ExecutionContext is defined elsewhere (e.g., in defs.js or via SUB-OPREG-01)
 /** @typedef {import('./defs.js').ExecutionContext} ExecutionContext */ // Placeholder
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./operationRegistry.js').default} OperationRegistry */ // Added Import
+
+// --- NEW: Import the placeholder resolver ---
+import {resolvePlaceholders} from './contextUtils.js'; // Adjust path as needed
 
 /**
  * @class OperationInterpreter
@@ -37,62 +39,78 @@ class OperationInterpreter {
      * @param {OperationRegistry} dependencies.registry - Service holding operation operationHandlers. // Added registry dependency
      * @throws {Error} If logger or registry dependency is missing or invalid.
      */
-    constructor({ logger, registry }) {
+    constructor({logger, registry}) {
         if (!logger || typeof logger.error !== 'function') { // Basic check
-            throw new Error("OperationInterpreter requires a valid ILogger instance.");
+            throw new Error('OperationInterpreter requires a valid ILogger instance.');
         }
         // --- AC: Validate and store registry ---
         if (!registry || typeof registry.getHandler !== 'function') {
-            throw new Error("OperationInterpreter requires a valid OperationRegistry instance.");
+            throw new Error('OperationInterpreter requires a valid OperationRegistry instance.');
         }
         this.#logger = logger;
         this.#registry = registry;
         // --- End AC ---
-        this.#logger.info("OperationInterpreter Initialized (using OperationRegistry).");
+        this.#logger.info('OperationInterpreter Initialized (using OperationRegistry).');
     }
 
     /**
      * Executes a single Operation by looking up its handler in the registry.
-     * Logs errors if the handler is not found or if the handler itself throws an error.
+     * Resolves placeholders in parameters before invoking the handler.
+     * Logs errors if the handler is not found, if placeholder resolution fails.
+     * **Re-throws errors** if the handler itself throws an error, allowing the caller
+     * (e.g., SystemLogicInterpreter) to handle sequence interruption.
      * Does NOT handle 'IF' operations; expects the caller to manage them.
      *
      * @param {Operation} operation - The Operation object to execute. Must be a valid object with a 'type' string property.
      * @param {ExecutionContext} executionContext - The context object available during execution (containing event, actor, target, services etc.).
      * @returns {void}
+     * @throws {Error} Rethrows any error caught during handler execution.
      * @public
      */
     execute(operation, executionContext) {
-        // --- AC: execute method signature updated ---
-        // Note: Assumes executionContext is the full ExecutionContext as per AC decision.
-
         // Basic validation of the operation object itself
         if (!operation || typeof operation.type !== 'string' || !operation.type.trim()) {
-            this.#logger.error('OperationInterpreter received invalid operation object (missing or invalid type). Skipping execution.', { operation });
+            this.#logger.error('OperationInterpreter received invalid operation object (missing or invalid type). Skipping execution.', {operation});
             return;
         }
 
         const opType = operation.type.trim(); // Trim for consistent lookup
 
-        // --- AC: Remove Old Logic (LOG etc.) ---
-        // The old 'if (opType === 'LOG')' block and others are removed.
-
-        // --- AC: IF Handling (Preserved in Caller) ---
-        // No 'if (opType === 'IF')' check here. The caller (SystemLogicInterpreter) handles IF.
-
         // --- AC: Registry Lookup ---
         const handler = this.#registry.getHandler(opType);
 
         if (handler) {
+            // --- NEW: Resolve placeholders before calling handler ---
+            let resolvedParameters;
+            try {
+                // Pass the raw parameters, the context, and the logger to the resolver
+                resolvedParameters = resolvePlaceholders(operation.parameters, executionContext, this.#logger);
+                this.#logger.debug(`Resolved parameters for operation type "${opType}".`);
+                // You might want to log the resolved parameters here for deep debugging if needed:
+                // this.#logger.debug('Resolved Parameters:', JSON.stringify(resolvedParameters));
+            } catch (interpolationError) {
+                this.#logger.error(`Error resolving placeholders for operation type "${opType}". Skipping handler invocation.`, interpolationError);
+                // Decide if placeholder errors should halt the sequence - if so, re-throw here too.
+                // For now, matching previous behavior of just logging and returning.
+                return;
+            }
+            // --- END NEW ---
+
             // --- AC: Handler Invocation & Error Handling ---
             try {
                 this.#logger.debug(`Executing handler for operation type "${opType}"...`);
-                // Pass parameters and the full execution context
-                handler(operation.parameters, executionContext);
+                // --- MODIFIED: Pass RESOLVED parameters ---
+                handler(resolvedParameters, executionContext);
+                // --- END MODIFIED ---
                 this.#logger.debug(`Handler execution finished successfully for type "${opType}".`);
             } catch (handlerError) {
-                // Log error from the handler itself, but do not re-throw
-                this.#logger.error(`Error executing handler for operation type "${opType}":`, handlerError);
-                // Execution continues with the next operation in the calling sequence.
+                // --- FIX: Re-throw the error ---
+                // Log that an error occurred here (optional, could be noisy)
+                this.#logger.debug(`Handler for operation type "${opType}" threw an error. Rethrowing...`);
+                // Re-throw the error so the caller (SystemLogicInterpreter) can catch it
+                // and implement its sequence halting logic.
+                throw handlerError;
+                // --- END FIX ---
             }
         } else {
             // --- AC: Unknown Type Handling ---

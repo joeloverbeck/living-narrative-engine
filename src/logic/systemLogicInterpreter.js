@@ -1,6 +1,6 @@
 // src/logic/systemLogicInterpreter.js
 
-import { createJsonLogicContext } from './contextAssembler.js';
+import {createJsonLogicContext} from './contextAssembler.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -13,6 +13,7 @@ import { createJsonLogicContext } from './contextAssembler.js';
 /** @typedef {import('../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+
 /**
  * @typedef {object} ConditionEvaluationResult
  * @property {boolean} conditionPassed - Whether the condition (if present) evaluated to true. True if no condition exists.
@@ -55,10 +56,10 @@ class SystemLogicInterpreter {
      * @param {OperationInterpreter} dependencies.operationInterpreter - Service to execute individual operations.
      * @throws {Error} If any required dependency is missing or invalid.
      */
-    constructor({ logger, eventBus, dataRegistry, jsonLogicEvaluationService, entityManager, operationInterpreter }) {
+    constructor({logger, eventBus, dataRegistry, jsonLogicEvaluationService, entityManager, operationInterpreter}) {
         // --- Existing Validation ---
         if (!logger || typeof logger.info !== 'function') {
-            throw new Error("SystemLogicInterpreter requires a valid ILogger instance.");
+            throw new Error('SystemLogicInterpreter requires a valid ILogger instance.');
         }
         if (!eventBus || typeof eventBus.subscribe !== 'function') {
             throw new Error("SystemLogicInterpreter requires a valid EventBus instance with a 'subscribe' method.");
@@ -85,7 +86,7 @@ class SystemLogicInterpreter {
         this.#entityManager = entityManager;
         this.#operationInterpreter = operationInterpreter;
 
-        this.#logger.info("SystemLogicInterpreter initialized. Ready to process events.");
+        this.#logger.info('SystemLogicInterpreter initialized. Ready to process events.');
     }
 
     /**
@@ -94,13 +95,13 @@ class SystemLogicInterpreter {
      */
     initialize() {
         if (this.#initialized) {
-            this.#logger.warn("SystemLogicInterpreter already initialized.");
+            this.#logger.warn('SystemLogicInterpreter already initialized.');
             return;
         }
         this.#loadAndCacheRules();
         this.#subscribeToEvents();
         this.#initialized = true;
-        this.#logger.info("SystemLogicInterpreter successfully initialized and subscribed to events.");
+        this.#logger.info('SystemLogicInterpreter successfully initialized and subscribed to events.');
     }
 
     /**
@@ -108,18 +109,18 @@ class SystemLogicInterpreter {
      * @private
      */
     #loadAndCacheRules() {
-        this.#logger.info("Loading and caching system rules by event type...");
+        this.#logger.info('Loading and caching system rules by event type...');
         this.#ruleCache.clear();
         const allRules = this.#dataRegistry.getAllSystemRules();
 
         if (!allRules || !Array.isArray(allRules)) {
-            this.#logger.error("Failed to load system rules from data registry. Result was not an array.");
+            this.#logger.error('Failed to load system rules from data registry. Result was not an array.');
             return;
         }
 
         for (const rule of allRules) {
             if (!rule || typeof rule.event_type !== 'string') {
-                this.#logger.warn("Skipping invalid rule definition (missing or invalid event_type):", rule);
+                this.#logger.warn('Skipping invalid rule definition (missing or invalid event_type):', rule);
                 continue;
             }
 
@@ -141,9 +142,9 @@ class SystemLogicInterpreter {
         const eventTypesToListen = Array.from(this.#ruleCache.keys());
         if (eventTypesToListen.length > 0) {
             this.#eventBus.subscribe('*', this.#handleEvent.bind(this));
-            this.#logger.info(`Subscribed to all events ('*') using the EventBus.`);
+            this.#logger.info('Subscribed to all events (\'*\') using the EventBus.');
         } else {
-            this.#logger.warn("No system rules loaded or cached. SystemLogicInterpreter will not actively listen for specific events.");
+            this.#logger.warn('No system rules loaded or cached. SystemLogicInterpreter will not actively listen for specific events.');
         }
     }
 
@@ -155,11 +156,11 @@ class SystemLogicInterpreter {
      */
     #handleEvent(event) {
         if (!event || typeof event.type !== 'string') {
-            this.#logger.warn("Received invalid event object. Ignoring.", { event });
+            this.#logger.warn('Received invalid event object. Ignoring.', {event});
             return;
         }
 
-        this.#logger.debug(`Received event: ${event.type}`, { payload: event.payload });
+        this.#logger.debug(`Received event: ${event.type}`, {payload: event.payload});
 
         const matchingRules = this.#ruleCache.get(event.type) || [];
 
@@ -221,7 +222,7 @@ class SystemLogicInterpreter {
             // conditionPassed remains true (default)
         }
 
-        return { conditionPassed, evaluationErrorOccurred };
+        return {conditionPassed, evaluationErrorOccurred};
     }
 
     /**
@@ -274,8 +275,8 @@ class SystemLogicInterpreter {
         } else {
             // AC4: Logging for skipping actions remains in #processRule, using the evaluation result
             const reason = evaluationResult.evaluationErrorOccurred
-                ? "due to error during condition evaluation"
-                : "due to condition evaluating to false";
+                ? 'due to error during condition evaluation'
+                : 'due to condition evaluating to false';
             this.#logger.info(
                 `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
             );
@@ -286,7 +287,8 @@ class SystemLogicInterpreter {
 
     /**
      * Executes a sequence of Operation objects using the OperationInterpreter.
-     * Handles errors during the *invocation* of the interpreter.
+     * Handles errors during the *invocation* of the interpreter or IF handling,
+     * logs them, and halts the sequence for the current rule.
      *
      * @param {Operation[]} actions - The array of Operation objects to execute.
      * @param {JsonLogicEvaluationContext} executionContext - The context for this execution sequence.
@@ -305,38 +307,39 @@ class SystemLogicInterpreter {
             const operation = actions[i];
             const operationIndex = i + 1; // 1-based index for logging
             const operationDesc = operation.comment ? `(Comment: ${operation.comment})` : '';
+            const opTypeString = operation?.type ?? 'MISSING_TYPE'; // Handle potentially missing type
 
-            // [Review Ticket 11] This debug log provides essential step-by-step diagnostic
-            // information for action sequences. Kept as-is after review, as its value for
-            // debugging complex rules outweighs verbosity concerns at the 'debug' level.
-            // Verbosity can be controlled via logger configuration.
-            this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] Processing Operation: ${operation?.type || 'MISSING_TYPE'} ${operationDesc}`);
+            // [Review Ticket 11] Kept as-is.
+            this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] Processing Operation: ${opTypeString} ${operationDesc}`);
 
             try {
                 if (!this.#operationInterpreter) {
-                    this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] OperationInterpreter not available! Skipping execution.`);
-                    continue;
+                    // This is a critical setup error, likely warrants halting.
+                    this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL: OperationInterpreter not available! Halting sequence for this rule.`);
+                    break; // Halt the sequence
                 }
+
                 // Handle IF internally first because it controls flow within this interpreter
-                if (operation?.type === 'IF') {
-                    try {
-                        this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
-                    } catch (ifError) {
-                        this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] Critical error during execution of IF operation's condition or nested actions. Halting this *IF* branch. Error:`, ifError);
-                        // Decide if IF error should halt the whole sequence or just the IF branch.
-                        // Current: Halting the IF branch, continuing parent sequence.
-                        // If the *entire sequence* should stop, we'd need to `return;` here.
-                        // Let's stick to halting the branch only unless requirements change.
-                        continue; // Skip to next action in the *parent* sequence
-                    }
+                if (opTypeString === 'IF') {
+                    // The #handleIfOperation now re-throws errors, so they are caught here.
+                    this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
                 } else {
                     // For all other operation types, delegate to OperationInterpreter
+                    // Assume OperationInterpreter.execute might throw errors (though its current design logs them internally)
+                    // If OperationInterpreter.execute *is* guaranteed not to throw, this outer catch is less critical for it.
                     this.#operationInterpreter.execute(operation, executionContext);
                 }
 
             } catch (invocationError) {
-                this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL error during execution of Operation ${operation?.type}. Continuing loop. Error:`, invocationError);
-                // Continue to the next action in the sequence
+                // --- TICKET-12.2: Catch Block Enhancement ---
+                // Log the critical error with context and the error object
+                this.#logger.error(
+                    `---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] CRITICAL error during execution of Operation ${opTypeString}. Halting sequence for this rule. Error:`,
+                    invocationError // Log the actual error object
+                );
+                // Halt the loop, preventing subsequent actions in this sequence
+                break;
+                // --- END TICKET-12.2 ---
             }
         }
 
@@ -358,13 +361,17 @@ class SystemLogicInterpreter {
         const parentIfDesc = `${parentScopeDesc} - IF Action ${operationIndex}`;
 
         const params = ifOperation.parameters;
-        if (!params || typeof params.condition !== 'object' || !Array.isArray(params.then_actions)) {
+        // Improved validation: Check params exist before accessing properties
+        if (!params || typeof params.condition !== 'object' || params.condition === null || !Array.isArray(params.then_actions)) {
+            // Log as error, but don't throw here - allow outer loop to potentially continue if desired (though currently it halts on throw)
             this.#logger.error(`---> [${parentIfDesc}] Invalid IF operation structure: Missing or invalid 'condition' or 'then_actions'. Skipping IF block execution.`);
-            return; // Don't throw, just skip this IF
+            // Consider if this *should* throw to halt the main sequence, per strict error handling.
+            // For now, logging and returning as per original structure. If this should halt, throw new Error(...).
+            return;
         }
         const condition = params.condition;
         const then_actions = params.then_actions;
-        const else_actions = params.else_actions; // Optional
+        const else_actions = params.else_actions; // Optional, validation below
 
         let conditionResult = false;
         try {
@@ -373,25 +380,42 @@ class SystemLogicInterpreter {
             this.#logger.info(`---> [${parentIfDesc}] IF condition evaluation result: ${conditionResult}`);
         } catch (evalError) {
             this.#logger.error(`---> [${parentIfDesc}] Error evaluating IF condition. Error:`, evalError);
-            throw evalError; // Re-throw to be caught by the caller (_executeActions)
+            // --- TICKET-12.2 Review: Re-throw evaluation error ---
+            // This error will be caught by the `catch` block in the calling `_executeActions` loop,
+            // which will then log it again (with more context) and halt the sequence via `break;`.
+            throw evalError;
         }
 
-        // Nested execution calls can also throw; they will propagate up.
-        // The try/catch in the calling _executeActions loop will catch errors from these nested calls.
-        if (conditionResult) {
-            this.#logger.debug(`---> [${parentIfDesc}] Condition TRUE. Executing THEN branch.`);
-            this._executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
-        } else {
-            if (else_actions && Array.isArray(else_actions) && else_actions.length > 0) {
-                this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE. Executing ELSE branch.`);
-                this._executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
+        try {
+            // --- TICKET-12.2 Review: Nested Execution Errors ---
+            // Errors thrown during the recursive call to _executeActions within either
+            // the THEN or ELSE branch will also propagate up to the `catch` block
+            // in the *calling* `_executeActions` loop (the one iterating through the main action list).
+            // That catch block handles the logging and halting.
+            if (conditionResult) {
+                this.#logger.debug(`---> [${parentIfDesc}] Condition TRUE. Executing THEN branch.`);
+                // Execute THEN actions. Errors here will propagate up.
+                this._executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
             } else {
-                this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE and no ELSE branch present or actions empty. Continuing after IF block.`);
+                // Validate else_actions only if the condition is false
+                if (else_actions && Array.isArray(else_actions) && else_actions.length > 0) {
+                    this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE. Executing ELSE branch.`);
+                    // Execute ELSE actions. Errors here will propagate up.
+                    this._executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
+                } else {
+                    this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE and no ELSE branch present or actions empty. Continuing after IF block.`);
+                }
             }
+        } catch (nestedExecutionError) {
+            // This catch block is technically redundant if the goal is just propagation.
+            // However, keeping it allows for potential specific logging *at this level* if needed later.
+            // For now, just re-throw to ensure it reaches the primary catch in _executeActions.
+            this.#logger.error(`---> [${parentIfDesc}] Error during nested action execution (THEN/ELSE). Error:`, nestedExecutionError);
+            throw nestedExecutionError; // Ensure propagation
         }
+
         this.#logger.debug(`---> [${parentIfDesc}] Finished processing IF block.`);
     }
-
 
 }
 
