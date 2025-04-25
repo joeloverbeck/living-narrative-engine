@@ -94,7 +94,7 @@ class InputHandler {
             console.log("InputHandler: Detected 'I' key press. Dispatching ui:toggle_inventory.");
             this.#eventBus.dispatch('ui:toggle_inventory', {});
         }
-        // Add other global key handlers here
+        // Add other global key operationHandlers here
     }
 
     /**

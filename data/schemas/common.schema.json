@@ -47,6 +47,31 @@
         }
       }
     },
+    "entityReference": {
+      "description": "Specifies an entity. Can be a keyword ('actor', 'target'), a direct non-empty entity ID string, or an object containing the entity ID.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Keyword ('actor', 'target') or direct entity ID string.",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entityId": {
+              "type": "string",
+              "description": "The specific entity ID.",
+              "minLength": 1,
+              "pattern": "^\\S(.*\\S)?$"
+            }
+          },
+          "required": ["entityId"],
+          "additionalProperties": false,
+          "description": "Reference via explicit entityId property."
+        }
+      ]
+    },
     "DescriptionComponent": {
       "type": "object",
       "additionalProperties": false,

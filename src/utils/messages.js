@@ -140,7 +140,7 @@ export const TARGET_MESSAGES = {
     // == Action-Specific Resolution Failure Overrides ==
     // ==================================================
     // These can be used in handleActionWithTargetResolution's `failureMessages` option
-    // or by action handlers directly.
+    // or by action operationHandlers directly.
 
     /**
      * Target not found in the current location specifically for attacking.

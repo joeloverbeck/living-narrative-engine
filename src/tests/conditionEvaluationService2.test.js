@@ -58,7 +58,7 @@ class MockNameComponent {
     }
 }
 
-// Add any other component classes needed by handlers being tested indirectly
+// Add any other component classes needed by operationHandlers being tested indirectly
 
 // Mock EntityManager
 const mockEntityManager = {
@@ -72,7 +72,7 @@ const mockEntityManager = {
     // Add other methods if needed by the service constructor or dataAccessor
 };
 
-// --- Mock the handlers module ---
+// --- Mock the operationHandlers module ---
 jest.mock('../conditions/handlers/index.js', () => ({
     // Define the mocks *inside* the factory function
     handlePlayerInLocationCondition: jest.fn(),
@@ -81,8 +81,8 @@ jest.mock('../conditions/handlers/index.js', () => ({
     handleTargetHasPropertyCondition: jest.fn(),
     handleConnectionStateIsCondition: jest.fn(),
     handleHealthBelowMaxCondition: jest.fn(),
-    // ... mock ALL handlers exported by index.js
-    // Add any other handlers from index.js that are used
+    // ... mock ALL operationHandlers exported by index.js
+    // Add any other operationHandlers from index.js that are used
     handleTargetDistanceCondition: jest.fn(),
     handleHasStatusEffectCondition: jest.fn(),
     handleAttributeCheckCondition: jest.fn(),
@@ -118,7 +118,7 @@ describe('ConditionEvaluationService', () => {
     };
 
     beforeEach(() => {
-        jest.clearAllMocks(); // Clears mocks including handlers
+        jest.clearAllMocks(); // Clears mocks including operationHandlers
         mockEntityManager.clearRegistry();
 
         // Register mock components used by dataAccessor/#getObjectName
@@ -169,7 +169,7 @@ describe('ConditionEvaluationService', () => {
             expect(() => new ConditionEvaluationService({})).toThrow('ConditionEvaluationService requires an EntityManager dependency.');
         });
 
-        it('should create an instance, register handlers (once), and log creation', () => {
+        it('should create an instance, register operationHandlers (once), and log creation', () => {
             // Service is created in beforeEach
             expect(conditionEvaluationService).toBeInstanceOf(ConditionEvaluationService);
             // Constructor logs registration and instance creation
@@ -191,7 +191,7 @@ describe('ConditionEvaluationService', () => {
         });
 
         it('should return success: true when all conditions pass', () => {
-            // Mock specific handlers for this test if needed, defaults are 'true'
+            // Mock specific operationHandlers for this test if needed, defaults are 'true'
             mockHandlers.handlePlayerInLocationCondition.mockReturnValue(true);
             mockHandlers.handleHealthBelowMaxCondition.mockReturnValue(true);
 
@@ -383,7 +383,7 @@ describe('ConditionEvaluationService', () => {
     });
 
     describe('evaluateConditions Error Handling', () => {
-        it('should handle errors thrown by handlers gracefully', () => {
+        it('should handle errors thrown by operationHandlers gracefully', () => {
             const error = new Error('Handler exploded!');
             mockHandlers.handlePlayerInLocationCondition.mockImplementation(() => {
                 throw error;

@@ -1,3 +1,20 @@
+// src/logic/defs.js
+
+// --- JSDoc Imports (Ensure paths are correct for your project) ---
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
+/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../core/services/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
+
+// --- Existing Type Definitions (Assuming these are up-to-date) ---
+/**
+ * @typedef {object} GameEvent
+ * @property {string} type - The unique identifier for the event type (e.g., "ENTITY_CREATED", "ACTION_PERFORMED:MOVE").
+ * @property {*} [payload] - Optional data associated with the event. Structure depends on the event type.
+ * @property {number} [timestamp] - Optional timestamp when the event occurred.
+ */
+
 /**
  * @typedef {object} JsonLogicEntityContext
  * Represents the data context for a relevant entity (like actor or target)
@@ -11,43 +28,58 @@
  * component data. Keys are Component Type IDs (e.g., "Health", "Position").
  * Accessing a key (e.g., `actor.components.Health`) dynamically retrieves the
  * raw component data object using `EntityManager.getComponentData(entityId, componentTypeId)`.
- * It yields the data object if the entity has that component, or null otherwise[cite: 467].
- * Deep access (e.g., `actor.components.Health.current`) will resolve correctly if the
- * component and property exist. If the component (`Health`) is missing, accessing `.current`
- * on the resulting null behaves as expected in JSON Logic (typically resolving to null).
- * If the component exists but the property (`current`) is missing from the data object,
- * accessing it yields `undefined`, which JSON Logic also handles predictably (typically resolving to null).
+ * It yields the data object if the entity has that component, or null otherwise.
  */
 
 /**
  * @typedef {object} JsonLogicEvaluationContext
  * The data object provided to the JSON Logic evaluation engine when processing
- * a SystemRule condition or an IF operation's condition[cite: 435]. This object aggregates
+ * a SystemRule condition or an IF operation's condition. This object aggregates
  * all necessary contextual information required for the condition logic.
  *
- * @property {object} event - Information about the triggering event[cite: 435].
+ * @property {object} event - Information about the triggering event.
  * @property {string} event.type - The namespaced ID of the triggering event (e.g., "ACTION_SUCCESS:MOVE").
- * @property {object} event.payload - The payload object carried by the triggering event. Contents vary by event type.
- *
- * @property {JsonLogicEntityContext | null} actor - Represents the primary entity contextually identified as the 'actor'
- * for this event (e.g., the entity performing an action). Its availability and identity depend
- * on the specific event type and the logic within the SystemLogicInterpreter that assembles this context.
- * Resolves to null if no actor is relevant or identified for the event[cite: 436, 468].
- *
- * @property {JsonLogicEntityContext | null} target - Represents the entity contextually identified as the 'target'
- * for this event (e.g., the entity being acted upon). Its availability and identity depend on the
- * specific event type. Resolves to null if no target is relevant or identified[cite: 436, 468].
- *
- * @property {object} context - Holds temporary variables generated during the execution
- * of the current SystemRule's action sequence[cite: 438, 502]. Primarily populated by the
- * 'result_variable' of QUERY_COMPONENT operations[cite: 466, 505]. Accessing a non-existent
- * variable (e.g., `context.myQuery`) resolves to undefined[cite: 467].
- *
- * @property {object} [globals] - Optional placeholder for future access to global game state
- * variables if needed (e.g., `globals.gameTime`, `globals.worldState.weather`)[cite: 439].
- * Structure TBD if implemented.
- *
- * @property {object} [entities] - Optional placeholder for future direct access to any entity's
- * component data by ID if needed, bypassing contextual `actor`/`target` references.
- * Structure TBD if implemented (e.g., `entities['npc-001'].components.Hostility.level`).
+ * @property {object | null} event.payload - The payload object carried by the triggering event. Contents vary by event type. Represented as null if payload was undefined.
+ * @property {JsonLogicEntityContext | null} actor - Represents the primary entity contextually identified as the 'actor' for this event.
+ * @property {JsonLogicEntityContext | null} target - Represents the entity contextually identified as the 'target' for this event.
+ * @property {object} context - Holds temporary variables generated during the execution of the current SystemRule's action sequence.
+ * @property {object} [globals] - Optional placeholder for future access to global game state variables.
+ * @property {object} [entities] - Optional placeholder for future direct access to any entity's component data by ID.
  */
+
+
+// --- REFINED Type Definitions for Operation Handling ---
+
+/**
+ * @typedef {object} OperationParams
+ * Represents the parameters provided to an Operation Handler. This is typically
+ * the `parameters` object defined within an `Operation` in a SystemRule's action
+ * list (conforming to `operation.schema.json`).
+ * The specific structure of this object is dependent on the `type` of the operation.
+ */
+
+/**
+ * @typedef {object} ExecutionContext
+ * Provides access to the current evaluation state and core system services
+ * needed by an Operation Handler during its execution. This context is assembled
+ * by the OperationInterpreter (or a similar orchestrator) before invoking the handler.
+ * It offers the necessary tools to interact with live game state and static definitions.
+ *
+ * @property {JsonLogicEvaluationContext} evaluationContext - The data context used for JSON Logic evaluations, containing information about the event, actor, target, and any temporary context variables set by preceding operations (like QUERY_COMPONENT).
+ * @property {EntityManager} entityManager - The central manager for accessing and manipulating live entity and component data. Essential for operations like MODIFY_COMPONENT.
+ * @property {ValidatedEventDispatcher} validatedEventDispatcher - The system's validated event dispatcher for emitting new events as a result of the operation's execution. Used by operations like DISPATCH_EVENT.
+ * @property {ILogger} logger - The logging service for recording messages, warnings, and errors occurring within the handler's logic. Used by operations like LOG.
+ * @property {GameDataRepository} [gameDataRepository] - (Optional but recommended) Provides abstracted access to static game data definitions (e.g., action definitions, item templates, entity definitions) stored in the data registry. Useful if an operation needs details about a definition referenced by an ID.
+ */
+
+/**
+ * @typedef {(params: OperationParams, context: ExecutionContext) => void | Promise<void>} OperationHandler
+ * Defines the contract for a function responsible for executing the logic
+ * associated with a specific operation type (e.g., 'MODIFY_COMPONENT', 'DISPATCH_EVENT', 'LOG').
+ * Handlers receive the specific parameters for the operation instance and the
+ * broader execution context containing core services and evaluation data.
+ * Handlers can be synchronous (`void`) or asynchronous (`Promise<void>`).
+ */
+
+// Ensure this file doesn't export anything by default if it's just for type definitions
+// export {};

@@ -14,7 +14,7 @@
  * @typedef {object} ConditionDataAccess
  * @property {(componentKey: string) => Function | null} getComponentClassByKey - Retrieves a registered component class constructor by its JSON key.
  * @property {(entity: Entity, componentKeyOrClass: string | Function) => Component | null} getComponentForEntity - Retrieves a component instance from an entity, using either the key or class.
- * // Add more methods like findEntityById if handlers require them later
+ * // Add more methods like findEntityById if operationHandlers require them later
  */
 
 /**
@@ -121,7 +121,7 @@ class ConditionEvaluationService {
     }
 
     /**
-     * Registers all known condition handlers into the static map.
+     * Registers all known condition operationHandlers into the static map.
      * @private
      */
     static #registerHandlers() {

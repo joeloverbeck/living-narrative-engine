@@ -33,7 +33,7 @@ class LockSystem {
     #eventBus;
     #entityManager;
 
-    // Store bound handlers to ensure correct removal during shutdown
+    // Store bound operationHandlers to ensure correct removal during shutdown
     _boundHandleUnlockAttempt;
     _boundHandleLockAttempt;
     _boundHandleForceUnlock;
@@ -55,7 +55,7 @@ class LockSystem {
         this.#eventBus = eventBus;
         this.#entityManager = entityManager;
 
-        // Bind event handlers to this instance for correct context and removal
+        // Bind event operationHandlers to this instance for correct context and removal
         this._boundHandleUnlockAttempt = this._handleUnlockAttempt.bind(this);
         this._boundHandleForceUnlock = this._handleForceUnlock.bind(this);
         this._boundHandleLockAttempt = this._handleLockAttempt.bind(this);
@@ -455,7 +455,7 @@ class LockSystem {
      * Unsubscribes the system from events during shutdown.
      */
     shutdown() {
-        // Use the stored bound handlers for correct unsubscription
+        // Use the stored bound operationHandlers for correct unsubscription
         this.#eventBus.unsubscribe("event:unlock_entity_attempt", this._boundHandleUnlockAttempt);
         this.#eventBus.unsubscribe("event:lock_entity_attempt", this._boundHandleLockAttempt);
         this.#eventBus.unsubscribe("event:unlock_entity_force", this._boundHandleForceUnlock);

@@ -160,7 +160,7 @@ const createMockActionContext = (actionId = 'test:action', playerEntity, current
             error: null,
         },
         gameDataRepository: mockGameDataRepository, // Pass if context requires it
-        dispatch: mockValidatedDispatcher.dispatchValidated, // Expose dispatch if needed in context handlers (unlikely for this test)
+        dispatch: mockValidatedDispatcher.dispatchValidated, // Expose dispatch if needed in context operationHandlers (unlikely for this test)
     };
     return baseContext;
 };

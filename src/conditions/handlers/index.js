@@ -1,4 +1,4 @@
-// src/conditions/handlers/index.js
+// src/conditions/operationHandlers/index.js
 
 export {handlePlayerInLocationCondition} from './handlePlayerInLocationCondition.js';
 export {handlePlayerStateCondition} from './handlePlayerStateCondition.js';
@@ -10,4 +10,4 @@ export {handleHasStatusEffectCondition} from './handleHasStatusEffectCondition.j
 export {handleAttributeCheckCondition} from './handleAttributeCheckCondition.js';
 export {handleConnectionStateIsCondition} from './handleConnectionStateIsCondition.js';
 
-// Add exports for any new condition handlers here
+// Add exports for any new condition operationHandlers here

@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleHasStatusEffectCondition.js
+// src/conditions/operationHandlers/handleHasStatusEffectCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

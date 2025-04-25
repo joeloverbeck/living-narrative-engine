@@ -29,7 +29,7 @@
 
 
 /**
- * The context object provided to action handlers. It contains the structured
+ * The context object provided to action operationHandlers. It contains the structured
  * command input (`parsedCommand`) and all necessary game state references
  * and dependencies (player, location, managers, event dispatcher) required
  * for the handler to perform its work. Handlers should rely *solely* on this context.
@@ -70,8 +70,8 @@
  * required changes to the core game state.
  *
  * @typedef {object} ActionResult
- * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For handlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
- * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., "event:display_message", "event:move_failed"). **NOTE:** Usage varies; some handlers still return messages. This might be refined later.
+ * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For operationHandlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
+ * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., "event:display_message", "event:move_failed"). **NOTE:** Usage varies; some operationHandlers still return messages. This might be refined later.
  */
 
 // +++ TICKET 6: Add ActionAttemptPseudoEvent Typedef +++

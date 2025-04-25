@@ -194,7 +194,7 @@ const createMockActionContext = (overrides = {}) => {
             error: null,
         },
         gameDataRepository: mockGameDataRepository,
-        dispatch: mockValidatedDispatcher.dispatchValidated, // Ensure dispatch function is available if needed by handlers (though likely not used directly now)
+        dispatch: mockValidatedDispatcher.dispatchValidated, // Ensure dispatch function is available if needed by operationHandlers (though likely not used directly now)
         ...overrides, // Apply specific overrides for the test case
     };
     return baseContext;

@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleHealthBelowMaxCondition.js
+// src/conditions/operationHandlers/handleHealthBelowMaxCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

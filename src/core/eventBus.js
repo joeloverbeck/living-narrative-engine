@@ -4,7 +4,7 @@
  * A simple Event Bus for decoupled communication between systems using a publish/subscribe pattern.
  */
 class EventBus {
-    #listeners = new Map();
+    #listeners = new Map(); // Stores eventName -> Set<listenerFn>
 
     subscribe(eventName, listener) {
         if (typeof eventName !== 'string' || !eventName) {
@@ -20,6 +20,7 @@ class EventBus {
             this.#listeners.set(eventName, new Set());
         }
         this.#listeners.get(eventName).add(listener);
+        // console.debug(`EventBus: Listener subscribed to "${eventName}"`); // Optional debug log
     }
 
     unsubscribe(eventName, listener) {
@@ -38,56 +39,70 @@ class EventBus {
             if (eventListeners.size === 0) {
                 this.#listeners.delete(eventName);
             }
+            // if (deleted) console.debug(`EventBus: Listener unsubscribed from "${eventName}"`); // Optional debug log
         }
     }
 
     /**
-     * Dispatches an event, ASYNCHRONOUSLY calling all subscribed listeners for that event name.
+     * Dispatches an event, ASYNCHRONOUSLY calling all subscribed listeners for that specific event name
+     * AND listeners subscribed to the wildcard ('*').
      * Waits for all listener promises to settle.
-     * @param {string} eventName - The name of the event to dispatch.
-     * @param {object} eventData - The data payload associated with the event.
-     * @returns {Promise<void>} A promise that resolves when all listeners have been processed.
+     * @param {string} eventName - The name of the event to dispatch (becomes event.type).
+     * @param {object} [eventPayload={}] - The data payload associated with the event (becomes event.payload). Defaults to empty object.
+     * @returns {Promise<void>} A promise that resolves when all relevant listeners have been processed.
      */
-    async dispatch(eventName, eventData) {
+    async dispatch(eventName, eventPayload = {}) { // Renamed second arg for clarity, added default
         if (typeof eventName !== 'string' || !eventName) {
             console.error("EventBus: Invalid event name provided for dispatch.", eventName);
             return;
         }
 
-        // console.log(`EventBus: Dispatching event "${eventName}"`, eventData);
-        if (this.#listeners.has(eventName)) {
-            const listenersToNotify = Array.from(this.#listeners.get(eventName));
+        // console.debug(`EventBus: Dispatching event "${eventName}"`, eventPayload);
 
-            await Promise.all(listenersToNotify.map(async (listener) => {
+        const specificListeners = this.#listeners.get(eventName) || new Set();
+        const wildcardListeners = this.#listeners.get('*') || new Set();
+        const listenersToNotify = new Set([...specificListeners, ...wildcardListeners]);
+
+        if (listenersToNotify.size > 0) {
+            // ***** FIX START *****
+            // Construct the full event object expected by listeners like #handleEvent
+            const eventObject = {
+                type: eventName,
+                payload: eventPayload
+            };
+            // ***** FIX END *****
+
+            const listenersArray = Array.from(listenersToNotify);
+            // console.debug(`EventBus: Notifying ${listenersArray.length} listener(s) for event "${eventName}"`);
+
+            await Promise.all(listenersArray.map(async (listener) => {
                 try {
-                    await listener(eventData);
+                    // ***** FIX START *****
+                    // Pass the constructed event object, not just the payload
+                    await listener(eventObject);
+                    // ***** FIX END *****
                 } catch (error) {
                     console.error(`EventBus: Error executing listener for event "${eventName}":`, error);
                 }
             }));
         } else {
-            // console.debug(`EventBus: No listeners registered for event "${eventName}".`);
+            // console.debug(`EventBus: No listeners registered for event "${eventName}" or wildcard '*'.`);
         }
     }
 
     /**
-     * Returns the number of listeners currently subscribed to a specific event.
+     * Returns the number of listeners currently subscribed to a specific event
+     * (excluding wildcard listeners unless eventName is '*').
      * @param {string} eventName - The name of the event.
      * @returns {number} The number of listeners for the given event name. Returns 0 if the event has no listeners or the event name is invalid.
      */
     listenerCount(eventName) {
         if (typeof eventName !== 'string' || !eventName) {
             console.error("EventBus: Invalid event name provided for listenerCount.", eventName);
-            return 0; // Return 0 for invalid event names
-        }
-
-        if (this.#listeners.has(eventName)) {
-            // Get the Set of listeners for the event and return its size
-            return this.#listeners.get(eventName).size;
-        } else {
-            // No listeners registered for this event name
             return 0;
         }
+
+        return this.#listeners.get(eventName)?.size || 0;
     }
 }
 

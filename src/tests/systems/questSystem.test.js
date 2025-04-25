@@ -31,7 +31,7 @@ const mockEventBus = {
     dispatch: jest.fn((eventName, payload) => {
         const handlers = mockEventBus._subscriptions.get(eventName);
         if (handlers) {
-            // Simulate event dispatch by calling handlers registered via subscribe
+            // Simulate event dispatch by calling operationHandlers registered via subscribe
             const payloadCopy = {...payload};
             [...handlers].forEach(handler => handler(payloadCopy));
         }

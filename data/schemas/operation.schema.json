@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
-  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events) or control the flow of execution (conditional logic). Based on the 'type' field, the 'parameters' object must conform to a specific structure. [cite: 369, 370, 371, 612, 613, 614, 615, 617]",
+  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events) or control the flow of execution (conditional logic). Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
   "type": "object",
   "$ref": "#/$defs/Operation",
   "$defs": {
@@ -12,7 +12,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "description": "Required. The identifier determining the type of operation and the expected structure of the 'parameters' object. [cite: 618]",
+          "description": "Required. The identifier determining the type of operation and the expected structure of the 'parameters' object.",
           "enum": [
             "QUERY_COMPONENT",
             "MODIFY_COMPONENT",
@@ -23,11 +23,11 @@
         },
         "comment": {
           "type": "string",
-          "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime. [cite: 372, 470, 471, 472, 474, 620]"
+          "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
         },
         "parameters": {
           "type": "object",
-          "description": "Required. Container for parameters specific to the operation 'type'. The structure is validated conditionally based on the 'type' value. [cite: 370, 371]"
+          "description": "Required. Container for parameters specific to the operation 'type'. The structure is validated conditionally based on the 'type' value."
         }
       },
       "required": [
@@ -35,7 +35,7 @@
         "parameters"
       ],
       "additionalProperties": false,
-      "$comment": "Using allOf with if/then for conditional validation based on 'type', as recommended for better error reporting and potential performance with Ajv. [cite: 394, 401, 404, 405, 406, 408, 412, 414, 415, 430, 525] Strict top-level properties enforced by additionalProperties: false. [cite: 381, 383, 458]",
+      "$comment": "Using allOf with if/then for conditional validation based on 'type', as recommended for better error reporting and potential performance with Ajv. Strict top-level properties enforced by additionalProperties: false.",
       "allOf": [
         {
           "if": {
@@ -159,6 +159,15 @@
           }
         },
         {
+          "type": "QUERY_COMPONENT",
+          "comment": "Get the Inventory component of a specific chest entity",
+          "parameters": {
+            "entity_ref": { "entityId": "chest:treasure_01" },
+            "component_type": "game:inventory",
+            "result_variable": "chestContents"
+          }
+        },
+        {
           "type": "MODIFY_COMPONENT",
           "parameters": {
             "entity_ref": "target",
@@ -174,8 +183,8 @@
         {
           "type": "DISPATCH_EVENT",
           "parameters": {
-            "event_type": "event:quest_updated",
-            "payload_mapping": {
+            "eventType": "event:quest_updated",
+            "payload": {
               "questId": {
                 "source": "event",
                 "path": "payload.questId"
@@ -208,8 +217,8 @@
               {
                 "type": "DISPATCH_EVENT",
                 "parameters": {
-                  "event_type": "event:entity_destroyed",
-                  "payload_mapping": {
+                  "eventType": "event:entity_destroyed",
+                  "payload": {
                     "entityId": {
                       "source": "entity",
                       "ref": "target",
@@ -241,19 +250,21 @@
     },
     "QueryComponentParameters": {
       "type": "object",
-      "description": "Parameters for the QUERY_COMPONENT operation. [cite: 623]",
+      "description": "Parameters for the QUERY_COMPONENT operation.",
       "properties": {
         "entity_ref": {
-          "type": "string",
-          "description": "Required. Specifies the entity whose component is being queried. Resolved by PayloadValueResolverService (e.g., 'actor', 'target', 'event.payload.entityId'). [cite: 625, 626]"
+         "$ref": "./common.schema.json#/definitions/entityReference",
+          "description": "Required. Specifies the entity whose component is being queried. Resolved by the handler (e.g., 'actor', 'target', 'specific-id', {entityId: 'specific-id'})."
         },
         "component_type": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the component type to retrieve (e.g., 'core:position', 'game:inventory'). [cite: 627]"
+          "description": "Required. The namespaced ID of the component type to retrieve (e.g., 'core:position', 'game:inventory')."
         },
         "result_variable": {
           "type": "string",
-          "description": "Required. The name of the variable within the rule's temporary execution context where the fetched component data (or null if not found) will be stored. [cite: 628, 665, 666, 667]"
+          "description": "Required. The name of the variable within the rule's execution context (`evaluationContext.context`) where the fetched component data (or undefined if not found) will be stored. Must be a non-empty string without leading/trailing whitespace.",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
         }
       },
       "required": [
@@ -262,23 +273,23 @@
         "result_variable"
       ],
       "additionalProperties": false,
-      "$comment": "Ensures no extraneous properties are added to query parameters. [cite: 460, 461]"
+      "$comment": "Ensures no extraneous properties are added to query parameters."
     },
     "ModifyComponentParameters": {
       "type": "object",
-      "description": "Parameters for the MODIFY_COMPONENT operation. [cite: 631]",
+      "description": "Parameters for the MODIFY_COMPONENT operation.",
       "properties": {
         "entity_ref": {
-          "type": "string",
-          "description": "Required. Specifies the target entity for the modification. Resolved by PayloadValueResolverService. [cite: 632]"
+          "$ref": "./common.schema.json#/definitions/entityReference",
+          "description": "Required. Specifies the target entity for the modification. Resolved by the handler."
         },
         "component_type": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the component type to add, remove, or update. [cite: 633]"
+          "description": "Required. The namespaced ID of the component type to add, remove, or update."
         },
         "operation": {
           "type": "string",
-          "description": "Required. Defines the modification type. [cite: 634]",
+          "description": "Required. Defines the modification type.",
           "enum": [
             "add",
             "remove",
@@ -287,7 +298,7 @@
         },
         "data": {
           "type": "object",
-          "description": "Component data. Required for 'add' and 'update' operations. Structure depends on the component_type. Values within can be literals or dynamically resolved via PayloadValueResolverService syntax. [cite: 637, 640, 641, 642, 643]",
+          "description": "Component data. Required for 'add' and 'update' operations. Structure depends on the component_type. Values within can be literals or dynamically resolved via PayloadValueResolverService syntax.",
           "additionalProperties": true,
           "$comment": "Allows any valid component data structure. Validation against the specific component's schema should happen at runtime by the interpreter or EntityManager."
         }
@@ -298,7 +309,7 @@
         "operation"
       ],
       "additionalProperties": false,
-      "$comment": "Ensures no extraneous properties are added to modify parameters. The 'data' field is conditionally required based on 'operation', handled by implementation logic rather than schema complexity here, but specified in descriptions. [cite: 637, 640]",
+      "$comment": "Ensures no extraneous properties are added to modify parameters. The 'data' field is conditionally required based on 'operation', handled by implementation logic rather than schema complexity here, but specified in descriptions.",
       "allOf": [
         {
           "if": {
@@ -332,57 +343,46 @@
     },
     "DispatchEventParameters": {
       "type": "object",
-      "description": "Parameters for the DISPATCH_EVENT operation. [cite: 644]",
+      "description": "Parameters for the DISPATCH_EVENT operation. Sends an event directly via the dispatcher using the specified payload.",
       "properties": {
-        "event_type": {
+        "eventType": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the event to dispatch onto the EventBus (e.g., 'event:damage_applied', 'ui:message_sent'). [cite: 646]"
+          "description": "Required. The namespaced ID of the event to dispatch (e.g., 'event:damage_applied', 'ui:message_sent')."
         },
-        "payload_mapping": {
+        "payload": {
           "type": "object",
-          "description": "Optional. Defines the payload for the dispatched event. Keys are payload field names. Values use PayloadValueResolverService syntax to source data from context (event, entities, query results, literals). If omitted, an empty payload is dispatched. [cite: 647, 648, 649]",
-          "additionalProperties": {
-            "type": [
-              "object",
-              "string",
-              "number",
-              "boolean",
-              "array",
-              "null"
-            ],
-            "$comment": "Allows resolved literal values or nested objects for resolver syntax."
-          }
+          "description": "Optional. The data payload object for the event. Defaults to {} if omitted.",
+          "default": {}
         }
       },
       "required": [
-        "event_type"
+        "eventType"
       ],
-      "additionalProperties": false,
-      "$comment": "Ensures no extraneous properties are added to dispatch parameters."
+      "additionalProperties": false
     },
     "IfParameters": {
       "type": "object",
-      "description": "Parameters for the IF operation, enabling conditional execution. [cite: 650]",
+      "description": "Parameters for the IF operation, enabling conditional execution.",
       "properties": {
         "condition": {
           "$ref": "./json-logic.schema.json#",
-          "description": "Required. A JSON Logic object defining the condition to evaluate. Can access the same context as rule conditions (event, entities, query results). [cite: 651, 652]"
+          "description": "Required. A JSON Logic object defining the condition to evaluate. Can access the same context as rule conditions (event, entities, query results)."
         },
         "then_actions": {
           "type": "array",
-          "description": "Required. An array of Operation objects to execute sequentially if the condition is true. [cite: 653]",
+          "description": "Required. An array of Operation objects to execute sequentially if the condition is true.",
           "items": {
             "$ref": "#/$defs/Operation",
-            "$comment": "Recursive reference to the Operation schema. [cite: 435, 436, 438, 440, 441, 512]"
+            "$comment": "Recursive reference to the Operation schema."
           },
           "minItems": 1
         },
         "else_actions": {
           "type": "array",
-          "description": "Optional. An array of Operation objects to execute sequentially if the condition is false. [cite: 654]",
+          "description": "Optional. An array of Operation objects to execute sequentially if the condition is false.",
           "items": {
             "$ref": "#/$defs/Operation",
-            "$comment": "Recursive reference to the Operation schema. [cite: 435, 436, 438, 440, 441, 512]"
+            "$comment": "Recursive reference to the Operation schema."
           },
           "default": []
         }
@@ -396,15 +396,16 @@
     },
     "LogParameters": {
       "type": "object",
-      "description": "Parameters for the LOG operation, used for debugging. [cite: 656]",
+      "description": "Parameters for the LOG operation, used for debugging.",
       "properties": {
         "message": {
           "type": "string",
-          "description": "Required. The message template to log. Can contain placeholders (e.g., '{actor.id}', '{context.variableName}') resolved via PayloadValueResolverService. [cite: 658, 659]"
+          "description": "Required. The message template to log. Can contain placeholders (e.g., '{actor.id}', '{context.variableName}') resolved via PayloadValueResolverService.",
+          "minLength": 1
         },
         "level": {
           "type": "string",
-          "description": "Optional. Specifies the logging level. [cite: 660]",
+          "description": "Optional. Specifies the logging level.",
           "enum": [
             "debug",
             "info",

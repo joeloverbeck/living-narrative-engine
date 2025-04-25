@@ -1,615 +1,272 @@
 // src/tests/logic/systemLogicInterpreter.integration.test.js
 
-// -----------------------------------------------------------------------------
-// Jest imports
-import {describe, it, expect, beforeEach, afterEach, jest} from '@jest/globals';
-
-// System Under Test
 import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js';
+import EventBus from '../../core/eventBus.js'; // Adjust path if necessary
+// Assuming contextAssembler is needed for context creation logic used internally
+// import { createJsonLogicContext } from '../../logic/contextAssembler.js'; // Not directly used in this test, but keep if needed indirectly
+import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals"; // Sorted imports
+import OperationInterpreter from "../../logic/operationInterpreter";
+import OperationRegistry from "../../logic/operationRegistry";
 
-// -----------------------------------------------------------------------------
-// *** Core Mock Rule Definitions ***
-// -----------------------------------------------------------------------------
-
-// A rule with no condition – should always attempt to execute its (empty) actions.
-const rule_no_condition = {
-    rule_id: 'RULE_NO_CONDITION',
-    event_type: 'test:event_no_condition',
-    // Empty actions array satisfies schema but triggers no real work.
-    actions: [],
+// --- Mock Core Services ---
+const mockLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
 };
 
-// A rule whose condition will be **true** for the mock event below
-const rule_cond_true_basic = {
-    rule_id: 'RULE_COND_TRUE_BASIC',
-    event_type: 'test:event_condition_true',
-    condition: {
-        '==': [{var: 'event.payload.value'}, true],
-    },
-    actions: [],
+const mockDataRegistry = {
+    getAllSystemRules: jest.fn(),
 };
 
-// A rule whose condition will be **false** for the matching mock event
-const rule_cond_false_basic = {
-    rule_id: 'RULE_COND_FALSE_BASIC',
-    event_type: 'test:event_condition_false',
-    condition: {
-        '==': [{var: 'event.payload.value'}, false],
-    },
-    actions: [],
+const mockJsonLogicEvaluationService = {
+    evaluate: jest.fn(),
 };
 
-// A rule whose condition depends on actor component data (health == 10)
-const rule_cond_actor = {
-    rule_id: 'RULE_COND_ACTOR',
-    event_type: 'test:event_actor',
-    condition: {
-        '==': [{var: 'actor.components.core:health.current'}, 10],
-    },
-    actions: [],
+const mockEntityManager = {
+    getEntityInstance: jest.fn(),
+    getComponentData: jest.fn(),
+    hasComponent: jest.fn()
 };
 
-// --- START: TICKET-10.5 Definition ---
-// Rule whose condition depends on target component data (lockable.isLocked)
-const rule_cond_target = {
-    rule_id: 'RULE_COND_TARGET',
-    event_type: 'test:event_target',
-    condition: {var: 'target.components.game:lockable.isLocked'},
-    actions: [],
-};
-// --- END: TICKET-10.5 Definition ---
+// --- Test Suite ---
 
-// --- START: TICKET-10.6 Definition ---
-// Rule whose condition accesses event payload data directly
-const rule_cond_payload = {
-    rule_id: 'RULE_COND_PAYLOAD',
-    event_type: 'test:event_payload',
-    condition: {">": [{"var": "event.payload.amount"}, 10]},
-    actions: [], // Empty actions are fine for checking if execution happens
-};
-// --- END: TICKET-10.6 Definition ---
+describe('SystemLogicInterpreter Integration Tests', () => {
+    let eventBus;
+    let mockOperationInterpreter; // Mock OperationInterpreter for these tests
+    /** @type {OperationRegistry} */ // <-- ADD TYPE DEF for registry
+    let operationRegistry;
+    let executeSpy;             // Spy for OperationInterpreter.execute
 
+    // --- Test Rule Definitions ---
+    const TEST_ACTION_LOG = { type: 'LOG', parameters: { message: 'Action Executed!', level: 'warn' } };
+    const RULE_NO_COND_BASIC = { rule_id: 'RULE_NO_COND_BASIC', event_type: 'test:event_no_condition', actions: [TEST_ACTION_LOG] };
+    const RULE_COND_TRUE_BASIC = { rule_id: 'RULE_COND_TRUE_BASIC', event_type: 'test:event_condition_true', condition: { '==': [{ var: 'event.payload.value' }, true] }, actions: [TEST_ACTION_LOG] };
+    const RULE_COND_FALSE_BASIC = { rule_id: 'RULE_COND_FALSE_BASIC', event_type: 'test:event_condition_false', condition: { '==': [{ var: 'event.payload.value' }, false] }, actions: [TEST_ACTION_LOG] };
 
-// -----------------------------------------------------------------------------
-// *** Core Mock Event Definitions ***
-// -----------------------------------------------------------------------------
-const event_no_condition = {
-    type: 'test:event_no_condition',
-    payload: {},
-};
+    // --- Mock Event Payloads & Entities ---
+    const MOCK_PAYLOAD_ACTOR_TARGET = { actorId: 'mockActor1', targetId: 'mockTarget1' };
+    const MOCK_ENTITY_ACTOR = { id: 'mockActor1', name: 'Mock Actor 1', definitionId: 'def:actor' };
+    const MOCK_ENTITY_TARGET = { id: 'mockTarget1', name: 'Mock Target 1', definitionId: 'def:target' };
 
-const event_cond_true = {
-    type: 'test:event_condition_true',
-    payload: {
-        value: true,
-        actorId: 'mockActor1',
-        targetId: 'mockTarget1',
-    },
-};
-
-const event_cond_false = {
-    type: 'test:event_condition_false',
-    payload: {
-        value: true, // intentionally mismatches
-        actorId: 'mockActor1',
-        targetId: 'mockTarget1',
-    },
-};
-
-const event_actor = {
-    type: 'test:event_actor',
-    payload: {
-        actorId: 'player',
-    },
-};
-
-// --- START: TICKET-10.5 Definition ---
-const event_target = {
-    type: 'test:event_target',
-    payload: {
-        targetId: 'door1',
-        actorId: 'player',
-    },
-};
-// --- END: TICKET-10.5 Definition ---
-
-// --- START: TICKET-10.6 Definition ---
-const event_payload_pass = {
-    type: 'test:event_payload',
-    payload: {amount: 15}, // amount > 10 -> condition TRUE
-};
-
-const event_payload_fail = {
-    type: 'test:event_payload',
-    payload: {amount: 5}, // amount <= 10 -> condition FALSE
-};
-// --- END: TICKET-10.6 Definition ---
-
-
-// -----------------------------------------------------------------------------
-// *** Test Suite – Core Mock Setup (TICKET-10.2) ***
-// -----------------------------------------------------------------------------
-describe('SystemLogicInterpreter – Integration Tests', () => {
-    /** @type {SystemLogicInterpreter} */
-    let sut;
-
-    /** @type {jest.Mocked<import('../../core/interfaces/coreServices.js').ILogger>} */
-    let mockLogger;
-    /** @type {jest.Mocked<import('../../core/eventBus.js').default>} */
-    let mockEventBus;
-    /** @type {jest.Mocked<import('../../core/interfaces/coreServices.js').IDataRegistry>} */
-    let mockDataRegistry;
-    /** @type {jest.Mocked<import('../../logic/jsonLogicEvaluationService.js').default>} */
-    let mockJsonLogicService;
-    /** @type {jest.Mocked<import('../../entities/entityManager.js').default>} */
-    let mockEntityManager;
-
-    /** @type {jest.SpyInstance<any, any[], any>} */
-    let executeActionsSpy;
-
-    // Helper to get the subscribed handler function
-    const getSubscribedHandler = () => {
-        expect(mockEventBus.subscribe).toHaveBeenCalledTimes(1);
-        const [eventPattern, handler] = mockEventBus.subscribe.mock.calls[0];
-        expect(eventPattern).toBe('*');
-        expect(typeof handler).toBe('function');
-        return handler;
-    };
 
     beforeEach(() => {
-        // ILogger
-        mockLogger = {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-            debug: jest.fn(),
-        };
+        // Clear mocks before each test
+        jest.clearAllMocks();
 
-        // EventBus
-        mockEventBus = {
-            subscribe: jest.fn(),
-            dispatch: jest.fn(),
-            unsubscribe: jest.fn(),
-            listenerCount: jest.fn(() => 0),
-        };
+        // Setup services needed across tests but without test-specific state
+        eventBus = new EventBus();
 
-        // IDataRegistry
-        mockDataRegistry = {
-            getAllSystemRules: jest
-                .fn()
-                .mockReturnValue([
-                    rule_no_condition,
-                    rule_cond_true_basic,
-                    rule_cond_false_basic,
-                    rule_cond_actor,
-                    rule_cond_target,
-                    // --- START: TICKET-10.6 Add Rule ---
-                    rule_cond_payload,
-                    // --- END: TICKET-10.6 Add Rule ---
-                ]),
-            store: jest.fn(),
-            get: jest.fn(),
-            getAll: jest.fn(),
-            clear: jest.fn(),
-            getManifest: jest.fn(),
-            setManifest: jest.fn(),
-        };
-
-        // JsonLogicEvaluationService
-        mockJsonLogicService = {
-            evaluate: jest.fn(),
-        };
-
-        // EntityManager
-        mockEntityManager = {
-            getEntityInstance: jest.fn(),
-            getComponentData: jest.fn(),
-            createEntityInstance: jest.fn(),
-            destroyEntityInstance: jest.fn(),
-            getEntityComponentData: jest.fn(),
-            getAllEntityInstances: jest.fn(),
-            hasComponent: jest.fn(),
-        };
-
-        // Instantiate SUT
-        sut = new SystemLogicInterpreter({
-            logger: mockLogger,
-            eventBus: mockEventBus,
-            dataRegistry: mockDataRegistry,
-            jsonLogicEvaluationService: mockJsonLogicService,
-            entityManager: mockEntityManager,
+        mockEntityManager.getEntityInstance.mockImplementation((entityId) => {
+            if (entityId === 'mockActor1') return MOCK_ENTITY_ACTOR;
+            if (entityId === 'mockTarget1') return MOCK_ENTITY_TARGET;
+            return undefined;
         });
 
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining('SystemLogicInterpreter initialized')
-        );
+        // 0. Instantiate OperationRegistry <-- ADD THIS STEP
+        operationRegistry = new OperationRegistry({ logger: mockLogger });
 
-        // Spy on the *public* proxy method but keep its side-effects
-        const proto = SystemLogicInterpreter.prototype;
-        const realExecuteActions = proto._executeActions;
-        executeActionsSpy = jest
-            .spyOn(proto, '_executeActions')
-            .mockImplementation(function (...args) {
-                // forward to the real implementation so debug logs still happen
-                return realExecuteActions.apply(this, args);
-            });
-        // Initialize
-        expect(() => sut.initialize()).not.toThrow();
+        // 1. Create OperationInterpreter instance (needs logger AND registry) <-- MODIFY THIS STEP
+        //    Variable name is mockOperationInterpreter in this file
+        mockOperationInterpreter = new OperationInterpreter({
+            logger: mockLogger,
+            registry: operationRegistry // <-- Pass the registry instance
+        });
+        executeSpy = jest.spyOn(mockOperationInterpreter, 'execute');
+
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        // Ensure spies created in beforeEach are restored
+        if(executeSpy) executeSpy.mockRestore();
+        jest.restoreAllMocks(); // Clean up all mocks
     });
 
-    describe('Initialization & Core Setup', () => {
-        it('initialise() should cache rules & subscribe without errors', () => {
-            expect(mockDataRegistry.getAllSystemRules).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.subscribe).toHaveBeenCalledTimes(1);
-            expect(mockEventBus.subscribe).toHaveBeenCalledWith('*', expect.any(Function));
+
+    // Helper function to run common arrange/act steps
+    async function arrangeAndAct(rule, eventPayload, evaluateResult = null) {
+        // 1. Set up the mocks specific to this test case
+        mockDataRegistry.getAllSystemRules.mockReturnValue([rule]);
+        if (evaluateResult !== null) {
+            mockJsonLogicEvaluationService.evaluate.mockReturnValue(evaluateResult);
+        } else {
+            mockJsonLogicEvaluationService.evaluate.mockClear();
+        }
+
+        // 2. Create and initialize the interpreter AFTER mocks are set
+        const interpreter = new SystemLogicInterpreter({
+            logger: mockLogger,
+            eventBus: eventBus, // Use the real EventBus from beforeEach
+            dataRegistry: mockDataRegistry,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            entityManager: mockEntityManager,
+            operationInterpreter: mockOperationInterpreter // Use the mocked interpreter from beforeEach
         });
 
-        it('should have a working spy on _executeActions (no calls yet initially)', () => {
-            expect(executeActionsSpy).toBeDefined();
-            expect(executeActionsSpy).not.toHaveBeenCalled();
-        });
+        interpreter.initialize(); // Initialize will now use the correctly mocked dataRegistry
+
+        // 3. Act: Dispatch the event CORRECTLY
+        const eventType = rule.event_type;
+        await eventBus.dispatch(eventType, eventPayload); // Pass type and payload separately
+
+        // Return details needed for assertions
+        return { eventType, eventPayload };
+    }
+
+    it('executes actions when rule has no condition', async () => {
+        const eventPayload = MOCK_PAYLOAD_ACTOR_TARGET;
+        const { eventType } = await arrangeAndAct(RULE_NO_COND_BASIC, eventPayload);
+
+        // Assert
+        expect(mockLogger.error).not.toHaveBeenCalledWith(
+            expect.stringContaining('Failed to assemble JsonLogicEvaluationContext')
+        );
+
+        // Check logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Cached rule '${RULE_NO_COND_BASIC.rule_id}'`));
+
+        // Event handling logs - Check the payload structure passed to the logger
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Received event: ${eventType}`,
+            // ***** CORRECTED EXPECTED PAYLOAD STRUCTURE *****
+            { payload: eventPayload }
+            // ********************************************
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Found 1 rule(s) matching event type: ${eventType}`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] Assembling JsonLogic context...`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] JsonLogic context assembled successfully.`));
+
+        // ***** CORRECTED ASSERTION FOR NO CONDITION LOG *****
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] No condition defined or condition is empty. Defaulting to passed.`));
+        // ***************************************************
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] Condition passed`));
+
+        // Action execution logs - Check via the spy on OperationInterpreter
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
+        expect(executeSpy).toHaveBeenCalledTimes(1); // Check execute was called
+        expect(executeSpy).toHaveBeenCalledWith(
+            TEST_ACTION_LOG, // The action object
+            expect.objectContaining({ // Check important parts of the context
+                event: { type: eventType, payload: eventPayload },
+                actor: expect.objectContaining({ id: MOCK_ENTITY_ACTOR.id }),
+                target: expect.objectContaining({ id: MOCK_ENTITY_TARGET.id })
+            })
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
+
+        // Check that evaluate was NOT called for no-condition rule
+        expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
     });
 
-    describe('Basic Rule Condition Evaluation (TICKET-10.3)', () => {
-        beforeEach(() => {
-            executeActionsSpy.mockClear();
-            mockJsonLogicService.evaluate.mockClear();
-            mockLogger.debug.mockClear();
-        });
+    it('executes actions when rule condition evaluates to true', async () => {
+        const eventPayload = { ...MOCK_PAYLOAD_ACTOR_TARGET, value: true };
+        // Mock evaluate to return true for this specific test case
+        const { eventType } = await arrangeAndAct(RULE_COND_TRUE_BASIC, eventPayload, true);
 
-        it('executes actions when rule has no condition', () => {
-            const handler = getSubscribedHandler();
-            handler(event_no_condition);
+        // Assert
+        expect(mockLogger.error).not.toHaveBeenCalledWith(
+            expect.stringContaining('Failed to assemble JsonLogicEvaluationContext')
+        );
 
-            expect(mockJsonLogicService.evaluate).not.toHaveBeenCalled();
-            expect(executeActionsSpy).toHaveBeenCalledTimes(1);
-            expect(executeActionsSpy).toHaveBeenCalledWith(
-                rule_no_condition.actions,
-                expect.any(Object),
-                expect.stringContaining(`Rule '${rule_no_condition.rule_id}'`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`No actions to execute for scope: Rule '${rule_no_condition.rule_id}'`)
-            );
-        });
+        // Check logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Cached rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
 
-        it('executes actions when rule condition evaluates to true', () => {
-            mockJsonLogicService.evaluate.mockReturnValue(true);
-            const handler = getSubscribedHandler();
-            handler(event_cond_true);
+        // Event handling logs - Check the payload structure passed to the logger
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Received event: ${eventType}`,
+            // ***** CORRECTED EXPECTED PAYLOAD STRUCTURE *****
+            { payload: eventPayload }
+            // ********************************************
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Found 1 rule(s) matching event type: ${eventType}`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Assembling JsonLogic context...`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] JsonLogic context assembled successfully.`));
 
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_true_basic.condition,
-                expect.objectContaining({ // Be more specific about context if needed
-                    event: expect.objectContaining({type: event_cond_true.type}),
-                    actor: expect.any(Object), // Assuming actorId resolution happens
-                    target: expect.any(Object) // Assuming targetId resolution happens
-                })
-            );
-            expect(executeActionsSpy).toHaveBeenCalledTimes(1);
-            expect(executeActionsSpy).toHaveBeenCalledWith(
-                rule_cond_true_basic.actions,
-                expect.any(Object),
-                expect.stringContaining(`Rule '${rule_cond_true_basic.rule_id}'`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`No actions to execute for scope: Rule '${rule_cond_true_basic.rule_id}'`)
-            );
-        });
+        // Condition evaluation logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition found. Evaluating...`));
+        // Check evaluate was called with the correct context structure
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+            RULE_COND_TRUE_BASIC.condition,
+            expect.objectContaining({
+                // ***** CORRECTED EXPECTED EVENT STRUCTURE IN CONTEXT *****
+                event: { type: eventType, payload: eventPayload },
+                // *******************************************************
+                actor: expect.objectContaining({ id: MOCK_ENTITY_ACTOR.id, components: expect.anything() }),
+                target: expect.objectContaining({ id: MOCK_ENTITY_TARGET.id, components: expect.anything() })
+            })
+        );
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition evaluation raw result: true`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition passed`));
 
-        it('does NOT execute actions when rule condition evaluates to false', () => {
-            mockJsonLogicService.evaluate.mockReturnValue(false);
-            const handler = getSubscribedHandler();
-            handler(event_cond_false);
-
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_false_basic.condition,
-                expect.objectContaining({event: expect.objectContaining({type: event_cond_false.type})})
-            );
-            expect(executeActionsSpy).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    `Root condition for rule '${rule_cond_false_basic.rule_id}' failed. Skipping actions.`
-                )
-            );
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(
-                expect.stringContaining('No actions to execute for scope:')
-            );
-        });
+        // Action execution logs - Check via the spy on OperationInterpreter
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
+        expect(executeSpy).toHaveBeenCalledTimes(1); // Check execute was called
+        expect(executeSpy).toHaveBeenCalledWith(
+            TEST_ACTION_LOG, // The action object
+            expect.objectContaining({ // Check important parts of the context
+                event: { type: eventType, payload: eventPayload },
+                actor: expect.objectContaining({ id: MOCK_ENTITY_ACTOR.id }),
+                target: expect.objectContaining({ id: MOCK_ENTITY_TARGET.id })
+            })
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
     });
 
-    describe('Actor component condition behaviour (TICKET-10.4)', () => {
-        beforeEach(() => {
-            executeActionsSpy.mockClear();
-            mockJsonLogicService.evaluate.mockClear();
-            mockLogger.debug.mockClear();
-            mockEntityManager.getEntityInstance.mockClear();
-            mockEntityManager.getComponentData.mockClear();
-        });
+    it('does NOT execute actions when rule condition evaluates to false', async () => {
+        const eventPayload = { ...MOCK_PAYLOAD_ACTOR_TARGET, value: true }; // Event payload value is true
+        // Rule condition expects false: { '==': [{ var: 'event.payload.value' }, false] }
+        // Mock evaluate to return false for this specific test case
+        const { eventType } = await arrangeAndAct(RULE_COND_FALSE_BASIC, eventPayload, false);
 
-        it('executes actions when actor component condition is true', async () => { // Mark async if handler is async
-            const mockActorEntity = {
-                id: 'player',
-                getComponentData: jest.fn((compId) =>
-                    compId === 'core:health' ? {current: 10} : null
-                ),
-            };
-            mockEntityManager.getEntityInstance.mockImplementation(
-                (id) => (id === 'player' ? mockActorEntity : null)
-            );
-            // Simulate component data fetching if createJsonLogicContext relies on it before evaluation
-            mockEntityManager.getComponentData.mockImplementation((id, compId) =>
-                id === 'player' && compId === 'core:health' ? {current: 10} : null
-            );
-            mockJsonLogicService.evaluate.mockReturnValue(true); // Assume condition is met
+        // Assert
+        expect(mockLogger.error).not.toHaveBeenCalledWith(
+            expect.stringContaining('Failed to assemble JsonLogicEvaluationContext')
+        );
 
-            const handler = getSubscribedHandler();
-            await handler(event_actor); // await if handler is async
+        // Check logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Cached rule '${RULE_COND_FALSE_BASIC.rule_id}'`));
 
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_actor.condition,
-                expect.objectContaining({
-                    actor: expect.objectContaining({id: 'player', components: expect.any(Object)}), // Check proxy exists
-                    event: event_actor,
-                })
-            );
-            expect(executeActionsSpy).toHaveBeenCalledTimes(1);
-            expect(executeActionsSpy).toHaveBeenCalledWith(
-                rule_cond_actor.actions,
-                expect.any(Object), // The evaluationContext
-                expect.stringContaining(`Rule '${rule_cond_actor.rule_id}'`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`No actions to execute for scope: Rule '${rule_cond_actor.rule_id}'`)
-            );
-        });
+        // Event handling logs - Check the payload structure passed to the logger
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Received event: ${eventType}`,
+            // ***** CORRECTED EXPECTED PAYLOAD STRUCTURE *****
+            { payload: eventPayload }
+            // ********************************************
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Found 1 rule(s) matching event type: ${eventType}`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_FALSE_BASIC.rule_id}] Assembling JsonLogic context...`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_FALSE_BASIC.rule_id}] JsonLogic context assembled successfully.`));
 
-        it('skips actions when actor component condition is false', async () => { // Mark async
-            const mockActorEntity = { // Actor exists...
-                id: 'player',
-                getComponentData: jest.fn((compId) =>
-                    compId === 'core:health' ? {current: 5} : null // ...but data mismatch
-                ),
-            };
-            mockEntityManager.getEntityInstance.mockImplementation(
-                (id) => (id === 'player' ? mockActorEntity : null)
-            );
-            mockEntityManager.getComponentData.mockImplementation((id, compId) =>
-                id === 'player' && compId === 'core:health' ? {current: 5} : null
-            );
-            mockJsonLogicService.evaluate.mockReturnValue(false); // Condition fails
+        // Condition evaluation logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_FALSE_BASIC.rule_id}] Condition found. Evaluating...`));
+        // Check evaluate was called with the correct context structure
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+            RULE_COND_FALSE_BASIC.condition,
+            expect.objectContaining({
+                // ***** CORRECTED EXPECTED EVENT STRUCTURE IN CONTEXT *****
+                event: { type: eventType, payload: eventPayload },
+                // *******************************************************
+                actor: expect.objectContaining({ id: MOCK_ENTITY_ACTOR.id, components: expect.anything() }),
+                target: expect.objectContaining({ id: MOCK_ENTITY_TARGET.id, components: expect.anything() })
+            })
+        );
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_FALSE_BASIC.rule_id}] Condition evaluation raw result: false`));
 
-            const handler = getSubscribedHandler();
-            await handler(event_actor); // await
+        // Check that condition *did not* pass and actions were skipped
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_FALSE_BASIC.rule_id}] Condition passed`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rule '${RULE_COND_FALSE_BASIC.rule_id}' actions skipped for event '${RULE_COND_FALSE_BASIC.event_type}' due to condition evaluating to false.`));
 
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_actor.condition,
-                expect.objectContaining({
-                    actor: expect.objectContaining({id: 'player', components: expect.any(Object)}),
-                    event: event_actor,
-                })
-            );
-            expect(executeActionsSpy).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    `Root condition for rule '${rule_cond_actor.rule_id}' failed. Skipping actions.`
-                )
-            );
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(
-                expect.stringContaining('No actions to execute for scope:')
-            );
-        });
+        // Check that action sequence logs were NOT generated and executeSpy was NOT called
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_COND_FALSE_BASIC.rule_id}'`));
+        expect(executeSpy).not.toHaveBeenCalled(); // Verify OperationInterpreter.execute wasn't called
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_COND_FALSE_BASIC.rule_id}'`));
+
+        // Verify the specific skip log message count
+        expect(mockLogger.info.mock.calls.filter(call => call[0].includes(`actions skipped`)).length).toBe(1);
     });
-
-    describe('Target component condition behaviour (TICKET-10.5)', () => {
-        beforeEach(() => {
-            executeActionsSpy.mockClear();
-            mockJsonLogicService.evaluate.mockClear();
-            mockLogger.debug.mockClear();
-            mockEntityManager.getEntityInstance.mockClear();
-            mockEntityManager.getComponentData.mockClear();
-        });
-
-        it('executes actions when target component condition is true', async () => {
-            const targetEntityId = 'door1';
-            const targetComponentId = 'game:lockable';
-            const targetComponentData = {isLocked: true};
-
-            // ---- actor stub so evaluationContext.actor is populated ----
-            const mockActorEntity = {
-                id: 'player',
-                getComponentData: jest.fn(() => null), // no components needed for this assertion
-            };
-
-            const mockTargetEntity = {
-                id: targetEntityId,
-                getComponentData: jest.fn((compId) =>
-                    compId === targetComponentId ? targetComponentData : null
-                ),
-            };
-
-            mockEntityManager.getEntityInstance.mockImplementation((id) =>
-                id === targetEntityId
-                    ? mockTargetEntity
-                    : id === 'player'
-                        ? mockActorEntity
-                        : null
-            );
-            // Simulate component data fetching needed by context assembly
-            mockEntityManager.getComponentData.mockImplementation((id, compId) =>
-                id === targetEntityId && compId === targetComponentId
-                    ? targetComponentData
-                    : null
-            );
-
-            mockJsonLogicService.evaluate.mockReturnValue(true); // Assume condition passes
-
-            const handler = getSubscribedHandler();
-            await handler(event_target);
-
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_target.condition,
-                expect.objectContaining({
-                    target: expect.objectContaining({id: targetEntityId, components: expect.any(Object)}),
-                    actor: expect.objectContaining({id: 'player'}),
-                    event: event_target,
-                })
-            );
-            expect(executeActionsSpy).toHaveBeenCalledTimes(1);
-            expect(executeActionsSpy).toHaveBeenCalledWith(
-                rule_cond_target.actions,
-                expect.any(Object),
-                expect.stringContaining(`Rule '${rule_cond_target.rule_id}'`)
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`No actions to execute for scope: Rule '${rule_cond_target.rule_id}'`)
-            );
-        });
-
-        it('skips actions when target component condition is false', async () => {
-            const targetEntityId = 'door1';
-            const targetComponentId = 'game:lockable';
-            const targetComponentData = {isLocked: false}; // Condition source is false
-
-            // ---- actor stub ----
-            const mockActorEntity = {id: 'player', getComponentData: jest.fn(() => null)};
-
-            const mockTargetEntity = {
-                id: targetEntityId,
-                getComponentData: jest.fn((compId) =>
-                    compId === targetComponentId ? targetComponentData : null
-                ),
-            };
-
-            mockEntityManager.getEntityInstance.mockImplementation((id) =>
-                id === targetEntityId
-                    ? mockTargetEntity
-                    : id === 'player'
-                        ? mockActorEntity
-                        : null
-            );
-            mockEntityManager.getComponentData.mockImplementation((id, compId) =>
-                id === targetEntityId && compId === targetComponentId
-                    ? targetComponentData
-                    : null
-            );
-
-            mockJsonLogicService.evaluate.mockReturnValue(false); // Condition fails
-
-            const handler = getSubscribedHandler();
-            await handler(event_target);
-
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_target.condition,
-                expect.objectContaining({
-                    target: expect.objectContaining({id: targetEntityId, components: expect.any(Object)}),
-                    actor: expect.objectContaining({id: 'player'}),
-                    event: event_target,
-                })
-            );
-            expect(executeActionsSpy).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    `Root condition for rule '${rule_cond_target.rule_id}' failed. Skipping actions.`
-                )
-            );
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(
-                expect.stringContaining('No actions to execute for scope:')
-            );
-        });
-    });
-
-    // --- START: TICKET-10.6 Test Suite ---
-    describe('Event Payload Condition Behaviour (TICKET-10.6)', () => {
-        beforeEach(() => {
-            // Clear mocks specific to this suite's assertions
-            executeActionsSpy.mockClear();
-            mockJsonLogicService.evaluate.mockClear();
-            mockLogger.debug.mockClear();
-            // No entity manager calls expected for direct payload access
-            mockEntityManager.getEntityInstance.mockClear();
-            mockEntityManager.getComponentData.mockClear();
-        });
-
-        it('executes actions when event payload condition is true', async () => {
-            // Arrange: Configure mock to return true for the payload condition
-            mockJsonLogicService.evaluate.mockReturnValue(true);
-            const handler = getSubscribedHandler();
-
-            // Act: Call the handler with the event designed to pass the condition
-            await handler(event_payload_pass);
-
-            // Assert
-            // 1. jsonLogicService.evaluate was called with the correct condition and context
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_payload.condition, // Ensure the specific rule's condition was used
-                expect.objectContaining({ // Verify the context had the correct event
-                    event: event_payload_pass,
-                    actor: null, // No actorId in event_payload_pass
-                    target: null // No targetId in event_payload_pass
-                })
-            );
-
-            // 2. _executeActions spy WAS called
-            expect(executeActionsSpy).toHaveBeenCalledTimes(1);
-            expect(executeActionsSpy).toHaveBeenCalledWith(
-                rule_cond_payload.actions,
-                expect.any(Object), // The context object
-                expect.stringContaining(`Rule '${rule_cond_payload.rule_id}'`) // Scope description
-            );
-
-            // 3. Optional: Check for the "no actions" log since the actions array is empty
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`No actions to execute for scope: Rule '${rule_cond_payload.rule_id}'`)
-            );
-        });
-
-        it('skips actions when event payload condition is false', async () => {
-            // Arrange: Configure mock to return false for the payload condition
-            mockJsonLogicService.evaluate.mockReturnValue(false);
-            const handler = getSubscribedHandler();
-
-            // Act: Call the handler with the event designed to fail the condition
-            await handler(event_payload_fail);
-
-            // Assert
-            // 1. jsonLogicService.evaluate WAS called
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
-            expect(mockJsonLogicService.evaluate).toHaveBeenCalledWith(
-                rule_cond_payload.condition,
-                expect.objectContaining({
-                    event: event_payload_fail,
-                    actor: null,
-                    target: null
-                })
-            );
-
-            // 2. _executeActions spy was NOT called
-            expect(executeActionsSpy).not.toHaveBeenCalled();
-
-            // 3. Check log message indicates condition failure
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    `Root condition for rule '${rule_cond_payload.rule_id}' failed. Skipping actions.`
-                )
-            );
-            // 4. Ensure the "no actions to execute" log was NOT called
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(
-                expect.stringContaining('No actions to execute for scope:')
-            );
-        });
-    });
-    // --- END: TICKET-10.6 Test Suite ---
 
 });

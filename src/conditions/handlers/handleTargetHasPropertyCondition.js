@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleTargetHasPropertyCondition.js
+// src/conditions/operationHandlers/handleTargetHasPropertyCondition.js
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../services/conditionEvaluationService.js').ConditionEvaluationContext} ConditionEvaluationContext */

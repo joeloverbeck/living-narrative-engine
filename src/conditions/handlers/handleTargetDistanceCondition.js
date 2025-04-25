@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleTargetDistanceCondition.js
+// src/conditions/operationHandlers/handleTargetDistanceCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

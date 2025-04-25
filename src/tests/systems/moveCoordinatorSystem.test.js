@@ -35,7 +35,7 @@ const mockEventBus = {
     simulateEvent: async (eventName, payload) => {
         const handlers = mockEventBus._subscriptions.get(eventName);
         if (handlers) {
-            // Use Promise.all if multiple handlers could exist and might be async
+            // Use Promise.all if multiple operationHandlers could exist and might be async
             await Promise.all(Array.from(handlers).map(handler => handler(payload)));
         }
     },

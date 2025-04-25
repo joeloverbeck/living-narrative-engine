@@ -7,7 +7,7 @@ import DomRenderer from './domRenderer.js';
 import EntityManager from '../entities/entityManager.js';
 import GameStateManager from './gameStateManager.js';
 import CommandParser from './commandParser.js';
-import ActionExecutor from '../actions/actionExecutor.js'; // Keep this
+import ActionExecutor from '../actions/actionExecutor.js';
 import InputHandler from './inputHandler.js';
 import GameLoop from './gameLoop.js';
 
@@ -56,7 +56,7 @@ import {ObjectiveStateCheckerService} from '../services/objectiveStateCheckerSer
 import GameStateInitializer from './gameStateInitializer.js';
 import WorldInitializer from './worldInitializer.js';
 import {ItemTargetResolverService} from '../services/itemTargetResolver.js';
-import {ActionValidationService} from "../services/actionValidationService.js"; // Keep import
+import {ActionValidationService} from "../services/actionValidationService.js";
 import TargetResolutionService from '../services/targetResolutionService.js';
 import PayloadValueResolverService from '../services/payloadValueResolverService.js';
 import ValidatedEventDispatcher from "../services/validatedEventDispatcher.js";
@@ -67,6 +67,8 @@ import ComponentDefinitionLoader from "./services/componentDefinitionLoader.js";
 import {DomainContextCompatibilityChecker} from '../validation/domainContextCompatibilityChecker.js';
 import InputSetupService from './setup/inputSetupService.js';
 import RuleLoader from "./services/ruleLoader.js";
+import SystemLogicInterpreter from '../logic/systemLogicInterpreter.js';
+import OperationInterpreter from '../logic/operationInterpreter.js';
 
 // --- PrerequisiteEvaluationService import needed for registration ---
 import {PrerequisiteEvaluationService} from '../services/prerequisiteEvaluationService.js';
@@ -109,7 +111,14 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     // --- 3. Data Loaders (Depend on core services) ---
     container.register('SchemaLoader', (c) => new SchemaLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ManifestLoader', (c) => new ManifestLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('ILogger')), {lifecycle: 'singleton'});
-    container.register('RuleLoader', (c) => new RuleLoader(c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('EventBus'), c.resolve('ILogger')), {lifecycle: 'singleton'});
+    container.register('RuleLoader', (c) => new RuleLoader(
+        c.resolve('IPathResolver'),
+        c.resolve('IDataFetcher'),
+        c.resolve('ISchemaValidator'),
+        c.resolve('IDataRegistry'),
+        c.resolve('ILogger')
+    ), { lifecycle: 'singleton' });
+    logger.info("ContainerConfig: Registered RuleLoader (with IDataRegistry dependency).");
     container.register('GenericContentLoader', (c) => new GenericContentLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
     container.register('ComponentDefinitionLoader', (c) => new ComponentDefinitionLoader(c.resolve('IConfiguration'), c.resolve('IPathResolver'), c.resolve('IDataFetcher'), c.resolve('ISchemaValidator'), c.resolve('IDataRegistry'), c.resolve('ILogger')), {lifecycle: 'singleton'});
 
@@ -419,6 +428,39 @@ export function registerCoreServices(container, {outputDiv, inputElement, titleE
     container.register('LockSystem', (c) => new LockSystem({
         eventBus: c.resolve('EventBus'), entityManager: c.resolve('EntityManager')
     }), {lifecycle: 'singleton'});
+
+    // --- AC1 (Dependency Injection): Register OperationInterpreter ---
+    container.register('OperationInterpreter', (c) => {
+        logger.info("ContainerConfig: Creating OperationInterpreter instance...");
+        const interpreter = new OperationInterpreter({
+            logger: c.resolve('ILogger')
+            // Add other dependencies here if OperationInterpreter needs them later
+        });
+        logger.info("ContainerConfig: OperationInterpreter instance created.");
+        return interpreter;
+    }, { lifecycle: 'singleton' });
+    logger.info("ContainerConfig: Registered OperationInterpreter.");
+
+
+    // --- Modify SystemLogicInterpreter Registration ---
+    // --- AC1 (Dependency Injection): Inject OperationInterpreter ---
+    container.register('SystemLogicInterpreter', (c) => {
+        logger.info("ContainerConfig: Creating SystemLogicInterpreter instance (with OperationInterpreter dependency)...");
+        // Resolve all required dependencies for SystemLogicInterpreter
+        const deps = {
+            logger: c.resolve('ILogger'),
+            eventBus: c.resolve('EventBus'),
+            dataRegistry: c.resolve('IDataRegistry'),
+            jsonLogicEvaluationService: c.resolve('JsonLogicEvaluationService'),
+            entityManager: c.resolve('EntityManager'),
+            operationInterpreter: c.resolve('OperationInterpreter') // <-- Inject the new dependency
+        };
+        logger.debug("ContainerConfig: Dependencies resolved for SystemLogicInterpreter:", Object.keys(deps));
+        const interpreter = new SystemLogicInterpreter(deps);
+        logger.info("ContainerConfig: SystemLogicInterpreter instance created.");
+        return interpreter;
+    }, { lifecycle: 'singleton' });
+    logger.info("ContainerConfig: Registered SystemLogicInterpreter (with OperationInterpreter).");
 
     logger.info("ContainerConfig: Service registration complete.");
 }

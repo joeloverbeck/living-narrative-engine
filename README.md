@@ -43,9 +43,10 @@ Ensure you have Node.js and npm installed.
 Since this is a browser-based application, you need a simple web-server to serve the files locally. We recommend using
 `http-server`.
 
-    ```bash
+```bash
     npm install --global http-server   # one-time
     http-server                        # from repo root
+   ``` 
 
 Then open the printed URL (usually http://localhost:8080) in your browser.
 

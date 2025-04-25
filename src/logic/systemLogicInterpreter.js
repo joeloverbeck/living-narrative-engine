@@ -1,62 +1,46 @@
 // src/logic/systemLogicInterpreter.js
 
-import {createJsonLogicContext} from './contextAssembler.js'; // Assuming path
+import { createJsonLogicContext } from './contextAssembler.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../core/eventBus.js').default} EventBus */ // Assuming path and default export
-/** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */ // Assuming path and default export
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Assuming path and default export
-/** @typedef {import('./defs.js').GameEvent} GameEvent */ // Assuming GameEvent definition exists
-/** @typedef {import('../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */ // Assuming generated type or structural compatibility
-/** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */ // Define Operation based on schema
+/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('./operationInterpreter.js').default} OperationInterpreter */
+/** @typedef {import('./defs.js').GameEvent} GameEvent */
+/** @typedef {import('../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */
+/** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+/**
+ * @typedef {object} ConditionEvaluationResult
+ * @property {boolean} conditionPassed - Whether the condition (if present) evaluated to true. True if no condition exists.
+ * @property {boolean} evaluationErrorOccurred - Whether an error occurred during the evaluation of the condition.
+ */
+
 
 /**
  * @class SystemLogicInterpreter
  * Responsible for listening to game events, matching them against SystemRule definitions,
  * evaluating optional rule conditions using JSON Logic, and triggering the execution
- * of the rule's action sequence if the conditions are met.
+ * of the rule's action sequence via the OperationInterpreter if the conditions are met.
  */
 class SystemLogicInterpreter {
-    /**
-     * @private
-     * @type {ILogger}
-     */
+    /** @private @type {ILogger} */
     #logger;
-
-    /**
-     * @private
-     * @type {EventBus}
-     */
+    /** @private @type {EventBus} */
     #eventBus;
-
-    /**
-     * @private
-     * @type {IDataRegistry}
-     */
+    /** @private @type {IDataRegistry} */
     #dataRegistry;
-
-    /**
-     * @private
-     * @type {JsonLogicEvaluationService}
-     */
+    /** @private @type {JsonLogicEvaluationService} */
     #jsonLogicEvaluationService;
-
-    /**
-     * @private
-     * @type {EntityManager}
-     */
+    /** @private @type {EntityManager} */
     #entityManager;
-
-    /**
-     * @private
-     * @type {Map<string, SystemRule[]>}
-     * @description Cache of rules keyed by event type for faster lookup.
-     */
+    /** @private @type {OperationInterpreter} */
+    #operationInterpreter;
+    /** @private @type {Map<string, SystemRule[]>} */
     #ruleCache = new Map();
-
     /** @private @type {boolean} */
     #initialized = false;
 
@@ -68,30 +52,38 @@ class SystemLogicInterpreter {
      * @param {IDataRegistry} dependencies.dataRegistry - Service to access loaded game data, including system rules.
      * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService - Service to evaluate JSON Logic rules.
      * @param {EntityManager} dependencies.entityManager - Service to manage entities (needed for context assembly).
+     * @param {OperationInterpreter} dependencies.operationInterpreter - Service to execute individual operations.
      * @throws {Error} If any required dependency is missing or invalid.
      */
-    constructor({logger, eventBus, dataRegistry, jsonLogicEvaluationService, entityManager}) {
+    constructor({ logger, eventBus, dataRegistry, jsonLogicEvaluationService, entityManager, operationInterpreter }) {
+        // --- Existing Validation ---
         if (!logger || typeof logger.info !== 'function') {
             throw new Error("SystemLogicInterpreter requires a valid ILogger instance.");
         }
         if (!eventBus || typeof eventBus.subscribe !== 'function') {
             throw new Error("SystemLogicInterpreter requires a valid EventBus instance with a 'subscribe' method.");
         }
-        if (!dataRegistry || typeof dataRegistry.getAllSystemRules !== 'function') { // Assuming getAllSystemRules exists
+        if (!dataRegistry || typeof dataRegistry.getAllSystemRules !== 'function') {
             throw new Error("SystemLogicInterpreter requires a valid IDataRegistry instance with an 'getAllSystemRules' method.");
         }
         if (!jsonLogicEvaluationService || typeof jsonLogicEvaluationService.evaluate !== 'function') {
-            throw new Error("SystemLogicInterpreter requires a valid JsonLogicEvaluationService instance.");
+            throw new Error("SystemLogicInterpreter requires a valid JsonLogicEvaluationService instance with an 'evaluate' method.");
         }
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-            throw new Error("SystemLogicInterpreter requires a valid EntityManager instance.");
+            throw new Error("SystemLogicInterpreter requires a valid EntityManager instance with a 'getEntityInstance' method.");
         }
+        // --- AC1: Added Validation ---
+        if (!operationInterpreter || typeof operationInterpreter.execute !== 'function') {
+            throw new Error("SystemLogicInterpreter requires a valid OperationInterpreter instance with an 'execute' method.");
+        }
+        // --- End Validation ---
 
         this.#logger = logger;
         this.#eventBus = eventBus;
         this.#dataRegistry = dataRegistry;
         this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
         this.#entityManager = entityManager;
+        this.#operationInterpreter = operationInterpreter;
 
         this.#logger.info("SystemLogicInterpreter initialized. Ready to process events.");
     }
@@ -117,8 +109,8 @@ class SystemLogicInterpreter {
      */
     #loadAndCacheRules() {
         this.#logger.info("Loading and caching system rules by event type...");
-        this.#ruleCache.clear(); // Clear existing cache if re-initializing
-        const allRules = this.#dataRegistry.getAllSystemRules(); // Assuming this returns SystemRule[]
+        this.#ruleCache.clear();
+        const allRules = this.#dataRegistry.getAllSystemRules();
 
         if (!allRules || !Array.isArray(allRules)) {
             this.#logger.error("Failed to load system rules from data registry. Result was not an array.");
@@ -163,11 +155,11 @@ class SystemLogicInterpreter {
      */
     #handleEvent(event) {
         if (!event || typeof event.type !== 'string') {
-            this.#logger.warn("Received invalid event object. Ignoring.", {event});
+            this.#logger.warn("Received invalid event object. Ignoring.", { event });
             return;
         }
 
-        this.#logger.debug(`Received event: ${event.type}`, {payload: event.payload});
+        this.#logger.debug(`Received event: ${event.type}`, { payload: event.payload });
 
         const matchingRules = this.#ruleCache.get(event.type) || [];
 
@@ -182,82 +174,122 @@ class SystemLogicInterpreter {
             try {
                 this.#processRule(rule, event);
             } catch (error) {
-                this.#logger.error(`Error processing rule '${rule.rule_id || 'NO_ID'}' for event '${event.type}':`, error);
+                this.#logger.error(`[CRITICAL] Uncaught error during #processRule execution for rule '${rule.rule_id || 'NO_ID'}', event '${event.type}':`, error);
             }
         });
     }
 
     /**
+     * Evaluates the condition of a system rule, if present.
+     * Handles logging related to condition presence and evaluation outcome/errors.
+     * @param {SystemRule} rule - The system rule definition.
+     * @param {JsonLogicEvaluationContext} evaluationContext - The context for evaluation.
+     * @returns {ConditionEvaluationResult} An object indicating if the condition passed and if an error occurred.
+     * @private
+     * @fulfils AC1, AC4
+     */
+    #evaluateRuleCondition(rule, evaluationContext) {
+        const ruleId = rule.rule_id || 'NO_ID';
+        let conditionPassed = true;
+        let evaluationErrorOccurred = false;
+
+        // Check if a valid condition object exists
+        if (rule.condition && typeof rule.condition === 'object' && Object.keys(rule.condition).length > 0) {
+            this.#logger.debug(`[Rule ${ruleId}] Condition found. Evaluating...`);
+            let conditionResult = false;
+            try {
+                this.#logger.debug(`[Rule ${ruleId}] Starting condition evaluation.`);
+                // Pass evaluation context to the service
+                conditionResult = this.#jsonLogicEvaluationService.evaluate(rule.condition, evaluationContext);
+                this.#logger.debug(`[Rule ${ruleId}] Condition evaluation raw result: ${conditionResult}`);
+                conditionPassed = !!conditionResult; // Convert to boolean
+            } catch (evalError) {
+                evaluationErrorOccurred = true;
+                conditionPassed = false; // Treat evaluation errors as condition failure
+                // AC4: Log evaluation error details
+                this.#logger.error(
+                    `[Rule ${ruleId}] Error during condition evaluation. Treating condition as FALSE.`,
+                    evalError // Log the actual error object
+                );
+            }
+            // AC4: Log the final boolean outcome after evaluation
+            this.#logger.debug(`[Rule ${ruleId}] Condition evaluation final boolean result: ${conditionPassed}`);
+
+        } else {
+            // AC4: Log when no condition is present
+            this.#logger.debug(`[Rule ${ruleId}] No condition defined or condition is empty. Defaulting to passed.`);
+            // conditionPassed remains true (default)
+        }
+
+        return { conditionPassed, evaluationErrorOccurred };
+    }
+
+    /**
      * Processes a single matched SystemRule against the triggering event.
-     * Evaluates the rule's condition (if any) and executes actions if the condition passes.
+     * Assembles context, evaluates the rule's condition (if any) via #evaluateRuleCondition,
+     * and executes actions if the condition passes.
      * @param {SystemRule} rule - The system rule definition.
      * @param {GameEvent} event - The triggering event.
      * @private
+     * @fulfils AC2, AC3, AC5 (implicitly by preserving behavior)
      */
     #processRule(rule, event) {
         const ruleId = rule.rule_id || 'NO_ID';
         this.#logger.debug(`Processing rule '${ruleId}' for event '${event.type}'...`);
 
+        /** @type {JsonLogicEvaluationContext | null} */
         let evaluationContext = null;
+
+        // 1. Assemble Context
         try {
-            // Assemble the base context needed for condition evaluation AND action execution
             const actorId = event.payload?.actorId ?? event.payload?.entityId ?? null;
             const targetId = event.payload?.targetId ?? null;
-
-            this.#logger.debug(`Assembling context for Rule '${ruleId}', Event '${event.type}'. ActorID=${actorId}, TargetID=${targetId}`);
-            evaluationContext = createJsonLogicContext(
-                event,
-                actorId,
-                targetId,
-                this.#entityManager,
-                this.#logger
-            );
-            // Crucially, the 'context' property within evaluationContext starts empty here
-            // and will be populated by QUERY_COMPONENT operations during action execution.
-            this.#logger.debug(`Context Assembled for Rule '${ruleId}'. Target in context:`, evaluationContext?.target ? {
-                id: evaluationContext.target.id,
-                hasComponents: !!evaluationContext.target.components
-            } : 'null');
-
+            this.#logger.debug(`[Rule ${ruleId}] Resolved IDs - Actor: ${actorId}, Target: ${targetId}`);
+            this.#logger.debug(`[Rule ${ruleId}] Assembling JsonLogic context...`);
+            evaluationContext = createJsonLogicContext(event, actorId, targetId, this.#entityManager, this.#logger);
+            const actorFound = !!evaluationContext?.actor;
+            const targetFound = !!evaluationContext?.target;
+            this.#logger.debug(`[Rule ${ruleId}] JsonLogic context assembled successfully. Actor found: ${actorFound}, Target found: ${targetFound}`);
         } catch (contextError) {
-            this.#logger.error(`Failed to assemble JsonLogicEvaluationContext for rule '${ruleId}' and event '${event.type}'. Cannot proceed.`, contextError);
-            return; // Stop processing this rule
+            this.#logger.error(`[Rule ${ruleId}] Failed to assemble JsonLogicEvaluationContext for event '${event.type}'. Cannot proceed with rule evaluation/execution.`, contextError);
+            return; // Stop processing this rule if context fails
         }
 
-        let ruleConditionResult = true; // Assume true if no condition
-        if (rule.condition && typeof rule.condition === 'object' && Object.keys(rule.condition).length > 0) {
-            this.#logger.debug(`Rule '${ruleId}' has a root condition. Evaluating...`);
-            try {
-                this.#logger.debug(`Evaluating Root Condition for Rule '${ruleId}'.`);
-                ruleConditionResult = this.#jsonLogicEvaluationService.evaluate(rule.condition, evaluationContext);
-                this.#logger.info(`Rule '${ruleId}' root condition evaluated. Result: ${ruleConditionResult}`); // Changed to info for visibility
-            } catch (evalError) {
-                this.#logger.error(`Error during root condition evaluation for rule '${ruleId}'. Assuming FALSE.`, evalError);
-                ruleConditionResult = false;
+        // 2. Evaluate Condition (using the new private method)
+        // AC2: Call the extracted method
+        const evaluationResult = this.#evaluateRuleCondition(rule, evaluationContext);
+
+        // 3. Execute Actions based on Condition Result
+        // AC2: Use the return value from #evaluateRuleCondition
+        if (evaluationResult.conditionPassed) {
+            this.#logger.debug(`[Rule ${ruleId}] Condition passed or absent. Checking for actions.`);
+            if (Array.isArray(rule.actions) && rule.actions.length > 0) {
+                this.#logger.debug(`[Rule ${ruleId}] Executing ${rule.actions.length} actions.`);
+                // Pass the assembled context to the action executor
+                // AC3 / AC5: Behavior unchanged - actions executed with context
+                this._executeActions(rule.actions, evaluationContext, `Rule '${ruleId}'`);
+            } else {
+                this.#logger.debug(`[Rule ${ruleId}] No actions defined or action list is empty.`);
             }
         } else {
-            this.#logger.debug(`Rule '${ruleId}' has no root condition. Proceeding directly to actions.`);
-        }
-
-        if (ruleConditionResult) {
-            this.#logger.debug(`Root condition for rule '${ruleId}' passed (or was absent). Executing actions.`);
-
-            // If the rule has no actions, make sure the “No actions …” message is still logged
-            if (Array.isArray(rule.actions) && rule.actions.length === 0) {
-                this.#logger.debug(`No actions to execute for scope: Rule '${ruleId}'`);
-            }
-
-            this._executeActions(rule.actions, evaluationContext, `Rule '${ruleId}'`);
-        } else {
-            this.#logger.debug(`Root condition for rule '${ruleId}' failed. Skipping actions.`);
+            // AC4: Logging for skipping actions remains in #processRule, using the evaluation result
+            const reason = evaluationResult.evaluationErrorOccurred
+                ? "due to error during condition evaluation"
+                : "due to condition evaluating to false";
+            this.#logger.info(
+                `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
+            );
+            // AC3: Behavior unchanged - actions skipped if condition fails or errors
         }
     }
 
+
     /**
-     * Executes a sequence of Operation objects. Can be called recursively for IF branches.
+     * Executes a sequence of Operation objects using the OperationInterpreter.
+     * Handles errors during the *invocation* of the interpreter.
      *
      * @param {Operation[]} actions - The array of Operation objects to execute.
-     * @param {JsonLogicEvaluationContext} executionContext - The context for this execution sequence. This object is potentially mutated by operations like QUERY_COMPONENT.
+     * @param {JsonLogicEvaluationContext} executionContext - The context for this execution sequence.
      * @param {string} scopeDescription - A description for logging (e.g., "Rule 'X'", "IF THEN branch").
      * @private
      */
@@ -273,128 +305,93 @@ class SystemLogicInterpreter {
             const operation = actions[i];
             const operationIndex = i + 1; // 1-based index for logging
             const operationDesc = operation.comment ? `(Comment: ${operation.comment})` : '';
-            this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] Processing Operation: ${operation.type} ${operationDesc}`);
+
+            // [Review Ticket 11] This debug log provides essential step-by-step diagnostic
+            // information for action sequences. Kept as-is after review, as its value for
+            // debugging complex rules outweighs verbosity concerns at the 'debug' level.
+            // Verbosity can be controlled via logger configuration.
+            this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] Processing Operation: ${operation?.type || 'MISSING_TYPE'} ${operationDesc}`);
 
             try {
-                // --- Task: Add logic to handle the case where operation.type is "IF". ---
-                switch (operation.type) {
-                    case 'IF':
+                if (!this.#operationInterpreter) {
+                    this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] OperationInterpreter not available! Skipping execution.`);
+                    continue;
+                }
+                // Handle IF internally first because it controls flow within this interpreter
+                if (operation?.type === 'IF') {
+                    try {
                         this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
-                        break;
-
-                    case 'QUERY_COMPONENT':
-                        // Placeholder for QUERY_COMPONENT logic (Ticket N+2)
-                        // Would call a handler function, e.g., #handleQueryComponentOperation(operation, executionContext)
-                        // This handler would use PayloadValueResolverService, call EntityManager,
-                        // and crucially update executionContext.context[result_variable].
-                        this.#logger.warn(`---> [${scopeDescription} - Action ${operationIndex}] Operation type ${operation.type} NOT YET IMPLEMENTED.`);
-                        // --- Example of potential update ---
-                        // const resultVar = operation.parameters?.result_variable;
-                        // if (resultVar && executionContext.context) {
-                        //    executionContext.context[resultVar] = { /* fetched data or null */ };
-                        //    this.#logger.debug(`---> Stored query result in context.${resultVar}`);
-                        // }
-                        break;
-
-                    case 'MODIFY_COMPONENT':
-                        // Placeholder for MODIFY_COMPONENT logic (Ticket N+3)
-                        // Would call a handler function, e.g., #handleModifyComponentOperation(operation, executionContext)
-                        this.#logger.warn(`---> [${scopeDescription} - Action ${operationIndex}] Operation type ${operation.type} NOT YET IMPLEMENTED.`);
-                        break;
-
-                    case 'DISPATCH_EVENT':
-                        // Placeholder for DISPATCH_EVENT logic (Ticket N+4)
-                        // Would call a handler function, e.g., #handleDispatchEventOperation(operation, executionContext)
-                        this.#logger.warn(`---> [${scopeDescription} - Action ${operationIndex}] Operation type ${operation.type} NOT YET IMPLEMENTED.`);
-                        break;
-
-                    case 'LOG':
-                        // Placeholder for LOG logic (Ticket N+5)
-                        // Would call a handler function, e.g., #handleLogOperation(operation, executionContext)
-                        this.#logger.warn(`---> [${scopeDescription} - Action ${operationIndex}] Operation type ${operation.type} NOT YET IMPLEMENTED.`);
-                        break;
-
-                    default:
-                        this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] Encountered UNKNOWN Operation type: ${operation.type}. Skipping.`);
-                        break;
+                    } catch (ifError) {
+                        this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] Critical error during execution of IF operation's condition or nested actions. Halting this *IF* branch. Error:`, ifError);
+                        // Decide if IF error should halt the whole sequence or just the IF branch.
+                        // Current: Halting the IF branch, continuing parent sequence.
+                        // If the *entire sequence* should stop, we'd need to `return;` here.
+                        // Let's stick to halting the branch only unless requirements change.
+                        continue; // Skip to next action in the *parent* sequence
+                    }
+                } else {
+                    // For all other operation types, delegate to OperationInterpreter
+                    this.#operationInterpreter.execute(operation, executionContext);
                 }
 
-            } catch (error) {
-                this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] Critical error during execution of ${operation.type}. Halting this action sequence. Error:`, error);
-                return; // Stop processing further actions in this sequence on error
+            } catch (invocationError) {
+                this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL error during execution of Operation ${operation?.type}. Continuing loop. Error:`, invocationError);
+                // Continue to the next action in the sequence
             }
         }
 
         this.#logger.info(`<--- Finished action sequence for: ${scopeDescription}.`);
     }
 
+
     /**
      * Handles the execution logic for an IF operation.
+     * Evaluates the condition and recursively calls _executeActions for the appropriate branch.
      * @param {Operation} ifOperation - The IF operation object.
      * @param {JsonLogicEvaluationContext} executionContext - The current execution context.
      * @param {string} parentScopeDesc - Description of the parent scope for logging.
      * @param {number} operationIndex - Index of the IF operation in its sequence.
      * @private
+     * @throws {Error} Rethrows errors from evaluation or nested execution to be caught by caller (_executeActions).
      */
     #handleIfOperation(ifOperation, executionContext, parentScopeDesc, operationIndex) {
         const parentIfDesc = `${parentScopeDesc} - IF Action ${operationIndex}`;
 
-        // --- Task: Extract parameters ---
         const params = ifOperation.parameters;
         if (!params || typeof params.condition !== 'object' || !Array.isArray(params.then_actions)) {
-            this.#logger.error(`---> [${parentIfDesc}] Invalid IF operation structure: Missing or invalid 'condition' or 'then_actions'. Skipping IF block.`);
-            return;
+            this.#logger.error(`---> [${parentIfDesc}] Invalid IF operation structure: Missing or invalid 'condition' or 'then_actions'. Skipping IF block execution.`);
+            return; // Don't throw, just skip this IF
         }
         const condition = params.condition;
         const then_actions = params.then_actions;
         const else_actions = params.else_actions; // Optional
 
-        // --- Task: Ensure the same JsonLogicEvaluationContext is available ---
-        // 'executionContext' is passed directly, it contains event, actor, target, and the mutable context object.
-
-        // --- Task: Call JsonLogicEvaluationService.evaluate ---
         let conditionResult = false;
         try {
             this.#logger.debug(`---> [${parentIfDesc}] Evaluating IF condition...`);
-            // Log context before evaluation (optional, can be verbose)
-            // console.dir(executionContext, { depth: 3 });
             conditionResult = this.#jsonLogicEvaluationService.evaluate(condition, executionContext);
-            // --- Task: Ensure appropriate logging ---
             this.#logger.info(`---> [${parentIfDesc}] IF condition evaluation result: ${conditionResult}`);
         } catch (evalError) {
-            this.#logger.error(`---> [${parentIfDesc}] Error evaluating IF condition. Assuming FALSE. Error:`, evalError);
-            conditionResult = false; // Ensure false on error
+            this.#logger.error(`---> [${parentIfDesc}] Error evaluating IF condition. Error:`, evalError);
+            throw evalError; // Re-throw to be caught by the caller (_executeActions)
         }
 
-        // --- Task: Execute branches based on result ---
+        // Nested execution calls can also throw; they will propagate up.
+        // The try/catch in the calling _executeActions loop will catch errors from these nested calls.
         if (conditionResult) {
-            // --- Task: If true, recursively call for then_actions ---
             this.#logger.debug(`---> [${parentIfDesc}] Condition TRUE. Executing THEN branch.`);
             this._executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
         } else {
-            // --- Task: If false and else_actions exists... ---
             if (else_actions && Array.isArray(else_actions) && else_actions.length > 0) {
-                // --- Task: recursively call for else_actions ---
                 this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE. Executing ELSE branch.`);
                 this._executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
             } else {
-                // --- Task: If false and no else_actions... ---
                 this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE and no ELSE branch present or actions empty. Continuing after IF block.`);
-                // Simply proceed to the next operation after the IF block (handled by the loop in #executeActions)
             }
         }
-        // --- Task: Execution correctly continues after the IF block ---
-        // This is handled naturally by the loop in #executeActions which called this handler.
-        // After this function returns, the loop will proceed to the next operation index.
+        this.#logger.debug(`---> [${parentIfDesc}] Finished processing IF block.`);
     }
 
-    // --- Placeholder Handler Functions for Other Operation Types ---
-    // These would be implemented in subsequent tickets.
-
-    // #handleQueryComponentOperation(operation, executionContext) { /* ... */ }
-    // #handleModifyComponentOperation(operation, executionContext) { /* ... */ }
-    // #handleDispatchEventOperation(operation, executionContext) { /* ... */ }
-    // #handleLogOperation(operation, executionContext) { /* ... */ }
 
 }
 

@@ -294,7 +294,7 @@ class ObjectiveStateCheckerService {
         }
     }
 
-    // Potential future handlers:
+    // Potential future operationHandlers:
     /*
     _handleInteraction({ entityId, interactionType }) {
         // Check entityWatchers for entityId

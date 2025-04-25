@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleTargetHasComponentCondition.js
+// src/conditions/operationHandlers/handleTargetHasComponentCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

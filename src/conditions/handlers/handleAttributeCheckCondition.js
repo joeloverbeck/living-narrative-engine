@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleAttributeCheckCondition.js
+// src/conditions/operationHandlers/handleAttributeCheckCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

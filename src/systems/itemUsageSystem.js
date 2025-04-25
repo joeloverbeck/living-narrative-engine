@@ -34,7 +34,7 @@ import {TARGET_MESSAGES, getDisplayName} from '../utils/messages.js';
  * Dispatches "event:item_consume_requested" for consumption.
  * **Crucially, this system NO LONGER dispatches final UI success messages detailing effect outcomes.**
  * Failure messages related to usability/targeting or detected by dependencies are expected
- * to be dispatched by the service/system detecting the failure or via specific event handlers.
+ * to be dispatched by the service/system detecting the failure or via specific event operationHandlers.
  * **Refactored (4.2.3): Retrieves itemDefinitionId from item instance's DefinitionRefComponent *data* via EntityManager.**
  */
 class ItemUsageSystem {
@@ -74,7 +74,7 @@ class ItemUsageSystem {
     /**
      * Handles the "event:item_use_attempted" event. Orchestrates the item usage flow.
      * **Refactored (4.2.3): Gets itemDefinitionId from DefinitionRefComponent *data* via EntityManager.**
-     * Relies on services/event handlers for detailed logic and feedback.
+     * Relies on services/event operationHandlers for detailed logic and feedback.
      * Dispatches effect events and consumption requests.
      * **NO LONGER dispatches final success UI messages.**
      *
@@ -303,7 +303,7 @@ class ItemUsageSystem {
             }
 
             // --- 6. Final Outcome Reporting ---
-            // REMOVED - Responsibility shifted to event handlers.
+            // REMOVED - Responsibility shifted to event operationHandlers.
 
             if (overallActionSuccess) {
                 log(`Item use orchestration completed successfully for "${itemName}" (Def: ${itemDefinitionId}). Effects processed: ${effectsProcessed}. Consumption requested: ${!!usableComponentData.consume_on_use}. No outcome UI message dispatched by this system.`, 'debug'); // Logging uses correct ID

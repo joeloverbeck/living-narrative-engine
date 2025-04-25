@@ -1,4 +1,4 @@
-// src/tests/conditions/handlers/handleConnectionStateIsCondition.test.js
+// src/tests/conditions/operationHandlers/handleConnectionStateIsCondition.test.js
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { handleConnectionStateIsCondition } from '../../../conditions/handlers'; // Adjust path as needed

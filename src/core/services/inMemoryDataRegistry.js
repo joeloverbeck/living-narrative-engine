@@ -97,7 +97,25 @@ class InMemoryDataRegistry {
     }
 
     // =======================================================
-    // --- ADD THE MISSING DEFINITION GETTER METHODS ---
+    // --- ADDED METHOD for RULESYS-101 ---
+    // =======================================================
+    /**
+     * Retrieves all loaded system rule objects.
+     * Uses the specific key 'system-rules' as agreed upon.
+     *
+     * @returns {object[]} An array containing all stored system rule objects.
+     * Returns an empty array `[]` if no system rules have been stored.
+     */
+    getAllSystemRules() {
+        return this.getAll('system-rules'); // AC3: Calls this.getAll with the specific key
+    }
+    // =======================================================
+    // --- END ADDED METHOD ---
+    // =======================================================
+
+
+    // =======================================================
+    // --- Existing Definition Getter Methods ---
     // =======================================================
 
     /**
@@ -145,7 +163,7 @@ class InMemoryDataRegistry {
     }
 
     // =======================================================
-    // --- END ADDED METHODS ---
+    // --- End Existing Definition Getter Methods ---
     // =======================================================
 
 

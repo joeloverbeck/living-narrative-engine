@@ -40,7 +40,7 @@ const createMockEventBus = () => {
             if (handlers) {
                 [...handlers].forEach(handler => handler({...payload})); // Pass copy
             } else {
-                // console.warn(`[Test Trigger] No handlers found for event: ${eventName}`);
+                // console.warn(`[Test Trigger] No operationHandlers found for event: ${eventName}`);
             }
         },
 

@@ -1,4 +1,4 @@
-// src/conditions/handlers/handlePlayerInLocationCondition.js
+// src/conditions/operationHandlers/handlePlayerInLocationCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

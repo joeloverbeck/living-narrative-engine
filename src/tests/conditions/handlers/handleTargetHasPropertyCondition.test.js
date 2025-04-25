@@ -1,4 +1,4 @@
-// src/tests/conditions/handlers/handleTargetHasPropertyCondition.test.js
+// src/tests/conditions/operationHandlers/handleTargetHasPropertyCondition.test.js
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { handleTargetHasPropertyCondition } from '../../../conditions/handlers'; // Adjust path as needed

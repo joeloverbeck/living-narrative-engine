@@ -58,6 +58,8 @@
  * Retrieves a specific data object by its type and ID. Returns `undefined` if not found.
  * @property {(type: string) => object[]} getAll
  * Retrieves all data objects belonging to a specific type. Returns an empty array if the type is unknown or has no data.
+ * @property {() => object[]} getAllSystemRules
+ * Retrieves all loaded system rule objects. Returns an empty array `[]` if no system rules are stored. (Added for RULESYS-101)
  * @property {() => void} clear
  * Removes all stored data objects and the manifest from the registry. Typically used when loading a new world or resetting state.
  * @property {() => object | null} getManifest

@@ -1,4 +1,4 @@
-// src/conditions/handlers/handleConnectionStateIsCondition.js
+// src/conditions/operationHandlers/handleConnectionStateIsCondition.js
 
 // --- Necessary Imports ---
 // JSDoc Type Imports

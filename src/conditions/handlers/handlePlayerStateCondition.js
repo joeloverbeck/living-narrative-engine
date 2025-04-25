@@ -1,4 +1,4 @@
-// src/conditions/handlers/handlePlayerStateCondition.js
+// src/conditions/operationHandlers/handlePlayerStateCondition.js
 
 // Keep necessary imports
 /** @typedef {import('../../entities/entity.js').default} Entity */

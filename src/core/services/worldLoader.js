@@ -27,7 +27,7 @@ import GenericContentLoader from './genericContentLoader.js';
  * 2. Schemas (compile)
  * 3. Essential-schema presence check
  * 4. Manifest (validate & store)
- * 5. System rules (so events emitted by content have handlers)
+ * 5. System rules (so events emitted by content have operationHandlers)
  * 6. Component definitions
  * 7. Remaining content types
  */
