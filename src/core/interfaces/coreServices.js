@@ -132,19 +132,77 @@
 
 // --- Path Resolution ---
 
+/* eslint-disable no-unused-vars */
+
 /**
- * Interface for resolving abstract identifiers or relative paths into absolute, fetchable paths/URLs.
- * Combines configuration values (like base paths) with specific filenames.
- * @typedef {object} IPathResolver
- * @property {(filename: string) => string} resolveSchemaPath
- * Takes a schema filename (e.g., 'common.schema.json') and returns the full path needed to fetch it.
- * @property {(worldName: string) => string} resolveManifestPath
- * Takes a world name (e.g., 'demo') and returns the full path needed to fetch its corresponding manifest file (e.g., 'data/worlds/demo.world.json').
- * @property {(typeName: string, filename: string) => string} resolveContentPath
- * Takes a content type (e.g., 'items') and a filename (e.g., 'potion.json') and returns the full path needed to fetch that content definition file.
- * @property {() => string} resolveGameConfigPath // <<< ADDED for GameConfigLoader
- * Returns the full path needed to fetch the main game configuration file (e.g., './game.json' or 'data/game.json').
+ * @interface IPathResolver
+ *
+ * Service that converts logical identifiers (schema name, world name, mod ID, etc.)
+ * into concrete relative‐to‐project paths understood by the fetcher layer.
  */
+export class IPathResolver {
+    /**
+     * @param {string} filename
+     * @returns {string}
+     */
+    resolveSchemaPath(filename) {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * @param {string} worldName
+     * @returns {string}
+     */
+    resolveManifestPath(worldName) {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * @param {string} typeName
+     * @param {string} filename
+     * @returns {string}
+     */
+    resolveContentPath(typeName, filename) {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * @param {string} filename
+     * @returns {string}
+     */
+    resolveRulePath(filename) {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * @returns {string}
+     */
+    resolveGameConfigPath() {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * **NEW (MODLOADER-004)**
+     * Takes a mod ID (directory name) and returns the full path needed to fetch its
+     * manifest file.
+     *
+     * @param   {string} modId              The unique directory name of the mod.
+     * @returns {string}                    e.g. `"./data/mods/MyMod/mod.manifest.json"`.
+     */
+    resolveModManifestPath(modId) {
+        throw new Error('Not implemented');
+    }
+
+    /**
+     * @param {string} modId
+     * @param {string} typeName
+     * @param {string} filename
+     * @returns {string}
+     */
+    resolveModContentPath(modId, typeName, filename) {
+        throw new Error('Not implemented');
+    }
+}
 
 
 // --- Spatial Indexing ---

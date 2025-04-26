@@ -80,7 +80,7 @@ describe('DefaultPathResolver', () => {
             ['getModsBasePath'], // <<< ADDED for MODLOADER-003
             ['getModManifestFilename'], // <<< ADDED for MODLOADER-003
         ])('should throw an Error if configurationService is missing %s', (methodName) => {
-            const expectedErrorMsg = new RegExp(`requires a valid IConfiguration service instance with a \`${methodName}\` method`);
+            const expectedErrorMsg = new RegExp(`DefaultPathResolver requires a valid IConfiguration with method`);
             const incompleteConfig = {
                 ...mockConfig,
                 [methodName]: undefined // Make the target method undefined
@@ -91,7 +91,7 @@ describe('DefaultPathResolver', () => {
 
         it('should throw an Error if configurationService methods are not functions', () => {
             // Expect the specific error message for the FIRST invalid method encountered in the loop
-            const expectedErrorMsg = /requires a valid IConfiguration service instance with a `getBaseDataPath` method/;
+            const expectedErrorMsg = "DefaultPathResolver requires a valid IConfiguration with method getBaseDataPath()."
             const invalidConfig = {
                 ...mockConfig, // Spread valid mocks first
                 getBaseDataPath: 'not-a-function', // Make the target method invalid
@@ -403,4 +403,55 @@ describe('DefaultPathResolver', () => {
     });
 
     // Add similar test suites for resolveGameConfigPath and resolveRulePath if needed
+});
+
+describe('DefaultPathResolver.resolveModManifestPath', () => {
+    /** Generates a stub IConfiguration with deterministic return values. */
+    const makeConfig = () => ({
+        getBaseDataPath: () => './data',
+        getSchemaBasePath: () => 'schemas',
+        getWorldBasePath: () => 'worlds',
+        getContentBasePath: (type) => type,
+        getGameConfigFilename: () => 'game.json',
+        getModsBasePath: () => 'mods',
+        getModManifestFilename: () => 'mod.manifest.json',
+    });
+
+    it('resolves a normal mod ID correctly', () => {
+        const resolver = new DefaultPathResolver(makeConfig());
+        const result = resolver.resolveModManifestPath('TestMod');
+        expect(result).toBe('./data/mods/TestMod/mod.manifest.json');
+    });
+
+    it('strips accidental whitespace from mod ID', () => {
+        const resolver = new DefaultPathResolver(makeConfig());
+        const result = resolver.resolveModManifestPath('  Core ');
+        expect(result).toBe('./data/mods/Core/mod.manifest.json');
+    });
+
+    it('throws when modId is an empty string', () => {
+        const resolver = new DefaultPathResolver(makeConfig());
+        expect(() => resolver.resolveModManifestPath('')).toThrow(
+            /Invalid or empty modId/i,
+        );
+    });
+
+    it('throws when modId is not a string', () => {
+        const resolver = new DefaultPathResolver(makeConfig());
+        // @ts-expect-error – intentional bad input
+        expect(() => resolver.resolveModManifestPath(42)).toThrow(
+            /Invalid or empty modId/i,
+        );
+    });
+
+    it('handles trailing slashes in configuration paths gracefully', () => {
+        const sloppyConfig = {
+            ...makeConfig(),
+            getBaseDataPath: () => './data/',
+            getModsBasePath: () => 'mods/',
+        };
+        const resolver = new DefaultPathResolver(sloppyConfig);
+        const result = resolver.resolveModManifestPath('Neat');
+        expect(result).toBe('./data/mods/Neat/mod.manifest.json');
+    });
 });
