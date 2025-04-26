@@ -17,6 +17,7 @@ export function registerInfrastructure(container) {
     r.single(tokens.EventBus, EventBus);
     container.register(tokens.ISpatialIndexManager, () => new SpatialIndexManager(), {lifecycle: 'singleton'});
 
+    // Updated WorldLoader factory function for Sub-Ticket 5
     container.register(tokens.WorldLoader, c => new WorldLoader(
         c.resolve(tokens.IDataRegistry),
         c.resolve(tokens.ILogger),
@@ -26,7 +27,8 @@ export function registerInfrastructure(container) {
         c.resolve(tokens.ComponentDefinitionLoader),
         c.resolve(tokens.RuleLoader),
         c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IConfiguration)
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.GameConfigLoader) // <<< ADDED GameConfigLoader Injection (AC2 related)
     ), {lifecycle: 'singleton'});
 
     container.register(tokens.GameDataRepository,

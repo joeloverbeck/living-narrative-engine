@@ -7,6 +7,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */ // <<< ADDED
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */ // <<< ADDED
+/** @typedef {import('ajv').ErrorObject} AjvErrorObject */ // For formatting errors
 
 /** @typedef {import('../../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
@@ -21,7 +22,7 @@ class GameConfigLoader {
     #pathResolver;
     /** @private @type {IDataFetcher} */
     #dataFetcher;
-    /** @private @type {ISchemaValidator} */ // <<< ADDED
+    /** @private @type {ISchemaValidator} */
     #schemaValidator;
     /** @private @type {ILogger} */
     #logger;
@@ -32,7 +33,7 @@ class GameConfigLoader {
      * @param {IConfiguration} dependencies.configuration - Configuration service.
      * @param {IPathResolver} dependencies.pathResolver - Path resolution service.
      * @param {IDataFetcher} dependencies.dataFetcher - Data fetching service.
-     * @param {ISchemaValidator} dependencies.schemaValidator - Schema validation service. // <<< ADDED
+     * @param {ISchemaValidator} dependencies.schemaValidator - Schema validation service.
      * @param {ILogger} dependencies.logger - Logging service.
      * @throws {Error} If any required dependency is not provided or invalid.
      */
@@ -47,105 +48,144 @@ class GameConfigLoader {
         if (!dataFetcher || typeof dataFetcher.fetch !== 'function') {
             throw new Error('GameConfigLoader requires a valid IDataFetcher instance with fetch.');
         }
-        // AC: The GameConfigLoader constructor dependency list is updated to include ISchemaValidator, and it's validated/stored.
-        if (!schemaValidator || typeof schemaValidator.isSchemaLoaded !== 'function' || typeof schemaValidator.getValidator !== 'function') { // <<< ADDED Validator Check
+        if (!schemaValidator || typeof schemaValidator.isSchemaLoaded !== 'function' || typeof schemaValidator.getValidator !== 'function') {
             throw new Error('GameConfigLoader requires a valid ISchemaValidator instance with isSchemaLoaded and getValidator.');
         }
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') { // <<< Added debug check
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
             throw new Error('GameConfigLoader requires a valid ILogger instance.');
         }
 
         this.#configuration = configuration;
         this.#pathResolver = pathResolver;
         this.#dataFetcher = dataFetcher;
-        this.#schemaValidator = schemaValidator; // <<< ADDED Assignment
+        this.#schemaValidator = schemaValidator;
         this.#logger = logger;
 
         this.#logger.info('GameConfigLoader: Instance created.');
     }
 
     /**
+     * Helper to format Ajv validation errors into a readable string.
+     * @private
+     * @param {AjvErrorObject[] | null | undefined} errors - The array of error objects from Ajv.
+     * @returns {string} A formatted string representation of the errors.
+     */
+    #formatValidationErrors(errors) {
+        if (!errors || errors.length === 0) {
+            return 'No specific error details provided.';
+        }
+        // Simple JSON stringify for now, can be made more elaborate if needed
+        return JSON.stringify(errors, null, 2);
+    }
+
+
+    /**
      * Loads, parses, and validates the game configuration file (e.g., game.json).
      * If validation is successful, returns the array of mod IDs specified in the config.
+     * Throws an error if any step fails (file not found, parse error, validation error),
+     * halting the loading process.
      *
-     * @returns {Promise<string[] | null>} A promise that resolves with the array of mod IDs if loading, parsing,
-     * and validation succeed, or null if any step fails.
+     * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs if loading, parsing,
+     * and validation succeed. The promise rejects if any step fails.
      * @public
      * @async
+     * @throws {Error} If the config file cannot be found, parsed, or validated.
      */
     async loadConfig() {
         let configPath = '';
-        try {
-            // 1. Locate and Fetch Config
-            configPath = this.#pathResolver.resolveGameConfigPath();
-            this.#logger.info(`GameConfigLoader: Attempting to load game config from ${configPath}...`);
-            const rawContent = await this.#dataFetcher.fetch(configPath);
+        let rawContent = null;
+        let parsedConfig = null;
 
-            if (typeof rawContent !== 'string' || rawContent.trim() === '') {
-                this.#logger.error(`GameConfigLoader: Fetched content from ${configPath} is not a valid non-empty string.`);
-                return null;
+        try {
+            // 1. Locate Config Path
+            configPath = this.#pathResolver.resolveGameConfigPath();
+            const configFilename = this.#configuration.getGameConfigFilename(); // Get filename for logging
+            this.#logger.info(`GameConfigLoader: Attempting to load game config '${configFilename}' from ${configPath}...`);
+
+            // 2. Fetch Config Content
+            try {
+                rawContent = await this.#dataFetcher.fetch(configPath);
+                this.#logger.debug(`GameConfigLoader: Raw content fetched successfully from ${configPath}.`);
+            } catch (fetchError) {
+                // AC: File Not Found / Fetch Error Handling
+                this.#logger.error(`FATAL: Game configuration file '${configFilename}' not found or could not be fetched at ${configPath}. Details: ${fetchError.message}`, fetchError);
+                // Re-throw the original error or a new summarizing one
+                throw new Error(`Failed to fetch game configuration '${configFilename}' from ${configPath}: ${fetchError.message}`);
             }
 
-            // 2. Parse JSON
-            // Type assertion for clarity, assuming GameConfig type matches the expected structure
-            const parsedConfig = /** @type {GameConfig} */ (JSON.parse(rawContent));
-            this.#logger.info(`GameConfigLoader: Successfully loaded and parsed game config from ${configPath}.`);
+            // Basic check: Ensure content is a non-empty string before parsing
+            if (typeof rawContent !== 'string' || rawContent.trim() === '') {
+                this.#logger.error(`FATAL: Fetched content for game configuration '${configFilename}' from ${configPath} is empty or not a string.`);
+                throw new Error(`Invalid content received for game configuration file '${configFilename}'. Expected non-empty string.`);
+            }
 
-            // --- 3. Schema Validation ---
+            // 3. Parse JSON
+            try {
+                // Type assertion for clarity
+                parsedConfig = /** @type {GameConfig} */ (JSON.parse(rawContent));
+                this.#logger.info(`GameConfigLoader: Successfully parsed game config '${configFilename}' from ${configPath}.`);
+            } catch (parseError) {
+                // AC: JSON Parse Error Handling
+                this.#logger.error(`FATAL: Failed to parse game configuration file '${configFilename}'. Invalid JSON syntax. Path: ${configPath}. Details: ${parseError.message}`, parseError);
+                throw new Error(`Failed to parse game configuration file '${configFilename}'. Invalid JSON: ${parseError.message}`);
+            }
 
-            // AC: The loadConfig method, after successfully parsing the JSON data, retrieves the schema ID for game.json
-            const schemaId = this.#configuration.getContentTypeSchemaId('game'); // <<< Assumes 'game' is the type name for game.json
+            // 4. Schema Validation
+            const schemaId = this.#configuration.getContentTypeSchemaId('game');
             if (!schemaId) {
-                this.#logger.error("GameConfigLoader: CRITICAL - Schema ID for 'game' configuration type not found in IConfiguration.");
+                this.#logger.error("FATAL: Schema ID for 'game' configuration type not found in IConfiguration.");
                 throw new Error("Schema ID for 'game' configuration type not configured.");
             }
             this.#logger.debug(`GameConfigLoader: Using schema ID '${schemaId}' for validation.`);
 
-            // AC: The method checks if the game.schema.json schema is loaded in the ISchemaValidator using isSchemaLoaded(schemaId).
             if (!this.#schemaValidator.isSchemaLoaded(schemaId)) {
-                // AC: If not, it logs a critical error and throws, halting the process.
-                this.#logger.error(`GameConfigLoader: CRITICAL - Game config schema ('${schemaId}') is not loaded in the validator. Ensure SchemaLoader ran first and 'game.schema.json' is configured.`);
+                this.#logger.error(`FATAL: Game config schema ('${schemaId}') is not loaded in the validator. Ensure SchemaLoader ran first and '${this.#configuration.getGameConfigFilename()}.schema.json' is configured.`);
                 throw new Error(`Required game config schema ('${schemaId}') not loaded.`);
             }
 
-            // AC: The method retrieves the validator function using ISchemaValidator.getValidator(schemaId).
             const validatorFn = this.#schemaValidator.getValidator(schemaId);
             if (!validatorFn) {
-                // AC: If undefined, it logs a critical error and throws.
-                this.#logger.error(`GameConfigLoader: CRITICAL - Could not retrieve validator function for game config schema '${schemaId}'. Schema might be invalid or compilation failed.`);
+                this.#logger.error(`FATAL: Could not retrieve validator function for game config schema '${schemaId}'. Schema might be invalid or compilation failed.`);
                 throw new Error(`Validator function unavailable for game config schema '${schemaId}'.`);
             }
 
-            // AC: The method calls the validator function with the parsed game.json data.
             this.#logger.debug(`GameConfigLoader: Validating parsed config against schema '${schemaId}'...`);
             const validationResult = validatorFn(parsedConfig);
 
-            // AC: The method checks validationResult.isValid.
-            if (validationResult.isValid) {
-                // AC: If validation passes (isValid is true), the loadConfig method proceeds to return the validated data (specifically, the mods array from the data).
-                this.#logger.info(`GameConfigLoader: Game config validation successful against schema '${schemaId}'.`);
-                // Return only the 'mods' array as required
-                if (!Array.isArray(parsedConfig.mods)) {
-                    this.#logger.error(`GameConfigLoader: Validated game config is missing the 'mods' array property.`);
-                    throw new Error("Validated game config is missing the 'mods' array.");
-                }
-                // Ensure all elements in mods are strings (basic check)
-                if (!parsedConfig.mods.every(mod => typeof mod === 'string')) {
-                    this.#logger.error(`GameConfigLoader: Validated game config 'mods' array contains non-string elements.`);
-                    throw new Error("Validated game config 'mods' array contains non-string elements.");
-                }
-                return parsedConfig.mods; // <<< Return validated mods array
-            } else {
-                // AC: If validation fails (isValid is false), the method does not return the data yet... it can log the failure...
-                const errorDetails = JSON.stringify(validationResult.errors, null, 2);
-                this.#logger.error(`GameConfigLoader: Game config validation FAILED against schema '${schemaId}'. Errors:\n${errorDetails}`);
-                // AC: ... (error handling is in the next ticket). For now, ... return null on failure.
-                return null; // Return null on validation failure as per interpretation of "does not return the data yet"
+            // AC: Schema Validation Error Handling
+            if (!validationResult.isValid) {
+                const formattedErrors = this.#formatValidationErrors(validationResult.errors);
+                this.#logger.error(`FATAL: Game configuration file '${configFilename}' failed schema validation. Path: ${configPath}. Schema ID: '${schemaId}'. Errors: ${formattedErrors}`);
+                // Throw a new error specifically indicating validation failure
+                throw new Error(`Game configuration validation failed for '${configFilename}'.`);
             }
 
+            // 5. Validation Success - Extract and Return Mods
+            this.#logger.info(`GameConfigLoader: Game config '${configFilename}' validation successful against schema '${schemaId}'.`);
+
+            // Final check for 'mods' array existence and type after successful validation
+            if (!parsedConfig || !Array.isArray(parsedConfig.mods)) {
+                this.#logger.error(`FATAL: Validated game config '${configFilename}' is missing the required 'mods' array property or has incorrect type. Path: ${configPath}.`);
+                throw new Error(`Validated game config '${configFilename}' is missing the required 'mods' array.`);
+            }
+            // Ensure all elements in mods are strings (basic check, schema should enforce this more strictly)
+            if (!parsedConfig.mods.every(mod => typeof mod === 'string')) {
+                this.#logger.error(`FATAL: Validated game config '${configFilename}' 'mods' array contains non-string elements. Path: ${configPath}.`);
+                throw new Error(`Validated game config '${configFilename}' 'mods' array contains non-string elements.`);
+            }
+
+            this.#logger.info(`GameConfigLoader: Successfully loaded and validated ${parsedConfig.mods.length} mod IDs from game config.`);
+            return parsedConfig.mods; // Return the validated mods array on success
+
         } catch (error) {
-            this.#logger.error(`GameConfigLoader: Failed to load, parse, or validate game config from ${configPath}. Error: ${error.message}`, error);
-            return null; // Return null on any exception
+            // AC: Halting - Ensure any error caught up to this point propagates
+            // Log a general fatal error message if it wasn't caught by more specific handlers above
+            if (!error.message.startsWith('Failed to fetch') && !error.message.startsWith('Failed to parse') && !error.message.startsWith('Game configuration validation failed')) {
+                // Avoid redundant logging if already logged by specific handlers
+                this.#logger.error(`FATAL: An unexpected error occurred during game config loading process for path ${configPath || 'unknown'}. Error: ${error.message}`, error);
+            }
+            // Re-throw the caught error to halt the process
+            throw error;
         }
     }
 }
