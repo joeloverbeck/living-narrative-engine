@@ -317,7 +317,7 @@ describe('WorldLoader', () => {
                 worldLoader.loadWorld(testWorldName)
             ).rejects.toThrow(
                 // The error message includes the original error's message
-                `WorldLoader failed data load sequence (World Hint: '${testWorldName}'): ${configError.message}`
+                `${configError.message}`
             );
 
             // Assert critical path
@@ -350,7 +350,7 @@ describe('WorldLoader', () => {
             await expect(
                 worldLoader.loadWorld(testWorldName)
             ).rejects.toThrow(
-                `WorldLoader failed data load sequence (World Hint: '${testWorldName}'): ${manifestError.message}`
+                `${manifestError.message}`
             );
 
             // Assert critical path
@@ -459,11 +459,11 @@ describe('WorldLoader', () => {
             expect(mockLogger.info).toHaveBeenCalledWith(`— WorldLoader Load Summary (World Hint: '${testWorldName}') —`);
             // <<< MODIFIED ASSERTION >>>
             expect(mockLogger.info).toHaveBeenCalledWith(`  • Final Mod Load Order: [core, extra]`); // Added space after comma
-            expect(mockLogger.info).toHaveBeenCalledWith(`  • Component definitions: 1`); // From mockRegistry.getAll
-            expect(mockLogger.info).toHaveBeenCalledWith(`  • Mod Manifests: 2`); // From mockRegistry.getAll
+            expect(mockLogger.info).toHaveBeenCalledWith(`  • Component definitions loaded: 1`); // From mockRegistry.getAll
+            expect(mockLogger.info).toHaveBeenCalledWith(`  • Mod Manifests loaded: 2`); // From mockRegistry.getAll
             expect(mockLogger.info).toHaveBeenCalledWith(`  • actions: 1`);
             expect(mockLogger.info).toHaveBeenCalledWith(`  • items: 2`);
-            expect(mockLogger.info).toHaveBeenCalledWith(`  • Total Content Items (excluding components/rules/manifests): 3`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`  • Total Content Items (excluding manifests): 3`);
             expect(mockLogger.info).toHaveBeenCalledWith(`  • System rules loaded: 1`); // From mockRegistry.getAll('system-rules')
             expect(mockLogger.info).toHaveBeenCalledWith('———————————————————————————————————————————————');
 

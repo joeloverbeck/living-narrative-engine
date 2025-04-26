@@ -7,9 +7,9 @@
   "additionalProperties": false,
   "properties": {
     "id": {
-      "description": "Unique identifier for the mod (must match its folder name under mods/).",
+      "description": "Unique identifier for the mod (must match its folder name under mods/). Case-insensitive for lookups, but preserved casing stored.",
       "type": "string",
-      "pattern": "^[a-z0-9_]+$"
+      "pattern": "^[a-zA-Z0-9_]+$"
     },
     "version": {
       "description": "Semantic version of the mod (SemVer: major.minor.patch[-prerelease][+build]).",
@@ -30,7 +30,7 @@
       "type": "string"
     },
     "dependencies": {
-      "description": "Mods this mod depends on. If omitted, there are no dependencies.",
+      "description": "Mods this mod depends on. Engine validates these during load. If omitted, there are no dependencies.",
       "type": "array",
       "items": {
         "$ref": "#/definitions/dependency"
@@ -38,21 +38,21 @@
       "uniqueItems": true
     },
     "conflicts": {
-      "description": "IDs of mods that are incompatible with this mod.",
+      "description": "IDs of mods that are incompatible with this mod. Engine validates these during load.",
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-z0-9_]+$"
+        "pattern": "^[a-zA-Z0-9_]+$"
       },
       "uniqueItems": true
     },
     "gameVersion": {
-      "description": "Game engine version or SemVer range this mod supports.",
+      "description": "Game engine version or SemVer range this mod supports (e.g., \"^1.2.0\", \">=1.0.0 <2.0.0\"). If specified (and not null/empty/whitespace), the engine will validate its own version against this range during startup using SemVer rules. If the engine version is outside the specified range, or if the value is not a valid SemVer range string, the engine will refuse to start with a fatal error.",
       "type": "string",
       "minLength": 1
     },
     "content": {
-      "description": "Mapping of content categories to lists of JSON definition files included in this mod.",
+      "description": "Mapping of content categories to lists of JSON definition files included in this mod. Relative paths from the mod's root directory.",
       "type": "object",
       "properties": {
         "actions": {
@@ -94,18 +94,17 @@
   "required": [
     "id",
     "version",
-    "name",
-    "content"
+    "name"
   ],
   "definitions": {
     "contentFileList": {
-      "description": "Array of relative paths (forward slashes) to .json definition files for a specific content type. Paths must not start with '/' or include '..'.",
+      "description": "Array of relative paths (using forward slashes '/') to .json definition files for a specific content type. Paths must not start with '/' or contain '..'.",
       "type": "array",
       "uniqueItems": true,
       "items": {
         "type": "string",
         "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$",
-        "description": "Relative path to a definition file, e.g. \"items/iron_sword.json\"."
+        "description": "Relative path to a definition file, e.g., \"items/swords/iron_sword.json\"."
       }
     },
     "dependency": {
@@ -114,19 +113,14 @@
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "ID of the dependency mod.",
+          "description": "ID of the dependency mod. Case-insensitive match.",
           "type": "string",
-          "pattern": "^[a-z0-9_]+$"
+          "pattern": "^[a-zA-Z0-9_]+$"
         },
         "version": {
-          "description": "SemVer or version range required.",
+          "description": "SemVer version range required (e.g., \"^1.0.0\", \">=2.1.0\").",
           "type": "string",
           "minLength": 1
-        },
-        "required": {
-          "description": "If false, the dependency is optional. Defaults to true.",
-          "type": "boolean",
-          "default": true
         }
       },
       "required": [

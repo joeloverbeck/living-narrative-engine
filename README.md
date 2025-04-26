@@ -97,6 +97,147 @@ implementation).
 The formal structure of this file is defined by the game.schema.json schema file. The engine validates game.json against
 this schema during startup. You can refer to data/schemas/game.schema.json for the precise definition.
 
+## Dependency & Conflict Validation
+
+A robust modding system relies on clearly defined dependencies and the ability to handle potential conflicts. The Living
+Narrative Engine employs a **fail-fast** philosophy during mod loading regarding critical dependency and conflict
+issues. This means the engine will halt the loading process immediately upon detecting a fatal error, providing clear
+feedback to the user or developer rather than attempting to continue with a potentially unstable configuration.
+
+**Mod IDs are treated as case-insensitive** for all validation purposes (e.g., "MyMod", "mymod", and "myMod" are
+considered the same ID). However, the originally declared casing in a mod's manifest `id` field is preserved for display
+and registry purposes.
+
+### Dependency Rules
+
+Dependencies are declared in the `mod.manifest.json` file within the `dependencies` array. Each entry specifies a
+required `modId` and a `version` requirement (using Semantic Versioning ranges).
+
+**Rule D1: Missing Dependency**
+
+* **Description:** A loaded mod declares a dependency on another mod ID that is not present in the list of mods being
+  loaded (`game.json` or resolved dependency chain).
+* **Severity:** **FATAL**
+* **Reasoning:** The mod explicitly requires functionality or content from the missing dependency. Proceeding would
+  likely lead to runtime errors.
+* **Example:**
+    * `ModA/mod.manifest.json`:
+      `{ "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }`
+    * `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
+    * **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
+
+**Rule D2: Version Mismatch (Incompatible Version)**
+
+* **Description:** A dependency is declared, and the required mod ID *is* present, but the loaded version of that
+  dependency does not satisfy the version range specified.
+* **Severity:** **FATAL**
+* **Reasoning:** The mod was built against a specific version (or range) of the dependency. Using an incompatible
+  version (too old or potentially too new if explicitly restricted) can cause API incompatibilities or unexpected
+  behavior.
+* **Example:**
+    * `ModB/mod.manifest.json`:
+      `{ "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }` (Requires
+      CoreUtils >=1.3.0 and <2.0.0)
+    * `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
+    * `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
+    * **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
+
+**Rule D3: Circular Dependency**
+
+* **Description:** A dependency chain exists where Mod A depends on Mod B, and Mod B (directly or indirectly) depends
+  back on Mod A.
+* **Severity:** **FATAL**
+* **Reasoning:** Circular dependencies create an unresolvable load order and often indicate a design flaw in the mods.
+* **Example:**
+    * `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
+    * `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
+    * **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
+
+### Conflict Rules
+
+Conflicts are declared in the `mod.manifest.json` file within the `conflicts` array. Each entry specifies a `modId` that
+this mod is known to be incompatible with. Version ranges *can* be specified but are less common for conflicts.
+
+**Rule C1: Declared Conflict Present**
+
+* **Description:** A loaded mod declares a conflict with another mod ID, and that conflicting mod ID is also present in
+  the list of mods being loaded.
+* **Severity:** **FATAL**
+* **Reasoning:** The mod author has explicitly stated these mods should not be run together due to known issues (e.g.,
+  overriding the same critical data in incompatible ways, causing game-breaking bugs). Respecting this declaration
+  prevents known unstable states.
+* **Example:**
+    * `AwesomeSwords/mod.manifest.json`:
+      `{ "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }`
+    * `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
+    * `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
+    * **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by "
+      AwesomeSwords".
+
+**Rule C2: Duplicate Mod ID Loaded**
+
+* **Description:** Two different mod sources (e.g., different directories being scanned or listed in `game.json`)
+  provide a manifest declaring the *same* `id` (case-insensitive). This is distinct from dependencies; it means the
+  engine found two separate mods claiming to be the same thing.
+* **Severity:** **FATAL**
+* **Reasoning:** It's ambiguous which mod source is the "correct" one. Allowing both could lead to unpredictable file
+  overrides or data corruption. The user must resolve the ambiguity by removing or renaming one of the sources. Note:
+  This rule applies *before* dependency/conflict checks based on the final list of loaded mods.
+* **Example:**
+    * Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
+    * Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
+    * `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
+    * **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
+
+### Engine Compatibility
+
+Mods can specify the range of engine versions they are compatible with using the `gameVersion` field in their
+`mod.manifest.json`.
+
+* **Field:** `gameVersion`
+* **Format:** A string representing a Semantic Versioning (SemVer) range (e.g., `"^1.2.0"`, `">=1.0.0 <2.0.0"`,
+  `"1.5.x"`). See the [npm semver documentation](https://docs.npmjs.com/cli/v7/using-npm/semver) for details on range
+  syntax.
+* **Behavior:** During startup, the engine checks its own version (imported as `ENGINE_VERSION` in the code) against the
+  `gameVersion` range specified by *each* loaded mod that includes this field.
+* **Validation:**
+    * If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does *not* satisfy that range, the engine will
+      **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
+    * If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type), the
+      engine will **halt startup** with a fatal `TypeError`.
+    * If a mod *omits* the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
+      **skipped** for this check and will not cause an engine compatibility error.
+
+**Rule E1: Engine Version Incompatibility**
+
+* **Description:** A loaded mod declares a `gameVersion` range, but the current engine version (`ENGINE_VERSION`) does
+  not fall within that range.
+* **Severity:** **FATAL**
+* **Reasoning:** The mod author expects specific engine features or behavior present only within the declared version
+  range. Running outside this range risks runtime errors or incorrect functionality.
+* **Example:**
+    * `SomeMod/mod.manifest.json`: `{ "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }` (Requires engine >
+      =1.2.0 and <2.0.0)
+    * Current Engine Version (`ENGINE_VERSION`): `1.1.5`
+    * **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
+
+### Validation Summary Table
+
+| Rule Code | Description                     | Severity | Notes                                                                    |
+|:----------|:--------------------------------|:---------|:-------------------------------------------------------------------------|
+| **D1**    | Missing Dependency              | FATAL    | Cannot proceed without required content/functionality.                   |
+| **D2**    | Incompatible Dependency Version | FATAL    | Potential for API breaks or incorrect behavior.                          |
+| **D3**    | Circular Dependency             | FATAL    | Unresolvable load order.                                                 |
+| **C1**    | Declared Conflict Present       | FATAL    | Explicitly marked as incompatible by mod author.                         |
+| **C2**    | Duplicate Mod ID Source         | FATAL    | Ambiguous which mod source is canonical. Must be resolved manually.      |
+| *(N/A)*   | Manifest Schema Validation      | FATAL    | (`modManifestLoader` error `VALIDATION_FAIL`) Invalid manifest format.   |
+| *(N/A)*   | Manifest ID Mismatch            | FATAL    | (`modManifestLoader` error `ID_MISMATCH`) Manifest `id` != requested ID. |
+| **E1**    | Engine Version Incompatibility  | FATAL    | Mod requires a different engine version range.                           |
+| *(N/A)*   | Invalid `gameVersion` Format    | FATAL    | (`modVersionValidator` re-throws `TypeError`) Not a valid SemVer range.  |
+
+*(Note: Schema validation, ID mismatch, and invalid gameVersion format errors are typically caught by specific
+loaders/validators but are included here for completeness as fatal loading errors related to manifests).*
+
 ### Documentation ▶️
 
 **JSON Logic – Composite Operators ➜ docs/composite-logical-operators.md**
