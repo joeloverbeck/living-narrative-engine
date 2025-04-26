@@ -17,6 +17,7 @@
 /** @typedef {import('../../services/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../services/genericContentLoader.js').default} GenericContentLoader */
 /** @typedef {import('../../services/componentDefinitionLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
 /** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../services/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../services/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -37,6 +38,7 @@ import ManifestLoader from '../../services/manifestLoader.js';
 import RuleLoader from '../../services/ruleLoader.js';
 import GenericContentLoader from '../../services/genericContentLoader.js';
 import ComponentDefinitionLoader from '../../services/componentDefinitionLoader.js';
+import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
 
 
 // --- DI & Helper Imports ---
@@ -45,7 +47,7 @@ import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 
 /**
  * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)
- * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions).
+ * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config).
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -62,7 +64,8 @@ export function registerLoaders(container) {
     registrar.singletonFactory(tokens.IConfiguration, () => new StaticConfiguration());
     logger.debug(`Loaders Registration: Registered ${tokens.IConfiguration}.`);
 
-    registrar.single(tokens.IPathResolver, DefaultPathResolver, [tokens.IConfiguration]);
+    // DefaultPathResolver depends on IConfiguration
+    registrar.singletonFactory(tokens.IPathResolver, (c) => new DefaultPathResolver(c.resolve(tokens.IConfiguration)));
     logger.debug(`Loaders Registration: Registered ${tokens.IPathResolver}.`);
 
     registrar.singletonFactory(tokens.ISchemaValidator, () => new AjvSchemaValidator());
@@ -77,52 +80,69 @@ export function registerLoaders(container) {
     // === Data Loaders ===
     // These services are responsible for fetching, validating, and potentially processing
     // specific types of game data files.
-    registrar.single(tokens.SchemaLoader, SchemaLoader, [
-        tokens.IConfiguration,
-        tokens.IPathResolver,
-        tokens.IDataFetcher,
-        tokens.ISchemaValidator,
-        tokens.ILogger
-    ]);
+
+    // SchemaLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
+    registrar.singletonFactory(tokens.SchemaLoader, (c) => new SchemaLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.ILogger)
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
 
-    registrar.single(tokens.ManifestLoader, ManifestLoader, [
-        tokens.IConfiguration,
-        tokens.IPathResolver,
-        tokens.IDataFetcher,
-        tokens.ISchemaValidator,
-        tokens.ILogger
-    ]);
+    // ManifestLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
+    registrar.singletonFactory(tokens.ManifestLoader, (c) => new ManifestLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.ILogger)
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.ManifestLoader}.`);
 
-    registrar.single(tokens.RuleLoader, RuleLoader, [
-        tokens.IPathResolver,
-        tokens.IDataFetcher,
-        tokens.ISchemaValidator,
-        tokens.IDataRegistry,
-        tokens.ILogger
-    ]);
+    // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger, IConfiguration (implicitly via DefaultPathResolver)
+    registrar.singletonFactory(tokens.RuleLoader, (c) => new RuleLoader(
+        c.resolve(tokens.IConfiguration), // Added dependency
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
 
-    registrar.single(tokens.GenericContentLoader, GenericContentLoader, [
-        tokens.IConfiguration,
-        tokens.IPathResolver,
-        tokens.IDataFetcher,
-        tokens.ISchemaValidator,
-        tokens.IDataRegistry,
-        tokens.ILogger
-    ]);
+    // GenericContentLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+    registrar.singletonFactory(tokens.GenericContentLoader, (c) => new GenericContentLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.GenericContentLoader}.`);
 
-    registrar.single(tokens.ComponentDefinitionLoader, ComponentDefinitionLoader, [
-        tokens.IConfiguration,
-        tokens.IPathResolver,
-        tokens.IDataFetcher,
-        tokens.ISchemaValidator,
-        tokens.IDataRegistry,
-        tokens.ILogger
-    ]);
+    // ComponentDefinitionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+    registrar.singletonFactory(tokens.ComponentDefinitionLoader, (c) => new ComponentDefinitionLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`);
 
-    logger.debug('Loaders Registration: Completed.');
+    // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ILogger // <<< ADDED
+    registrar.singletonFactory(tokens.GameConfigLoader, (c) => new GameConfigLoader({
+        configuration: c.resolve(tokens.IConfiguration),
+        pathResolver: c.resolve(tokens.IPathResolver),
+        dataFetcher: c.resolve(tokens.IDataFetcher),
+        logger: c.resolve(tokens.ILogger)
+    }));
+    logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
+
+
+    logger.info('Loaders Registration: Completed.');
 }

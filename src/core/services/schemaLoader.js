@@ -20,18 +20,18 @@
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
 class SchemaLoader {
-  /** @private @type {IConfiguration} */
-  #config;
-  /** @private @type {IPathResolver} */
-  #resolver;
-  /** @private @type {IDataFetcher} */
-  #fetcher;
-  /** @private @type {ISchemaValidator} */
-  #validator;
-  /** @private @type {ILogger} */
-  #logger;
+    /** @private @type {IConfiguration} */
+    #config;
+    /** @private @type {IPathResolver} */
+    #resolver;
+    /** @private @type {IDataFetcher} */
+    #fetcher;
+    /** @private @type {ISchemaValidator} */
+    #validator;
+    /** @private @type {ILogger} */
+    #logger;
 
-  /**
+    /**
      * Constructs a SchemaLoader instance.
      *
      * @param {IConfiguration} configuration - Service to provide configuration values (schema paths, filenames).
@@ -41,34 +41,39 @@ class SchemaLoader {
      * @param {ILogger} logger - Service for logging messages.
      * @throws {Error} If any required dependency is not provided or invalid.
      */
-  constructor(configuration, pathResolver, fetcher, validator, logger) {
-    // Basic validation
-    if (!configuration || typeof configuration.getSchemaFiles !== 'function' || typeof configuration.getManifestSchemaId !== 'function') {
-      throw new Error("SchemaLoader: Missing or invalid 'configuration' dependency (IConfiguration - requires getSchemaFiles, getManifestSchemaId).");
-    }
-    if (!pathResolver || typeof pathResolver.resolveSchemaPath !== 'function') {
-      throw new Error("SchemaLoader: Missing or invalid 'pathResolver' dependency (IPathResolver).");
-    }
-    if (!fetcher || typeof fetcher.fetch !== 'function') {
-      throw new Error("SchemaLoader: Missing or invalid 'fetcher' dependency (IDataFetcher).");
-    }
-    if (!validator || typeof validator.addSchema !== 'function' || typeof validator.isSchemaLoaded !== 'function') {
-      throw new Error("SchemaLoader: Missing or invalid 'validator' dependency (ISchemaValidator).");
-    }
-    if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') { // Added debug check
-      throw new Error("SchemaLoader: Missing or invalid 'logger' dependency (ILogger - requires info, error, debug).");
+    constructor(configuration, pathResolver, fetcher, validator, logger) {
+        // Basic validation
+        // --- MODIFIED LINE: Removed check for getManifestSchemaId ---
+        // --- MODIFIED LINE: Updated error message ---
+        if (!configuration || typeof configuration.getSchemaFiles !== 'function') {
+            throw new Error("SchemaLoader: Missing or invalid 'configuration' dependency (IConfiguration - requires getSchemaFiles).");
+        }
+        // --- NOTE: pathResolver needs resolveSchemaPath, fetcher needs fetch, validator needs addSchema/isSchemaLoaded ---
+        // These checks correctly reflect the methods used within this class.
+        if (!pathResolver || typeof pathResolver.resolveSchemaPath !== 'function') {
+            throw new Error("SchemaLoader: Missing or invalid 'pathResolver' dependency (IPathResolver - requires resolveSchemaPath).");
+        }
+        if (!fetcher || typeof fetcher.fetch !== 'function') {
+            throw new Error("SchemaLoader: Missing or invalid 'fetcher' dependency (IDataFetcher - requires fetch).");
+        }
+        if (!validator || typeof validator.addSchema !== 'function' || typeof validator.isSchemaLoaded !== 'function') {
+            throw new Error("SchemaLoader: Missing or invalid 'validator' dependency (ISchemaValidator - requires addSchema, isSchemaLoaded).");
+        }
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
+            throw new Error("SchemaLoader: Missing or invalid 'logger' dependency (ILogger - requires info, error, debug).");
+        }
+
+        this.#config = configuration;
+        this.#resolver = pathResolver;
+        this.#fetcher = fetcher;
+        this.#validator = validator;
+        this.#logger = logger;
+
+        // --- Changed log level from info to debug for instance creation ---
+        this.#logger.debug('SchemaLoader: Instance created and services injected.');
     }
 
-    this.#config = configuration;
-    this.#resolver = pathResolver;
-    this.#fetcher = fetcher;
-    this.#validator = validator;
-    this.#logger = logger;
-
-    this.#logger.info('SchemaLoader: Instance created and services injected.');
-  }
-
-  /**
+    /**
      * Loads and adds a single schema file to the validator if it's not already loaded.
      * Handles path resolution, data fetching, $id extraction/validation, and error logging.
      * @private
@@ -80,44 +85,42 @@ class SchemaLoader {
      * @throws {Error} If fetching fails, the schema is missing '$id', or adding to the validator fails.
      * The error will be logged and re-thrown.
      */
-  async #loadAndAddSingleSchema(filename) {
-    const path = this.#resolver.resolveSchemaPath(filename);
-    let schemaId = null; // Keep track of ID for error reporting
+    async #loadAndAddSingleSchema(filename) {
+        // --- Uses resolveSchemaPath from IPathResolver ---
+        const path = this.#resolver.resolveSchemaPath(filename);
+        let schemaId = null; // Keep track of ID for error reporting
 
-    try {
-      // Fetch the raw schema data
-      const schemaData = await this.#fetcher.fetch(path);
-      schemaId = schemaData?.$id; // Extract the schema ID
+        try {
+            // --- Uses fetch from IDataFetcher ---
+            const schemaData = await this.#fetcher.fetch(path);
+            schemaId = schemaData?.$id; // Extract the schema ID
 
-      // Validate that the schema has an ID
-      if (!schemaId) {
-        const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
-        this.#logger.error(`SchemaLoader: ${errMsg}`);
-        throw new Error(errMsg);
-      }
+            // Validate that the schema has an ID
+            if (!schemaId) {
+                const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
+                this.#logger.error(`SchemaLoader: ${errMsg}`);
+                throw new Error(errMsg);
+            }
 
-      // Check if this specific schema is already loaded in the validator
-      if (!this.#validator.isSchemaLoaded(schemaId)) {
-        // If not loaded, add it to the validator
-        await this.#validator.addSchema(schemaData, schemaId);
-        // Successfully added
-        return true;
-      } else {
-        // If already loaded, log a debug message and skip adding it again
-        this.#logger.debug(`SchemaLoader: Schema '${schemaId}' from ${filename} already loaded. Skipping addition.`);
-        // Skipped (successfully processed, but not added)
-        return false;
-      }
+            // --- Uses isSchemaLoaded from ISchemaValidator ---
+            if (!this.#validator.isSchemaLoaded(schemaId)) {
+                // --- Uses addSchema from ISchemaValidator ---
+                await this.#validator.addSchema(schemaData, schemaId);
+                // Successfully added
+                return true;
+            } else {
+                this.#logger.debug(`SchemaLoader: Schema '${schemaId}' from ${filename} already loaded. Skipping addition.`);
+                // Skipped (successfully processed, but not added)
+                return false;
+            }
 
-    } catch (error) {
-      // Catch errors during fetch, $id check, or addSchema for this specific file
-      this.#logger.error(`SchemaLoader: Failed to load or process schema ${filename} (ID: ${schemaId || 'unknown'}, Path: ${path})`, error);
-      // Re-throw the original error to cause Promise.all to reject
-      throw error;
+        } catch (error) {
+            this.#logger.error(`SchemaLoader: Failed to load or process schema ${filename} (ID: ${schemaId || 'unknown'}, Path: ${path})`, error);
+            throw error;
+        }
     }
-  }
 
-  /**
+    /**
      * Loads and compiles all JSON schemas listed in the configuration's `schemaFiles`
      * using the injected services (PathResolver, DataFetcher, SchemaValidator).
      * It delegates the processing of each file to the #loadAndAddSingleSchema helper method.
@@ -127,39 +130,28 @@ class SchemaLoader {
      * occurs during fetching or adding any schema listed in the configuration.
      * @throws {Error} If processing fails for any schema during the main processing loop.
      */
-  async loadAndCompileAllSchemas() {
-    const schemaFiles = this.#config.getSchemaFiles();
+    async loadAndCompileAllSchemas() {
+        // --- Uses getSchemaFiles from IConfiguration ---
+        const schemaFiles = this.#config.getSchemaFiles();
 
-    if (!schemaFiles || schemaFiles.length === 0) {
-      this.#logger.warn('SchemaLoader: No schema files listed in configuration. Skipping schema loading.');
-      return; // Exit if no schemas are configured
+        if (!schemaFiles || schemaFiles.length === 0) {
+            this.#logger.warn('SchemaLoader: No schema files listed in configuration. Skipping schema loading.');
+            return; // Exit if no schemas are configured
+        }
+
+        this.#logger.info(`SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration...`);
+
+        const schemaPromises = schemaFiles.map(filename => this.#loadAndAddSingleSchema(filename));
+
+        try {
+            const results = await Promise.all(schemaPromises);
+            const loadedSchemaCount = results.filter(result => result === true).length;
+            this.#logger.info(`SchemaLoader: Schema processing complete. Added ${loadedSchemaCount} new schemas to the validator (others may have been skipped).`);
+        } catch (error) {
+            this.#logger.error('SchemaLoader: One or more configured schemas failed to load or process. Aborting.', error);
+            throw error;
+        }
     }
-
-    this.#logger.info(`SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration...`);
-
-    // Process each schema file listed in the configuration using the helper method
-    // This map now returns an array of Promises, each resolving to true (added) or false (skipped), or rejecting.
-    const schemaPromises = schemaFiles.map(filename => this.#loadAndAddSingleSchema(filename));
-
-    try {
-      // Wait for all schema processing promises to settle
-      // Promise.all will reject immediately if any promise in schemaPromises rejects.
-      // If successful, 'results' will be an array of booleans [true, false, true, ...]
-      const results = await Promise.all(schemaPromises);
-
-      // Calculate how many schemas were actually added (where the result was true)
-      const loadedSchemaCount = results.filter(result => result === true).length;
-
-      // Log success summary only if all promises resolved
-      this.#logger.info(`SchemaLoader: Schema processing complete. Added ${loadedSchemaCount} new schemas to the validator (others may have been skipped).`);
-    } catch (error) {
-      // Catch any error re-thrown from the #loadAndAddSingleSchema helper method
-      // Promise.all rejects immediately on the first error
-      this.#logger.error('SchemaLoader: One or more configured schemas failed to load or process. Aborting.', error);
-      // Re-throw the error to the caller of loadAndCompileAllSchemas
-      throw error; // No need to wrap, the original error is already descriptive
-    }
-  }
 }
 
 export default SchemaLoader;

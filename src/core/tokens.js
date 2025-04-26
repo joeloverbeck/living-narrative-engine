@@ -22,12 +22,14 @@
  * @property {DiToken} IPathResolver - Token for resolving data paths.
  * @property {DiToken} ISchemaValidator - Token for validating data against schemas.
  * @property {DiToken} IDataRegistry - Token for storing loaded game data.
+ * @property {DiToken} ISpatialIndexManager - Token for managing the spatial index.
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
  * @property {DiToken} ManifestLoader - Token for the manifest loading service.
  * @property {DiToken} RuleLoader - Token for the rule loading service.
  * @property {DiToken} GenericContentLoader - Token for loading generic content files.
  * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
+ * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file. // <<< ADDED
  * @property {DiToken} GameDataRepository - Token for accessing registered game data.
  * @property {DiToken} EntityManager - Token for managing game entities and components.
  * @property {DiToken} DomRenderer - Token for rendering game output to the DOM.
@@ -75,13 +77,13 @@
  * @property {DiToken} HealthSystem - Token for the health system.
  * @property {DiToken} StatusEffectSystem - Token for the status effect system.
  * @property {DiToken} LockSystem - Token for the lock system.
- * @property {DiToken} OperationRegistry - Token for the operation handler registry service. // <<< ADDED
+ * @property {DiToken} OperationRegistry - Token for the operation handler registry service.
  * @property {DiToken} OperationInterpreter - Token for the operation interpreter service.
  * @property {DiToken} SystemLogicInterpreter - Token for the system logic interpreter service.
- * @property {DiToken} DispatchEventHandler - Token for the 'DISPATCH_EVENT' operation handler. // <<< ADDED
- * @property {DiToken} LogHandler - Token for the 'LOG' operation handler. // <<< ADDED
- * @property {DiToken} ModifyComponentHandler - Token for the 'MODIFY_COMPONENT' operation handler. // <<< ADDED
- * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler. // <<< ADDED
+ * @property {DiToken} DispatchEventHandler - Token for the 'DISPATCH_EVENT' operation handler.
+ * @property {DiToken} LogHandler - Token for the 'LOG' operation handler.
+ * @property {DiToken} ModifyComponentHandler - Token for the 'MODIFY_COMPONENT' operation handler.
+ * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
  */
 export const tokens = Object.freeze({
     // Core Interfaces/Abstractions & Externals
@@ -104,6 +106,7 @@ export const tokens = Object.freeze({
     GenericContentLoader: 'GenericContentLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     WorldLoader: 'WorldLoader',
+    GameConfigLoader: 'GameConfigLoader', // <<< ADDED
 
     // Core Services & Managers
     GameDataRepository: 'GameDataRepository',
@@ -156,18 +159,18 @@ export const tokens = Object.freeze({
     HealthSystem: 'HealthSystem',
     StatusEffectSystem: 'StatusEffectSystem',
     LockSystem: 'LockSystem',
-    ActionDiscoverySystem: 'ActionDiscoverySystem', // Added as it's registered
+    ActionDiscoverySystem: 'ActionDiscoverySystem',
 
     // Logic/Interpretation Layer
-    OperationRegistry: 'OperationRegistry', // <<< ADDED
+    OperationRegistry: 'OperationRegistry',
     OperationInterpreter: 'OperationInterpreter',
     SystemLogicInterpreter: 'SystemLogicInterpreter',
 
     // Operation Handlers (Registered within Interpreter bundle)
-    DispatchEventHandler: 'DispatchEventHandler', // <<< ADDED
-    LogHandler: 'LogHandler', // <<< ADDED
-    ModifyComponentHandler: 'ModifyComponentHandler', // <<< ADDED
-    QueryComponentHandler: 'QueryComponentHandler', // <<< ADDED
+    DispatchEventHandler: 'DispatchEventHandler',
+    LogHandler: 'LogHandler',
+    ModifyComponentHandler: 'ModifyComponentHandler',
+    QueryComponentHandler: 'QueryComponentHandler',
 
 
     // --- Add any new keys here ---

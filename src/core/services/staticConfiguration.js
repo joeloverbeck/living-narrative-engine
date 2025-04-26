@@ -1,160 +1,136 @@
-/**
- * @fileoverview Implements the IConfiguration interface by providing
- * hardcoded configuration values, primarily sourced from the legacy
- * constants in the original GameDataRepository.js. This serves as an initial,
- * static configuration provider during the refactoring process.
- */
+// src/core/services/staticConfiguration.js
 
-// JSDoc type import for interface reference - helps tools understand @implements
-/**
- * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
- */
-
-// --- Constants reflecting consolidated entity validation ---
-
-const BASE_DATA_PATH = './data';
-
-// Updated SCHEMA_FILES array:
-// - Removed 'connection.schema.json'
-// - component-definition.schema.json is essential for loading component definitions.
-const SCHEMA_FILES = [
-  'common.schema.json',
-  'event-definition.schema.json',
-  'action-definition.schema.json',
-  'entity.schema.json',            // Main generic entity schema (for items, locations, NPCs, connections, etc.)
-  'interaction-test.schema.json',
-  // 'connection.schema.json',     // REMOVED
-  'quest.schema.json',
-  'objective.schema.json',
-  'world-manifest.schema.json',
-  'component-definition.schema.json', // Core schema for validating component definition files
-  'json-logic.schema.json',
-  'system-rule.schema.json',
-  'operation.schema.json',
-];
-
-// Updated CONTENT_TYPE_SCHEMAS map:
-// - 'connections' now points to the generic 'entity.schema.json' ID.
-const CONTENT_TYPE_SCHEMAS = {
-  common: 'http://example.com/schemas/common.schema.json',
-  actions: 'http://example.com/schemas/action-definition.schema.json',
-  events: 'http://example.com/schemas/event-definition.schema.json',
-  entities: 'http://example.com/schemas/entity.schema.json',   // For player/NPC entities
-  items: 'http://example.com/schemas/entity.schema.json',      // Items are generic entities
-  locations: 'http://example.com/schemas/entity.schema.json',  // Locations are generic entities
-  connections: 'http://example.com/schemas/entity.schema.json',// UPDATED: Connections are generic entities
-  blockers: 'http://example.com/schemas/entity.schema.json',   // Blockers are generic entities
-  objectives: 'http://example.com/schemas/objective.schema.json',
-  quests: 'http://example.com/schemas/quest.schema.json',
-  interactionTests: 'http://example.com/schemas/interaction-test.schema.json',
-  manifest: 'http://example.com/schemas/world-manifest.schema.json',
-  components: 'http://example.com/schemas/component-definition.schema.json' // Schema for component definition files
-};
-
-// --- Static Configuration Class ---
+/** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 
 /**
- * Provides hardcoded configuration values based on the legacy GameDataRepository constants.
- * This implementation fulfills the IConfiguration interface for initial refactoring steps.
- * Future implementations might load configuration from files or environment variables.
- *
+ * Provides static configuration values for the application.
+ * Implements the IConfiguration interface.
+ * In a real application, this might load from a file or environment variables.
  * @implements {IConfiguration}
  */
 class StaticConfiguration {
-  /**
-     * @private
-     * @type {string}
-     * @description The root path for game data.
-     */
-  #baseDataPath = BASE_DATA_PATH;
+    /** @private @type {string} */
+    #baseDataPath = './data'; // Base path relative to execution
 
-  /**
-     * @private
-     * @type {string[]}
-     * @description List of core schema filenames that should be loaded by SchemaLoader.
-     */
-  #schemaFiles = SCHEMA_FILES; // Uses the updated array
-
-  /**
-     * @private
-     * @type {Record<string, string>}
-     * @description Mapping of content type names to their schema $ids.
-     */
-  #contentTypeSchemas = CONTENT_TYPE_SCHEMAS; // Uses the updated map
-
-  /**
-     * @private
-     * @type {string}
-     * @description The specific schema $id for validating world manifest files.
-     */
-  #manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
-
-  /**
-     * Returns the root path where all game data is located.
-     * @override
+    /**
+     * Returns the root path where all game data (worlds, schemas, content) is located.
      * @returns {string}
      */
-  getBaseDataPath() {
-    return this.#baseDataPath;
-  }
+    getBaseDataPath() {
+        return this.#baseDataPath;
+    }
 
-  /**
-     * Returns a list of core schema filenames.
-     * @override
+    /**
+     * Returns a list of schema filenames that should be loaded.
+     * These are typically core schemas needed for validation.
      * @returns {string[]}
      */
-  getSchemaFiles() {
-    return [...this.#schemaFiles]; // Return a copy
-  }
+    getSchemaFiles() {
+        // Define the core schemas needed by the application
+        return [
+            'common.schema.json',
+            'action-definition.schema.json',
+            'component-definition.schema.json',
+            'entity.schema.json',
+            'event-definition.schema.json',
+            'game.schema.json',
+            'json-logic.schema.json',
+            'operation.schema.json',
+            'system-rule.schema.json',
+        ];
+    }
 
-  /**
-     * Returns the schema ID associated with a given content type name.
-     * @override
-     * @param {string} typeName
-     * @returns {string | undefined}
+    /**
+     * Returns the schema ID (e.g., the `$id` value) associated with a given content type name.
+     * This maps type names (like 'entities', 'items') to their validation schema IDs.
+     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions').
+     * @returns {string | undefined} The schema ID or undefined if not mapped.
      */
-  getContentTypeSchemaId(typeName) {
-    return this.#contentTypeSchemas[typeName];
-  }
+    getContentTypeSchemaId(typeName) {
+        const map = {
+            'actions': 'http://example.com/schemas/action-definition.schema.json',
+            'blockers': 'http://example.com/schemas/entity.schema.json',
+            'components': 'http://example.com/schemas/component-definition.schema.json',
+            'connections': 'http://example.com/schemas/entity.schema.json',
+            'entities': 'http://example.com/schemas/entity.schema.json',
+            'events': 'http://example.com/schemas/event-definition.schema.json',
+            'items': 'http://example.com/schemas/entity.schema.json',
+            'locations': 'http://example.com/schemas/entity.schema.json',
+            'operations': 'http://example.com/schemas/operation.schema.json',
+            'system-rules': 'http://example.com/schemas/system-rule.schema.json',
+            // Add other content types as needed
+        };
+        return map[typeName];
+    }
 
-  /**
-     * Returns the schema ID used for validating world manifest files.
-     * @override
+    /**
+     * Returns the path (relative to the `baseDataPath`) where schema files are stored.
      * @returns {string}
      */
-  getManifestSchemaId() {
-    return this.#manifestSchemaId;
-  }
+    getSchemaBasePath() {
+        // --- CORRECTED LINE ---
+        // Assumes schemas are directly in a 'schemas' subdirectory of baseDataPath
+        return `${this.getBaseDataPath()}/schemas`; // Prepend base path
+    }
 
-  /**
-     * Returns the path where core schema files are stored.
-     * @override
+    /**
+     * Returns the path (relative to the `baseDataPath`) where content definition files
+     * for a specific type (e.g., 'items', 'actions') are stored.
+     * @param {string} typeName - The content type name (e.g., 'items', 'actions').
+     * @returns {string} The relative path to the content directory.
+     */
+    getContentBasePath(typeName) {
+        // --- CORRECTED LINE ---
+        // Assumes content types are stored in directories named after the typeName
+        // within the baseDataPath.
+        // Example: typeName 'items' -> path will be `${baseDataPath}/items`
+        // String coercion will handle null/undefined correctly (e.g., `${basePath}/null`)
+        return `${this.getBaseDataPath()}/${typeName}`; // Prepend base path
+    }
+
+    /**
+     * Returns the path (relative to the `baseDataPath`) where world manifest files
+     * (`.world.json`) are stored.
      * @returns {string}
      */
-  getSchemaBasePath() {
-    return `${this.#baseDataPath}/schemas`;
-  }
+    getWorldBasePath() {
+        // --- CORRECTED LINE ---
+        // Assumes manifests are in a 'worlds' subdirectory of baseDataPath
+        return `${this.getBaseDataPath()}/worlds`; // Prepend base path
+    }
 
-  /**
-     * Returns the base path where content definition files for a specific type are stored.
-     * @override
-     * @param {string} typeName
+    /**
+     * Returns the filename for the main game configuration file.
+     * @returns {string} - e.g., "game.json"
+     */
+    getGameConfigFilename() {
+        return 'game.json'; // <<< IMPLEMENTED for GameConfigLoader
+    }
+
+    /**
+     * Returns the path (relative to the `baseDataPath`) where system rule files
+     * are stored.
      * @returns {string}
      */
-  getContentBasePath(typeName) {
-    // Handles 'components' -> './data/components', 'items' -> './data/items', etc.
-    return `${this.#baseDataPath}/${typeName}`;
-  }
+    getRuleBasePath() {
+        // --- CORRECTION (Consistent with others, assuming relative path needed) ---
+        // Assumes rules are in a 'system-rules' subdirectory
+        // If this method is used elsewhere and expects *only* the subdirectory,
+        // you might need to adjust calls to it or create a separate method.
+        // However, based on the pattern, it likely needs the base path too.
+        return `${this.getBaseDataPath()}/system-rules`;
+    }
 
-  /**
-     * Returns the path where world manifest files are stored.
-     * @override
+    /**
+     * Returns the schema ID used for validating system rule files.
      * @returns {string}
      */
-  getWorldBasePath() {
-    return `${this.#baseDataPath}/worlds`;
-  }
+    getRuleSchemaId() {
+        // Note: The original schema ID seemed potentially incorrect (game_rule vs system-rule)
+        // Adjusted to potentially match naming conventions, but verify this ID is correct for your setup.
+        // return 'http://example.com/schemas/game_rule.schema.json';
+        return 'http://example.com/schemas/system-rule.schema.json'; // Or keep original if intended
+    }
 }
 
-// Export the class as the default export for this module
 export default StaticConfiguration;

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/game.schema.json",
+  "title": "Game Configuration",
+  "description": "Schema for the game configuration file (game.json), defining the required list of mods.",
+  "type": "object",
+  "properties": {
+    "mods": {
+      "description": "A list of unique mod identifiers to be loaded.",
+      "type": "array",
+      "items": {
+        "description": "Identifier for a single mod.",
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "mods"
+  ],
+  "additionalProperties": false
+}

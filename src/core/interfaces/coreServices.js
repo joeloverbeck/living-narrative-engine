@@ -14,9 +14,8 @@
  * @typedef {object} IDataFetcher
  * @property {(identifier: string) => Promise<any>} fetch
  * Fetches data identified by the given string (e.g., path, URL).
- * The promise should resolve with the fetched data.
- * Consider refining the Promise return type (e.g., `Promise<object>`, `Promise<string>`, `Promise<ArrayBuffer>`)
- * based on the specific data types expected by implementations.
+ * The promise should resolve with the fetched data (e.g., string, object, ArrayBuffer).
+ * Implementations should handle basic fetch errors (network, HTTP status) and potentially JSON parsing errors, logging them and throwing appropriate errors.
  */
 
 // --- Schema Validation ---
@@ -66,6 +65,26 @@
  * Retrieves the currently loaded world manifest object. Returns `null` if no manifest is loaded.
  * @property {(data: object) => void} setManifest
  * Stores the world manifest object.
+ * // --- Specific Getters (Added for REFACTOR-014 / TICKET-11) ---
+ * @property {(id: string) => object | undefined} getEntityDefinition Retrieves a definition classified as an 'entity'.
+ * @property {(id: string) => object | undefined} getItemDefinition Retrieves a definition classified as an 'item'.
+ * @property {(id: string) => object | undefined} getLocationDefinition Retrieves a definition classified as a 'location'.
+ * @property {(id: string) => object | undefined} getConnectionDefinition Retrieves a definition classified as a 'connection'.
+ * @property {(id: string) => object | undefined} getBlockerDefinition Retrieves a definition classified as a 'blocker'.
+ * @property {(id: string) => object | undefined} getActionDefinition Retrieves a definition classified as an 'action'.
+ * @property {(id: string) => object | undefined} getEventDefinition Retrieves a definition classified as an 'event'.
+ * @property {(id: string) => object | undefined} getComponentDefinition Retrieves a definition classified as a 'component'.
+ * @property {() => object[]} getAllEntityDefinitions Retrieves all 'entity' definitions.
+ * @property {() => object[]} getAllItemDefinitions Retrieves all 'item' definitions.
+ * @property {() => object[]} getAllLocationDefinitions Retrieves all 'location' definitions.
+ * @property {() => object[]} getAllConnectionDefinitions Retrieves all 'connection' definitions.
+ * @property {() => object[]} getAllBlockerDefinitions Retrieves all 'blocker' definitions.
+ * @property {() => object[]} getAllActionDefinitions Retrieves all 'action' definitions.
+ * @property {() => object[]} getAllEventDefinitions Retrieves all 'event' definitions.
+ * @property {() => object[]} getAllComponentDefinitions Retrieves all 'component' definitions.
+ * // --- Manifest Specific Data (Added for REFACTOR-014 / TICKET-11) ---
+ * @property {() => string | null} getStartingPlayerId Retrieves the starting player ID from the manifest.
+ * @property {() => string | null} getStartingLocationId Retrieves the starting location ID from the manifest.
  */
 
 // --- Logging ---
@@ -97,14 +116,14 @@
  * @property {(typeName: string) => string | undefined} getContentTypeSchemaId
  * Returns the schema ID (e.g., the `$id` value) associated with a given content type name (like 'entities', 'items', 'actions').
  * Returns `undefined` if the type name has no associated schema ID configured.
- * @property {() => string} getManifestSchemaId
- * Returns the schema ID used specifically for validating world manifest files.
  * @property {() => string} getSchemaBasePath
  * Returns the path (often relative to the `baseDataPath`) where schema files are stored.
  * @property {(typeName: string) => string} getContentBasePath
  * Returns the path (often relative to the `baseDataPath`) where content definition files for a specific type (e.g., 'items', 'actions') are stored.
  * @property {() => string} getWorldBasePath
  * Returns the path (often relative to the `baseDataPath`) where world manifest files (`.world.json`) are stored.
+ * @property {() => string} getGameConfigFilename // <<< ADDED for GameConfigLoader
+ * Returns the filename (e.g., 'game.json') for the main game configuration file.
  */
 
 // --- Path Resolution ---
@@ -119,6 +138,37 @@
  * Takes a world name (e.g., 'demo') and returns the full path needed to fetch its corresponding manifest file (e.g., 'data/worlds/demo.world.json').
  * @property {(typeName: string, filename: string) => string} resolveContentPath
  * Takes a content type (e.g., 'items') and a filename (e.g., 'potion.json') and returns the full path needed to fetch that content definition file.
+ * @property {() => string} resolveGameConfigPath // <<< ADDED for GameConfigLoader
+ * Returns the full path needed to fetch the main game configuration file (e.g., './game.json' or 'data/game.json').
+ */
+
+
+// --- Spatial Indexing ---
+/**
+ * @typedef {import('../entities/entityManager.js').default} EntityManager
+ */
+
+/**
+ * Interface for managing a spatial index of entities based on their location.
+ * Allows efficient querying of entities within a specific location.
+ * @typedef {object} ISpatialIndexManager
+ * @property {(entityId: string, locationId: string | null | undefined) => void} addEntity
+ * Adds or updates an entity's presence in the index for a given location.
+ * Handles cases where locationId is null or undefined (entity might be nowhere).
+ * @property {(entityId: string, oldLocationId: string | null | undefined) => void} removeEntity
+ * Removes an entity from the index, potentially specifying its previous location for efficiency.
+ * Handles cases where oldLocationId is null or undefined.
+ * @property {(entityId: string, oldLocationId: string | null | undefined, newLocationId: string | null | undefined) => void} updateEntityLocation
+ * Updates an entity's location from an old location to a new one. This is often more efficient
+ * than separate remove and add calls. Handles null/undefined for both old and new locations.
+ * @property {(locationId: string) => Set<string>} getEntitiesInLocation
+ * Retrieves a set of all entity IDs currently registered in the specified location.
+ * Returns an empty set if the location is not found or has no entities.
+ * @property {(entityManager: EntityManager) => void} buildIndex
+ * Builds or rebuilds the entire spatial index based on the current state of entities
+ * provided by the EntityManager. Typically called during initialization.
+ * @property {() => void} clearIndex
+ * Clears all entries from the spatial index.
  */
 
 
