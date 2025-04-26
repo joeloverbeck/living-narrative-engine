@@ -32,7 +32,13 @@
  * @typedef {object} ISchemaValidator
  * @property {(schemaData: object, schemaId: string) => Promise<void>} addSchema
  * Adds a JSON schema object to the validator instance, associating it with the given schema ID (typically the `$id`).
+ * Ajv v8 does NOT overwrite existing schemas with the same ID; use removeSchema first if override is needed.
  * The promise resolves when the schema is successfully added and potentially compiled/prepared for validation.
+ * Rejects if the schema is invalid, the ID is invalid, or if the schema ID already exists.
+ * @property {(schemaId: string) => boolean} removeSchema
+ * Removes a schema from the validator instance using its unique identifier ($id).
+ * Returns `true` if the schema was successfully removed, `false` otherwise (e.g., not found, error during removal).
+ * This is necessary for allowing mods to override schemas, as `addSchema` does not overwrite.
  * @property {(schemaId: string) => ((data: any) => ValidationResult) | undefined} getValidator
  * Retrieves a validation function for the specified schema ID.
  * The returned function takes data as input and returns a `ValidationResult`.

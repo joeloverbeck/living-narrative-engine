@@ -81,15 +81,15 @@ class GenericContentLoader {
     }
 
     /**
-     * Loads, validates, and stores all content files for a specific type name.
-     * Orchestrates the fetch -> parse -> validate (schema + runtime) -> store workflow for a list of files.
-     *
-     * @param {string} typeName - The type of content being loaded (e.g., 'actions', 'items', 'triggers').
-     * @param {string[]} filenames - An array of filenames for this content type (from the manifest).
-     * @returns {Promise<void>} Resolves when all files for this type are processed, or rejects on the first critical error for this type.
-     * @throws {Error} If setup fails (e.g., schema not found) or if any file processing fails critically.
+     * @param {string} modId      – which mod are we loading right now?
+     * @param {string} typeName   – e.g. 'entities', 'items'
+     * @param {string[]} filenames
      */
-    async loadContentFiles(typeName, filenames) {
+    async loadContentFiles(modId = 'core', typeName, filenames) {
+        if (typeof modId !== 'string' || !modId.trim()) {
+            throw new Error('GenericContentLoader.loadContentFiles: invalid modId');
+        }
+
         // AC: loadContentFiles logs the start of loading for a type.
         this.#logger.info(`GenericContentLoader: Starting load for content type '${typeName}' (${filenames.length} files)...`);
 
@@ -105,6 +105,8 @@ class GenericContentLoader {
             this.#logger.info(`GenericContentLoader: No files listed for content type '${typeName}'. Skipping.`);
             return; // Nothing to do
         }
+
+        this.#logger.info(`GenericContentLoader: [${modId}] ▶ ${typeName} (${filenames.length})`);
 
         // AC: Schema validation uses IConfiguration to get the schema ID
         const schemaId = this.#config.getContentTypeSchemaId(typeName);
@@ -125,42 +127,25 @@ class GenericContentLoader {
 
         // Process files in parallel for efficiency within a type
         // AC: Processes each filename provided in the array.
-        const filePromises = filenames.map(filename => this.#loadAndProcessFile(typeName, filename, schemaId, validatorFn));
+        const filePromises = filenames.map(fn => this.#loadAndProcessFile(modId, typeName, fn, schemaId, validatorFn));
 
-        try {
-            // Wait for all files of this type to be processed.
-            // Promise.all will reject immediately if any file promise rejects.
-            await Promise.all(filePromises);
-            // AC: Logs successful completion for the content type.
-            this.#logger.info(`GenericContentLoader: Successfully finished loading content type '${typeName}'.`);
-        } catch (error) {
-            // AC: Errors during processing are logged gracefully.
-            this.#logger.error(`GenericContentLoader: Failed to load one or more files for content type '${typeName}'. See previous errors for details.`, error);
-            // Re-throw to signal failure to WorldLoader for this type.
-            throw error;
-        }
+        await Promise.all(filePromises);
+        this.#logger.info(`GenericContentLoader: [${modId}] ✔ finished ${typeName}`);
     }
 
     /**
-     * Loads and processes a single content file, including runtime component validation.
-     * Helper method for loadContentFiles.
      * @private
-     * @param {string} typeName - The type of content (e.g., 'entities', 'items').
-     * @param {string} filename - The filename to process.
-     * @param {string} schemaId - The primary schema ID to validate the overall file structure against.
-     * @param {(data: any) => ValidationResult} validatorFn - The primary schema validation function.
-     * @returns {Promise<void>} Resolves on success (both validations pass, stored), rejects on failure for this file.
      */
-    async #loadAndProcessFile(typeName, filename, schemaId, validatorFn) {
+    async #loadAndProcessFile(modId, typeName, filename, schemaId, validatorFn) {
         let path = '';
-        // **** ADD TEMPORARY LOG ****
-        console.log(`>>> #loadAndProcessFile entered for: ${filename}`);
         try {
-            // --- 1. Resolve Path ---
             if (/[\\/]/.test(filename)) {
-                this.#logger.warn(`GenericContentLoader: Filename '${filename}' for type '${typeName}' contains path separators. Ensure filenames in manifest are just the base filename.`);
+                this.#logger.warn(`GenericContentLoader: Filename '${filename}' contains path separators`);
             }
-            path = this.#resolver.resolveModContentPath('core', typeName, filename);
+
+            /* the hard-coded 'core' is gone ↓ */
+            path = this.#resolver.resolveModContentPath(modId, typeName, filename);
+
             this.#logger.debug(`GenericContentLoader: Processing file: ${path}`);
 
             // --- 2. Fetch Data ---

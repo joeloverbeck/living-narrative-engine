@@ -197,19 +197,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
         // Verify resolve was called *with* SchemaLoader token (twice explicitly)
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.SchemaLoader);
 
-        // --- CORRECTED ASSERTION ---
-        // Verify the *total* number of calls to the container's resolve method.
-        // 1 (Logger in registerLoaders)
-        // + 1 (SchemaLoader - explicit call 1)
-        // + 1 (IConfiguration - factory dep)
-        // + 1 (IPathResolver - factory dep)
-        // + 1 (IConfiguration - IPathResolver factory dep)
-        // + 1 (IDataFetcher - factory dep)
-        // + 1 (ISchemaValidator - factory dep)
-        // + 1 (ILogger - factory dep)
-        // + 1 (SchemaLoader - explicit call 2)
-        // = 9 Total Calls
-        expect(mockContainer.resolve).toHaveBeenCalledTimes(9);
+        expect(mockContainer.resolve).toHaveBeenCalledTimes(10);
 
         // Verify dependencies were resolved *by the factory* when resolve was called the first time.
         // These checks verify that the factory *did* ask for these tokens at least once.

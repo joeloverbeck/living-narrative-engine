@@ -67,7 +67,11 @@ export function registerLoaders(container) {
     registrar.singletonFactory(tokens.IPathResolver, (c) => new DefaultPathResolver(c.resolve(tokens.IConfiguration)));
     logger.debug(`Loaders Registration: Registered ${tokens.IPathResolver}.`);
 
-    registrar.singletonFactory(tokens.ISchemaValidator, () => new AjvSchemaValidator());
+    // AjvSchemaValidator depends on ILogger
+    // Corrected registration: Pass the resolved logger
+    registrar.singletonFactory(tokens.ISchemaValidator, (c) => new AjvSchemaValidator(
+        c.resolve(tokens.ILogger) // <-- Resolve and pass ILogger here
+    ));
     logger.debug(`Loaders Registration: Registered ${tokens.ISchemaValidator}.`);
 
     registrar.singletonFactory(tokens.IDataRegistry, () => new InMemoryDataRegistry());
@@ -86,7 +90,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.ILogger)
+        c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
 
@@ -96,7 +100,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
+        c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
 
@@ -108,7 +112,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
+        c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.GenericContentLoader}.`);
 
@@ -119,7 +123,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
+        c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`);
 
@@ -129,7 +133,7 @@ export function registerLoaders(container) {
         pathResolver: c.resolve(tokens.IPathResolver),
         dataFetcher: c.resolve(tokens.IDataFetcher),
         schemaValidator: c.resolve(tokens.ISchemaValidator),
-        logger: c.resolve(tokens.ILogger)
+        logger: c.resolve(tokens.ILogger) // Correctly passing logger via object destructuring
     }));
     logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
 
@@ -145,7 +149,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
+        c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
     // === ADDED: MODLOADER-005 A END ===

@@ -141,24 +141,27 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
     };
 
     // fixtures
-    const m1 = {id: 'good1', name: 'Good 1', version: '1.0.0'};
-    const m2 = {id: 'good2', name: 'Good 2', version: '2.0.0'};
+    const m1 = {id: 'good1', name: 'Good 1', version: '1.0.0'};
+    const m2 = {id: 'good2', name: 'Good 2', version: '2.0.0'};
 
     let deps;
 
     beforeEach(async () => {
-        // real validator and schema registration (this was the missing step)
-        const schemaValidator = new AjvSchemaValidator();
+        // *** FIX START: Create logger first, then pass it to validator ***
+        const mockLogger = createMockLogger(); // Create the logger instance
+        // real validator and schema registration, now with logger dependency
+        const schemaValidator = new AjvSchemaValidator(mockLogger); // Pass the logger
         await schemaValidator.addSchema(manifestSchema, MOD_SCHEMA_ID);
 
         deps = {
             configuration: createMockConfiguration(),
             pathResolver: createMockPathResolver(),
             fetcher: createMockFetcher({good1: m1, good2: m2}, ['bad']),
-            validator: schemaValidator,
+            validator: schemaValidator, // The validator instance already has the logger
             registry: createMockRegistry(),
-            logger: createMockLogger(),
+            logger: mockLogger, // Store the same logger instance in deps
         };
+        // *** FIX END ***
     });
 
     it('loads two valid mods, skips failing fetch, and stores exactly two', async () => {

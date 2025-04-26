@@ -1,351 +1,361 @@
 // src/core/services/ruleLoader.js
 
+import path from 'path'; // Node.js path module
+
 /**
- * @typedef {import('../interfaces/coreServices.js').IPathResolver}      IPathResolver
- * @typedef {import('../interfaces/coreServices.js').IDataFetcher}       IDataFetcher
- * @typedef {import('../interfaces/coreServices.js').ISchemaValidator}   ISchemaValidator
- * @typedef {import('../interfaces/coreServices.js').ILogger}            ILogger
- * @typedef {import('../interfaces/coreServices.js').IDataRegistry}      IDataRegistry // Added
+ * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
+ * @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver
+ * @typedef {import('../interfaces/coreServices.js').IDataFetcher} IDataFetcher
+ * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('./modManifestLoader.js').ModManifest} ModManifest // Assuming ModManifest type is defined elsewhere
  */
-// EventBus import removed (AC11 related)
-
-// AC1: uuid library is imported
-import { v4 as uuidv4 } from 'uuid';
-
-/** Domain-specific failure wrapper that callers can trap with
- * `catch (e) { if (e instanceof RuleLoaderError) … }` */
-export class RuleLoaderError extends Error {
-  constructor(message, cause) {
-    super(message);
-    this.name = 'RuleLoaderError';
-    if (cause) this.cause = cause;
-  }
-}
 
 /**
- * @class RuleLoader
- * @description Responsible for discovering, fetching, validating, and storing system rule
- * definition files. It interacts with various core services (fetching, path resolution,
- * validation, logging, data registry) to perform its tasks. This version focuses
- * solely on loading rules into the IDataRegistry and does *not* handle rule
- * interpretation or event bus interactions directly.
+ * Service responsible for loading, validating, and registering SystemRule definitions
+ * from mods based on their manifests.
+ * Follows the strict manifest-based approach (Parent Ticket: PARENT-TICKET-ID).
  */
 class RuleLoader {
-  /** @type {IPathResolver}     */ #pathResolver;
-  /** @type {IDataFetcher}      */ #dataFetcher;
-  /** @type {ISchemaValidator}  */ #schemaValidator;
-  /** @type {IDataRegistry}     */ #dataRegistry;   // Added
-  /** @type {ILogger}           */ #logger;
-  // #eventBus removed (AC2, AC11 related)
-  // #interpreter removed (AC11 related)
-  // #rulesByEvent map removed (AC11 related, storage handled by dataRegistry)
+    /** @type {IConfiguration} */
+    #config;
+    /** @type {IPathResolver} */
+    #pathResolver;
+    /** @type {IDataFetcher} */
+    #fetcher;
+    /** @type {ISchemaValidator} */
+    #validator;
+    /** @type {IDataRegistry} */
+    #registry;
+    /** @type {ILogger} */
+    #logger;
+    /** @type {string | null} */
+    #ruleSchemaId = null; // Cache the schema ID
 
-  /**
-     * @param {IPathResolver}     pathResolver
-     * @param {IDataFetcher}      dataFetcher
-     * @param {ISchemaValidator}  schemaValidator
-     * @param {IDataRegistry}     dataRegistry    // Added
-     * @param {ILogger}           logger
-     * // Removed eventBus parameter
+    /**
+     * Constructs a RuleLoader instance.
+     * @param {IConfiguration} config - Configuration service.
+     * @param {IPathResolver} pathResolver - Path resolution service.
+     * @param {IDataFetcher} fetcher - Data fetching service.
+     * @param {ISchemaValidator} validator - Schema validation service.
+     * @param {IDataRegistry} registry - Data registry service.
+     * @param {ILogger} logger - Logging service.
      */
-  constructor(
-    pathResolver,
-    dataFetcher,
-    schemaValidator,
-    dataRegistry,   // Added
-    logger,
-  ) {
-    //------------------------------------------------------------------
-    // Dependency guards
-    //------------------------------------------------------------------
-    if (!pathResolver || typeof pathResolver.resolveContentPath !== 'function')
-      throw new Error("RuleLoader: Missing/invalid 'pathResolver' (needs resolveContentPath).");
+    constructor(config, pathResolver, fetcher, validator, registry, logger) {
+        // --- Dependency validation ---
+        if (!config || typeof config.getContentTypeSchemaId !== 'function') {
+            throw new Error("RuleLoader: Missing or invalid 'config' dependency (IConfiguration). Requires getContentTypeSchemaId method.");
+        }
+        if (!pathResolver || typeof pathResolver.resolveModContentPath !== 'function') { // Check for the specific method needed
+            throw new Error("RuleLoader: Missing or invalid 'pathResolver' dependency (IPathResolver). Requires resolveModContentPath method.");
+        }
+        if (!fetcher || typeof fetcher.fetch !== 'function') {
+            throw new Error("RuleLoader: Missing or invalid 'fetcher' dependency (IDataFetcher). Requires fetch method.");
+        }
+        if (!validator || typeof validator.validate !== 'function' || typeof validator.isSchemaLoaded !== 'function') { // Check for validate and isSchemaLoaded
+            throw new Error("RuleLoader: Missing or invalid 'validator' dependency (ISchemaValidator). Requires validate and isSchemaLoaded methods.");
+        }
+        if (!registry || typeof registry.store !== 'function') { // Check for store
+            throw new Error("RuleLoader: Missing or invalid 'registry' dependency (IDataRegistry). Requires store method.");
+        }
+        if (!logger || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
+            throw new Error("RuleLoader: Missing or invalid 'logger' dependency (ILogger). Requires info, warn, error, and debug methods.");
+        }
 
-    if (!dataFetcher || typeof dataFetcher.fetch !== 'function')
-      throw new Error("RuleLoader: Missing/invalid 'dataFetcher' (needs fetch).");
+        this.#config = config;
+        this.#pathResolver = pathResolver;
+        this.#fetcher = fetcher;
+        this.#validator = validator;
+        this.#registry = registry;
+        this.#logger = logger;
 
-    if (
-      !schemaValidator ||
-            typeof schemaValidator.addSchema !== 'function' ||
-            typeof schemaValidator.isSchemaLoaded !== 'function' ||
-            typeof schemaValidator.validate !== 'function'
-    )
-      throw new Error("RuleLoader: Missing/invalid 'schemaValidator' (needs addSchema, isSchemaLoaded & validate).");
+        // Pre-fetch the schema ID for system rules from configuration
+        this.#ruleSchemaId = this.#config.getContentTypeSchemaId('system-rules');
+        if (!this.#ruleSchemaId) {
+            this.#logger.warn(`RuleLoader: System rule schema ID is not configured ('system-rules'). Rule validation will be skipped.`);
+        } else {
+            this.#logger.debug(`RuleLoader: Initialized with rule schema ID: ${this.#ruleSchemaId}`);
+        }
+    }
 
-    // Added: Check for dataRegistry with a 'store' method
-    if (!dataRegistry || typeof dataRegistry.store !== 'function')
-      throw new Error("RuleLoader: Missing/invalid 'dataRegistry' (needs store method).");
-
-    // Removed: EventBus dependency check (AC11 related)
-
-    if (
-      !logger ||
-            typeof logger.info !== 'function' ||
-            typeof logger.warn !== 'function' ||
-            typeof logger.error !== 'function' ||
-            typeof logger.debug !== 'function' // Added debug check for logging store success
-    )
-      throw new Error("RuleLoader: Missing/invalid 'logger' (needs info/warn/error/debug).");
-
-    this.#pathResolver = pathResolver;
-    this.#dataFetcher = dataFetcher;
-    this.#schemaValidator = schemaValidator;
-    this.#dataRegistry = dataRegistry; // Added
-    this.#logger = logger;
-    // #eventBus assignment removed
-    // #interpreter assignment removed
-
-    // Updated log message
-    this.#logger.info('RuleLoader: Instance created. Mode: Load & Store.');
-  }
-
-  // ** AC1: Removed commented-out loadedEventCount getter **
-
-  // -------------------------------------------------------------------
-  // Internal helpers
-  // -------------------------------------------------------------------
-
-  // ** AC1: Removed commented-out subscribeOnce method **
-
-  // -------------------------------------------------------------------
-  // Public API
-  // -------------------------------------------------------------------
-
-  /**
-     * Load and validate every `*.json` rule file beneath `baseUrl`.
+    /**
+     * Loads system rules defined in a specific mod's manifest.
+     * This implements the strict manifest-based loading strategy.
+     * It relies entirely on the manifest's `content.rules` array and
+     * contains no fallback logic for rule discovery.
      *
-     * Workflow: *dir discover* → *parallel fetch* → *schema validation* → *store in IDataRegistry*.
+     * @param {string} modId - The ID of the mod whose rules are being loaded.
+     * @param {ModManifest} manifest - The parsed manifest object for the mod.
+     * @returns {Promise<number>} A promise that resolves with the number of rules successfully loaded and registered for this mod.
+     */
+    async loadRulesForMod(modId, manifest) {
+        const ruleFiles = manifest?.content?.rules; // Get the list from manifest
+
+        // --- Input Type Validation ---
+        if (!Array.isArray(ruleFiles)) {
+            if (ruleFiles != null) {
+                this.#logger.warn(`RuleLoader [${modId}]: Invalid 'content.rules' field in manifest. Expected an array, got ${typeof ruleFiles}. Skipping rule loading for this mod.`);
+            } else {
+                this.#logger.debug(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`);
+            }
+            return 0; // No valid rule files specified
+        }
+
+        if (ruleFiles.length === 0) {
+            this.#logger.info(`RuleLoader [${modId}]: Manifest specifies an empty 'content.rules' array. No rules to load.`);
+            return 0;
+        }
+        // --- End Input Type Validation ---
+
+        // --- Filter ruleFiles Array for Valid Strings ---
+        const validFilenames = [];
+        let failedFilename = null; // Keep track of which file failed resolution for logging context
+        ruleFiles.forEach(entry => {
+            if (typeof entry === 'string') {
+                const trimmedEntry = entry.trim();
+                if (trimmedEntry.length > 0) {
+                    validFilenames.push(trimmedEntry);
+                } else {
+                    this.#logger.warn(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) "${entry}"`);
+                }
+            } else if (entry !== null) {
+                let entryString;
+                try {
+                    entryString = JSON.stringify(entry);
+                } catch (e) {
+                    entryString = String(entry); // Fallback
+                }
+                this.#logger.warn(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': ${entryString}`);
+            }
+            // Null entries are skipped silently
+        });
+        // --- End Filter ---
+
+
+        // --- Handle Empty List After Filtering and Delegate Processing ---
+        if (validFilenames.length === 0) {
+            this.#logger.info(`RuleLoader [${modId}]: No valid rule files listed in manifest 'content.rules' after filtering.`);
+            return 0; // Return 0 successful loads
+        }
+
+        this.#logger.debug(`RuleLoader [${modId}]: Filtered rule filenames to process: ${JSON.stringify(validFilenames)}`);
+
+        const absolutePaths = [];
+        try {
+            for (const filename of validFilenames) {
+                failedFilename = filename; // Store filename in case of error
+                const resolvedPath = this.#pathResolver.resolveModContentPath(modId, 'system-rules', filename);
+                absolutePaths.push(resolvedPath);
+            }
+            failedFilename = null; // Reset if loop completes successfully
+        } catch (pathError) {
+            // Log the error including which file failed
+            this.#logger.error(`RuleLoader [${modId}]: Failed to resolve path for rule file '${failedFilename}'. Aborting rule loading for this mod. Error: ${pathError.message}`, {
+                error: pathError,
+                modId: modId,
+                filename: failedFilename, // Include the failing filename
+                manifestRules: ruleFiles // Include original list for context
+            });
+            return 0; // Indicate failure by returning 0 rules loaded
+        }
+
+        this.#logger.info(`RuleLoader [${modId}]: Loading ${absolutePaths.length} rule file(s) specified by manifest.`);
+
+        // Delegate processing to #processRulePaths
+        try {
+            return await this.#processRulePaths(absolutePaths, modId);
+        } catch (processingError) {
+            this.#logger.error(`RuleLoader [${modId}]: Unexpected error occurred during #processRulePaths. Error: ${processingError.message}`, {
+                error: processingError,
+                modId: modId,
+                resolvedPaths: absolutePaths
+            });
+            return 0; // Assuming processing errors should also result in 0 loaded count for the mod
+        }
+        // --- End Delegation ---
+    }
+
+    /**
+     * Processes a list of absolute paths to rule files for a specific mod.
+     * Fetches, validates, and registers each rule.
+     * @private
+     * @param {string[]} absolutePaths - Array of absolute paths to validated rule files.
+     * @param {string} modId - The ID of the mod these rules belong to.
+     * @returns {Promise<number>} A promise resolving to the number of rules successfully processed and registered.
+     * @throws {Error} If critical errors occur during fetching, parsing, validation, or storage.
+     */
+    async #processRulePaths(absolutePaths, modId) {
+        let successfulLoads = 0;
+        let ruleValidatorFn = null;
+
+        // --- DEBUG LOG ---
+        // console.log(`DEBUG [${modId}]: #processRulePaths received paths:`, absolutePaths);
+        // --- END DEBUG ---
+
+        // Get validator function once (logic unchanged)
+        if (this.#ruleSchemaId && this.#validator.isSchemaLoaded(this.#ruleSchemaId)) {
+            ruleValidatorFn = this.#validator.getValidator(this.#ruleSchemaId);
+            if (!ruleValidatorFn) {
+                this.#logger.error(`RuleLoader [${modId}]: Could not retrieve validator function for rule schema '${this.#ruleSchemaId}'. Validation will be effectively skipped.`);
+            }
+        } else if (this.#ruleSchemaId) {
+            this.#logger.warn(`RuleLoader [${modId}]: Rule schema '${this.#ruleSchemaId}' is configured but not loaded. Skipping validation.`);
+        }
+
+        const processingPromises = absolutePaths.map(async (filePath) => {
+            const filename = path.basename(filePath);
+            try {
+                // a. Fetch
+                const ruleData = await this.#fetcher.fetch(filePath);
+
+                // b. Validate (logic unchanged)
+                if (ruleValidatorFn) {
+                    const validationResult = ruleValidatorFn(ruleData);
+                    if (!validationResult.isValid) {
+                        const errorDetails = JSON.stringify(validationResult.errors, null, 2);
+                        throw new Error(`Schema validation failed for ${filename}: ${errorDetails}`);
+                    }
+                }
+
+                // c. Determine Rule ID (logic unchanged)
+                const ruleIdInData = ruleData?.rule_id;
+                const generatedRuleId = typeof ruleIdInData === 'string' && ruleIdInData.trim()
+                    ? ruleIdInData.trim()
+                    : ruleIdInData?.startsWith(`${modId}:`)
+                        ? ruleIdInData.substring(modId.length + 1)
+                        : path.parse(filename).name;
+                const finalRuleId = `${modId}:${generatedRuleId}`;
+
+                // Check for duplicates (logic unchanged)
+                if (this.#registry.get('system-rules', finalRuleId)) {
+                    this.#logger.warn(`RuleLoader [${modId}]: Overwriting existing rule with ID '${finalRuleId}' from file '${filename}'.`);
+                }
+
+                // d. Store (logic unchanged)
+                this.#registry.store('system-rules', finalRuleId, ruleData);
+                this.#logger.debug(`RuleLoader [${modId}]: Successfully processed and registered rule '${finalRuleId}' from file '${filename}'.`);
+
+                // --- DEBUG LOG ---
+                // console.log(`DEBUG [${modId}]: File '${filename}' fulfilled.`);
+                // --- END DEBUG ---
+                // Return value for success case is unchanged
+                return {status: 'fulfilled', value: finalRuleId}; // This still needs to be returned for Promise.allSettled
+
+            } catch (error) {
+                // --- DEBUG LOG ---
+                // console.log(`DEBUG [${modId}]: File '${filename}' caught error:`, error.message);
+                // --- END DEBUG ---
+
+                // e. Handle errors (Fetch, Parse, Validation, Storage)
+                this.#logger.error(`RuleLoader [${modId}]: Failed to fetch rule file '${filename}'. Skipping.`, {
+                    error,
+                    modId,
+                    filePath
+                });
+
+                // --- FIX: Re-throw the error so the promise rejects ---
+                throw error;
+                // --- END FIX ---
+
+                // No return value needed here anymore
+            }
+        });
+
+        const results = await Promise.allSettled(processingPromises);
+
+        // --- DEBUG LOG ---
+        // console.log(`DEBUG [${modId}]: Promise.allSettled results:`, JSON.stringify(results, null, 2));
+        // --- END DEBUG ---
+
+        // Reset counter - necessary if this function is called multiple times,
+        // though it's scoped locally here, it's good practice.
+        successfulLoads = 0;
+
+        results.forEach(result => {
+            // The check remains the same: only count fulfilled promises
+            if (result.status === 'fulfilled') {
+                successfulLoads++;
+            }
+            // --- DEBUG LOG ---
+            // else {
+            //     console.log(`DEBUG [${modId}]: Skipping increment for rejected promise. Reason:`, result.reason?.message);
+            // }
+            // --- END DEBUG ---
+        });
+
+        // Final summary logging (logic unchanged)
+        if (successfulLoads > 0 && successfulLoads < absolutePaths.length) {
+            this.#logger.warn(`RuleLoader [${modId}]: Processed ${successfulLoads} out of ${absolutePaths.length} rule files successfully (some failed).`);
+        } else if (successfulLoads === absolutePaths.length && absolutePaths.length > 0) {
+            this.#logger.info(`RuleLoader [${modId}]: Successfully processed and registered all ${successfulLoads} validated rule files for mod.`);
+        } else if (successfulLoads === 0 && absolutePaths.length > 0) {
+            this.#logger.error(`RuleLoader [${modId}]: Failed to process any of the ${absolutePaths.length} specified rule files. Check previous errors.`);
+        }
+
+        // --- DEBUG LOG ---
+        // console.log(`DEBUG [${modId}]: #processRulePaths returning count: ${successfulLoads}`);
+        // --- END DEBUG ---
+        return successfulLoads;
+    }
+
+
+    /**
+     * Loads all rules for a list of mods based on their manifests and load order.
      *
-     * A **RuleLoaderError** is thrown when:
-     * • any fetch fails, **or**
-     * • any blob fails JSON-schema validation.
+     * @param {Array<{modId: string, manifest: ModManifest}>} modsToLoad - An ordered list of mod IDs and their manifests.
+     * @returns {Promise<number>} A promise resolving to the total number of rules loaded across all mods.
+     */
+    async loadAllRules(modsToLoad) {
+        this.#logger.info(`RuleLoader: Starting rule loading for ${modsToLoad.length} mods.`);
+        let totalRulesLoaded = 0;
+
+        // Check if the required rule schema is loaded before starting
+        if (this.#ruleSchemaId && !this.#validator.isSchemaLoaded(this.#ruleSchemaId)) {
+            this.#logger.error(`RuleLoader: Cannot proceed. Configured rule schema '${this.#ruleSchemaId}' is not loaded. Ensure schemas are loaded first.`);
+            return 0; // Halt loading if primary schema is missing
+        } else if (!this.#ruleSchemaId) {
+            this.#logger.warn(`RuleLoader: No rule schema ID configured ('system-rules'). Rules will be loaded without schema validation.`);
+        }
+
+        for (const {modId, manifest} of modsToLoad) {
+            this.#logger.debug(`RuleLoader: Loading rules for mod: ${modId}`);
+            try {
+                // Delegate loading for this specific mod to loadRulesForMod
+                const count = await this.loadRulesForMod(modId, manifest);
+                totalRulesLoaded += count;
+            } catch (error) {
+                // This catch block would only be hit if loadRulesForMod re-threw an error,
+                // but currently it returns 0 on path resolution or processing errors.
+                this.#logger.error(`RuleLoader: Unexpected error during rule loading for mod '${modId}'. Load sequence may be incomplete. Error: ${error.message}`, {
+                    error,
+                    modId
+                });
+                // Consider re-throwing if mod-level failures should halt everything
+                // throw error;
+            }
+        }
+
+        this.#logger.info(`RuleLoader: Finished loading rules for all mods. Total rules registered: ${totalRulesLoaded}.`);
+        // Optional: Rebuild registry index if needed
+        // this.#registry.rebuildRuleIndex();
+
+        return totalRulesLoaded;
+    }
+
+    /**
+     * DEPRECATED: Placeholder method for compatibility during refactoring.
+     * This method likely represented the old way of loading rules globally.
+     * It should no longer be used directly; use `loadAllRules` instead.
      *
-     * Storing uses `rule.rule_id` if available and valid, otherwise generates a UUID.
-     * If no files are found after attempting both directory listing and a `rulesIndex.json` fallback,
-     * the method completes gracefully without throwing an enumeration error.
-     *
-     * @param   {string} [baseUrl='./data/system-rules/']
+     * @deprecated Use loadAllRules(modsToLoad) instead.
      * @returns {Promise<void>}
-     * @throws  {RuleLoaderError} If fetch/parse or validation fails for any discovered file.
      */
-  async loadAll(baseUrl = './data/system-rules/') {
-    //------------------------------------------------------------------
-    // Start - No need to clear internal state like #rulesByEvent anymore
-    //------------------------------------------------------------------
-    // Consider if #dataRegistry needs clearing: Depends on registry implementation.
-    // Assuming registry handles its own state or is cleared elsewhere if needed.
-    // Example: // this.#dataRegistry.clear('system-rules');
-
-    if (!baseUrl.endsWith('/')) baseUrl += '/';
-    this.#logger.info(`RuleLoader.loadAll: Starting load process from “${baseUrl}”`);
-
-    //------------------------------------------------------------------
-    // #1  Enumerate files  .............................................
-    //------------------------------------------------------------------
-    let filenames = [];
-    try {
-      // Attempt HTML directory listing
-      const indexResp = await this.#dataFetcher.fetch(baseUrl, {method: 'GET'});
-      if (indexResp.ok) {
-        const type = indexResp.headers.get('content-type') ?? '';
-        if (type.includes('text/html')) {
-          const html = await indexResp.text();
-          const hrefRe = /href\s*=\s*"(.*?)"/gi;
-          let m;
-          while ((m = hrefRe.exec(html))) {
-            const f = decodeURIComponent(m[1]).replace(/^\.\//, '');
-            if (f.endsWith('.json')) filenames.push(f);
-          }
-        } else if (type.includes('application/json')) {
-          // Handle potential JSON directory listing
-          const listing = await indexResp.json();
-          if (Array.isArray(listing))
-            filenames = listing.filter(f => typeof f === 'string' && f.endsWith('.json'));
-        }
-      }
-      // If HTML directory listing fails or doesn't yield results, filenames might still be empty
-    } catch (e) {
-      this.#logger.warn(`RuleLoader: Directory scrape attempt failed (${e.message}) – falling back to rulesIndex.json`);
-      // Fall through to try rulesIndex.json
+    async loadAll() {
+        this.#logger.warn("RuleLoader.loadAll() is deprecated and likely non-functional in the new mod-based system. Use loadAllRules(modsToLoad) which requires the list of mods.");
+        // Returning 0 to signify no rules loaded via this old path.
+        return Promise.resolve(0);
     }
-
-    // Attempt rulesIndex.json fallback ONLY if directory listing yielded no files
-    if (filenames.length === 0) {
-      this.#logger.info('RuleLoader: Directory listing yielded no JSON files, attempting fallback: rulesIndex.json');
-      try {
-        const idx = await this.#dataFetcher.fetch(baseUrl + 'rulesIndex.json');
-        if (!idx.ok) {
-          // Log the failure but don't throw here - let the final check handle it
-          this.#logger.warn(`RuleLoader: rulesIndex.json fetch failed (HTTP ${idx.status} ${idx.statusText}). Proceeding with potentially empty file list.`);
-        } else {
-          const j = await idx.json();
-          if (Array.isArray(j)) {
-            filenames = j.filter(f => typeof f === 'string' && f.endsWith('.json'));
-            this.#logger.info(`RuleLoader: Loaded ${filenames.length} files from rulesIndex.json.`);
-          } else {
-            this.#logger.warn('RuleLoader: rulesIndex.json content was not a valid JSON array.');
-          }
-        }
-      } catch (e) {
-        // ***** FIX: Remove the throw from this catch block ***** (Already Fixed in Provided Code)
-        this.#logger.error(`RuleLoader: rulesIndex.json fallback failed (${e.message})`);
-        // Let the logic proceed to check if filenames is still empty
-        // *******************************************************
-      }
-    }
-
-    filenames = [...new Set(filenames)]; // Deduplicate filenames
-
-    // Final check after attempting both methods
-    if (filenames.length === 0) {
-      this.#logger.warn(`RuleLoader: No *.json rule files discovered under ${baseUrl} after attempting directory listing and rulesIndex.json fallback. Load process completing without rules.`);
-      // AC12 requires final log, so run that before returning
-      this.#logger.info(
-        'RuleLoader: Load process finished. ' +
-                'Successfully stored 0 rule(s). ' +
-                'Skipped/Failed to store 0 rule(s) during registry operation.'
-      );
-      return; // Gracefully return undefined as per test expectation
-    }
-
-    this.#logger.info(`RuleLoader: Discovered ${filenames.length} potential rule file(s) to process.`);
-
-    //------------------------------------------------------------------
-    // #2  Parallel fetch ...............................................
-    //------------------------------------------------------------------
-    const results = await Promise.allSettled(
-      filenames.map(fn =>
-        this.#dataFetcher.fetch(baseUrl + fn)
-          .then(r => {
-            if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText} (${baseUrl + fn})`);
-            return r.json(); // Attempt to parse JSON directly
-          })
-          .catch(err => {
-            // Catch fetch or JSON parse errors here to enrich the reason
-            throw new Error(`Failed fetch or JSON parse for "${fn}": ${err.message}`);
-          })
-      )
-    );
-
-    //------------------------------------------------------------------
-    // #3  Transport/Parse errors ......................................
-    //------------------------------------------------------------------
-    const fetchFails = results
-      .map((r, i) => ({r, fn: filenames[i]}))
-      .filter(({r}) => r.status === 'rejected');
-
-    fetchFails.forEach(({fn, r}) =>
-      this.#logger.error(`RuleLoader: Fetch/Parse failed for "${fn}" – ${r.reason?.message || r.reason || 'Unknown error'}`)); // Log enriched reason
-
-    // Throw if any file failed fetching/parsing
-    if (fetchFails.length)
-      throw new RuleLoaderError(`${fetchFails.length}/${filenames.length} rule files failed to download or parse`);
-
-    //------------------------------------------------------------------
-    // #4  Schema validation ............................................
-    //------------------------------------------------------------------
-    const SCHEMA_ID = 'http://example.com/schemas/system-rule.schema.json'; // Ensure this schema is loaded elsewhere
-    const validationFails = [];
-    const validRules = []; // Keep track of rules that passed validation
-
-    results.forEach((res, idx) => {
-      // Only process fulfilled promises (fetch/parse errors already handled)
-      if (res.status === 'fulfilled') {
-        const json = res.value;
-        const vRes = this.#schemaValidator.validate(SCHEMA_ID, json);
-
-        const valid = typeof vRes === 'boolean' ? vRes : vRes?.valid;
-        // Handle potential missing errors property on validator result
-        const errors = valid ? [] : (typeof vRes === 'boolean' ? this.#schemaValidator.errors : (vRes?.errors || [{ message: 'Unknown validation error' }]));
-
-        if (!valid) {
-          this.#logger.error(`RuleLoader: Schema invalid → "${filenames[idx]}"`, errors);
-          validationFails.push({file: filenames[idx], errors});
-          // Do not add to validRules
-        } else {
-          // Store the validated rule along with its original filename for logging during storage
-          validRules.push({file: filenames[idx], rule: json}); // AC4 implicitly happens here (populating validRules)
-        }
-      }
-    });
-
-    // Throw if any file failed validation
-    if (validationFails.length)
-      throw new RuleLoaderError(`${validationFails.length} rule file(s) failed schema validation`);
-
-    // Log validation success only if there were files to validate
-    if (results.length > 0) {
-      this.#logger.info(`RuleLoader: Validated ${validRules.length} rule file(s) against schema ${SCHEMA_ID}.`);
-    }
-
-    //------------------------------------------------------------------
-    // #5  Store validated rules in IDataRegistry ......................
-    //------------------------------------------------------------------
-    let storedCount = 0;
-    let skippedOrFailedStoreCount = 0; // Track failures during storage
-
-    // AC4: The loop iterating through validRules in loadAll is present.
-    for (const { file, rule } of validRules) {
-      let storageId;
-      let usedGeneratedId = false;
-
-      // AC5: Inside the loop, logic correctly retrieves rule.rule_id.
-      const ruleIdFromRule = rule?.rule_id;
-
-      // AC8: If rule.rule_id is valid, it is used as the storageId.
-      // Define "valid" as a non-empty string for this context.
-      if (typeof ruleIdFromRule === 'string' && ruleIdFromRule.trim().length > 0) {
-        storageId = ruleIdFromRule.trim();
-      } else {
-        // AC6: If rule.rule_id is missing, empty, or invalid, uuidv4() is called to generate a storageId.
-        storageId = uuidv4();
-        usedGeneratedId = true;
-
-        // AC7: If rule_id is missing/invalid, log warning including filename, generated storageId, and recommendation.
-        this.#logger.warn(
-          `RuleLoader: Rule from "${file}" is missing a valid 'rule_id'. ` +
-                    `Using generated UUID: "${storageId}". ` +
-                    'Consider adding a permanent \'rule_id\' to the rule file for better traceability.'
-        );
-      }
-
-      try {
-        // AC9: this.#dataRegistry.store('system-rules', storageId, rule) is called for each valid rule processed.
-        // Using 'system-rules' as the type key per ticket description.
-        this.#dataRegistry.store('system-rules', storageId, rule);
-
-        // AC10: Success... logged appropriately (debug for success)
-        this.#logger.debug(`RuleLoader: Successfully stored rule from "${file}" with ID "${storageId}" in data registry.`);
-        storedCount++;
-
-      } catch (e) {
-        // AC10: ...failure of the store operation is logged appropriately (error for failure).
-        this.#logger.error(
-          `RuleLoader: Failed to store rule (ID: "${storageId}") from file "${file}" in dataRegistry.`,
-          e instanceof Error ? e.message : e // Log error message or the caught object itself
-        );
-        skippedOrFailedStoreCount++;
-        // Decide whether to re-throw or continue processing other rules. Currently continues.
-      }
-    } // End loop AC4
-
-    // AC12: Final logging accurately reflects stored vs. skipped/failed.
-    // This log now runs even if no files were found initially (handled by the early return)
-    // Only log details about validation/fetch failures if they occurred.
-    this.#logger.info(
-      'RuleLoader: Load process finished. ' +
-            `Successfully stored ${storedCount} rule(s). ` +
-            `Skipped/Failed to store ${skippedOrFailedStoreCount} rule(s) during registry operation.` +
-            (validationFails.length > 0 ? ` Note: ${validationFails.length} file(s) failed schema validation prior to storage attempts.` : '') +
-            (fetchFails.length > 0 ? ` Note: ${fetchFails.length} file(s) failed to fetch/parse.` : '')
-    );
-
-    //------------------------------------------------------------------
-    // #6  Subscribe once per unique event_type .........................
-    // AC11: This section and any calls to subscribeOnce are completely removed.
-    //------------------------------------------------------------------
-    // (Section physically removed)
-  }
 }
 
 export default RuleLoader;

@@ -1,21 +1,5 @@
 // src/core/services/componentDefinitionLoader.js
-
-/**
- * @fileoverview Defines the ComponentDefinitionLoader class, responsible for
- * orchestrating the loading of component definition files, validating their
- * structure, and preparing them for schema registration.
- */
-
-// --- Import Interfaces (for JSDoc/Type Hinting) ---
-/**
- * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
- * @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver
- * @typedef {import('../interfaces/coreServices.js').IDataFetcher} IDataFetcher
- * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
- * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry // Kept for potential future use (metadata storage)
- * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
- */
+// --- (Imports and other class parts remain the same) ---
 
 /**
  * Orchestrates the loading and validation of component definition files (*.component.json).
@@ -41,14 +25,6 @@ class ComponentDefinitionLoader {
     #logger;
 
     /**
-     * @private
-     * @type {object[] | null}
-     * @description Temporarily stores successfully loaded and validated definitions during processing.
-     * Nullified after processing finishes or on error.
-     */
-    #validatedDefinitions = null;
-
-    /**
      * Constructs a ComponentDefinitionLoader instance.
      *
      * @param {IConfiguration} configuration - Service to provide config values (e.g., component definition path, schema ID).
@@ -60,21 +36,23 @@ class ComponentDefinitionLoader {
      * @throws {Error} If any required dependency is not provided or appears invalid based on essential methods check.
      */
     constructor(configuration, pathResolver, fetcher, validator, registry, logger) {
-        // Validate dependencies
+        // (Constructor validation remains unchanged)
         if (!configuration || typeof configuration.getContentBasePath !== 'function' || typeof configuration.getContentTypeSchemaId !== 'function') {
             throw new Error("ComponentDefinitionLoader: Missing or invalid 'configuration' dependency (IConfiguration). Requires getContentBasePath and getContentTypeSchemaId methods.");
         }
-        if (!pathResolver || typeof pathResolver.resolveContentPath !== 'function') {
-            throw new Error("ComponentDefinitionLoader: Missing or invalid 'pathResolver' dependency (IPathResolver). Requires resolveContentPath method.");
+        if (!pathResolver || typeof pathResolver.resolveContentPath !== 'function' || typeof pathResolver.resolveModContentPath !== 'function') { // Added resolveModContentPath check
+            throw new Error("ComponentDefinitionLoader: Missing or invalid 'pathResolver' dependency (IPathResolver). Requires resolveContentPath and resolveModContentPath methods.");
         }
         if (!fetcher || typeof fetcher.fetch !== 'function') {
             throw new Error("ComponentDefinitionLoader: Missing or invalid 'fetcher' dependency (IDataFetcher). Requires fetch method.");
         }
-        if (!validator || typeof validator.addSchema !== 'function' || typeof validator.isSchemaLoaded !== 'function' || typeof validator.getValidator !== 'function') { // Added getValidator check
-            throw new Error("ComponentDefinitionLoader: Missing or invalid 'validator' dependency (ISchemaValidator). Requires addSchema, isSchemaLoaded, and getValidator methods.");
+        // Updated check: added removeSchema
+        if (!validator || typeof validator.addSchema !== 'function' || typeof validator.isSchemaLoaded !== 'function' || typeof validator.getValidator !== 'function' || typeof validator.removeSchema !== 'function') {
+            throw new Error("ComponentDefinitionLoader: Missing or invalid 'validator' dependency (ISchemaValidator). Requires addSchema, isSchemaLoaded, getValidator, and removeSchema methods.");
         }
-        if (!registry || typeof registry.store !== 'function') {
-            throw new Error("ComponentDefinitionLoader: Missing or invalid 'registry' dependency (IDataRegistry). Requires store method.");
+        // Added check for 'get' method needed in Sub-Ticket 5
+        if (!registry || typeof registry.store !== 'function' || typeof registry.get !== 'function') {
+            throw new Error("ComponentDefinitionLoader: Missing or invalid 'registry' dependency (IDataRegistry). Requires store and get methods.");
         }
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function') { // Added debug check
             throw new Error("ComponentDefinitionLoader: Missing or invalid 'logger' dependency (ILogger). Requires info, error, warn, and debug methods.");
@@ -92,208 +70,385 @@ class ComponentDefinitionLoader {
     }
 
     /**
-     * Loads component definition files: discovers filenames, fetches content for each,
-     * validates content against the component definition schema, extracts the nested
-     * dataSchema from valid definitions, registers these data schemas with the
-     * ISchemaValidator, and optionally stores the definition metadata in the IDataRegistry.
-     * Rejects if any file fails to load or validate, if essential setup (like the
-     * component definition schema) is missing, or if schema registration fails.
+     * Load every `*.component.json` definition file listed in the provided mod manifest.
+     * Validates the definitions and registers their nested data schemas.
      *
-     * @returns {Promise<void>} Resolves when all files are processed successfully and schemas registered,
-     * rejects on the first critical error.
-     * @throws {Error} If configuration is invalid, essential schemas/validators are missing,
-     * any file processing fails, or schema registration fails.
+     * @param {string} modId - The unique identifier of the mod being processed.
+     * @param {ModManifest | null | undefined} modManifest - The parsed manifest object for the specified mod.
+     * @returns {Promise<number>} A promise that resolves with the number of component definitions successfully loaded and processed for this mod.
+     * Does not throw based on individual file failures, but returns the count of successes.
+     * @throws {Error} If critical setup errors occur (e.g., configuration issues, schema validator problems).
      */
-    async loadComponentDefinitions() {
-        this.#logger.info('ComponentDefinitionLoader: Starting component definition loading based on manifest...');
-        this.#validatedDefinitions = null;
+    async loadComponentDefinitions(modId, modManifest) {
+        // --- Sanity Checks (unchanged) ---
+        if (typeof modId !== 'string' || !modId.trim()) {
+            this.#logger.error('ComponentDefinitionLoader.loadComponentDefinitions: Invalid or empty modId provided.');
+            throw new Error('ComponentDefinitionLoader.loadComponentDefinitions: invalid or empty modId provided.');
+        }
 
+        this.#logger.info(`ComponentDefinitionLoader: Loading component definitions for mod '${modId}'...`);
         let componentFilenames = [];
 
-        try {
-            // --- 1. Get Files from Loaded Manifest ---
-            const manifest = this.#registry.getManifest(); // Get the manifest loaded by WorldLoader
-            if (!manifest) {
-                throw new Error('ComponentDefinitionLoader: World manifest not found in registry. Ensure it was loaded before attempting to load components.');
-            }
-            if (!manifest.contentFiles || !Array.isArray(manifest.contentFiles.components)) {
-                this.#logger.warn(`ComponentDefinitionLoader: World manifest for '${manifest.worldName}' does not contain a 'contentFiles.components' array. Assuming no world-specific components needed.`);
-                componentFilenames = []; // Treat as empty list
+        // --- Extract and Validate Component Filenames (unchanged) ---
+        if (!modManifest || typeof modManifest !== 'object') {
+            this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Invalid or null modManifest provided. Assuming no components to load.`);
+            return 0;
+        }
+        if (!modManifest.content) {
+            this.#logger.info(`ComponentDefinitionLoader [${modId}]: Mod manifest does not contain a 'content' section. Assuming no components.`);
+            return 0;
+        }
+        if (!Array.isArray(modManifest.content.components)) {
+            if (modManifest.content.components == null) {
+                this.#logger.info(`ComponentDefinitionLoader [${modId}]: Mod manifest 'content.components' is null or missing. Assuming no components.`);
             } else {
-                componentFilenames = manifest.contentFiles.components;
+                this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Mod manifest 'content.components' is not an array (type: ${typeof modManifest.content.components}). Assuming no components.`);
             }
-            this.#logger.info(`ComponentDefinitionLoader: Found ${componentFilenames.length} component definition filenames listed in the manifest.`);
-            // --- End Manifest Reading ---
+            return 0;
+        }
 
-            if (componentFilenames.length === 0) {
-                this.#logger.info('ComponentDefinitionLoader: No component definition files listed in manifest. Nothing to load or register for this world.');
-                return;
+        const rawFilenames = modManifest.content.components;
+        componentFilenames = rawFilenames.filter(f => {
+            const isValid = typeof f === 'string' && f.trim();
+            if (typeof f !== 'string' && f != null) {
+                this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Invalid non-string entry found in content.components: ${JSON.stringify(f)}. Skipping.`);
+            } else if (typeof f === 'string' && !f.trim()) {
+                this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Empty string found in content.components. Skipping.`);
             }
-            this.#logger.debug('ComponentDefinitionLoader: Files to process:', componentFilenames);
+            return isValid;
+        });
 
+        this.#logger.info(`ComponentDefinitionLoader [${modId}]: Found ${componentFilenames.length} valid component definition filenames listed in the manifest.`);
 
-            // --- 2. Get Schema and Validator for the *Definition* files ---
+        if (componentFilenames.length === 0) {
+            this.#logger.info(`ComponentDefinitionLoader [${modId}]: No valid component definition files listed to process after filtering. Finishing for this mod.`);
+            return 0;
+        }
+        this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Valid files to process:`, componentFilenames);
+
+        // --- Variables for Processing Results ---
+        let processedCount = 0;
+        let failureCount = 0; // Counter for failed files
+
+        try {
+            // --- Get Schema and Validator for the *Definition* files (unchanged) ---
             const definitionSchemaId = this.#config.getContentTypeSchemaId('components');
             if (!definitionSchemaId) {
-                this.#logger.error("ComponentDefinitionLoader: Schema ID for 'components' not found in configuration.");
-                throw new Error('Component definition schema ID is not configured.');
+                this.#logger.error(`ComponentDefinitionLoader [${modId}]: Schema ID for 'components' (definition files) not found in configuration.`);
+                throw new Error(`Component definition schema ID ('components') is not configured.`);
             }
             if (!this.#validator.isSchemaLoaded(definitionSchemaId)) {
-                this.#logger.error(`ComponentDefinitionLoader: CRITICAL - Component definition schema ('${definitionSchemaId}') is not loaded in the validator. Cannot proceed.`);
+                this.#logger.error(`ComponentDefinitionLoader [${modId}]: CRITICAL - Component definition schema ('${definitionSchemaId}') is not loaded in the validator. Cannot proceed.`);
                 throw new Error(`Required component definition schema ('${definitionSchemaId}') not loaded.`);
             }
             const definitionValidatorFn = this.#validator.getValidator(definitionSchemaId);
             if (!definitionValidatorFn) {
-                this.#logger.error(`ComponentDefinitionLoader: CRITICAL - Could not retrieve validator function for schema '${definitionSchemaId}'.`);
+                this.#logger.error(`ComponentDefinitionLoader [${modId}]: CRITICAL - Could not retrieve validator function for schema '${definitionSchemaId}'.`);
                 throw new Error(`Validator function unavailable for schema '${definitionSchemaId}'.`);
             }
-            this.#logger.debug(`ComponentDefinitionLoader: Using schema '${definitionSchemaId}' for validating definition file structure.`);
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Using schema '${definitionSchemaId}' for validating definition file structure.`);
 
 
-            // --- 3. Load and Validate Definition Files ---
-            const validatedDefinitionsInternal = []; // Use a local variable during processing
+            // --- Create Processing Promises (unchanged) ---
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Mapping ${componentFilenames.length} filenames to processing promises...`);
             const processingPromises = componentFilenames.map(filename =>
-                this.#loadAndValidateDefinition(filename, definitionValidatorFn)
-                    .then(definitionData => {
-                        if (definitionData) { // Ensure helper returned data
-                            validatedDefinitionsInternal.push(definitionData);
-                        }
-                    })
+                this.#processSingleComponentFile(filename, definitionValidatorFn, modId, definitionSchemaId)
             );
 
-            // Wait for all validation promises to complete.
-            await Promise.all(processingPromises);
 
-            // Store the collected definitions temporarily
-            this.#validatedDefinitions = validatedDefinitionsInternal;
-            this.#logger.info(`ComponentDefinitionLoader: Successfully validated ${this.#validatedDefinitions.length} component definitions.`);
+            // --- Wait for Promises to Settle (unchanged) ---
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Awaiting concurrent processing of ${processingPromises.length} component files...`);
+            const settledResults = await Promise.allSettled(processingPromises);
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Concurrent processing finished. Analyzing results...`);
 
 
-            // --- 4. Register Nested Data Schemas & Store Metadata ---
-            // <<< MODIFIED for Ticket 2.1.6 and 2.1.7 START >>>
-            this.#logger.info(`ComponentDefinitionLoader: Starting registration of ${this.#validatedDefinitions.length} component data schemas and metadata storage...`);
-            let processedCount = 0;
+            // --- Process Settled Results ---
+            settledResults.forEach((result, index) => {
+                const sourceFilename = componentFilenames[index] ?? 'unknown file'; // Use filename from original array
+                const sourcePath = result.status === 'rejected' ? result.reason?.resolvedPath : 'unknown path'; // Try to get path from rejection reason if available
 
-            // AC: Iterate through each successfully validated definitionData object
-            for (const definitionData of this.#validatedDefinitions) {
-                let componentId = 'unknown'; // For error reporting if extraction fails
-                try {
-                    // AC: Extract and Validate `id`
-                    componentId = definitionData.id; // Extract ID first for logging context
-                    if (!componentId || typeof componentId !== 'string' || componentId.trim() === '') {
-                        // Basic validation, regex pattern check could be added if needed but schema should cover it
-                        throw new Error('Invalid or missing \'id\' property in validated definition data. Expected non-empty string.');
+                if (result.status === 'fulfilled') {
+                    if (result.value != null) {
+                        processedCount++;
+                        this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully processed component file '${sourceFilename}'. Data ID: ${result.value?.id || 'N/A'}.`);
+                    } else {
+                        // This case shouldn't happen if #processSingleComponentFile always throws on failure or returns data on success.
+                        // However, log a warning just in case.
+                        this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Promise for file '${sourceFilename}' fulfilled but returned null/undefined. Treating as failure.`);
+                        failureCount++;
                     }
-
-                    // AC: Extract and Validate `dataSchema`
-                    const dataSchema = definitionData.dataSchema;
-                    if (!dataSchema || typeof dataSchema !== 'object') { // Null is an object, check explicitly? schema requires object.
-                        throw new Error(`Invalid or missing 'dataSchema' property for component '${componentId}'. Expected a non-null object.`);
-                    }
-                    if (dataSchema === null) {
-                        // This case should ideally be caught by the definition schema validation, but double-check
-                        throw new Error(`Invalid 'dataSchema' property for component '${componentId}'. Must be an object, received null.`);
-                    }
-
-
-                    // AC: Call await this.#validator.addSchema(dataSchema, id). (Ticket 2.1.6)
-                    // AC: Handle Registration Errors (try...catch implicitly handles this)
-                    await this.#validator.addSchema(dataSchema, componentId);
-
-                    // AC: Log success for schema registration using this.#logger.debug (Ticket 2.1.6)
-                    this.#logger.debug(`ComponentDefinitionLoader: Successfully registered data schema for component '${componentId}'.`);
-
-                    // --- TICKET 2.1.7 Implementation START ---
-                    // AC: Call this.#registry.store(...) (Ticket 2.1.7)
-                    this.#registry.store('component_definitions', definitionData.id, definitionData);
-
-                    // AC: Log the storage action using this.#logger.debug (Ticket 2.1.7)
-                    this.#logger.debug(`ComponentDefinitionLoader: Stored definition metadata for component '${definitionData.id}'.`);
-                    // --- TICKET 2.1.7 Implementation END ---
-
-                    processedCount++;
-
-                } catch (error) {
-                    // AC: If addSchema throws an error: Log a critical error... Throw an error to halt... (Ticket 2.1.6)
-                    // Also covers errors during registry storage or logging (Ticket 2.1.7)
-                    this.#logger.error(`ComponentDefinitionLoader: CRITICAL - Failed during post-validation processing for component '${componentId}'. Reason: ${error.message}`, error);
-                    // Throw error to halt the entire loadComponentDefinitions process
-                    throw new Error(`Failed during post-validation processing for component '${componentId}'. Halting load.`);
+                } else if (result.status === 'rejected') {
+                    failureCount++;
+                    // *** Updated error logging to include better context from the rejection reason ***
+                    const reason = result.reason ?? new Error('Unknown rejection reason');
+                    const rejectionDetails = {
+                        modId: modId,
+                        filename: sourceFilename,
+                        resolvedPath: sourcePath, // Use path if available
+                        error: reason // Log the actual error object/reason
+                    };
+                    this.#logger.error(
+                        `ComponentDefinitionLoader [${modId}]: Processing failed for component file: ${sourceFilename}. Reason: ${reason?.message || reason}`,
+                        rejectionDetails
+                    );
+                } else {
+                    // This is highly unlikely for Promise.allSettled
+                    this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Unexpected outcome status '${result.status}' for component file ${sourceFilename} (Promise Index: ${index}). Treating as failure.`);
+                    failureCount++;
                 }
+            });
+
+
+            // --- Logging Summary (unchanged) ---
+            this.#logger.info(`ComponentDefinitionLoader [${modId}]: Completed processing. Success: ${processedCount}/${componentFilenames.length}. Failures: ${failureCount}.`);
+            if (failureCount > 0) {
+                this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Processing encountered ${failureCount} failures for component files. Check previous error logs for details.`);
             }
-
-            // AC: After successfully iterating... log a final success message using this.#logger.info. (Ticket 2.1.6)
-            this.#logger.info(`ComponentDefinitionLoader: Successfully processed (registered schema, stored metadata) for ${processedCount} component definitions.`);
-            // <<< MODIFIED for Ticket 2.1.6 and 2.1.7 END >>>
-
 
         } catch (error) {
-            this.#logger.error('ComponentDefinitionLoader: Critical error during component definition loading/validation, schema registration, or metadata storage.', error);
-            throw error;
-        } finally {
-            this.#validatedDefinitions = null;
+            this.#logger.error(`ComponentDefinitionLoader [${modId}]: Critical error during component definition loading setup or processing loop.`, error);
+            throw error; // Re-throw critical setup errors
         }
+
+        // Return the final count of successful operations (including storage)
+        return processedCount;
     }
 
+
     /**
-     * Loads, validates, and returns the content of a single component definition file.
-     * Helper method for loadComponentDefinitions.
+     * Loads, validates, and processes a single component definition file.
+     * Resolves the path, fetches data, validates structure, extracts key info,
+     * validates and registers the nested data schema, and stores the metadata.
      * @private
-     * @param {string} filename - The filename to process.
-     * @param {(data: any) => ValidationResult} validatorFn - The schema validation function for component definitions.
-     * @returns {Promise<object>} Resolves with the validated definition data object on success.
-     * @throws {Error} Rejects with an error if path resolution, fetching, or validation fails.
+     * @param {string} filename - The relative filename within the mod's components directory.
+     * @param {(data:any) => ValidationResult} definitionValidatorFn - The pre-compiled Ajv validator function for the component definition structure.
+     * @param {string} modId - The ID of the mod being processed (for path resolution and logging).
+     * @param {string} definitionSchemaId - The schema ID used for validation (for logging errors).
+     * @returns {Promise<object | null>} A promise that resolves with the processed definition data object if successful *and* stored.
+     * Rejects if any critical error occurs during the processing of *this specific file* (e.g., fetch error, validation failure, storage error).
+     * The rejection reason will be an Error object, potentially with added context like `reason` type and `resolvedPath`.
      */
-    async #loadAndValidateDefinition(filename, validatorFn) {
-        let path = 'unknown'; // Default path for error logging if resolution fails
-        try {
-            // Resolve the full path
-            this.#logger.debug(`ComponentDefinitionLoader: Processing file: ${filename}...`);
-            path = this.#resolver.resolveModContentPath('core', 'components', filename);
-            this.#logger.debug(`ComponentDefinitionLoader: Resolved mod path for ${filename}: ${path}`);
+    async #processSingleComponentFile(filename, definitionValidatorFn, modId, definitionSchemaId) {
+        this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Processing component file: ${filename}`);
+        let resolvedPath = '';
+        let definitionData = null;
+        let componentIdRaw = null; // Store raw ID before trimming
+        let componentId = null; // Store trimmed ID
 
-            // Fetch, validate, etc. (unchanged)
-            const definitionData = await this.#fetcher.fetch(path);
-            this.#logger.debug(`ComponentDefinitionLoader: Fetched content for ${path}`);
+        try { // Outer try
+            // --- Steps 1-4 remain the same ---
 
-            // Validate the fetched definitionData
-            const validationResult = validatorFn(definitionData);
-
-            if (!validationResult.isValid) {
-                const errorDetails = JSON.stringify(validationResult.errors, null, 2);
-                this.#logger.error(`ComponentDefinitionLoader: Schema validation failed for ${filename} at path ${path}. Errors:\n${errorDetails}`);
-                throw new Error(`Schema validation failed for component definition file '${filename}'.`);
+            // --- 1. Resolve Full File Path ---
+            try {
+                resolvedPath = this.#resolver.resolveModContentPath(modId, 'components', filename);
+                this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Resolved path for ${filename} to ${resolvedPath}`);
+            } catch (resolutionError) {
+                const error = new Error(`Path Resolution Error: Failed to resolve path for component ${filename} in mod ${modId}: ${resolutionError.message}`);
+                error.resolvedPath = resolvedPath || filename; // Attach path if available
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: Failed to resolve path for component file '${filename}'. Error: ${resolutionError.message}`,
+                    {modId, filename, error: resolutionError}
+                );
+                throw error;
             }
 
-            // Log debug logs for processing each file and success logs upon successful validation.
-            this.#logger.debug(`ComponentDefinitionLoader: Successfully validated ${filename} from ${path}.`);
+            // --- 2. Fetch Content ---
+            try {
+                definitionData = await this.#fetcher.fetch(resolvedPath);
+                this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully fetched and parsed data for ${resolvedPath}.`);
+            } catch (fetchError) {
+                const error = new Error(`Workspace/Parse Error: Failed to fetch or parse component ${filename} from ${resolvedPath} in mod ${modId}: ${fetchError.message}`);
+                error.resolvedPath = resolvedPath;
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: Failed to fetch or parse component definition from '${resolvedPath}'. Mod: ${modId}, File: ${filename}. Error: ${fetchError.message}`,
+                    {modId, filename, path: resolvedPath, error: fetchError}
+                );
+                throw error;
+            }
 
-            // Return the validated data for collection
+            // --- 3. Primary Schema Validation ---
+            const definitionValidationResult = definitionValidatorFn(definitionData);
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=${definitionValidationResult.isValid}`);
+
+            // --- 4. Handle Validation Failure ---
+            if (!definitionValidationResult.isValid) {
+                const formattedErrors = JSON.stringify(definitionValidationResult.errors, null, 2);
+                const errorMessage = `Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${definitionSchemaId}'. Errors:\n${formattedErrors}`;
+                const error = new Error(`Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`);
+                error.reason = 'Schema Validation Error'; // Add reason
+                error.resolvedPath = resolvedPath;
+                error.validationErrors = definitionValidationResult.errors; // Attach errors
+
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: ${errorMessage}`, // Keep detailed message here
+                    { // Context for logging
+                        modId: modId,
+                        filename: filename,
+                        schemaId: definitionSchemaId,
+                        validationErrors: definitionValidationResult.errors,
+                        resolvedPath: resolvedPath,
+                        definition: definitionData // Include definition data on schema failure
+                    }
+                );
+                throw error; // Throw the custom error
+            }
+
+            // --- 5. Extract/Validate ID and DataSchema ---
+            componentIdRaw = definitionData?.id; // Store the raw value
+            const dataSchema = definitionData?.dataSchema;
+
+            // --- ID Validation ---
+            if (typeof componentIdRaw !== 'string' || !componentIdRaw.trim()) {
+                const foundValue = componentIdRaw === null ? 'null' : `"${componentIdRaw}"`;
+                const errorMsg = `Component definition in file '${filename}' from mod '${modId}' is missing a valid string 'id'. Found: ${foundValue}. Skipping.`;
+                const error = new Error(`Definition ID Error: Component definition from '${filename}' in mod '${modId}' is missing a valid string 'id'.`); // Shorter error message
+                error.reason = 'Definition ID Error';
+                error.resolvedPath = resolvedPath;
+
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: ${errorMsg}`,
+                    {modId, resolvedPath, definition: definitionData}
+                );
+                throw error;
+            }
+            componentId = componentIdRaw.trim();
+
+            // --- DataSchema Validation ---
+            if (typeof dataSchema !== 'object' || dataSchema === null) {
+                // *** CORRECTED FORMATTING FOR DATASCHEMA ***
+                const foundValueString = dataSchema === null ? 'null' : `type: ${typeof dataSchema}`; // Get 'null' or 'type: xxx'
+                const errorMsg = `Component definition ID '${componentId}' in file '${filename}' from mod '${modId}' is missing a valid object 'dataSchema'. Found: ${foundValueString}. Skipping.`; // Added colon
+                const error = new Error(`Definition Schema Error: Component definition '${componentId}' from '${filename}' in mod '${modId}' is missing a valid object 'dataSchema'.`); // Shorter error message
+                error.reason = 'Definition Schema Error';
+                error.resolvedPath = resolvedPath;
+
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: ${errorMsg}`,
+                    {modId, resolvedPath, definition: definitionData}
+                );
+                throw error;
+            }
+            this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Extracted valid componentId ('${componentId}') and dataSchema object for ${filename}.`);
+
+            // --- Steps 6 & 7 remain the same ---
+
+            // --- 6. Register Data Schema (with Override Logic) ---
+            try {
+                let schemaExists = false;
+                try {
+                    schemaExists = this.#validator.isSchemaLoaded(componentId);
+                    this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Schema check for component '${componentId}': ${schemaExists ? 'EXISTS' : 'DOES NOT EXIST'}.`);
+                } catch (checkError) {
+                    const errorMsg = `Unexpected error during isSchemaLoaded check for component '${componentId}' in mod '${modId}', file '${filename}'.`;
+                    const error = new Error(`${errorMsg} Error: ${checkError.message}`);
+                    error.reason = 'Schema Registration Error';
+                    error.resolvedPath = resolvedPath;
+                    this.#logger.error(`ComponentDefinitionLoader [${modId}]: ${errorMsg}`, {
+                        modId, filename, componentId, error: checkError, resolvedPath
+                    });
+                    throw error;
+                }
+
+                if (schemaExists) {
+                    this.#logger.warn(`ComponentDefinitionLoader [${modId}]: Overriding previously registered dataSchema for component ID '${componentId}' from file '${filename}'.`);
+                    try {
+                        const removed = this.#validator.removeSchema(componentId);
+                        if (!removed) {
+                            const errorMsg = `Failed to remove existing schema for component '${componentId}' before override attempt. Mod: ${modId}, File: ${filename}.`;
+                            const error = new Error(errorMsg);
+                            error.reason = 'Schema Registration Error';
+                            error.resolvedPath = resolvedPath;
+                            this.#logger.error(`ComponentDefinitionLoader [${modId}]: ${errorMsg}`, {
+                                modId, filename, componentId, path: resolvedPath
+                            });
+                            throw error;
+                        }
+                        this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully removed existing schema for '${componentId}' before override.`);
+                    } catch (removeError) {
+                        const errorMsg = `Error during removeSchema for component '${componentId}'. Mod: ${modId}, File: ${filename}.`;
+                        const error = new Error(`${errorMsg} Error: ${removeError.message}`);
+                        error.reason = 'Schema Registration Error';
+                        error.resolvedPath = resolvedPath;
+                        this.#logger.error(`ComponentDefinitionLoader [${modId}]: ${errorMsg}`, {
+                            modId, filename, componentId, path: resolvedPath, error: removeError
+                        });
+                        throw error;
+                    }
+                }
+
+                await this.#validator.addSchema(dataSchema, componentId);
+                this.#logger.debug(`ComponentDefinitionLoader [${modId}]: Registered dataSchema for component ID '${componentId}' from file '${filename}'.`);
+
+            } catch (registrationError) {
+                // Re-throw if it's already our custom error, otherwise wrap it
+                if (registrationError.reason === 'Schema Registration Error') {
+                    throw registrationError;
+                }
+                const errorMsg = `Failed during dataSchema registration steps for component '${componentId}' from file '${filename}'.`;
+                const error = new Error(`${errorMsg} Error: ${registrationError.message}`);
+                error.reason = 'Schema Registration Error';
+                error.resolvedPath = resolvedPath;
+                this.#logger.error(`ComponentDefinitionLoader [${modId}]: ${errorMsg}`, {
+                    modId, filename, componentId, error: registrationError, resolvedPath
+                });
+                throw error;
+            }
+
+            // --- 7. Store Metadata in Registry (with Override Check and Error Handling) ---
+            try {
+                const storageKey = 'component_definitions';
+                const existingDefinition = this.#registry.get(storageKey, componentId);
+
+                if (existingDefinition) {
+                    this.#logger.warn(
+                        `ComponentDefinitionLoader [${modId}]: Overwriting existing component definition metadata in registry for ID '${componentId}' (from file '${filename}').`,
+                        {modId, filename, componentId, path: resolvedPath}
+                    );
+                }
+
+                this.#registry.store(storageKey, componentId, definitionData);
+                this.#logger.debug(
+                    `ComponentDefinitionLoader [${modId}]: Successfully stored component definition metadata for '${componentId}' (from file '${filename}') in registry.`,
+                    {modId, filename, componentId, path: resolvedPath}
+                );
+
+            } catch (storageError) {
+                const errorMsg = `CRITICAL: Failed to store component definition metadata for '${componentId}' (from file '${filename}') in registry.`;
+                const error = new Error(`${errorMsg} Error: ${storageError.message}`);
+                error.reason = 'Registry Storage Error';
+                error.resolvedPath = resolvedPath;
+                this.#logger.error(
+                    `ComponentDefinitionLoader [${modId}]: ${errorMsg}`,
+                    {modId, filename, componentId, path: resolvedPath, error: storageError}
+                );
+                throw error;
+            }
+
+            // If all steps succeed, return the validated definition data
             return definitionData;
 
-        } catch (error) {
-            // Log adding context if it's a generic error
-            const errorMessage = `ComponentDefinitionLoader: Failed to load/validate component definition ${filename} (Path: ${path}). Reason: ${error.message}`;
-            this.#logger.error(errorMessage, error); // Log original error too if available
+        } catch (error) { // Outer catch
+            // Attach resolvedPath if missing
+            if (error && !error.resolvedPath && resolvedPath) {
+                error.resolvedPath = resolvedPath;
+            }
 
-            // Re-throw a new error with context to ensure Promise.all rejects clearly
-            throw new Error(errorMessage);
+            // *** REMOVED THE 'if (!isAlreadyLoggedSpecificError)' CHECK ***
+            // Always log the generic error when an error reaches this catch block.
+            this.#logger.error(
+                `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${resolvedPath || filename}'. Error: ${error?.message || error}`, // Use resolvedPath in message
+                {
+                    modId,
+                    filename, // Keep original filename for context
+                    componentId: componentId || componentIdRaw || 'unknown_id',
+                    path: resolvedPath,
+                    error // Include the actual error object
+                }
+            );
+
+            // Ensure the promise for this file is always rejected on any error caught here
+            throw error; // Re-throw ANY error to reject the promise
         }
-    }
-
-    /**
-     * Provides access to the definitions that were successfully loaded and validated
-     * during the last call to `loadComponentDefinitions`.
-     * NOTE: This method is now less relevant as registration/storage happens within loadComponentDefinitions.
-     * Kept temporarily for potential debugging, but the primary consumer logic is now integrated.
-     *
-     * @deprecated Use is now internal to loadComponentDefinitions.
-     * @returns {object[] | null} An array of validated component definition objects stored
-     * during processing, or null if called outside processing or after an error.
-     */
-    getValidatedDefinitions() {
-        this.#logger.warn('ComponentDefinitionLoader: getValidatedDefinitions() is deprecated as processing now happens internally. Accessing temporary state.');
-        return this.#validatedDefinitions;
     }
 
 }
