@@ -1,20 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/mod.manifest.schema.json",
-  "title": "Mod Manifest",
-  "description": "Defines the structure for a mod's manifest file (mod.manifest.json), detailing its identity, dependencies, and provided content.",
+  "title": "Mod Manifest Schema",
+  "description": "Defines the structure of a mod.manifest.json file for the Living Narrative Engine.",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "id": {
-      "description": "Unique identifier for the mod. MUST match the mod's directory name.",
+      "description": "Unique identifier for the mod (must match its folder name under mods/).",
       "type": "string",
-      "minLength": 1,
       "pattern": "^[a-z0-9_]+$"
     },
     "version": {
-      "description": "Semantic version of the mod (e.g., '1.0.0').",
+      "description": "Semantic version of the mod (SemVer: major.minor.patch[-prerelease][+build]).",
       "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
     },
     "name": {
       "description": "Human-readable display name for the mod.",
@@ -22,31 +22,37 @@
       "minLength": 1
     },
     "description": {
-      "description": "Brief description of the mod's purpose.",
+      "description": "Brief summary of what the mod does.",
+      "type": "string"
+    },
+    "author": {
+      "description": "Author or team that created the mod.",
       "type": "string"
     },
     "dependencies": {
-      "description": "Specifies other mods this mod requires, mapping required mod ID to a version string.",
-      "type": "object",
-      "additionalProperties": {
-        "description": "Required version string for the dependency (e.g., '>=1.2.0', '^1.0.0'). Format follows standard semantic version range specifiers.",
-        "type": "string"
-      }
-    },
-    "conflicts": {
-      "description": "Lists mod IDs that are incompatible with this mod.",
+      "description": "Mods this mod depends on. If omitted, there are no dependencies.",
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/dependency"
+      },
+      "uniqueItems": true
+    },
+    "conflicts": {
+      "description": "IDs of mods that are incompatible with this mod.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
       },
       "uniqueItems": true
     },
     "gameVersion": {
-      "description": "The game engine version or version range this mod is compatible with.",
-      "type": "string"
+      "description": "Game engine version or SemVer range this mod supports.",
+      "type": "string",
+      "minLength": 1
     },
-    "contentFiles": {
-      "description": "Lists content files provided by this mod, categorized by type.",
+    "content": {
+      "description": "Mapping of content categories to lists of JSON definition files included in this mod.",
       "type": "object",
       "properties": {
         "actions": {
@@ -81,7 +87,6 @@
         }
       },
       "additionalProperties": {
-        "description": "Allows mods to define custom content types and list their files.",
         "$ref": "#/definitions/contentFileList"
       }
     }
@@ -90,19 +95,44 @@
     "id",
     "version",
     "name",
-    "contentFiles"
+    "content"
   ],
-  "additionalProperties": false,
   "definitions": {
     "contentFileList": {
-      "description": "A list of unique relative file paths for a specific content type.",
+      "description": "Array of relative paths (forward slashes) to .json definition files for a specific content type. Paths must not start with '/' or include '..'.",
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
-        "description": "Relative path to a content definition file within the mod's directory (e.g., 'items/my_sword.json').",
-        "pattern": "^[^/\\s].*\\.json$"
+        "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$",
+        "description": "Relative path to a definition file, e.g. \"items/iron_sword.json\"."
+      }
+    },
+    "dependency": {
+      "description": "Declares a dependency on another mod.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "ID of the dependency mod.",
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "version": {
+          "description": "SemVer or version range required.",
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "description": "If false, the dependency is optional. Defaults to true.",
+          "type": "boolean",
+          "default": true
+        }
       },
-      "uniqueItems": true
+      "required": [
+        "id",
+        "version"
+      ]
     }
   }
 }

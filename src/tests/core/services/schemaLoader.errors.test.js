@@ -6,7 +6,6 @@ import SchemaLoader from '../../../core/services/schemaLoader.js'; // Adjust pat
 // --- Mocks Setup (Minimal for Error Tests) ---
 const mockConfiguration = {
   getSchemaFiles: jest.fn(),
-  getManifestSchemaId: jest.fn(),
   // getContentTypeSchemaId not needed for these tests based on current SchemaLoader
 };
 const mockPathResolver = {
@@ -46,7 +45,6 @@ describe('SchemaLoader - Error Handling', () => {
 
     // Configure mocks for a basic 2-file scenario where loading is attempted
     mockConfiguration.getSchemaFiles.mockReturnValue(defaultSchemaFiles);
-    mockConfiguration.getManifestSchemaId.mockReturnValue(manifestSchemaId);
     mockPathResolver.resolveSchemaPath.mockImplementation(filename => {
       const path = `./test/schemas/${filename}`;
       console.log(`[Config] resolveSchemaPath called for ${filename}, returning ${path}`);

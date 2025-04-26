@@ -38,7 +38,6 @@ describe('DefaultPathResolver', () => {
             // Add other IConfiguration methods as undefined or jest.fn() if needed elsewhere
             getSchemaFiles: jest.fn(),
             getContentTypeSchemaId: jest.fn(),
-            getManifestSchemaId: jest.fn(),
             getRuleBasePath: jest.fn(), // Mock if resolveRulePath is used/tested
         };
 

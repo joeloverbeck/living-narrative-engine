@@ -101,7 +101,6 @@ export const tokens = Object.freeze({
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
-    ManifestLoader: 'ManifestLoader',
     RuleLoader: 'RuleLoader',
     GenericContentLoader: 'GenericContentLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',

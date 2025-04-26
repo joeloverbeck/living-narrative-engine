@@ -29,7 +29,6 @@ import SchemaLoader from '../../../../core/services/schemaLoader.js'; // Import 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
 
-// --- UPDATED mockConfiguration (Remove getManifestSchemaId as it's no longer checked) ---
 const mockConfiguration = {
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getSchemaFiles: jest.fn().mockReturnValue(['common.schema.json', 'entity.schema.json']),
@@ -111,13 +110,15 @@ describe('registerLoaders (with Mock DI Container)', () => {
     let mockContainer;
 
     beforeEach(() => {
-        jest.clearAllMocks();
-        mockContainer = createMockContainer();
+        jest.clearAllMocks(); // Clears mocks from previous tests
+        mockContainer = createMockContainer(); // Creates a fresh container with fresh spies
 
+        // Register the logger BEFORE calling the function under test
+        // This call SHOULD be counted by the assertion in the test.
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
 
-        // Clear mocks - ensure spies on container methods are also cleared if applicable
-        mockPathResolver.resolve?.mockClear(); // Optional chaining if resolve might not exist
+        // Clear mocks for dependencies that might be called during registration
+        mockPathResolver.resolve?.mockClear();
         mockPathResolver.resolveSchemaPath.mockClear();
         mockSchemaValidator.validate?.mockClear();
         mockSchemaValidator.addSchema.mockClear();
@@ -128,27 +129,52 @@ describe('registerLoaders (with Mock DI Container)', () => {
         mockDataFetcher.fetchText?.mockClear();
         Object.values(mockConfiguration).forEach(mockFn => typeof mockFn?.mockClear === 'function' && mockFn.mockClear());
 
-        // Clear the container's own mock functions/spies
-        mockContainer.register.mockClear();
-        mockContainer.resolve.mockClear(); // Clear the spy
+        // Clear the container's RESOLVE spy, as its calls depend on the specific test case
+        mockContainer.resolve.mockClear();
+        // DO NOT clear mockContainer.register here, as we want to count the ILogger registration above
+        // along with the registrations done by registerLoaders.
     });
 
     // Test 'should register all...' passes (assuming previous fixes are applied)
     it('should register all 11 services/loaders as singletons', () => {
+        // Arrange: Logger is already registered in beforeEach
+
+        // Act: Register the loaders
         registerLoaders(mockContainer);
+
+        // Assert
         const expectedTokens = [
             tokens.IConfiguration, tokens.IPathResolver, tokens.ISchemaValidator,
             tokens.IDataRegistry, tokens.IDataFetcher, tokens.SchemaLoader,
             tokens.RuleLoader, tokens.GenericContentLoader,
             tokens.ComponentDefinitionLoader, tokens.GameConfigLoader, tokens.ModManifestLoader
         ];
-        // Logger (pre-registered) + 11 loaders/services = 12
+        // Expect 1 (ILogger from beforeEach) + 11 (from registerLoaders) = 12 calls
         expect(mockContainer.register).toHaveBeenCalledTimes(expectedTokens.length + 1);
-        // ... other assertions for this test
-        expect(mockLogger.debug).toHaveBeenCalledTimes(13); // 1 start + 11 registers
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // 1 complete
-        expect(mockLogger.info).toHaveBeenCalledWith('Loaders Registration: Completed.');
 
+        // Check that each expected token was registered (ensures no duplicates or wrong tokens)
+        expectedTokens.forEach(token => {
+            expect(mockContainer.register).toHaveBeenCalledWith(
+                token,           // The token itself
+                expect.any(Function), // The factory function
+                {lifecycle: 'singleton'} // The options object
+            );
+        });
+
+        // Check the ILogger registration from beforeEach separately if needed, though the count implies it.
+        expect(mockContainer.register).toHaveBeenCalledWith(
+            tokens.ILogger,
+            mockLogger, // The mock implementation itself (not a factory)
+            {lifecycle: 'singleton'}
+        );
+
+
+        // Verify logger calls within registerLoaders
+        // Note: The count might change slightly depending on whether the Registrar helper logs.
+        // Assuming the pattern `logger.debug('Loaders Registration: Registered ${token}.')`
+        expect(mockLogger.debug).toHaveBeenCalledTimes(1 + expectedTokens.length); // 1 "Starting..." + 11 "Registered..."
+        expect(mockLogger.info).toHaveBeenCalledTimes(1); // 1 "Completed."
+        expect(mockLogger.info).toHaveBeenCalledWith('Loaders Registration: Completed.');
     });
 
 

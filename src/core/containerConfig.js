@@ -6,6 +6,8 @@ import {Registrar} from './dependencyInjection/registrarHelpers.js';
 
 // --- Import Logger ---
 import ConsoleLogger from './services/consoleLogger.js';
+// --- Import Logger Interface for Type Hinting ---
+/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Import registration bundle functions ---
 import {registerLoaders} from './config/registrations/loadersRegistrations.js';
@@ -37,13 +39,22 @@ export function configureContainer(
     container,
     {outputDiv, inputElement, titleElement},
 ) {
-    // --- Bootstrap logger early so bundles can use it ------------------------
     const registrar = new Registrar(container);
-    const logger = new ConsoleLogger();
-    registrar.instance(tokens.ILogger, logger);
+
+    // --- Bootstrap logger early so bundles can use it ------------------------
+    // CHANGE: Register ILogger using a factory function.
+    // Use singletonFactory (or equivalent) from your Registrar helper if it exists,
+    // otherwise, call container.register directly. Assuming registrar.singletonFactory exists:
+    registrar.singletonFactory(tokens.ILogger, () => new ConsoleLogger());
+
+    // CHANGE: Resolve the logger *after* it's registered to use it here.
+    /** @type {ILogger} */
+    const logger = container.resolve(tokens.ILogger);
     logger.info('Container Config: starting bundle registration…');
 
+
     // --- Core data infrastructure -------------------------------------------
+    // This call will now correctly resolve the registered ILogger singleton.
     registerLoaders(container);
     registerInfrastructure(container);
 

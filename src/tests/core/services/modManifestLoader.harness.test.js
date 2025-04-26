@@ -101,7 +101,7 @@ describe('ModManifestLoader — branch edges', () => {
     it('throws when schema validator missing', async () => {
         deps.validator.getValidator.mockReturnValue(undefined);
         await expect(buildLoader(deps).loadRequestedManifests(['modA']))
-            .rejects.toThrow(/No validator function/);
+            .rejects.toThrow(/no validator available/);
         expect(deps.logger.error).toHaveBeenCalledWith(
             expect.stringMatching(/NO_SCHEMA_VALIDATOR/i),
             expect.any(String),
@@ -115,7 +115,8 @@ describe('ModManifestLoader — branch edges', () => {
         expect(result).toBeInstanceOf(Map);
         expect(result.size).toBe(0);
         expect(deps.registry.store).not.toHaveBeenCalled();
-        expect(deps.logger.info).toHaveBeenCalledWith(expect.stringContaining('Fetched: 0/2'));
+        // *** FIX: Removed colon from 'fetched: 0/2' ***
+        expect(deps.logger.info).toHaveBeenCalledWith(expect.stringContaining('fetched 0/2'));
     });
 });
 
@@ -181,6 +182,7 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
         );
 
         // final summary reflects 2/3 fetched ok
-        expect(deps.logger.info).toHaveBeenCalledWith(expect.stringContaining('Fetched: 2/3'));
+        // *** FIX: Removed colon from 'fetched: 2/3' ***
+        expect(deps.logger.info).toHaveBeenCalledWith(expect.stringContaining('fetched 2/3'));
     });
 });

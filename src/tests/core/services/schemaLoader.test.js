@@ -8,7 +8,6 @@ import SchemaLoader from '../../../core/services/schemaLoader.js'; // Adjust pat
 // Mock Interface Implementations using jest.fn()
 const mockConfiguration = {
     getSchemaFiles: jest.fn(),
-    getManifestSchemaId: jest.fn(),
     getContentTypeSchemaId: jest.fn(), // Add other methods if SchemaLoader constructor checks them, though not used in loadAndCompileAllSchemas directly
     getBaseDataPath: jest.fn(),
     getSchemaBasePath: jest.fn(),
@@ -67,7 +66,6 @@ describe('SchemaLoader', () => {
 
         // Default successful mock configuration
         mockConfiguration.getSchemaFiles.mockReturnValue([...defaultSchemaFiles]); // Use spread to avoid modifying original
-        mockConfiguration.getManifestSchemaId.mockReturnValue(manifestSchemaId); // Still needed for constructor test
         mockConfiguration.getContentTypeSchemaId.mockReturnValue('some-id');
 
         mockPathResolver.resolveSchemaPath.mockImplementation(filename => `./test/schemas/${filename}`);
@@ -103,7 +101,6 @@ describe('SchemaLoader', () => {
         // Assert
         expect(mockConfiguration.getSchemaFiles).toHaveBeenCalledTimes(1);
         // Crucially, none of the loading machinery should be called
-        expect(mockConfiguration.getManifestSchemaId).not.toHaveBeenCalled(); // getManifestSchemaId is never called in loadAndCompileAllSchemas
         expect(mockSchemaValidator.isSchemaLoaded).not.toHaveBeenCalled();
         expect(mockPathResolver.resolveSchemaPath).not.toHaveBeenCalled();
         expect(mockDataFetcher.fetch).not.toHaveBeenCalled();

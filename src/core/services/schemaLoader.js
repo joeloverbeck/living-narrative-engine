@@ -43,7 +43,6 @@ class SchemaLoader {
      */
     constructor(configuration, pathResolver, fetcher, validator, logger) {
         // Basic validation
-        // --- MODIFIED LINE: Removed check for getManifestSchemaId ---
         // --- MODIFIED LINE: Updated error message ---
         if (!configuration || typeof configuration.getSchemaFiles !== 'function') {
             throw new Error("SchemaLoader: Missing or invalid 'configuration' dependency (IConfiguration - requires getSchemaFiles).");

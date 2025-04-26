@@ -1,0 +1,26 @@
+{
+  "id": "core",
+  "version": "1.0.0",
+  "name": "core",
+  "description": "Contains the essential base data and definitions required to run the Living Narrative Engine engine.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=1.0.0",
+  "content": {
+    "components": [
+    ],
+    "entities": [
+    ],
+    "items": [
+    ],
+    "locations": [
+    ],
+    "actions": [
+    ],
+    "rules": [
+    ],
+    "events": [
+    ],
+    "operations": [
+    ]
+  }
+}

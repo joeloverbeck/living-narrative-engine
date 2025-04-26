@@ -1,17 +1,33 @@
 // tests/core/services/worldLoader.test.js
 
-import WorldLoader from '../../../core/services/worldLoader.js'; // Corrected path assumption
+// --- JSDoc Imports ---
+/** @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
+/** @typedef {import('../../../core/services/schemaLoader.js').default} SchemaLoader */ // Assuming type
+/** @typedef {import('../../../core/services/componentDefinitionLoader.js').default} ComponentDefinitionLoader */ // Assuming type
+/** @typedef {import('../../../core/services/ruleLoader.js').default} RuleLoader */ // Assuming type
+/** @typedef {import('../../../core/services/gameConfigLoader.js').default} GameConfigLoader */ // Assuming type
+/** @typedef {import('../../../core/services/modManifestLoader.js').default} ModManifestLoader */ // Assuming type
+
+// --- Class Under Test ---
+import WorldLoader from '../../../core/services/worldLoader.js';
+// --- Jest Imports ---
 import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 
 // ── Mock dependencies ──────────────────────────────────────────────────
+/** @type {jest.Mocked<IDataRegistry>} */
 const mockRegistry = {
     clear: jest.fn(),
     setManifest: jest.fn(), // Keep mock even if not called in success path now
     getManifest: jest.fn(),
     store: jest.fn(),
     getAll: jest.fn().mockReturnValue([]),
+    // Add other methods if needed by IDataRegistry interface
 };
 
+/** @type {jest.Mocked<ILogger>} */
 const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
@@ -19,32 +35,33 @@ const mockLogger = {
     debug: jest.fn(),
 };
 
+/** @type {jest.Mocked<SchemaLoader>} */
 const mockSchemaLoader = {
     loadAndCompileAllSchemas: jest.fn(),
 };
 
-const mockManifestLoader = { // Legacy manifest loader
-    loadAndValidateManifest: jest.fn(),
-};
-
-const mockContentLoader = { // Legacy content loader (mock needed, though maybe not called)
+// NOTE: mockContentLoader is no longer passed to the constructor,
+// but keep the mock definition if loadWorld might use it later or if other tests need it.
+/** @type {jest.Mocked<any>} */ // Use 'any' or a specific interface if available
+const mockContentLoader = {
     loadContentFiles: jest.fn(),
 };
 
+/** @type {jest.Mocked<ComponentDefinitionLoader>} */
 const mockComponentDefinitionLoader = {
     loadComponentDefinitions: jest.fn(),
 };
 
+/** @type {jest.Mocked<RuleLoader> & { _loadedEventCount: number }} */
 const mockRuleLoader = {
     loadAll: jest.fn().mockResolvedValue(undefined),
-    // Note: loadedEventCount might be removed or become internal if RuleLoader changes
     get loadedEventCount() {
         return mockRuleLoader._loadedEventCount || 0;
     },
-    _loadedEventCount: 0, // Internal mock state
+    _loadedEventCount: 0,
 };
 
-
+/** @type {jest.Mocked<ISchemaValidator>} */
 const mockValidator = {
     isSchemaLoaded: jest.fn(),
     addSchema: jest.fn(),
@@ -52,47 +69,43 @@ const mockValidator = {
     validate: jest.fn(),
 };
 
+/** @type {jest.Mocked<IConfiguration>} */
 const mockConfiguration = {
-    getManifestSchemaId: jest.fn(), // Legacy
     getContentTypeSchemaId: jest.fn().mockImplementation((type) => {
-        // Provide essential schema IDs used in WorldLoader's checks
         if (type === 'game') return essentialSchemaIds.game;
         if (type === 'components') return essentialSchemaIds.components;
-        if (type === 'mod-manifest') return essentialSchemaIds.modManifest; // Added
-        // Add others if needed for content loading checks later
+        if (type === 'mod-manifest') return essentialSchemaIds.modManifest;
         return essentialSchemaIds[type];
     }),
     getBaseDataPath: jest.fn().mockReturnValue('/fake/data'),
     getSchemaFiles: jest.fn().mockReturnValue([]),
     getSchemaBasePath: jest.fn().mockReturnValue('/fake/data/schemas'),
     getContentBasePath: jest.fn().mockReturnValue('/fake/data/content'),
-    getWorldBasePath: jest.fn().mockReturnValue('/fake/data/worlds'), // Legacy
+    getWorldBasePath: jest.fn().mockReturnValue('/fake/data/worlds'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
 };
 
+/** @type {jest.Mocked<GameConfigLoader>} */
 const mockGameConfigLoader = {
     loadConfig: jest.fn(),
 };
 
-// <<< ADDED: Mock for ModManifestLoader START >>>
+/** @type {jest.Mocked<ModManifestLoader>} */
 const mockModManifestLoader = {
     loadRequestedManifests: jest.fn(),
-    // Add other methods if needed by future tests
 };
-// <<< ADDED: Mock for ModManifestLoader END >>>
 
 
 // ── Test constants ─────────────────────────────────────────────────────
 const testWorldName = 'test-world';
-const defaultModList = ['core']; // Default mod list for successful game config load
+const defaultModList = ['core'];
 const essentialSchemaIds = {
-    manifest: 'schema://core/manifest', // Legacy
+    // manifest: 'schema://core/manifest', // Legacy - Removed
     components: 'schema://content/components',
     game: 'schema://core/game',
-    modManifest: 'schema://core/mod-manifest', // Added
-    // other schema IDs are included for completeness but are not “essential” for constructor/initial steps
+    modManifest: 'schema://core/mod-manifest',
     events: 'schema://content/events',
     actions: 'schema://content/actions',
     entities: 'schema://content/entities',
@@ -110,127 +123,109 @@ describe('WorldLoader', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // --- Success-path defaults ---
+        // Success-path defaults
         mockSchemaLoader.loadAndCompileAllSchemas.mockResolvedValue(undefined);
-
-        // Mock configuration to return essential schema IDs
-        mockConfiguration.getManifestSchemaId.mockReturnValue(essentialSchemaIds.manifest); // Legacy
-
-        // Mock validator to report essential schemas as loaded by default
         mockValidator.isSchemaLoaded.mockImplementation((id) => {
-            // Assume all essential schemas needed *before* game config load are present
             return id === essentialSchemaIds.game ||
-                id === essentialSchemaIds.manifest || // Legacy
                 id === essentialSchemaIds.components ||
-                id === essentialSchemaIds.modManifest; // Added
+                id === essentialSchemaIds.modManifest;
         });
-
-        // Default success for game config load
         mockGameConfigLoader.loadConfig.mockResolvedValue(defaultModList);
-
-        // <<< ADDED: Default success for mod manifest load >>>
         mockModManifestLoader.loadRequestedManifests.mockResolvedValue(new Map([['core', {
-            id: 'core',
-            version: '1.0.0', // Add version etc. based on ModManifestLoader's needs if applicable
-            name: 'Core Mod',
-            content: { // Example content structure
-                items: ['item1.json'],
-                actions: ['action1.json']
-            }
+            id: 'core', version: '1.0.0', name: 'Core Mod', content: {items: ['item1.json'], actions: ['action1.json']}
         }]]));
-
-        // Default success for legacy manifest load (MOCK STILL NEEDED FOR CONSTRUCTOR)
-        // Even though it's not used in the loading logic anymore, the constructor still expects it.
-        mockManifestLoader.loadAndValidateManifest.mockResolvedValue({
-            worldName: testWorldName,
-            contentFiles: { // This structure is effectively ignored by the loadWorld logic now
-                components: ['comp1.component.json'],
-                items: ['item1.json'],
-            },
-        });
-        mockRegistry.getManifest.mockReturnValue(null); // Start with no manifest
-        mockRegistry.setManifest.mockImplementation((m) =>
-            mockRegistry.getManifest.mockReturnValue(m),
-        ); // Simulate setting manifest, though it's not called in success path
-
-        // Default success for downstream loaders
         mockComponentDefinitionLoader.loadComponentDefinitions.mockResolvedValue(undefined);
-        mockContentLoader.loadContentFiles.mockResolvedValue(undefined); // Mock still needed, even if not called
         mockRuleLoader.loadAll.mockResolvedValue(undefined);
-        mockRuleLoader._loadedEventCount = 0; // Reset mock state
+        mockRuleLoader._loadedEventCount = 0;
+        // mockContentLoader.loadContentFiles.mockResolvedValue(undefined); // No need to setup mock result if not called
 
 
-        // Instantiate SUT with ALL dependencies, including the new one
+        // Instantiate SUT with the CORRECT 9 dependencies in the CORRECT order
         worldLoader = new WorldLoader(
-            mockRegistry,
-            mockLogger,
-            mockSchemaLoader,
-            mockManifestLoader, // Legacy, keep for now
-            mockContentLoader, // Legacy
-            mockComponentDefinitionLoader,
-            mockRuleLoader,
-            mockValidator,
-            mockConfiguration,
-            mockGameConfigLoader,
-            mockModManifestLoader // <<< ADDED: Pass mock ModManifestLoader
+            mockRegistry,                 // 1
+            mockLogger,                   // 2
+            mockSchemaLoader,             // 3
+            mockComponentDefinitionLoader,// 4
+            mockRuleLoader,               // 5
+            mockValidator,                // 6
+            mockConfiguration,            // 7
+            mockGameConfigLoader,         // 8
+            mockModManifestLoader         // 9
         );
     });
 
     // --- Constructor Tests (Verification for MODLOADER-006-A) ---
     describe('Constructor', () => {
         test('should instantiate successfully with valid dependencies', () => {
-            // Arrange: beforeEach already sets up valid mocks
+            // Arrange: beforeEach already sets up valid mocks and CORRECTLY instantiates
             // Act & Assert: Instantiation in beforeEach should not throw
             expect(worldLoader).toBeInstanceOf(WorldLoader);
-            // Check that the logger message includes the new dependency name
             expect(mockLogger.info).toHaveBeenCalledWith('WorldLoader: Instance created (with ModManifestLoader).');
         });
 
         test('should throw error if ModManifestLoader is missing', () => {
-            // Arrange: Intentionally pass null for ModManifestLoader
+            // Arrange: Intentionally pass null for ModManifestLoader at the correct position (9th arg)
             // Act & Assert
             expect(() => new WorldLoader(
-                mockRegistry, mockLogger, mockSchemaLoader, mockManifestLoader,
-                mockContentLoader, mockComponentDefinitionLoader, mockRuleLoader,
-                mockValidator, mockConfiguration, mockGameConfigLoader,
-                null // Pass null for modManifestLoader
+                mockRegistry,                 // 1
+                mockLogger,                   // 2
+                mockSchemaLoader,             // 3
+                mockComponentDefinitionLoader,// 4
+                mockRuleLoader,               // 5
+                mockValidator,                // 6
+                mockConfiguration,            // 7
+                mockGameConfigLoader,         // 8
+                null                          // 9 <<< Pass null for modManifestLoader
             )).toThrow("WorldLoader: Missing/invalid 'modManifestLoader' (needs loadRequestedManifests method).");
         });
 
         test('should throw error if ModManifestLoader is invalid (missing method)', () => {
-            // Arrange: Pass an object without the required method
+            // Arrange: Pass an object without the required method at the correct position (9th arg)
             const invalidModManifestLoader = {
                 someOtherMethod: () => {
                 }
             };
             // Act & Assert
             expect(() => new WorldLoader(
-                mockRegistry, mockLogger, mockSchemaLoader, mockManifestLoader,
-                mockContentLoader, mockComponentDefinitionLoader, mockRuleLoader,
-                mockValidator, mockConfiguration, mockGameConfigLoader,
-                invalidModManifestLoader // Pass invalid object
+                mockRegistry,                 // 1
+                mockLogger,                   // 2
+                mockSchemaLoader,             // 3
+                mockComponentDefinitionLoader,// 4
+                mockRuleLoader,               // 5
+                mockValidator,                // 6
+                mockConfiguration,            // 7
+                mockGameConfigLoader,         // 8
+                invalidModManifestLoader      // 9 <<< Pass invalid object
             )).toThrow("WorldLoader: Missing/invalid 'modManifestLoader' (needs loadRequestedManifests method).");
         });
 
         test('should throw error if GameConfigLoader is missing or invalid', () => {
             // Arrange & Act & Assert
             expect(() => new WorldLoader(
-                mockRegistry, mockLogger, mockSchemaLoader, mockManifestLoader,
-                mockContentLoader, mockComponentDefinitionLoader, mockRuleLoader,
-                mockValidator, mockConfiguration,
-                null, // Missing GameConfigLoader
-                mockModManifestLoader
+                mockRegistry,                 // 1
+                mockLogger,                   // 2
+                mockSchemaLoader,             // 3
+                mockComponentDefinitionLoader,// 4
+                mockRuleLoader,               // 5
+                mockValidator,                // 6
+                mockConfiguration,            // 7
+                null,                         // 8 <<< Missing GameConfigLoader
+                mockModManifestLoader         // 9
             )).toThrow("WorldLoader: Missing/invalid 'gameConfigLoader' (needs loadConfig method).");
 
             expect(() => new WorldLoader(
-                mockRegistry, mockLogger, mockSchemaLoader, mockManifestLoader,
-                mockContentLoader, mockComponentDefinitionLoader, mockRuleLoader,
-                mockValidator, mockConfiguration,
+                mockRegistry,                 // 1
+                mockLogger,                   // 2
+                mockSchemaLoader,             // 3
+                mockComponentDefinitionLoader,// 4
+                mockRuleLoader,               // 5
+                mockValidator,                // 6
+                mockConfiguration,            // 7
                 {
                     wrongMethod: () => {
                     }
-                }, // Invalid GameConfigLoader
-                mockModManifestLoader
+                },    // 8 <<< Invalid GameConfigLoader
+                mockModManifestLoader         // 9
             )).toThrow("WorldLoader: Missing/invalid 'gameConfigLoader' (needs loadConfig method).");
         });
 
@@ -240,47 +235,43 @@ describe('WorldLoader', () => {
     // ── loadWorld – Basic Flow Tests (adapted for new stages) ────────────────
     describe('loadWorld – basic flow', () => {
         test('should call services in the correct initial order', async () => {
-            // Arrange: Default setup already mocks success
+            // Arrange: Default setup in beforeEach
             // Act
             await worldLoader.loadWorld(testWorldName);
 
-            // Assert: Check initial call sequence
-            // Registry Clear -> Schemas -> Essential Check -> Game Config -> Mod Manifests -> Rules -> Components -> Content (Refactor Needed)
+            // Assert: Check call sequence
             const orderClear = mockRegistry.clear.mock.invocationCallOrder[0];
             const orderSchemaLoad = mockSchemaLoader.loadAndCompileAllSchemas.mock.invocationCallOrder[0];
-            const orderEssentialCheck = mockValidator.isSchemaLoaded.mock.invocationCallOrder[0]; // First call
+            const orderEssentialCheck = mockValidator.isSchemaLoaded.mock.invocationCallOrder[0];
             const orderGameConfig = mockGameConfigLoader.loadConfig.mock.invocationCallOrder[0];
             const orderModManifest = mockModManifestLoader.loadRequestedManifests.mock.invocationCallOrder[0];
             const orderRules = mockRuleLoader.loadAll.mock.invocationCallOrder[0];
             const orderComponents = mockComponentDefinitionLoader.loadComponentDefinitions.mock.invocationCallOrder[0];
-            // Content Loader might not be called now, so we cannot reliably check its order until refactor
-            // const orderContent = mockContentLoader.loadContentFiles.mock.invocationCallOrder[0]; // First call (REMOVED CHECK)
+            // Content Loader is not called directly by this version of loadWorld constructor/initial steps
+            // const orderContent = mockContentLoader.loadContentFiles.mock.invocationCallOrder[0]; // REMOVED CHECK
 
             expect(orderClear).toBeLessThan(orderSchemaLoad);
             expect(orderSchemaLoad).toBeLessThan(orderEssentialCheck);
+            // Note: isSchemaLoaded gets called multiple times for essential checks, ensure order relative to first call
             expect(orderEssentialCheck).toBeLessThan(orderGameConfig);
-            expect(orderGameConfig).toBeLessThan(orderModManifest); // Game Config before Mod Manifests
-            expect(orderModManifest).toBeLessThan(orderRules); // Mod Manifests before Rules
+            expect(orderGameConfig).toBeLessThan(orderModManifest);
+            expect(orderModManifest).toBeLessThan(orderRules);
             expect(orderRules).toBeLessThan(orderComponents);
-            // expect(orderComponents).toBeLessThan(orderContent); // <<< FAILING ASSERTION COMMENTED OUT / REMOVED
+            // expect(orderComponents).toBeLessThan(orderContent); // REMOVED CHECK
 
             // Verify specific calls
             expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
             expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
-            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.game); // Essential checks
+            expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.game);
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.components);
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.modManifest);
             expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
-            expect(mockModManifestLoader.loadRequestedManifests).toHaveBeenCalledWith(defaultModList); // Called with result of game config
-            // Legacy manifest calls should NOT happen
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled();
-            expect(mockRegistry.setManifest).not.toHaveBeenCalled();
-            // Subsequent calls
+            expect(mockModManifestLoader.loadRequestedManifests).toHaveBeenCalledWith(defaultModList);
             expect(mockRuleLoader.loadAll).toHaveBeenCalledTimes(1);
-            // Component loader might fail if it relies on getManifest, test this explicitly if needed
             expect(mockComponentDefinitionLoader.loadComponentDefinitions).toHaveBeenCalledTimes(1);
-            // Content loader not called because the logic using legacy manifest.contentFiles is bypassed
-            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled();
+            // Verify legacy loaders/methods not called
+            expect(mockRegistry.setManifest).not.toHaveBeenCalled();
+            expect(mockContentLoader.loadContentFiles).not.toHaveBeenCalled(); // Should not be called
 
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
@@ -302,7 +293,6 @@ describe('WorldLoader', () => {
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(missingSchemaId); // It should have checked for the missing one
             expect(mockGameConfigLoader.loadConfig).not.toHaveBeenCalled(); // Should fail before game config
             expect(mockModManifestLoader.loadRequestedManifests).not.toHaveBeenCalled();
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled(); // Legacy also skipped
 
             // Assert logging
             expect(mockLogger.error).toHaveBeenCalledWith(`WorldLoader: Essential schema missing: ${missingSchemaId}`);
@@ -335,7 +325,6 @@ describe('WorldLoader', () => {
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(essentialSchemaIds.game); // Check happened
             expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1); // Called
             expect(mockModManifestLoader.loadRequestedManifests).not.toHaveBeenCalled(); // Did not proceed
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled(); // Legacy skipped
 
             // Assert logging
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -368,7 +357,6 @@ describe('WorldLoader', () => {
             expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
             expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
             expect(mockModManifestLoader.loadRequestedManifests).toHaveBeenCalledWith(defaultModList); // Called
-            expect(mockManifestLoader.loadAndValidateManifest).not.toHaveBeenCalled(); // Legacy skipped
 
             // Assert logging
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -440,7 +428,7 @@ describe('WorldLoader', () => {
             // Arrange
             mockGameConfigLoader.loadConfig.mockResolvedValue(['core', 'extra']);
             const loadedManifests = new Map([
-                ['core', {id: 'core', name: 'Core', content: {actions: ['a1.json']}}],
+                ['core', {id: 'core', name: 'core', content: {actions: ['a1.json']}}],
                 ['extra', {id: 'extra', name: 'Extra', content: {items: ['i1.json', 'i2.json']}}],
             ]);
             mockModManifestLoader.loadRequestedManifests.mockResolvedValue(loadedManifests);

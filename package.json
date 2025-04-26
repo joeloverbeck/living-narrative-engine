@@ -13,8 +13,11 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.25.1",
     "babel-jest": "^29.7.0",
+    "cpy-cli": "^5.0.0",
+    "esbuild": "^0.x.x",
     "eslint": "^9.25.1",
     "globals": "^16.0.0",
+    "http-server": "^14.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "whatwg-fetch": "^3.6.20"
@@ -24,6 +27,7 @@
     "coverage": "jest --coverage --env=jsdom",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
-    "check-di": "node scripts/check-di-order.mjs"
+    "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy favicon.ico dist",
+    "start": "npm run build && http-server dist -o"
   }
 }

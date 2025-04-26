@@ -17,19 +17,19 @@ export function registerInfrastructure(container) {
     r.single(tokens.EventBus, EventBus);
     container.register(tokens.ISpatialIndexManager, () => new SpatialIndexManager(), {lifecycle: 'singleton'});
 
-    // Updated WorldLoader factory function for Sub-Ticket MODLOADER-006-B
+    // CORRECTED WorldLoader factory function
     container.register(tokens.WorldLoader, c => new WorldLoader(
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger),
-        c.resolve(tokens.SchemaLoader),
-        c.resolve(tokens.ManifestLoader),         // Existing (Keep for now as per MODLOADER-006-B example)
-        c.resolve(tokens.GenericContentLoader),
-        c.resolve(tokens.ComponentDefinitionLoader),
-        c.resolve(tokens.RuleLoader),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.GameConfigLoader),       // Existing (Added in previous ticket)
-        c.resolve(tokens.ModManifestLoader)       // <<< ADDED Injection (MODLOADER-006-B)
+        // Arguments must match the WorldLoader constructor order exactly:
+        c.resolve(tokens.IDataRegistry),           // 1st: registry
+        c.resolve(tokens.ILogger),                // 2nd: logger
+        c.resolve(tokens.SchemaLoader),           // 3rd: schemaLoader
+        c.resolve(tokens.ComponentDefinitionLoader), // 4th: componentDefinitionLoader CORRECTED
+        c.resolve(tokens.RuleLoader),             // 5th: ruleLoader CORRECTED
+        c.resolve(tokens.ISchemaValidator),       // 6th: validator CORRECTED
+        c.resolve(tokens.IConfiguration),         // 7th: configuration CORRECTED
+        c.resolve(tokens.GameConfigLoader),       // 8th: gameConfigLoader CORRECTED
+        c.resolve(tokens.ModManifestLoader)       // 9th: modManifestLoader CORRECTED
+        // Removed the extra 10th argument
     ), {lifecycle: 'singleton'});
 
     container.register(tokens.GameDataRepository,

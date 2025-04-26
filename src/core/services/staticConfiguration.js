@@ -10,23 +10,61 @@
  */
 class StaticConfiguration {
     /** @private @type {string} */
-    #baseDataPath = './data'; // Base path relative to execution
+    #baseDataPath = './data';   // Base path relative to execution
 
-    /**
-     * Returns the root path where all game data (worlds, schemas, content) is located.
-     * @returns {string}
-     */
+    /* ─────────────────────────────── BASE PATHS ────────────────────────────── */
+
+    /** @returns {string} */
     getBaseDataPath() {
         return this.#baseDataPath;
     }
 
+    /** @returns {string} */
+    getSchemaBasePath() {
+        return 'schemas';
+    }
+
+    /** @param {string} typeName */
+    getContentBasePath(typeName) {
+        return typeName;
+    }
+
+    /** @returns {string} */
+    getWorldBasePath() {
+        return 'worlds';
+    }
+
+    /** @returns {string} */
+    getRuleBasePath() {
+        return 'system-rules';
+    }
+
+    /* ─────────────────────────────── FILENAMES ─────────────────────────────── */
+
+    /** @returns {string} */
+    getGameConfigFilename() {
+        return 'game.json';
+    }
+
+    /** @returns {string} */
+    getModManifestFilename() {
+        return 'mod.manifest.json';
+    }
+
+    /* ─────────────────────────────── MODS PATH ─────────────────────────────── */
+
+    /** @returns {string} */
+    getModsBasePath() {
+        return 'mods';
+    }
+
+    /* ─────────────────────────────── SCHEMAS ───────────────────────────────── */
+
     /**
-     * Returns a list of schema filenames that should be loaded.
-     * These are typically core schemas needed for validation.
+     * Enumerates every JSON-Schema file that must be pre-compiled.
      * @returns {string[]}
      */
     getSchemaFiles() {
-        // Define the core schemas needed by the application
         return [
             'common.schema.json',
             'action-definition.schema.json',
@@ -35,124 +73,42 @@ class StaticConfiguration {
             'event-definition.schema.json',
             'game.schema.json',
             'json-logic.schema.json',
-            'mod.manifest.schema.json', // <<< ADDED for MODLOADER-002
+            'mod.manifest.schema.json',          // ← NEW schema added
             'operation.schema.json',
             'system-rule.schema.json',
-            'world.schema.json'
         ];
     }
 
     /**
-     * Returns the schema ID (e.g., the `$id` value) associated with a given content type name.
-     * This maps type names (like 'entities', 'items') to their validation schema IDs.
-     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions', 'game', 'mod-manifest').
-     * @returns {string | undefined} The schema ID or undefined if not mapped.
+     * Maps logical content-type names to their canonical $id values.
+     * @param   {string} typeName
+     * @returns {string|undefined}
      */
     getContentTypeSchemaId(typeName) {
         const map = {
-            'actions': 'http://example.com/schemas/action-definition.schema.json',
-            'blockers': 'http://example.com/schemas/entity.schema.json',
-            'components': 'http://example.com/schemas/component-definition.schema.json',
-            'connections': 'http://example.com/schemas/entity.schema.json',
-            'entities': 'http://example.com/schemas/entity.schema.json',
-            'events': 'http://example.com/schemas/event-definition.schema.json',
-            'game': 'http://example.com/schemas/game.schema.json',
-            'items': 'http://example.com/schemas/entity.schema.json',
-            'locations': 'http://example.com/schemas/entity.schema.json',
-            'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json', // <<< ADDED for MODLOADER-002
-            'operations': 'http://example.com/schemas/operation.schema.json',
+            actions: 'http://example.com/schemas/action-definition.schema.json',
+            blockers: 'http://example.com/schemas/entity.schema.json',
+            components: 'http://example.com/schemas/component-definition.schema.json',
+            connections: 'http://example.com/schemas/entity.schema.json',
+            entities: 'http://example.com/schemas/entity.schema.json',
+            events: 'http://example.com/schemas/event-definition.schema.json',
+            game: 'http://example.com/schemas/game.schema.json',
+            items: 'http://example.com/schemas/entity.schema.json',
+            locations: 'http://example.com/schemas/entity.schema.json',
+            'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json', // ← NEW mapping
+            operations: 'http://example.com/schemas/operation.schema.json',
             'system-rules': 'http://example.com/schemas/system-rule.schema.json',
-            'world': 'http://example.com/schemas/world.schema.json',
-            // Add other content types as needed
         };
         return map[typeName];
     }
 
-    /**
-     * Returns the path (relative to the `baseDataPath`) where schema files are stored.
-     * @returns {string}
-     */
-    getSchemaBasePath() {
-        // --- Kept logic as-is, assuming it's correct for the project structure ---
-        return `schemas`; // Relative path to schemas subdirectory
-    }
+    /* ─────────────────────────────── OTHER IDS ─────────────────────────────── */
 
-    /**
-     * Returns the path (relative to the `baseDataPath`) where content definition files
-     * for a specific type (e.g., 'items', 'actions') are stored.
-     * @param {string} typeName - The content type name (e.g., 'items', 'actions').
-     * @returns {string} The relative path to the content directory.
-     */
-    getContentBasePath(typeName) {
-        // --- Kept logic as-is, assuming it's correct ---
-        // Assumes content types are stored in directories named after the typeName
-        // within the baseDataPath. Returns only the relative dir name.
-        return typeName; // e.g., 'items', 'actions'
-    }
-
-    /**
-     * Returns the path (relative to the `baseDataPath`) where world manifest files
-     * (`.world.json`) are stored.
-     * @returns {string}
-     */
-    getWorldBasePath() {
-        // --- Kept logic as-is ---
-        return `worlds`; // Relative path to worlds subdirectory
-    }
-
-    /**
-     * Returns the filename for the main game configuration file.
-     * @returns {string} - e.g., "game.json"
-     */
-    getGameConfigFilename() {
-        return 'game.json';
-    }
-
-    /**
-     * Returns the path (relative to the `baseDataPath`) where system rule files
-     * are stored.
-     * @returns {string}
-     */
-    getRuleBasePath() {
-        // --- Kept logic as-is ---
-        return `system-rules`;
-    }
-
-    /**
-     * Returns the schema ID used for validating system rule files.
-     * @returns {string}
-     */
+    /** @returns {string} */
     getRuleSchemaId() {
         return 'http://example.com/schemas/system-rule.schema.json';
     }
 
-    /**
-     * Returns the schema ID used for validating world manifest files.
-     * Needed by ManifestLoader.
-     * @returns {string}
-     */
-    getManifestSchemaId() {
-        return 'http://example.com/schemas/world.schema.json';
-    }
-
-    // --- ADDED METHODS for MODLOADER-003 ---
-    /**
-     * Returns the path (often relative to baseDataPath) where mod subdirectories are located.
-     * @returns {string} - Hardcoded relative path (e.g., 'mods').
-     */
-    getModsBasePath() {
-        return 'mods'; // Standard directory for mods
-    }
-
-    /**
-     * Returns the standard filename for a mod manifest file (e.g., 'mod.manifest.json').
-     * @returns {string} - Hardcoded filename (e.g., 'mod.manifest.json').
-     */
-    getModManifestFilename() {
-        return 'mod.manifest.json'; // Standard manifest filename
-    }
-
-    // --- END ADDED METHODS ---
 }
 
 export default StaticConfiguration;

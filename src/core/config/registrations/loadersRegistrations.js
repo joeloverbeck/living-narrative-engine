@@ -33,7 +33,6 @@ import WorkspaceDataFetcher from '../../services/workspaceDataFetcher.js';
 
 // --- Loader Imports ---
 import SchemaLoader from '../../services/schemaLoader.js';
-import ManifestLoader from '../../services/manifestLoader.js';
 import RuleLoader from '../../services/ruleLoader.js';
 import GenericContentLoader from '../../services/genericContentLoader.js';
 import ComponentDefinitionLoader from '../../services/componentDefinitionLoader.js';
@@ -90,17 +89,6 @@ export function registerLoaders(container) {
         c.resolve(tokens.ILogger)
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
-
-    // ManifestLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
-    // NOTE: This might become deprecated or change with modding system.
-    registrar.singletonFactory(tokens.ManifestLoader, (c) => new ManifestLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.ILogger)
-    ));
-    logger.debug(`Loaders Registration: Registered ${tokens.ManifestLoader}.`);
 
     // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
     registrar.singletonFactory(tokens.RuleLoader, (c) => new RuleLoader(

@@ -106,7 +106,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
     // afterEach: jest.restoreAllMocks() is good practice if using jest.spyOn,
     // but jest.clearAllMocks() in beforeEach handles jest.mock resets.
 
-    it('should register outputDiv, inputElement, and titleElement as instances', () => {
+    it('should register outputDiv, inputElement, and titleElement as instances via factories', () => { // Updated test description slightly
         // Arrange
         registerUI(mockContainer, {
             outputDiv: mockOutputDiv,
@@ -114,12 +114,27 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             titleElement: mockTitleElement
         });
 
-        // Assert: Check registration calls (unchanged)
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.outputDiv, mockOutputDiv, expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.inputElement, mockInputElement, expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.titleElement, mockTitleElement, expect.objectContaining({lifecycle: 'singleton'}));
+        // --- Assert: Check registration calls ---
+        // *** FIX HERE: Expect a FUNCTION as the second argument ***
+        expect(mockContainer.register).toHaveBeenCalledWith(
+            tokens.outputDiv,
+            expect.any(Function), // The Registrar.instance now provides a factory function
+            expect.objectContaining({lifecycle: 'singleton'})
+        );
+        expect(mockContainer.register).toHaveBeenCalledWith(
+            tokens.inputElement,
+            expect.any(Function), // The Registrar.instance now provides a factory function
+            expect.objectContaining({lifecycle: 'singleton'})
+        );
+        expect(mockContainer.register).toHaveBeenCalledWith(
+            tokens.titleElement,
+            expect.any(Function), // The Registrar.instance now provides a factory function
+            expect.objectContaining({lifecycle: 'singleton'})
+        );
 
-        // Assert: Check resolution (unchanged)
+        // --- Assert: Check resolution (This part remains the same and is important!) ---
+        // Verify that resolving these tokens returns the *original* mock instance,
+        // proving the factory function wrapper works correctly.
         expect(mockContainer.resolve(tokens.outputDiv)).toBe(mockOutputDiv);
         expect(mockContainer.resolve(tokens.inputElement)).toBe(mockInputElement);
         expect(mockContainer.resolve(tokens.titleElement)).toBe(mockTitleElement);
@@ -127,6 +142,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         // Assert: Check logger call (unchanged)
         expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Registered DOM element instances.');
     });
+
 
     it('should register DomRenderer as a singleton factory', () => {
         // Arrange

@@ -84,160 +84,126 @@ class ModManifestLoader {
     /* ----------------------------------------------------------------------- */
 
     /**
-     * Fetches manifests **in parallel**, then validates & registers them.
-     * Validation and ID checks happen sequentially based on the requested order.
-     * If any manifest fails a critical check (validation, ID issues), the entire
-     * operation halts immediately by throwing an error.
-     * Manifests are stored in the registry only *after* all requested manifests
-     * have been successfully fetched and validated.
+     * Fetches, validates (against mod.manifest.schema.json), and registers
+     * every manifest listed in `requestedModIds`.
      *
-     * @param {string[]} requestedModIds
-     * @returns {Promise<Map<string,object>>} Resolves with a map of successfully loaded manifests.
-     * @throws {Error} If parameter validation fails, schema validator is missing,
-     * or any manifest fails fetching (critically) or validation/ID checks.
+     * @param  {string[]} requestedModIds
+     * @return {Promise<Map<string,object>>}
+     * @throws {Error} if any manifest cannot be fetched, validated, or stored.
      */
     async loadRequestedManifests(requestedModIds) {
         const fn = 'ModManifestLoader.loadRequestedManifests';
         const schemaId = this.#configuration.getContentTypeSchemaId('mod-manifest');
 
-        // --- 1. Parameter Validation & Deduplication (Fast, Upfront) ---
+        /* ── 1. basic request-array sanity ─────────────────────────────── */
         if (!Array.isArray(requestedModIds)) {
-            const errorMsg = `${fn}: expected an array of mod IDs.`;
-            this.#logger.error(ERR.INVALID_REQUEST_ARRAY, errorMsg, {details: 'Input was not an array.'});
-            throw new TypeError(errorMsg);
+            const msg = `${fn}: expected an array of mod-IDs.`;
+            this.#logger.error(ERR.INVALID_REQUEST_ARRAY, msg, {});
+            throw new TypeError(msg);
         }
+
         const trimmedIds = [];
-        const reqSeen = new Set();
-        for (const id of requestedModIds) {
-            if (typeof id !== 'string' || id.trim() === '') {
-                const errorMsg = `${fn}: every mod ID must be a non-empty string.`;
-                this.#logger.error(ERR.INVALID_REQUEST_ID, errorMsg, {details: `Invalid ID encountered: ${id}`});
-                throw new TypeError(errorMsg);
+        const seen = new Set();
+        for (const raw of requestedModIds) {
+            if (typeof raw !== 'string' || !(raw.trim())) {
+                const msg = `${fn}: mod-IDs must be non-empty strings.`;
+                this.#logger.error(ERR.INVALID_REQUEST_ID, msg, {badValue: raw});
+                throw new TypeError(msg);
             }
-            const trimmedId = id.trim();
-            if (reqSeen.has(trimmedId)) {
-                const errorMsg = `${fn}: Duplicate mod ID '${trimmedId}' encountered in request list.`;
-                this.#logger.error(ERR.DUPLICATE_REQUEST_ID, errorMsg, {modId: trimmedId});
-                throw new Error(errorMsg);
+            const id = raw.trim();
+            if (seen.has(id)) {
+                const msg = `${fn}: duplicate mod-ID '${id}' in request list.`;
+                this.#logger.error(ERR.DUPLICATE_REQUEST_ID, msg);
+                throw new Error(msg);
             }
-            reqSeen.add(trimmedId);
-            trimmedIds.push(trimmedId);
+            seen.add(id);
+            trimmedIds.push(id);
         }
 
-        // --- 2. Prepare Validator ---
-        const validator = this.#schemaValidator.getValidator(schemaId);
-        if (typeof validator !== 'function') {
-            const errorMsg = `${fn}: No validator function found for schemaId '${schemaId}'.`;
-            this.#logger.error(ERR.NO_VALIDATOR, errorMsg, {schemaId: schemaId});
-            throw new Error(errorMsg);
+        /* ── 2. pull the compiled validator once ───────────────────────── */
+        const validatorFn = this.#schemaValidator.getValidator(schemaId);
+        if (typeof validatorFn !== 'function') {
+            const msg = `${fn}: no validator available for '${schemaId}'.`;
+            this.#logger.error(ERR.NO_VALIDATOR, msg, {schemaId});
+            throw new Error(msg);
         }
 
-        // --- 3. Parallel Fetch ---
-        const fetchMeta = trimmedIds.map(modId => {
+        /* ── 3. parallel fetch of *all* manifests ──────────────────────── */
+        const fetchJobs = trimmedIds.map(modId => {
             const path = this.#pathResolver.resolveModManifestPath(modId);
-            return {modId, path, promise: this.#dataFetcher.fetch(path)};
+            return {modId, path, job: this.#dataFetcher.fetch(path)};
         });
-        const settledResults = await Promise.allSettled(fetchMeta.map(f => f.promise));
+        const settled = await Promise.allSettled(fetchJobs.map(f => f.job));
 
-        // --- 4. Sequential Validation and Collection (Halts on First Critical Error) ---
-        const validatedManifestData = []; // Store successfully validated data temporarily
-        for (let idx = 0; idx < trimmedIds.length; idx++) {
-            const {modId, path} = fetchMeta[idx];
-            const res = settledResults[idx];
+        /* ── 4. validation & id-consistency (sequential, abort on error) ─ */
+        const validated = [];        // {modId, data, path}
+        for (let i = 0; i < fetchJobs.length; i++) {
+            const {modId, path} = fetchJobs[i];
+            const result = settled[i];
 
-            if (res.status === 'rejected') {
-                // Log fetch failure as warning but continue processing others *for validation*
-                // However, if ANY fetch fails, we might consider halting *before* storing later.
-                // For now, just log and skip validation for this one. The final count will be lower.
-                const reason = res.reason?.message || res.reason || 'Unknown fetch error';
+            if (result.status === 'rejected') {
                 this.#logger.warn(
                     ERR.FETCH_FAIL,
-                    `${fn}: Could not fetch manifest for requested mod '${modId}'. This mod will be skipped.`,
-                    {modId: modId, path: path, details: reason}
+                    `${fn}: could not fetch manifest for '${modId}' – skipping.`,
+                    {modId, path, reason: result.reason?.message || result.reason}
                 );
-                continue; // Skip processing this failed fetch
+                continue;
             }
 
-            // If fetch succeeded, perform validation and checks
-            const manifestData = res.value;
+            const manifestObj = result.value;
 
-            // Schema validation (critical)
-            const valResult = validator(manifestData);
-            if (!valResult?.isValid) {
-                const errors = Array.isArray(valResult.errors) && valResult.errors.length
-                    ? valResult.errors.map(e => e.message || JSON.stringify(e)).join('; ')
-                    : 'No specific validation errors provided.';
-                const errorMsg = `${fn}: Manifest for requested mod '${modId}' failed schema validation. Halting processing.`;
-                this.#logger.error(ERR.VALIDATION_FAIL, errorMsg, {
-                    modId: modId,
-                    path: path,
-                    schemaId: schemaId,
-                    details: errors
-                });
-                throw new Error(`${errorMsg} Details: ${errors}`); // Throw immediately
+            /* ── 4a. schema validation ⤵ ─────────────────────────────── */
+            const vRes = validatorFn(manifestObj);
+            if (!vRes.isValid) {
+                const pretty = JSON.stringify(vRes.errors ?? [], null, 2);
+                const msg = `${fn}: manifest for '${modId}' failed schema validation.`;
+                this.#logger.error(
+                    ERR.VALIDATION_FAIL,
+                    msg,
+                    {modId, path, schemaId, details: pretty}
+                );
+                throw new Error(`${msg} See log for Ajv error details.`);
             }
+            this.#logger.debug(`${fn}: manifest for '${modId}' schema-validated OK.`);
 
-            // ID validity check (critical)
-            if (!manifestData || typeof manifestData !== 'object' || typeof manifestData.id !== 'string' || manifestData.id.trim() === '') {
-                const errorMsg = `${fn}: Manifest for requested mod '${modId}' is missing a valid 'id' field. Halting processing.`;
-                this.#logger.error(ERR.MISSING_MANIFEST_ID, errorMsg, {
-                    modId: modId,
-                    path: path,
-                    schemaId: schemaId,
-                    details: 'Manifest data is invalid or lacks a non-empty string ID.'
-                });
-                throw new Error(errorMsg); // Throw immediately
+            /* ── 4b. ID ↔ directory consistency check ────────────────── */
+            const declaredId = manifestObj?.id?.trim?.();
+            if (!declaredId) {
+                const msg = `${fn}: manifest '${path}' is missing an 'id' field.`;
+                this.#logger.error(ERR.MISSING_MANIFEST_ID, msg, {modId, path});
+                throw new Error(msg);
             }
-
-            const manifestId = manifestData.id.trim();
-
-            // ID consistency check (critical)
-            if (manifestId !== modId) {
-                const errorMsg = `${fn}: Manifest ID '${manifestId}' does not match requested mod ID '${modId}'. Halting processing.`;
-                this.#logger.error(ERR.ID_MISMATCH, errorMsg, {
-                    modId: modId,
-                    path: path,
-                    schemaId: schemaId,
-                    details: `Manifest contains ID '${manifestId}'`
-                });
-                throw new Error(errorMsg); // Throw immediately
+            if (declaredId !== modId) {
+                const msg = `${fn}: manifest ID '${declaredId}' does not match expected mod ID '${modId}'.`;
+                this.#logger.error(ERR.ID_MISMATCH, msg, {modId, path});
+                throw new Error(msg);
             }
+            this.#logger.debug(`${fn}: manifest ID consistency check passed for '${modId}'.`);
 
-            // If all checks passed for this manifest, add it to our temporary list
-            validatedManifestData.push({modId: manifestId, data: manifestData, path: path}); // Store context
-            this.#logger.debug(`${fn}: Manifest for mod '${manifestId}' passed validation and checks.`);
+            validated.push({modId, data: manifestObj, path});
         }
 
-        // --- 5. Store Validated Manifests in Registry (Only if loop completed without errors) ---
-        const storedManifests = new Map();
-        if (validatedManifestData.length > 0) {
-            this.#logger.info(`${fn}: All processed manifests passed validation. Storing ${validatedManifestData.length} manifests...`);
-            for (const {modId, data, path} of validatedManifestData) {
-                try {
-                    this.#dataRegistry.store('mod_manifests', modId, data);
-                    storedManifests.set(modId, data);
-                    this.#logger.debug(`${fn}: Stored manifest for mod '${modId}'.`);
-                } catch (err) {
-                    // If storing fails, it's still a critical error for the overall process
-                    const errorMsg = `${fn}: Failed to store manifest '${modId}' in registry during final storage phase. Halting.`;
-                    this.#logger.error(
-                        ERR.REGISTRY_STORE_FAIL,
-                        errorMsg,
-                        {modId: modId, path: path, schemaId: schemaId, details: err.message}
-                    );
-                    throw new Error(`${errorMsg} Reason: ${err.message}`); // Throw immediately
-                }
+        /* ── 5. store each validated manifest ─────────────────────────── */
+        const stored = new Map();
+        for (const {modId, data, path} of validated) {
+            try {
+                this.#dataRegistry.store('mod_manifests', modId, data);
+                stored.set(modId, data);
+                this.#logger.debug(`${fn}: stored manifest '${modId}'.`);
+            } catch (e) {
+                const msg = `${fn}: failed to store manifest '${modId}'.`;
+                this.#logger.error(ERR.REGISTRY_STORE_FAIL, msg, {modId, path});
+                throw new Error(`${msg} – ${e.message}`);
             }
-        } else {
-            this.#logger.info(`${fn}: No manifests passed validation or fetch stage. Nothing to store.`);
         }
 
-
-        // --- 6. Finalize ---
-        this.#lastLoadedManifests = storedManifests;
-        const fetchedCount = settledResults.filter(r => r.status === 'fulfilled').length;
-        this.#logger.info(`${fn}: Processing complete. Fetched: ${fetchedCount}/${trimmedIds.length}. Validated: ${validatedManifestData.length}. Stored: ${storedManifests.size}.`);
-        return storedManifests; // Resolve with the map of successfully stored manifests
+        /* ── 6. summary ───────────────────────────────────────────────── */
+        this.#lastLoadedManifests = stored;
+        this.#logger.info(
+            `${fn}: finished – fetched ${settled.filter(s => s.status === 'fulfilled').length}/` +
+            `${trimmedIds.length}, validated ${validated.length}, stored ${stored.size}.`
+        );
+        return stored;
     }
 
     /* ---------------- placeholders / future work (unchanged) ------------ */

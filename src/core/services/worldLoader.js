@@ -26,8 +26,6 @@ class WorldLoader {
     /** @type {IDataRegistry} */           #registry;
     /** @type {ILogger} */                 #logger;
     /** @type {*} */                       #schemaLoader;
-    /** @type {*} */                       #legacyManifestLoader;     // kept only for backwards compatibility, currently unused
-    /** @type {*} */                       #legacyContentLoader;      // ditto
     /** @type {*} */                       #componentDefinitionLoader;
     /** @type {*} */                       #ruleLoader;
     /** @type {ISchemaValidator} */        #validator;
@@ -40,8 +38,6 @@ class WorldLoader {
      * @param {IDataRegistry}                 registry
      * @param {ILogger}                       logger
      * @param {*}                             schemaLoader
-     * @param {*}                             legacyManifestLoader
-     * @param {*}                             legacyContentLoader
      * @param {*}                             componentDefinitionLoader
      * @param {*}                             ruleLoader
      * @param {ISchemaValidator}              validator
@@ -53,8 +49,6 @@ class WorldLoader {
         registry,
         logger,
         schemaLoader,
-        legacyManifestLoader,
-        legacyContentLoader,
         componentDefinitionLoader,
         ruleLoader,
         validator,
@@ -95,8 +89,6 @@ class WorldLoader {
         this.#registry = registry;
         this.#logger = logger;
         this.#schemaLoader = schemaLoader;
-        this.#legacyManifestLoader = legacyManifestLoader;   // retained for now
-        this.#legacyContentLoader = legacyContentLoader;    // retained for now
         this.#componentDefinitionLoader = componentDefinitionLoader;
         this.#ruleLoader = ruleLoader;
         this.#validator = validator;

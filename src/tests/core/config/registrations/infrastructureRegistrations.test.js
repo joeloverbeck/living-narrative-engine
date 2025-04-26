@@ -151,7 +151,6 @@ describe('registerInfrastructure', () => {
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SchemaLoader, mockSchemaLoader, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ManifestLoader, mockManifestLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GenericContentLoader, mockGenericContentLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ComponentDefinitionLoader, mockComponentDefinitionLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.RuleLoader, mockRuleLoader, {lifecycle: 'singleton'});

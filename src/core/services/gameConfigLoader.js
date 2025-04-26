@@ -13,7 +13,7 @@
 
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
- * After validation, it returns the list of mod IDs.
+ * After validation, it ensures 'core' is the first mod and returns the list of mod IDs.
  */
 class GameConfigLoader {
     /** @private @type {IConfiguration} */
@@ -81,12 +81,12 @@ class GameConfigLoader {
 
     /**
      * Loads, parses, and validates the game configuration file (e.g., game.json).
-     * If validation is successful, returns the array of mod IDs specified in the config.
+     * If validation is successful, ensures 'core' is the first mod ID and returns the array of mod IDs.
      * Throws an error if any step fails (file not found, parse error, validation error),
      * halting the loading process.
      *
-     * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs if loading, parsing,
-     * and validation succeed. The promise rejects if any step fails.
+     * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs (guaranteed to start with 'core')
+     * if loading, parsing, and validation succeed. The promise rejects if any step fails.
      * @public
      * @async
      * @throws {Error} If the config file cannot be found, parsed, or validated.
@@ -104,8 +104,10 @@ class GameConfigLoader {
 
             // 2. Fetch Config Content
             try {
-                rawContent = await this.#dataFetcher.fetch(configPath);
+                // --- MODIFIED TO EXPECT OBJECT DIRECTLY ---
+                parsedConfig = await this.#dataFetcher.fetch(configPath);
                 this.#logger.debug(`GameConfigLoader: Raw content fetched successfully from ${configPath}.`);
+                // --- END MODIFICATION ---
             } catch (fetchError) {
                 // AC: File Not Found / Fetch Error Handling
                 this.#logger.error(`FATAL: Game configuration file '${configFilename}' not found or could not be fetched at ${configPath}. Details: ${fetchError.message}`, fetchError);
@@ -113,22 +115,8 @@ class GameConfigLoader {
                 throw new Error(`Failed to fetch game configuration '${configFilename}' from ${configPath}: ${fetchError.message}`);
             }
 
-            // Basic check: Ensure content is a non-empty string before parsing
-            if (typeof rawContent !== 'string' || rawContent.trim() === '') {
-                this.#logger.error(`FATAL: Fetched content for game configuration '${configFilename}' from ${configPath} is empty or not a string.`);
-                throw new Error(`Invalid content received for game configuration file '${configFilename}'. Expected non-empty string.`);
-            }
-
-            // 3. Parse JSON
-            try {
-                // Type assertion for clarity
-                parsedConfig = /** @type {GameConfig} */ (JSON.parse(rawContent));
-                this.#logger.info(`GameConfigLoader: Successfully parsed game config '${configFilename}' from ${configPath}.`);
-            } catch (parseError) {
-                // AC: JSON Parse Error Handling
-                this.#logger.error(`FATAL: Failed to parse game configuration file '${configFilename}'. Invalid JSON syntax. Path: ${configPath}. Details: ${parseError.message}`, parseError);
-                throw new Error(`Failed to parse game configuration file '${configFilename}'. Invalid JSON: ${parseError.message}`);
-            }
+            // --- REMOVED RAW CONTENT CHECK AND JSON PARSE ---
+            // Assuming fetcher now returns parsed JSON or throws on invalid JSON
 
             // 4. Schema Validation
             const schemaId = this.#configuration.getContentTypeSchemaId('game');
@@ -160,7 +148,7 @@ class GameConfigLoader {
                 throw new Error(`Game configuration validation failed for '${configFilename}'.`);
             }
 
-            // 5. Validation Success - Extract and Return Mods
+            // 5. Validation Success - Check 'mods' array
             this.#logger.info(`GameConfigLoader: Game config '${configFilename}' validation successful against schema '${schemaId}'.`);
 
             // Final check for 'mods' array existence and type after successful validation
@@ -174,8 +162,27 @@ class GameConfigLoader {
                 throw new Error(`Validated game config '${configFilename}' 'mods' array contains non-string elements.`);
             }
 
-            this.#logger.info(`GameConfigLoader: Successfully loaded and validated ${parsedConfig.mods.length} mod IDs from game config.`);
-            return parsedConfig.mods; // Return the validated mods array on success
+            // --- START: MODLOADER-XXX IMPLEMENTATION ---
+            // Ensure 'core' mod is always first in the list
+            if (!parsedConfig.mods.length || parsedConfig.mods[0] !== 'core') {
+                if (parsedConfig.mods.includes('core')) {
+                    // If Core exists but not first, remove it and prepend
+                    parsedConfig.mods = parsedConfig.mods.filter(modId => modId !== 'core');
+                    parsedConfig.mods.unshift('core');
+                    this.#logger.info(`GameConfigLoader: 'core' mod found but was not first; moved to the beginning of the load order.`);
+                } else {
+                    // If Core is missing entirely, prepend it
+                    parsedConfig.mods.unshift('core');
+                    this.#logger.info(`GameConfigLoader: Auto-injected 'core' mod at the beginning of the load order.`);
+                }
+            } else {
+                this.#logger.debug(`GameConfigLoader: 'core' mod already present at the beginning of the load order.`);
+            }
+            // --- END: MODLOADER-XXX IMPLEMENTATION ---
+
+
+            this.#logger.info(`GameConfigLoader: Successfully loaded and validated ${parsedConfig.mods.length} mod IDs from game config. Final order: [${parsedConfig.mods.join(', ')}]`);
+            return parsedConfig.mods; // Return the validated (and potentially modified) mods array
 
         } catch (error) {
             // AC: Halting - Ensure any error caught up to this point propagates
