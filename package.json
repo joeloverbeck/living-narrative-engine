@@ -5,6 +5,7 @@
     "ajv": "^8.17.1",
     "json-logic-js": "^2.0.5",
     "lint": "^0.8.19",
+    "semver": "^7.7.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
