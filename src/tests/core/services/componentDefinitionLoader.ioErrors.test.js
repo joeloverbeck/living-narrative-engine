@@ -4,7 +4,8 @@
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
 
-// --- Mock Service Factories (Copied from existing tests for self-containment) ---
+// --- Mock Service Factories (Keep as they are) ---
+// ... (createMockConfiguration, createMockPathResolver, etc. - NO CHANGES NEEDED HERE based on provided errors) ...
 
 /**
  * Creates a mock IConfiguration service.
@@ -24,7 +25,7 @@ const createMockConfiguration = (overrides = {}) => ({
     getWorldBasePath: jest.fn().mockReturnValue('worlds'),
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-    getModsBasePath: jest.fn().mockReturnValue('mods'),
+    getModsBasePath: jest.fn().mockReturnValue('mods'), // Already added from previous fix
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
     getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
     getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
@@ -56,14 +57,15 @@ const createMockPathResolver = (overrides = {}) => ({
 const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
     fetch: jest.fn(async (path) => {
         if (errorPaths.includes(path)) {
-            return Promise.reject(new Error(`Mock Fetch Error: Failed to fetch ${path}`));
+            // Throw error to simulate real fetch failure
+            throw new Error(`Mock Fetch Error: Failed to fetch ${path}`);
         }
         if (path in pathToResponse) {
             // Deep clone to prevent tests from modifying the mock response object
             return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
         }
-        // Default behavior if not an error path or specific response path
-        return Promise.reject(new Error(`Mock Fetch Error: 404 Not Found for ${path}`));
+        // Simulate file not found by throwing an error
+        throw new Error(`Mock Fetch Error: 404 Not Found for ${path}`);
     }),
 });
 
@@ -80,12 +82,14 @@ const createMockSchemaValidator = (overrides = {}) => {
         addSchema: jest.fn(async (schemaData, schemaId) => {
             loadedSchemas.set(schemaId, schemaData);
             // Ensure a mock validator function exists, default to valid
-            schemaValidators.set(schemaId, jest.fn((data) => ({isValid: true, errors: null})));
+            if (!schemaValidators.has(schemaId)) {
+                schemaValidators.set(schemaId, jest.fn((data) => ({isValid: true, errors: null})));
+            }
         }),
         removeSchema: jest.fn((schemaId) => {
             const deletedSchemas = loadedSchemas.delete(schemaId);
             const deletedValidators = schemaValidators.delete(schemaId);
-            return deletedSchemas && deletedValidators; // Return true only if both were present
+            return deletedSchemas || deletedValidators; // Return true if either was present
         }),
         isSchemaLoaded: jest.fn((schemaId) => loadedSchemas.has(schemaId)),
         getValidator: jest.fn((schemaId) => schemaValidators.get(schemaId)),
@@ -94,7 +98,6 @@ const createMockSchemaValidator = (overrides = {}) => {
             if (validatorFn) return validatorFn(data);
             return {isValid: false, errors: [{message: `Mock Schema Error: Schema '${schemaId}' not found.`}]};
         }),
-        // *** FIX START: Add _setSchemaLoaded helper ***
         // Helper to simulate schema loading for tests
         _setSchemaLoaded: (schemaId, schemaData = {}) => {
             if (!loadedSchemas.has(schemaId)) {
@@ -108,22 +111,18 @@ const createMockSchemaValidator = (overrides = {}) => {
         },
         // Helper to allow tests to customize validator behavior
         mockValidatorFunction: (schemaId, implementation) => {
-            if (schemaValidators.has(schemaId)) {
-                schemaValidators.get(schemaId).mockImplementation(implementation);
-            } else {
-                const newMockFn = jest.fn(implementation);
-                schemaValidators.set(schemaId, newMockFn);
-                // Also mark schema as 'loaded' if we're defining its function
-                if (!loadedSchemas.has(schemaId)) {
-                    loadedSchemas.set(schemaId, {}); // Add placeholder data
-                }
+            if (!schemaValidators.has(schemaId)) {
+                // If schema wasn't explicitly loaded, add it now
+                loadedSchemas.set(schemaId, {}); // Add placeholder data
             }
+            const mockFn = jest.fn(implementation);
+            schemaValidators.set(schemaId, mockFn); // Overwrite or set the mock function
         },
-        // *** FIX END ***
         ...overrides,
     };
     return mockValidator;
 };
+
 
 /**
  * Creates a mock IDataRegistry service.
@@ -215,7 +214,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
     const modId = 'ioErrorMod';
     const filename = 'file.component.json';
     const errorManifest = createMockModManifest(modId, [filename]);
-    // *** FIX: Define schema ID used in setup ***
     const componentDefinitionSchemaId = 'http://example.com/schemas/component-definition.schema.json';
 
     // --- Setup ---
@@ -248,12 +246,9 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
             return undefined;
         });
 
-        // *** FIX START: Simulate the main schema being loaded ***
+        // Simulate the main schema being loaded and validator available
         mockValidator._setSchemaLoaded(componentDefinitionSchemaId, {});
-        // Simulate that the validator function for the main schema exists and passes by default
-        // (it's only the *existence* of the schema we need for this test, not its specific validation logic)
         mockValidator.mockValidatorFunction(componentDefinitionSchemaId, (data) => ({isValid: true, errors: null}));
-        // *** FIX END ***
     });
 
     // --- Test Case: Scenario 1 (Path Resolution Failure) ---
@@ -264,7 +259,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
             if (mId === modId && type === 'components' && fName === filename) {
                 throw pathError;
             }
-            // Fallback for potential other calls (though none expected)
+            // Fallback for potential other calls (just in case)
             return `./data/mods/${mId}/${type}/${fName}`;
         });
 
@@ -272,7 +267,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
 
         // --- Verify: Promise Resolves & Count ---
-        // The loadComponentDefinitions method itself should still resolve even if individual files fail
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
         expect(count).toBe(0); // No files were successfully loaded
@@ -280,52 +274,44 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         // --- Verify: No Fetch/Store/Schema Add ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
-        expect(mockValidator.addSchema).not.toHaveBeenCalled();
+        expect(mockValidator.addSchema).not.toHaveBeenCalled(); // addSchema is part of _processFetchedItem, which isn't reached
 
         // --- Verify: Error Logs ---
-        // The inner try...catch logs the path resolution error directly.
-        // The allSettled handler logs the rejection reason.
-        expect(mockLogger.error).toHaveBeenCalledTimes(3);
+        // *** FIX START: Expect only ONE error log from the wrapper ***
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
-        // 1. Inner catch block error (Original Path Resolution Failure)
+        // Check the single error log from BaseManifestItemLoader._processFileWrapper
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Failed to resolve path for component file '${filename}'. Error: Mock Path Error: Could not resolve path for ${filename}`), // Check specific error message
+            "Error processing file:", // Exact message from the wrapper's catch block
             expect.objectContaining({
                 modId: modId,
                 filename: filename,
-                error: pathError, // The original error should be logged
-            })
+                path: 'Path not resolved', // Path resolution failed
+                error: pathError?.message || String(pathError) // Check error message logged
+            }),
+            pathError // Check the full error object logged
         );
+        // *** FIX END ***
 
-
-        // 2. AllSettled rejection reason log
-        // The actual logged message in the code uses `reason?.message || reason`
-        const expectedRejectionReason = `Path Resolution Error: Failed to resolve path for component ${filename} in mod ${modId}: ${pathError.message}`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filename}. Reason: ${expectedRejectionReason}`), // Check specific error message from rejection
-            expect.objectContaining({
-                modId: modId,
-                filename: filename, // From loop context
-                error: expect.objectContaining({ // Check the wrapped error structure
-                    message: expectedRejectionReason, // Check the message on the wrapped error
-                    // cause property might not be automatically added unless the error is wrapped explicitly with {cause: ...}
-                }),
-            })
+        // --- Verify: Final Summary Log ---
+        // *** FIX START: Check info log for summary, not warn ***
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentDefinitionLoader: Loading component definitions for mod '${modId}'...` // Initial log
         );
-
-
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 1 failures for component files. Check previous error logs for details.`
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            // Summary log from _loadItemsInternal
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected in this path
+        // *** FIX END ***
+
 
         // --- Verify Other Interactions ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
-        // Validator should be checked at the start, but not for individual file validation
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentDefinitionSchemaId);
-        expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefinitionSchemaId);
+        // Validator is checked at the start of _processFetchedItem, which isn't reached
+        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
+        expect(mockValidator.getValidator).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
 
     });
 
@@ -344,7 +330,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
             return `./data/mods/${mId}/${type}/${fName}`;
         });
 
-        // Fetching fails for the resolved path
+        // Fetching fails (throws error)
         mockFetcher.fetch.mockImplementation(async (path) => {
             if (path === filePath) {
                 throw fetchError;
@@ -363,52 +349,44 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
 
         // --- Verify: No Store/Schema Add ---
         expect(mockRegistry.store).not.toHaveBeenCalled();
-        expect(mockValidator.addSchema).not.toHaveBeenCalled();
+        expect(mockValidator.addSchema).not.toHaveBeenCalled(); // Not reached
 
         // --- Verify: Error Logs ---
-        // The inner try...catch logs the fetch failure.
-        // The allSettled handler logs the rejection reason.
-        expect(mockLogger.error).toHaveBeenCalledTimes(3);
+        // *** FIX START: Expect only ONE error log from the wrapper ***
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
-        // 1. Inner catch block error (Original Fetch/Parse Failure)
+        // Check the single error log from BaseManifestItemLoader._processFileWrapper
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Failed to fetch or parse component definition from '${filePath}'. Mod: ${modId}, File: ${filename}. Error: ${fetchError.message}`), // Check specific message
+            "Error processing file:", // Exact message from the wrapper's catch block
             expect.objectContaining({
                 modId: modId,
                 filename: filename,
-                path: filePath,
-                error: fetchError, // The original error should be logged
-            })
+                path: filePath, // Path was resolved successfully
+                error: fetchError?.message || String(fetchError) // Check error message logged
+            }),
+            fetchError // Check the full error object logged
         );
+        // *** FIX END ***
 
-
-        // 2. AllSettled rejection reason log
-        const expectedRejectionReason = `Workspace/Parse Error: Failed to fetch or parse component ${filename} from ${filePath} in mod ${modId}: ${fetchError.message}`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filename}. Reason: ${expectedRejectionReason}`), // Check specific message from rejection
-            expect.objectContaining({
-                modId: modId,
-                filename: filename, // From loop context
-                resolvedPath: filePath, // Added to error object in the catch block
-                error: expect.objectContaining({ // Check the wrapped error structure
-                    message: expectedRejectionReason,
-                }),
-            })
+        // --- Verify: Final Summary Log ---
+        // *** FIX START: Check info log for summary, not warn ***
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentDefinitionLoader: Loading component definitions for mod '${modId}'...` // Initial log
         );
-
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 1 failures for component files. Check previous error logs for details.`
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            // Summary log from _loadItemsInternal
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
+        // *** FIX END ***
 
         // --- Verify Other Interactions ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-        // Validator should be checked at the start, but not for individual file validation
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentDefinitionSchemaId);
-        expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefinitionSchemaId);
+        // Validator is checked at the start of _processFetchedItem, which isn't reached
+        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
+        expect(mockValidator.getValidator).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
     });
 });

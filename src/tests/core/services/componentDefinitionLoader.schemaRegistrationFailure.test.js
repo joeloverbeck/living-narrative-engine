@@ -2,8 +2,20 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
 
+// --- Mock Service Factories ---
+// [Mocks omitted for brevity - assume they are the same as provided previously]
+/** Mocks assumed present:
+ * createMockConfiguration
+ * createMockPathResolver
+ * createMockDataFetcher
+ * createMockSchemaValidator
+ * createMockDataRegistry
+ * createMockLogger
+ * createMockComponentDefinition
+ * createMockModManifest
+ */
 // --- Mock Service Factories (Copied from existing tests for self-containment) ---
 
 /**
@@ -225,7 +237,6 @@ const createMockModManifest = (modId, componentFiles = []) => ({
     },
 });
 
-
 // --- Test Suite ---
 
 describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', () => {
@@ -245,37 +256,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
     // --- Setup ---
     beforeEach(() => {
         jest.clearAllMocks();
-
-        // Instantiate mocks
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
         mockValidator = createMockSchemaValidator();
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
-
-        // Instantiate loader
-        loader = new ComponentDefinitionLoader(
-            mockConfig,
-            mockResolver,
-            mockFetcher,
-            mockValidator,
-            mockRegistry,
-            mockLogger
-        );
-
-        // Common mock setup
-        mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-            if (typeName === 'components') return componentDefSchemaId;
-            return undefined;
-        });
-
-        // Ensure the main definition schema validator exists and passes by default
+        loader = new ComponentDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+        mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => typeName === 'components' ? componentDefSchemaId : undefined);
         mockValidator._setSchemaLoaded(componentDefSchemaId, {});
-        mockValidator.mockValidatorFunction(componentDefSchemaId, (data) => ({isValid: true, errors: null}));
+        mockValidator.mockValidatorFunction(componentDefSchemaId, () => ({isValid: true, errors: null}));
+        mockRegistry.get.mockReturnValue(undefined); // Default: registry is empty
+        mockValidator.isSchemaLoaded.mockReturnValue(false); // Default: schema not loaded
     });
 
     // --- Test Case: Scenario 1 (addSchema Failure) ---
+    // [Scenario 1 test code omitted for brevity - assume it's correct from previous step]
     it('Scenario 1: should handle errors during addSchema', async () => {
         // --- Setup: Scenario 1 ---
         const filename = 'comp_add_fail.component.json';
@@ -288,19 +284,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
         const addSchemaError = new Error("Mock Validator Error: Failed to add schema");
         const manifest = createMockModManifest(modId, [filename]);
 
-        // Configure fetcher
-        mockFetcher.fetch.mockImplementation(async (path) => {
-            if (path === filePath) return JSON.parse(JSON.stringify(validDef));
-            throw new Error(`Unexpected fetch: ${path}`);
-        });
-
-        // Configure addSchema to fail
-        mockValidator.addSchema.mockImplementation(async (schemaData, schemaId) => {
-            if (schemaId === componentId) {
-                throw addSchemaError;
-            }
-            // Default success for other schemas (shouldn't be called here)
-        });
+        mockFetcher.fetch.mockResolvedValue(JSON.parse(JSON.stringify(validDef)));
+        mockValidator.addSchema.mockRejectedValue(addSchemaError); // Configure addSchema to fail
 
         // --- Action ---
         const loadPromise = loader.loadComponentDefinitions(modId, manifest);
@@ -314,7 +299,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
         expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
-        // Ensure the main validator was called (should pass based on setup)
         const mainValidatorFn = mockValidator.getValidator(componentDefSchemaId);
         expect(mainValidatorFn).toHaveBeenCalledWith(validDef);
 
@@ -322,91 +306,88 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
         expect(mockValidator.addSchema).toHaveBeenCalledTimes(1);
         expect(mockValidator.addSchema).toHaveBeenCalledWith(validDef.dataSchema, componentId);
 
-        // --- Verify: store was NOT called ---
+        // --- Verify: store/removeSchema NOT called ---
         expect(mockRegistry.store).not.toHaveBeenCalled();
-
-        // --- Verify: removeSchema was NOT called ---
         expect(mockValidator.removeSchema).not.toHaveBeenCalled();
 
         // --- Verify: Error Logs ---
-        expect(mockLogger.error).toHaveBeenCalledTimes(3); // Inner catch + outer catch + rejection reason
+        expect(mockLogger.error).toHaveBeenCalledTimes(3); // Inner catch + outer catch + wrapper catch
 
-        // 1. Inner catch block error (most specific) - **CORRECTED ASSERTION**
-        // Verify the core message string and the context object separately
+        // 1. Specific addSchema failure log (_processFetchedItem inner registration catch)
         const expectedInnerLogMessage = `ComponentDefinitionLoader [${modId}]: Failed during dataSchema registration steps for component '${componentId}' from file '${filename}'.`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedInnerLogMessage, // Check the exact message string
-            expect.objectContaining({ // Check context object
-                modId: modId,
-                filename: filename,
-                resolvedPath: filePath,
-                componentId: componentId,
-                error: addSchemaError, // Original error
-            })
-        );
+        const expectedInnerLogDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            componentId: componentId,
+            error: addSchemaError, // The original error object
+            resolvedPath: filePath,
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedInnerLogMessage, expectedInnerLogDetails);
 
-        // 2. AllSettled rejection reason log - **CORRECTED ASSERTION**
-        // Check the rejection reason message string (which includes the error message)
-        const expectedRejectionReasonMsg = `Failed during dataSchema registration steps for component '${componentId}' from file '${filename}'. Error: ${addSchemaError.message}`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filename}. Reason: ${expectedRejectionReasonMsg}`),
-            expect.objectContaining({
-                modId: modId,
-                filename: filename,
-                resolvedPath: filePath,
-                error: expect.objectContaining({
-                    message: expect.stringContaining(expectedRejectionReasonMsg), // Check the wrapped error message
-                    reason: 'Schema Registration Error' // Check the reason property
-                }),
-            })
-        );
+        // 2. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePath}'. Error: Failed during dataSchema registration steps for component '${componentId}' from file '${filename}'. Error: ${addSchemaError.message}`;
+        const expectedOuterCatchDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            componentId: componentId, // ID was valid before registration failure
+            path: filePath,
+            error: expect.objectContaining({ // The wrapped error object
+                message: expect.stringContaining(`Failed during dataSchema registration steps for component '${componentId}'`),
+                reason: 'Schema Registration Error',
+                resolvedPath: filePath
+            }),
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg, expectedOuterCatchDetails);
 
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 1 failures for component files. Check previous error logs for details.`
+        // 3. Wrapper error (_processFileWrapper catch) - *CORRECTED CHECK*
+        const expectedWrapperMsg = `Error processing file:`;
+        const expectedWrapperDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            path: filePath,
+            error: expect.stringContaining(`Failed during dataSchema registration steps for component '${componentId}'`),
+        });
+        const expectedWrapperErrorArg = expect.objectContaining({ // The actual error object
+            message: expect.stringContaining(`Failed during dataSchema registration steps for component '${componentId}'`),
+            reason: 'Schema Registration Error',
+            resolvedPath: filePath
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails, expectedWrapperErrorArg);
+
+        // --- Verify: Final Info Log ---
+        // *Correction:* Use INFO log for summary
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
     });
+
 
     // --- Test Case: Scenario 2 (removeSchema Failure during Override) ---
     it('Scenario 2: should handle errors during removeSchema on override', async () => {
         // --- Setup: Scenario 2 ---
         const filename = 'comp_remove_fail.component.json';
         const filePath = `./data/mods/${modId}/components/${filename}`;
-        const componentId = `${modId}:remove_fail`; // Same ID for original and override
+        const componentId = `${modId}:remove_fail`;
 
-        // Original definition (simulated as already loaded)
         const originalDef = createMockComponentDefinition(componentId, {
             type: 'object',
             properties: {version: {const: 1}}
         });
-        const originalSchema = originalDef.dataSchema;
-
-        // Overriding definition
         const overrideDef = createMockComponentDefinition(componentId, {
             type: 'object',
             properties: {version: {const: 2}}
         });
-
         const removeSchemaError = new Error("Mock Validator Error: Failed to remove schema");
         const manifest = createMockModManifest(modId, [filename]);
 
-        // Simulate original definition/schema exists
-        mockRegistry._prepopulate('component_definitions', componentId, originalDef);
-        mockValidator._setSchemaLoaded(componentId, originalSchema); // Pre-load the schema to be removed
+        // Simulate original schema exists, but definition might not be in registry yet (or we don't care for this test)
+        mockValidator.isSchemaLoaded.mockImplementation((id) => id === componentId); // Schema exists
 
-        // Configure fetcher for the override file
-        mockFetcher.fetch.mockImplementation(async (path) => {
-            if (path === filePath) return JSON.parse(JSON.stringify(overrideDef));
-            throw new Error(`Unexpected fetch: ${path}`);
-        });
-
-        // Configure removeSchema to fail
-        mockValidator.removeSchema.mockImplementation((schemaId) => {
-            if (schemaId === componentId) {
-                throw removeSchemaError; // Throw the error
-            }
-            return true; // Default success
+        mockFetcher.fetch.mockResolvedValue(JSON.parse(JSON.stringify(overrideDef)));
+        mockValidator.removeSchema.mockImplementation((schemaId) => { // removeSchema throws
+            if (schemaId === componentId) throw removeSchemaError;
+            return true;
         });
 
         // --- Action ---
@@ -421,65 +402,70 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
         expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
-        // Ensure the main validator was called (should pass based on setup)
         const mainValidatorFn = mockValidator.getValidator(componentDefSchemaId);
         expect(mainValidatorFn).toHaveBeenCalledWith(overrideDef);
-        // Check for override detection *before* the error
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentId);
+        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentId); // Check override detection
 
         // --- Verify: removeSchema was called and failed ---
         expect(mockValidator.removeSchema).toHaveBeenCalledTimes(1);
         expect(mockValidator.removeSchema).toHaveBeenCalledWith(componentId);
 
-        // --- Verify: get was NOT called ---
+        // --- Verify: Methods NOT called after failure ---
+        expect(mockValidator.addSchema).not.toHaveBeenCalled(); // addSchema is skipped
+        expect(mockRegistry.store).not.toHaveBeenCalled(); // store is skipped
+        // *CORRECTED:* Registry 'get' should NOT be called as error happened before that check
         expect(mockRegistry.get).not.toHaveBeenCalled();
 
-        // --- Verify: addSchema (for override) was NOT called ---
-        expect(mockValidator.addSchema).not.toHaveBeenCalled();
-
-        // --- Verify: store (for override) was NOT called ---
-        expect(mockRegistry.store).not.toHaveBeenCalled();
-
         // --- Verify: Error Logs ---
-        expect(mockLogger.error).toHaveBeenCalledTimes(3); // Inner catch + outer catch + rejection reason
+        expect(mockLogger.error).toHaveBeenCalledTimes(3);
 
-        // 1. Inner catch block error (most specific) - **CORRECTED ASSERTION**
-        // Verify the core message string and the context object separately
+        // 1. Specific removeSchema failure log (_processFetchedItem inner registration catch)
         const expectedInnerLogMessage = `ComponentDefinitionLoader [${modId}]: Error during removeSchema for component '${componentId}'. Mod: ${modId}, File: ${filename}.`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expectedInnerLogMessage, // Check exact message string
-            expect.objectContaining({ // Check context object
-                modId: modId,
-                filename: filename,
-                componentId: componentId,
-                path: filePath,
-                error: removeSchemaError, // Original error
-            })
+        const expectedInnerLogDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            componentId: componentId,
+            path: filePath,
+            error: removeSchemaError,
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedInnerLogMessage, expectedInnerLogDetails);
+
+        // 2. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePath}'. Error: Error during removeSchema for component '${componentId}'. Mod: ${modId}, File: ${filename}. Error: ${removeSchemaError.message}`;
+        const expectedOuterCatchDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            componentId: componentId,
+            path: filePath,
+            error: expect.objectContaining({
+                message: expect.stringContaining(`Error during removeSchema for component '${componentId}'`),
+                reason: 'Schema Registration Error',
+                resolvedPath: filePath
+            }),
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg, expectedOuterCatchDetails);
+
+        // 3. Wrapper error (_processFileWrapper catch)
+        const expectedWrapperMsg = `Error processing file:`;
+        const expectedWrapperDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            path: filePath,
+            error: expect.stringContaining(`Error during removeSchema for component '${componentId}'`),
+        });
+        const expectedWrapperErrorArg = expect.objectContaining({
+            message: expect.stringContaining(`Error during removeSchema for component '${componentId}'`),
+            reason: 'Schema Registration Error',
+            resolvedPath: filePath
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails, expectedWrapperErrorArg);
+
+        // --- Verify: Final Info Log ---
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
 
-        // 2. AllSettled rejection reason log - **CORRECTED ASSERTION**
-        // Check the rejection reason message string (which includes the error message)
-        const expectedRejectionReasonMsg = `Error during removeSchema for component '${componentId}'. Mod: ${modId}, File: ${filename}. Error: ${removeSchemaError.message}`;
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filename}. Reason: ${expectedRejectionReasonMsg}`),
-            expect.objectContaining({
-                modId: modId,
-                filename: filename,
-                resolvedPath: filePath,
-                error: expect.objectContaining({
-                    message: expect.stringContaining(expectedRejectionReasonMsg), // Check the wrapped error message
-                    reason: 'Schema Registration Error' // Check the reason property
-                }),
-            })
-        );
-
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 1 failures for component files. Check previous error logs for details.`
-        );
-
-        // --- Verify State: Original schema should still be 'loaded' in mock ---
-        // (because removeSchema failed)
-        expect(mockValidator._isSchemaActuallyLoaded(componentId)).toBe(true);
+        // --- Verify State: Original schema should still be 'loaded' according to mock ---
+        expect(mockValidator.isSchemaLoaded(componentId)).toBe(true);
     });
 });

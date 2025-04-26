@@ -1,16 +1,21 @@
 // tests/core/services/componentDefinitionLoader.test.js
-// -----------------------------------------------------------------------------
-// Sub-Ticket 6.1: Setup Component Loader Test Environment & Mocks
-// -----------------------------------------------------------------------------
-// This file establishes the testing infrastructure for ComponentDefinitionLoader.
-// It includes mock implementations for dependencies (IConfiguration, IPathResolver,
-// IDataFetcher, ISchemaValidator, IDataRegistry, ILogger) and a Jest test harness.
-// -----------------------------------------------------------------------------
-
+// --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
 
 // --- Mock Service Factories ---
+// [Mocks omitted for brevity - assume they are the same as provided in the question]
+/** Mocks assumed present:
+ * createMockConfiguration
+ * createMockPathResolver
+ * createMockDataFetcher
+ * createMockSchemaValidator
+ * createMockDataRegistry
+ * createMockLogger
+ * createMockComponentDefinition
+ * createMockModManifest
+ */
+// --- Mock Service Factories (Copied from previous test files for self-containment) ---
 
 /**
  * Creates a mock IConfiguration service.
@@ -18,7 +23,11 @@ import ComponentDefinitionLoader from '../../../core/services/componentDefinitio
  * @returns {import('../../../src/core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+    // --- FIX START: Add the missing required method ---
+    getModsBasePath: jest.fn(() => './data/mods'), // Provide a mock implementation/return value
+    // --- FIX END ---
+
+    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentDefinitionLoader uses it directly.
     getContentTypeSchemaId: jest.fn((typeName) => {
         if (typeName === 'components') {
             // Matches the schema provided in the ticket
@@ -28,6 +37,16 @@ const createMockConfiguration = (overrides = {}) => ({
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
     // Include other IConfiguration methods if needed by the loader, mocking their returns
+    // Required by Base Class validation
+    getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
+    getSchemaFiles: jest.fn().mockReturnValue([]),
+    getWorldBasePath: jest.fn().mockReturnValue('worlds'),
+    getBaseDataPath: jest.fn().mockReturnValue('./data'),
+    getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
+    getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+
     ...overrides,
 });
 
@@ -41,6 +60,12 @@ const createMockPathResolver = (overrides = {}) => ({
     resolveModContentPath: jest.fn((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
     // Include other IPathResolver methods if needed, mocking their returns
     resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`), // Example for non-mod paths if used elsewhere
+    // Required by Base Class validation
+    resolveSchemaPath: jest.fn(),
+    resolveManifestPath: jest.fn(),
+    resolveRulePath: jest.fn(),
+    resolveGameConfigPath: jest.fn(),
+    resolveModManifestPath: jest.fn(),
     ...overrides,
 });
 
@@ -181,6 +206,30 @@ const createMockDataRegistry = (overrides = {}) => {
             }
             registryData.get(type).set(id, JSON.parse(JSON.stringify(data)));
         },
+        // Required by Base Class Validation
+        clear: jest.fn(),
+        getAllSystemRules: jest.fn(),
+        getManifest: jest.fn(),
+        setManifest: jest.fn(),
+        getEntityDefinition: jest.fn(),
+        getItemDefinition: jest.fn(),
+        getLocationDefinition: jest.fn(),
+        getConnectionDefinition: jest.fn(),
+        getBlockerDefinition: jest.fn(),
+        getActionDefinition: jest.fn(),
+        getEventDefinition: jest.fn(),
+        getComponentDefinition: jest.fn(),
+        getAllEntityDefinitions: jest.fn(),
+        getAllItemDefinitions: jest.fn(),
+        getAllLocationDefinitions: jest.fn(),
+        getAllConnectionDefinitions: jest.fn(),
+        getAllBlockerDefinitions: jest.fn(),
+        getAllActionDefinitions: jest.fn(),
+        getAllEventDefinitions: jest.fn(),
+        getAllComponentDefinitions: jest.fn(),
+        getStartingPlayerId: jest.fn(),
+        getStartingLocationId: jest.fn(),
+
         // Allow overriding default mock methods
         ...overrides,
     };
@@ -201,7 +250,7 @@ const createMockLogger = (overrides = {}) => ({
 });
 
 // --- Test Utility Functions ---
-
+// [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]
 /**
  * Creates a basic valid mock component definition object.
  * @param {string} id - The component ID (e.g., 'core:health').
@@ -246,12 +295,10 @@ describe('ComponentDefinitionLoader Test Setup', () => {
 
     // Setup before each test
     beforeEach(() => {
-        // *** FIX START: Clear mocks *before* instantiation ***
-        // Clear any mock calls from previous tests first
+        // Clear mocks *before* instantiation
         jest.clearAllMocks();
-        // *** FIX END ***
 
-        // Create fresh mock instances for isolation
+        // Create fresh mock instances
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
@@ -268,23 +315,24 @@ describe('ComponentDefinitionLoader Test Setup', () => {
             mockRegistry,
             mockLogger
         );
-
-        // *** REMOVED jest.clearAllMocks() from here ***
     });
 
     // --- Basic Setup Verification Test ---
     it('should instantiate ComponentDefinitionLoader with all mock dependencies', () => {
-        // AC: A test suite structure is created where ComponentDefinitionLoader
-        //     can be instantiated with the configured mocks before each test.
         expect(loader).toBeInstanceOf(ComponentDefinitionLoader);
 
-        // Optional: Verify that the constructor logged its creation message
-        // Note: The actual loader code logs 'ComponentDefinitionLoader: Instance created and services injected.'
-        // This assertion should now pass because mocks are cleared *before* instantiation.
-        expect(mockLogger.info).toHaveBeenCalledWith('ComponentDefinitionLoader: Instance created and services injected.');
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Be precise
+        // *CORRECTED: Check DEBUG logs from constructors*
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2); // One from Base, one from Subclass
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'ComponentDefinitionLoader: Initialized successfully with all dependencies.' // From Base constructor
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'ComponentDefinitionLoader: Initialized.' // From ComponentDefinitionLoader constructor
+        );
+        expect(mockLogger.info).not.toHaveBeenCalled(); // Ensure no INFO logs during construction
     });
 
+    // [Other tests in the describe block omitted for brevity]
     it('should have mock services ready for configuration and tracking', () => {
         // AC: Mock implementations for all required service interfaces are created.
         // AC: Mocks allow configuration of return values and throwing errors.
@@ -352,19 +400,5 @@ describe('ComponentDefinitionLoader Test Setup', () => {
         });
     });
 
-    // --- Placeholder for Future Tests ---
-    // describe('loadComponentDefinitions', () => {
-    //   // Tests for the actual loading logic will go here in subsequent tickets (6.2 - 6.5)
-    //   it.todo('should correctly process valid component definitions');
-    //   it.todo('should handle fetch errors gracefully');
-    //   it.todo('should handle primary schema validation failures');
-    //   it.todo('should handle missing component IDs or dataSchemas');
-    //   it.todo('should correctly register data schemas with the validator');
-    //   it.todo('should correctly handle overrides for data schemas');
-    //   it.todo('should store validated definitions in the registry');
-    //    it.todo('should correctly handle overrides in the registry');
-    //    it.todo('should handle errors during schema registration');
-    //    it.todo('should handle errors during registry storage');
-    // });
 
 });

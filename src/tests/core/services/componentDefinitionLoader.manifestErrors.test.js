@@ -2,7 +2,18 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+
+// --- Mock Service Factories ---
+// [Mocks omitted for brevity - assume they are the same as provided in the question]
+/** Mocks assumed present:
+ * createMockConfiguration
+ * createMockPathResolver
+ * createMockDataFetcher
+ * createMockSchemaValidator
+ * createMockDataRegistry
+ * createMockLogger
+ */
 
 // --- Mock Service Factories (Copied from previous test files for self-containment) ---
 
@@ -155,6 +166,7 @@ const createMockLogger = (overrides = {}) => ({
     ...overrides,
 });
 
+
 // --- Test Suite ---
 
 describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
@@ -200,10 +212,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - Missing Components',
             version: '1.0.0',
-            content: {
-                // components key is missing
-                actions: [], // Other keys might exist
-            },
+            content: {actions: []}
         };
 
         // --- Action ---
@@ -214,22 +223,19 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         const count = await loadPromise;
         expect(count).toBe(0);
 
-        // --- Verify: Info Log Message ---
-        // CORRECTION: Expect 3 info logs: Constructor, Start Load, Specific Skipping Message
-        expect(mockLogger.info).toHaveBeenCalledTimes(3);
-        // Ensure the *specific* skipping message was logged
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`[${modId}]: Mod manifest 'content.components' is null or missing. Assuming no components.`)
+        // --- Verify: Log Messages ---
+        // *CORRECTED: Check for specific DEBUG message*
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
         );
-
-        // --- Verify: No Warnings/Errors ---
+        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message from loadComponentDefinitions
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.validate).not.toHaveBeenCalled(); // Direct validate call shouldn't happen
-        expect(mockValidator.getValidator).not.toHaveBeenCalled(); // Getting specific validator shouldn't happen
+        expect(mockValidator.getValidator).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -242,10 +248,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - Null Components',
             version: '1.0.0',
-            content: {
-                components: null, // Explicitly null
-                actions: [],
-            },
+            content: {components: null, actions: []}
         };
 
         // --- Action ---
@@ -256,38 +259,32 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         const count = await loadPromise;
         expect(count).toBe(0);
 
-        // --- Verify: Info Log Message ---
-        // CORRECTION: Expect 3 info logs: Constructor, Start Load, Specific Skipping Message
-        expect(mockLogger.info).toHaveBeenCalledTimes(3);
-        // Ensure the *specific* skipping message was logged
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`[${modId}]: Mod manifest 'content.components' is null or missing. Assuming no components.`)
+        // --- Verify: Log Messages ---
+        // *CORRECTED: Check for specific DEBUG message*
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
         );
-
-        // --- Verify: No Warnings/Errors ---
+        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockValidator.getValidator).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
     });
 
-    // --- Test Case: Scenario 3 (Section Not Array) ---
+    // --- Test Case: Scenario 3 (Section Not Array - Object) ---
     it('should handle manifests where content.components is not an array (object)', async () => {
         // --- Setup: Scenario 3a (Object) ---
         const manifestObjectComponents = {
             id: modId,
             name: 'Test Mod - Object Components',
             version: '1.0.0',
-            content: {
-                components: {file: 'some_component.json'}, // Not an array
-                actions: [],
-            },
+            content: {components: {file: 'some_component.json'}, actions: []}
         };
 
         // --- Action ---
@@ -298,35 +295,32 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         const count = await loadPromise;
         expect(count).toBe(0);
 
-        // --- Verify: Warn Log Message ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        // --- Verify: Log Messages ---
+        // *CORRECTED: Check for specific WARN message*
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1); // From _extractValidFilenames
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Mod manifest 'content.components' is not an array (type: object). Assuming no components.`
+            `Mod '${modId}': Expected an array for content key 'components' but found type 'object'. Skipping.`
         );
-
-        // --- Verify: No Errors ---
-        // CORRECTION: Removed check for `mockLogger.info.not.toHaveBeenCalled()` as info logs are expected
+        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
         expect(mockLogger.error).not.toHaveBeenCalled();
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockValidator.getValidator).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
     });
 
+    // --- Test Case: Scenario 4 (Section Not Array - String) ---
     it('should handle manifests where content.components is not an array (string)', async () => {
         // --- Setup: Scenario 3b (String) ---
         const manifestStringComponents = {
             id: modId,
             name: 'Test Mod - String Components',
             version: '1.0.0',
-            content: {
-                components: "file.json", // Not an array
-                actions: [],
-            },
+            content: {components: "file.json", actions: []}
         };
 
         // --- Action ---
@@ -337,19 +331,18 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         const count = await loadPromise;
         expect(count).toBe(0);
 
-        // --- Verify: Warn Log Message ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        // --- Verify: Log Messages ---
+        // *CORRECTED: Check for specific WARN message*
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1); // From _extractValidFilenames
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Mod manifest 'content.components' is not an array (type: string). Assuming no components.`
+            `Mod '${modId}': Expected an array for content key 'components' but found type 'string'. Skipping.`
         );
-
-        // --- Verify: No Errors ---
-        // CORRECTION: Removed check for `mockLogger.info.not.toHaveBeenCalled()` as info logs are expected
+        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
         expect(mockLogger.error).not.toHaveBeenCalled();
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockValidator.getValidator).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();

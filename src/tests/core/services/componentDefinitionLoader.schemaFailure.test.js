@@ -320,90 +320,92 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
         const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
 
         // --- Verify: Promise Resolves ---
-        // Individual file errors should not reject the main load promise
         await expect(loadPromise).resolves.not.toThrow();
 
         // --- Verify: Returned Count ---
         const count = await loadPromise;
-        expect(count).toBe(0); // No definitions were successfully loaded
+        expect(count).toBe(0);
 
-        // --- Verify: ISchemaValidator.addSchema not called ---
-        // Because the definition itself was invalid, its dataSchema should not be added
+        // --- Verify: No Schema Add / Registry Store ---
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
-
-        // --- Verify: IDataRegistry.store not called ---
-        // The invalid definition should not be stored
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
-        // --- Verify: Error Log Message ---
-        // Note: The code logs the schema failure AND the rejection reason as errors now
-        expect(mockLogger.error).toHaveBeenCalledTimes(3); // Schema fail + Rejection reason
+        // --- Verify: Error Log Messages ---
+        expect(mockLogger.error).toHaveBeenCalledTimes(3);
 
-        // Check the schema validation failure error message specifically
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining('Schema validation failed'),
-            expect.objectContaining({
-                modId: modId,
-                // In the code, the key is 'resolvedPath', let's check that
-                resolvedPath: filePath, // Check path resolution worked
-                schemaId: componentDefSchemaId,
-                validationErrors: mockErrors, // Ensure the specific errors are logged
-            })
-        );
-        // Check specific substrings in the primary error message string of the first error call
-        const schemaErrorCall = mockLogger.error.mock.calls.find(call => call[0].includes('Schema validation failed'));
+        // 1. Specific schema validation failure log (_processFetchedItem inner logic)
+        const expectedSchemaErrorMsg = `ComponentDefinitionLoader [${modId}]: Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${componentDefSchemaId}'. Errors:\n${JSON.stringify(mockErrors, null, 2)}`;
+        const expectedSchemaErrorDetails = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            schemaId: componentDefSchemaId,
+            validationErrors: mockErrors,
+            resolvedPath: filePath,
+            definition: invalidData
+        });
+        const schemaErrorCall = mockLogger.error.mock.calls.find(call => call[0] === expectedSchemaErrorMsg);
         expect(schemaErrorCall).toBeDefined();
-        if (schemaErrorCall) { // Check if found to avoid error on undefined
-            const errorMessage = schemaErrorCall[0];
-            expect(errorMessage).toContain(filename);
-            expect(errorMessage).toContain(modId);
-            expect(errorMessage).toContain(componentDefSchemaId);
-        }
+        expect(schemaErrorCall[1]).toEqual(expectedSchemaErrorDetails);
 
+        // 2. Item processing error log (_processFetchedItem outer catch)
+        const expectedOuterErrorMessage = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePath}'. Error: Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`;
+        // ***** CORRECTED PART *****
+        const expectedOuterErrorObject = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            componentId: 'unknown_id', // CORRECTED: ID is unknown because validation failed before assignment
+            path: filePath,
+            error: expect.objectContaining({ // The error constructed when validation fails
+                message: `Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`,
+                reason: 'Schema Validation Error',
+                resolvedPath: filePath,
+                validationErrors: mockErrors,
+            }),
+        });
+        // ***** END CORRECTION *****
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterErrorMessage, expectedOuterErrorObject);
 
-        // --- Verify: Final Warning Log Message ---
-        // Check the summary warning at the end of loadComponentDefinitions
+        // 3. Base loader file processing wrapper log (_processFileWrapper catch)
+        const expectedWrapperErrorMessage = `Error processing file:`;
+        const expectedWrapperErrorObject = expect.objectContaining({
+            modId: modId,
+            filename: filename,
+            path: filePath,
+            error: expect.stringContaining(`Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`),
+        });
+        const expectedWrapperErrorArg = expect.objectContaining({
+            message: `Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`,
+            reason: 'Schema Validation Error',
+            resolvedPath: filePath,
+            validationErrors: mockErrors,
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperErrorMessage, expectedWrapperErrorObject, expectedWrapperErrorArg);
 
-        // *** DEBUGGING START - REMOVED ***
-        // console.log('DEBUG: mockLogger.warn calls:', JSON.stringify(mockLogger.warn.mock.calls, null, 2));
-        // *** DEBUGGING END ***
-
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Should be called exactly once
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            // *** UPDATED ASSERTION: Check for the correct warning message ***
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 1 failures for component files. Check previous error logs for details.`
+        // --- Verify: Final Summary Log Message (Info Log) ---
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
-        // Remove the redundant/incorrect checks for the other message format
-        // expect(mockLogger.warn).toHaveBeenCalledWith(
-        //     expect.stringMatching(/Completed processing\. Success: 0\/\d+\. Failures: 1\./)
-        // );
-        // expect(mockLogger.warn).toHaveBeenCalledWith(
-        //     `ComponentDefinitionLoader: Mod '${modId}': Completed processing. Success: 0/${errorManifest.content.components.length}. Failures: 1.`
-        // );
 
+        // --- Verify: No Warning Logs ---
+        expect(mockLogger.warn).not.toHaveBeenCalled();
 
         // --- Verify Other Interactions (Sanity Check) ---
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
         expect(mockConfig.getContentTypeSchemaId).toHaveBeenCalledWith('components');
-        // Check getValidator was called, but we don't need to inspect its return value directly now
         expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
+        const validatorFn = mockValidator.getValidator(componentDefSchemaId);
+        expect(validatorFn).toHaveBeenCalledTimes(1);
+        expect(validatorFn).toHaveBeenCalledWith(invalidData);
 
-        // Check the failing validator function (retrieved via the mock's internal map) was actually called
-        const validatorMap = mockValidator.getValidator.getMockImplementation() ? null : mockValidator.getValidator(componentDefSchemaId); // Get the *actual* validator fn from map if getValidator wasn't mocked
-        if (validatorMap && jest.isMockFunction(validatorMap)) {
-            expect(validatorMap).toHaveBeenCalledTimes(1);
-            expect(validatorMap).toHaveBeenCalledWith(invalidData);
-        } else {
-            // This path might occur if the getValidator mock implementation was complex; log a warning if the function wasn't found/mocked as expected
-            console.warn("Test Warning: Could not verify calls to the specific failing validator function retrieved via the mock's internal map.");
-        }
-
-
-        // Debug logs should show processing start, but not success messages
+        // --- Verify Debug Logs ---
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing component file: ${filename}`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${filename}. Result: isValid=false`));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully stored component definition'));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Registered dataSchema for component ID'));
-
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${filePath}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${filePath}`);
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[${modId}] Failed processing ${filename}. Reason:`));
     });
 });

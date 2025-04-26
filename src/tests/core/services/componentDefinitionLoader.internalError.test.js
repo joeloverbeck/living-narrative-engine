@@ -2,8 +2,19 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
 
+// --- Mock Service Factories ---
+// [Mocks omitted for brevity - assume they are the same as provided in the question]
+/** Mocks assumed present:
+ * createMockConfiguration
+ * createMockPathResolver
+ * createMockDataFetcher
+ * createMockSchemaValidator
+ * createMockDataRegistry
+ * createMockLogger
+ * createMockModManifest
+ */
 // --- Mock Service Factories (Copied from previous test files for self-containment) ---
 
 /**
@@ -208,7 +219,6 @@ const createMockModManifest = (modId, componentFiles = []) => ({
     },
 });
 
-
 // --- Test Suite ---
 
 describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)', () => {
@@ -248,29 +258,15 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         );
 
         // --- Configure Common Mocks ---
-
-        // IConfiguration: Return the main schema ID for components
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
             if (typeName === 'components') return componentDefSchemaId;
             return undefined;
         });
-
-        // ISchemaValidator: Simulate the main component definition schema is loaded AND *passes* validation
-        mockValidator._setSchemaLoaded(componentDefSchemaId, { /* mock schema data */});
-        mockValidator.mockValidatorFunction(componentDefSchemaId, (dataToValidate) => {
-            // For these tests, the primary schema validation always passes
-            // The errors are caught *after* this step by internal checks
-            return {isValid: true, errors: null};
-        });
-
-        // IPathResolver: Default implementation is usually sufficient
-        // mockResolver.resolveModContentPath is already mocked by the factory
-
-        // IDataRegistry: Default implementation (empty) is usually sufficient
-        // mockRegistry.store and get are already mocked by the factory
+        // Primary schema validation always passes for these internal error tests
+        mockValidator._setSchemaLoaded(componentDefSchemaId, {});
+        mockValidator.mockValidatorFunction(componentDefSchemaId, (data) => ({isValid: true, errors: null}));
     });
 
-    // --- Test Case: Scenario 1 (Invalid ID) ---
     // --- Test Case: Scenario 1 (Invalid ID) ---
     it('should handle definitions with invalid "id" (null or empty string)', async () => {
         // --- Setup: Scenario 1 ---
@@ -303,69 +299,99 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
         // --- Verify: Error Log Messages ---
-        // Two files failed, so 3 logs per file = 6 total error logs expected
-        expect(mockLogger.error).toHaveBeenCalledTimes(6); // *** UPDATED EXPECTATION (Back to 6) ***
+        expect(mockLogger.error).toHaveBeenCalledTimes(6); // 3 logs per failed file
 
-        // 1. Specific internal errors (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Component definition in file '${filenameNullId}' from mod '${modId}' is missing a valid string 'id'. Found: null. Skipping.`),
-            expect.objectContaining({modId: modId, resolvedPath: filePathNullId, definition: invalidDataNullId})
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Component definition in file '${filenameEmptyId}' from mod '${modId}' is missing a valid string 'id'. Found: \"\". Skipping.`),
-            expect.objectContaining({modId: modId, resolvedPath: filePathEmptyId, definition: invalidDataEmptyId})
-        );
+        // --- File 1: invalid_null_id.component.json ---
+        // 1a. Specific internal error (_processFetchedItem check)
+        const expectedSpecificErrorMsg1 = `ComponentDefinitionLoader [${modId}]: Component definition in file '${filenameNullId}' from mod '${modId}' is missing a valid string 'id'. Found: null. Skipping.`;
+        const expectedSpecificErrorDetails1 = expect.objectContaining({
+            modId: modId,
+            resolvedPath: filePathNullId,
+            definition: invalidDataNullId
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1);
 
-        // 2. Generic catch block errors (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            // Use resolvedPath in the expected message now
-            expect.stringContaining(`Error processing component definition file '${filePathNullId}'. Error: Definition ID Error:`),
-            expect.objectContaining({ // Check the context object structure
-                modId: modId,
-                filename: filenameNullId,
-                path: filePathNullId,
-                error: expect.objectContaining({reason: 'Definition ID Error'}) // Check the error object
+        // 1b. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg1 = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePathNullId}'. Error: Definition ID Error: Component definition from '${filenameNullId}' in mod '${modId}' is missing a valid string 'id'.`;
+        const expectedOuterCatchDetails1 = expect.objectContaining({
+            modId: modId,
+            filename: filenameNullId,
+            componentId: 'unknown_id', // ID is unknown because check failed
+            path: filePathNullId,
+            error: expect.objectContaining({
+                message: `Definition ID Error: Component definition from '${filenameNullId}' in mod '${modId}' is missing a valid string 'id'.`,
+                reason: 'Definition ID Error',
+                resolvedPath: filePathNullId
             })
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Error processing component definition file '${filePathEmptyId}'. Error: Definition ID Error:`),
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameEmptyId,
-                path: filePathEmptyId,
-                error: expect.objectContaining({reason: 'Definition ID Error'})
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg1, expectedOuterCatchDetails1);
+
+        // 1c. Wrapper error (_processFileWrapper catch) - *CORRECTED CHECK*
+        const expectedWrapperMsg = `Error processing file:`; // Generic message from wrapper
+        const expectedWrapperDetails1 = expect.objectContaining({
+            modId: modId,
+            filename: filenameNullId,
+            path: filePathNullId,
+            error: expect.stringContaining(`Definition ID Error: Component definition from '${filenameNullId}' in mod '${modId}' is missing a valid string 'id'.`), // Error message string
+        });
+        const expectedWrapperErrorArg1 = expect.objectContaining({ // The actual error object
+            message: `Definition ID Error: Component definition from '${filenameNullId}' in mod '${modId}' is missing a valid string 'id'.`,
+            reason: 'Definition ID Error',
+            resolvedPath: filePathNullId
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, expectedWrapperErrorArg1);
+
+        // --- File 2: invalid_empty_id.component.json ---
+        // 2a. Specific internal error (_processFetchedItem check)
+        const expectedSpecificErrorMsg2 = `ComponentDefinitionLoader [${modId}]: Component definition in file '${filenameEmptyId}' from mod '${modId}' is missing a valid string 'id'. Found: \"\". Skipping.`;
+        const expectedSpecificErrorDetails2 = expect.objectContaining({
+            modId: modId,
+            resolvedPath: filePathEmptyId,
+            definition: invalidDataEmptyId
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg2, expectedSpecificErrorDetails2);
+
+        // 2b. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg2 = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePathEmptyId}'. Error: Definition ID Error: Component definition from '${filenameEmptyId}' in mod '${modId}' is missing a valid string 'id'.`;
+        const expectedOuterCatchDetails2 = expect.objectContaining({
+            modId: modId,
+            filename: filenameEmptyId,
+            componentId: 'unknown_id', // ID is unknown
+            path: filePathEmptyId,
+            error: expect.objectContaining({
+                message: `Definition ID Error: Component definition from '${filenameEmptyId}' in mod '${modId}' is missing a valid string 'id'.`,
+                reason: 'Definition ID Error',
+                resolvedPath: filePathEmptyId
             })
-        );
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg2, expectedOuterCatchDetails2);
+
+        // 2c. Wrapper error (_processFileWrapper catch) - *CORRECTED CHECK*
+        const expectedWrapperDetails2 = expect.objectContaining({
+            modId: modId,
+            filename: filenameEmptyId,
+            path: filePathEmptyId,
+            error: expect.stringContaining(`Definition ID Error: Component definition from '${filenameEmptyId}' in mod '${modId}' is missing a valid string 'id'.`), // Error message string
+        });
+        const expectedWrapperErrorArg2 = expect.objectContaining({ // The actual error object
+            message: `Definition ID Error: Component definition from '${filenameEmptyId}' in mod '${modId}' is missing a valid string 'id'.`,
+            reason: 'Definition ID Error',
+            resolvedPath: filePathEmptyId
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, expectedWrapperErrorArg2);
 
 
-        // 3. allSettled rejection reason messages (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filenameNullId}. Reason: Definition ID Error:`), // Updated message format
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameNullId, // From the loop context
-                resolvedPath: filePathNullId, // From the error object
-                error: expect.objectContaining({reason: 'Definition ID Error'}) // Check the rejection reason
-            })
+        // --- Verify: Final Info Log ---
+        // *Correction:* The base class logs an INFO message for the summary, not WARN
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Updated counts and format
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filenameEmptyId}. Reason: Definition ID Error:`), // Updated message format
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameEmptyId, // From the loop context
-                resolvedPath: filePathEmptyId, // From the error object
-                error: expect.objectContaining({reason: 'Definition ID Error'}) // Check the rejection reason
-            })
-        );
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
 
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 2 failures for component files. Check previous error logs for details.`
-        );
 
         // --- Verify Other Interactions ---
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
+        expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per file attempt
         expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
     });
 
@@ -376,7 +402,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         const filenameStringSchema = 'invalid_string_schema.component.json';
         const filePathNullSchema = `./data/mods/${modId}/components/${filenameNullSchema}`;
         const filePathStringSchema = `./data/mods/${modId}/components/${filenameStringSchema}`;
-        const validId = `${modId}:valid_id`;
+        const validId = `${modId}:valid_id`; // Use a valid ID for this test
 
         const invalidDataNullSchema = {id: validId, dataSchema: null};
         const invalidDataStringSchema = {id: validId, dataSchema: "not-an-object"};
@@ -402,72 +428,97 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
         // --- Verify: Error Log Messages ---
-        expect(mockLogger.error).toHaveBeenCalledTimes(6); // *** UPDATED EXPECTATION (Back to 6) ***
+        expect(mockLogger.error).toHaveBeenCalledTimes(6); // 3 logs per failed file
 
-        // 1. Specific internal errors (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            // Updated expectation with colon
-            expect.stringContaining(`Component definition ID '${validId}' in file '${filenameNullSchema}' from mod '${modId}' is missing a valid object 'dataSchema'. Found: null. Skipping.`),
-            expect.objectContaining({modId: modId, resolvedPath: filePathNullSchema, definition: invalidDataNullSchema})
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Component definition ID '${validId}' in file '${filenameStringSchema}' from mod '${modId}' is missing a valid object 'dataSchema'. Found: type: string. Skipping.`),
-            expect.objectContaining({
-                modId: modId,
-                resolvedPath: filePathStringSchema,
-                definition: invalidDataStringSchema
-            })
-        );
+        // --- File 1: invalid_null_schema.component.json ---
+        // 1a. Specific internal error (_processFetchedItem check)
+        const expectedSpecificErrorMsg1 = `ComponentDefinitionLoader [${modId}]: Component definition ID '${validId}' in file '${filenameNullSchema}' from mod '${modId}' is missing a valid object 'dataSchema'. Found: null. Skipping.`;
+        const expectedSpecificErrorDetails1 = expect.objectContaining({
+            modId: modId,
+            resolvedPath: filePathNullSchema,
+            definition: invalidDataNullSchema
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1);
 
-        // 2. Generic catch block errors (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            // Use resolvedPath in the expected message now
-            expect.stringContaining(`Error processing component definition file '${filePathNullSchema}'. Error: Definition Schema Error:`),
-            expect.objectContaining({ // Check the context object structure
-                modId: modId,
-                filename: filenameNullSchema,
-                path: filePathNullSchema,
-                error: expect.objectContaining({reason: 'Definition Schema Error'}) // Check the error object
+        // 1b. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg1 = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePathNullSchema}'. Error: Definition Schema Error: Component definition '${validId}' from '${filenameNullSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`;
+        const expectedOuterCatchDetails1 = expect.objectContaining({
+            modId: modId,
+            filename: filenameNullSchema,
+            componentId: validId, // ID is valid here, check failed later
+            path: filePathNullSchema,
+            error: expect.objectContaining({
+                message: `Definition Schema Error: Component definition '${validId}' from '${filenameNullSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`,
+                reason: 'Definition Schema Error',
+                resolvedPath: filePathNullSchema
             })
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Error processing component definition file '${filePathStringSchema}'. Error: Definition Schema Error:`),
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameStringSchema,
-                path: filePathStringSchema,
-                error: expect.objectContaining({reason: 'Definition Schema Error'})
-            })
-        );
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg1, expectedOuterCatchDetails1);
 
-        // 3. allSettled rejection reason messages (should appear twice)
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filenameNullSchema}. Reason: Definition Schema Error:`), // Updated message format
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameNullSchema, // From the loop context
-                resolvedPath: filePathNullSchema, // From the error object
-                error: expect.objectContaining({reason: 'Definition Schema Error'}) // Check the rejection reason
-            })
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Processing failed for component file: ${filenameStringSchema}. Reason: Definition Schema Error:`), // Updated message format
-            expect.objectContaining({
-                modId: modId,
-                filename: filenameStringSchema, // From the loop context
-                resolvedPath: filePathStringSchema, // From the error object
-                error: expect.objectContaining({reason: 'Definition Schema Error'}) // Check the rejection reason
-            })
-        );
+        // 1c. Wrapper error (_processFileWrapper catch) - *CORRECTED CHECK*
+        const expectedWrapperMsg = `Error processing file:`;
+        const expectedWrapperDetails1 = expect.objectContaining({
+            modId: modId,
+            filename: filenameNullSchema,
+            path: filePathNullSchema,
+            error: expect.stringContaining(`Definition Schema Error: Component definition '${validId}' from '${filenameNullSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`),
+        });
+        const expectedWrapperErrorArg1 = expect.objectContaining({
+            message: `Definition Schema Error: Component definition '${validId}' from '${filenameNullSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`,
+            reason: 'Definition Schema Error',
+            resolvedPath: filePathNullSchema
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, expectedWrapperErrorArg1);
 
-        // --- Verify: Final Warning ---
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader [${modId}]: Processing encountered 2 failures for component files. Check previous error logs for details.`
+        // --- File 2: invalid_string_schema.component.json ---
+        // 2a. Specific internal error (_processFetchedItem check)
+        const expectedSpecificErrorMsg2 = `ComponentDefinitionLoader [${modId}]: Component definition ID '${validId}' in file '${filenameStringSchema}' from mod '${modId}' is missing a valid object 'dataSchema'. Found: type: string. Skipping.`;
+        const expectedSpecificErrorDetails2 = expect.objectContaining({
+            modId: modId,
+            resolvedPath: filePathStringSchema,
+            definition: invalidDataStringSchema
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg2, expectedSpecificErrorDetails2);
+
+        // 2b. Outer catch error (_processFetchedItem outer catch)
+        const expectedOuterCatchMsg2 = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePathStringSchema}'. Error: Definition Schema Error: Component definition '${validId}' from '${filenameStringSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`;
+        const expectedOuterCatchDetails2 = expect.objectContaining({
+            modId: modId,
+            filename: filenameStringSchema,
+            componentId: validId, // ID is valid
+            path: filePathStringSchema,
+            error: expect.objectContaining({
+                message: `Definition Schema Error: Component definition '${validId}' from '${filenameStringSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`,
+                reason: 'Definition Schema Error',
+                resolvedPath: filePathStringSchema
+            })
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterCatchMsg2, expectedOuterCatchDetails2);
+
+        // 2c. Wrapper error (_processFileWrapper catch) - *CORRECTED CHECK*
+        const expectedWrapperDetails2 = expect.objectContaining({
+            modId: modId,
+            filename: filenameStringSchema,
+            path: filePathStringSchema,
+            error: expect.stringContaining(`Definition Schema Error: Component definition '${validId}' from '${filenameStringSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`),
+        });
+        const expectedWrapperErrorArg2 = expect.objectContaining({
+            message: `Definition Schema Error: Component definition '${validId}' from '${filenameStringSchema}' in mod '${modId}' is missing a valid object 'dataSchema'.`,
+            reason: 'Definition Schema Error',
+            resolvedPath: filePathStringSchema
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, expectedWrapperErrorArg2);
+
+        // --- Verify: Final Info Log ---
+        // *Correction:* Use INFO log for summary
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Updated counts and format
         );
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
 
         // --- Verify Other Interactions ---
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
+        expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per file
         expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
     });
 });

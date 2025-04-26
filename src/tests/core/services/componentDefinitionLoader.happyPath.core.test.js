@@ -14,170 +14,226 @@ import {beforeEach, describe, expect, jest, test} from '@jest/globals'; // Impor
  * @typedef {import('../interfaces/coreServices.js').ModManifest} ModManifest
  */
 
+// --- Mock Service Factories (Copied from previous test files for self-containment) ---
+
+/**
+ * Creates a mock IConfiguration service.
+ * @param {object} [overrides={}] - Optional overrides for mock methods.
+ * @returns {import('../../../core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
+ */
+const createMockConfiguration = (overrides = {}) => ({
+    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+    getContentTypeSchemaId: jest.fn((typeName) => {
+        if (typeName === 'components') {
+            return 'http://example.com/schemas/component-definition.schema.json';
+        }
+        return `http://example.com/schemas/${typeName}.schema.json`;
+    }),
+    getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
+    getSchemaFiles: jest.fn().mockReturnValue([]),
+    getWorldBasePath: jest.fn().mockReturnValue('worlds'),
+    getBaseDataPath: jest.fn().mockReturnValue('./data'),
+    getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
+    getModsBasePath: jest.fn().mockReturnValue('mods'),
+    getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    ...overrides,
+});
+
+/**
+ * Creates a mock IPathResolver service.
+ * @param {object} [overrides={}] - Optional overrides for mock methods.
+ * @returns {import('../../../core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
+ */
+const createMockPathResolver = (overrides = {}) => ({
+    resolveModContentPath: jest.fn((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
+    resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`),
+    resolveSchemaPath: jest.fn(filename => `./data/schemas/${filename}`),
+    resolveModManifestPath: jest.fn(modId => `./data/mods/${modId}/mod.manifest.json`),
+    resolveGameConfigPath: jest.fn(() => './data/game.json'),
+    resolveRulePath: jest.fn(filename => `./data/system-rules/${filename}`),
+    resolveManifestPath: jest.fn(worldName => `./data/worlds/${worldName}.world.json`),
+    ...overrides,
+});
+
+/**
+ * Creates a mock IDataFetcher service.
+ * @param {object} [pathToResponse={}] - Map of path strings to successful response data.
+ * @param {string[]} [errorPaths=[]] - List of paths that should trigger a rejection.
+ * @returns {import('../../../core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
+ */
+const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
+    fetch: jest.fn(async (path) => {
+        if (errorPaths.includes(path)) {
+            return Promise.reject(new Error(`Mock Fetch Error: Failed to fetch ${path}`));
+        }
+        if (path in pathToResponse) {
+            return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
+        }
+        return Promise.reject(new Error(`Mock Fetch Error: 404 Not Found for ${path}`));
+    }),
+});
+
+/**
+ * Creates a mock ISchemaValidator service.
+ * @param {object} [overrides={}] - Optional overrides for mock methods.
+ * @returns {import('../../../core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
+ */
+const createMockSchemaValidator = (overrides = {}) => {
+    const loadedSchemas = new Map();
+    const schemaValidators = new Map();
+
+    const mockValidator = {
+        addSchema: jest.fn(async (schemaData, schemaId) => {
+            loadedSchemas.set(schemaId, schemaData);
+            schemaValidators.set(schemaId, jest.fn(() => ({isValid: true, errors: null})));
+        }),
+        removeSchema: jest.fn((schemaId) => loadedSchemas.delete(schemaId) && schemaValidators.delete(schemaId)),
+        isSchemaLoaded: jest.fn((schemaId) => loadedSchemas.has(schemaId)),
+        getValidator: jest.fn((schemaId) => schemaValidators.get(schemaId)),
+        validate: jest.fn((schemaId, data) => {
+            const validatorFn = schemaValidators.get(schemaId);
+            if (validatorFn) return validatorFn(data);
+            return {isValid: false, errors: [{message: `Mock Schema Error: Schema '${schemaId}' not found.`}]};
+        }),
+        // Helper to configure validator behavior
+        mockValidatorFunction: (schemaId, implementation) => {
+            if (schemaValidators.has(schemaId)) {
+                schemaValidators.get(schemaId).mockImplementation(implementation);
+            } else {
+                const newMockFn = jest.fn(implementation);
+                schemaValidators.set(schemaId, newMockFn);
+            }
+        },
+        // Helper to simulate schema loading for tests
+        _setSchemaLoaded: (schemaId, schemaData = {}) => {
+            if (!loadedSchemas.has(schemaId)) {
+                loadedSchemas.set(schemaId, schemaData);
+                if (!schemaValidators.has(schemaId)) {
+                    const mockValidationFn = jest.fn((data) => ({isValid: true, errors: null}));
+                    schemaValidators.set(schemaId, mockValidationFn);
+                }
+            }
+        },
+        // Helper to check internal state
+        _isSchemaActuallyLoaded: (schemaId) => loadedSchemas.has(schemaId),
+        ...overrides,
+    };
+    return mockValidator;
+};
+
+/**
+ * Creates a mock IDataRegistry service.
+ * @param {object} [overrides={}] - Optional overrides for mock methods.
+ * @returns {import('../../../core/interfaces/coreServices.js').IDataRegistry} Mocked data registry service.
+ */
+const createMockDataRegistry = (overrides = {}) => {
+    const registryData = new Map();
+    return {
+        store: jest.fn((type, id, data) => {
+            if (!registryData.has(type)) registryData.set(type, new Map());
+            registryData.get(type).set(id, JSON.parse(JSON.stringify(data)));
+        }),
+        get: jest.fn((type, id) => {
+            const typeMap = registryData.get(type);
+            return typeMap?.has(id) ? JSON.parse(JSON.stringify(typeMap.get(id))) : undefined;
+        }),
+        getAll: jest.fn((type) => {
+            const typeMap = registryData.get(type);
+            return typeMap ? Array.from(typeMap.values()).map(d => JSON.parse(JSON.stringify(d))) : [];
+        }),
+        clear: jest.fn(() => registryData.clear()),
+        getAllSystemRules: jest.fn().mockReturnValue([]),
+        getManifest: jest.fn().mockReturnValue(null),
+        setManifest: jest.fn(),
+        getEntityDefinition: jest.fn(),
+        getItemDefinition: jest.fn(),
+        getLocationDefinition: jest.fn(),
+        getConnectionDefinition: jest.fn(),
+        getBlockerDefinition: jest.fn(),
+        getActionDefinition: jest.fn(),
+        getEventDefinition: jest.fn(),
+        getComponentDefinition: jest.fn(),
+        getAllEntityDefinitions: jest.fn().mockReturnValue([]),
+        getAllItemDefinitions: jest.fn().mockReturnValue([]),
+        getAllLocationDefinitions: jest.fn().mockReturnValue([]),
+        getAllConnectionDefinitions: jest.fn().mockReturnValue([]),
+        getAllBlockerDefinitions: jest.fn().mockReturnValue([]),
+        getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        getAllEventDefinitions: jest.fn().mockReturnValue([]),
+        getAllComponentDefinitions: jest.fn().mockReturnValue([]),
+        getStartingPlayerId: jest.fn().mockReturnValue(null),
+        getStartingLocationId: jest.fn().mockReturnValue(null),
+        ...overrides,
+    };
+};
+
+/**
+ * Creates a mock ILogger service.
+ * @param {object} [overrides={}] - Optional overrides for mock methods.
+ * @returns {import('../../../core/interfaces/coreServices.js').ILogger} Mocked logger service.
+ */
+const createMockLogger = (overrides = {}) => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    ...overrides,
+});
+
+
 describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', () => {
     // --- Declare variables for mocks and loader ---
-    /** @type {IConfiguration} */
     let mockConfig;
-    /** @type {IPathResolver} */
     let mockResolver;
-    /** @type {IDataFetcher} */
     let mockFetcher;
-    /** @type {ISchemaValidator} */
     let mockValidator;
-    /** @type {IDataRegistry} */
     let mockRegistry;
-    /** @type {ILogger} */
     let mockLogger;
-    /** @type {ComponentDefinitionLoader} */
     let componentDefinitionLoader;
 
     // --- Define mock component data ---
     const coreHealthFilename = 'core_health.component.json';
     const corePositionFilename = 'core_position.component.json';
-
     const coreHealthPath = './data/mods/core/components/core_health.component.json';
     const corePositionPath = './data/mods/core/components/core_position.component.json';
-
     const coreHealthDef = {
         id: 'core:health',
-        description: 'Tracks entity health points.',
-        dataSchema: {
-            type: 'object',
-            properties: {
-                current: {type: 'number', default: 100},
-                max: {type: 'number', default: 100},
-            },
-            required: ['current', 'max'],
-            additionalProperties: false,
-        },
+        description: '...',
+        dataSchema: {type: 'object', properties: {current: {}, max: {}}, required: ['current', 'max']}
     };
-
     const corePositionDef = {
         id: 'core:position',
-        description: 'Tracks entity position in the world.',
-        dataSchema: {
-            type: 'object',
-            properties: {
-                x: {type: 'integer', default: 0},
-                y: {type: 'integer', default: 0},
-                z: {type: 'integer', default: 0},
-            },
-            required: ['x', 'y', 'z'],
-            additionalProperties: false,
-        },
+        description: '...',
+        dataSchema: {type: 'object', properties: {x: {}, y: {}, z: {}}, required: ['x', 'y', 'z']}
     };
 
     // --- Define the 'core' mod manifest ---
-    /** @type {ModManifest} */
     const mockCoreManifest = {
         id: 'core',
-        name: 'Core Game Systems',
+        name: '...',
         version: '1.0.0',
-        content: {
-            components: [
-                coreHealthFilename,
-                corePositionFilename,
-            ],
-            // Other content types can be empty or omitted for this test
-        },
-        // Other manifest fields like dependencies can be omitted
+        content: {components: [coreHealthFilename, corePositionFilename]}
     };
 
     // --- Define schema IDs ---
     const componentDefinitionSchemaId = 'http://example.com/schemas/component-definition.schema.json';
 
     beforeEach(() => {
-        // --- Setup: Instantiate Mocks using jest.fn() ---
+        // --- Setup: Instantiate Mocks ---
+        mockConfig = createMockConfiguration();
+        mockResolver = createMockPathResolver();
+        mockFetcher = createMockDataFetcher();
+        mockValidator = createMockSchemaValidator();
+        mockRegistry = createMockDataRegistry();
+        mockLogger = createMockLogger();
 
-        // Mock IConfiguration
-        mockConfig = {
-            getContentBasePath: jest.fn(),
-            getContentTypeSchemaId: jest.fn(),
-            // Add mocks for other methods required by constructor validation
-            getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
-            getSchemaFiles: jest.fn().mockReturnValue([]),
-            getWorldBasePath: jest.fn().mockReturnValue('worlds'),
-            getBaseDataPath: jest.fn().mockReturnValue('./data'),
-            getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-            getModsBasePath: jest.fn().mockReturnValue('mods'),
-            getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-        };
-
-        // Mock IPathResolver
-        mockResolver = {
-            resolveContentPath: jest.fn(),
-            resolveModContentPath: jest.fn(),
-            // Add mocks for other methods required by constructor validation
-            resolveSchemaPath: jest.fn(),
-            resolveManifestPath: jest.fn(),
-            resolveRulePath: jest.fn(),
-            resolveGameConfigPath: jest.fn(),
-            resolveModManifestPath: jest.fn(),
-        };
-
-        // Mock IDataFetcher
-        mockFetcher = {
-            fetch: jest.fn(),
-        };
-
-        // Mock ISchemaValidator
-        mockValidator = {
-            addSchema: jest.fn(),
-            isSchemaLoaded: jest.fn(),
-            getValidator: jest.fn(),
-            removeSchema: jest.fn(), // Required by constructor
-            validate: jest.fn(),     // Required by constructor
-        };
-
-        // Mock IDataRegistry
-        mockRegistry = {
-            store: jest.fn(),
-            get: jest.fn(),
-            // Add mocks for other methods required by constructor validation
-            getAll: jest.fn().mockReturnValue([]),
-            getAllSystemRules: jest.fn().mockReturnValue([]),
-            clear: jest.fn(),
-            getManifest: jest.fn().mockReturnValue(null),
-            setManifest: jest.fn(),
-            getEntityDefinition: jest.fn(),
-            getItemDefinition: jest.fn(),
-            getLocationDefinition: jest.fn(),
-            getConnectionDefinition: jest.fn(),
-            getBlockerDefinition: jest.fn(),
-            getActionDefinition: jest.fn(),
-            getEventDefinition: jest.fn(),
-            getComponentDefinition: jest.fn(),
-            getAllEntityDefinitions: jest.fn().mockReturnValue([]),
-            getAllItemDefinitions: jest.fn().mockReturnValue([]),
-            getAllLocationDefinitions: jest.fn().mockReturnValue([]),
-            getAllConnectionDefinitions: jest.fn().mockReturnValue([]),
-            getAllBlockerDefinitions: jest.fn().mockReturnValue([]),
-            getAllActionDefinitions: jest.fn().mockReturnValue([]),
-            getAllEventDefinitions: jest.fn().mockReturnValue([]),
-            getAllComponentDefinitions: jest.fn().mockReturnValue([]),
-            getStartingPlayerId: jest.fn().mockReturnValue(null),
-            getStartingLocationId: jest.fn().mockReturnValue(null),
-        };
-
-        // Mock ILogger
-        mockLogger = {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-            debug: jest.fn(),
-        };
-
-        // --- Setup: Configure Mock Implementations (Acceptance Criteria) ---
-
-        // IConfiguration
+        // --- Setup: Configure Mock Implementations ---
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-            if (typeName === 'components') {
-                return componentDefinitionSchemaId;
-            }
+            if (typeName === 'components') return componentDefinitionSchemaId;
             return undefined;
         });
-
-        // IPathResolver
         mockResolver.resolveModContentPath.mockImplementation((modId, typeName, filename) => {
             if (modId === 'core' && typeName === 'components') {
                 if (filename === coreHealthFilename) return coreHealthPath;
@@ -185,48 +241,30 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
             }
             throw new Error(`Unexpected resolveModContentPath call: ${modId}, ${typeName}, ${filename}`);
         });
-
-        // IDataFetcher
         mockFetcher.fetch.mockImplementation(async (path) => {
-            if (path === coreHealthPath) return Promise.resolve({...coreHealthDef}); // Return copies
+            if (path === coreHealthPath) return Promise.resolve({...coreHealthDef});
             if (path === corePositionPath) return Promise.resolve({...corePositionDef});
             throw new Error(`Unexpected fetch call for path: ${path}`);
         });
-
-        // ISchemaValidator
-        const addedSchemas = new Set(); // Track schemas added via mock
-        mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-            if (schemaId === componentDefinitionSchemaId) return true;
-            // Check if addSchema was called for this component ID
-            return addedSchemas.has(schemaId);
-        });
+        const addedSchemas = new Set();
+        mockValidator.isSchemaLoaded.mockImplementation((schemaId) => schemaId === componentDefinitionSchemaId || addedSchemas.has(schemaId));
         mockValidator.getValidator.mockImplementation((schemaId) => {
             if (schemaId === componentDefinitionSchemaId) {
-                // Return a mock validator function for the *definition* schema
                 return jest.fn().mockReturnValue({isValid: true, errors: null});
             }
-            // No validator needed for component *data* schemas in this loader's flow
             return undefined;
         });
         mockValidator.addSchema.mockImplementation(async (schemaData, schemaId) => {
-            addedSchemas.add(schemaId); // Mark schema as 'added'
-            return Promise.resolve(); // Simulate success
+            addedSchemas.add(schemaId);
         });
-        mockValidator.removeSchema.mockReturnValue(false); // Ensure it's tracked but returns false
-
-        // IDataRegistry
-        mockRegistry.get.mockReturnValue(undefined); // Simulate empty registry initially
-        mockRegistry.store.mockImplementation(() => { /* Simulate success */
+        mockValidator.removeSchema.mockReturnValue(false);
+        mockRegistry.get.mockReturnValue(undefined);
+        mockRegistry.store.mockImplementation(() => {
         });
 
         // --- Setup: Instantiate Loader ---
         componentDefinitionLoader = new ComponentDefinitionLoader(
-            mockConfig,
-            mockResolver,
-            mockFetcher,
-            mockValidator,
-            mockRegistry,
-            mockLogger
+            mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger
         );
     });
 
@@ -234,53 +272,80 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         // --- Action ---
         const promise = componentDefinitionLoader.loadComponentDefinitions('core', mockCoreManifest);
 
-        // --- Verify: Promise Resolves ---
+        // --- Verify: Promise Resolves & Count ---
         await expect(promise).resolves.not.toThrow();
-
-        // --- Verify: Returned Count ---
         const count = await promise;
-        expect(count).toBe(mockCoreManifest.content.components.length); // Should be 2
+        expect(count).toBe(mockCoreManifest.content.components.length); // 2
 
         // --- Verify: Mock Calls ---
-
-        // IDataRegistry.store
         expect(mockRegistry.store).toHaveBeenCalledTimes(2);
-        // Use expect.objectContaining or deep equality checks if strict object identity isn't guaranteed
         expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', coreHealthDef.id, expect.objectContaining(coreHealthDef));
         expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', corePositionDef.id, expect.objectContaining(corePositionDef));
 
-        // ISchemaValidator.addSchema
         expect(mockValidator.addSchema).toHaveBeenCalledTimes(2);
         expect(mockValidator.addSchema).toHaveBeenCalledWith(coreHealthDef.dataSchema, coreHealthDef.id);
         expect(mockValidator.addSchema).toHaveBeenCalledWith(corePositionDef.dataSchema, corePositionDef.id);
 
-        // ISchemaValidator.removeSchema
         expect(mockValidator.removeSchema).not.toHaveBeenCalled();
-
-        // IDataRegistry.get (called before each store)
         expect(mockRegistry.get).toHaveBeenCalledTimes(2);
         expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', coreHealthDef.id);
         expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', corePositionDef.id);
 
-        // ILogger.info/debug (check for key messages)
+        // --- Verify: ILogger Calls ---
+        // Info logs
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and End logs
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Loading component definitions for mod 'core'"));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found ${mockCoreManifest.content.components.length} valid component definition filenames`));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Completed processing. Success: ${mockCoreManifest.content.components.length}/${mockCoreManifest.content.components.length}`));
+        // Final summary log format from BaseManifestItemLoader
+        const expectedSuccessCount = mockCoreManifest.content.components.length;
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.` // Exact message format
+        );
 
+        // Debug logs
+        // *CORRECTED: Check for the DEBUG log about files found*
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Found ${mockCoreManifest.content.components.length} potential components files to process for mod core.`
+        );
+
+        // Check logs for each file processed
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing component file: ${coreHealthFilename}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing component file: ${corePositionFilename}`));
+        // Base class wrapper logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Resolved path for ${coreHealthFilename}: ${coreHealthPath}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Resolved path for ${corePositionFilename}: ${corePositionPath}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Fetched data from ${coreHealthPath}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Fetched data from ${corePositionPath}`);
+        // Component loader specific logs
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${coreHealthFilename}. Result: isValid=true`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${corePositionFilename}. Result: isValid=true`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted valid componentId ('${coreHealthDef.id}')`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted valid componentId ('${corePositionDef.id}')`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${coreHealthDef.id}'`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${corePositionDef.id}'`));
-
-        // --- CORRECTED ASSERTIONS ---
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`Successfully stored component definition metadata for '${coreHealthDef.id}'`),
-            expect.anything() // Allow any second argument
+            expect.objectContaining({ // Check details object
+                modId: 'core',
+                filename: coreHealthFilename,
+                componentId: coreHealthDef.id,
+                path: coreHealthPath
+            })
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`Successfully stored component definition metadata for '${corePositionDef.id}'`),
-            expect.anything() // Allow any second argument
+            expect.objectContaining({
+                modId: 'core',
+                filename: corePositionFilename,
+                componentId: corePositionDef.id,
+                path: corePositionPath
+            })
         );
-        // --- END CORRECTION ---
+        // Base class wrapper success log
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Successfully processed ${coreHealthFilename}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[core] Successfully processed ${corePositionFilename}`);
+
+        // Ensure no warnings or errors
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.error).not.toHaveBeenCalled();
     });
 });
