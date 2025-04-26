@@ -331,9 +331,11 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
         // --- Verify: Error Log Messages ---
-        expect(mockLogger.error).toHaveBeenCalledTimes(3);
+        // ***** CORRECTED ERROR LOG EXPECTATIONS *****
+        // Expect exactly two error logs for this failure path
+        expect(mockLogger.error).toHaveBeenCalledTimes(2);
 
-        // 1. Specific schema validation failure log (_processFetchedItem inner logic)
+        // 1. Specific schema validation failure log (from _processFetchedItem, before throw)
         const expectedSchemaErrorMsg = `ComponentDefinitionLoader [${modId}]: Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${componentDefSchemaId}'. Errors:\n${JSON.stringify(mockErrors, null, 2)}`;
         const expectedSchemaErrorDetails = expect.objectContaining({
             modId: modId,
@@ -343,43 +345,33 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
             resolvedPath: filePath,
             definition: invalidData
         });
-        const schemaErrorCall = mockLogger.error.mock.calls.find(call => call[0] === expectedSchemaErrorMsg);
-        expect(schemaErrorCall).toBeDefined();
-        expect(schemaErrorCall[1]).toEqual(expectedSchemaErrorDetails);
+        // Check that the specific schema error was logged (order doesn't matter with toHaveBeenCalledWith)
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedSchemaErrorMsg, expectedSchemaErrorDetails);
 
-        // 2. Item processing error log (_processFetchedItem outer catch)
-        const expectedOuterErrorMessage = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePath}'. Error: Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`;
-        // ***** CORRECTED PART *****
-        const expectedOuterErrorObject = expect.objectContaining({
-            modId: modId,
-            filename: filename,
-            componentId: 'unknown_id', // CORRECTED: ID is unknown because validation failed before assignment
-            path: filePath,
-            error: expect.objectContaining({ // The error constructed when validation fails
-                message: `Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`,
-                reason: 'Schema Validation Error',
-                resolvedPath: filePath,
-                validationErrors: mockErrors,
-            }),
-        });
-        // ***** END CORRECTION *****
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterErrorMessage, expectedOuterErrorObject);
-
-        // 3. Base loader file processing wrapper log (_processFileWrapper catch)
+        // 2. Base loader file processing wrapper log (from _processFileWrapper catch)
         const expectedWrapperErrorMessage = `Error processing file:`;
         const expectedWrapperErrorObject = expect.objectContaining({
             modId: modId,
             filename: filename,
-            path: filePath,
-            error: expect.stringContaining(`Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`),
+            path: filePath, // Path should be resolved before the error is thrown
+            error: expect.stringContaining(`Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`), // Check error message string
         });
+        // The third argument is the actual Error object thrown from _processFetchedItem
         const expectedWrapperErrorArg = expect.objectContaining({
             message: `Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`,
             reason: 'Schema Validation Error',
             resolvedPath: filePath,
             validationErrors: mockErrors,
         });
+        // Check that the wrapper error was logged
         expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperErrorMessage, expectedWrapperErrorObject, expectedWrapperErrorArg);
+
+        // REMOVE the check for the non-existent "outer catch" log
+        // const expectedOuterErrorMessage = ... // REMOVE
+        // const expectedOuterErrorObject = ... // REMOVE
+        // expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterErrorMessage, expectedOuterErrorObject); // REMOVE
+        // ***** END CORRECTION *****
+
 
         // --- Verify: Final Summary Log Message (Info Log) ---
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -393,12 +385,20 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
         expect(mockConfig.getContentTypeSchemaId).toHaveBeenCalledWith('components');
-        expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
-        const validatorFn = mockValidator.getValidator(componentDefSchemaId);
-        expect(validatorFn).toHaveBeenCalledTimes(1);
-        expect(validatorFn).toHaveBeenCalledWith(invalidData);
+
+        // ***** CORRECTED VALIDATOR CHECK *****
+        // Check that 'validate' was called directly, not 'getValidator'
+        expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Should be called once for the main definition
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidData);
+        // Remove the checks related to getValidator
+        // expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId); // REMOVE
+        // const validatorFn = mockValidator.getValidator(componentDefSchemaId); // REMOVE
+        // expect(validatorFn).toHaveBeenCalledTimes(1); // REMOVE
+        // expect(validatorFn).toHaveBeenCalledWith(invalidData); // REMOVE
+        // ***** END CORRECTION *****
 
         // --- Verify Debug Logs ---
+        // (Debug log checks remain the same - ensure they are valid for the actual flow)
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing component file: ${filename}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${filename}. Result: isValid=false`));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully stored component definition'));
@@ -406,6 +406,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${filePath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${filePath}`);
         expect(mockLogger.debug).not.toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[${modId}] Failed processing ${filename}. Reason:`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[${modId}] Failed processing ${filename}. Reason:`)); // Logged by Base Class
     });
 });

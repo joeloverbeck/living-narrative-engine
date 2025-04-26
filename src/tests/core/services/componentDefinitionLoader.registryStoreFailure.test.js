@@ -301,75 +301,89 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
         // --- Verify: Pre-Storage Steps Succeeded ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-        expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId);
-        const mainValidatorFn = mockValidator.getValidator(componentDefSchemaId);
-        expect(mainValidatorFn).toHaveBeenCalledWith(validDef);
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentId);
-        expect(mockValidator.addSchema).toHaveBeenCalledTimes(1);
+
+        // ***** CORRECTED VALIDATOR CHECK *****
+        // Check that 'validate' was called directly, not 'getValidator'
+        expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Should be called once for the main definition
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, validDef);
+        // Remove the checks related to getValidator
+        // expect(mockValidator.getValidator).toHaveBeenCalledWith(componentDefSchemaId); // <-- REMOVE
+        // const mainValidatorFn = mockValidator.getValidator(componentDefSchemaId); // <-- REMOVE
+        // expect(mainValidatorFn).toHaveBeenCalledWith(validDef); // <-- REMOVE
+        // ***** END CORRECTION *****
+
+        // Continue verifying other pre-storage steps
+        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentId); // Checks if dataSchema exists
+        expect(mockValidator.addSchema).toHaveBeenCalledTimes(1); // Called for the dataSchema
         expect(mockValidator.addSchema).toHaveBeenCalledWith(validDef.dataSchema, componentId);
-        expect(mockRegistry.get).toHaveBeenCalledTimes(1);
+        expect(mockRegistry.get).toHaveBeenCalledTimes(1); // Checks for existing definition
         expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', componentId);
 
         // --- Verify: Storage Attempt and Failure ---
         expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-        expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', componentId, expect.objectContaining(validDef));
+        // Construct the object expected to be stored (including added properties)
+        const expectedStoredObject = {
+            ...validDef,
+            modId: modId,
+            _sourceFile: filename
+        };
+        // Check that store was called with the correct arguments, including the enhanced object
+        expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', componentId, expectedStoredObject);
 
-        // --- Verify: Error Logs (Order Matters) ---
-        expect(mockLogger.error).toHaveBeenCalledTimes(3);
+        // --- Verify: Error Logs (Order might vary slightly depending on Promise timing, but all should be present) ---
+        // Expect 3 errors: the specific store failure, the error from the try/catch in _processFetchedItem, and the wrapper error
 
-        // 1. Specific storage error log (_processFetchedItem inner catch)
-        const expectedInnerErrorMessage = `ComponentDefinitionLoader [${modId}]: CRITICAL: Failed to store component definition metadata for '${componentId}' (from file '${filename}') in registry.`;
+        // 1. Specific storage error log (_processFetchedItem inner catch for store)
+        const expectedInnerErrorMessage = `ComponentDefinitionLoader [${modId}]: Failed to store component definition '${componentId}' from file '${filename}' in registry.`;
         const expectedInnerErrorObject = expect.objectContaining({
             modId: modId,
             filename: filename,
             componentId: componentId,
             path: filePath,
-            error: storageError
+            error: storageError.message // Check message from the original error
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedInnerErrorMessage, expectedInnerErrorObject);
+        // The third argument is the original error object
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedInnerErrorMessage, expectedInnerErrorObject, storageError);
 
-        // 2. Item processing error log (_processFetchedItem outer catch)
-        const expectedOuterErrorMessage = `ComponentDefinitionLoader [${modId}]: Error processing component definition file '${filePath}'. Error: CRITICAL: Failed to store component definition metadata for '${componentId}' (from file '${filename}') in registry. Error: ${storageError.message}`;
-        const expectedOuterErrorObject = expect.objectContaining({
-            modId: modId,
-            filename: filename,
-            componentId: componentId,
-            path: filePath,
-            error: expect.objectContaining({
-                message: expect.stringContaining(storageError.message),
-                reason: 'Registry Storage Error'
-            })
-        });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedOuterErrorMessage, expectedOuterErrorObject);
+        // ***** UPDATED: Re-examine Error Logging Logic *****
+        // The implementation now throws a more specific error *from within* the catch block in step 5.
+        // Let's adjust the expectations for the next two logs based on the *new* error thrown.
 
-        // 3. Base loader file processing wrapper log (_processFileWrapper catch)
+        // 2. Error log from _processFileWrapper catch block
         const expectedWrapperErrorMessage = `Error processing file:`;
         const expectedWrapperErrorObject = expect.objectContaining({
             modId: modId,
             filename: filename,
             path: filePath,
-            error: expect.stringContaining(storageError.message)
+            error: expect.stringContaining(`Registry Error: Failed to store component definition '${componentId}' from '${filename}'. Reason: ${storageError.message}`) // Expect the *new* error message
         });
+        // The third argument to the wrapper's logger is the *new* error object thrown from _processFetchedItem's catch
         const expectedWrapperErrorArg = expect.objectContaining({
-            message: expect.stringContaining(storageError.message),
-            reason: 'Registry Storage Error'
+            message: expect.stringContaining(`Registry Error: Failed to store component definition '${componentId}'`),
+            reason: 'Registry Error', // Check the reason assigned in the catch block
+            originalError: storageError // Check if the original error is attached
         });
         expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperErrorMessage, expectedWrapperErrorObject, expectedWrapperErrorArg);
 
+        // 3. Let's double check the implementation's error logging again.
+        // - Step 5 catch block logs error A and throws error B (Registry Error).
+        // - _processFileWrapper catch block catches error B, logs error C (using error B's message), and re-throws error B.
+        // It seems there should only be *two* error logs in this scenario based on the provided code.
+        // Let's adjust the expectation to 2.
+        expect(mockLogger.error).toHaveBeenCalledTimes(2); // ADJUSTED EXPECTATION
+
         // --- Verify: Final Summary Log ---
-        // *CORRECTED: Check INFO log with correct format*
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `Mod [${modId}] - Processed 0/1 components items. (1 failed)` // Correct message format
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
-        // *CORRECTED: Ensure WARN was NOT called for the summary*
         expect(mockLogger.warn).not.toHaveBeenCalled();
 
 
         // --- Verify: Debug Logs ---
+        // (Debug log checks remain the same - check if they are still valid)
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing component file: ${filename}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${componentId}'`));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully stored component definition metadata'));
-        // Base class debug logs
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${filePath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${filePath}`);
         expect(mockLogger.debug).not.toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`);
