@@ -33,18 +33,19 @@ class StaticConfiguration {
             'component-definition.schema.json',
             'entity.schema.json',
             'event-definition.schema.json',
-            'game.schema.json', // <<< Already present, as required
+            'game.schema.json',
             'json-logic.schema.json',
+            'mod.manifest.schema.json', // <<< ADDED for MODLOADER-002
             'operation.schema.json',
             'system-rule.schema.json',
-            'world.schema.json' // <<< ADDED missing world schema for ManifestLoader
+            'world.schema.json'
         ];
     }
 
     /**
      * Returns the schema ID (e.g., the `$id` value) associated with a given content type name.
      * This maps type names (like 'entities', 'items') to their validation schema IDs.
-     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions', 'game').
+     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions', 'game', 'mod-manifest').
      * @returns {string | undefined} The schema ID or undefined if not mapped.
      */
     getContentTypeSchemaId(typeName) {
@@ -55,12 +56,13 @@ class StaticConfiguration {
             'connections': 'http://example.com/schemas/entity.schema.json',
             'entities': 'http://example.com/schemas/entity.schema.json',
             'events': 'http://example.com/schemas/event-definition.schema.json',
-            'game': 'http://example.com/schemas/game.schema.json', // <<< ADDED mapping for 'game'
+            'game': 'http://example.com/schemas/game.schema.json',
             'items': 'http://example.com/schemas/entity.schema.json',
             'locations': 'http://example.com/schemas/entity.schema.json',
+            'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json', // <<< ADDED for MODLOADER-002
             'operations': 'http://example.com/schemas/operation.schema.json',
             'system-rules': 'http://example.com/schemas/system-rule.schema.json',
-            'world': 'http://example.com/schemas/world.schema.json', // <<< ADDED mapping for world manifest
+            'world': 'http://example.com/schemas/world.schema.json',
             // Add other content types as needed
         };
         return map[typeName];
@@ -130,7 +132,7 @@ class StaticConfiguration {
      * @returns {string}
      */
     getManifestSchemaId() {
-        return 'http://example.com/schemas/world.schema.json'; // <<< ADDED required method
+        return 'http://example.com/schemas/world.schema.json';
     }
 }
 

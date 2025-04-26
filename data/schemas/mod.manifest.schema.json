@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/mod.manifest.schema.json",
+  "title": "Mod Manifest",
+  "description": "Defines the structure for a mod's manifest file (mod.manifest.json), detailing its identity, dependencies, and provided content.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique identifier for the mod. MUST match the mod's directory name.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "version": {
+      "description": "Semantic version of the mod (e.g., '1.0.0').",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "name": {
+      "description": "Human-readable display name for the mod.",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "Brief description of the mod's purpose.",
+      "type": "string"
+    },
+    "dependencies": {
+      "description": "Specifies other mods this mod requires, mapping required mod ID to a version string.",
+      "type": "object",
+      "additionalProperties": {
+        "description": "Required version string for the dependency (e.g., '>=1.2.0', '^1.0.0'). Format follows standard semantic version range specifiers.",
+        "type": "string"
+      }
+    },
+    "conflicts": {
+      "description": "Lists mod IDs that are incompatible with this mod.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "gameVersion": {
+      "description": "The game engine version or version range this mod is compatible with.",
+      "type": "string"
+    },
+    "contentFiles": {
+      "description": "Lists content files provided by this mod, categorized by type.",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "blockers": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "components": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "connections": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "entities": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "events": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "items": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "locations": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "operations": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "rules": {
+          "$ref": "#/definitions/contentFileList"
+        }
+      },
+      "additionalProperties": {
+        "description": "Allows mods to define custom content types and list their files.",
+        "$ref": "#/definitions/contentFileList"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "name",
+    "contentFiles"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "contentFileList": {
+      "description": "A list of unique relative file paths for a specific content type.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Relative path to a content definition file within the mod's directory (e.g., 'items/my_sword.json').",
+        "pattern": "^[^/\\s].*\\.json$"
+      },
+      "uniqueItems": true
+    }
+  }
+}

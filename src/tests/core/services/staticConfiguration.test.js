@@ -16,6 +16,7 @@ const EXPECTED_SCHEMA_FILES = [
     'event-definition.schema.json',
     'game.schema.json',
     'json-logic.schema.json',
+    'mod.manifest.schema.json',
     'operation.schema.json',
     'system-rule.schema.json',
     'world.schema.json',
