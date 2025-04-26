@@ -124,6 +124,10 @@
  * Returns the path (often relative to the `baseDataPath`) where world manifest files (`.world.json`) are stored.
  * @property {() => string} getGameConfigFilename // <<< ADDED for GameConfigLoader
  * Returns the filename (e.g., 'game.json') for the main game configuration file.
+ * @property {() => string} getModsBasePath // <<< ADDED for MODLOADER-003
+ * Returns the path (often relative to baseDataPath) where mod subdirectories are located.
+ * @property {() => string} getModManifestFilename // <<< ADDED for MODLOADER-003
+ * Returns the standard filename for a mod manifest file (e.g., 'mod.manifest.json').
  */
 
 // --- Path Resolution ---

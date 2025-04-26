@@ -15,11 +15,13 @@ describe('DefaultPathResolver', () => {
     let resolver;
 
     // Base paths for mocking
-    const MOCK_SCHEMA_BASE = '/mock/base/schemas';
-    const MOCK_WORLD_BASE = '/mock/base/worlds';
-    const MOCK_CONTENT_BASE_FN = (typeName) => `/mock/base/content/${typeName}`; // Keep generic mock
-    const MOCK_BASE_DATA_PATH = '/mock/base'; // Added for completeness
-    const MOCK_GAME_CONFIG_FILENAME = 'game.conf.json'; // Added for completeness
+    const MOCK_SCHEMA_BASE = 'schemas'; // Relative path as returned by StaticConfig
+    const MOCK_WORLD_BASE = 'worlds'; // Relative path
+    const MOCK_CONTENT_BASE_FN = (typeName) => typeName; // Relative path matching StaticConfig
+    const MOCK_BASE_DATA_PATH = './data'; // Relative path matching StaticConfig
+    const MOCK_GAME_CONFIG_FILENAME = 'game.json'; // Matching StaticConfig
+    const MOCK_MODS_BASE = 'mods'; // <<< ADDED for MODLOADER-003
+    const MOCK_MOD_MANIFEST_FILENAME = 'mod.manifest.json'; // <<< ADDED for MODLOADER-003
 
     beforeEach(() => {
         // Create a fresh mock configuration before each test
@@ -30,13 +32,14 @@ describe('DefaultPathResolver', () => {
             getWorldBasePath: jest.fn(),
             getContentBasePath: jest.fn(),
             getGameConfigFilename: jest.fn(),
+            getModsBasePath: jest.fn(), // <<< ADDED for MODLOADER-003
+            getModManifestFilename: jest.fn(), // <<< ADDED for MODLOADER-003
 
             // Add other IConfiguration methods as undefined or jest.fn() if needed elsewhere
-            // For THESE tests, only the ones above are strictly needed by the constructor
             getSchemaFiles: jest.fn(),
             getContentTypeSchemaId: jest.fn(),
-            getManifestSchemaId: jest.fn(), // Assuming this isn't used by DefaultPathResolver
-            // getRuleBasePath: jest.fn(), // Mock if resolveRulePath is used/tested
+            getManifestSchemaId: jest.fn(),
+            getRuleBasePath: jest.fn(), // Mock if resolveRulePath is used/tested
         };
 
         // Default successful mock implementations
@@ -45,11 +48,15 @@ describe('DefaultPathResolver', () => {
         mockConfig.getWorldBasePath.mockReturnValue(MOCK_WORLD_BASE);
         mockConfig.getContentBasePath.mockImplementation(MOCK_CONTENT_BASE_FN);
         mockConfig.getGameConfigFilename.mockReturnValue(MOCK_GAME_CONFIG_FILENAME);
+        mockConfig.getModsBasePath.mockReturnValue(MOCK_MODS_BASE); // <<< ADDED for MODLOADER-003
+        mockConfig.getModManifestFilename.mockReturnValue(MOCK_MOD_MANIFEST_FILENAME); // <<< ADDED for MODLOADER-003
+
     });
 
     // --- Task 3: Test Constructor ---
     describe('constructor', () => {
         it('should instantiate successfully with a valid IConfiguration object', () => {
+            // This test should now pass because the mockConfig in beforeEach is complete
             expect(() => new DefaultPathResolver(mockConfig)).not.toThrow();
         });
 
@@ -63,47 +70,34 @@ describe('DefaultPathResolver', () => {
             expect(() => new DefaultPathResolver(undefined)).toThrow(expectedErrorMsg);
         });
 
-        // --- UPDATED/CORRECTED TESTS ---
-
-        it('should throw an Error if configurationService is missing getSchemaBasePath', () => {
-            // Expect the specific error message for the missing method
-            const expectedErrorMsg = /requires a valid IConfiguration service instance with a `getSchemaBasePath` method/;
-            // Create incomplete config ensuring other required methods exist
+        // Test for missing essential methods
+        it.each([
+            ['getBaseDataPath'],
+            ['getSchemaBasePath'],
+            ['getWorldBasePath'],
+            ['getContentBasePath'],
+            ['getGameConfigFilename'],
+            ['getModsBasePath'], // <<< ADDED for MODLOADER-003
+            ['getModManifestFilename'], // <<< ADDED for MODLOADER-003
+        ])('should throw an Error if configurationService is missing %s', (methodName) => {
+            const expectedErrorMsg = new RegExp(`requires a valid IConfiguration service instance with a \`${methodName}\` method`);
             const incompleteConfig = {
-                ...mockConfig, // Spread valid mocks first
-                getSchemaBasePath: undefined // Make the target method undefined
+                ...mockConfig,
+                [methodName]: undefined // Make the target method undefined
             };
             expect(() => new DefaultPathResolver(/** @type {any} */ (incompleteConfig))).toThrow(expectedErrorMsg);
         });
 
-        it('should throw an Error if configurationService is missing getContentBasePath', () => {
-            // Expect the specific error message for the missing method
-            const expectedErrorMsg = /requires a valid IConfiguration service instance with a `getContentBasePath` method/;
-            // Create incomplete config ensuring other required methods exist
-            const incompleteConfig = {
-                ...mockConfig, // Spread valid mocks first
-                getContentBasePath: undefined // Make the target method undefined
-            };
-            expect(() => new DefaultPathResolver(/** @type {any} */ (incompleteConfig))).toThrow(expectedErrorMsg);
-        });
 
         it('should throw an Error if configurationService methods are not functions', () => {
-            // Expect the specific error message for the FIRST invalid method encountered
-            const expectedErrorMsg = /requires a valid IConfiguration service instance with a `getSchemaBasePath` method/;
-            // Create invalid config ensuring other required methods are valid functions
+            // Expect the specific error message for the FIRST invalid method encountered in the loop
+            const expectedErrorMsg = /requires a valid IConfiguration service instance with a `getBaseDataPath` method/;
             const invalidConfig = {
                 ...mockConfig, // Spread valid mocks first
-                getSchemaBasePath: 'not-a-function', // Make the target method invalid
-                // Ensure other methods checked by the constructor are valid functions
-                // These are inherited from mockConfig via spread:
-                // getBaseDataPath: jest.fn(),
-                // getWorldBasePath: jest.fn(),
-                // getContentBasePath: jest.fn(),
-                // getGameConfigFilename: jest.fn(),
+                getBaseDataPath: 'not-a-function', // Make the target method invalid
             };
             expect(() => new DefaultPathResolver(/** @type {any} */ (invalidConfig))).toThrow(expectedErrorMsg);
         });
-        // --- END UPDATED/CORRECTED TESTS ---
 
     });
 
@@ -117,7 +111,8 @@ describe('DefaultPathResolver', () => {
         it('should return the correct path for a valid filename', () => {
             const filename = 'common.schema.json';
             // Expected path combines base, schema dir, and filename
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${MOCK_SCHEMA_BASE}/${filename}`.replace(/\/{2,}/g, '/'); // Basic normalization
+            // Using template literals and fixing join logic assumption
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_SCHEMA_BASE}/${filename}`;
             const actualPath = resolver.resolveSchemaPath(filename);
 
             expect(actualPath).toBe(expectedPath);
@@ -126,8 +121,12 @@ describe('DefaultPathResolver', () => {
         });
 
         it('should handle filenames with leading/trailing spaces (trimming is done by validation)', () => {
+            // Although the method validates against empty/null, the join logic itself
+            // doesn't trim spaces. Filenames with spaces might be valid in some filesystems.
+            // If trimming is desired, it should be explicit in the join logic or validation.
+            // Assuming the current implementation passes them through:
             const filename = ' spaced_schema.json ';
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${MOCK_SCHEMA_BASE}/${filename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_SCHEMA_BASE}/${filename}`;
             expect(resolver.resolveSchemaPath(filename)).toBe(expectedPath);
             expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
             expect(mockConfig.getSchemaBasePath).toHaveBeenCalledTimes(1);
@@ -178,7 +177,7 @@ describe('DefaultPathResolver', () => {
         it('should return the correct manifest path for a valid world name', () => {
             const worldName = 'demo';
             const expectedFilename = `${worldName}.world.json`;
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${MOCK_WORLD_BASE}/${expectedFilename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_WORLD_BASE}/${expectedFilename}`;
             const actualPath = resolver.resolveManifestPath(worldName);
 
             expect(actualPath).toBe(expectedPath);
@@ -186,10 +185,10 @@ describe('DefaultPathResolver', () => {
             expect(mockConfig.getWorldBasePath).toHaveBeenCalledTimes(1);
         });
 
-        it('should handle world names with spaces (trimming done by validation)', () => {
+        it('should handle world names with spaces (passed through by join)', () => {
             const worldName = ' my world ';
             const expectedFilename = `${worldName}.world.json`;
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${MOCK_WORLD_BASE}/${expectedFilename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_WORLD_BASE}/${expectedFilename}`;
             expect(resolver.resolveManifestPath(worldName)).toBe(expectedPath);
             expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
             expect(mockConfig.getWorldBasePath).toHaveBeenCalledTimes(1);
@@ -240,8 +239,8 @@ describe('DefaultPathResolver', () => {
         it('should return the correct content path for a valid type and filename (items)', () => {
             const typeName = 'items';
             const filename = 'potion.json';
-            const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName); // e.g., /mock/base/content/items
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${expectedContentDir}/${filename}`.replace(/\/{2,}/g, '/');
+            const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName); // e.g., items
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
             const actualPath = resolver.resolveContentPath(typeName, filename);
 
             expect(actualPath).toBe(expectedPath);
@@ -254,7 +253,7 @@ describe('DefaultPathResolver', () => {
             const typeName = 'actions';
             const filename = 'attack.json';
             const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${expectedContentDir}/${filename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
             const actualPath = resolver.resolveContentPath(typeName, filename);
 
             expect(actualPath).toBe(expectedPath);
@@ -268,7 +267,7 @@ describe('DefaultPathResolver', () => {
             const typeName = 'components'; // Specific typeName for component definitions
             const filename = 'core_health.component.json';
             const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${expectedContentDir}/${filename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
             const actualPath = resolver.resolveContentPath(typeName, filename);
 
             expect(actualPath).toBe(expectedPath);
@@ -280,11 +279,11 @@ describe('DefaultPathResolver', () => {
         // --- End Ticket 2.1.2 Test ---
 
 
-        it('should handle typeName and filename with spaces (trimming done by validation)', () => {
+        it('should handle typeName and filename with spaces (passed through by join)', () => {
             const typeName = ' spaced type ';
             const filename = ' spaced file.json ';
             const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
-            const expectedPath = `${MOCK_BASE_DATA_PATH}${expectedContentDir}/${filename}`.replace(/\/{2,}/g, '/');
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
             const actualPath = resolver.resolveContentPath(typeName, filename);
 
             expect(actualPath).toBe(expectedPath);
@@ -322,8 +321,7 @@ describe('DefaultPathResolver', () => {
             // Wrap the actual call and the check in the expect().toThrow block
             expect(() => {
                 // Reset mock *just before* the call within this specific test context
-                // Note: No need to reset getBaseDataPath as it shouldn't be called if validation fails early
-                mockConfig.getContentBasePath.mockClear();
+                mockConfig.getContentBasePath.mockClear(); // Only need to clear the one potentially called
                 resolver.resolveContentPath(typeName, invalidFilename);
             }).toThrow(expectedErrorMsg);
 
@@ -337,6 +335,70 @@ describe('DefaultPathResolver', () => {
             expect(() => resolver.resolveContentPath('', '')).toThrow(expectedErrorMsg);
             expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
             expect(mockConfig.getContentBasePath).not.toHaveBeenCalled();
+        });
+    });
+
+    // --- Tests for resolveModManifestPath (MODLOADER-003 related) ---
+    describe('resolveModManifestPath', () => {
+        beforeEach(() => {
+            resolver = new DefaultPathResolver(mockConfig);
+        });
+
+        it('should return the correct path for a valid modId', () => {
+            const modId = 'MyAwesomeMod';
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_MODS_BASE}/${modId}/${MOCK_MOD_MANIFEST_FILENAME}`;
+            expect(resolver.resolveModManifestPath(modId)).toBe(expectedPath);
+            expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
+            expect(mockConfig.getModsBasePath).toHaveBeenCalledTimes(1);
+            expect(mockConfig.getModManifestFilename).toHaveBeenCalledTimes(1);
+        });
+
+        it('should throw an Error for an invalid modId', () => {
+            const expectedErrorMsg = /Invalid or empty modId provided/;
+            expect(() => resolver.resolveModManifestPath('')).toThrow(expectedErrorMsg);
+            expect(() => resolver.resolveModManifestPath(null)).toThrow(expectedErrorMsg);
+            expect(() => resolver.resolveModManifestPath(undefined)).toThrow(expectedErrorMsg);
+            expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
+            expect(mockConfig.getModsBasePath).not.toHaveBeenCalled();
+            expect(mockConfig.getModManifestFilename).not.toHaveBeenCalled();
+        });
+    });
+
+    // --- Tests for resolveModContentPath (MODLOADER-003 related) ---
+    describe('resolveModContentPath', () => {
+        beforeEach(() => {
+            resolver = new DefaultPathResolver(mockConfig);
+        });
+
+        it('should return the correct path for valid modId, typeName, and filename', () => {
+            const modId = 'MyMod';
+            const typeName = 'items';
+            const filename = 'special_item.json';
+            const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_MODS_BASE}/${modId}/${typeName}/${filename}`;
+            expect(resolver.resolveModContentPath(modId, typeName, filename)).toBe(expectedPath);
+            expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
+            expect(mockConfig.getModsBasePath).toHaveBeenCalledTimes(1);
+        });
+
+        it('should throw an Error for invalid modId', () => {
+            const expectedErrorMsg = /Invalid or empty modId provided/;
+            expect(() => resolver.resolveModContentPath('', 'items', 'file.json')).toThrow(expectedErrorMsg);
+            expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
+            expect(mockConfig.getModsBasePath).not.toHaveBeenCalled();
+        });
+
+        it('should throw an Error for invalid typeName', () => {
+            const expectedErrorMsg = /Invalid or empty typeName provided/;
+            expect(() => resolver.resolveModContentPath('MyMod', null, 'file.json')).toThrow(expectedErrorMsg);
+            expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled(); // Should fail before getting base path
+            expect(mockConfig.getModsBasePath).not.toHaveBeenCalled();
+        });
+
+        it('should throw an Error for invalid filename', () => {
+            const expectedErrorMsg = /Invalid or empty filename provided/;
+            expect(() => resolver.resolveModContentPath('MyMod', 'items', '  ')).toThrow(expectedErrorMsg);
+            expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled(); // Should fail before getting base path
+            expect(mockConfig.getModsBasePath).not.toHaveBeenCalled();
         });
     });
 

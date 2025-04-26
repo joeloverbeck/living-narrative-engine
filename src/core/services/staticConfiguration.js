@@ -134,6 +134,25 @@ class StaticConfiguration {
     getManifestSchemaId() {
         return 'http://example.com/schemas/world.schema.json';
     }
+
+    // --- ADDED METHODS for MODLOADER-003 ---
+    /**
+     * Returns the path (often relative to baseDataPath) where mod subdirectories are located.
+     * @returns {string} - Hardcoded relative path (e.g., 'mods').
+     */
+    getModsBasePath() {
+        return 'mods'; // Standard directory for mods
+    }
+
+    /**
+     * Returns the standard filename for a mod manifest file (e.g., 'mod.manifest.json').
+     * @returns {string} - Hardcoded filename (e.g., 'mod.manifest.json').
+     */
+    getModManifestFilename() {
+        return 'mod.manifest.json'; // Standard manifest filename
+    }
+
+    // --- END ADDED METHODS ---
 }
 
 export default StaticConfiguration;
