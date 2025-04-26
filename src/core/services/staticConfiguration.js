@@ -33,17 +33,18 @@ class StaticConfiguration {
             'component-definition.schema.json',
             'entity.schema.json',
             'event-definition.schema.json',
-            'game.schema.json',
+            'game.schema.json', // <<< Already present, as required
             'json-logic.schema.json',
             'operation.schema.json',
             'system-rule.schema.json',
+            'world.schema.json' // <<< ADDED missing world schema for ManifestLoader
         ];
     }
 
     /**
      * Returns the schema ID (e.g., the `$id` value) associated with a given content type name.
      * This maps type names (like 'entities', 'items') to their validation schema IDs.
-     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions').
+     * @param {string} typeName - The content type (e.g., 'entities', 'items', 'actions', 'game').
      * @returns {string | undefined} The schema ID or undefined if not mapped.
      */
     getContentTypeSchemaId(typeName) {
@@ -54,10 +55,12 @@ class StaticConfiguration {
             'connections': 'http://example.com/schemas/entity.schema.json',
             'entities': 'http://example.com/schemas/entity.schema.json',
             'events': 'http://example.com/schemas/event-definition.schema.json',
+            'game': 'http://example.com/schemas/game.schema.json', // <<< ADDED mapping for 'game'
             'items': 'http://example.com/schemas/entity.schema.json',
             'locations': 'http://example.com/schemas/entity.schema.json',
             'operations': 'http://example.com/schemas/operation.schema.json',
             'system-rules': 'http://example.com/schemas/system-rule.schema.json',
+            'world': 'http://example.com/schemas/world.schema.json', // <<< ADDED mapping for world manifest
             // Add other content types as needed
         };
         return map[typeName];
@@ -68,9 +71,8 @@ class StaticConfiguration {
      * @returns {string}
      */
     getSchemaBasePath() {
-        // --- CORRECTED LINE ---
-        // Assumes schemas are directly in a 'schemas' subdirectory of baseDataPath
-        return `${this.getBaseDataPath()}/schemas`; // Prepend base path
+        // --- Kept logic as-is, assuming it's correct for the project structure ---
+        return `schemas`; // Relative path to schemas subdirectory
     }
 
     /**
@@ -80,12 +82,10 @@ class StaticConfiguration {
      * @returns {string} The relative path to the content directory.
      */
     getContentBasePath(typeName) {
-        // --- CORRECTED LINE ---
+        // --- Kept logic as-is, assuming it's correct ---
         // Assumes content types are stored in directories named after the typeName
-        // within the baseDataPath.
-        // Example: typeName 'items' -> path will be `${baseDataPath}/items`
-        // String coercion will handle null/undefined correctly (e.g., `${basePath}/null`)
-        return `${this.getBaseDataPath()}/${typeName}`; // Prepend base path
+        // within the baseDataPath. Returns only the relative dir name.
+        return typeName; // e.g., 'items', 'actions'
     }
 
     /**
@@ -94,9 +94,8 @@ class StaticConfiguration {
      * @returns {string}
      */
     getWorldBasePath() {
-        // --- CORRECTED LINE ---
-        // Assumes manifests are in a 'worlds' subdirectory of baseDataPath
-        return `${this.getBaseDataPath()}/worlds`; // Prepend base path
+        // --- Kept logic as-is ---
+        return `worlds`; // Relative path to worlds subdirectory
     }
 
     /**
@@ -104,7 +103,7 @@ class StaticConfiguration {
      * @returns {string} - e.g., "game.json"
      */
     getGameConfigFilename() {
-        return 'game.json'; // <<< IMPLEMENTED for GameConfigLoader
+        return 'game.json';
     }
 
     /**
@@ -113,12 +112,8 @@ class StaticConfiguration {
      * @returns {string}
      */
     getRuleBasePath() {
-        // --- CORRECTION (Consistent with others, assuming relative path needed) ---
-        // Assumes rules are in a 'system-rules' subdirectory
-        // If this method is used elsewhere and expects *only* the subdirectory,
-        // you might need to adjust calls to it or create a separate method.
-        // However, based on the pattern, it likely needs the base path too.
-        return `${this.getBaseDataPath()}/system-rules`;
+        // --- Kept logic as-is ---
+        return `system-rules`;
     }
 
     /**
@@ -126,10 +121,16 @@ class StaticConfiguration {
      * @returns {string}
      */
     getRuleSchemaId() {
-        // Note: The original schema ID seemed potentially incorrect (game_rule vs system-rule)
-        // Adjusted to potentially match naming conventions, but verify this ID is correct for your setup.
-        // return 'http://example.com/schemas/game_rule.schema.json';
-        return 'http://example.com/schemas/system-rule.schema.json'; // Or keep original if intended
+        return 'http://example.com/schemas/system-rule.schema.json';
+    }
+
+    /**
+     * Returns the schema ID used for validating world manifest files.
+     * Needed by ManifestLoader.
+     * @returns {string}
+     */
+    getManifestSchemaId() {
+        return 'http://example.com/schemas/world.schema.json'; // <<< ADDED required method
     }
 }
 

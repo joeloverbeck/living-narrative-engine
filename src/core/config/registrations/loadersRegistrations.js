@@ -103,7 +103,7 @@ export function registerLoaders(container) {
 
     // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger, IConfiguration (implicitly via DefaultPathResolver)
     registrar.singletonFactory(tokens.RuleLoader, (c) => new RuleLoader(
-        c.resolve(tokens.IConfiguration), // Added dependency
+        // c.resolve(tokens.IConfiguration), // Removed dependency as per RuleLoader code
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
@@ -134,11 +134,12 @@ export function registerLoaders(container) {
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`);
 
-    // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ILogger // <<< ADDED
+    // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger // <<< UPDATED
     registrar.singletonFactory(tokens.GameConfigLoader, (c) => new GameConfigLoader({
         configuration: c.resolve(tokens.IConfiguration),
         pathResolver: c.resolve(tokens.IPathResolver),
         dataFetcher: c.resolve(tokens.IDataFetcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator), // <<< ADDED dependency
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);

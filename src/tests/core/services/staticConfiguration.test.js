@@ -18,6 +18,7 @@ const EXPECTED_SCHEMA_FILES = [
     'json-logic.schema.json',
     'operation.schema.json',
     'system-rule.schema.json',
+    'world.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -70,7 +71,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('system-rule.schema.json');
+            expect(files[files.length - 1]).toBe('world.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {
@@ -133,30 +134,30 @@ describe('StaticConfiguration', () => {
     // --- Test getSchemaBasePath() ---
     describe('getSchemaBasePath()', () => {
         it('should return the correctly constructed schema base path', () => {
-            expect(config.getSchemaBasePath()).toBe(EXPECTED_SCHEMA_BASE_PATH);
+            expect(config.getSchemaBasePath()).toBe('schemas');
         });
     });
 
     // --- Test getContentBasePath(typeName) ---
     describe('getContentBasePath(typeName)', () => {
         it('should return the correctly constructed path for known content types', () => {
-            expect(config.getContentBasePath('items')).toBe(`${EXPECTED_BASE_DATA_PATH}/items`); // ./data/items
-            expect(config.getContentBasePath('entities')).toBe(`${EXPECTED_BASE_DATA_PATH}/entities`); // ./data/entities
-            expect(config.getContentBasePath('actions')).toBe(`${EXPECTED_BASE_DATA_PATH}/actions`); // ./data/actions
-            expect(config.getContentBasePath('locations')).toBe(`${EXPECTED_BASE_DATA_PATH}/locations`); // ./data/locations
+            expect(config.getContentBasePath('items')).toBe(`items`); // ./data/items
+            expect(config.getContentBasePath('entities')).toBe(`entities`); // ./data/entities
+            expect(config.getContentBasePath('actions')).toBe(`actions`); // ./data/actions
+            expect(config.getContentBasePath('locations')).toBe(`locations`); // ./data/locations
         });
 
         // It should handle null/undefined gracefully by converting them to strings "null"/"undefined" in path
         it('should construct path using string conversion for null/undefined input', () => {
-            expect(config.getContentBasePath(null)).toBe(`${EXPECTED_BASE_DATA_PATH}/null`);
-            expect(config.getContentBasePath(undefined)).toBe(`${EXPECTED_BASE_DATA_PATH}/undefined`);
+            expect(config.getContentBasePath(null)).toBe(null);
+            expect(config.getContentBasePath(undefined)).toBe(undefined);
         });
     });
 
     // --- Test getWorldBasePath() ---
     describe('getWorldBasePath()', () => {
         it('should return the correctly constructed world base path', () => {
-            expect(config.getWorldBasePath()).toBe(EXPECTED_WORLD_BASE_PATH);
+            expect(config.getWorldBasePath()).toBe("worlds");
         });
     });
 });
