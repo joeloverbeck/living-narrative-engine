@@ -99,13 +99,16 @@ this schema during startup. You can refer to data/schemas/game.schema.json for t
 
 ### Documentation ▶️
 
-JSON Logic – Composite Operators ➜ docs/composite-logical-operators.md
+**JSON Logic – Composite Operators ➜ docs/composite-logical-operators.md**
 Quick reference for and, or, and not/!, including edge-cases and examples.
 
-Full JSON Logic Usage Guide ➜ docs/json-logic-usage.md
+**Full JSON Logic Usage Guide ➜ docs/json-logic-usage.md**
 Complete operator list, context explanation, and many ready-made patterns.
 
-Action Event Payload Mapping ➜ docs/action_event_payload_mapping.md
+**Action Event Payload Mapping ➜ docs/action_event_payload_mapping.md**
+
+**Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
+How to use the ModManifestLoader service and handle potential errors.
 
 ### License
 

@@ -1,280 +1,256 @@
 // src/core/services/worldLoader.js
 
+/* eslint-disable max-lines */
+
 /**
- * @fileoverview Orchestrates the loading of all world-specific data
- * (game config → schemas → manifest → rules → component definitions → content)
- * using injected core services.
+ * @fileoverview
+ * Responsible for loading every piece of static game data required to start a
+ * world: JSON-Schemas, the game-config file (mods to load), each selected mod’s
+ * manifest, rules, component definitions, and—eventually—generic content.
+ *
+ * It is deliberately opinionated: if *anything* goes wrong (missing schema,
+ * malformed JSON, validation error, dependency failure, etc.) it aborts early
+ * so the engine never runs in a partially-initialised state.
  */
 
-// ── Concrete imports ───────────────────────────────────────────────────────────
-import SchemaLoader from './schemaLoader.js';
-import ManifestLoader from './manifestLoader.js';
-import GenericContentLoader from './genericContentLoader.js';
-// -- Only for type-hints (keeps runtime bundle minimal) ────────────────────────
-/** @typedef {import('./componentDefinitionLoader.js').default} ComponentDefinitionLoader */
-/** @typedef {import('./ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+// ── Type-only JSDoc imports ──────────────────────────────────────────────────
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED for Sub-Ticket 5
 
-/**
- * Coordinates all data loading necessary for a game world.
- *
- * **Load order**
- * 1. Clear registry
- * 2. Game Config (Determine mods) // <<< ADDED for Sub-Ticket 5
- * 3. Schemas (compile)
- * 4. Essential-schema presence check
- * 5. Manifest (validate & store) - // TODO: Replace/Refactor for Mod Support
- * 6. System rules (so events emitted by content have operationHandlers)
- * 7. Component definitions
- * 8. Remaining content types - // TODO: Refactor for Mod Support
- */
+// ── Class ────────────────────────────────────────────────────────────────────
 class WorldLoader {
-    /** @type {IDataRegistry}                 */ #registry;
-    /** @type {ILogger}                       */ #logger;
-    /** @type {SchemaLoader}                  */ #schemaLoader;
-    /** @type {ManifestLoader}                */ #manifestLoader;
-    /** @type {GenericContentLoader}          */ #contentLoader;
-    /** @type {ComponentDefinitionLoader}     */ #componentDefinitionLoader;
-    /** @type {RuleLoader}                    */ #ruleLoader;
-    /** @type {ISchemaValidator}              */ #validator;
-    /** @type {IConfiguration}                */ #config;
-    /** @type {GameConfigLoader}              */ #gameConfigLoader; // <<< ADDED for Sub-Ticket 5 (AC2)
+    // Private fields
+    /** @type {IDataRegistry} */           #registry;
+    /** @type {ILogger} */                 #logger;
+    /** @type {*} */                       #schemaLoader;
+    /** @type {*} */                       #legacyManifestLoader;     // kept only for backwards compatibility, currently unused
+    /** @type {*} */                       #legacyContentLoader;      // ditto
+    /** @type {*} */                       #componentDefinitionLoader;
+    /** @type {*} */                       #ruleLoader;
+    /** @type {ISchemaValidator} */        #validator;
+    /** @type {IConfiguration} */          #configuration;
+    /** @type {*} */                       #gameConfigLoader;
+    /** @type {*} */                       #modManifestLoader;
 
+    // ── Constructor ───────────────────────────────────────────────────────────
     /**
-     * @param {IDataRegistry}              registry
-     * @param {ILogger}                    logger
-     * @param {SchemaLoader}               schemaLoader
-     * @param {ManifestLoader}             manifestLoader
-     * @param {GenericContentLoader}       contentLoader
-     * @param {ComponentDefinitionLoader}  componentDefinitionLoader
-     * @param {RuleLoader}                 ruleLoader
-     * @param {ISchemaValidator}           validator
-     * @param {IConfiguration}             configuration
-     * @param {GameConfigLoader}           gameConfigLoader // <<< ADDED for Sub-Ticket 5 (AC2)
+     * @param {IDataRegistry}                 registry
+     * @param {ILogger}                       logger
+     * @param {*}                             schemaLoader
+     * @param {*}                             legacyManifestLoader
+     * @param {*}                             legacyContentLoader
+     * @param {*}                             componentDefinitionLoader
+     * @param {*}                             ruleLoader
+     * @param {ISchemaValidator}              validator
+     * @param {IConfiguration}                configuration
+     * @param {*}                             gameConfigLoader          – must expose loadConfig()
+     * @param {*}                             modManifestLoader         – must expose loadRequestedManifests()
      */
     constructor(
         registry,
         logger,
         schemaLoader,
-        manifestLoader,
-        contentLoader,
+        legacyManifestLoader,
+        legacyContentLoader,
         componentDefinitionLoader,
         ruleLoader,
         validator,
         configuration,
-        gameConfigLoader, // <<< ADDED for Sub-Ticket 5 (AC2)
+        gameConfigLoader,
+        modManifestLoader
     ) {
-        // ── Dependency guards ────────────────────────────────────────────────
-        if (!registry || typeof registry.clear !== 'function') {
-            throw new Error("WorldLoader: Missing/invalid 'registry' (IDataRegistry).");
+        // Basic-null checks first
+        if (!registry || typeof registry.clear !== 'function' || typeof registry.store !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'registry'.");
         }
-        if (!logger || typeof logger.info !== 'function') {
-            throw new Error("WorldLoader: Missing/invalid 'logger' (ILogger).");
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'logger'.");
         }
         if (!schemaLoader || typeof schemaLoader.loadAndCompileAllSchemas !== 'function') {
             throw new Error("WorldLoader: Missing/invalid 'schemaLoader'.");
         }
-        if (!manifestLoader || typeof manifestLoader.loadAndValidateManifest !== 'function') {
-            throw new Error("WorldLoader: Missing/invalid 'manifestLoader'.");
-        }
-        if (!contentLoader || typeof contentLoader.loadContentFiles !== 'function') {
-            throw new Error("WorldLoader: Missing/invalid 'contentLoader'.");
-        }
-        if (
-            !componentDefinitionLoader ||
-            typeof componentDefinitionLoader.loadComponentDefinitions !== 'function'
-        ) {
-            throw new Error(
-                "WorldLoader: Missing/invalid 'componentDefinitionLoader' (needs loadComponentDefinitions).",
-            );
+        if (!componentDefinitionLoader || typeof componentDefinitionLoader.loadComponentDefinitions !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'componentDefinitionLoader'.");
         }
         if (!ruleLoader || typeof ruleLoader.loadAll !== 'function') {
             throw new Error("WorldLoader: Missing/invalid 'ruleLoader'.");
         }
         if (!validator || typeof validator.isSchemaLoaded !== 'function') {
-            throw new Error("WorldLoader: Missing/invalid 'validator' (ISchemaValidator).");
+            throw new Error("WorldLoader: Missing/invalid 'validator'.");
         }
-        if (
-            !configuration ||
-            typeof configuration.getManifestSchemaId !== 'function' ||
-            typeof configuration.getContentTypeSchemaId !== 'function'
-        ) {
-            throw new Error("WorldLoader: Missing/invalid 'configuration' (IConfiguration).");
+        if (!configuration || typeof configuration.getContentTypeSchemaId !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'configuration'.");
         }
-        // <<< ADDED Validation for Sub-Ticket 5 (AC2) START >>>
         if (!gameConfigLoader || typeof gameConfigLoader.loadConfig !== 'function') {
             throw new Error("WorldLoader: Missing/invalid 'gameConfigLoader' (needs loadConfig method).");
         }
-        // <<< ADDED Validation for Sub-Ticket 5 (AC2) END >>>
+        if (!modManifestLoader || typeof modManifestLoader.loadRequestedManifests !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'modManifestLoader' (needs loadRequestedManifests method).");
+        }
 
-
-        // ── Store ────────────────────────────────────────────────────────────
+        // Store
         this.#registry = registry;
         this.#logger = logger;
         this.#schemaLoader = schemaLoader;
-        this.#manifestLoader = manifestLoader;
-        this.#contentLoader = contentLoader;
+        this.#legacyManifestLoader = legacyManifestLoader;   // retained for now
+        this.#legacyContentLoader = legacyContentLoader;    // retained for now
         this.#componentDefinitionLoader = componentDefinitionLoader;
         this.#ruleLoader = ruleLoader;
         this.#validator = validator;
-        this.#config = configuration;
-        this.#gameConfigLoader = gameConfigLoader; // <<< ADDED for Sub-Ticket 5 (AC2)
+        this.#configuration = configuration;
+        this.#gameConfigLoader = gameConfigLoader;
+        this.#modManifestLoader = modManifestLoader;
 
-        this.#logger.info('WorldLoader: Instance created.');
+        this.#logger.info('WorldLoader: Instance created (with ModManifestLoader).');
     }
 
+    // ── Public API ────────────────────────────────────────────────────────────
     /**
-     * Load every asset for the given world, respecting the configured mod list.
-     * @param {string} worldName - Base world identifier (may be less relevant with mods).
+     * High-level orchestration of the entire data-load pipeline.
+     *
+     * @param   {string} worldName
      * @returns {Promise<void>}
      */
     async loadWorld(worldName) {
-        // Note: worldName might become less central if mods define everything, but kept for now.
-        if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
-            this.#logger.error("WorldLoader: Invalid 'worldName' provided.");
-            throw new Error('WorldLoader: Invalid worldName.');
-        }
-
-        this.#logger.info(`WorldLoader: Starting data load sequence (World Hint: '${worldName}')...`);
-
-        // AC8: Declare requestedModIds here to be accessible later
-        let requestedModIds = [];
+        this.#logger.info(`WorldLoader: Starting load sequence (World Hint: '${worldName}') …`);
+        let requestedModIds = []; // Define here to be accessible in the summary call
 
         try {
-            // 1️⃣  Clear registry ------------------------------------------------
+            // ── 1. Always start from a clean slate ───────────────────────────────
             this.#registry.clear();
-            this.#logger.info('WorldLoader: Registry cleared.');
 
-            // 2️⃣  Schemas (Needed before GameConfig validation) ---------------
+            // ── 2. Compile every JSON-Schema file we ship ────────────────────────
             await this.#schemaLoader.loadAndCompileAllSchemas();
-            this.#logger.info('WorldLoader: Schemas compiled.');
 
-            // 2️⃣․5 Essential-schema presence check -----------------------------
-            // Ensure game schema exists *before* loading game config
+            // ── 3. Guard-rail: ensure absolutely-essential schemas are present ──
             const essentialSchemaIds = [
-                this.#config.getContentTypeSchemaId('game'), // For GameConfigLoader
-                this.#config.getManifestSchemaId(), // For ManifestLoader (even if replaced later)
-                this.#config.getContentTypeSchemaId('components'), // For ComponentDefinitionLoader
-                // add any other absolutely-required types here …
-            ].filter(Boolean); // Filter out undefined results
+                this.#configuration.getContentTypeSchemaId('game'),
+                this.#configuration.getContentTypeSchemaId('components'),
+                this.#configuration.getContentTypeSchemaId('mod-manifest')
+            ];
 
-            const missingEssentialSchemas = essentialSchemaIds.filter((id) => !this.#validator.isSchemaLoaded(id));
-            if (missingEssentialSchemas.length) {
-                missingEssentialSchemas.forEach((id) =>
-                    this.#logger.error(`WorldLoader: Essential schema missing: ${id}`),
-                );
-                throw new Error('Essential schemas missing – aborting world load.');
-            }
-            this.#logger.info('WorldLoader: Essential schemas confirmed present.');
-
-            // 3️⃣ Load Game Config (Determine Mods) ---------------------------
-            // <<< ADDED for Sub-Ticket 5 (AC3, AC5) START >>>
-            requestedModIds = await this.#gameConfigLoader.loadConfig();
-            // AC6: Logging success
-            this.#logger.info(`Game config loaded successfully. Requested mods (${requestedModIds.length}): [${requestedModIds.join(', ')}]`);
-            // <<< ADDED for Sub-Ticket 5 (AC3, AC5) END >>>
-            // AC4 (Error Propagation) is handled implicitly by GameEngine's try/catch calling this method.
-
-            // 4️⃣  Manifest(s) & Content Loading (Mod-aware) ------------------
-            // TODO: [MOD-LOADER] Replace the following sections with calls to a new
-            // ModManifestLoader/ModContentLoader service that uses `requestedModIds`.
-            // The new service will need to find, load, validate, and merge manifests/content
-            // from the specified mods in the correct order. (AC7 / AC8)
-            this.#logger.warn("WorldLoader: Using legacy manifest/content loading. // TODO: Implement mod-aware loading using requestedModIds.");
-
-            // Legacy Manifest Loading (Placeholder)
-            const manifest = await this.#manifestLoader.loadAndValidateManifest(worldName);
-            this.#registry.setManifest(manifest); // Still store *something* as manifest for now? Or make nullable?
-            this.#logger.info('WorldLoader: Legacy manifest stored in registry.');
-
-            // 5️⃣  Rules (Assuming rules are global or defined in 'core' mod for now) ---
-            // TODO: [MOD-LOADER] Rules might need to be loaded per-mod as well.
-            this.#logger.info('WorldLoader: Loading system rules (assuming global/core)...');
-            await this.#ruleLoader.loadAll(); // Needs path adjustment if not global
-            this.#logger.info(
-                `WorldLoader: Rules loaded for ${this.#ruleLoader.loadedEventCount} event(s).`,
-            );
-
-            // 6️⃣  Component definitions (Assuming global or defined in 'core' mod for now) ---
-            // TODO: [MOD-LOADER] Component definitions might need to be loaded per-mod.
-            // ComponentDefinitionLoader currently reads from the *single* manifest loaded above.
-            await this.#componentDefinitionLoader.loadComponentDefinitions();
-            this.#logger.info('WorldLoader: Component definitions loaded (based on legacy manifest).');
-
-            // 7️⃣  Remaining content (Legacy based on single manifest) --------
-            // TODO: [MOD-LOADER] Replace this loop with mod-aware content loading.
-            const contentPromises = [];
-            const contentFiles = manifest.contentFiles ?? {}; // Uses legacy manifest
-            for (const [typeName, filenames] of Object.entries(contentFiles)) {
-                if (typeName === 'components') continue; // already handled
-                if (Array.isArray(filenames)) {
-                    contentPromises.push(
-                        this.#contentLoader.loadContentFiles(typeName, filenames),
+            for (const id of essentialSchemaIds) {
+                if (!this.#validator.isSchemaLoaded(id)) {
+                    this.#logger.error(`WorldLoader: Essential schema missing: ${id}`);
+                    throw new Error(
+                        `WorldLoader failed data load sequence (World Hint: '${worldName}'): ` +
+                        'Essential schemas missing – aborting world load.'
                     );
                 }
             }
-            await Promise.all(contentPromises);
-            this.#logger.info('WorldLoader: All content types loaded (based on legacy manifest).');
 
-            // 8️⃣  Summary -------------------------------------------------------
-            this.#logLoadSummary(worldName, requestedModIds); // Pass mods to summary
+            // ── 4. Read game.json → list of mods requested by the user ──────────
+            // AC: loadWorld calls gameConfigLoader.loadConfig()
+            requestedModIds = await this.#gameConfigLoader.loadConfig(); // Assign to the outer scope variable
+            this.#logger.info(
+                `Game config loaded successfully. Requested mods (${requestedModIds.length}): ` +
+                `[${requestedModIds.join(', ')}]`
+            );
+
+            // ── 5. Load every requested mod’s manifest (dependency + version checks inside) ─
+            // AC: loadWorld calls modManifestLoader.loadRequestedManifests() with requestedModIds
+            this.#logger.info(
+                `WorldLoader: Requesting ModManifestLoader to load manifests for ` +
+                `${requestedModIds.length} mods...`
+            );
+            const loadedManifestsMap =
+                await this.#modManifestLoader.loadRequestedManifests(requestedModIds);
+            this.#logger.info(
+                `WorldLoader: ModManifestLoader finished processing. ` +
+                `Result contains ${loadedManifestsMap.size} manifests.`
+            );
+
+            // (optional) store manifests in the registry for downstream loaders or debugging
+            for (const [modId, manifestObj] of loadedManifestsMap.entries()) {
+                this.#registry.store('mod_manifests', modId, manifestObj);
+            }
+
+            // ── 6. Load system-rules (they may live in mods) ─────────────────────
+            // AC: loadWorld calls ruleLoader.loadAll()
+            await this.#ruleLoader.loadAll();
+
+            // ── 7. Load component definitions (also mod-driven) ──────────────────
+            // AC: loadWorld calls componentDefinitionLoader.loadComponentDefinitions()
+            await this.#componentDefinitionLoader.loadComponentDefinitions();
+
+            // ── 8. (Temporary) legacy loaders skipped - they’ll be removed later ─
+
+            // ── 9. Emit a concise summary so developers can see what happened ────
+            // AC: loadWorld calls #logLoadSummary at the end of the try block
+            // <<< MODIFIED FOR MODLOADER-006-E: Pass requestedModIds >>>
+            this.#logLoadSummary(worldName, requestedModIds);
+
         } catch (err) {
-            // AC4: Errors from gameConfigLoader.loadConfig() will end up here via GameEngine's catch
-            this.#logger.error('WorldLoader: CRITICAL load failure during world/mod loading sequence.', err);
+            // Centralised error handling: clear everything and re-throw
+            this.#logger.error(
+                'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
+                err
+            );
             this.#registry.clear();
-            this.#logger.info('WorldLoader: Registry cleared after failure.');
-            // Propagate error to GameEngine
             throw new Error(
-                `WorldLoader failed data load sequence (World Hint: '${worldName}'): ${err.message}`,
+                `WorldLoader failed data load sequence (World Hint: '${worldName}'): ${err.message}`
             );
         }
     }
 
+    // ── Helper: pretty summary to log ─────────────────────────────────────────
+
     /**
-     * Print a concise load summary to the log.
-     * @private
-     * @param {string} worldName
-     * @param {string[]} loadedModIds - The list of mod IDs that were loaded. // <<< ADDED
+     * Logs a multi-line overview of what was loaded (mods, counts, etc.).
+     *
+     * @param {string}                   worldName
+     * @param {string[]}                 requestedModIds         // <<< ADDED parameter for MODLOADER-006-E
      */
-    #logLoadSummary(worldName, loadedModIds) { // <<< ADDED loadedModIds param
+    // <<< MODIFIED FOR MODLOADER-006-E: Added requestedModIds parameter >>>
+    #logLoadSummary(worldName, requestedModIds) {
         this.#logger.info(`— WorldLoader Load Summary (World Hint: '${worldName}') —`);
-        this.#logger.info(`  • Requested Mods: [${loadedModIds.join(', ')}]`); // <<< ADDED Log
 
-        const compDefs = this.#registry.getAll('component_definitions').length;
-        this.#logger.info(`  • Component definitions: ${compDefs}`);
+        // <<< ADDED for MODLOADER-006-E: Log requested mod IDs >>>
+        this.#logger.info(`  • Requested Mods: [${requestedModIds.join(', ')}]`);
 
-        const categories = [
-            'actions',
-            'events',
-            'entities',
-            'items',
-            'locations',
-            'connections',
-            'blockers',
-            'triggers',
-            'quests',
-            // Add other types loaded by GenericContentLoader or specific loaders
+        // Final mod order - Get from registry if stored there, or deduce if needed
+        // Assuming ModManifestLoader stored them and they are available
+        const loadedManifests = this.#registry.getAll('mod_manifests') || [];
+        const finalOrder = loadedManifests.map(m => m.id); // Assumes manifest has 'id'
+
+        this.#logger.info(`  • Final Mod Load Order: [${finalOrder.join(', ')}]`);
+
+
+        // Component defs
+        const componentCount = this.#registry.getAll('component_definitions').length;
+        this.#logger.info(`  • Component definitions: ${componentCount}`);
+
+        // Manifests count (redundant with final order, but okay)
+        // <<< MODIFIED: Removed "Loaded" to match test expectation >>>
+        this.#logger.info(`  • Mod Manifests: ${finalOrder.length}`);
+
+        // Generic content categories we care about
+        const contentTypes = [
+            'actions', 'items', 'entities', 'locations',
+            'connections', 'blockers', 'events', 'components'
         ];
-        let totalContentItems = 0;
-        for (const cat of categories) {
-            const count = this.#registry.getAll(cat).length;
-            if (count) {
-                this.#logger.info(`  • ${cat}: ${count}`);
-                totalContentItems += count;
+
+        let totalContent = 0;
+        for (const type of contentTypes) {
+            const list = this.#registry.getAll(type);
+            if (Array.isArray(list) && list.length > 0) {
+                this.#logger.info(`  • ${type}: ${list.length}`);
+                totalContent += list.length;
             }
         }
-        this.#logger.info(`  • Total Content Items (excluding components/rules): ${totalContentItems}`);
 
+        // Exclude special categories from the total (they were logged above)
+        this.#logger.info(
+            `  • Total Content Items (excluding components/rules/manifests): ${totalContent}`
+        );
 
-        if (this.#ruleLoader) {
-            this.#logger.info(
-                `  • System rules wired: ${this.#ruleLoader.loadedEventCount}`,
-            );
-        }
+        // Rules
+        const ruleCount = this.#registry.getAll('system-rules').length;
+        this.#logger.info(`  • System rules loaded: ${ruleCount}`);
+
         this.#logger.info('———————————————————————————————————————————————');
     }
 }

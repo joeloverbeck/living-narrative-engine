@@ -107,6 +107,7 @@ export const tokens = Object.freeze({
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     WorldLoader: 'WorldLoader',
     GameConfigLoader: 'GameConfigLoader', // <<< ADDED
+    ModManifestLoader: 'ModManifestLoader',
 
     // Core Services & Managers
     GameDataRepository: 'GameDataRepository',

@@ -140,12 +140,12 @@ describe('registerLoaders (with Mock DI Container)', () => {
             tokens.IConfiguration, tokens.IPathResolver, tokens.ISchemaValidator,
             tokens.IDataRegistry, tokens.IDataFetcher, tokens.SchemaLoader,
             tokens.RuleLoader, tokens.GenericContentLoader,
-            tokens.ComponentDefinitionLoader, tokens.GameConfigLoader
+            tokens.ComponentDefinitionLoader, tokens.GameConfigLoader, tokens.ModManifestLoader
         ];
         // Logger (pre-registered) + 11 loaders/services = 12
         expect(mockContainer.register).toHaveBeenCalledTimes(expectedTokens.length + 1);
         // ... other assertions for this test
-        expect(mockLogger.debug).toHaveBeenCalledTimes(12); // 1 start + 11 registers
+        expect(mockLogger.debug).toHaveBeenCalledTimes(13); // 1 start + 11 registers
         expect(mockLogger.info).toHaveBeenCalledTimes(1); // 1 complete
         expect(mockLogger.info).toHaveBeenCalledWith('Loaders Registration: Completed.');
 

@@ -1,5 +1,3 @@
-// src/core/config/registrations/loadersRegistrations.js
-
 /**
  * @fileoverview Registers data loading services and their core dependencies.
  */
@@ -18,6 +16,7 @@
 /** @typedef {import('../../services/genericContentLoader.js').default} GenericContentLoader */
 /** @typedef {import('../../services/componentDefinitionLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
+/** @typedef {import('../../services/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
 /** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../services/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../services/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -39,6 +38,7 @@ import RuleLoader from '../../services/ruleLoader.js';
 import GenericContentLoader from '../../services/genericContentLoader.js';
 import ComponentDefinitionLoader from '../../services/componentDefinitionLoader.js';
 import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
+import ModManifestLoader from '../../services/modManifestLoader.js'; // <<< ADDED: MODLOADER-005 A
 
 
 // --- DI & Helper Imports ---
@@ -47,7 +47,7 @@ import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 
 /**
  * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)
- * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config).
+ * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config, Mod Manifests). // <<< UPDATED Description
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -92,6 +92,7 @@ export function registerLoaders(container) {
     logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
 
     // ManifestLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
+    // NOTE: This might become deprecated or change with modding system.
     registrar.singletonFactory(tokens.ManifestLoader, (c) => new ManifestLoader(
         c.resolve(tokens.IConfiguration),
         c.resolve(tokens.IPathResolver),
@@ -101,9 +102,8 @@ export function registerLoaders(container) {
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ManifestLoader}.`);
 
-    // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger, IConfiguration (implicitly via DefaultPathResolver)
+    // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
     registrar.singletonFactory(tokens.RuleLoader, (c) => new RuleLoader(
-        // c.resolve(tokens.IConfiguration), // Removed dependency as per RuleLoader code
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
@@ -113,6 +113,7 @@ export function registerLoaders(container) {
     logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
 
     // GenericContentLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+    // NOTE: This might become deprecated or change with modding system.
     registrar.singletonFactory(tokens.GenericContentLoader, (c) => new GenericContentLoader(
         c.resolve(tokens.IConfiguration),
         c.resolve(tokens.IPathResolver),
@@ -134,15 +135,32 @@ export function registerLoaders(container) {
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`);
 
-    // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger // <<< UPDATED
+    // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
     registrar.singletonFactory(tokens.GameConfigLoader, (c) => new GameConfigLoader({
         configuration: c.resolve(tokens.IConfiguration),
         pathResolver: c.resolve(tokens.IPathResolver),
         dataFetcher: c.resolve(tokens.IDataFetcher),
-        schemaValidator: c.resolve(tokens.ISchemaValidator), // <<< ADDED dependency
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
+
+    // === ADDED: MODLOADER-005 A START ===
+    // ModManifestLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+    // NOTE: Assuming tokens.ModManifestLoader exists in src/core/tokens.js
+    // If src/core/tokens.js was not provided, you would need to add:
+    // ModManifestLoader: Symbol('ModManifestLoader')
+    // to the tokens object definition in that file.
+    registrar.singletonFactory(tokens.ModManifestLoader, c => new ModManifestLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
+    logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
+    // === ADDED: MODLOADER-005 A END ===
 
 
     logger.info('Loaders Registration: Completed.');
