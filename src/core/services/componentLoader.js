@@ -25,15 +25,11 @@ import {BaseManifestItemLoader} from './baseManifestItemLoader.js';
  */
 class ComponentLoader extends BaseManifestItemLoader {
 
-    /**
-     * @private
-     * @type {string | undefined} - Cached schema ID for component definitions.
-     */
-    _componentDefSchemaId;
+    // REMOVED: Private field for caching schema ID
+    // _componentDefSchemaId;
 
     /**
-     * Initializes the ComponentLoader by calling the parent constructor
-     * and caching the schema ID for component definitions.
+     * Initializes the ComponentLoader by calling the parent constructor.
      *
      * @param {IConfiguration} config - The configuration service.
      * @param {IPathResolver} pathResolver - The path resolver service.
@@ -44,13 +40,15 @@ class ComponentLoader extends BaseManifestItemLoader {
      */
     constructor(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger) {
         super(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger); // Call parent constructor
-        this._componentDefSchemaId = this._config.getContentTypeSchemaId('components');
-        if (!this._componentDefSchemaId) {
-            // <<< CORRECTED CLASS NAME in log
-            this._logger.error('ComponentLoader: CRITICAL - Schema ID for component definitions (\'components\') not found in configuration. Validation will fail.');
-        }
+
+        // REMOVED: Logic to cache schema ID in constructor
+        // this._componentDefSchemaId = this._config.getContentTypeSchemaId('components');
+        // if (!this._componentDefSchemaId) {
+        //     this._logger.error('ComponentLoader: CRITICAL - Schema ID for component definitions (\'components\') not found in configuration. Validation will fail.');
+        // }
+
         // <<< CORRECTED CLASS NAME in log
-        this._logger.debug(`ComponentLoader: Initialized. Using schema ID '${this._componentDefSchemaId || 'NOT CONFIGURED'}' for definitions.`);
+        this._logger.debug(`ComponentLoader: Initialized.`);
     }
 
     /**
@@ -113,10 +111,12 @@ class ComponentLoader extends BaseManifestItemLoader {
 
         // --- 1. Definition Schema Validation ---
         // AC: Retain the existing logic for validating the component definition schema.
-        const definitionSchemaId = this._componentDefSchemaId;
+        // USE HELPER: Retrieve schema ID using the base class helper
+        const definitionSchemaId = this._getContentTypeSchemaId('components');
         if (!definitionSchemaId) {
+            // Warning logged by helper, but throw error here as validation cannot proceed
             this._logger.error(`ComponentLoader [${modId}]: Cannot validate ${filename} - Component definition schema ID ('components') is not configured.`);
-            throw new Error(`Configuration Error: Component definition schema ID not configured.`);
+            throw new Error(`Configuration Error: Component definition schema ID ('components') not configured.`);
         }
 
         const validationResult = this._schemaValidator.validate(definitionSchemaId, data);

@@ -34,11 +34,8 @@ import {BaseManifestItemLoader} from './baseManifestItemLoader.js';
 class RuleLoader extends BaseManifestItemLoader {
     // Remove private fields for dependencies handled by base class
 
-    /**
-     * @private
-     * @type {string | null} - Cached schema ID for system rules.
-     */
-    #ruleSchemaId = null;
+    // REMOVED: Private field for caching schema ID
+    // #ruleSchemaId = null;
 
     /**
      * @private
@@ -48,8 +45,7 @@ class RuleLoader extends BaseManifestItemLoader {
 
     /**
      * Constructs a RuleLoader instance.
-     * Calls the parent constructor to store dependencies and caches the schema ID
-     * for system rules using the configuration service provided to the base class.
+     * Calls the parent constructor to store dependencies.
      *
      * @param {IConfiguration} config - Configuration service instance.
      * @param {IPathResolver} pathResolver - Path resolution service instance.
@@ -62,13 +58,16 @@ class RuleLoader extends BaseManifestItemLoader {
         // Call super() first, passing all dependencies
         super(config, pathResolver, fetcher, validator, registry, logger);
 
-        // Retain logic to fetch and cache rule schema ID using protected members
-        this.#ruleSchemaId = this._config.getContentTypeSchemaId('system-rules');
-        if (!this.#ruleSchemaId) {
-            this._logger.warn(`RuleLoader: System rule schema ID is not configured ('system-rules'). Rule validation will be skipped.`);
-        } else {
-            this._logger.debug(`RuleLoader: Initialized with rule schema ID: ${this.#ruleSchemaId}`);
-        }
+        // REMOVED: Logic to cache schema ID in constructor
+        // this.#ruleSchemaId = this._config.getContentTypeSchemaId('system-rules');
+        // if (!this.#ruleSchemaId) {
+        //     this._logger.warn(`RuleLoader: System rule schema ID is not configured ('system-rules'). Rule validation will be skipped.`);
+        // } else {
+        //     this._logger.debug(`RuleLoader: Initialized with rule schema ID: ${this.#ruleSchemaId}`);
+        // }
+
+        // Log initialization
+        this._logger.debug(`RuleLoader: Initialized.`);
         // Don't import 'path' here yet.
     }
 
@@ -147,7 +146,8 @@ class RuleLoader extends BaseManifestItemLoader {
 
         // --- Schema Validation (Conditional) ---
         // AC: Keep the schema validation logic
-        const schemaId = this.#ruleSchemaId;
+        // USE HELPER: Retrieve schema ID using the base class helper
+        const schemaId = this._getContentTypeSchemaId('system-rules');
         let ruleValidatorFn = null;
 
         if (schemaId && this._schemaValidator.isSchemaLoaded(schemaId)) {
@@ -158,7 +158,8 @@ class RuleLoader extends BaseManifestItemLoader {
         } else if (schemaId) {
             this._logger.warn(`RuleLoader [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`);
         } else {
-            this._logger.warn(`RuleLoader [${modId}]: No rule schema ID configured. Skipping validation for ${filename}.`);
+            // Warning logged by helper
+            this._logger.warn(`RuleLoader [${modId}]: No rule schema ID configured ('system-rules'). Skipping validation for ${filename}.`);
         }
 
         if (ruleValidatorFn) {
@@ -249,11 +250,15 @@ class RuleLoader extends BaseManifestItemLoader {
         let totalRulesLoaded = 0;
 
         // Pre-check schema availability before loop
-        if (this.#ruleSchemaId && !this._schemaValidator.isSchemaLoaded(this.#ruleSchemaId)) {
-            this._logger.error(`RuleLoader: Cannot proceed. Configured rule schema '${this.#ruleSchemaId}' is not loaded. Ensure schemas are loaded first.`);
+        // USE HELPER: Get schema ID using the helper
+        const ruleSchemaId = this._getContentTypeSchemaId('system-rules');
+
+        if (ruleSchemaId && !this._schemaValidator.isSchemaLoaded(ruleSchemaId)) {
+            this._logger.error(`RuleLoader: Cannot proceed. Configured rule schema '${ruleSchemaId}' is not loaded. Ensure schemas are loaded first.`);
             // Consider throwing here if rules absolutely require validation to load
             return 0;
-        } else if (!this.#ruleSchemaId) {
+        } else if (!ruleSchemaId) {
+            // Warning logged by helper
             this._logger.warn(`RuleLoader: No rule schema ID configured ('system-rules'). Rules will be loaded without schema validation.`);
         }
 

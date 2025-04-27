@@ -144,6 +144,25 @@ export class BaseManifestItemLoader {
     }
 
     /**
+     * Retrieves the schema ID for a given content type from the configuration.
+     * Logs a warning if the schema ID is not found.
+     *
+     * @protected
+     * @param {string} contentType - The logical name of the content type (e.g., 'actions', 'components').
+     * @returns {string | null} The schema ID string if found, otherwise null.
+     */
+    _getContentTypeSchemaId(contentType) {
+        const schemaId = this._config.getContentTypeSchemaId(contentType); // Uses this._config
+        if (schemaId == null) { // Check for null or undefined
+            // Uses this._logger
+            this._logger.warn(`${this.constructor.name}: Schema ID for content type '${contentType}' not found in configuration.`);
+            return null;
+        }
+        return schemaId;
+    }
+
+
+    /**
      * Abstract method to be implemented by subclasses. Processes the data fetched
      * from a single content file. Subclasses should validate the data against
      * a schema (if applicable), extract/determine the **base** item ID (un-prefixed),
