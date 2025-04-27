@@ -180,17 +180,12 @@ class ComponentLoader extends BaseManifestItemLoader {
         this._logger.debug(`ComponentLoader [${modId}]: Extracted full ID '${trimmedComponentIdFromFile}' and base ID '${baseComponentId}' from ${filename}.`);
 
         // --- 4. Schema Registration with Override Check ---
-        // AC: Retain the existing logic for registering the dataSchema with _schemaValidator using the base componentId, including the remove/add logic for handling overrides. (Correction: Use FULL ID from file for this step)
-        // **IMPORTANT:** Register the dataSchema using the FULL ID read from the file.
         this._logger.debug(`ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`);
-
-        // Check/Remove/Add schema using the FULL ID from the file
         const alreadyLoaded = this._schemaValidator.isSchemaLoaded(trimmedComponentIdFromFile);
 
         if (alreadyLoaded) {
             this._logger.warn(`Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`);
             try {
-                // Remove using FULL ID from the file
                 const removed = this._schemaValidator.removeSchema(trimmedComponentIdFromFile);
                 if (removed) {
                     this._logger.debug(`ComponentLoader [${modId}]: Successfully removed existing schema '${trimmedComponentIdFromFile}' before overwriting.`);
@@ -199,32 +194,29 @@ class ComponentLoader extends BaseManifestItemLoader {
                 }
             } catch (removalError) {
                 const removalLogMsg = `ComponentLoader [${modId}]: Error during removeSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
-                // *** CORRECTION: Log the full error object in the details ***
                 this._logger.error(removalLogMsg, {
                     modId,
                     filename,
                     componentId: trimmedComponentIdFromFile,
-                    error: removalError // Log the actual error object
+                    error: removalError
                 }, removalError);
-                // Re-throw critical error during schema management
+                // **** Potential Fix: Comment out re-throw ****
                 throw removalError;
             }
         }
 
         try {
-            // Add using FULL ID from the file
             await this._schemaValidator.addSchema(dataSchema, trimmedComponentIdFromFile);
             this._logger.debug(`ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`);
         } catch (error) {
             const addLogMsg = `ComponentLoader [${modId}]: Error during addSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
-            // *** CORRECTION: Log the full error object in the details ***
             this._logger.error(addLogMsg, {
                 modId,
                 filename,
                 componentId: trimmedComponentIdFromFile,
-                error: error // Log the actual error object
+                error: error
             }, error);
-            // Re-throw critical error during schema management
+            // **** Potential Fix: Comment out re-throw ****
             throw error;
         }
 

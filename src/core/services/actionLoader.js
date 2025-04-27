@@ -115,95 +115,72 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
      * @returns {Promise<string>} The **fully qualified** action ID (e.g., "MyMod:core:action_attack") upon success.
      * @throws {Error} If schema validation, ID validation/extraction, or storage fails.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { //
-        // AC: Located _processFetchedItem
-        this._logger.debug(`ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`); //
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+        this._logger.debug(`ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
 
         // --- Step 1: Schema Validation ---
-        // AC: Retain the existing logic for: Validating the action schema.
-        // USE HELPER: Retrieve schema ID using the base class helper
-        const schemaId = this._getContentTypeSchemaId('actions'); //
-
-        if (!schemaId) { //
-            // Warning logged by helper, but throw error here as validation cannot proceed
-            this._logger.error(`ActionLoader [${modId}]: Cannot validate ${filename} - Action schema ID ('actions') is not configured or was not found.`); //
-            throw new Error(`Configuration Error: Action definition schema ID ('actions') not configured.`); //
+        const schemaId = this._getContentTypeSchemaId('actions');
+        if (!schemaId) {
+            this._logger.error(`ActionLoader [${modId}]: Cannot validate ${filename} - Action schema ID ('actions') is not configured or was not found.`);
+            throw new Error(`Configuration Error: Action definition schema ID ('actions') not configured.`);
         }
-
-        const validationResult = this._schemaValidator.validate(schemaId, data); //
-        this._logger.debug(`ActionLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=${validationResult.isValid}`); //
-
-        if (!validationResult.isValid) { //
-            const errorDetails = JSON.stringify(validationResult.errors ?? [], null, 2); //
-            this._logger.error( //
-                `ActionLoader [${modId}]: Schema validation failed for action definition '${filename}' using schema '${schemaId}'. Errors:\n${errorDetails}`, //
-                {modId, filename, resolvedPath, schemaId, validationErrors: validationResult.errors, failedData: data} //
+        const validationResult = this._schemaValidator.validate(schemaId, data);
+        if (!validationResult.isValid) {
+            const errorDetails = JSON.stringify(validationResult.errors ?? [], null, 2);
+            this._logger.error(
+                `ActionLoader [${modId}]: Schema validation failed for action definition '${filename}' using schema '${schemaId}'. Errors:\n${errorDetails}`,
+                {modId, filename, resolvedPath, schemaId, validationErrors: validationResult.errors, failedData: data}
             );
-            throw new Error(`Schema validation failed for action definition '${filename}' in mod '${modId}'.`); //
+            throw new Error(`Schema validation failed for action definition '${filename}' in mod '${modId}'.`);
         }
-        this._logger.debug(`ActionLoader [${modId}]: Schema validation passed for ${filename}.`); //
-        // --- End Step 1 ---
-
+        this._logger.debug(`ActionLoader [${modId}]: Schema validation passed for ${filename}.`);
 
         // --- Step 2: ID Extraction & Validation ---
-        // AC: Retain the existing logic for: Extracting and validating the actionId (base ID).
-        // AC: Retain the existing logic for: Constructing the finalActionId (e.g., ${modId}:${trimmedActionId}).
-        const namespacedActionId = data.id; // e.g., "core:action_attack"
+        const idFromFile = data.id; // Can be "ns:name" or "name"
 
-        if (typeof namespacedActionId !== 'string' || namespacedActionId.trim() === '') { //
-            this._logger.error( //
-                `ActionLoader [${modId}]: Invalid or missing 'id' in action definition file '${filename}'. ID must be a non-empty namespaced string (e.g., 'namespace:action_name').`, //
-                {modId, filename, resolvedPath, receivedId: namespacedActionId} //
+        if (typeof idFromFile !== 'string' || idFromFile.trim() === '') {
+            this._logger.error(
+                `ActionLoader [${modId}]: Invalid or missing 'id' in action definition file '${filename}'. ID must be a non-empty string.`,
+                {modId, filename, resolvedPath, receivedId: idFromFile}
             );
-            throw new Error(`Invalid or missing 'id' in action definition file '${filename}' for mod '${modId}'.`); //
+            throw new Error(`Invalid or missing 'id' in action definition file '${filename}' for mod '${modId}'.`);
         }
 
-        // NOTE: `trimmedNamespacedActionId` holds the NAMESPACED id from the file.
-        const trimmedNamespacedActionId = namespacedActionId.trim(); // e.g., "core:action_attack"
+        const trimmedIdFromFile = idFromFile.trim(); // e.g., "core:action_attack" or "cool_action"
 
-        // Extract the *base* action ID (un-prefixed by namespace) for the storage helper.
-        const idParts = trimmedNamespacedActionId.split(':'); //
-        if (idParts.length !== 2 || !idParts[0].trim() || !idParts[1].trim()) { //
-            this._logger.error( //
-                `ActionLoader [${modId}]: Invalid 'id' format in action definition file '${filename}'. ID '${trimmedNamespacedActionId}' must be in 'namespace:action_name' format.`, //
-                {modId, filename, resolvedPath, receivedId: trimmedNamespacedActionId} //
-            );
-            throw new Error(`Invalid 'id' format ('${trimmedNamespacedActionId}') in action definition file '${filename}' for mod '${modId}'. Must be 'namespace:action_name'.`); //
+        // **** FIX: Use robust base ID extraction ****
+        const idParts = trimmedIdFromFile.split(':');
+        // If colon exists and both parts are non-empty, assume ns:name format; otherwise, the whole ID is the base ID.
+        // This handles "ns:name", "name", but would break on "ns:" or ":name" (which should be invalid anyway).
+        const baseActionId = idParts.length > 1 && idParts[0].trim() && idParts[1].trim()
+            ? idParts[1] // Get part after first colon
+            : idParts[0]; // Use whole ID as base if no valid namespace format
+
+        if (!baseActionId) { // Should not happen if initial check passed, but good failsafe
+            this._logger.error(`ActionLoader [${modId}]: Could not extract valid base ID from ID '${trimmedIdFromFile}' in file '${filename}'.`);
+            throw new Error(`Could not extract base Action ID from '${trimmedIdFromFile}' in ${filename}`);
         }
-        // The base ID is the part AFTER the colon, used for registry key construction by the helper.
-        const baseActionId = idParts[1]; // e.g., "action_attack"
+        // *******************************************
 
-        this._logger.debug(`ActionLoader [${modId}]: Extracted namespaced ID '${trimmedNamespacedActionId}' and base ID '${baseActionId}' from ${filename}.`); //
+        this._logger.debug(`ActionLoader [${modId}]: Extracted full ID '${trimmedIdFromFile}' and base ID '${baseActionId}' from ${filename}.`);
 
-        // The fully qualified ID includes the modId and the namespaced ID from the file.
-        const fullyQualifiedId = `${modId}:${trimmedNamespacedActionId}`; // e.g., "MyMod:core:action_attack"
-        // --- End Step 2 ---
-
+        // Construct fully qualified ID for return value consistency (optional, depends on caller needs)
+        // Using the trimmed ID from file ensures we capture the original intent (namespaced or not)
+        const fullyQualifiedId = `${modId}:${trimmedIdFromFile}`;
 
         // --- Step 3: Data Storage (Using Base Helper) ---
-        // AC: Remove: Delete the existing code block responsible for calling _dataRegistry.get, logging warnings, augmenting data, and calling _dataRegistry.store.
-        // AC: Add: Insert a call to this._storeItemInRegistry('actions', finalActionId, data, modId, filename). Ensure data passed is the original fetched data object.
-        // ---> MODIFICATION: Calling base helper with baseActionId instead of finalActionId, consistent with other loaders and base class docs.
-        // AC: _processFetchedItem correctly calls this._storeItemInRegistry with 'actions', the finalActionId (using baseActionId), the original data, modId, and filename.
-        this._logger.debug(`ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`); //
+        this._logger.debug(`ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`);
         try {
-            // Use the BASE action ID (without namespace) for the helper.
-            // The helper constructs the final key (`modId:baseActionId`) and augments the data.
-            this._storeItemInRegistry('actions', modId, baseActionId, data, filename); //
-            // Success/overwrite logging is handled within the base helper method.
-        } catch (storageError) { //
-            // Error logging is handled within the base helper. Re-throw to allow _processFileWrapper to catch it.
-            throw storageError; //
+            // Use the extracted BASE action ID for the helper.
+            this._storeItemInRegistry('actions', modId, baseActionId, data, filename);
+        } catch (storageError) {
+            // Error logging is handled within the base helper. Re-throw.
+            throw storageError;
         }
-        // AC: ActionLoader._processFetchedItem no longer directly calls _dataRegistry.get or _dataRegistry.store. (Verified by replacement)
-        // --- End Step 3 ---
 
         // --- Step 4: Return Value ---
-        // AC: Ensure the method returns the finalActionId.
-        // Return the fully qualified ID as required by the base class contract.
-        this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning fully qualified ID: ${fullyQualifiedId}`); //
-        return fullyQualifiedId; //
-        // --- End Step 4 ---
+        this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning fully qualified ID: ${fullyQualifiedId}`);
+        return fullyQualifiedId; // Return consistent fully qualified ID format
     }
 }
 

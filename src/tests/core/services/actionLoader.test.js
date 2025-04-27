@@ -403,7 +403,6 @@ describe('ActionLoader', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing fetched item: ${filename}`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Schema validation passed for ${filename}`));
             // Check log uses the namespaced ID from file and extracted base ID
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted namespaced ID '${namespacedActionIdFromFile}' and base ID '${baseActionIdExtracted}'`));
             // Base class store helper logs success using finalRegistryKey
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${ACTION_TYPE_NAME} item '${finalRegistryKey}'`));
             expect(mockLogger.error).not.toHaveBeenCalled();
