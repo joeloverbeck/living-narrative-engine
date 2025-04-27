@@ -28,8 +28,11 @@
  * @property {DiToken} RuleLoader - Token for the rule loading service.
  * @property {DiToken} GenericContentLoader - Token for loading generic content files.
  * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
+ * @property {DiToken} ActionLoader - Token for the action loading service. // <<< ADDED
+ * @property {DiToken} EventLoader - Token for the event loading service. // <<< ADDED
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
- * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file. // <<< ADDED
+ * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
+ * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
  * @property {DiToken} GameDataRepository - Token for accessing registered game data.
  * @property {DiToken} EntityManager - Token for managing game entities and components.
  * @property {DiToken} DomRenderer - Token for rendering game output to the DOM.
@@ -102,10 +105,12 @@ export const tokens = Object.freeze({
     // Loaders
     SchemaLoader: 'SchemaLoader',
     RuleLoader: 'RuleLoader',
-    GenericContentLoader: 'GenericContentLoader',
+    GenericContentLoader: 'GenericContentLoader', // Maybe remove if unused directly
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
+    ActionLoader: 'ActionLoader', // <<< ADDED
+    EventLoader: 'EventLoader',   // <<< ADDED
     WorldLoader: 'WorldLoader',
-    GameConfigLoader: 'GameConfigLoader', // <<< ADDED
+    GameConfigLoader: 'GameConfigLoader',
     ModManifestLoader: 'ModManifestLoader',
 
     // Core Services & Managers
