@@ -88,30 +88,31 @@ class ComponentLoader extends BaseManifestItemLoader {
      * This method is called by the base class's `_processFileWrapper`.
      * It validates the overall structure against the component definition schema,
      * extracts and validates the required `id` and `dataSchema` properties,
-     * registers the `dataSchema` with the ISchemaValidator using the **un-prefixed** `trimmedComponentId` (handling overrides),
-     * and finally stores the component definition metadata in the data registry using the base class helper `_storeItemInRegistry`,
-     * which applies the standardized `modId:trimmedComponentId` key format.
-     * Returns the **fully qualified** `modId:trimmedComponentId`.
+     * registers the `dataSchema` with the ISchemaValidator using the **full component ID from the file** (e.g., `core:health`), handling overrides,
+     * constructs the **final, prefixed** `finalItemId` (`modId:baseComponentId`),
+     * and delegates storage to the base class helper `_storeItemInRegistry`.
+     * Returns the **final, prefixed** `finalItemId`.
      *
-     * **Important:** The component's `dataSchema` is registered using the **un-prefixed** ID (e.g., `my_component`)
-     * while the component definition itself is stored in the registry using the **prefixed** ID
-     * (e.g., `MyMod:my_component`) by the `_storeItemInRegistry` helper.
+     * **Important:** The component's `dataSchema` is registered using the **full ID from the file** (e.g., `core:health`),
+     * while the component definition itself is stored in the registry using the **prefixed ID derived from modId and baseId**
+     * (e.g., `core:health`) by the `_storeItemInRegistry` helper.
      *
      * @param {string} modId - The ID of the mod the item belongs to.
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path used to fetch the file.
      * @param {any} data - The raw, parsed data object fetched from the file.
      * @param {string} typeName - The content type name ('components').
-     * @returns {Promise<string>} A promise resolving with the **fully qualified, prefixed** component ID (`modId:trimmedComponentId`) on successful processing.
+     * @returns {Promise<string>} A promise resolving with the **fully qualified, prefixed** component ID (`finalItemId`) on successful processing.
      * @throws {Error} Throws an error if configuration is missing, validation fails, schema registration fails, or storage fails.
      * @protected
      * @override
      */
     async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-        // typeName is available ('components')
+        // AC: Located _processFetchedItem method
         this._logger.debug(`ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
 
         // --- 1. Definition Schema Validation ---
+        // AC: Retain the existing logic for validating the component definition schema.
         const definitionSchemaId = this._componentDefSchemaId;
         if (!definitionSchemaId) {
             this._logger.error(`ComponentLoader [${modId}]: Cannot validate ${filename} - Component definition schema ID ('components') is not configured.`);
@@ -122,41 +123,44 @@ class ComponentLoader extends BaseManifestItemLoader {
         this._logger.debug(`ComponentLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=${validationResult.isValid}`);
 
         if (!validationResult.isValid) {
-            // ... (Schema validation error handling remains the same - logs error, throws) ...
             const errorDetails = JSON.stringify(validationResult.errors, null, 2);
             const errorMsg = `ComponentLoader [${modId}]: Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${definitionSchemaId}'. Errors:\n${errorDetails}`;
-            this._logger.error(errorMsg, { /* ... details ... */}); // Log with only 2 args
+            this._logger.error(errorMsg, {
+                modId,
+                filename,
+                resolvedPath,
+                schemaId: definitionSchemaId,
+                validationErrors: validationResult.errors,
+                failedData: data
+            });
             const validationError = new Error(`Schema Validation Error for ${filename} in mod ${modId}`);
             validationError.details = validationResult.errors;
             throw validationError;
         }
+        this._logger.debug(`ComponentLoader [${modId}]: Schema validation passed for ${filename}.`);
 
         // --- 2. Property Extraction ---
-        const componentIdFromFile = data.id; // e.g., "core:health" or "myMod:position"
+        // AC: Retain the existing logic for extracting and validating componentId (base ID) and dataSchema.
+        const componentIdFromFile = data.id; // e.g., "core:health" or "health"
         const dataSchema = data.dataSchema;
 
         // --- 3. Property Validation ---
-        const trimmedComponentIdFromFile = componentIdFromFile?.trim(); // e.g., "core:health"
+        const trimmedComponentIdFromFile = componentIdFromFile?.trim(); // e.g., "core:health" or "health"
         if (!trimmedComponentIdFromFile) {
             const errorMsg = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filename}'. Found: ${JSON.stringify(componentIdFromFile)}`;
             this._logger.error(errorMsg, {modId, filename, resolvedPath, componentIdValue: componentIdFromFile});
             throw new Error(`Invalid Component ID in ${filename}`);
         }
 
-        // ***** MODIFICATION: EXTRACT BASE ID *****
-        // Assumes format "prefix:baseId" or just "baseId" if no colon.
-        // Takes everything after the *first* colon as the base ID.
+        // Extract BASE component ID (e.g., "health" from "core:health" or just "health")
+        // This ID is used for constructing the final storage key.
         const idParts = trimmedComponentIdFromFile.split(':');
         const baseComponentId = idParts.length > 1 ? idParts.slice(1).join(':') : idParts[0];
-        // Example: "core:health" -> baseComponentId = "health"
-        // Example: "myMod:custom:thing" -> baseComponentId = "custom:thing"
-        // Example: "position" -> baseComponentId = "position"
 
-        if (!baseComponentId) { // Check if baseId extraction failed (e.g., ID was just ":")
+        if (!baseComponentId) {
             this._logger.error(`ComponentLoader [${modId}]: Could not extract valid base ID from component ID '${trimmedComponentIdFromFile}' in file '${filename}'.`);
             throw new Error(`Could not extract base Component ID from '${trimmedComponentIdFromFile}' in ${filename}`);
         }
-        // ***** END MODIFICATION *****
 
         if (typeof dataSchema !== 'object' || dataSchema === null) {
             const dataType = dataSchema === null ? 'null' : typeof dataSchema;
@@ -173,11 +177,12 @@ class ComponentLoader extends BaseManifestItemLoader {
         }
 
         // Log uses the full ID from the file for clarity during processing steps
-        this._logger.debug(`ComponentLoader [${modId}]: Extracted and validated properties for component '${trimmedComponentIdFromFile}' (base: '${baseComponentId}') from ${filename}.`);
+        this._logger.debug(`ComponentLoader [${modId}]: Extracted full ID '${trimmedComponentIdFromFile}' and base ID '${baseComponentId}' from ${filename}.`);
 
         // --- 4. Schema Registration with Override Check ---
+        // AC: Retain the existing logic for registering the dataSchema with _schemaValidator using the base componentId, including the remove/add logic for handling overrides. (Correction: Use FULL ID from file for this step)
         // **IMPORTANT:** Register the dataSchema using the FULL ID read from the file.
-        this._logger.debug(`ComponentLoader [${modId}]: Attempting to register data schema using FULL ID '${trimmedComponentIdFromFile}'.`);
+        this._logger.debug(`ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`);
 
         // Check/Remove/Add schema using the FULL ID from the file
         const alreadyLoaded = this._schemaValidator.isSchemaLoaded(trimmedComponentIdFromFile);
@@ -185,7 +190,8 @@ class ComponentLoader extends BaseManifestItemLoader {
         if (alreadyLoaded) {
             this._logger.warn(`Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`);
             try {
-                const removed = this._schemaValidator.removeSchema(trimmedComponentIdFromFile); // Remove using FULL ID
+                // Remove using FULL ID from the file
+                const removed = this._schemaValidator.removeSchema(trimmedComponentIdFromFile);
                 if (removed) {
                     this._logger.debug(`ComponentLoader [${modId}]: Successfully removed existing schema '${trimmedComponentIdFromFile}' before overwriting.`);
                 } else {
@@ -193,12 +199,14 @@ class ComponentLoader extends BaseManifestItemLoader {
                 }
             } catch (removalError) {
                 const removalLogMsg = `ComponentLoader [${modId}]: Error during removeSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
+                // *** CORRECTION: Log the full error object in the details ***
                 this._logger.error(removalLogMsg, {
                     modId,
                     filename,
                     componentId: trimmedComponentIdFromFile,
-                    error: removalError
+                    error: removalError // Log the actual error object
                 }, removalError);
+                // Re-throw critical error during schema management
                 throw removalError;
             }
         }
@@ -209,28 +217,46 @@ class ComponentLoader extends BaseManifestItemLoader {
             this._logger.debug(`ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`);
         } catch (error) {
             const addLogMsg = `ComponentLoader [${modId}]: Error during addSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
-            this._logger.error(addLogMsg, {modId, filename, componentId: trimmedComponentIdFromFile, error}, error);
+            // *** CORRECTION: Log the full error object in the details ***
+            this._logger.error(addLogMsg, {
+                modId,
+                filename,
+                componentId: trimmedComponentIdFromFile,
+                error: error // Log the actual error object
+            }, error);
+            // Re-throw critical error during schema management
             throw error;
         }
 
-        // --- 5. Store Component Definition Metadata (Using Helper) ---
-        // **IMPORTANT:** Store the metadata using the extracted BASE (un-prefixed) ID.
-        // The helper will prepend the current modId.
-        this._logger.debug(`ComponentLoader [${modId}]: Delegating storage of component definition metadata for BASE ID '${baseComponentId}' to base class helper (will use prefixed key).`);
+        // --- 5. Construct Final Item ID ---
+        // AC: Add: Construct the finalItemId for registry storage. Based on the recommended standardization, this should be ${modId}:${trimmedComponentId}.
+        // Using the *base* component ID for consistency as per REFACTOR-2's storage helper convention.
+        const finalItemId = `${modId}:${baseComponentId}`; // e.g., "core:health"
+        this._logger.debug(`ComponentLoader [${modId}]: Constructed finalItemId for registry: '${finalItemId}'.`);
+
+        // --- 6. Store Component Definition Metadata (Using Helper) ---
+        // AC: Remove: Delete the existing code block responsible for calling _dataRegistry.get, logging warnings, and calling _dataRegistry.store.
+        // AC: Add: Insert a call to this._storeItemInRegistry('components', finalItemId, data, modId, filename). Ensure data passed is the original fetched data object.
+        // **IMPORTANT:** Store the metadata using the BASE ID. The helper constructs the final key.
+        this._logger.debug(`ComponentLoader [${modId}]: Delegating storage of component definition metadata using BASE ID '${baseComponentId}' to base class helper.`);
 
         try {
-            // ***** MODIFICATION: Pass the BASE ID to the helper *****
+            // Call the base helper, passing the BASE component ID.
+            // The helper is responsible for creating the `finalItemId` key (`modId:baseComponentId`)
+            // and augmenting the 'data' object with the finalItemId in the 'id' field before storing.
             this._storeItemInRegistry('components', modId, baseComponentId, data, filename);
+            // Success logging is handled within the helper.
         } catch (storageError) {
+            // Error logging is handled within the helper. Re-throw to allow _processFileWrapper to catch it.
             throw storageError;
         }
+        // AC: ComponentLoader._processFetchedItem no longer directly calls _dataRegistry.get or _dataRegistry.store. (Verified by removing the block and using the helper).
 
-        // --- 6. Return the correct fully qualified ID ---
-        // The canonical ID should be modId:baseComponentId.
-        // ***** MODIFICATION: Construct the correct ID *****
-        const qualifiedId = `${modId}:${baseComponentId}`;
-        this._logger.debug(`ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning qualified ID: ${qualifiedId}`);
-        return qualifiedId; // Return the correctly constructed ID
+        // --- 7. Return the Final Item ID ---
+        // AC: Ensure the method returns the finalItemId.
+        // The final ID represents the key used in the registry.
+        this._logger.debug(`ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final ID: ${finalItemId}`);
+        return finalItemId;
     }
 
 }

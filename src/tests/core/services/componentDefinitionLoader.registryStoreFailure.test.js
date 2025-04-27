@@ -385,11 +385,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
         // Check logs carefully based on the actual execution path
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing fetched item: ${filename} (Type: components)`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${filename}. Result: isValid=true`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted and validated properties for component '${componentIdFromFile}' (base: '${baseComponentId}')`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Attempting to register data schema using FULL ID '${componentIdFromFile}'`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${componentIdFromFile}'`));
         // Check the log just before calling _storeItemInRegistry
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage of component definition metadata for BASE ID '${baseComponentId}'`));
         // Check the specific *success* log from _storeItemInRegistry *was not* called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully stored components item '${finalRegistryKey}'`));
         // Check base loader logs

@@ -343,14 +343,17 @@ export class BaseManifestItemLoader {
      * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
      */
     _storeItemInRegistry(category, modId, baseItemId, dataToStore, sourceFilename) {
+        // AC: Define the _storeItemInRegistry method within the BaseManifestItemLoader class
         // Construct the final key using the modId and the un-prefixed baseItemId
         const finalRegistryKey = `${modId}:${baseItemId}`;
 
         try {
+            // AC: The method correctly uses injected _dataRegistry and _logger.
             // Check for existing definition using the fully qualified key
             const existingDefinition = this._dataRegistry.get(category, finalRegistryKey);
 
             if (existingDefinition != null) {
+                // AC: Override warnings are logged using the subclass's name via this.constructor.name.
                 this._logger.warn(
                     `${this.constructor.name} [${modId}]: Overwriting existing ${category} definition with key '${finalRegistryKey}'. ` +
                     `New Source: ${sourceFilename}. Previous Source: ${existingDefinition._sourceFile || 'unknown'} from mod '${existingDefinition.modId || 'unknown'}.'`
@@ -359,6 +362,8 @@ export class BaseManifestItemLoader {
 
             // Prepare the final data object, ensuring required fields are present/overwritten
             // The object stored should contain the FINAL, PREFIXED ID in its `id` field.
+            // AC: Stored data includes id (matching finalItemId), modId, and _sourceFile.
+            // AC: Ensure the method correctly augments the dataToStore object, specifically setting the id field to the finalItemId.
             const finalData = {
                 ...dataToStore, // Spread the original data
                 id: finalRegistryKey, // Ensure the final, prefixed key is stored within the object itself
@@ -366,17 +371,22 @@ export class BaseManifestItemLoader {
                 _sourceFile: sourceFilename // Ensure the source filename is stored
             };
 
+            // AC: The method correctly uses injected _dataRegistry
             // Store the augmented data using the final, prefixed key
             this._dataRegistry.store(category, finalRegistryKey, finalData);
 
+            // AC: The method correctly uses injected _logger.
             // Log successful storage at debug level
             this._logger.debug(
                 `${this.constructor.name} [${modId}]: Successfully stored ${category} item '${finalRegistryKey}' from file '${sourceFilename}'.`
             );
 
         } catch (error) {
+            // AC: Storage errors are logged and re-thrown.
+            // AC: The method correctly uses injected _logger.
             // Log the error encountered during registry interaction
             this._logger.error(
+                // AC: Override warnings are logged using the subclass's name via this.constructor.name. (Error logs also use it)
                 `${this.constructor.name} [${modId}]: Failed to store ${category} item with key '${finalRegistryKey}' from file '${sourceFilename}' in data registry.`,
                 {
                     category,
@@ -391,5 +401,6 @@ export class BaseManifestItemLoader {
             // Re-throw the error to be handled by the calling context (e.g., _processFileWrapper)
             throw error;
         }
+        // AC: The _storeItemInRegistry method is added to BaseManifestItemLoader.js with the specified signature and implementation.
     }
 }

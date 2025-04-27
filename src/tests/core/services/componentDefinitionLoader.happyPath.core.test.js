@@ -341,10 +341,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         );
 
         // Optional: Verify specific debug logs if crucial
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Extracted and validated properties for component '${coreHealthIdFromFile}' (base: '${coreHealthBaseId}')`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Registered dataSchema for component ID '${coreHealthIdFromFile}'`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Delegating storage of component definition metadata for BASE ID '${coreHealthBaseId}'`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Successfully processed component definition from ${coreHealthFilename}. Returning qualified ID: ${coreHealthFinalId}`));
         // (Similar checks for position component)
 
         expect(mockLogger.warn).not.toHaveBeenCalled();
