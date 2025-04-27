@@ -119,7 +119,6 @@ class EntityManager {
       return null;
     }
 
-    // Basic validation (already performed by GenericContentLoader, but good defense)
     if (entityDefinition.components && typeof entityDefinition.components !== 'object') {
       this.#logger.warn(`EntityManager.createEntityInstance: Entity definition for ${entityId} has an invalid 'components' field (must be an object). Treating as no components.`);
       entityDefinition.components = {}; // Ensure it's an empty object if invalid
@@ -134,7 +133,7 @@ class EntityManager {
 
       // AC: Populate entity's components Map by copying data (no class instantiation)
       for (const [componentTypeId, componentData] of Object.entries(entityDefinition.components)) {
-        // Data is assumed pre-validated by GenericContentLoader before registry storage.
+        // Data is assumed pre-validated.
         // Directly add the data object to the entity.
         // Consider cloning here if entityDefinition data might be mutated elsewhere, though typically registry data is treated as immutable.
         // const clonedData = JSON.parse(JSON.stringify(componentData)); // Optional deep clone

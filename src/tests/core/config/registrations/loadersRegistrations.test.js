@@ -9,7 +9,6 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../../../core/services/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../../../core/services/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../../../core/services/genericContentLoader.js').default} GenericContentLoader */
 /** @typedef {import('../../../../core/services/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../../../core/services/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../../../core/services/modManifestLoader.js').default} ModManifestLoader */
@@ -29,7 +28,6 @@ import {tokens} from '../../../../core/tokens.js';
 import SchemaLoader from '../../../../core/services/schemaLoader.js'; // Import actual class
 // Import other actual loader classes if needed for instanceof checks
 import RuleLoader from '../../../../core/services/ruleLoader.js';
-import GenericContentLoader from '../../../../core/services/genericContentLoader.js';
 import ComponentLoader from '../../../../core/services/componentLoader.js';
 import GameConfigLoader from '../../../../core/services/gameConfigLoader.js';
 import ModManifestLoader from '../../../../core/services/modManifestLoader.js';
@@ -78,7 +76,6 @@ const mockPathResolver = {
     resolveModManifestPath: jest.fn(modId => `resolved/mods/${modId}/mod.manifest.json`),
     resolveGameConfigPath: jest.fn(() => 'resolved/game.json'),
     resolveRulePath: jest.fn(filename => `resolved/rules/${filename}`),
-    resolveContentPath: jest.fn((typeName, filename) => `resolved/${typeName}/${filename}`), // For GenericContentLoader
     // Add other methods if necessary
 };
 
@@ -201,7 +198,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
             tokens.IConfiguration, tokens.IPathResolver, tokens.ISchemaValidator,
             tokens.IDataRegistry, tokens.IDataFetcher,
             // Specific Loaders
-            tokens.SchemaLoader, tokens.RuleLoader, tokens.GenericContentLoader,
+            tokens.SchemaLoader, tokens.RuleLoader,
             tokens.ComponentDefinitionLoader, tokens.GameConfigLoader, tokens.ModManifestLoader,
             tokens.ActionLoader, tokens.EventLoader, tokens.EntityLoader // <<< Using EntityLoader token
         ];

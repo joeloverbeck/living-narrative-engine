@@ -26,7 +26,6 @@
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
  * @property {DiToken} ManifestLoader - Token for the manifest loading service.
  * @property {DiToken} RuleLoader - Token for the rule loading service.
- * @property {DiToken} GenericContentLoader - Token for loading generic content files.
  * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
  * @property {DiToken} ActionLoader - Token for the action loading service. // <<< ADDED
  * @property {DiToken} EventLoader - Token for the event loading service. // <<< ADDED
@@ -105,7 +104,6 @@ export const tokens = Object.freeze({
     // Loaders
     SchemaLoader: 'SchemaLoader',
     RuleLoader: 'RuleLoader',
-    GenericContentLoader: 'GenericContentLoader', // Maybe remove if unused directly
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     ActionLoader: 'ActionLoader', // <<< ADDED
     EventLoader: 'EventLoader',   // <<< ADDED

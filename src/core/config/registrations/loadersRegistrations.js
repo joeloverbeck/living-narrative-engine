@@ -15,7 +15,6 @@
 /** @typedef {import('../../services/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../services/manifestLoader.js').default} ManifestLoader */
 /** @typedef {import('../../services/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../services/genericContentLoader.js').default} GenericContentLoader */
 /** @typedef {import('../../services/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
 /** @typedef {import('../../services/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
@@ -39,7 +38,6 @@ import WorkspaceDataFetcher from '../../services/workspaceDataFetcher.js';
 // --- Loader Imports ---
 import SchemaLoader from '../../services/schemaLoader.js';
 import RuleLoader from '../../services/ruleLoader.js';
-import GenericContentLoader from '../../services/genericContentLoader.js';
 import ComponentLoader from '../../services/componentLoader.js';
 import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
 import ModManifestLoader from '../../services/modManifestLoader.js'; // <<< ADDED: MODLOADER-005 A
@@ -112,18 +110,6 @@ export function registerLoaders(container) {
         c.resolve(tokens.ILogger) // Pass logger here too
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
-
-    // GenericContentLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
-    // NOTE: This might become deprecated or change with modding system.
-    registrar.singletonFactory(tokens.GenericContentLoader, (c) => new GenericContentLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger) // Pass logger here too
-    ));
-    logger.debug(`Loaders Registration: Registered ${tokens.GenericContentLoader}.`);
 
     // ComponentDefinitionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
     registrar.singletonFactory(tokens.ComponentDefinitionLoader, (c) => new ComponentLoader(

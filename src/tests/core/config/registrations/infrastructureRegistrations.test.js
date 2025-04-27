@@ -3,7 +3,6 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../../core/interfaces/loaders.js').ISchemaLoader} ISchemaLoader */
 /** @typedef {import('../../../../core/interfaces/loaders.js').IManifestLoader} IManifestLoader */
-/** @typedef {import('../../../../core/interfaces/loaders.js').IGenericContentLoader} IGenericContentLoader */
 /** @typedef {import('../../../../core/interfaces/loaders.js').IComponentDefinitionLoader} IComponentDefinitionLoader */
 /** @typedef {import('../../../../core/interfaces/loaders.js').IRuleLoader} IRuleLoader */
 /** @typedef {import('../../../../validation/interfaces.js').ISchemaValidator} ISchemaValidator */
@@ -47,7 +46,6 @@ const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: j
 const mockDataRegistry = {};
 const mockSchemaLoader = {};
 const mockManifestLoader = {};
-const mockGenericContentLoader = {};
 const mockComponentDefinitionLoader = {};
 const mockRuleLoader = {};
 const mockSchemaValidator = {};
@@ -151,7 +149,6 @@ describe('registerInfrastructure', () => {
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SchemaLoader, mockSchemaLoader, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.GenericContentLoader, mockGenericContentLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ComponentDefinitionLoader, mockComponentDefinitionLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.RuleLoader, mockRuleLoader, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ISchemaValidator, mockSchemaValidator, {lifecycle: 'singleton'});
