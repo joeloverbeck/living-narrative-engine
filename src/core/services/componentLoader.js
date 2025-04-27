@@ -51,34 +51,11 @@ class ComponentLoader extends BaseManifestItemLoader {
         this._logger.debug(`ComponentLoader: Initialized.`);
     }
 
-    /**
-     * Loads and registers component definitions for a given mod based on its manifest.
-     * Serves as the public entry point for loading components for a specific mod.
-     * It delegates the core file iteration, fetching, and processing logic to the
-     * base class's `_loadItemsInternal` method, which utilizes the `_processFetchedItem`
-     * implementation provided by this class.
-     *
-     * @param {string} modId - The ID of the mod.
-     * @param {ModManifest} modManifest - The manifest object for the mod.
-     * @returns {Promise<number>} A promise that resolves with the count of successfully loaded component definitions.
-     * @async
+    // --- METHOD REMOVED: loadComponentDefinitions ---
+    /*
+     * Removed the loadComponentDefinitions method and its JSDoc comments as per REFACTOR-LOADER-2.
+     * The generic loadItemsForMod in the base class should be used instead.
      */
-    async loadComponentDefinitions(modId, modManifest) {
-        // <<< CORRECTED CLASS NAME in log
-        this._logger.info(`ComponentLoader: Loading component definitions for mod '${modId}'.`);
-
-        // --- Retained Initial Validation ---
-        if (!modId || !modManifest) {
-            // <<< CORRECTED CLASS NAME in log
-            this._logger.error('ComponentLoader: Mod ID or Manifest is missing.', {modId, modManifest});
-            return 0; // Or throw an error, depending on desired strictness
-        }
-
-        // --- Delegate to Base Class ---
-        // Pass 'components' as the typeName, contentKey, and contentTypeDir
-        // (Assuming component files are in a 'components' directory within the mod)
-        return await this._loadItemsInternal(modId, modManifest, 'components', 'components', 'components');
-    }
 
 
     /**

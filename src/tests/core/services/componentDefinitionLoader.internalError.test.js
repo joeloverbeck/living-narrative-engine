@@ -265,7 +265,14 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         });
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,           // modId
+            errorManifest,   // modManifest
+            'components',    // contentKey
+            'components',    // contentTypeDir
+            'components'     // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -281,58 +288,59 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         // --- File 1: invalid_null_id.component.json ---
         // 1a. Specific internal error log (_processFetchedItem check for ID)
         const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameNullId}'. Found: ${JSON.stringify(invalidDataNullId.id)}`;
-        // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails1 = expect.objectContaining({
-            resolvedPath: filePathNullId,       // Use resolvedPath
-            componentIdValue: invalidDataNullId.id, // Use componentIdValue
+            resolvedPath: filePathNullId,
+            componentIdValue: invalidDataNullId.id,
             modId: modId,
             filename: filenameNullId,
         });
-        // ***** Check for 2 arguments *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1);
 
         // 1b. Wrapper error log (_processFileWrapper catch)
         const expectedWrapperMsg = `Error processing file:`;
-        const idError1 = expect.objectContaining({ // Error object passed as 3rd arg
-            message: `Invalid Component ID in ${filenameNullId}`,
-        });
-        const expectedWrapperDetails1 = expect.objectContaining({ // Details object passed as 2nd arg
+        const idError1 = expect.objectContaining({message: `Invalid Component ID in ${filenameNullId}`});
+        const expectedWrapperDetails1 = expect.objectContaining({
             filename: filenameNullId,
-            path: filePathNullId, // Wrapper log uses 'path'
+            path: filePathNullId,
             modId: modId,
-            error: `Invalid Component ID in ${filenameNullId}` // Wrapper log passes error message string
+            typeName: 'components', // Check typeName is included
+            error: `Invalid Component ID in ${filenameNullId}`
         });
-        // ***** Check for 3 arguments, matching structure *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, idError1);
 
         // --- File 2: invalid_empty_id.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for ID)
         const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameEmptyId}'. Found: ${JSON.stringify(invalidDataEmptyId.id)}`;
-        // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails2 = expect.objectContaining({
-            resolvedPath: filePathEmptyId,       // Use resolvedPath
-            componentIdValue: invalidDataEmptyId.id, // Use componentIdValue
+            resolvedPath: filePathEmptyId,
+            componentIdValue: invalidDataEmptyId.id,
             modId: modId,
             filename: filenameEmptyId
         });
-        // ***** Check for 2 arguments *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg2, expectedSpecificErrorDetails2);
 
         // 2b. Wrapper error log (_processFileWrapper catch)
-        const idError2 = expect.objectContaining({ // Error object passed as 3rd arg
-            message: `Invalid Component ID in ${filenameEmptyId}`,
-        });
-        const expectedWrapperDetails2 = expect.objectContaining({ // Details object passed as 2nd arg
+        const idError2 = expect.objectContaining({message: `Invalid Component ID in ${filenameEmptyId}`});
+        const expectedWrapperDetails2 = expect.objectContaining({
             filename: filenameEmptyId,
-            path: filePathEmptyId, // Wrapper log uses 'path'
+            path: filePathEmptyId,
             modId: modId,
-            error: `Invalid Component ID in ${filenameEmptyId}` // Wrapper log passes error message string
+            typeName: 'components', // Check typeName is included
+            error: `Invalid Component ID in ${filenameEmptyId}`
         });
-        // ***** Check for 3 arguments, matching structure *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, idError2);
 
         // --- Verify: Final Info Log ---
-        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 0/2 components items. (2 failed)`);
+        // <<< MODIFIED EXPECTATION: Check for the new log messages >>>
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary logs
+        // Check the initial log message from loadItemsForMod
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
+        // Check the summary log from _loadItemsInternal, indicating failure
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Correct summary for two failures
+        );
         expect(mockLogger.warn).not.toHaveBeenCalled();
 
         // --- Verify Other Interactions ---
@@ -363,7 +371,14 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         });
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,           // modId
+            errorManifest,   // modManifest
+            'components',    // contentKey
+            'components',    // contentTypeDir
+            'components'     // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -379,56 +394,61 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         // --- File 1: invalid_null_schema.component.json ---
         // 1a. Specific internal error log (_processFetchedItem check for dataSchema type)
         const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameNullSchema}'. Expected an object but received type 'null'.`;
-        const schemaTypeError1 = expect.any(Error); // Check it's an error object
-        // ***** CORRECTED DETAILS OBJECT *****
+        const schemaTypeError1 = expect.any(Error);
         const expectedSpecificErrorDetails1 = expect.objectContaining({
             componentId: validId,
-            resolvedPath: filePathNullSchema, // Use resolvedPath
-            receivedType: 'null',           // Use receivedType
+            resolvedPath: filePathNullSchema,
+            receivedType: 'null',
             modId: modId,
             filename: filenameNullSchema
         });
-        // ***** Check for 3 arguments *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1, schemaTypeError1);
 
         // 1b. Wrapper error log (_processFileWrapper catch)
         const expectedWrapperMsg = `Error processing file:`;
-        const expectedWrapperDetails1 = expect.objectContaining({ // Details object passed as 2nd arg
+        const expectedWrapperDetails1 = expect.objectContaining({
             filename: filenameNullSchema,
-            path: filePathNullSchema, // Wrapper log uses 'path'
+            path: filePathNullSchema,
             modId: modId,
-            error: expect.stringContaining(`Invalid dataSchema type in ${filenameNullSchema} for component ${validId}`) // Wrapper log passes error message string
+            typeName: 'components', // Check typeName is included
+            error: expect.stringContaining(`Invalid dataSchema type in ${filenameNullSchema} for component ${validId}`)
         });
-        // ***** Check for 3 arguments, matching structure *****
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, schemaTypeError1); // The same error object is caught and passed
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, schemaTypeError1);
 
         // --- File 2: invalid_string_schema.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for dataSchema type)
         const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameStringSchema}'. Expected an object but received type 'string'.`;
-        const schemaTypeError2 = expect.any(Error); // Check it's an error object
-        // ***** CORRECTED DETAILS OBJECT *****
+        const schemaTypeError2 = expect.any(Error);
         const expectedSpecificErrorDetails2 = expect.objectContaining({
             componentId: validId,
-            resolvedPath: filePathStringSchema, // Use resolvedPath
-            receivedType: 'string',           // Use receivedType
+            resolvedPath: filePathStringSchema,
+            receivedType: 'string',
             modId: modId,
             filename: filenameStringSchema
         });
-        // ***** Check for 3 arguments *****
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg2, expectedSpecificErrorDetails2, schemaTypeError2);
 
         // 2b. Wrapper error log (_processFileWrapper catch)
-        const expectedWrapperDetails2 = expect.objectContaining({ // Details object passed as 2nd arg
+        const expectedWrapperDetails2 = expect.objectContaining({
             filename: filenameStringSchema,
-            path: filePathStringSchema, // Wrapper log uses 'path'
+            path: filePathStringSchema,
             modId: modId,
-            error: expect.stringContaining(`Invalid dataSchema type in ${filenameStringSchema} for component ${validId}`) // Wrapper log passes error message string
+            typeName: 'components', // Check typeName is included
+            error: expect.stringContaining(`Invalid dataSchema type in ${filenameStringSchema} for component ${validId}`)
         });
-        // ***** Check for 3 arguments, matching structure *****
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, schemaTypeError2); // The same error object is caught and passed
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, schemaTypeError2);
 
         // --- Verify: Final Info Log ---
-        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 0/2 components items. (2 failed)`);
+        // <<< MODIFIED EXPECTATION: Check for the new log messages >>>
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary logs
+        // Check the initial log message from loadItemsForMod
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
+        // Check the summary log from _loadItemsInternal, indicating failure
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Correct summary for two failures
+        );
         expect(mockLogger.warn).not.toHaveBeenCalled();
 
         // --- Verify Other Interactions ---
@@ -438,4 +458,4 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataNullSchema);
         expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataStringSchema);
     });
-});
+}); // End of describe block

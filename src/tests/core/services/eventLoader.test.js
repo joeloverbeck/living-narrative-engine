@@ -147,25 +147,17 @@ beforeEach(() => {
     // --- Mock Base Class Internal Methods ---
     // Spy ONLY on methods EventLoader explicitly delegates to in the method being tested,
     // OR methods whose call we want to prevent/verify without executing their full logic.
-    // For loadEventsForMod, we spy on _loadItemsInternal.
+    // For loadItemsForMod, we spy on _loadItemsInternal.
     // For _processFetchedItem, we DON'T spy on _getContentTypeSchemaId or _storeItemInRegistry
     // because we want the actual base implementations to run (they use the injected mocks).
-    jest.spyOn(BaseManifestItemLoader.prototype, '_loadItemsInternal'); // Don't mock implementation here, do it in the relevant describe block
+    // We only set the spy here, the mock implementation is set in relevant describe blocks.
+    jest.spyOn(BaseManifestItemLoader.prototype, '_loadItemsInternal');
 
-    // Ensure the instance uses the spy if needed (though prototype spy is usually sufficient)
-    if (typeof eventLoader._loadItemsInternal === 'function') {
-        eventLoader._loadItemsInternal = BaseManifestItemLoader.prototype._loadItemsInternal;
-    }
-
-    // Bind the actual _processFetchedItem method for testing
+    // Bind the actual _processFetchedItem method for testing (Specific to EventLoader)
     if (EventLoader.prototype._processFetchedItem) {
         eventLoader._processFetchedItem = EventLoader.prototype._processFetchedItem.bind(eventLoader);
     }
 
-    // --- IMPORTANT CORRECTION: REMOVED PROBLEMATIC SPIES/MOCKS ---
-    // REMOVED: jest.spyOn(BaseManifestItemLoader.prototype, '_getContentTypeSchemaId')...
-    // REMOVED: jest.spyOn(BaseManifestItemLoader.prototype, '_storeItemInRegistry')...
-    // REMOVED: Assignments related to the removed spies
 });
 
 // --- Test Suite ---
@@ -182,7 +174,6 @@ describe('EventLoader', () => {
 
             expect(loader).toBeInstanceOf(EventLoader);
             expect(loader).toBeInstanceOf(BaseManifestItemLoader);
-            // Verify dependencies are stored (inherited check)
             expect(loader._config).toBe(tempConfig);
             expect(loader._pathResolver).toBe(mockResolver);
             expect(loader._dataFetcher).toBe(mockFetcher);
@@ -193,15 +184,13 @@ describe('EventLoader', () => {
         });
 
         it('should log initialization message', () => {
-            // This test relies on the logger passed during instantiation in beforeEach
             new EventLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
-            // Need to check the mockLogger created *for this test*, not the global one potentially cleared
             expect(mockLogger.debug).toHaveBeenCalledWith('EventLoader: Initialized.');
         });
     });
 
-    // --- loadEventsForMod Tests ---
-    describe('loadEventsForMod', () => {
+    // --- loadItemsForMod Tests ---
+    describe('loadItemsForMod', () => {
         const mockManifest = {
             id: TEST_MOD_ID,
             name: 'Test Event Mod',
@@ -211,85 +200,190 @@ describe('EventLoader', () => {
             }
         };
         const expectedLoadCount = 2; // Simulate 2 files processed successfully
+        let internalLoadSpy; // To hold the spy instance
 
         beforeEach(() => {
-            // Configure the spy/mock for _loadItemsInternal for this block
-            // Use the spy attached to the instance in the outer beforeEach
-            if (typeof eventLoader._loadItemsInternal?.mockResolvedValue === 'function') {
-                eventLoader._loadItemsInternal.mockResolvedValue(expectedLoadCount);
-            } else {
-                console.warn("Could not mock _loadItemsInternal for loadEventsForMod tests");
-            }
+            // Reset the spy and its mock implementation before each test in this block
+            internalLoadSpy = jest.spyOn(BaseManifestItemLoader.prototype, '_loadItemsInternal');
+            internalLoadSpy.mockResolvedValue(expectedLoadCount); // Default mock behavior
         });
 
-        it('should return 0 and log error if modId is missing', async () => {
-            const result = await eventLoader.loadEventsForMod(null, mockManifest);
+        it('should return 0 and log error if modId is missing or invalid', async () => {
+            // *** Use loadItemsForMod with all arguments ***
+            const result = await eventLoader.loadItemsForMod(
+                null, // Invalid modId
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            );
             expect(result).toBe(0);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                'EventLoader: Mod ID or Manifest is missing for loadEventsForMod.',
-                expect.objectContaining({modId: null, modManifestProvided: true})
+                // *** Updated expected log message based on base class validation ***
+                `EventLoader: Invalid 'modId' provided for loading ${EVENT_TYPE_NAME}. Must be a non-empty string. Received: null`
             );
-            expect(eventLoader._loadItemsInternal).not.toHaveBeenCalled();
+            // Verify the internal method was not called due to validation failure
+            expect(internalLoadSpy).not.toHaveBeenCalled();
         });
 
-        it('should return 0 and log error if modManifest is missing', async () => {
-            const result = await eventLoader.loadEventsForMod(TEST_MOD_ID, undefined);
+        it('should return 0 and log error if modManifest is missing or invalid', async () => {
+            // *** Use loadItemsForMod with all arguments ***
+            const result = await eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                undefined, // Invalid manifest
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            );
             expect(result).toBe(0);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                'EventLoader: Mod ID or Manifest is missing for loadEventsForMod.',
-                expect.objectContaining({modId: TEST_MOD_ID, modManifestProvided: false})
+                // *** Updated expected log message based on base class validation ***
+                `EventLoader: Invalid 'modManifest' provided for loading ${EVENT_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-null object. Received: undefined`
             );
-            expect(eventLoader._loadItemsInternal).not.toHaveBeenCalled();
+            // Verify the internal method was not called due to validation failure
+            expect(internalLoadSpy).not.toHaveBeenCalled();
         });
 
+        it('should throw TypeError and log error if contentKey is invalid', async () => {
+            const invalidKey = '';
+            const expectedErrorMsg = `${eventLoader.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${EVENT_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidKey}`;
+
+            await expect(eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                invalidKey, // Invalid contentKey
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            )).rejects.toThrow(new TypeError(expectedErrorMsg));
+
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            // Verify the internal method was not called due to validation failure
+            expect(internalLoadSpy).not.toHaveBeenCalled();
+        });
+
+        it('should throw TypeError and log error if contentTypeDir is invalid', async () => {
+            const invalidDir = null;
+            const expectedErrorMsg = `${eventLoader.constructor.name}: Programming Error - Invalid 'contentTypeDir' provided for loading ${EVENT_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`;
+
+            await expect(eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                invalidDir, // Invalid contentTypeDir
+                EVENT_TYPE_NAME
+            )).rejects.toThrow(new TypeError(expectedErrorMsg));
+
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            // Verify the internal method was not called due to validation failure
+            expect(internalLoadSpy).not.toHaveBeenCalled();
+        });
+
+        it('should throw TypeError and log error if typeName is invalid', async () => {
+            const invalidTypeName = ' ';
+            const expectedErrorMsg = `${eventLoader.constructor.name}: Programming Error - Invalid 'typeName' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidTypeName}`;
+
+            await expect(eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                invalidTypeName // Invalid typeName
+            )).rejects.toThrow(new TypeError(expectedErrorMsg));
+
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            // Verify the internal method was not called due to validation failure
+            expect(internalLoadSpy).not.toHaveBeenCalled();
+        });
 
         it('should log the loading info message', async () => {
-            await eventLoader.loadEventsForMod(TEST_MOD_ID, mockManifest);
+            // *** Use loadItemsForMod with all arguments ***
+            await eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            );
+            // This initial log comes from the public loadItemsForMod wrapper
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `EventLoader: Loading event definitions for mod '${TEST_MOD_ID}'.`
+                // *** Ensure message matches base class generic log ***
+                `EventLoader: Loading ${EVENT_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
+            );
+            // Also check the debug log for delegation
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `EventLoader [${TEST_MOD_ID}]: Delegating loading for type '${EVENT_TYPE_NAME}' to _loadItemsInternal.`
             );
         });
 
         it('should call _loadItemsInternal with correct parameters', async () => {
-            await eventLoader.loadEventsForMod(TEST_MOD_ID, mockManifest);
-
-            expect(eventLoader._loadItemsInternal).toHaveBeenCalledTimes(1);
-            expect(eventLoader._loadItemsInternal).toHaveBeenCalledWith(
+            // *** Use loadItemsForMod with all arguments ***
+            await eventLoader.loadItemsForMod(
                 TEST_MOD_ID,
                 mockManifest,
-                EVENT_CONTENT_KEY, // manifest key
-                EVENT_CONTENT_DIR, // content directory
-                EVENT_TYPE_NAME    // type name for registry/schema
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            );
+
+            // Verify the internal method was called correctly by the public wrapper
+            expect(internalLoadSpy).toHaveBeenCalledTimes(1);
+            expect(internalLoadSpy).toHaveBeenCalledWith(
+                TEST_MOD_ID,           // Should be trimmed version, but test ID has no whitespace
+                mockManifest,
+                EVENT_CONTENT_KEY,     // Should be trimmed version
+                EVENT_CONTENT_DIR,     // Should be trimmed version
+                EVENT_TYPE_NAME        // Should be trimmed version
             );
         });
 
         it('should return the count from _loadItemsInternal', async () => {
-            const result = await eventLoader.loadEventsForMod(TEST_MOD_ID, mockManifest);
+            // *** Use loadItemsForMod with all arguments ***
+            const result = await eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            );
+            // Should return the value resolved by the mocked internal method
             expect(result).toBe(expectedLoadCount);
+            // Check the final debug log
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `EventLoader [${TEST_MOD_ID}]: Finished loading for type '${EVENT_TYPE_NAME}'. Count: ${expectedLoadCount}`
+            );
         });
 
         it('should handle errors from _loadItemsInternal by propagating them', async () => {
             const loadError = new Error('Internal base loading failed');
-            // Ensure the mock is configured to reject
-            if (typeof eventLoader._loadItemsInternal?.mockRejectedValue === 'function') {
-                eventLoader._loadItemsInternal.mockRejectedValue(loadError);
-            } else {
-                throw new Error("Cannot configure _loadItemsInternal mock to reject");
-            }
+            // Configure the spy to reject *after* initial validation passes
+            internalLoadSpy.mockRejectedValue(loadError);
 
-
-            await expect(eventLoader.loadEventsForMod(TEST_MOD_ID, mockManifest))
-                .rejects.toThrow(loadError);
+            // *** Use loadItemsForMod with all arguments ***
+            await expect(eventLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                EVENT_CONTENT_KEY,
+                EVENT_CONTENT_DIR,
+                EVENT_TYPE_NAME
+            )).rejects.toThrow(loadError); // Should throw the error from the internal method
 
             // Verify initial log still happened
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `EventLoader: Loading event definitions for mod '${TEST_MOD_ID}'.`
+                `EventLoader: Loading ${EVENT_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
             );
-            // Base class handles logging the error itself during _loadItemsInternal failure
+            // Verify delegation log happened
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `EventLoader [${TEST_MOD_ID}]: Delegating loading for type '${EVENT_TYPE_NAME}' to _loadItemsInternal.`
+            );
+            // Verify internal method *was* called (and subsequently threw the error)
+            expect(internalLoadSpy).toHaveBeenCalledTimes(1);
+            // The summary log within _loadItemsInternal handles logging the failure count,
+            // and _processFileWrapper logs the specific error, so we don't need to check logger.error here.
         });
     });
 
     // --- _processFetchedItem Tests (Core EventLoader Logic) ---
+    // No changes needed in this section based on the errors provided.
     describe('_processFetchedItem', () => {
         const filename = 'test_event.json';
         const resolvedPath = `./data/mods/${TEST_MOD_ID}/${EVENT_CONTENT_DIR}/${filename}`;
@@ -345,8 +439,6 @@ describe('EventLoader', () => {
             const resultKey = await eventLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, EVENT_TYPE_NAME);
 
             // 1. Schema Validation (Main Definition)
-            // Verify the *actual* base class method was called (indirectly via `this._getContentTypeSchemaId`)
-            // We check this by ensuring the mockConfig method was called.
             expect(mockConfig.getContentTypeSchemaId).toHaveBeenCalledWith('events');
             expect(mockValidator.validate).toHaveBeenCalledTimes(1);
             expect(mockValidator.validate).toHaveBeenCalledWith(EVENT_SCHEMA_ID, fetchedData);
@@ -364,7 +456,6 @@ describe('EventLoader', () => {
 
             // 4. Storage (via base helper)
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage for event (base ID: '${baseEventIdExtracted}')`));
-            // Check that registry.store was actually called by the *real* base helper
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             const expectedStoredData = {
                 ...fetchedData,
@@ -373,7 +464,6 @@ describe('EventLoader', () => {
                 _sourceFile: filename,
             };
             expect(mockRegistry.store).toHaveBeenCalledWith(EVENT_TYPE_NAME, finalRegistryKey, expectedStoredData);
-            // Check the success log *from the real base helper*
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${EVENT_TYPE_NAME} item '${finalRegistryKey}'`));
 
 
@@ -406,7 +496,6 @@ describe('EventLoader', () => {
             expect(mockValidator.addSchema).not.toHaveBeenCalled();
 
             // 4. Storage (via base helper)
-            // Check that registry.store was actually called by the *real* base helper
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             const expectedStoredData = {
                 ...fetchedData,

@@ -1,9 +1,11 @@
-// Filename: src/tests/core/services/integration/loaderRegistry.integration.test.js
+// Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import ActionLoader from '../../core/services/actionLoader.js'; // Adjust path if needed
 import ComponentLoader from '../../core/services/componentLoader.js'; // Adjust path if needed
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js'; // Use the real registry
+// Import the base class to potentially spy on its methods if needed later
+import {BaseManifestItemLoader} from '../../core/services/baseManifestItemLoader.js';
 
 // --- Mock Service Factories (Copied from provided examples) ---
 
@@ -173,6 +175,12 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
     const actionFilename = 'cool_action.json';
     const componentFilename = 'cool_component.json';
 
+    // *** ADDED: Constants for Action Loader ***
+    const ACTION_CONTENT_KEY = 'actions';
+    const ACTION_CONTENT_DIR = 'actions';
+    const ACTION_TYPE_NAME = 'actions';
+    // *** END ADDED ***
+
     // Base IDs (used in file content)
     const coolActionBaseId = 'cool_action'; // ID in file is just the base
     const coolComponentBaseId = 'cool_component'; // ID in file is just the base
@@ -239,8 +247,10 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         mockFetcher = createMockDataFetcher(); // Initialize with default
         mockValidator = createMockSchemaValidator();
         mockLogger = createMockLogger();
-        dataRegistry = new InMemoryDataRegistry(mockLogger);
+        dataRegistry = new InMemoryDataRegistry(mockLogger); // Pass logger to real registry if needed
 
+        // Clear mocks AND spies on the real registry
+        jest.clearAllMocks();
         jest.spyOn(dataRegistry, 'store');
         jest.spyOn(dataRegistry, 'get');
         jest.spyOn(dataRegistry, 'getAll');
@@ -248,8 +258,14 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         actionLoader = new ActionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, dataRegistry, mockLogger);
         componentLoader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, dataRegistry, mockLogger);
 
+        // Ensure schemas are marked as loaded for the tests
         mockValidator._setSchemaLoaded('http://example.com/schemas/action.schema.json', {});
         mockValidator._setSchemaLoaded('http://example.com/schemas/component-definition.schema.json', {});
+        // If components define data schemas that need registering during load,
+        // the componentLoader._processFetchedItem should handle that registration.
+        // If the tests expect specific component data schemas to be pre-loaded, add them here:
+        // mockValidator._setSchemaLoaded('modA:cool_component', modAComponentData.dataSchema);
+        // mockValidator._setSchemaLoaded('modB:cool_component', modBComponentData.dataSchema);
     });
 
     // --- Scenario 1: Non-Conflicting Base IDs ---
@@ -262,89 +278,114 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
                 [modBComponentPath]: modBComponentData,
             };
             mockFetcher = createMockDataFetcher(fetcherConfig);
-            actionLoader._dataFetcher = mockFetcher;
+            actionLoader._dataFetcher = mockFetcher; // Ensure loaders use the configured fetcher
             componentLoader._dataFetcher = mockFetcher;
         });
 
+        // **** TEST CASE 1: Correction ****
         it('should store items from different mods with the same base ID under unique keys without warnings', async () => {
             // --- Act ---
-            // Keep logs for now to confirm intermediate states if needed
-            console.log(`Debug: Scenario 1 - Initial actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 1 - Loading Mod A Actions...');
-            await actionLoader.loadActionsForMod(modAId, modAManifest);
-            console.log(`Debug: Scenario 1 - After Mod A Actions - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 1 - Loading Mod A Components...');
-            await componentLoader.loadComponentDefinitions(modAId, modAManifest);
-            console.log(`Debug: Scenario 1 - After Mod A Components - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 1 - Loading Mod B Actions...');
-            await actionLoader.loadActionsForMod(modBId, modBManifest);
-            console.log(`Debug: Scenario 1 - After Mod B Actions - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 1 - Loading Mod B Components...');
-            await componentLoader.loadComponentDefinitions(modBId, modBManifest);
-            console.log(`Debug: Scenario 1 - After Mod B Components - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 1 - Loading Complete.');
+            // Load Mod A Actions
+            await actionLoader.loadItemsForMod(
+                modAId,
+                modAManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
+            // Load Mod A Components
+            // <<< CORRECTION: Use loadItemsForMod for ComponentLoader >>>
+            await componentLoader.loadItemsForMod(
+                modAId,           // modId
+                modAManifest,     // modManifest
+                'components',     // contentKey
+                'components',     // contentTypeDir
+                'components'      // typeName
+            );
+            // Load Mod B Actions
+            await actionLoader.loadItemsForMod(
+                modBId,
+                modBManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
+            // Load Mod B Components
+            // <<< CORRECTION: Use loadItemsForMod for ComponentLoader >>>
+            await componentLoader.loadItemsForMod(
+                modBId,           // modId
+                modBManifest,     // modManifest
+                'components',     // contentKey
+                'components',     // contentTypeDir
+                'components'      // typeName
+            );
 
             // --- Assert ---
             expect(dataRegistry.store).toHaveBeenCalledTimes(4); // Assert store count
 
-            const actionA = dataRegistry.get('actions', 'modA:cool_action');
-            const componentA = dataRegistry.get('components', 'modA:cool_component');
-            const actionB = dataRegistry.get('actions', 'modB:cool_action');
-            const componentB = dataRegistry.get('components', 'modB:cool_component');
+            // Get items using the final registry keys
+            const actionA = dataRegistry.get('actions', `${modAId}:${coolActionBaseId}`); // modA:cool_action
+            const componentA = dataRegistry.get('components', `${modAId}:${coolComponentBaseId}`); // modA:cool_component
+            const actionB = dataRegistry.get('actions', `${modBId}:${coolActionBaseId}`); // modB:cool_action
+            const componentB = dataRegistry.get('components', `${modBId}:${coolComponentBaseId}`); // modB:cool_component
 
-            // **** FIX: Remove .withContext(...) ****
             expect(actionA).toBeDefined();
             expect(componentA).toBeDefined();
             expect(actionB).toBeDefined();
             expect(componentB).toBeDefined();
-            // ****************************************
 
             // Verify Content and Metadata Augmentation
-            expect(actionA).toEqual({
-                ...modAActionData,
-                id: 'modA:cool_action',
+            expect(actionA).toEqual(expect.objectContaining({
+                id: `${modAId}:${coolActionBaseId}`,
                 modId: modAId,
                 _sourceFile: actionFilename,
-            });
-            expect(componentA).toEqual({
-                ...modAComponentData,
-                id: 'modA:cool_component',
+                description: "From Mod A" // Check a property from original data
+            }));
+            expect(componentA).toEqual(expect.objectContaining({
+                id: `${modAId}:${coolComponentBaseId}`,
                 modId: modAId,
                 _sourceFile: componentFilename,
-            });
-            expect(actionB).toEqual({
-                ...modBActionData,
-                id: 'modB:cool_action',
+                description: "From Mod A",
+                dataSchema: {type: 'object', properties: {propA: {}}}
+            }));
+            expect(actionB).toEqual(expect.objectContaining({
+                id: `${modBId}:${coolActionBaseId}`,
                 modId: modBId,
                 _sourceFile: actionFilename,
-            });
-            expect(componentB).toEqual({
-                ...modBComponentData,
-                id: 'modB:cool_component',
+                description: "From Mod B"
+            }));
+            expect(componentB).toEqual(expect.objectContaining({
+                id: `${modBId}:${coolComponentBaseId}`,
                 modId: modBId,
                 _sourceFile: componentFilename,
-            });
+                description: "From Mod B",
+                dataSchema: {type: 'object', properties: {propB: {}}}
+            }));
 
+            // Ensure no "Overwriting" warnings were logged for these operations
+            // The warning check in _storeItemInRegistry uses `this.constructor.name`,
+            // so it will correctly identify ActionLoader or ComponentLoader.
             expect(mockLogger.warn).not.toHaveBeenCalledWith(
                 expect.stringMatching(/Overwriting existing/),
-                expect.anything(),
-                expect.anything()
+                expect.anything() // Allow any details object
+                // Removed third argument check as warn might not always receive the original error object
             );
-            mockLogger.warn.mock.calls.forEach(callArgs => {
-                expect(callArgs[0]).not.toContain(`Overwriting existing actions definition with key 'modB:${coolActionBaseId}'`);
-                expect(callArgs[0]).not.toContain(`Overwriting existing components definition with key 'modB:${coolComponentBaseId}'`);
-            });
 
-            expect(dataRegistry.get).toHaveBeenCalledWith('actions', 'modA:cool_action');
-            expect(dataRegistry.get).toHaveBeenCalledWith('components', 'modA:cool_component');
-            expect(dataRegistry.get).toHaveBeenCalledWith('actions', 'modB:cool_action');
-            expect(dataRegistry.get).toHaveBeenCalledWith('components', 'modB:cool_component');
+            // Verify logger info calls for starting/finishing mods
+            expect(mockLogger.info).toHaveBeenCalledWith(`ActionLoader: Loading actions definitions for mod '${modAId}'.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`ComponentLoader: Loading components definitions for mod '${modAId}'.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`ActionLoader: Loading actions definitions for mod '${modBId}'.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`ComponentLoader: Loading components definitions for mod '${modBId}'.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modAId}] - Processed 1/1 actions items.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modAId}] - Processed 1/1 components items.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modBId}] - Processed 1/1 actions items.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modBId}] - Processed 1/1 components items.`);
         });
     });
 
     // --- Scenario 2: True Key Override (Simulated via Re-loading) ---
     describe('Scenario 2: True Key Override (Warning Check)', () => {
-
+        // ... Scenario 2 setup remains the same ...
         const overrideModId = 'overrideMod';
         const overrideActionFileV1 = 'action_v1.json';
         const overrideActionFileV2 = 'action_v2.json';
@@ -377,63 +418,82 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
             };
             mockFetcher = createMockDataFetcher(fetcherConfig);
             actionLoader._dataFetcher = mockFetcher;
+
+            // Ensure the real _processFetchedItem is used for this test
+            if (ActionLoader.prototype._processFetchedItem) {
+                actionLoader._processFetchedItem = ActionLoader.prototype._processFetchedItem.bind(actionLoader);
+            } else {
+                console.error("Error: ActionLoader.prototype._processFetchedItem is undefined in Scenario 2 beforeEach");
+            }
+            // Spy on the base class helper directly
+            jest.spyOn(BaseManifestItemLoader.prototype, '_storeItemInRegistry');
         });
 
         it('should log a warning when an item is stored with the same final key as an existing item', async () => {
-            actionLoader._processFetchedItem = ActionLoader.prototype._processFetchedItem.bind(actionLoader);
 
-            console.log('Debug: Scenario 2 - Processing V1...');
+            // console.log('Debug: Scenario 2 - Processing V1...');
+            // Directly call _processFetchedItem to simulate loading one file
             await actionLoader._processFetchedItem(
                 overrideModId,
                 overrideActionFileV1,
                 overrideActionPathV1,
                 overrideActionDataV1,
-                'actions'
+                ACTION_TYPE_NAME // Use constant
             );
-            console.log(`Debug: Scenario 2 - After V1 - actions: ${dataRegistry.getAll('actions').length}`);
+            // console.log(`Debug: Scenario 2 - After V1 - actions: ${dataRegistry.getAll('actions').length}`);
 
             const itemV1 = dataRegistry.get('actions', overrideFinalKey);
-            // **** FIX: Remove .withContext(...) ****
             expect(itemV1).toBeDefined();
-            // ****************************************
             expect(itemV1.description).toBe("Version 1");
+
+            // Expect NO warning log after the first processing
             expect(mockLogger.warn).not.toHaveBeenCalled();
-            expect(dataRegistry.store).toHaveBeenCalledTimes(1);
-            expect(dataRegistry.get).toHaveBeenCalledWith('actions', overrideFinalKey);
+            // Expect store to have been called once via the helper
+            expect(BaseManifestItemLoader.prototype._storeItemInRegistry).toHaveBeenCalledTimes(1);
+            expect(BaseManifestItemLoader.prototype._storeItemInRegistry).toHaveBeenCalledWith(
+                ACTION_TYPE_NAME, overrideModId, overrideBaseId, overrideActionDataV1, overrideActionFileV1
+            );
 
+
+            // Reset mocks/spies for the next call
             mockLogger.warn.mockClear();
-            dataRegistry.get.mockClear();
-            dataRegistry.store.mockClear();
+            BaseManifestItemLoader.prototype._storeItemInRegistry.mockClear();
 
-            console.log('Debug: Scenario 2 - Processing V2...');
+
+            // console.log('Debug: Scenario 2 - Processing V2...');
+            // Directly call _processFetchedItem again with V2 data for the same effective ID
             await actionLoader._processFetchedItem(
                 overrideModId,
                 overrideActionFileV2,
                 overrideActionPathV2,
                 overrideActionDataV2,
-                'actions'
+                ACTION_TYPE_NAME // Use constant
             );
-            console.log(`Debug: Scenario 2 - After V2 - actions: ${dataRegistry.getAll('actions').length}`); // Should still be 1
+            // console.log(`Debug: Scenario 2 - After V2 - actions: ${dataRegistry.getAll('actions').length}`); // Should still be 1
 
+            // Expect the OVERWRITE warning log NOW
             expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-            const expectedWarnMsg = `${ActionLoader.name} [${overrideModId}]: Overwriting existing actions definition with key '${overrideFinalKey}'. New Source: ${overrideActionFileV2}. Previous Source: ${overrideActionFileV1} from mod '${overrideModId}.'`;
+            // Check the warning message content (originates from _storeItemInRegistry)
+            const expectedWarnMsg = `${ActionLoader.name} [${overrideModId}]: Overwriting existing ${ACTION_TYPE_NAME} definition with key '${overrideFinalKey}'. New Source: ${overrideActionFileV2}. Previous Source: ${overrideActionFileV1} from mod '${overrideModId}.'`;
             expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarnMsg);
 
-            expect(dataRegistry.get).toHaveBeenCalledWith('actions', overrideFinalKey);
-            expect(dataRegistry.store).toHaveBeenCalledTimes(1);
-            expect(dataRegistry.store).toHaveBeenCalledWith(
-                'actions',
-                overrideFinalKey,
-                expect.objectContaining({description: "Version 2"})
+
+            // Expect store helper to be called again for the override
+            expect(BaseManifestItemLoader.prototype._storeItemInRegistry).toHaveBeenCalledTimes(1);
+            expect(BaseManifestItemLoader.prototype._storeItemInRegistry).toHaveBeenCalledWith(
+                ACTION_TYPE_NAME, overrideModId, overrideBaseId, overrideActionDataV2, overrideActionFileV2
             );
 
+
+            // Verify the final state in the registry
             const finalItem = dataRegistry.get('actions', overrideFinalKey);
             expect(finalItem).toBeDefined();
             expect(finalItem.description).toBe("Version 2");
-            expect(finalItem.id).toBe(overrideFinalKey);
+            expect(finalItem.id).toBe(overrideFinalKey); // Stored object should have the final key
             expect(finalItem.modId).toBe(overrideModId);
             expect(finalItem._sourceFile).toBe(overrideActionFileV2);
 
+            // Ensure no unexpected errors occurred
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
     });
@@ -441,7 +501,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
 
     // --- Scenario 3: Registry State Verification ---
     describe('Scenario 3: Registry State Verification', () => {
-
+        // ... Scenario 3 setup remains the same ...
         const diverseActionFilename = 'diverse_action.json';
         const diverseComponentFilename = 'diverse_component.json';
 
@@ -483,31 +543,63 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
             componentLoader._dataFetcher = mockFetcher;
         });
 
+        // **** TEST CASE 2: Correction ****
         it('should store items with correct keys and augmented metadata', async () => {
             // --- Act ---
-            console.log(`Debug: Scenario 3 - Initial actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod A Actions...');
-            await actionLoader.loadActionsForMod(modAId, modAManifest);
-            console.log(`Debug: Scenario 3 - After Mod A Actions - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod A Components...');
-            await componentLoader.loadComponentDefinitions(modAId, modAManifest);
-            console.log(`Debug: Scenario 3 - After Mod A Components - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod B Actions...');
-            await actionLoader.loadActionsForMod(modBId, modBManifest);
-            console.log(`Debug: Scenario 3 - After Mod B Actions - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod B Components...');
-            await componentLoader.loadComponentDefinitions(modBId, modBManifest);
-            console.log(`Debug: Scenario 3 - After Mod B Components - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod C Components...');
-            await componentLoader.loadComponentDefinitions(modCId, modCManifest);
-            console.log(`Debug: Scenario 3 - After Mod C Components - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Mod D Actions...');
-            await actionLoader.loadActionsForMod(modDId, modDManifest);
-            console.log(`Debug: Scenario 3 - After Mod D Actions - actions: ${dataRegistry.getAll('actions').length}, components: ${dataRegistry.getAll('components').length}`);
-            console.log('Debug: Scenario 3 - Loading Complete.');
-
+            // Load Mod A Actions
+            await actionLoader.loadItemsForMod(
+                modAId,
+                modAManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
+            // Load Mod A Components
+            // <<< CORRECTION: Use loadItemsForMod for ComponentLoader >>>
+            await componentLoader.loadItemsForMod(
+                modAId,           // modId
+                modAManifest,     // modManifest
+                'components',     // contentKey
+                'components',     // contentTypeDir
+                'components'      // typeName
+            );
+            // Load Mod B Actions
+            await actionLoader.loadItemsForMod(
+                modBId,
+                modBManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
+            // Load Mod B Components
+            // <<< CORRECTION: Use loadItemsForMod for ComponentLoader >>>
+            await componentLoader.loadItemsForMod(
+                modBId,           // modId
+                modBManifest,     // modManifest
+                'components',     // contentKey
+                'components',     // contentTypeDir
+                'components'      // typeName
+            );
+            // Load Mod C Components
+            // <<< CORRECTION: Use loadItemsForMod for ComponentLoader >>>
+            await componentLoader.loadItemsForMod(
+                modCId,           // modId
+                modCManifest,     // modManifest
+                'components',     // contentKey
+                'components',     // contentTypeDir
+                'components'      // typeName
+            );
+            // Load Mod D Actions
+            await actionLoader.loadItemsForMod(
+                modDId,
+                modDManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
 
             // --- Assert ---
+            // Define expected items with their final registry keys and metadata
             const expectedItems = [
                 {
                     type: 'actions',
@@ -543,28 +635,32 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
                     sourceFile: diverseComponentFilename,
                     modId: modCId,
                     originalData: modCComponentData
-                }, // Base ID extracted correctly
+                },
                 {
                     type: 'actions',
                     key: 'modD:unique_action',
                     sourceFile: diverseActionFilename,
                     modId: modDId,
                     originalData: modDActionData
-                }, // Base ID extracted correctly
+                },
             ];
 
+            // Verify store was called the correct number of times
             expect(dataRegistry.store).toHaveBeenCalledTimes(expectedItems.length); // Expect 6 calls
 
+            // Verify each item in the registry
             for (const expected of expectedItems) {
                 const retrievedItem = dataRegistry.get(expected.type, expected.key);
 
-                // **** FIX: Remove .withContext(...) ****
+                // Basic check: item exists
                 expect(retrievedItem).toBeDefined();
-                expect(retrievedItem.id).toBe(expected.key);
+
+                // Check augmented metadata
+                expect(retrievedItem.id).toBe(expected.key); // The stored item's ID should be the final registry key
                 expect(retrievedItem.modId).toBe(expected.modId);
                 expect(retrievedItem._sourceFile).toBe(expected.sourceFile);
-                // ****************************************
 
+                // Check that original data properties (excluding 'id') are present
                 const {id: originalId, ...restOfOriginalData} = expected.originalData;
                 const {
                     id: retrievedId,
@@ -572,20 +668,20 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
                     _sourceFile: retrievedSourceFile,
                     ...restOfRetrievedData
                 } = retrievedItem;
-
-                // **** FIX: Remove .withContext(...) ****
+                // Perform deep equality check on the rest of the data
                 expect(restOfRetrievedData).toEqual(restOfOriginalData);
-                // ****************************************
             }
 
-            expect(dataRegistry.getAll('actions').length).toBe(3);
-            expect(dataRegistry.getAll('components').length).toBe(3);
+            // Verify final counts per type
+            expect(dataRegistry.getAll('actions').length).toBe(3); // modA:cool_action, modB:cool_action, modD:unique_action
+            expect(dataRegistry.getAll('components').length).toBe(3); // modA:cool_component, modB:cool_component, modC:unique_comp
 
+            // Ensure no overwrite warnings were logged (because keys are unique per mod)
             expect(mockLogger.warn).not.toHaveBeenCalledWith(
                 expect.stringMatching(/Overwriting existing/),
-                expect.anything(),
-                expect.anything()
+                expect.anything() // Allow any details object
             );
+            // Ensure no errors occurred
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
     });

@@ -312,7 +312,13 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     // --- Test Case ---
     it('should handle errors during registry storage', async () => {
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, manifest);
+        const loadPromise = loader.loadItemsForMod(
+            modId,           // 'storeFailMod'
+            manifest,        // The mock manifest
+            'components',    // contentKey
+            'components',    // contentTypeDir
+            'components'     // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();

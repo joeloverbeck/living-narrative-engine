@@ -69,6 +69,7 @@ const createMockSchemaValidator = () => {
 
     return {
         validate: jest.fn().mockImplementation((schemaId, data) => {
+            // Use the mock function only if it's the correct, loaded schema
             if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn(data);
             }
@@ -78,11 +79,14 @@ const createMockSchemaValidator = () => {
         removeSchema: jest.fn().mockReturnValue(true), // Added for completeness if Base needs it
         isSchemaLoaded: jest.fn().mockImplementation((schemaId) => loadedSchemas.has(schemaId)), // Use map
         getValidator: jest.fn().mockImplementation((schemaId) => {
+            // Return the mock function only if it's the correct, loaded schema
             if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn;
             }
             return undefined; // No validator for other schemas by default
         }),
+        // --- Base class constructor requires these ---
+        getModsBasePath: jest.fn().mockReturnValue('mods'),
         // Expose the internal mock function for configuration/assertion
         _mockValidatorFn: mockValidatorFn,
     };
@@ -94,10 +98,11 @@ const createMockDataRegistry = () => ({
     get: jest.fn().mockReturnValue(undefined), // Default: rule does not exist
     // --- Methods required by Base constructor ---
     getAll: jest.fn(() => []),
-    getAllSystemRules: jest.fn().mockReturnValue([]),
     clear: jest.fn(),
     getManifest: jest.fn().mockReturnValue(null),
     setManifest: jest.fn(),
+    // --- RuleLoader specific ---
+    getAllSystemRules: jest.fn().mockReturnValue([]),
     // Add specific getters if needed by other parts, defaulting to undefined
     getEntityDefinition: jest.fn().mockReturnValue(undefined),
     getItemDefinition: jest.fn().mockReturnValue(undefined),
@@ -130,7 +135,8 @@ const createMockLogger = (overrides = {}) => ({
 
 // --- Test Suite ---
 
-describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesForMod)', () => {
+// *** UPDATED describe block title slightly ***
+describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
 
     // --- Mocks & Loader Instance (shared across this sub-ticket suite) ---
     /** @type {IConfiguration} */
@@ -150,6 +156,14 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
     /** @type {jest.Mock} */
     let mockRuleValidatorFn; // Reference to the mock validator function
 
+    // --- Shared Test Data ---
+    const modId = 'test-mod-processing';
+    // *** Define constants for RuleLoader specific args ***
+    const RULE_CONTENT_KEY = 'rules';
+    const RULE_CONTENT_DIR = 'system-rules';
+    const RULE_TYPE_NAME = 'system-rules';
+    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+
     // --- Shared Setup (run before each test in this suite) ---
     beforeEach(() => {
         jest.clearAllMocks();
@@ -163,16 +177,16 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
         mockLogger = createMockLogger();
         mockRuleValidatorFn = mockValidator._mockValidatorFn; // Get reference
 
-        // Ensure rule schema ID is configured
-        const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+        // Ensure rule schema ID is configured via base method
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-            typeName === 'system-rules' ? ruleSchemaId : undefined
+            typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
         );
+        // Mock specific getter if RuleLoader uses it
         mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
 
 
         // Reset common mocks
-        mockRuleValidatorFn.mockImplementation((data) => ({isValid: true})); // Default pass validation
+        mockRuleValidatorFn.mockImplementation(() => ({isValid: true, errors: null})); // Default pass validation
         mockRegistry.get.mockReturnValue(undefined); // Default: no rule exists yet
 
         // Instantiate the loader
@@ -189,13 +203,11 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
 
     describe('Ticket 4.5.1: Happy Path Rule Processing', () => {
         // --- Test Specific Data ---
-        const modId = 'test-mod-happy';
-        const ruleType = 'system-rules';
         const fileA = 'ruleA.json';
         const fileBRelative = 'subdir/ruleB.json';
         const fileBBasename = 'ruleB'; // Basename without extension for ID fallback
-        const resolvedPathA = `/abs/path/to/mods/${modId}/${ruleType}/${fileA}`;
-        const resolvedPathB = `/abs/path/to/mods/${modId}/${ruleType}/${fileBRelative}`;
+        const resolvedPathA = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileA}`;
+        const resolvedPathB = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileBRelative}`;
 
         const ruleDataA = {
             rule_id: 'ruleA_id', // Explicit ID
@@ -214,7 +226,8 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
             version: '1.0.0',
             name: 'Happy Path Test Mod',
             content: {
-                rules: [fileA, `  ${fileBRelative}  `] // Include whitespace
+                // Use constant for key
+                [RULE_CONTENT_KEY]: [fileA, `  ${fileBRelative}  `] // Include whitespace
             }
         };
 
@@ -239,9 +252,9 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
         it('should successfully process multiple valid rules from manifest', async () => {
             // Arrange: Configure mocks specific to this test case
             mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
-                if (mId === modId && type === ruleType && file === fileA) return resolvedPathA;
+                if (mId === modId && type === RULE_CONTENT_DIR && file === fileA) return resolvedPathA;
                 // Base class trims the filename before resolving
-                if (mId === modId && type === ruleType && file === fileBRelative.trim()) return resolvedPathB;
+                if (mId === modId && type === RULE_CONTENT_DIR && file === fileBRelative.trim()) return resolvedPathB;
                 throw new Error(`Unexpected path resolution call: ${mId}, ${type}, ${file}`);
             });
 
@@ -253,13 +266,20 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
             });
 
             // Act
-            const count = await loader.loadRulesForMod(modId, manifest);
+            // *** UPDATED: Call loadItemsForMod ***
+            const count = await loader.loadItemsForMod(
+                modId,
+                manifest,
+                RULE_CONTENT_KEY,
+                RULE_CONTENT_DIR,
+                RULE_TYPE_NAME
+            );
 
             // Assert
             // Verify IPathResolver.resolveModContentPath calls
             expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
-            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, ruleType, fileA);
-            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, ruleType, fileBRelative.trim()); // Trimmed filename
+            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, RULE_CONTENT_DIR, fileA);
+            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, RULE_CONTENT_DIR, fileBRelative.trim()); // Trimmed filename
 
             // Verify IDataFetcher.fetch calls
             expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
@@ -268,36 +288,34 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
 
             // Verify ISchemaValidator interactions
             expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per rule processed
-            expect(mockValidator.getValidator).toHaveBeenCalledWith('http://example.com/schemas/system-rule.schema.json');
+            expect(mockValidator.getValidator).toHaveBeenCalledWith(ruleSchemaId);
             expect(mockRuleValidatorFn).toHaveBeenCalledTimes(2);
             // Schema validator is called with the ORIGINAL data before augmentation
             expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(ruleDataA));
             expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(ruleDataB));
 
-            // Verify IDataRegistry.store calls
-            // --- CORRECTION: Use the expected AUGMENTED data ---
+            // Verify IDataRegistry.store calls with AUGMENTED data
             expect(mockRegistry.store).toHaveBeenCalledTimes(2);
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,                         // category
+                RULE_TYPE_NAME,                   // category
                 `${modId}:${ruleDataA.rule_id}`,  // finalRegistryKey (modId:baseRuleId)
                 expectedStoredDataA               // The augmented data object
             );
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,                       // category
+                RULE_TYPE_NAME,                 // category
                 `${modId}:${fileBBasename}`,    // finalRegistryKey (modId:baseRuleId - fallback)
                 expectedStoredDataB             // The augmented data object
             );
-            // --- END CORRECTION ---
 
             // Verify return value
             expect(count).toBe(2);
 
-            // Verify logging (remains the same)
+            // Verify logging
             expect(mockLogger.info).toHaveBeenCalledWith(
-                expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`)
+                `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
             );
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `Mod [${modId}] - Processed 2/2 rules items.`
+                `Mod [${modId}] - Processed 2/2 ${RULE_CONTENT_KEY} items.`
             );
             expect(mockLogger.warn).not.toHaveBeenCalled();
             expect(mockLogger.error).not.toHaveBeenCalled();

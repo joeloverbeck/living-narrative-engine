@@ -67,6 +67,8 @@ const createMockSchemaValidator = () => {
             return {isValid: true, errors: null};
         }),
         addSchema: jest.fn().mockResolvedValue(undefined),
+        // --- Base class constructor requires these ---
+        removeSchema: jest.fn().mockReturnValue(true),
         isSchemaLoaded: jest.fn().mockImplementation((schemaId) => loadedSchemas.has(schemaId)),
         getValidator: jest.fn().mockImplementation((schemaId) => {
             if (loadedSchemas.has(schemaId) && schemaId === ruleSchemaId) {
@@ -100,7 +102,8 @@ const createMockLogger = (overrides = {}) => ({
 });
 
 // --- Test Suite for Fetch Failure Handling ---
-describe('RuleLoader - Fetch Failure Handling', () => {
+// *** UPDATED describe block title slightly ***
+describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
     /** @type {IConfiguration} */
     let mockConfig;
     /** @type {IPathResolver} */
@@ -116,6 +119,15 @@ describe('RuleLoader - Fetch Failure Handling', () => {
     /** @type {RuleLoader} */
     let loader;
 
+    // --- Shared Test Data ---
+    const modId = 'test-mod-fetch-fail';
+    // *** Define constants for RuleLoader specific args ***
+    const RULE_CONTENT_KEY = 'rules';
+    const RULE_CONTENT_DIR = 'system-rules';
+    const RULE_TYPE_NAME = 'system-rules';
+    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+
+
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -126,11 +138,11 @@ describe('RuleLoader - Fetch Failure Handling', () => {
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
 
-        // Ensure rule schema ID is configured
-        const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+        // Ensure rule schema ID is configured via base method
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-            typeName === 'system-rules' ? ruleSchemaId : undefined
+            typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
         );
+        // Mock specific getter if RuleLoader uses it
         mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
 
         // Default validation pass for the mock validator
@@ -150,13 +162,11 @@ describe('RuleLoader - Fetch Failure Handling', () => {
     });
 
     describe('Ticket 4.5.2: Fetch Failure Handling', () => {
-        const modId = 'test-mod-fetch-fail';
-        const ruleType = 'system-rules';
         const fileOK = 'ruleOK.json';
         const fileFail = 'ruleFail.json';
         const fileOKName = 'ruleOK'; // For derived ID
-        const resolvedPathOK = `/abs/path/to/mods/${modId}/${ruleType}/${fileOK}`;
-        const resolvedPathFail = `/abs/path/to/mods/${modId}/${ruleType}/${fileFail}`;
+        const resolvedPathOK = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileOK}`;
+        const resolvedPathFail = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileFail}`;
 
         const ruleDataOK = {
             // No rule_id, let RuleLoader derive it from filename
@@ -172,15 +182,16 @@ describe('RuleLoader - Fetch Failure Handling', () => {
             version: '1.0.0',
             name: 'Fetch Failure Test Mod',
             content: {
-                rules: [fileOK, fileFail] // Order matters for predictable processing
+                // Use constant for key
+                [RULE_CONTENT_KEY]: [fileOK, fileFail] // Order matters for predictable processing
             }
         };
 
         it('should log fetch errors, skip failed files, process valid ones, and return correct count', async () => {
             // Arrange: Configure mocks specific to this test case
             mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
-                if (mId === modId && type === ruleType && file === fileOK) return resolvedPathOK;
-                if (mId === modId && type === ruleType && file === fileFail) return resolvedPathFail;
+                if (mId === modId && type === RULE_CONTENT_DIR && file === fileOK) return resolvedPathOK;
+                if (mId === modId && type === RULE_CONTENT_DIR && file === fileFail) return resolvedPathFail;
                 throw new Error(`Unexpected path resolution call: ${mId}, ${type}, ${file}`);
             });
 
@@ -196,7 +207,14 @@ describe('RuleLoader - Fetch Failure Handling', () => {
             });
 
             // Act
-            const count = await loader.loadRulesForMod(modId, manifest);
+            // *** UPDATED: Call loadItemsForMod ***
+            const count = await loader.loadItemsForMod(
+                modId,
+                manifest,
+                RULE_CONTENT_KEY,
+                RULE_CONTENT_DIR,
+                RULE_TYPE_NAME
+            );
 
             // Assert
             // Verify fetch attempts
@@ -206,13 +224,13 @@ describe('RuleLoader - Fetch Failure Handling', () => {
 
             // Verify error log for the failed file (logged by BaseManifestItemLoader._processFileWrapper)
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
-            // --- CORRECTION 1: Match the actual log call ---
             expect(mockLogger.error).toHaveBeenCalledWith(
                 'Error processing file:', // Actual message
                 expect.objectContaining({ // Check context object structure
                     modId: modId,
                     filename: fileFail,
                     path: resolvedPathFail,
+                    typeName: RULE_TYPE_NAME, // Type name should be logged
                     error: fetchError.message // Base class logs the message string here
                 }),
                 fetchError // Base class passes the full error object as the third argument
@@ -220,10 +238,16 @@ describe('RuleLoader - Fetch Failure Handling', () => {
 
             // Verify registry store for the successful file only
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
+            const expectedStoredDataOK = { // Calculate expected stored data with augmentations
+                ...ruleDataOK,
+                id: expectedRuleIdOK,
+                modId: modId,
+                _sourceFile: fileOK
+            };
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,
+                RULE_TYPE_NAME,
                 expectedRuleIdOK, // Expect the ID derived from filename
-                expect.objectContaining(ruleDataOK) // Check data content
+                expectedStoredDataOK // Expect the augmented data
             );
             // Ensure store wasn't called for the failed file
             expect(mockRegistry.store).not.toHaveBeenCalledWith(
@@ -235,30 +259,22 @@ describe('RuleLoader - Fetch Failure Handling', () => {
             // Verify return count
             expect(count).toBe(1); // Only one rule was successfully processed
 
-            // --- CORRECTION 2: Check actual summary logs ---
-            // Verify the final summary log from BaseManifestItemLoader
+            // Verify summary logs
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `Mod [${modId}] - Processed 1/2 rules items. (1 failed)`
+                `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log
             );
-            // Ensure the initial delegation log was also called
             expect(mockLogger.info).toHaveBeenCalledWith(
-                expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`)
-            );
-            // Ensure non-existent logs weren't called
-            expect(mockLogger.warn).not.toHaveBeenCalledWith( // This specific warning doesn't exist
-                expect.stringContaining(`Processed 1 out of 2 rule files successfully`)
-            );
-            expect(mockLogger.info).not.toHaveBeenCalledWith( // This info log doesn't exist
-                expect.stringContaining(`Loading 2 rule file(s)`)
-            );
-            expect(mockLogger.info).not.toHaveBeenCalledWith( // This specific success wording isn't used
-                expect.stringContaining(`Successfully processed and registered all`)
+                `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)` // Final summary log
             );
 
             // Verify debug log for the failed file processing (logged by BaseManifestItemLoader)
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `[${modId}] Failed processing ${fileFail}. Reason: ${fetchError.message}`
             );
+
+            // Ensure no warnings
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+
         });
     });
 });

@@ -71,34 +71,12 @@ class RuleLoader extends BaseManifestItemLoader {
         // Don't import 'path' here yet.
     }
 
-    /**
-     * Loads system rules defined in a specific mod's manifest.
-     * This public method acts as the entry point for loading rules for a given mod.
-     * It delegates the core logic of finding, fetching, and processing rule files
-     * to the base class's `_loadItemsInternal` method, ensuring consistency with
-     * other content loaders.
-     *
-     * @param {string} modId - The unique identifier of the mod whose rules are to be loaded.
-     * @param {ModManifest} manifest - The parsed manifest object for the specified mod.
-     * @returns {Promise<number>} A promise that resolves with the count of successfully loaded and registered rules for the mod.
-     * @throws {Error} If the `modId` or `manifest` is invalid.
-     * @async
+    // --- METHOD REMOVED: loadRulesForMod ---
+    /*
+     * Removed the loadRulesForMod method and its JSDoc comments as per REFACTOR-LOADER-2.
+     * The generic loadItemsForMod in the base class should be used instead.
      */
-    async loadRulesForMod(modId, manifest) {
-        if (!modId || typeof modId !== 'string' || modId.trim() === '') {
-            this._logger.error(`RuleLoader: Invalid modId provided to loadRulesForMod. ModId: ${modId}`);
-            throw new Error('Invalid modId provided to RuleLoader.loadRulesForMod.');
-        }
-        if (!manifest || typeof manifest !== 'object') {
-            this._logger.error(`RuleLoader [${modId}]: Invalid manifest provided to loadRulesForMod.`);
-            throw new Error(`Invalid manifest provided for mod '${modId}' to RuleLoader.loadRulesForMod.`);
-        }
 
-        this._logger.info(`RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`);
-        // Pass 'rules' as the contentKey, 'system-rules' as the directory, and 'system-rules' as the typeName
-        // TICKET REFACTOR-1.4 specifies 'system-rules' as the category for storage, so we use it as typeName here.
-        return this._loadItemsInternal(modId, manifest, 'rules', 'system-rules', 'system-rules');
-    }
 
     /**
      * @private
@@ -267,7 +245,9 @@ class RuleLoader extends BaseManifestItemLoader {
             this._logger.debug(`RuleLoader: Loading rules for mod: ${modId}`);
             try {
                 // Await loading for the current mod
-                const count = await this.loadRulesForMod(modId, manifest);
+                // --- UPDATED: Use the generic loadItemsForMod ---
+                const count = await this.loadItemsForMod(modId, manifest, 'rules', 'system-rules', 'system-rules');
+                // const count = await this.loadRulesForMod(modId, manifest); // OLD CALL REMOVED
                 totalRulesLoaded += count;
             } catch (error) {
                 // Log errors during a specific mod's rule loading but continue with others
@@ -284,18 +264,16 @@ class RuleLoader extends BaseManifestItemLoader {
         return totalRulesLoaded;
     }
 
-    /**
-     * DEPRECATED: Placeholder method for compatibility during refactoring.
-     * This method is no longer suitable for the mod-based loading system
-     * as it lacks the context of which mods to load. Use `loadAllRules(modsToLoad)` instead.
-     * @deprecated Use loadAllRules(modsToLoad) instead.
-     * @returns {Promise<number>} Resolves with 0.
+    // --- METHOD REMOVED: loadAll (Optional) ---
+    /*
+     * Removed the loadAll method as per REFACTOR-LOADER-2 (Optional AC).
+     * This method was incompatible with the per-mod loading model.
      */
-    async loadAll() {
-        this._logger.warn("RuleLoader.loadAll() is deprecated and likely non-functional in the new mod-based system. Use loadAllRules(modsToLoad) which requires the list of mods.");
-        // Return 0 as it cannot load anything without mod context.
-        return Promise.resolve(0);
-    }
+    // async loadAll() {
+    //     this._logger.warn("RuleLoader.loadAll() is deprecated and likely non-functional in the new mod-based system. Use loadAllRules(modsToLoad) which requires the list of mods.");
+    //     // Return 0 as it cannot load anything without mod context.
+    //     return Promise.resolve(0);
+    // }
 }
 
 export default RuleLoader;

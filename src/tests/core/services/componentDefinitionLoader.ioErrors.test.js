@@ -259,14 +259,21 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
             if (mId === modId && type === 'components' && fName === filename) {
                 throw pathError;
             }
-            // Fallback for potential other calls (just in case)
-            return `./data/mods/${mId}/${type}/${fName}`;
+            return `./data/mods/${mId}/${type}/${fName}`; // Fallback
         });
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,           // modId
+            errorManifest,   // modManifest
+            'components',    // contentKey
+            'components',    // contentTypeDir
+            'components'     // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
+        // Promise resolves because _loadItemsInternal uses Promise.allSettled
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
         expect(count).toBe(0); // No files were successfully loaded
@@ -274,45 +281,41 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         // --- Verify: No Fetch/Store/Schema Add ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
-        expect(mockValidator.addSchema).not.toHaveBeenCalled(); // addSchema is part of _processFetchedItem, which isn't reached
+        expect(mockValidator.addSchema).not.toHaveBeenCalled();
 
         // --- Verify: Error Logs ---
-        // *** FIX START: Expect only ONE error log from the wrapper ***
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-
-        // Check the single error log from BaseManifestItemLoader._processFileWrapper
+        // Path resolution fails within _processFileWrapper before _processFetchedItem
+        expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only the wrapper logs
         expect(mockLogger.error).toHaveBeenCalledWith(
-            "Error processing file:", // Exact message from the wrapper's catch block
+            "Error processing file:", // Exact message
             expect.objectContaining({
                 modId: modId,
                 filename: filename,
                 path: 'Path not resolved', // Path resolution failed
-                error: pathError?.message || String(pathError) // Check error message logged
+                typeName: 'components',    // typeName included
+                error: pathError.message   // Error message string
             }),
-            pathError // Check the full error object logged
+            pathError // Full error object
         );
-        // *** FIX END ***
 
         // --- Verify: Final Summary Log ---
-        // *** FIX START: Check info log for summary, not warn ***
+        // <<< MODIFIED EXPECTATION: Check info logs >>>
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentLoader: Loading component definitions for mod '${modId}'.` // Initial log
+            `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-            // Summary log from _loadItemsInternal
-            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)` // Summary log
         );
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected in this path
-        // *** FIX END ***
+        expect(mockLogger.warn).not.toHaveBeenCalled();
 
 
         // --- Verify Other Interactions ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
-        // Validator is checked at the start of _processFetchedItem, which isn't reached
-        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
-        expect(mockValidator.getValidator).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
-
+        // No validator methods should be called as the error happens before _processFetchedItem
+        expect(mockValidator.validate).not.toHaveBeenCalled();
+        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalled();
     });
 
 
@@ -335,58 +338,62 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
             if (path === filePath) {
                 throw fetchError;
             }
-            // Fallback for potential other calls
-            throw new Error(`Unexpected fetch call: ${path}`);
+            throw new Error(`Unexpected fetch call: ${path}`); // Fallback
         });
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, errorManifest);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,           // modId
+            errorManifest,   // modManifest
+            'components',    // contentKey
+            'components',    // contentTypeDir
+            'components'     // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
+        // Promise resolves because _loadItemsInternal uses Promise.allSettled
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
         expect(count).toBe(0);
 
         // --- Verify: No Store/Schema Add ---
         expect(mockRegistry.store).not.toHaveBeenCalled();
-        expect(mockValidator.addSchema).not.toHaveBeenCalled(); // Not reached
+        expect(mockValidator.addSchema).not.toHaveBeenCalled();
 
         // --- Verify: Error Logs ---
-        // *** FIX START: Expect only ONE error log from the wrapper ***
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-
-        // Check the single error log from BaseManifestItemLoader._processFileWrapper
+        // Fetch error occurs within _processFileWrapper before _processFetchedItem
+        expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only the wrapper logs
         expect(mockLogger.error).toHaveBeenCalledWith(
-            "Error processing file:", // Exact message from the wrapper's catch block
+            "Error processing file:", // Exact message
             expect.objectContaining({
                 modId: modId,
                 filename: filename,
-                path: filePath, // Path was resolved successfully
-                error: fetchError?.message || String(fetchError) // Check error message logged
+                path: filePath, // Path was resolved
+                typeName: 'components', // typeName included
+                error: fetchError.message // Error message string
             }),
-            fetchError // Check the full error object logged
+            fetchError // Full error object
         );
-        // *** FIX END ***
 
         // --- Verify: Final Summary Log ---
-        // *** FIX START: Check info log for summary, not warn ***
+        // <<< MODIFIED EXPECTATION: Check info logs >>>
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentLoader: Loading component definitions for mod '${modId}'.` // Initial log
+            `ComponentLoader: Loading components definitions for mod '${modId}'.` // Initial log
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-            // Summary log from _loadItemsInternal
-            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)` // Summary log
         );
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
-        // *** FIX END ***
+        expect(mockLogger.warn).not.toHaveBeenCalled();
 
         // --- Verify Other Interactions ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-        // Validator is checked at the start of _processFetchedItem, which isn't reached
-        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
-        expect(mockValidator.getValidator).not.toHaveBeenCalledWith(componentDefinitionSchemaId);
+        // No validator methods should be called as the error happens before _processFetchedItem
+        expect(mockValidator.validate).not.toHaveBeenCalled();
+        expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalled();
     });
 });

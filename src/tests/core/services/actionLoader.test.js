@@ -228,7 +228,7 @@ describe('ActionLoader', () => {
     });
 
     // --- loadActionsForMod Tests ---
-    describe('loadActionsForMod', () => {
+    describe('loadItemsForMod (Actions)', () => {
         const mockManifest = {
             id: TEST_MOD_ID,
             name: 'Test Action Mod',
@@ -254,15 +254,23 @@ describe('ActionLoader', () => {
                 }
             } else {
                 // Fallback if spy setup failed
-                console.warn("Could not mock _loadItemsInternal for loadActionsForMod tests");
+                console.warn("Could not mock _loadItemsInternal for loadItemsForMod (Actions) tests");
             }
         });
 
         it('should log the loading message', async () => {
             expect(actionLoader).toBeDefined(); // Ensure loader is available
-            await actionLoader.loadActionsForMod(TEST_MOD_ID, mockManifest);
+            // *** CORRECTION: Call loadItemsForMod instead of loadActionsForMod ***
+            await actionLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
+            // The log message comes from the base class method and uses the constructor name
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `ActionLoader: Loading action definitions for mod '${TEST_MOD_ID}'.` // Corrected log message
+                `ActionLoader: Loading ${ACTION_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.` // Log message from BaseManifestItemLoader.loadItemsForMod
             );
         });
 
@@ -270,8 +278,16 @@ describe('ActionLoader', () => {
             expect(actionLoader).toBeDefined();
             expect(actionLoader._loadItemsInternal).toBeDefined(); // Check spy exists
 
-            await actionLoader.loadActionsForMod(TEST_MOD_ID, mockManifest);
+            // *** CORRECTION: Call loadItemsForMod instead of loadActionsForMod ***
+            await actionLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
 
+            // The internal delegation remains the same
             expect(actionLoader._loadItemsInternal).toHaveBeenCalledTimes(1);
             expect(actionLoader._loadItemsInternal).toHaveBeenCalledWith(
                 TEST_MOD_ID,
@@ -284,7 +300,14 @@ describe('ActionLoader', () => {
 
         it('should return the result from _loadItemsInternal', async () => {
             expect(actionLoader).toBeDefined();
-            const result = await actionLoader.loadActionsForMod(TEST_MOD_ID, mockManifest);
+            // *** CORRECTION: Call loadItemsForMod instead of loadActionsForMod ***
+            const result = await actionLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
             expect(result).toBe(expectedLoadCount);
         });
 
@@ -294,12 +317,18 @@ describe('ActionLoader', () => {
             const loadError = new Error('Internal loading failed');
             actionLoader._loadItemsInternal.mockRejectedValue(loadError);
 
-            await expect(actionLoader.loadActionsForMod(TEST_MOD_ID, mockManifest))
-                .rejects.toThrow(loadError);
+            // *** CORRECTION: Call loadItemsForMod instead of loadActionsForMod ***
+            await expect(actionLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                mockManifest,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            )).rejects.toThrow(loadError);
 
             // Verify initial log still happened before the error
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `ActionLoader: Loading action definitions for mod '${TEST_MOD_ID}'.` // Corrected log message
+                `ActionLoader: Loading ${ACTION_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
             );
             // Base class or wrapper usually logs the error, not this method directly.
             // expect(mockLogger.error).toHaveBeenCalled();
@@ -316,9 +345,17 @@ describe('ActionLoader', () => {
             };
             actionLoader._loadItemsInternal.mockResolvedValue(0); // Simulate base class returning 0
 
-            const result = await actionLoader.loadActionsForMod(TEST_MOD_ID, manifestNoActions);
+            // *** CORRECTION: Call loadItemsForMod instead of loadActionsForMod ***
+            const result = await actionLoader.loadItemsForMod(
+                TEST_MOD_ID,
+                manifestNoActions,
+                ACTION_CONTENT_KEY,
+                ACTION_CONTENT_DIR,
+                ACTION_TYPE_NAME
+            );
 
             expect(result).toBe(0);
+            // Verify _loadItemsInternal was still called, even with no relevant content
             expect(actionLoader._loadItemsInternal).toHaveBeenCalledWith(
                 TEST_MOD_ID,
                 manifestNoActions,

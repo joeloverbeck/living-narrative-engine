@@ -61,25 +61,24 @@ const createMockSchemaValidator = () => {
     // This mock validator function should NOT be called in this test case
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
     const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const loadedSchemas = new Map(); // Start with no schemas loaded by default for this test
 
     return {
         validate: jest.fn().mockImplementation((schemaId, data) => {
-            if (schemaId === ruleSchemaId) {
-                return mockValidatorFn(data);
-            }
-            return {isValid: true, errors: null};
+            // This should not be called if isSchemaLoaded returns false
+            return {isValid: false, errors: [{message: "Validate should not have been called!"}]};
         }),
         addSchema: jest.fn().mockResolvedValue(undefined),
         // Default to true, will be overridden in the test
-        isSchemaLoaded: jest.fn().mockReturnValue(true),
+        isSchemaLoaded: jest.fn().mockReturnValue(true), // Default to true, override in test
         // getValidator should NOT be called if isSchemaLoaded is false
         getValidator: jest.fn().mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) {
-                return mockValidatorFn;
-            }
+            // This should not be called if isSchemaLoaded returns false
             return undefined;
         }),
-        // Expose the internal mock function for assertion
+        // --- Base class constructor requires these ---
+        removeSchema: jest.fn().mockReturnValue(true),
+        // Expose the internal mock function for assertion (though not used here)
         _mockValidatorFn: mockValidatorFn,
     };
 };
@@ -88,6 +87,12 @@ const createMockSchemaValidator = () => {
 const createMockDataRegistry = () => ({
     store: jest.fn(),
     get: jest.fn().mockReturnValue(undefined), // Default: rule does not exist
+    // --- Base class constructor requires these ---
+    getAll: jest.fn(() => []),
+    clear: jest.fn(),
+    getManifest: jest.fn().mockReturnValue(null),
+    setManifest: jest.fn(),
+    // --- RuleLoader specific ---
     getAllSystemRules: jest.fn().mockReturnValue([]),
 });
 
@@ -102,7 +107,8 @@ const createMockLogger = (overrides = {}) => ({
 
 // --- Test Suite ---
 
-describe('RuleLoader - Skip Validation Scenario', () => {
+// *** UPDATED describe block title slightly ***
+describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
 
     // --- Mocks & Loader Instance ---
     /** @type {IConfiguration} */
@@ -119,8 +125,15 @@ describe('RuleLoader - Skip Validation Scenario', () => {
     let mockLogger;
     /** @type {RuleLoader} */
     let loader;
-    /** @type {jest.Mock} */
-    let mockRuleValidatorFn; // Reference to the mock validator function
+
+    // --- Shared Test Data ---
+    const modId = 'test-mod-skip-validation';
+    // *** Define constants for RuleLoader specific args ***
+    const RULE_CONTENT_KEY = 'rules';
+    const RULE_CONTENT_DIR = 'system-rules';
+    const RULE_TYPE_NAME = 'system-rules';
+    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+
 
     // --- Shared Setup ---
     beforeEach(() => {
@@ -133,14 +146,13 @@ describe('RuleLoader - Skip Validation Scenario', () => {
         mockValidator = createMockSchemaValidator();
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
-        mockRuleValidatorFn = mockValidator._mockValidatorFn; // Get reference
 
         // Common mock setup, ISchemaLoaded will be overridden in test
-        const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
-        mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId); // Ensure config returns the correct ID
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-            typeName === 'system-rules' ? ruleSchemaId : undefined
+            typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
         );
+        // Mock specific getter if RuleLoader uses it
+        mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
         mockRegistry.get.mockReturnValue(undefined); // Default: no rule exists yet
 
         // Instantiate the loader
@@ -155,33 +167,32 @@ describe('RuleLoader - Skip Validation Scenario', () => {
     });
 
     // --- Test Cases ---
-    describe('Ticket 4.5.4: Test: loadRulesForMod - Handles Missing Rule Schema Correctly (Skip Validation)', () => {
+    // *** UPDATED describe block title slightly ***
+    describe('Ticket 4.5.4: Test: Handles Missing Rule Schema Correctly (Skip Validation)', () => {
         // Arrange: Define test data and configuration
-        const modId = 'test-mod-skip-validation';
-        const ruleType = 'system-rules';
         const ruleFile = 'ruleToSkip.json';
         const ruleBasename = 'ruleToSkip'; // Basename used for generated ID
-        const resolvedPathSkip = `/abs/path/to/mods/${modId}/${ruleType}/${ruleFile}`;
+        const resolvedPathSkip = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFile}`;
         const ruleDataSkip = {
             // Minimal valid data, no rule_id needed as it will be generated
             event_type: 'core:test_skip_validation',
             actions: [{type: 'LOG', parameters: {message: 'Rule loaded despite missing schema'}}]
         };
-        const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
 
         const manifest = {
             id: modId,
             version: '1.0.0',
             name: 'Skip Schema Validation Test Mod',
             content: {
-                rules: [ruleFile]
+                // Use constant for key
+                [RULE_CONTENT_KEY]: [ruleFile]
             }
         };
 
         it('should skip validation (with warning) but still fetch and store the rule if schema is not loaded', async () => {
             // Arrange: Configure mocks specific to this test case
             mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
-                if (mId === modId && type === ruleType && file === ruleFile) return resolvedPathSkip;
+                if (mId === modId && type === RULE_CONTENT_DIR && file === ruleFile) return resolvedPathSkip;
                 throw new Error(`Unexpected path resolution call: ${mId}, ${type}, ${file}`);
             });
 
@@ -196,13 +207,20 @@ describe('RuleLoader - Skip Validation Scenario', () => {
             });
 
             // Act
-            const count = await loader.loadRulesForMod(modId, manifest);
+            // *** UPDATED: Call loadItemsForMod ***
+            const count = await loader.loadItemsForMod(
+                modId,
+                manifest,
+                RULE_CONTENT_KEY,
+                RULE_CONTENT_DIR,
+                RULE_TYPE_NAME
+            );
 
             // Assert
             // Verify isSchemaLoaded was checked for the rule schema
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(ruleSchemaId);
 
-            // Verify the warning log was called
+            // Verify the warning log was called from _processFetchedItem
             expect(mockLogger.warn).toHaveBeenCalledTimes(1);
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 `RuleLoader [${modId}]: Rule schema '${ruleSchemaId}' is configured but not loaded. Skipping validation for ${ruleFile}.` // Match exact message
@@ -213,16 +231,14 @@ describe('RuleLoader - Skip Validation Scenario', () => {
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathSkip);
 
             // Verify validator was NOT called
-            expect(mockValidator.validate).not.toHaveBeenCalled(); // Corrected check, validate shouldn't be called
-            expect(mockValidator.getValidator).not.toHaveBeenCalled(); // getValidator also shouldn't be called
-            // No need to check mockRuleValidatorFn if getValidator isn't called
+            expect(mockValidator.validate).not.toHaveBeenCalled();
+            expect(mockValidator.getValidator).not.toHaveBeenCalled();
 
             // Verify registry store was called
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
 
-            // ***** CORRECTED ASSERTION for store *****
+            // Assert call to store with AUGMENTED data
             const expectedStoredRuleId = `${modId}:${ruleBasename}`; // "test-mod-skip-validation:ruleToSkip"
-            // Expect the data object passed to store to be the *augmented* one
             const expectedStoredData = {
                 ...ruleDataSkip,              // Original data properties
                 id: expectedStoredRuleId,     // Augmented with final ID
@@ -231,7 +247,7 @@ describe('RuleLoader - Skip Validation Scenario', () => {
             };
 
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,                // Category "system-rules"
+                RULE_TYPE_NAME,          // Category "system-rules"
                 expectedStoredRuleId,    // Key "test-mod-skip-validation:ruleToSkip"
                 expectedStoredData       // Expect the AUGMENTED data object
             );
@@ -241,11 +257,11 @@ describe('RuleLoader - Skip Validation Scenario', () => {
 
             // Verify summary info log
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `Mod [${modId}] - Processed 1/1 rules items.` // Base loader logs this summary
+                `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log from loadItemsForMod
             );
-            // Optionally check the initial log from loadRulesForMod
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`));
-
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `Mod [${modId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.` // Summary log from _loadItemsInternal
+            );
 
             // Verify no errors were logged
             expect(mockLogger.error).not.toHaveBeenCalled();

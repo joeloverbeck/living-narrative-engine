@@ -284,7 +284,13 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
 
     test('should successfully load and register component definitions from the core mod', async () => {
         // --- Action ---
-        const promise = componentDefinitionLoader.loadComponentDefinitions('core', mockCoreManifest);
+        const promise = componentDefinitionLoader.loadItemsForMod(
+            'core',           // modId
+            mockCoreManifest, // modManifest
+            'components',     // contentKey (key in manifest.content)
+            'components',     // contentTypeDir (directory name)
+            'components'      // typeName (descriptive name / registry category)
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(promise).resolves.not.toThrow();
@@ -334,7 +340,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
 
         // --- Verify: ILogger Calls ---
         expect(mockLogger.info).toHaveBeenCalledTimes(2);
-        expect(mockLogger.info).toHaveBeenCalledWith("ComponentLoader: Loading component definitions for mod 'core'."); // Match exact message
+        expect(mockLogger.info).toHaveBeenCalledWith("ComponentLoader: Loading components definitions for mod 'core'."); // Match exact message
         const expectedSuccessCount = 2;
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.` // Match exact message

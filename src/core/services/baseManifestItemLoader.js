@@ -7,6 +7,7 @@
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest // Assuming ModManifest type is defined here or imported
  */
 
 /**
@@ -422,4 +423,79 @@ export class BaseManifestItemLoader {
         }
         // AC: The _storeItemInRegistry method is added to BaseManifestItemLoader.js with the specified signature and implementation.
     }
+
+    // --- NEW METHOD: REFACTOR-LOADER-1 ---
+    /**
+     * Generic entry point for loading all items of a specific type for a given mod.
+     * This method encapsulates the common logic for validating inputs and delegating
+     * the actual loading process to the internal `_loadItemsInternal` method.
+     * Subclasses should call this public method instead of directly calling `_loadItemsInternal`.
+     *
+     * @public
+     * @async
+     * @param {string} modId - The ID of the mod. Must be a non-empty string.
+     * @param {ModManifest} modManifest - The manifest object for the mod. Must be a non-null object.
+     * @param {string} contentKey - The key in the manifest's `content` section (e.g., 'actions', 'components'). Must be a non-empty string.
+     * @param {string} contentTypeDir - The subdirectory within the mod's folder containing the content files (e.g., 'actions', 'components'). Must be a non-empty string.
+     * @param {string} typeName - A descriptive name for the content type being loaded (e.g., 'actions', 'components'). Used for logging and context. Must be a non-empty string.
+     * @returns {Promise<number>} A promise that resolves with the numerical count of items successfully loaded and processed for this type and mod. Returns 0 if initial validation fails.
+     * @throws {TypeError} If `contentKey`, `contentTypeDir`, or `typeName` are invalid (indicates a programming error in the calling subclass).
+     */
+    async loadItemsForMod(modId, modManifest, contentKey, contentTypeDir, typeName) {
+        // AC: Log informational message at the start
+        this._logger.info(`${this.constructor.name}: Loading ${typeName} definitions for mod '${modId}'.`);
+
+        // AC: Validate modId (non-empty string)
+        if (typeof modId !== 'string' || modId.trim() === '') {
+            this._logger.error(`${this.constructor.name}: Invalid 'modId' provided for loading ${typeName}. Must be a non-empty string. Received: ${modId}`);
+            return 0; // Return 0 if invalid
+        }
+        const trimmedModId = modId.trim(); // Use trimmed version going forward
+
+        // AC: Validate modManifest (non-null object)
+        if (!modManifest || typeof modManifest !== 'object') {
+            this._logger.error(`${this.constructor.name}: Invalid 'modManifest' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-null object. Received: ${typeof modManifest}`);
+            return 0; // Return 0 if invalid
+        }
+
+        // AC: Validate contentKey, contentTypeDir, typeName (non-empty strings)
+        if (typeof contentKey !== 'string' || contentKey.trim() === '') {
+            const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`;
+            this._logger.error(errorMsg);
+            throw new TypeError(errorMsg); // Throw TypeError for programming errors
+        }
+        const trimmedContentKey = contentKey.trim();
+
+        if (typeof contentTypeDir !== 'string' || contentTypeDir.trim() === '') {
+            const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentTypeDir' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentTypeDir}`;
+            this._logger.error(errorMsg);
+            throw new TypeError(errorMsg); // Throw TypeError for programming errors
+        }
+        const trimmedContentTypeDir = contentTypeDir.trim();
+
+        if (typeof typeName !== 'string' || typeName.trim() === '') {
+            // Note: This case is highly unlikely if the previous checks passed, but included for completeness.
+            const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'typeName' provided for loading content for mod '${trimmedModId}'. Must be a non-empty string. Received: ${typeName}`;
+            this._logger.error(errorMsg);
+            throw new TypeError(errorMsg); // Throw TypeError for programming errors
+        }
+        const trimmedTypeName = typeName.trim();
+
+
+        // AC: Call _loadItemsInternal exactly once, passing parameters
+        this._logger.debug(`${this.constructor.name} [${trimmedModId}]: Delegating loading for type '${trimmedTypeName}' to _loadItemsInternal.`);
+        const count = await this._loadItemsInternal(
+            trimmedModId,
+            modManifest,
+            trimmedContentKey,
+            trimmedContentTypeDir,
+            trimmedTypeName
+        );
+
+        // AC: Return the numerical count from _loadItemsInternal
+        this._logger.debug(`${this.constructor.name} [${trimmedModId}]: Finished loading for type '${trimmedTypeName}'. Count: ${count}`);
+        return count;
+    }
+
+    // --- END NEW METHOD ---
 }

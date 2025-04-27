@@ -60,39 +60,11 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
         this._logger.debug(`ActionLoader: Initialized.`); // Logs debug message confirming initialization
     }
 
-    /**
-     * Loads and registers action definitions for a given mod based on its manifest.
-     * This method delegates to the base class's internal loading mechanism,
-     * which in turn calls this class's _processFetchedItem implementation.
-     *
-     * @param {string} modId - The ID of the mod.
-     * @param {ModManifest} modManifest - The manifest object for the mod. // Corrected type hint assumption
-     * @returns {Promise<number>} A promise that resolves with the count of successfully loaded action definitions.
-     * @async
-     * @public // Added for clarity, though JS doesn't enforce
+    // --- METHOD REMOVED: loadActionsForMod ---
+    /*
+     * Removed the loadActionsForMod method and its JSDoc comments as per REFACTOR-LOADER-2.
+     * The generic loadItemsForMod in the base class should be used instead.
      */
-    async loadActionsForMod(modId, modManifest) { // AC: Async public method 'loadActionsForMod' added
-        // AC: Accepts modId and modManifest arguments
-        this._logger.info(`ActionLoader: Loading action definitions for mod '${modId}'.`); // AC: Logs informational message
-
-        // Basic input validation
-        if (!modId || !modManifest) {
-            this._logger.error('ActionLoader: Mod ID or Manifest is missing for loadActionsForMod.', {
-                modId,
-                modManifest
-            });
-            // Consider throwing an error or returning 0 based on desired strictness
-            return 0;
-        }
-
-        // AC: Calls protected _loadItemsInternal method
-        // Delegate to the base class's protected method for loading items.
-        // AC: Passes modId, modManifest, 'actions' (contentKey), 'actions' (contentTypeDir), 'actions' (typeName)
-        const count = await this._loadItemsInternal(modId, modManifest, 'actions', 'actions', 'actions'); // AC: Awaits result
-
-        // AC: Returns the numerical count received from _loadItemsInternal
-        return count;
-    }
 
 
     /**

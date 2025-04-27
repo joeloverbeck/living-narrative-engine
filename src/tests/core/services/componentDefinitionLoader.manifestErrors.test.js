@@ -212,11 +212,18 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - Missing Components',
             version: '1.0.0',
-            content: {actions: []}
+            content: {actions: []} // components key is absent
         };
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, manifestMissingComponents);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,                      // modId
+            manifestMissingComponents,  // modManifest
+            'components',               // contentKey
+            'components',               // contentTypeDir
+            'components'                // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -224,18 +231,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         expect(count).toBe(0);
 
         // --- Verify: Log Messages ---
-        // *CORRECTED: Check for specific DEBUG message*
+        // Base class _extractValidFilenames logs debug when key is missing
         expect(mockLogger.debug).toHaveBeenCalledWith(
             `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
         );
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message from loadComponentDefinitions
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
+        // Base class loadItemsForMod logs info at start
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // Summary log from _loadItemsInternal isn't called if filename list is empty
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.getValidator).not.toHaveBeenCalled();
+        expect(mockValidator.validate).not.toHaveBeenCalled(); // Validate only happens within _processFetchedItem
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -248,11 +259,18 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - Null Components',
             version: '1.0.0',
-            content: {components: null, actions: []}
+            content: {components: null, actions: []} // components key is null
         };
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, manifestNullComponents);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,                      // modId
+            manifestNullComponents,     // modManifest
+            'components',               // contentKey
+            'components',               // contentTypeDir
+            'components'                // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -260,18 +278,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         expect(count).toBe(0);
 
         // --- Verify: Log Messages ---
-        // *CORRECTED: Check for specific DEBUG message*
+        // Base class _extractValidFilenames logs debug when value is null/undefined
         expect(mockLogger.debug).toHaveBeenCalledWith(
             `Mod '${modId}': Content key 'components' not found or is null/undefined in manifest. Skipping.`
         );
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
+        // Base class loadItemsForMod logs info at start
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // Summary log from _loadItemsInternal isn't called if filename list is empty
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.getValidator).not.toHaveBeenCalled();
+        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -284,11 +306,18 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - Object Components',
             version: '1.0.0',
-            content: {components: {file: 'some_component.json'}, actions: []}
+            content: {components: {file: 'some_component.json'}, actions: []} // components is an object
         };
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, manifestObjectComponents);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,                      // modId
+            manifestObjectComponents,   // modManifest
+            'components',               // contentKey
+            'components',               // contentTypeDir
+            'components'                // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -296,18 +325,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         expect(count).toBe(0);
 
         // --- Verify: Log Messages ---
-        // *CORRECTED: Check for specific WARN message*
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1); // From _extractValidFilenames
+        // Base class _extractValidFilenames logs warn when not an array
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(
             `Mod '${modId}': Expected an array for content key 'components' but found type 'object'. Skipping.`
         );
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
+        // Base class loadItemsForMod logs info at start
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // Summary log from _loadItemsInternal isn't called if filename list is empty
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.getValidator).not.toHaveBeenCalled();
+        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -320,11 +353,18 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             id: modId,
             name: 'Test Mod - String Components',
             version: '1.0.0',
-            content: {components: "file.json", actions: []}
+            content: {components: "file.json", actions: []} // components is a string
         };
 
         // --- Action ---
-        const loadPromise = loader.loadComponentDefinitions(modId, manifestStringComponents);
+        // <<< CORRECTION: Use loadItemsForMod >>>
+        const loadPromise = loader.loadItemsForMod(
+            modId,                      // modId
+            manifestStringComponents,   // modManifest
+            'components',               // contentKey
+            'components',               // contentTypeDir
+            'components'                // typeName
+        );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
@@ -332,18 +372,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         expect(count).toBe(0);
 
         // --- Verify: Log Messages ---
-        // *CORRECTED: Check for specific WARN message*
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1); // From _extractValidFilenames
+        // Base class _extractValidFilenames logs warn when not an array
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(
             `Mod '${modId}': Expected an array for content key 'components' but found type 'string'. Skipping.`
         );
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Start message
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading component definitions for mod '${modId}'`));
+        // Base class loadItemsForMod logs info at start
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+        );
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // Summary log from _loadItemsInternal isn't called if filename list is empty
 
         // --- Verify: No Processing ---
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
-        expect(mockValidator.getValidator).not.toHaveBeenCalled();
+        expect(mockValidator.validate).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();

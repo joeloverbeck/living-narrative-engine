@@ -51,39 +51,12 @@ class EventLoader extends BaseManifestItemLoader {
         this._logger.debug(`EventLoader: Initialized.`); // Corrected class name
     }
 
-    /**
-     * Loads and registers event definitions for a given mod based on its manifest.
-     * This method delegates to the base class's internal loading mechanism,
-     * which in turn calls this class's _processFetchedItem implementation.
-     *
-     * AC: A public async method loadEventsForMod(modId, modManifest) is defined.
-     * @param {string} modId - The ID of the mod.
-     * @param {ModManifest} modManifest - The manifest object for the mod.
-     * @returns {Promise<number>} A promise that resolves with the count of successfully loaded event definitions.
-     * @async
-     * @public
+    // --- METHOD REMOVED: loadEventsForMod ---
+    /*
+     * Removed the loadEventsForMod method and its JSDoc comments as per REFACTOR-LOADER-2.
+     * The generic loadItemsForMod in the base class should be used instead.
      */
-    async loadEventsForMod(modId, modManifest) {
-        // AC: loadEventsForMod performs a null/undefined check for modId and modManifest, logging an error and returning 0 if invalid.
-        if (!modId || !modManifest) {
-            this._logger.error('EventLoader: Mod ID or Manifest is missing for loadEventsForMod.', {
-                modId,
-                modManifestProvided: !!modManifest // Log boolean presence instead of potentially large object
-            });
-            return 0; // Return 0 as per acceptance criteria
-        }
 
-        // AC: loadEventsForMod logs an info message like "EventLoader: Loading event definitions for mod 'modId'." at the beginning.
-        this._logger.info(`EventLoader: Loading event definitions for mod '${modId}'.`); // Corrected class name
-
-        // AC: loadEventsForMod calls await this._loadItemsInternal(modId, modManifest, 'events', 'events', 'events') exactly once.
-        // Delegate to the base class's protected method for loading items.
-        // Uses 'events' for contentKey, contentTypeDir, and typeName based on PRD/Spike/Tickets.
-        const count = await this._loadItemsInternal(modId, modManifest, 'events', 'events', 'events');
-
-        // AC: loadEventsForMod returns the numerical value returned by _loadItemsInternal.
-        return count;
-    }
 
     /**
      * Processes a single fetched event definition file's data. Validates the data,
