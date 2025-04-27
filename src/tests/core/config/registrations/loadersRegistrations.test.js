@@ -53,7 +53,7 @@ const mockConfiguration = {
             'actions': 'http://example.com/schemas/action-definition.schema.json',
             'events': 'http://example.com/schemas/event-definition.schema.json',
             'entities': 'http://example.com/schemas/entity.schema.json', // Needed by EntityLoader
-            'system-rules': 'http://example.com/schemas/system-rule.schema.json',
+            'rules': 'http://example.com/schemas/rule.schema.json',
             'game': 'http://example.com/schemas/game.schema.json',
             'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
         };
@@ -66,7 +66,7 @@ const mockConfiguration = {
     getModsBasePath: jest.fn().mockReturnValue('mods'), // Needed for ModManifestLoader etc.
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'), // Needed
     getRuleBasePath: jest.fn().mockReturnValue('./data/system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
 };
 
 // Provide all methods used by ANY loader being registered

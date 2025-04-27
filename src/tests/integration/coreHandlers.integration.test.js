@@ -57,7 +57,7 @@ class SimpleEntityManager {
 //  Minimal IDataRegistry stub – only the method the interpreter needs.
 // -----------------------------------------------------------------------------
 class StubDataRegistry {
-    /** @param {import('../../data/schemas/system-rule.schema.json').SystemRule[]} rules */
+    /** @param {import('../../data/schemas/rule.schema.json').SystemRule[]} rules */
     constructor(rules) {
         this._rules = rules;
     }
@@ -125,7 +125,7 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
         entityManager.addComponent(ENEMY_ID, 'core:status', {dead: false});
 
         // ---- System rules -------------------------------------------------------
-        /** @type {import('../../data/schemas/system-rule.schema.json').SystemRule} */
+        /** @type {import('../../data/schemas/rule.schema.json').SystemRule} */
         const ruleA = {
             rule_id: 'enemy_die_state',
             event_type: 'game:enemy_damaged',
@@ -151,7 +151,7 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
             ]
         };
 
-        /** @type {import('../../data/schemas/system-rule.schema.json').SystemRule} */
+        /** @type {import('../../data/schemas/rule.schema.json').SystemRule} */
         const ruleB = {
             rule_id: 'enemy_dead_sound',
             event_type: 'game:enemy_dead',

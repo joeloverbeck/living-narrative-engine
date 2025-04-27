@@ -18,7 +18,7 @@ const EXPECTED_SCHEMA_FILES = [
     'json-logic.schema.json',
     'mod.manifest.schema.json',
     'operation.schema.json',
-    'system-rule.schema.json',
+    'rule.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -32,7 +32,7 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
     'items': 'http://example.com/schemas/entity.schema.json',
     'locations': 'http://example.com/schemas/entity.schema.json',
     'operations': 'http://example.com/schemas/operation.schema.json',
-    'system-rules': 'http://example.com/schemas/system-rule.schema.json',
+    'rules': 'http://example.com/schemas/rule.schema.json',
 };
 
 // Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
@@ -71,7 +71,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('system-rule.schema.json');
+            expect(files[files.length - 1]).toBe('rule.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {

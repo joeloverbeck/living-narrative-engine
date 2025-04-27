@@ -36,7 +36,7 @@ class StaticConfiguration {
 
     /** @returns {string} */
     getRuleBasePath() {
-        return 'system-rules';
+        return 'rules';
     }
 
     /* ─────────────────────────────── FILENAMES ─────────────────────────────── */
@@ -75,7 +75,7 @@ class StaticConfiguration {
             'json-logic.schema.json',
             'mod.manifest.schema.json',          // ← NEW schema added
             'operation.schema.json',
-            'system-rule.schema.json',
+            'rule.schema.json',
         ];
     }
 
@@ -97,7 +97,7 @@ class StaticConfiguration {
             locations: 'http://example.com/schemas/entity.schema.json',
             'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json', // ← NEW mapping
             operations: 'http://example.com/schemas/operation.schema.json',
-            'system-rules': 'http://example.com/schemas/system-rule.schema.json',
+            rules: 'http://example.com/schemas/rule.schema.json',
         };
         return map[typeName];
     }
@@ -106,7 +106,7 @@ class StaticConfiguration {
 
     /** @returns {string} */
     getRuleSchemaId() {
-        return 'http://example.com/schemas/system-rule.schema.json';
+        return 'http://example.com/schemas/rule.schema.json';
     }
 
 }

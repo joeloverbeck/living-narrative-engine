@@ -96,7 +96,6 @@ export class GameDataRepository {
      * @returns {EventDefinition | null} // Use specific EventDefinition type if available
      */
     getEventDefinition(id) {
-        // Delegate to the specific method on IDataRegistry - THIS IS THE MISSING METHOD
         return this.#registry.getEventDefinition(id) ?? null;
     }
 

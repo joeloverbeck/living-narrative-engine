@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/common/json-logic.schema.json",
+  "$id": "http://example.com/schemas/json-logic.schema.json",
   "title": "JSON Logic Rule",
   "description": "A JSON Schema representing a JSON Logic rule object with explicit support for composite logical operators (and, or, not, !). It validates the standard {\"operator\": [arguments...]} structure while enforcing arrays for \"and\"/\"or\", and a single nested rule for \"not\"/\"!\". Other JSON‑Logic operators remain unrestricted and may accept primitives or arrays of nested rules.",
   "$comment": "Updated for Ticket: Schema: Define Composite Logical Operators (and, or, not) for Conditions. Ensures recursive validation of composite logic while preserving existing operator flexibility.",

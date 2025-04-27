@@ -15,13 +15,13 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
  */
 const createMockConfiguration = (overrides = {}) => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-    // Updated to specifically handle 'system-rules' and return ruleSchemaId
+    // Updated to specifically handle 'rules' and return ruleSchemaId
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
+        if (typeName === 'rules') {
             // Delegate to getRuleSchemaId or return a fixed value if getRuleSchemaId isn't used directly
             // Assuming RuleLoader might use this OR getRuleSchemaId directly.
             // Let's use a default value here and allow overriding getRuleSchemaId separately.
-            return 'http://example.com/schemas/system-rule.schema.json';
+            return 'http://example.com/schemas/rule.schema.json';
         }
         // Add other types if needed for different loaders tested in the same context potentially
         if (typeName === 'components') {
@@ -36,9 +36,9 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'), // Relevant for RuleLoader
+    getRuleBasePath: jest.fn().mockReturnValue('rules'), // Relevant for RuleLoader
     // Explicitly mock getRuleSchemaId as RuleLoader might use it
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -247,7 +247,7 @@ const createMockDataRegistry = (overrides = {}) => {
         }),
         // Specific getter relevant for RuleLoader tests
         getAllSystemRules: jest.fn(() => {
-            const rules = registryStore['system-rules']; // Assuming 'system-rules' is the type used
+            const rules = registryStore['rules']; // Assuming 'rules' is the type used
             if (!rules) return [];
             try {
                 return Object.values(rules).map(item => JSON.parse(JSON.stringify(item)));
@@ -299,7 +299,7 @@ describe('RuleLoader (Sub-Ticket 4.1: Test Setup & Mocking)', () => {
     let loader; //: RuleLoader;
 
     // --- Shared Test Data ---
-    const defaultRuleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
     const modId = 'test-mod';
 
     // --- Helper Functions for Mock Scenario Setup ---
@@ -351,7 +351,7 @@ describe('RuleLoader (Sub-Ticket 4.1: Test Setup & Mocking)', () => {
         // Ensure the rule schema ID is consistently returned
         mockConfig.getRuleSchemaId.mockReturnValue(defaultRuleSchemaId);
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-            if (typeName === 'system-rules') {
+            if (typeName === 'rules') {
                 return defaultRuleSchemaId;
             }
             return undefined; // Or handle other types if necessary

@@ -162,8 +162,8 @@ class WorldLoader {
             {
                 loader: this.#ruleLoader,
                 contentKey: 'rules',
-                contentTypeDir: 'system-rules', // Note: Directory name might differ from key/type
-                typeName: 'system-rules' // Using descriptive name
+                contentTypeDir: 'rules', // Note: Directory name might differ from key/type
+                typeName: 'rules' // Using descriptive name
             },
             // --- ADDED: LOADER-004-F Configurations ---
             {
@@ -398,7 +398,7 @@ class WorldLoader {
         // --- REMOVED old specific count retrieval using registry.getAll ---
         // const componentCount = this.#registry.getAll('components').length;
         // this.#logger.info(`  • Component definitions loaded: ${componentCount}`);
-        // const ruleCount = this.#registry.getAll('system-rules').length;
+        // const ruleCount = this.#registry.getAll('rules').length;
         // this.#logger.info(`  • System rules loaded         : ${ruleCount}`);
         // const actionCount = this.#registry.getAll('actions').length;
         // this.#logger.info(`  • Action definitions loaded   : ${actionCount}`);

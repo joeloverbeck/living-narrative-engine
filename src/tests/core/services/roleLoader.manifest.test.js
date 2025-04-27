@@ -26,8 +26,8 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 const createMockConfiguration = (overrides = {}) => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
-            return 'http://example.com/schemas/system-rule.schema.json';
+        if (typeName === 'rules') {
+            return 'http://example.com/schemas/rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
@@ -38,8 +38,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -77,7 +77,7 @@ const createMockDataFetcher = () => ({
 
 // --- Mock SchemaValidator (Now needed for valid input tests) ---
 const createMockSchemaValidator = () => {
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     // Mock validator function for the rule schema
     const mockRuleValidatorFn = jest.fn((data) => {
         const isValid = data && typeof data.event_type === 'string' && Array.isArray(data.actions);
@@ -160,10 +160,10 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
     const modId = 'manifest-test-mod';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules';
-    const RULE_TYPE_NAME = 'system-rules';
+    const RULE_CONTENT_DIR = 'rules';
+    const RULE_TYPE_NAME = 'rules';
 
-    const defaultRuleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
 
     // --- Setup ---
     beforeEach(() => {

@@ -22,7 +22,7 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 const createMockConfiguration = (overrides = {}) => ({
     // --- Methods required by BaseManifestItemLoader constructor ---
     getModsBasePath: jest.fn().mockReturnValue('./data/mods'), // Added
-    getContentTypeSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getContentTypeSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     // --- Other potentially used methods (good practice to include) ---
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
@@ -31,8 +31,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'), // Keep specific getter if RuleLoader uses it directly
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'), // Keep specific getter
+    getRuleBasePath: jest.fn().mockReturnValue('rules'), // Keep specific getter if RuleLoader uses it directly
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'), // Keep specific getter
     ...overrides,
 });
 
@@ -63,7 +63,7 @@ const createMockDataFetcher = () => ({
 
 /** Mocks ISchemaValidator - needed for successful processing */
 const createMockSchemaValidator = () => {
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     const mockRuleValidatorFn = jest.fn((data) => ({
         // Simple validation for test purposes
         isValid: data && typeof data.event_type === 'string' && Array.isArray(data.actions),
@@ -155,8 +155,8 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
     const modId = 'testMod';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules'; // Matches RuleLoader implementation detail
-    const RULE_TYPE_NAME = 'system-rules'; // Matches RuleLoader implementation detail
+    const RULE_CONTENT_DIR = 'rules'; // Matches RuleLoader implementation detail
+    const RULE_TYPE_NAME = 'rules'; // Matches RuleLoader implementation detail
 
     const ruleFileA = 'ruleA.json';
     const ruleFileB = 'rules/ruleB.json'; // Note the subdirectory
@@ -182,7 +182,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         mockRegistry = createMockDataRegistry();
 
         // Ensure rule schema ID is configured via the base class method access
-        const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+        const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
             typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined // Use constant
         );

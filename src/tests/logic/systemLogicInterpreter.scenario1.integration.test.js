@@ -7,7 +7,7 @@
 /** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../logic/defs.js').GameEvent} GameEvent */
-/** @typedef {import('../../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */
+/** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 

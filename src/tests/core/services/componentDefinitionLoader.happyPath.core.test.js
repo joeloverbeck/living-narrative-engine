@@ -36,8 +36,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 

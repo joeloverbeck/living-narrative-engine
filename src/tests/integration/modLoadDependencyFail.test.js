@@ -21,7 +21,7 @@ const createMockConfiguration = (overrides = {}) => ({
         if (t === 'actions') return 'http://example.com/schemas/action-definition.schema.json';
         if (t === 'events') return 'http://example.com/schemas/event-definition.schema.json';
         if (t === 'entities') return 'http://example.com/schemas/entity.schema.json'; // Required for WorldLoader essentials check
-        if (t === 'system-rules') return 'http://example.com/schemas/system-rule.schema.json';
+        if (t === 'rules') return 'http://example.com/schemas/rule.schema.json';
         return `http://example.com/schemas/${t}.schema.json`;
     }),
     // Unused in this harness but required by ModManifestLoader interface
@@ -99,8 +99,8 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
         if (path.includes('/schemas/event-definition.schema.json')) {
             return {$id: 'http://example.com/schemas/event-definition.schema.json', type: 'object'};
         }
-        if (path.includes('/schemas/system-rule.schema.json')) {
-            return {$id: 'http://example.com/schemas/system-rule.schema.json', type: 'object'};
+        if (path.includes('/schemas/rule.schema.json')) {
+            return {$id: 'http://example.com/schemas/rule.schema.json', type: 'object'};
         }
 
 
@@ -182,7 +182,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
     const ACTION_SCHEMA_ID = 'http://example.com/schemas/action-definition.schema.json';
     const EVENT_SCHEMA_ID = 'http://example.com/schemas/event-definition.schema.json';
-    const RULE_SCHEMA_ID = 'http://example.com/schemas/system-rule.schema.json';
+    const RULE_SCHEMA_ID = 'http://example.com/schemas/rule.schema.json';
 
     // Define minimal schemas
     const manifestSchema = {

@@ -171,8 +171,8 @@ describe('InMemoryDataRegistry', () => {
       const rule1 = { rule_id: 'rule-001', event_type: 'test-event', actions: [] };
       const rule2 = { rule_id: 'rule-002', event_type: 'another-event', condition: {}, actions: [] };
 
-      registry.store('system-rules', 'rule-001', rule1);
-      registry.store('system-rules', 'rule-002', rule2);
+      registry.store('rules', 'rule-001', rule1);
+      registry.store('rules', 'rule-002', rule2);
       registry.store('items', 'potion', { id: 'potion' }); // Other data
 
       const rules = registry.getAllSystemRules();
@@ -184,7 +184,7 @@ describe('InMemoryDataRegistry', () => {
 
     it('should return an empty array after clear() is called', () => {
       const rule1 = { rule_id: 'rule-001', event_type: 'test-event', actions: [] };
-      registry.store('system-rules', 'rule-001', rule1);
+      registry.store('rules', 'rule-001', rule1);
       expect(registry.getAllSystemRules()).toHaveLength(1); // Verify before clear
 
       registry.clear();

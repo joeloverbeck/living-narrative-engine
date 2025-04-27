@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
-  "id": "event:set_title",
+  "id": "textUI:set_title",
   "description": "Signals a request to update the main title display in the user interface, often used to indicate game state, loading progress, or the current world/area name.",
   "payloadSchema": {
     "type": "object",

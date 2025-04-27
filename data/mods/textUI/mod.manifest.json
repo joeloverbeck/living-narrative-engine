@@ -1,0 +1,28 @@
+{
+  "id": "textUI",
+  "version": "1.0.0",
+  "name": "textUI",
+  "description": "Contains the definitions needed to display a game on the browser, in a text-based manner.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "components": [
+    ],
+    "entities": [
+    ],
+    "items": [
+    ],
+    "locations": [
+    ],
+    "actions": [
+    ],
+    "rules": [
+      "set_title.rule.json"
+    ],
+    "events": [
+      "set_title.event.json"
+    ],
+    "operations": [
+    ]
+  }
+}

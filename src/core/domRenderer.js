@@ -131,7 +131,7 @@ class DomRenderer {
     this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
     this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
     this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
-    this.#eventBus.subscribe('event:set_title', this.#handleSetTitle.bind(this));
+    this.#eventBus.subscribe('set_title', this.#handleSetTitle.bind(this));
 
     // --- Inventory UI Events ---
     this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
@@ -188,7 +188,7 @@ class DomRenderer {
     if (data && typeof data.text === 'string') {
       this.#titleElement.textContent = data.text;
     } else {
-      this.#logger.warn("DomRenderer received 'event:set_title' with invalid data:", data);
+      this.#logger.warn("DomRenderer received 'set_title' with invalid data:", data);
     }
   }
 

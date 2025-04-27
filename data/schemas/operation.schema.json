@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/operation.schema.json?v=2",
+  "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
   "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events) or control the flow of execution (conditional logic). Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
   "type": "object",
@@ -18,7 +18,8 @@
             "MODIFY_COMPONENT",
             "DISPATCH_EVENT",
             "IF",
-            "LOG"
+            "LOG",
+            "MODIFY_DOM_ELEMENT"
           ]
         },
         "comment": {
@@ -145,6 +146,28 @@
               "parameters"
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MODIFY_DOM_ELEMENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ModifyDomElementParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         }
       ],
       "examples": [
@@ -191,6 +214,15 @@
               "newState": "completed",
               "completedBy": "$actor.id"
             }
+          }
+        },
+        {
+          "type": "MODIFY_DOM_ELEMENT",
+          "comment": "Update the main title text",
+          "parameters": {
+            "selector": "#title-element",
+            "property": "textContent",
+            "value": "{event.payload.text}"
           }
         }
       ]
@@ -356,6 +388,31 @@
       },
       "required": [
         "message"
+      ],
+      "additionalProperties": false
+    },
+    "ModifyDomElementParameters": {
+      "type": "object",
+      "description": "Parameters for the MODIFY_DOM_ELEMENT operation. Modifies a property of a DOM element selected via CSS selector.",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "Required. A CSS selector string to identify the target DOM element(s). If multiple elements match, the behavior might depend on the handler implementation (e.g., modify first, modify all).",
+          "minLength": 1
+        },
+        "property": {
+          "type": "string",
+          "description": "Required. The name of the DOM element property to modify (e.g., 'textContent', 'innerHTML', 'className', 'style.display', 'dataset.value'). Dot notation can be used for nested properties like 'style.color'.",
+          "minLength": 1
+        },
+        "value": {
+          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}') which will be resolved at runtime."
+        }
+      },
+      "required": [
+        "selector",
+        "property",
+        "value"
       ],
       "additionalProperties": false
     }

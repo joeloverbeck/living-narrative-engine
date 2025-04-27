@@ -20,8 +20,8 @@ import RuleLoader from '../../../core/services/ruleLoader.js';
 const createMockConfiguration = (overrides = {}) => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
-            return 'http://example.com/schemas/system-rule.schema.json';
+        if (typeName === 'rules') {
+            return 'http://example.com/schemas/rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
@@ -32,8 +32,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -54,7 +54,7 @@ const createMockDataFetcher = () => ({
 });
 
 const createMockSchemaValidator = () => {
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
     const loadedSchemas = new Map();
     loadedSchemas.set(ruleSchemaId, {}); // Mark schema as loaded
@@ -123,9 +123,9 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
     const modId = 'test-mod-fetch-fail';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules';
-    const RULE_TYPE_NAME = 'system-rules';
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const RULE_CONTENT_DIR = 'rules';
+    const RULE_TYPE_NAME = 'rules';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
 
 
     beforeEach(() => {

@@ -59,9 +59,9 @@ class RuleLoader extends BaseManifestItemLoader {
         super(config, pathResolver, fetcher, validator, registry, logger);
 
         // REMOVED: Logic to cache schema ID in constructor
-        // this.#ruleSchemaId = this._config.getContentTypeSchemaId('system-rules');
+        // this.#ruleSchemaId = this._config.getContentTypeSchemaId('rules');
         // if (!this.#ruleSchemaId) {
-        //     this._logger.warn(`RuleLoader: System rule schema ID is not configured ('system-rules'). Rule validation will be skipped.`);
+        //     this._logger.warn(`RuleLoader: System rule schema ID is not configured ('rules'). Rule validation will be skipped.`);
         // } else {
         //     this._logger.debug(`RuleLoader: Initialized with rule schema ID: ${this.#ruleSchemaId}`);
         // }
@@ -104,7 +104,7 @@ class RuleLoader extends BaseManifestItemLoader {
      * This method is called by the base class's `_processFileWrapper`. It performs:
      * 1.  **Schema Validation:** Validates the fetched `data` against the configured system rule schema (if available).
      * 2.  **Rule ID Determination:** Extracts the rule ID from the `rule_id` field within the `data`. If not present, it derives a base ID from the `filename`. The resulting ID is the **un-prefixed** `baseRuleId`.
-     * 3.  **Storage:** Delegates storage to the base class helper `_storeItemInRegistry` using the category 'system-rules', the `modId`, the **un-prefixed** `baseRuleId`, the original `data`, and the `filename`. The helper constructs the prefixed key (`modId:baseRuleId`) for storage.
+     * 3.  **Storage:** Delegates storage to the base class helper `_storeItemInRegistry` using the category 'rules', the `modId`, the **un-prefixed** `baseRuleId`, the original `data`, and the `filename`. The helper constructs the prefixed key (`modId:baseRuleId`) for storage.
      * 4.  **Return Value:** Returns the **fully qualified, prefixed** rule ID (`modId:baseRuleId`) as required by the base class.
      *
      * @override
@@ -114,7 +114,7 @@ class RuleLoader extends BaseManifestItemLoader {
      * @param {string} filename - The original filename as listed in the mod manifest (e.g., "my_rule.rule.json").
      * @param {string} resolvedPath - The fully resolved path used to fetch the file data.
      * @param {any} data - The raw, parsed data object fetched from the rule file.
-     * @param {string} typeName - The content type name ('system-rules').
+     * @param {string} typeName - The content type name ('rules').
      * @returns {Promise<string>} A promise resolving with the **fully qualified, prefixed** rule ID (e.g., "MyMod:my_rule") upon successful processing.
      * @throws {Error} Throws an error if schema validation fails (when applicable) or if storing the rule in the registry fails (errors from `_storeItemInRegistry` are re-thrown).
      */
@@ -125,7 +125,7 @@ class RuleLoader extends BaseManifestItemLoader {
         // --- Schema Validation (Conditional) ---
         // AC: Keep the schema validation logic
         // USE HELPER: Retrieve schema ID using the base class helper
-        const schemaId = this._getContentTypeSchemaId('system-rules');
+        const schemaId = this._getContentTypeSchemaId('rules');
         let ruleValidatorFn = null;
 
         if (schemaId && this._schemaValidator.isSchemaLoaded(schemaId)) {
@@ -137,7 +137,7 @@ class RuleLoader extends BaseManifestItemLoader {
             this._logger.warn(`RuleLoader [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`);
         } else {
             // Warning logged by helper
-            this._logger.warn(`RuleLoader [${modId}]: No rule schema ID configured ('system-rules'). Skipping validation for ${filename}.`);
+            this._logger.warn(`RuleLoader [${modId}]: No rule schema ID configured ('rules'). Skipping validation for ${filename}.`);
         }
 
         if (ruleValidatorFn) {
@@ -191,11 +191,11 @@ class RuleLoader extends BaseManifestItemLoader {
         // Delegate storage to the base helper, passing the *base* rule ID.
         // The helper constructs the final prefixed registry key `modId:baseRuleId`.
         // AC: Add a call to the base class helper method: this._storeItemInRegistry...
-        // AC: The call uses 'system-rules' as the category, the modId, the un-prefixed baseRuleId as baseItemId, the original data, and the filename.
+        // AC: The call uses 'rules' as the category, the modId, the un-prefixed baseRuleId as baseItemId, the original data, and the filename.
         this._logger.debug(`RuleLoader [${modId}]: Delegating storage for rule (base ID: '${baseRuleId}') from ${filename} to base helper.`);
         try {
             // Pass the UN-PREFIXED baseRuleId to the helper.
-            this._storeItemInRegistry('system-rules', modId, baseRuleId, data, filename);
+            this._storeItemInRegistry('rules', modId, baseRuleId, data, filename);
             // Logging of success/overwrite/failure is handled within _storeItemInRegistry.
         } catch (storageError) {
             // Error logging is handled within the base helper. Re-throw to allow _processFileWrapper to catch it.
@@ -229,7 +229,7 @@ class RuleLoader extends BaseManifestItemLoader {
 
         // Pre-check schema availability before loop
         // USE HELPER: Get schema ID using the helper
-        const ruleSchemaId = this._getContentTypeSchemaId('system-rules');
+        const ruleSchemaId = this._getContentTypeSchemaId('rules');
 
         if (ruleSchemaId && !this._schemaValidator.isSchemaLoaded(ruleSchemaId)) {
             this._logger.error(`RuleLoader: Cannot proceed. Configured rule schema '${ruleSchemaId}' is not loaded. Ensure schemas are loaded first.`);
@@ -237,7 +237,7 @@ class RuleLoader extends BaseManifestItemLoader {
             return 0;
         } else if (!ruleSchemaId) {
             // Warning logged by helper
-            this._logger.warn(`RuleLoader: No rule schema ID configured ('system-rules'). Rules will be loaded without schema validation.`);
+            this._logger.warn(`RuleLoader: No rule schema ID configured ('rules'). Rules will be loaded without schema validation.`);
         }
 
         // Load rules sequentially per mod
@@ -246,7 +246,7 @@ class RuleLoader extends BaseManifestItemLoader {
             try {
                 // Await loading for the current mod
                 // --- UPDATED: Use the generic loadItemsForMod ---
-                const count = await this.loadItemsForMod(modId, manifest, 'rules', 'system-rules', 'system-rules');
+                const count = await this.loadItemsForMod(modId, manifest, 'rules', 'rules', 'rules');
                 // const count = await this.loadRulesForMod(modId, manifest); // OLD CALL REMOVED
                 totalRulesLoaded += count;
             } catch (error) {

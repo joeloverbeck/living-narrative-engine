@@ -25,8 +25,8 @@ const createMockConfiguration = (overrides = {}) => ({
     // --- Methods required by BaseManifestItemLoader constructor ---
     getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
-            return 'http://example.com/schemas/system-rule.schema.json';
+        if (typeName === 'rules') {
+            return 'http://example.com/schemas/rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
@@ -38,8 +38,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -66,7 +66,7 @@ const createMockDataFetcher = () => ({
 /** Creates a mock ISchemaValidator service. */
 const createMockSchemaValidator = () => {
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     const loadedSchemas = new Map();
     loadedSchemas.set(ruleSchemaId, {}); // Mark schema as loaded
 
@@ -130,9 +130,9 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     const overrideModId = 'OverrideMod';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules';
-    const RULE_TYPE_NAME = 'system-rules';
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const RULE_CONTENT_DIR = 'rules';
+    const RULE_TYPE_NAME = 'rules';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
 
     const commonFileName = 'common_rule.json';
     const commonRuleIdInFile = 'common_rule'; // ID inside the JSON data

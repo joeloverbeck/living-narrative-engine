@@ -25,8 +25,8 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 const createMockConfiguration = (overrides = {}) => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
-            return 'http://example.com/schemas/system-rule.schema.json';
+        if (typeName === 'rules') {
+            return 'http://example.com/schemas/rule.schema.json';
         }
         if (typeName === 'components') {
             return 'http://example.com/schemas/component-definition.schema.json';
@@ -40,8 +40,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'), // Relevant for RuleLoader
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'), // Relevant for RuleLoader
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -230,7 +230,7 @@ const createMockDataRegistry = (overrides = {}) => {
             }
         }),
         getAllSystemRules: jest.fn(() => {
-            const rules = registryStore['system-rules'];
+            const rules = registryStore['rules'];
             if (!rules) return [];
             try {
                 return Object.values(rules).map(item => JSON.parse(JSON.stringify(item)));
@@ -286,10 +286,10 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     const modId = 'legacy-test-mod';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules';
-    const RULE_TYPE_NAME = 'system-rules';
+    const RULE_CONTENT_DIR = 'rules';
+    const RULE_TYPE_NAME = 'rules';
 
-    const defaultRuleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const defaultRuleSchemaId = 'http://example.com/schemas/rule.schema.json';
 
     // Example rule content for tests that need valid data
     const validRuleData = {

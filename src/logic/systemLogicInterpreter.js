@@ -10,7 +10,7 @@ import {createJsonLogicContext} from './contextAssembler.js';
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('./defs.js').GameEvent} GameEvent */
-/** @typedef {import('../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */
+/** @typedef {import('../../data/schemas/rule.schema.json').SystemRule} SystemRule */
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 

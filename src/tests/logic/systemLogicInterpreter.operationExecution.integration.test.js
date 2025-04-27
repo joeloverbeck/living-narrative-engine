@@ -7,7 +7,7 @@
 /** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../logic/operationInterpreter.js').default} OperationInterpreter */
-/** @typedef {import('../../../data/schemas/system-rule.schema.json').SystemRule} SystemRule */
+/** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */
 /** @typedef {import('../../../data/schemas/entity.schema.json').Entity} Entity */
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../../data/schemas/operation.schema.json').Operation} Operation */ // Added for spy typing

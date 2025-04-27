@@ -175,6 +175,7 @@ export const tokens = Object.freeze({
     LogHandler: 'LogHandler',
     ModifyComponentHandler: 'ModifyComponentHandler',
     QueryComponentHandler: 'QueryComponentHandler',
+    ModifyDomElementHandler: 'ModifyDomElementHandler',
 
 
     // --- Add any new keys here ---

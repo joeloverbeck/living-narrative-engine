@@ -22,8 +22,8 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 const createMockConfiguration = (overrides = {}) => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getContentTypeSchemaId: jest.fn((typeName) => {
-        if (typeName === 'system-rules') {
-            return 'http://example.com/schemas/system-rule.schema.json';
+        if (typeName === 'rules') {
+            return 'http://example.com/schemas/rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
@@ -34,8 +34,8 @@ const createMockConfiguration = (overrides = {}) => ({
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
     getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-    getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
-    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
+    getRuleBasePath: jest.fn().mockReturnValue('rules'),
+    getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
     ...overrides,
 });
 
@@ -60,7 +60,7 @@ const createMockDataFetcher = () => ({
 const createMockSchemaValidator = () => {
     // This mock validator function should NOT be called in this test case
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     const loadedSchemas = new Map(); // Start with no schemas loaded by default for this test
 
     return {
@@ -130,9 +130,9 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
     const modId = 'test-mod-skip-validation';
     // *** Define constants for RuleLoader specific args ***
     const RULE_CONTENT_KEY = 'rules';
-    const RULE_CONTENT_DIR = 'system-rules';
-    const RULE_TYPE_NAME = 'system-rules';
-    const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const RULE_CONTENT_DIR = 'rules';
+    const RULE_TYPE_NAME = 'rules';
+    const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
 
 
     // --- Shared Setup ---
@@ -247,7 +247,7 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
             };
 
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                RULE_TYPE_NAME,          // Category "system-rules"
+                RULE_TYPE_NAME,          // Category 'rules'
                 expectedStoredRuleId,    // Key "test-mod-skip-validation:ruleToSkip"
                 expectedStoredData       // Expect the AUGMENTED data object
             );
