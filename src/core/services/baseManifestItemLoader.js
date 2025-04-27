@@ -1,3 +1,5 @@
+// src/core/services/baseManifestItemLoader.js
+
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
  * @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver
@@ -151,10 +153,11 @@ export class BaseManifestItemLoader {
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file.
+     * @param {string} typeName - The content type name (e.g., 'items', 'locations'). <<< NEW PARAMETER
      * @returns {any | Promise<any>} The result of processing (e.g., the validated data object, null, or undefined). Can be async.
      * @throws {Error} If processing or validation fails. This error will be caught by `_processFileWrapper`.
      */
-    _processFetchedItem(modId, filename, resolvedPath, data) {
+    _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< ADDED typeName
         // istanbul ignore next
         throw new Error('Abstract method _processFetchedItem must be implemented by subclass.');
     }
@@ -215,10 +218,11 @@ export class BaseManifestItemLoader {
      * @param {string} modId - The ID of the mod owning the file.
      * @param {string} filename - The filename to process.
      * @param {string} contentTypeDir - The directory name for this content type (e.g., 'items', 'actions').
+     * @param {string} typeName - The content type name (e.g., 'items', 'locations'). <<< NEW PARAMETER
      * @returns {Promise<any>} A promise that resolves with the result from `_processFetchedItem` or rejects if any step fails.
      * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
      */
-    async _processFileWrapper(modId, filename, contentTypeDir) {
+    async _processFileWrapper(modId, filename, contentTypeDir, typeName) { // <<< ADDED typeName
         let resolvedPath = null; // Initialize outside try for catch block access
         try {
             // 1. Resolve Path
@@ -230,8 +234,8 @@ export class BaseManifestItemLoader {
             this._logger.debug(`[${modId}] Fetched data from ${resolvedPath}`);
 
             // 3. Call Abstract Method
-            // Pass original filename and resolved path for context
-            const result = await this._processFetchedItem(modId, filename, resolvedPath, data);
+            // Pass original filename, resolved path, and typeName for context
+            const result = await this._processFetchedItem(modId, filename, resolvedPath, data, typeName); // <<< PASS typeName
             this._logger.debug(`[${modId}] Successfully processed ${filename}`);
 
             // 4. Return Result
@@ -245,6 +249,7 @@ export class BaseManifestItemLoader {
                     modId,
                     filename,
                     path: resolvedPath ?? 'Path not resolved', // Use resolvedPath if available
+                    typeName, // <<< Log typeName
                     error: error?.message || String(error) // Ensure error message is captured
                 },
                 error // Pass the full error object for potential stack trace logging
@@ -265,9 +270,10 @@ export class BaseManifestItemLoader {
      * @param {object} manifest - The parsed mod manifest object.
      * @param {string} contentKey - The key within `manifest.content` (e.g., 'components').
      * @param {string} contentTypeDir - The directory name for this content type (e.g., 'components').
+     * @param {string} typeName - The content type name (e.g., 'components', 'locations'). <<< NEW PARAMETER
      * @returns {Promise<number>} A promise that resolves with the count of successfully processed items.
      */
-    async _loadItemsInternal(modId, manifest, contentKey, contentTypeDir) {
+    async _loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName) { // <<< ADDED typeName
         // 1. Extract Filenames
         const filenames = this._extractValidFilenames(manifest, contentKey, modId);
         const totalAttempted = filenames.length;
@@ -282,7 +288,7 @@ export class BaseManifestItemLoader {
 
         // 3. Create Processing Promises
         const processingPromises = filenames.map(filename =>
-            this._processFileWrapper(modId, filename, contentTypeDir)
+            this._processFileWrapper(modId, filename, contentTypeDir, typeName) // <<< PASS typeName
         );
 
         // 4. Await Promises

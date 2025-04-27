@@ -20,10 +20,10 @@ import {BaseManifestItemLoader} from './baseManifestItemLoader.js';
  * the definition metadata in the registry. It extends {@link BaseManifestItemLoader}
  * and implements the component-definition-specific processing logic in `_processFetchedItem`.
  *
- * @class ComponentDefinitionLoader
+ * @class ComponentLoader
  * @extends BaseManifestItemLoader
  */
-class ComponentDefinitionLoader extends BaseManifestItemLoader {
+class ComponentLoader extends BaseManifestItemLoader {
 
     /**
      * @private
@@ -73,7 +73,8 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
         }
 
         // --- Delegate to Base Class ---
-        return await this._loadItemsInternal(modId, modManifest, 'components', 'components');
+        // Pass 'components' as the typeName
+        return await this._loadItemsInternal(modId, modManifest, 'components', 'components', 'components');
     }
 
 
@@ -90,13 +91,15 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path used to fetch the file.
      * @param {any} data - The raw, parsed data object fetched from the file.
+     * @param {string} typeName - The content type name ('components'). <<< NEW PARAMETER (ignored by this implementation)
      * @returns {Promise<string>} A promise resolving with the validated component ID on successful processing, validation, registration, and storage.
      * @throws {Error} Throws an error if configuration is missing, validation fails (structure or properties), schema registration fails, or storage fails.
      * @protected
      * @override
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data) {
-        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Processing fetched item: ${filename}`);
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< ADDED typeName
+        // typeName is available but not used by this specific loader as per ticket instructions
+        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
 
         // --- 1. Implement Definition Schema Validation ---
         const definitionSchemaId = this._componentDefSchemaId;
@@ -192,7 +195,8 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
         // --- 5. Store Component Definition Metadata ---
         this._logger.debug(`ComponentDefinitionLoader [${modId}]: Storing component definition metadata for '${trimmedComponentId}'.`);
 
-        const existingDefinition = this._dataRegistry.get('component_definitions', trimmedComponentId);
+        // Use the typeName ('components') to check for existing definition for consistency
+        const existingDefinition = this._dataRegistry.get('components', trimmedComponentId); // <<< Use 'components' for check
         if (existingDefinition) {
             this._logger.warn(`Component Definition '${filename}' in mod '${modId}' is overwriting existing component definition metadata for ID '${trimmedComponentId}'.`);
         }
@@ -203,7 +207,8 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
                 modId: modId,
                 _sourceFile: filename
             };
-            this._dataRegistry.store('component_definitions', trimmedComponentId, dataToStore);
+            // Store under the key 'components' consistent with manifest and typeName
+            this._dataRegistry.store('components', trimmedComponentId, dataToStore); // <<< Use 'components' for storage
             this._logger.debug(`Successfully stored component definition metadata for '${trimmedComponentId}' from file '${filename}'.`);
         } catch (error) {
             this._logger.error(`Failed to store component definition metadata for ID '${trimmedComponentId}' from file '${filename}' in mod '${modId}'. Error: ${error.message}`, {
@@ -221,4 +226,4 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
 
 }
 
-export default ComponentDefinitionLoader;
+export default ComponentLoader;

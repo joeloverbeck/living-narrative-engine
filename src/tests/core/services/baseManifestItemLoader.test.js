@@ -293,7 +293,8 @@ describe('BaseManifestItemLoader Constructor', () => {
             freshLoader._processFetchedItem = originalMethod;
 
             // Wrap the synchronous call in a function for .toThrow()
-            expect(() => freshLoader._processFetchedItem('modId', 'filename', 'path', {}))
+            // Pass undefined for typeName as the original stub doesn't expect it
+            expect(() => freshLoader._processFetchedItem('modId', 'filename', 'path', {}, undefined)) // <<< Pass undefined
                 .toThrow('Abstract method _processFetchedItem must be implemented by subclass.');
 
             // No need to restore mock, beforeEach handles it for subsequent tests
@@ -558,6 +559,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
     const modId = 'test-mod';
     const filename = 'item.json';
     const contentTypeDir = 'items';
+    const typeName = 'items'; // <<< ADDED typeName variable
     const resolvedPath = `./data/mods/${modId}/${contentTypeDir}/${filename}`;
     const mockData = {id: 'test-item', value: 123};
     const mockResult = {processed: true, id: 'test-item'}; // Example result from _processFetchedItem
@@ -580,13 +582,15 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         loader._processFetchedItem.mockResolvedValue(mockResult); // Configure the mock
 
         // --- Act ---
-        const result = await loader._processFileWrapper(modId, filename, contentTypeDir);
+        // Pass typeName to the wrapper
+        const result = await loader._processFileWrapper(modId, filename, contentTypeDir, typeName); // <<< PASS typeName
 
         // --- Assert ---
         expect(result).toEqual(mockResult); // Check returned value
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, contentTypeDir, filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPath);
-        expect(loader._processFetchedItem).toHaveBeenCalledWith(modId, filename, resolvedPath, mockData);
+        // Expect _processFetchedItem to be called WITH typeName
+        expect(loader._processFetchedItem).toHaveBeenCalledWith(modId, filename, resolvedPath, mockData, typeName); // <<< ADDED typeName to expectation
         expect(mockLogger.error).not.toHaveBeenCalled(); // No errors logged
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${resolvedPath}`);
@@ -601,7 +605,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         });
 
         // --- Act & Assert ---
-        await expect(loader._processFileWrapper(modId, filename, contentTypeDir))
+        await expect(loader._processFileWrapper(modId, filename, contentTypeDir, typeName)) // <<< PASS typeName
             .rejects.toThrow(resolutionError); // Verify re-throw
 
         // Assert logging
@@ -612,6 +616,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
                 modId: modId,
                 filename: filename,
                 path: 'Path not resolved', // resolvedPath is null here
+                typeName: typeName, // <<< ADDED typeName to error context
                 error: resolutionError.message
             },
             resolutionError // Original error object
@@ -629,7 +634,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         mockFetcher.fetch.mockRejectedValue(fetchError); // Simulate fetch failure
 
         // --- Act & Assert ---
-        await expect(loader._processFileWrapper(modId, filename, contentTypeDir))
+        await expect(loader._processFileWrapper(modId, filename, contentTypeDir, typeName)) // <<< PASS typeName
             .rejects.toThrow(fetchError); // Verify re-throw
 
         // Assert logging
@@ -640,6 +645,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
                 modId: modId,
                 filename: filename,
                 path: resolvedPath, // Path was resolved
+                typeName: typeName, // <<< ADDED typeName to error context
                 error: fetchError.message
             },
             fetchError // Original error object
@@ -660,7 +666,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         loader._processFetchedItem.mockRejectedValue(processError); // Simulate processing failure
 
         // --- Act & Assert ---
-        await expect(loader._processFileWrapper(modId, filename, contentTypeDir))
+        await expect(loader._processFileWrapper(modId, filename, contentTypeDir, typeName)) // <<< PASS typeName
             .rejects.toThrow(processError); // Verify re-throw
 
         // Assert logging
@@ -671,6 +677,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
                 modId: modId,
                 filename: filename,
                 path: resolvedPath, // Path was resolved, data fetched
+                typeName: typeName, // <<< ADDED typeName to error context
                 error: processError.message
             },
             processError // Original error object
@@ -687,6 +694,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     const manifest = {id: modId, content: {}}; // Basic manifest structure
     const contentKey = 'items';
     const contentTypeDir = 'items';
+    const typeName = 'items'; // <<< ADDED typeName variable
 
     // Note: loader, mocks, _extractValidFilenames, _processFileWrapper are mocked in global beforeEach
 
@@ -704,7 +712,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         loader._extractValidFilenames.mockReturnValue([]); // Configure mock
 
         // --- Act ---
-        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir);
+        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName); // <<< PASS typeName
 
         // --- Assert ---
         expect(result).toBe(0);
@@ -721,14 +729,15 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         loader._processFileWrapper.mockResolvedValue('success'); // Mock wrapper to always succeed
 
         // --- Act ---
-        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir);
+        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName); // <<< PASS typeName
 
         // --- Assert ---
         expect(result).toBe(2);
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(2);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir);
+        // Expect wrapper to be called WITH typeName
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName); // <<< ADDED typeName
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName); // <<< ADDED typeName
         expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/2 ${contentKey} items.`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`Found 2 potential ${contentKey} files to process for mod ${modId}.`); // Check initial debug log
     });
@@ -738,7 +747,9 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         const filenames = ['file1.json', 'file2.json', 'file3.json'];
         const failureError = new Error('Failed to process file2');
         loader._extractValidFilenames.mockReturnValue(filenames);
-        loader._processFileWrapper.mockImplementation(async (mId, fname, cTypeDir) => {
+        // Update mock signature to accept typeName
+        loader._processFileWrapper.mockImplementation(async (mId, fname, cTypeDir, tName) => { // <<< ADDED tName
+            expect(tName).toBe(typeName); // Add assertion for typeName within mock
             if (fname === 'file2.json') {
                 // Simulate rejection that _processFileWrapper would propagate
                 throw failureError;
@@ -747,15 +758,15 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         });
 
         // --- Act ---
-        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir);
+        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName); // <<< PASS typeName
 
         // --- Assert ---
         expect(result).toBe(2); // Only file1 and file3 succeeded
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(3);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file3.json', contentTypeDir);
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName); // <<< ADDED typeName
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName); // <<< ADDED typeName
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file3.json', contentTypeDir, typeName); // <<< ADDED typeName
         expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/3 ${contentKey} items. (1 failed)`);
         // Check debug log for the failure reason (optional, but good)
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Failed processing file2.json. Reason: ${failureError.message}`);
@@ -768,8 +779,9 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         const failureError1 = new Error('Failed file1');
         const failureError2 = new Error('Failed file2');
         loader._extractValidFilenames.mockReturnValue(filenames);
-        // Mock _processFileWrapper to always reject
-        loader._processFileWrapper.mockImplementation(async (mId, fname, cTypeDir) => {
+        // Update mock signature to accept typeName
+        loader._processFileWrapper.mockImplementation(async (mId, fname, cTypeDir, tName) => { // <<< ADDED tName
+            expect(tName).toBe(typeName); // Add assertion for typeName within mock
             if (fname === 'file1.json') throw failureError1;
             if (fname === 'file2.json') throw failureError2;
             // Should not happen in this test setup, but good practice
@@ -777,14 +789,14 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         });
 
         // --- Act ---
-        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir);
+        const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName); // <<< PASS typeName
 
         // --- Assert ---
         expect(result).toBe(0);
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(2);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir);
-        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir);
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName); // <<< ADDED typeName
+        expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName); // <<< ADDED typeName
         expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 0/2 ${contentKey} items. (2 failed)`);
         // Check debug logs for failure reasons
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Failed processing file1.json. Reason: ${failureError1.message}`);

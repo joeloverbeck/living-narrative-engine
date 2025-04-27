@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentLoader from '../../../core/services/componentLoader.js'; // Adjust path if necessary
 
 // --- Mock Service Factories (Copied from componentDefinitionLoader.test.js for self-containment) ---
 
@@ -265,7 +265,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.4: Schema Validation Failure)'
         mockLogger = createMockLogger();
 
         // Instantiate loader
-        loader = new ComponentDefinitionLoader(
+        loader = new ComponentLoader(
             mockConfig,
             mockResolver,
             mockFetcher,

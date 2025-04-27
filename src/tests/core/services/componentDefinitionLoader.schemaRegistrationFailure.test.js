@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+import ComponentLoader from '../../../core/services/componentLoader.js';
 import {BaseManifestItemLoader} from '../../../core/services/baseManifestItemLoader.js'; // Import base class if needed
 
 // --- Mock Service Factories ---
@@ -196,7 +196,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.8: Data Schema Registration Fa
         mockValidator = createMockSchemaValidator(); // Uses factory defaults initially
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
-        loader = new ComponentDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+        loader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
 
         // --- Base setup common to both scenarios ---
         // Ensure the main component definition schema ID is configured

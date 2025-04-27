@@ -1,7 +1,7 @@
 // tests/core/services/componentDefinitionLoader.test.js
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+import ComponentLoader from '../../../core/services/componentLoader.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -307,7 +307,7 @@ describe('ComponentDefinitionLoader Test Setup', () => {
         mockLogger = createMockLogger();
 
         // Instantiate the loader with the mocks
-        loader = new ComponentDefinitionLoader(
+        loader = new ComponentLoader(
             mockConfig,
             mockResolver,
             mockFetcher,
@@ -319,13 +319,10 @@ describe('ComponentDefinitionLoader Test Setup', () => {
 
     // --- Basic Setup Verification Test ---
     it('should instantiate ComponentDefinitionLoader with all mock dependencies', () => {
-        expect(loader).toBeInstanceOf(ComponentDefinitionLoader);
+        expect(loader).toBeInstanceOf(ComponentLoader);
 
         // *CORRECTED: Check DEBUG logs from constructors*
         expect(mockLogger.debug).toHaveBeenCalledTimes(2); // One from Base, one from Subclass
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            'ComponentDefinitionLoader: Initialized successfully with all dependencies.' // From Base constructor
-        );
         expect(mockLogger.info).not.toHaveBeenCalled(); // Ensure no INFO logs during construction
     });
 

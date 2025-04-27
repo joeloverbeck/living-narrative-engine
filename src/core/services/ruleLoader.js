@@ -87,7 +87,8 @@ class RuleLoader extends BaseManifestItemLoader {
         }
 
         this._logger.info(`RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`);
-        return this._loadItemsInternal(modId, manifest, 'rules', 'system-rules');
+        // Pass 'rules' as the typeName
+        return this._loadItemsInternal(modId, manifest, 'rules', 'system-rules', 'rules');
     }
 
     /**
@@ -122,11 +123,13 @@ class RuleLoader extends BaseManifestItemLoader {
      * @param {string} filename - The original filename as listed in the mod manifest (e.g., "my_rule.rule.json").
      * @param {string} resolvedPath - The fully resolved path used to fetch the file data (e.g., "./data/mods/MyMod/system-rules/my_rule.rule.json").
      * @param {any} data - The raw, parsed data object fetched from the rule file. Expected to conform to the system rule schema.
+     * @param {string} typeName - The content type name ('rules'). <<< NEW PARAMETER (ignored by this implementation)
      * @returns {Promise<string>} A promise resolving with the `finalRuleId` (e.g., "MyMod:my_rule") upon successful processing, validation, and storage.
      * @throws {Error} Throws an error if schema validation fails (when applicable) or if storing the rule in the registry fails. The error will be logged by the base class wrapper.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data) {
-        this._logger.debug(`RuleLoader [${modId}]: Processing fetched rule item: ${filename} from path ${resolvedPath}`);
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< ADDED typeName
+        // typeName is available but not used by this specific loader as per ticket instructions
+        this._logger.debug(`RuleLoader [${modId}]: Processing fetched rule item: ${filename} from path ${resolvedPath} (Type: ${typeName})`);
 
         // --- Schema Validation (Conditional) ---
         const schemaId = this.#ruleSchemaId;

@@ -14,7 +14,7 @@
 /** @typedef {import('../../services/manifestLoader.js').default} ManifestLoader */
 /** @typedef {import('../../services/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../services/genericContentLoader.js').default} GenericContentLoader */
-/** @typedef {import('../../services/componentDefinitionLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../services/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
 /** @typedef {import('../../services/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
 /** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
@@ -35,7 +35,7 @@ import WorkspaceDataFetcher from '../../services/workspaceDataFetcher.js';
 import SchemaLoader from '../../services/schemaLoader.js';
 import RuleLoader from '../../services/ruleLoader.js';
 import GenericContentLoader from '../../services/genericContentLoader.js';
-import ComponentDefinitionLoader from '../../services/componentDefinitionLoader.js';
+import ComponentLoader from '../../services/componentLoader.js';
 import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
 import ModManifestLoader from '../../services/modManifestLoader.js'; // <<< ADDED: MODLOADER-005 A
 
@@ -117,7 +117,7 @@ export function registerLoaders(container) {
     logger.debug(`Loaders Registration: Registered ${tokens.GenericContentLoader}.`);
 
     // ComponentDefinitionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
-    registrar.singletonFactory(tokens.ComponentDefinitionLoader, (c) => new ComponentDefinitionLoader(
+    registrar.singletonFactory(tokens.ComponentDefinitionLoader, (c) => new ComponentLoader(
         c.resolve(tokens.IConfiguration),
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),

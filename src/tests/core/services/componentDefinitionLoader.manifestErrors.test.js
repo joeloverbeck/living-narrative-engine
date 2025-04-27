@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+import ComponentLoader from '../../../core/services/componentLoader.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -195,7 +195,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         mockLogger = createMockLogger();
 
         // Instantiate loader
-        loader = new ComponentDefinitionLoader(
+        loader = new ComponentLoader(
             mockConfig,
             mockResolver,
             mockFetcher,

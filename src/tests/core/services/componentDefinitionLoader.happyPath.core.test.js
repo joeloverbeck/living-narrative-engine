@@ -1,6 +1,6 @@
 // src/tests/core/services/componentDefinitionLoader.happyPath.core.test.js
 
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // The class under test
+import ComponentLoader from '../../../core/services/componentLoader.js'; // The class under test
 import {beforeEach, describe, expect, jest, test} from '@jest/globals'; // Import Jest utilities if needed, like jest.fn()
 
 /**
@@ -260,23 +260,23 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
             return {isValid: true, errors: null};
         });
 
-        // 3. Remove the previous incorrect/ineffective mocks
-        // const addedSchemas = new Set(); // No longer needed with factory state
-        // mockValidator.isSchemaLoaded.mockImplementation(...); // REMOVE - Use factory default or override if needed
-        // mockValidator.getValidator.mockImplementation(...); // REMOVE - Not called by code under test
-        // mockValidator.addSchema.mockImplementation(...); // REMOVE - Use factory default
-        // mockValidator.removeSchema.mockReturnValue(false); // REMOVE - Use factory default
-
         // Use default behavior for data schema handling (addSchema/isSchemaLoaded/removeSchema)
         // The factory default addSchema should work for registering data schemas.
         // The factory default isSchemaLoaded will work based on what's added.
-        // ***** END CORRECTED VALIDATOR SETUP *****
 
-        mockRegistry.get.mockReturnValue(undefined); // Simulate no existing definitions
-        // Use default registry store
+        // --- Setup: Configure Mock Registry ---
+        // Make registry.get return undefined for 'components' key initially
+        mockRegistry.get.mockImplementation((type, id) => {
+            if (type === 'components') { // <<< Check correct key
+                return undefined; // Simulate no existing definitions
+            }
+            // Fallback for other types if needed
+            const typeMap = mockRegistry._internalRegistryData?.get(type); // Access internal state if needed (use cautiously)
+            return typeMap?.has(id) ? JSON.parse(JSON.stringify(typeMap.get(id))) : undefined;
+        });
 
         // --- Setup: Instantiate Loader ---
-        componentDefinitionLoader = new ComponentDefinitionLoader(
+        componentDefinitionLoader = new ComponentLoader(
             mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger
         );
     });
@@ -295,8 +295,9 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         // Add checks for the stored object including modId and _sourceFile
         const expectedStoredHealth = {...coreHealthDef, modId: 'core', _sourceFile: coreHealthFilename};
         const expectedStoredPosition = {...corePositionDef, modId: 'core', _sourceFile: corePositionFilename};
-        expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', coreHealthDef.id, expectedStoredHealth);
-        expect(mockRegistry.store).toHaveBeenCalledWith('component_definitions', corePositionDef.id, expectedStoredPosition);
+        // Expect store with 'components' key
+        expect(mockRegistry.store).toHaveBeenCalledWith('components', coreHealthDef.id, expectedStoredHealth); // <<< CORRECTED KEY
+        expect(mockRegistry.store).toHaveBeenCalledWith('components', corePositionDef.id, expectedStoredPosition); // <<< CORRECTED KEY
 
         expect(mockValidator.addSchema).toHaveBeenCalledTimes(2);
         expect(mockValidator.addSchema).toHaveBeenCalledWith(coreHealthDef.dataSchema, coreHealthDef.id);
@@ -311,14 +312,16 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         // Other checks
         expect(mockValidator.removeSchema).not.toHaveBeenCalled();
         expect(mockRegistry.get).toHaveBeenCalledTimes(2); // Checks for overrides
-        expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', coreHealthDef.id);
-        expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', corePositionDef.id);
+        // Expect get with 'components' key
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', coreHealthDef.id); // <<< CORRECTED KEY
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', corePositionDef.id); // <<< CORRECTED KEY
 
         // --- Verify: ILogger Calls ---
-        // (Logger checks seem mostly correct, ensure they pass after the main fix)
         expect(mockLogger.info).toHaveBeenCalledTimes(2);
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Loading component definitions for mod 'core'"));
         const expectedSuccessCount = mockCoreManifest.content.components.length;
+        // Note: The log message from BaseManifestItemLoader._loadItemsInternal uses the 'contentKey', which is 'components'.
+        // The test assertion should reflect this.
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.`
         );

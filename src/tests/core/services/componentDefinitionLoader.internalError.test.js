@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+import ComponentLoader from '../../../core/services/componentLoader.js';
 import {BaseManifestItemLoader} from '../../../core/services/baseManifestItemLoader.js'; // Import base class if needed for type hints or inspection
 
 // --- Mock Service Factories (Copied from previous test files for self-containment) ---
@@ -237,7 +237,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         mockValidator = createMockSchemaValidator();
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
-        loader = new ComponentDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+        loader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => typeName === 'components' ? componentDefSchemaId : undefined);
         mockValidator._setSchemaLoaded(componentDefSchemaId, {});
         // Ensure component def schema validation passes by default for these tests

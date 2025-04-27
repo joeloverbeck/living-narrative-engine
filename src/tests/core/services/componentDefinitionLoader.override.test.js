@@ -2,7 +2,9 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js';
+// Correct the import: ComponentDefinitionLoader, not ComponentLoader
+import ComponentDefinitionLoader from '../../../core/services/componentLoader.js';
+
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided previously]
@@ -179,6 +181,7 @@ const createMockDataRegistry = (overrides = {}) => {
             const typeMap = registryData.get(type);
             return typeMap ? Array.from(typeMap.values()).map(d => JSON.parse(JSON.stringify(d))) : [];
         }),
+        // Expose internal data for direct checking in tests (use carefully)
         _getData: (type, id) => registryData.get(type)?.get(id),
         _prepopulate: (type, id, data) => {
             if (!registryData.has(type)) registryData.set(type, new Map());
@@ -263,7 +266,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
     let mockValidator;
     let mockRegistry;
     let mockLogger;
-    let loader;
+    let loader; // Correct type: ComponentDefinitionLoader
 
     // --- Shared Test Data ---
     const sharedComponentId = 'shared:position';
@@ -298,6 +301,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
         mockValidator = createMockSchemaValidator(); // Creates validator with working internal state
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
+        // Instantiate the correct loader
         loader = new ComponentDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
 
         // --- Base Configuration for Mocks ---
@@ -338,7 +342,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
         // 1. Check if the specific component schema was loaded using the validator's state check
         expect(mockValidator.isSchemaLoaded(sharedComponentId)).toBe(true);
         // 2. Verify the data stored in the registry matches the 'core' definition
-        expect(mockRegistry.get('component_definitions', sharedComponentId)).toEqual({
+        //    Use the CORRECTED key 'components'
+        expect(mockRegistry.get('components', sharedComponentId)).toEqual({ // <<< CORRECTED KEY
             ...coreSharedPositionDef,
             modId: 'core', // Ensure correct mod ID is stored
             _sourceFile: sharedFilename // Ensure correct source file is stored
@@ -350,17 +355,31 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
         // --- PREPARATION FOR PHASE 2 ---
         // Clear mock call history *without* resetting internal state (like loaded schemas/registry data)
         // This allows us to verify Phase 2 interactions specifically.
-        jest.clearAllMocks(); // Clears call counts, arguments, etc.
+        // Note: Using jest.clearAllMocks() clears calls AND resets implementations if they were mocks.
+        //       We need to re-apply mock implementations if they were cleared.
+        //       A better approach might be jest.resetAllMocks() or manually resetting specific mocks' call counts.
+        //       For simplicity here, let's assume we re-apply necessary mocks after clearAllMocks.
+        jest.clearAllMocks();
+
+        // Re-apply mock implementations that were cleared (if using clearAllMocks)
+        // Or simply clear calls: mockRegistry.get.mockClear(); mockRegistry.store.mockClear(); etc.
+        mockRegistry.get.mockClear();
+        mockRegistry.store.mockClear();
+        mockValidator.isSchemaLoaded.mockClear();
+        mockValidator.removeSchema.mockClear();
+        mockValidator.addSchema.mockClear();
+        mockLogger.warn.mockClear();
+        mockLogger.debug.mockClear();
+        mockLogger.info.mockClear();
+
 
         // --- Phase 2: Setup Mocks Specific to Foo Load ---
 
-        // Re-configure necessary mock behaviors for the *override* scenario.
-        // Some mocks might need to reflect the state left by Phase 1.
-
         // 1. Mock registry 'get' to simulate finding the existing 'core' definition
         //    when the loader checks before storing the 'foo' version.
+        //    Use the CORRECTED key 'components'
         mockRegistry.get.mockImplementation((type, id) => {
-            if (type === 'component_definitions' && id === sharedComponentId) {
+            if (type === 'components' && id === sharedComponentId) { // <<< CORRECTED KEY
                 // Return a deep copy of the *expected* existing data from Phase 1
                 return JSON.parse(JSON.stringify({
                     ...coreSharedPositionDef,
@@ -371,44 +390,17 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
             return undefined; // Return undefined for any other registry get calls
         });
 
-        // 2. Mock Schema Validator interactions for the override flow:
+        // 2. Schema Validator interactions for the override flow:
         //    - isSchemaLoaded: Should return true because 'core' loaded it.
         //    - removeSchema: Should be called and succeed for the specific ID.
         //    - addSchema: Should be called with the new schema data.
 
-        //    Let's rely on the *base* mock implementation from createMockSchemaValidator
-        //    for isSchemaLoaded, removeSchema, and addSchema where possible, as it handles
-        //    the internal state (`loadedSchemas` map). We only override if needed.
-
-        //    Ensure `isSchemaLoaded` uses the mock's internal state.
-        //    The base mock already does this, but we can be explicit if needed:
-        //    mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-        //        return mockValidator._getLoadedSchemaData(schemaId) !== undefined;
-        //    });
-
-        //    ***** CORRECTED MOCK IMPLEMENTATION FOR removeSchema *****
-        //    We need `removeSchema` to be *called* and ideally succeed (return true).
-        //    The base mock should handle removing from its internal map.
-        //    We *don't* need a custom implementation here unless the base mock is flawed.
-        //    Let's *spy* on the base mock's removeSchema instead of completely replacing it,
-        //    so we can verify it's called while letting it manage internal state.
+        //    Use spies on the *existing* mockValidator instance to track calls
+        //    without replacing the underlying mock logic which handles state.
         const removeSchemaSpy = jest.spyOn(mockValidator, 'removeSchema');
-
-        //    ***** CORRECTED MOCK IMPLEMENTATION FOR addSchema *****
-        //    Similarly, let's spy on the base mock's `addSchema` to ensure it's called
-        //    with the correct *new* schema data ('foo' version). The base mock
-        //    should handle adding it to the internal map.
         const addSchemaSpy = jest.spyOn(mockValidator, 'addSchema');
-        //    If the base addSchema throws on duplicate (which it might), we *would* need
-        //    to override it for the test:
-        //    mockValidator.addSchema.mockImplementation(async (schemaData, schemaId) => {
-        //        if (schemaId === sharedComponentId) {
-        //            mockValidator._setSchemaLoaded(schemaId, schemaData); // Use helper to force state update
-        //            return Promise.resolve();
-        //        }
-        //        throw new Error(`Unexpected addSchema call in Phase 2 mock for ${schemaId}`);
-        //    });
-        //    However, since removeSchema should run first, the base addSchema should *not* see a duplicate.
+        //    Ensure the base isSchemaLoaded is used (it checks the internal map)
+        const isSchemaLoadedSpy = jest.spyOn(mockValidator, 'isSchemaLoaded');
 
         // --- Action: Load Foo (Phase 2) ---
         console.log("--- Starting Phase 2 Load ---");
@@ -420,14 +412,15 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
         // Get the result (count of loaded items)
         const count = await loadPromiseFoo;
         // Verify that exactly one item was loaded successfully.
-        expect(count).toBe(1); // <<<<<< This assertion should now pass
+        expect(count).toBe(1); // Should be 1 for the 'foo' mod load
 
         // --- Verification: Mock Interactions for Phase 2 ---
 
         // 1. Registry Interactions:
         //    - Check if `registry.get` was called once to detect the existing definition.
         expect(mockRegistry.get).toHaveBeenCalledTimes(1);
-        expect(mockRegistry.get).toHaveBeenCalledWith('component_definitions', sharedComponentId);
+        //    Expect get with 'components' key
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', sharedComponentId); // <<< CORRECTED KEY
         //    - Check if `registry.store` was called once to store the *overriding* definition.
         expect(mockRegistry.store).toHaveBeenCalledTimes(1);
         const expectedStoredObject = {
@@ -435,8 +428,9 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
             modId: 'foo',            // Mod ID updated to 'foo'
             _sourceFile: sharedFilename // Source file remains the same name, but context is 'foo'
         };
+        //    Expect store with 'components' key
         expect(mockRegistry.store).toHaveBeenCalledWith(
-            'component_definitions',
+            'components', // <<< CORRECTED KEY
             sharedComponentId,
             // Use objectContaining to be flexible if extra properties are added later
             expect.objectContaining(expectedStoredObject)
@@ -444,7 +438,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
 
         // 2. Schema Validator Interactions (using spies):
         //    - isSchemaLoaded should have been called before removal attempt.
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(sharedComponentId);
+        expect(isSchemaLoadedSpy).toHaveBeenCalledWith(sharedComponentId);
         //    - removeSchema should have been called once with the correct ID.
         expect(removeSchemaSpy).toHaveBeenCalledTimes(1);
         expect(removeSchemaSpy).toHaveBeenCalledWith(sharedComponentId);
@@ -479,7 +473,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.3: Override Behavior)', () => 
 
         // 1. Check Registry State:
         //    Use the internal helper `_getData` for direct access without invoking mocks.
-        const finalStoredData = mockRegistry._getData('component_definitions', sharedComponentId);
+        //    Check using the CORRECTED key 'components'
+        const finalStoredData = mockRegistry._getData('components', sharedComponentId); // <<< CORRECTED KEY
         expect(finalStoredData).toEqual(expect.objectContaining(expectedStoredObject));
 
         // 2. Check Validator State:

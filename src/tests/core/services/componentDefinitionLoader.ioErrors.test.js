@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentDefinitionLoader from '../../../core/services/componentDefinitionLoader.js'; // Adjust path if necessary
+import ComponentLoader from '../../../core/services/componentLoader.js'; // Adjust path if necessary
 
 // --- Mock Service Factories (Keep as they are) ---
 // ... (createMockConfiguration, createMockPathResolver, etc. - NO CHANGES NEEDED HERE based on provided errors) ...
@@ -229,7 +229,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         mockLogger = createMockLogger();
 
         // Instantiate loader
-        loader = new ComponentDefinitionLoader(
+        loader = new ComponentLoader(
             mockConfig,
             mockResolver,
             mockFetcher,

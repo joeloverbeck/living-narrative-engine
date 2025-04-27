@@ -6,7 +6,7 @@
 /** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../../core/services/schemaLoader.js').default} SchemaLoader */ // Assuming type
-/** @typedef {import('../../../core/services/componentDefinitionLoader.js').default} ComponentDefinitionLoader */ // Assuming type
+/** @typedef {import('../../../core/services/componentLoader.js').default} ComponentDefinitionLoader */ // Assuming type
 /** @typedef {import('../../../core/services/ruleLoader.js').default} RuleLoader */ // Assuming type
 /** @typedef {import('../../../core/services/gameConfigLoader.js').default} GameConfigLoader */ // Assuming type
 /** @typedef {import('../../../core/services/modManifestLoader.js').default} ModManifestLoader */ // Assuming type
