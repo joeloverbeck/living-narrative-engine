@@ -109,6 +109,7 @@ export const tokens = Object.freeze({
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     ActionLoader: 'ActionLoader', // <<< ADDED
     EventLoader: 'EventLoader',   // <<< ADDED
+    EntityLoader: 'EntityLoader',
     WorldLoader: 'WorldLoader',
     GameConfigLoader: 'GameConfigLoader',
     ModManifestLoader: 'ModManifestLoader',

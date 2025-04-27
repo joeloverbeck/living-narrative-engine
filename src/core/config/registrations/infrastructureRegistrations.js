@@ -32,6 +32,7 @@ export function registerInfrastructure(container) {
         c.resolve(tokens.RuleLoader),               // 5th: ruleLoader
         c.resolve(tokens.ActionLoader),             // 6th: actionLoader <<< ADDED
         c.resolve(tokens.EventLoader),              // 7th: eventLoader <<< ADDED
+        c.resolve(tokens.EntityLoader),
         c.resolve(tokens.ISchemaValidator),         // 8th: validator
         c.resolve(tokens.IConfiguration),           // 9th: configuration
         c.resolve(tokens.GameConfigLoader),         // 10th: gameConfigLoader

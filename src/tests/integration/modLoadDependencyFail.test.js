@@ -1,4 +1,4 @@
-// src/tests/integration/modLoadDependencyFail.test.js
+// Filename: src/tests/integration/modLoadDependencyFail.test.js
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
@@ -20,12 +20,13 @@ const createMockConfiguration = (overrides = {}) => ({
         // Add mappings for other types if needed by mocks/test, otherwise keep generic
         if (t === 'actions') return 'http://example.com/schemas/action-definition.schema.json';
         if (t === 'events') return 'http://example.com/schemas/event-definition.schema.json';
+        if (t === 'entities') return 'http://example.com/schemas/entity.schema.json'; // Required for WorldLoader essentials check
         if (t === 'system-rules') return 'http://example.com/schemas/system-rule.schema.json';
         return `http://example.com/schemas/${t}.schema.json`;
     }),
     // Unused in this harness but required by ModManifestLoader interface
     getBaseDataPath: jest.fn(() => './data'),
-    getSchemaFiles: jest.fn(() => ['mod.manifest.schema.json', 'game.schema.json', 'components.schema.json']), // Basic schemas for test
+    getSchemaFiles: jest.fn(() => ['mod.manifest.schema.json', 'game.schema.json', 'components.schema.json', 'entity.schema.json']), // Basic schemas for test
     getSchemaBasePath: jest.fn(() => 'schemas'),
     getContentBasePath: jest.fn((typeName) => typeName),
     getWorldBasePath: jest.fn(() => 'worlds'),
@@ -86,6 +87,10 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
         }
         if (path.includes('/schemas/components.schema.json')) {
             return {$id: 'http://example.com/schemas/components.schema.json', type: 'object'};
+        }
+        // Add entity schema fetch mock
+        if (path.includes('/schemas/entity.schema.json')) {
+            return {$id: 'http://example.com/schemas/entity.schema.json', type: 'object'};
         }
         // Add other schemas handled by fetcher if validator needs them
         if (path.includes('/schemas/action-definition.schema.json')) {
@@ -165,6 +170,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     let ruleLoader;
     let actionLoader;
     let eventLoader;
+    let entityLoader; // <<< ADDED: Declare mock entityLoader
     let gameConfigLoader;
     let modManifestLoader; // The real instance will be created here
     let worldLoader;
@@ -173,6 +179,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     const MOD_MANIFEST_SCHEMA_ID = 'http://example.com/schemas/mod.manifest.schema.json';
     const GAME_SCHEMA_ID = 'http://example.com/schemas/game.schema.json';
     const COMPONENTS_SCHEMA_ID = 'http://example.com/schemas/components.schema.json';
+    const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
     const ACTION_SCHEMA_ID = 'http://example.com/schemas/action-definition.schema.json';
     const EVENT_SCHEMA_ID = 'http://example.com/schemas/event-definition.schema.json';
     const RULE_SCHEMA_ID = 'http://example.com/schemas/system-rule.schema.json';
@@ -219,6 +226,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         additionalProperties: true
     };
     const componentsSchema = {$id: COMPONENTS_SCHEMA_ID, type: 'object', additionalProperties: true};
+    const entitySchema = {$id: ENTITY_SCHEMA_ID, type: 'object', additionalProperties: true}; // <<< ADDED
     const actionSchema = {$id: ACTION_SCHEMA_ID, type: 'object', additionalProperties: true};
     const eventSchema = {$id: EVENT_SCHEMA_ID, type: 'object', additionalProperties: true};
     const ruleSchema = {$id: RULE_SCHEMA_ID, type: 'object', additionalProperties: true};
@@ -238,6 +246,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
                     if (!validator.isSchemaLoaded(GAME_SCHEMA_ID)) await validator.addSchema(gameSchema, GAME_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(COMPONENTS_SCHEMA_ID)) await validator.addSchema(componentsSchema, COMPONENTS_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(MOD_MANIFEST_SCHEMA_ID)) await validator.addSchema(manifestSchema, MOD_MANIFEST_SCHEMA_ID);
+                    if (!validator.isSchemaLoaded(ENTITY_SCHEMA_ID)) await validator.addSchema(entitySchema, ENTITY_SCHEMA_ID); // <<< ADDED
                     if (!validator.isSchemaLoaded(ACTION_SCHEMA_ID)) await validator.addSchema(actionSchema, ACTION_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(EVENT_SCHEMA_ID)) await validator.addSchema(eventSchema, EVENT_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(RULE_SCHEMA_ID)) await validator.addSchema(ruleSchema, RULE_SCHEMA_ID);
@@ -272,6 +281,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         componentDefinitionLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
         actionLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
         eventLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
+        entityLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)}; // <<< ADDED: Mock entityLoader
 
         // Mock GameConfigLoader to return the *list* of mod IDs
         gameConfigLoader = {
@@ -289,18 +299,20 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         );
 
         /* -------------------- System under test ------------------------------ */
+        // <<< FIXED: Pass all 12 arguments in the correct order >>>
         worldLoader = new WorldLoader(
-            registry,
-            logger,
-            schemaLoader,
-            componentDefinitionLoader,
-            ruleLoader,
-            actionLoader,
-            eventLoader,
-            validator, // Pass REAL validator
-            configuration,
-            gameConfigLoader,
-            modManifestLoader, // Pass REAL instance
+            registry,                   // 1
+            logger,                     // 2
+            schemaLoader,               // 3
+            componentDefinitionLoader,  // 4
+            ruleLoader,                 // 5
+            actionLoader,               // 6
+            eventLoader,                // 7
+            entityLoader,               // 8 <<< Correctly pass mock entityLoader
+            validator,                  // 9 <<< Correctly pass REAL validator
+            configuration,              // 10
+            gameConfigLoader,           // 11
+            modManifestLoader           // 12 <<< Correctly pass REAL modManifestLoader
         );
     });
 
@@ -328,11 +340,11 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
         // Check that NO content files were fetched
         const contentFetches = fetcher.fetch.mock.calls.filter(([p]) =>
-            /\/mods\/[^/]+\/(actions|components|events|system-rules|items|entities)\//.test(p)
+            /\/mods\/[^/]+\/(actions|components|events|system-rules|items|entities|blockers|connections|locations)\//.test(p) // Added entity types
         );
         expect(contentFetches).toHaveLength(0);
 
-        // Total fetch count should be just the 2 manifests (adjust if schema fetches are expected)
+        // Total fetch count should be just the 2 manifests
         expect(fetcher.fetch).toHaveBeenCalledTimes(2);
 
 
@@ -351,28 +363,16 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         expect(componentDefinitionLoader.loadItemsForMod).not.toHaveBeenCalled();
         expect(actionLoader.loadItemsForMod).not.toHaveBeenCalled();
         expect(eventLoader.loadItemsForMod).not.toHaveBeenCalled();
+        expect(entityLoader.loadItemsForMod).not.toHaveBeenCalled(); // <<< ADDED Check
 
         // Logger assertions
-        // *** FIX START: Correct logger.error assertion ***
-        // Verify the call made by WorldLoader's catch block
-        expect(logger.error).toHaveBeenCalledTimes(1); // Should only be called once
-        expect(logger.error).toHaveBeenCalledWith(
-            'WorldLoader: CRITICAL load failure during world/mod loading sequence.', // First argument is the specific string
-            expect.objectContaining({                                                  // Second argument is an object...
-                error: expect.any(ModDependencyError)                                 // ...containing an 'error' property which is a ModDependencyError instance
-            })
-        );
-
-        // Optionally, you can refine the check on the nested error's message if needed:
-        const errorLogCallArgs = logger.error.mock.calls[0]; // Get the arguments of the first call
-        expect(errorLogCallArgs[1].error.message).toMatch(/Mod 'badmod' requires missing dependency 'MissingMod'/);
-
-        // REMOVED the incorrect assertion:
-        // expect(logger.error).toHaveBeenCalledWith(
-        //     expect.stringContaining("Mod 'badmod' requires missing dependency 'MissingMod'"),
-        //     expect.any(ModDependencyError)
-        // );
-        // *** FIX END ***
+        const errorLogCallArgs = logger.error.mock.calls[0];
+        expect(logger.error).toHaveBeenCalledTimes(1);
+        expect(errorLogCallArgs[0]).toBe('WorldLoader: CRITICAL load failure during world/mod loading sequence.'); // Message
+        expect(errorLogCallArgs[1]).toEqual(expect.objectContaining({ // Payload object
+            error: expect.any(ModDependencyError)
+        }));
+        expect(errorLogCallArgs[1].error.message).toMatch(/Mod 'badmod' requires missing dependency 'MissingMod'/); // Check nested error
 
 
         // Registry assertions

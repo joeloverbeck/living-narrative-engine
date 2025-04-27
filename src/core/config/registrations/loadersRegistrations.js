@@ -1,3 +1,5 @@
+// Filename: src/core/config/registrations/loaderRegistrations.js
+
 /**
  * @fileoverview Registers data loading services and their core dependencies.
  */
@@ -17,6 +19,9 @@
 /** @typedef {import('../../services/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
 /** @typedef {import('../../services/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
+/** @typedef {import('../../services/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
+/** @typedef {import('../../services/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
+/** @typedef {import('../../services/entityLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
 /** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../services/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../services/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -38,6 +43,9 @@ import GenericContentLoader from '../../services/genericContentLoader.js';
 import ComponentLoader from '../../services/componentLoader.js';
 import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
 import ModManifestLoader from '../../services/modManifestLoader.js'; // <<< ADDED: MODLOADER-005 A
+import ActionLoader from '../../services/actionLoader.js'; // <<< ADDED: LOADER-001
+import EventLoader from '../../services/eventLoader.js'; // <<< ADDED: LOADER-003
+import EntityLoader from '../../services/entityLoader.js'; // <<< ADDED: LOADER-004-F
 
 
 // --- DI & Helper Imports ---
@@ -96,6 +104,7 @@ export function registerLoaders(container) {
 
     // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
     registrar.singletonFactory(tokens.RuleLoader, (c) => new RuleLoader(
+        c.resolve(tokens.IConfiguration), // <<< FIXED: RuleLoader needs config too
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
@@ -153,6 +162,45 @@ export function registerLoaders(container) {
     ));
     logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
     // === ADDED: MODLOADER-005 A END ===
+
+    // === ADDED: LOADER-001 ===
+    registrar.singletonFactory(tokens.ActionLoader, c => new ActionLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
+    logger.debug(`Loaders Registration: Registered ${tokens.ActionLoader}.`);
+    // === END LOADER-001 ===
+
+    // === ADDED: LOADER-003 ===
+    registrar.singletonFactory(tokens.EventLoader, c => new EventLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
+    logger.debug(`Loaders Registration: Registered ${tokens.EventLoader}.`);
+    // === END LOADER-003 ===
+
+    // === ADDED: LOADER-004-F ===
+    // Register EntityDefinitionLoader (using EntityLoader class)
+    // Dependencies: IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+    // Assuming tokens.EntityDefinitionLoader exists in src/core/tokens.js
+    registrar.singletonFactory(tokens.EntityLoader, c => new EntityLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+    ));
+    logger.debug(`Loaders Registration: Registered ${tokens.EntityLoader}.`);
+    // === END LOADER-004-F ===
 
 
     logger.info('Loaders Registration: Completed.');

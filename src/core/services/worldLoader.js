@@ -1,4 +1,4 @@
-// src/core/services/worldLoader.js
+// Filename: src/core/services/worldLoader.js
 
 /* eslint-disable max-lines */
 
@@ -14,6 +14,7 @@
 /** @typedef {import('./schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('./modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('./entityLoader.js').default} EntityLoader */ // <<< ADDED LOADER-004-F
 /** @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest */ // Assuming ModManifest type definition
 
 // --- Implementation Imports -------------------------------------------------
@@ -36,6 +37,7 @@ class WorldLoader {
     /** @type {RuleLoader}     */          #ruleLoader;
     /** @type {ActionLoader}   */          #actionLoader;
     /** @type {EventLoader}    */          #eventLoader;
+    /** @type {EntityLoader}   */          #entityDefinitionLoader; // <<< ADDED LOADER-004-F
     /** @type {GameConfigLoader}*/         #gameConfigLoader;
     /** @type {ModManifestLoader}*/        #modManifestLoader;
     /** @type {string[]}       */          #finalOrder = [];
@@ -60,6 +62,7 @@ class WorldLoader {
      * @param {RuleLoader}     ruleLoader
      * @param {ActionLoader}   actionLoader
      * @param {EventLoader}    eventLoader
+     * @param {EntityLoader}   entityLoader // <<< ADDED LOADER-004-F
      * @param {ISchemaValidator} validator
      * @param {IConfiguration} configuration
      * @param {GameConfigLoader} gameConfigLoader  – exposes loadConfig()
@@ -73,6 +76,7 @@ class WorldLoader {
         ruleLoader,
         actionLoader,
         eventLoader,
+        entityLoader, // <<< ADDED LOADER-004-F
         validator,
         configuration,
         gameConfigLoader,
@@ -116,6 +120,10 @@ class WorldLoader {
         if (!eventLoader || typeof eventLoader.loadItemsForMod !== 'function') {
             throw new Error("WorldLoader: Missing/invalid 'eventLoader' (must implement loadItemsForMod).");
         }
+        // LOADER-004-F: Validate EntityDefinitionLoader
+        if (!entityLoader || typeof entityLoader.loadItemsForMod !== 'function') {
+            throw new Error("WorldLoader: Missing/invalid 'entityLoader' (must implement loadItemsForMod).");
+        }
 
         // --- Store dependencies ---
         this.#registry = registry;
@@ -125,12 +133,13 @@ class WorldLoader {
         this.#ruleLoader = ruleLoader;
         this.#actionLoader = actionLoader;
         this.#eventLoader = eventLoader;
+        this.#entityDefinitionLoader = entityLoader; // <<< ADDED LOADER-004-F
         this.#validator = validator;
         this.#configuration = configuration;
         this.#gameConfigLoader = gameConfigLoader;
         this.#modManifestLoader = modManifestLoader;
 
-        // --- REFACTOR-LOADER-4: Initialize content loaders config ---
+        // --- REFACTOR-LOADER-4 & LOADER-004-F: Initialize content loaders config ---
         this.#contentLoadersConfig = [
             {
                 loader: this.#actionLoader,
@@ -156,24 +165,42 @@ class WorldLoader {
                 contentTypeDir: 'system-rules', // Note: Directory name might differ from key/type
                 typeName: 'system-rules' // Using descriptive name
             },
-            // --- Extend this array for other content types as needed ---
-            // Example:
-            // {
-            //     loader: this.#itemLoader, // Assuming an itemLoader exists
-            //     contentKey: 'items',
-            //     contentTypeDir: 'items',
-            //     typeName: 'items'
-            // },
-            // {
-            //     loader: this.#entityLoader, // Assuming an entityLoader exists
-            //     contentKey: 'entities',
-            //     contentTypeDir: 'entities',
-            //     typeName: 'entities'
-            // },
+            // --- ADDED: LOADER-004-F Configurations ---
+            {
+                loader: this.#entityDefinitionLoader,
+                contentKey: 'blockers',
+                contentTypeDir: 'blockers',
+                typeName: 'blockers'
+            },
+            {
+                loader: this.#entityDefinitionLoader,
+                contentKey: 'connections',
+                contentTypeDir: 'connections',
+                typeName: 'connections'
+            },
+            {
+                loader: this.#entityDefinitionLoader,
+                contentKey: 'entities',
+                contentTypeDir: 'entities',
+                typeName: 'entities'
+            },
+            {
+                loader: this.#entityDefinitionLoader,
+                contentKey: 'items',
+                contentTypeDir: 'items',
+                typeName: 'items'
+            },
+            {
+                loader: this.#entityDefinitionLoader,
+                contentKey: 'locations',
+                contentTypeDir: 'locations',
+                typeName: 'locations'
+            },
+            // --- END ADDED: LOADER-004-F ---
         ];
         // --- END REFACTOR-LOADER-4 ---
 
-        this.#logger.info('WorldLoader: Instance created with ALL loaders (Action, Event, Component, Rule, etc.) and order‑resolver.');
+        this.#logger.info('WorldLoader: Instance created with ALL loaders (Action, Event, Component, Rule, EntityDefinition) and order‑resolver.');
     }
 
     // ── Public API ──────────────────────────────────────────────────────────
@@ -205,7 +232,8 @@ class WorldLoader {
             const essentials = [
                 this.#configuration.getContentTypeSchemaId('game'),
                 this.#configuration.getContentTypeSchemaId('components'), // Component Definition Schema
-                this.#configuration.getContentTypeSchemaId('mod-manifest')
+                this.#configuration.getContentTypeSchemaId('mod-manifest'),
+                this.#configuration.getContentTypeSchemaId('entities') // LOADER-004-F: Add entity schema check
             ];
             for (const id of essentials) {
                 if (!id || !this.#validator.isSchemaLoaded(id)) {
@@ -266,7 +294,14 @@ class WorldLoader {
 
                 // Iterate through the contentLoadersConfig to load each type for the current mod
                 for (const config of this.#contentLoadersConfig) {
-                    this.#logger.debug(`WorldLoader [${modId}]: Loading type '${config.typeName}'...`);
+                    // Check if the manifest actually lists this content type
+                    // Use the contentKey from the config to check the manifest
+                    if (!manifest.content || !manifest.content[config.contentKey] || manifest.content[config.contentKey].length === 0) {
+                        this.#logger.debug(`WorldLoader [${modId}]: No '${config.contentKey}' listed in manifest. Skipping loading for type '${config.typeName}'.`);
+                        continue; // Skip this content type for this mod
+                    }
+
+                    this.#logger.debug(`WorldLoader [${modId}]: Loading type '${config.typeName}' using content key '${config.contentKey}'...`);
                     try {
                         // Call loadItemsForMod using the configuration
                         const count = await config.loader.loadItemsForMod(
@@ -348,7 +383,9 @@ class WorldLoader {
         // --- REFACTOR-LOADER-4: Update summary log using totalCounts ---
         this.#logger.info(`  • Content Loading Summary:`);
         if (Object.keys(totalCounts).length > 0) {
-            for (const [typeName, count] of Object.entries(totalCounts)) {
+            const sortedTypes = Object.keys(totalCounts).sort(); // Sort type names alphabetically
+            for (const typeName of sortedTypes) {
+                const count = totalCounts[typeName];
                 // Pad typeName for alignment (adjust padding as needed)
                 const paddedTypeName = typeName.padEnd(20, ' ');
                 this.#logger.info(`    - ${paddedTypeName}: ${count} loaded`);
