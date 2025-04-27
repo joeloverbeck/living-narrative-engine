@@ -15,15 +15,26 @@ import {BaseManifestItemLoader} from './baseManifestItemLoader.js';
  */
 
 /**
+ * Loads component definitions from mods, validates them against the component definition schema,
+ * extracts metadata, registers the component's `dataSchema` with the validator, and stores
+ * the definition metadata in the registry. It extends {@link BaseManifestItemLoader}
+ * and implements the component-definition-specific processing logic in `_processFetchedItem`.
+ *
  * @class ComponentDefinitionLoader
  * @extends BaseManifestItemLoader
- * @description Loads component definitions from mods, validates them against schemas,
- * and registers their data schemas with the validator.
  */
 class ComponentDefinitionLoader extends BaseManifestItemLoader {
 
     /**
-     * Creates an instance of ComponentDefinitionLoader.
+     * @private
+     * @type {string | undefined} - Cached schema ID for component definitions.
+     */
+    _componentDefSchemaId;
+
+    /**
+     * Initializes the ComponentDefinitionLoader by calling the parent constructor
+     * and caching the schema ID for component definitions.
+     *
      * @param {IConfiguration} config - The configuration service.
      * @param {IPathResolver} pathResolver - The path resolver service.
      * @param {IDataFetcher} dataFetcher - The data fetcher service.
@@ -32,18 +43,24 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
      * @param {ILogger} logger - The logger service.
      */
     constructor(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger) {
-        super(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger);
+        super(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger); // Call parent constructor
         this._componentDefSchemaId = this._config.getContentTypeSchemaId('components');
-        this._logger.debug('ComponentDefinitionLoader: Initialized.');
+        if (!this._componentDefSchemaId) {
+            this._logger.error('ComponentDefinitionLoader: CRITICAL - Schema ID for component definitions (\'components\') not found in configuration. Validation will fail.');
+        }
+        this._logger.debug(`ComponentDefinitionLoader: Initialized. Using schema ID '${this._componentDefSchemaId || 'NOT CONFIGURED'}' for definitions.`);
     }
 
     /**
      * Loads and registers component definitions for a given mod based on its manifest.
-     * Delegates the core file iteration, fetching, and processing logic to the base class.
+     * Serves as the public entry point for loading components for a specific mod.
+     * It delegates the core file iteration, fetching, and processing logic to the
+     * base class's `_loadItemsInternal` method, which utilizes the `_processFetchedItem`
+     * implementation provided by this class.
      *
      * @param {string} modId - The ID of the mod.
      * @param {ModManifest} modManifest - The manifest object for the mod.
-     * @returns {Promise<number>} A promise that resolves with the number of successfully loaded component definitions.
+     * @returns {Promise<number>} A promise that resolves with the count of successfully loaded component definitions.
      * @async
      */
     async loadComponentDefinitions(modId, modManifest) {
@@ -56,232 +73,152 @@ class ComponentDefinitionLoader extends BaseManifestItemLoader {
         }
 
         // --- Delegate to Base Class ---
-        // The base class method handles:
-        // - Extracting valid filenames from manifest.content['components']
-        // - Logging the number of files found
-        // - Looping through filenames
-        // - Calling _processFileWrapper for each file
-        // - Handling Promise.allSettled for concurrent processing
-        // - Aggregating success/failure counts
-        // - Logging the final summary
-        // The actual processing logic for each file is implemented in _processFetchedItem below.
         return await this._loadItemsInternal(modId, modManifest, 'components', 'components');
     }
 
 
     /**
-     * Processes a single fetched component definition file.
-     * This method is called by the base class's _processFileWrapper.
-     * It validates the structure, extracts the component ID, registers the data schema,
-     * and stores the definition metadata.
+     * Processes a single fetched component definition file's data.
+     * This method is called by the base class's `_processFileWrapper`.
+     * It validates the overall structure against the component definition schema,
+     * extracts and validates the required `id` and `dataSchema` properties,
+     * registers the `dataSchema` with the ISchemaValidator (handling overrides),
+     * and finally stores the component definition metadata (the entire validated object,
+     * augmented with source information) in the data registry.
      *
      * @param {string} modId - The ID of the mod the item belongs to.
      * @param {string} filename - The original filename from the manifest.
-     * @param {string} resolvedPath - The fully resolved path to the file.
-     * @param {object} rawData - The raw, fetched data from the JSON file.
-     * @returns {Promise<object>} A promise resolving with the processed item metadata on success.
+     * @param {string} resolvedPath - The fully resolved path used to fetch the file.
+     * @param {any} data - The raw, parsed data object fetched from the file.
+     * @returns {Promise<string>} A promise resolving with the validated component ID on successful processing, validation, registration, and storage.
+     * @throws {Error} Throws an error if configuration is missing, validation fails (structure or properties), schema registration fails, or storage fails.
      * @protected
-     * @async
      * @override
-     * @throws {Error} Throws an error if validation fails or processing encounters a critical issue.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, rawData) {
-        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Processing component file: ${filename}`);
+    async _processFetchedItem(modId, filename, resolvedPath, data) {
+        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Processing fetched item: ${filename}`);
 
-        // 1. --- Validate Structure against Component Definition Schema ---
-        const validationResult = this._schemaValidator.validate(this._componentDefSchemaId, rawData);
+        // --- 1. Implement Definition Schema Validation ---
+        const definitionSchemaId = this._componentDefSchemaId;
+        if (!definitionSchemaId) {
+            this._logger.error(`ComponentDefinitionLoader [${modId}]: Cannot validate ${filename} - Component definition schema ID ('components') is not configured.`);
+            throw new Error(`Configuration Error: Component definition schema ID not configured.`);
+        }
+
+        const validationResult = this._schemaValidator.validate(definitionSchemaId, data);
         this._logger.debug(`ComponentDefinitionLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=${validationResult.isValid}`);
-        if (!validationResult.isValid) {
-            // Log the detailed schema validation error
-            this._logger.error(`ComponentDefinitionLoader [${modId}]: Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${this._componentDefSchemaId}'. Errors:\n${JSON.stringify(validationResult.errors, null, 2)}`, {
-                modId: modId,
-                filename: filename,
-                schemaId: this._componentDefSchemaId,
-                validationErrors: validationResult.errors,
-                resolvedPath: resolvedPath,
-                definition: rawData // Include rawData for context
-            });
 
-            // Throw a specific error instead of returning null to signal failure
-            const validationError = new Error(`Schema Validation Error: Schema validation failed for component ${filename} in mod ${modId}`);
-            validationError.reason = 'Schema Validation Error'; // Add context for potential filtering
-            validationError.modId = modId;
-            validationError.filename = filename;
-            validationError.resolvedPath = resolvedPath;
-            validationError.validationErrors = validationResult.errors;
+        if (!validationResult.isValid) {
+            const errorDetails = JSON.stringify(validationResult.errors, null, 2);
+            const errorMsg = `ComponentDefinitionLoader [${modId}]: Schema validation failed for component definition '${filename}' in mod '${modId}' using schema '${definitionSchemaId}'. Errors:\n${errorDetails}`;
+            this._logger.error(
+                errorMsg,
+                {
+                    modId,
+                    filename,
+                    resolvedPath,
+                    schemaId: definitionSchemaId,
+                    validationErrors: validationResult.errors,
+                    definition: data
+                }
+            );
+            const validationError = new Error(`Schema Validation Error for ${filename} in mod ${modId}`);
+            validationError.details = validationResult.errors;
             throw validationError;
         }
 
-        // 2. --- Extract and Validate Component ID ---
-        const componentId = rawData.id;
-        if (!componentId || typeof componentId !== 'string' || !componentId.trim()) {
-            // Log the error
-            this._logger.error(`ComponentDefinitionLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filename}'.`, {
-                modId,
-                filename,
-                path: resolvedPath,
-                data: rawData
+        // --- 2. Implement Property Extraction ---
+        const componentId = data.id;
+        const dataSchema = data.dataSchema;
+
+        // --- 3. Implement Property Validation ---
+        if (typeof componentId !== 'string' || !componentId.trim()) {
+            const errorMsg = `ComponentDefinitionLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filename}'. Found: ${JSON.stringify(componentId)}`;
+            this._logger.error(errorMsg, {
+                modId, filename, resolvedPath, componentIdValue: componentId
             });
-            // Throw an error to signal failure
-            const idError = new Error(`Invalid Component ID: Missing or invalid 'id' field in component definition file '${filename}' for mod '${modId}'.`);
-            idError.reason = 'Invalid Component ID';
-            idError.modId = modId;
-            idError.filename = filename;
-            idError.resolvedPath = resolvedPath;
-            throw idError;
+            throw new Error(`Invalid Component ID in ${filename}`);
         }
         const trimmedComponentId = componentId.trim();
-        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Extracted valid componentId ('${trimmedComponentId}') from ${filename}.`);
 
-
-        // 3. --- Check for Overrides (Handled by Base Class Registry Interaction - Optional Warning Here) ---
-        const existingDefinition = this._dataRegistry.get('component_definitions', trimmedComponentId);
-        if (existingDefinition) {
-            this._logger.warn(`ComponentDefinitionLoader [${modId}]: Overwriting existing component definition with ID '${trimmedComponentId}' from file '${filename}'. Previous source likely: ${existingDefinition.modId || 'unknown'} (${existingDefinition._sourceFile || 'unknown'})`);
-            // Potentially remove the old schema if it differs? Or assume addSchema handles updates.
-            // For simplicity, assume addSchema overwrites/updates.
-            // this._schemaValidator.removeSchema(trimmedComponentId); // Consider implications if schemas differ significantly
+        if (typeof dataSchema !== 'object' || dataSchema === null) {
+            const dataType = dataSchema === null ? 'null' : typeof dataSchema;
+            const errorMsg = `ComponentDefinitionLoader [${modId}]: Invalid 'dataSchema' found for component '${trimmedComponentId}' in file '${filename}'. Expected an object but received type '${dataType}'.`;
+            const error = new Error(`Invalid dataSchema type in ${filename} for component ${trimmedComponentId}`);
+            this._logger.error(errorMsg, {
+                modId, filename, resolvedPath, componentId: trimmedComponentId, receivedType: dataType
+            }, error);
+            throw error;
         }
 
-        // 4. --- Register Component's Data Schema (if present) ---
-        if (rawData.hasOwnProperty('dataSchema')) { // Check if the key *exists* at all
-            const dataSchemaValue = rawData.dataSchema;
-            const isObject = dataSchemaValue !== null && typeof dataSchemaValue === 'object'; // Explicit null check needed as typeof null === 'object'
+        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Extracted and validated properties for component '${trimmedComponentId}' from ${filename}.`);
 
-            if (isObject) {
-                // dataSchema is present and is a valid object - Register it
-                this._logger.debug(`ComponentDefinitionLoader [${modId}]: Found valid 'dataSchema' object for component '${trimmedComponentId}' in ${filename}. Attempting registration.`);
+        // --- 4. Schema Registration with Override Check ---
+        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Attempting to register data schema for component '${trimmedComponentId}'.`);
 
-                if (this._schemaValidator.isSchemaLoaded(trimmedComponentId)) {
-                    this._logger.warn(`ComponentDefinitionLoader [${modId}]: Attempting to override previously registered dataSchema for component ID '${trimmedComponentId}' from file '${filename}'. Removing old schema first.`);
-                    try {
-                        const removed = this._schemaValidator.removeSchema(trimmedComponentId);
-                        if (removed) {
-                            this._logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully removed existing schema for '${trimmedComponentId}' before override.`);
-                        } else {
-                            // This case might occur if isSchemaLoaded and removeSchema are somehow inconsistent in the validator implementation
-                            this._logger.warn(`ComponentDefinitionLoader [${modId}]: removeSchema reported no schema found for '${trimmedComponentId}' despite isSchemaLoaded being true. Proceeding with addSchema.`);
-                        }
-                    } catch (removeError) {
-                        // Treat failure to remove the old schema as a critical error
-                        this._logger.error(`ComponentDefinitionLoader [${modId}]: Failed to remove existing dataSchema for component '${trimmedComponentId}' during override attempt from file '${filename}'.`, {
-                            modId,
-                            filename,
-                            componentId: trimmedComponentId,
-                            path: resolvedPath,
-                            error: removeError.message
-                        }, removeError);
-                        const removeSchemaError = new Error(`Schema Removal Error: Failed to remove existing dataSchema for component '${trimmedComponentId}'. Reason: ${removeError.message}`);
-                        removeSchemaError.reason = 'Schema Removal Error';
-                        removeSchemaError.modId = modId;
-                        removeSchemaError.filename = filename;
-                        removeSchemaError.componentId = trimmedComponentId;
-                        removeSchemaError.resolvedPath = resolvedPath;
-                        removeSchemaError.originalError = removeError;
-                        throw removeSchemaError; // Fail processing if old schema cannot be removed
-                    }
+        const alreadyLoaded = this._schemaValidator.isSchemaLoaded(trimmedComponentId);
+
+        if (alreadyLoaded) {
+            this._logger.warn(`Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentId}'.`);
+            try {
+                const removed = this._schemaValidator.removeSchema(trimmedComponentId);
+                if (removed) {
+                    this._logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully removed existing schema '${trimmedComponentId}' before overwriting.`);
+                } else {
+                    this._logger.warn(`ComponentDefinitionLoader [${modId}]: Attempted to remove existing schema '${trimmedComponentId}' but removal failed or schema was not found by removeSchema.`);
                 }
-
-                try {
-                    await this._schemaValidator.addSchema(dataSchemaValue, trimmedComponentId);
-                    this._logger.debug(`ComponentDefinitionLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentId}' from ${filename}.`);
-                } catch (schemaError) {
-                    // Log and throw Schema Registration Error
-                    this._logger.error(`ComponentDefinitionLoader [${modId}]: Failed to add dataSchema for component '${trimmedComponentId}' from file '${filename}'.`, {
-                        modId,
-                        filename,
-                        componentId: trimmedComponentId,
-                        path: resolvedPath,
-                        error: schemaError.message,
-                        schema: dataSchemaValue
-                    }, schemaError);
-                    const addSchemaError = new Error(`Schema Registration Error: Failed to add dataSchema for component '${trimmedComponentId}' from file '${filename}'. Reason: ${schemaError.message}`);
-                    addSchemaError.reason = 'Schema Registration Error';
-                    // ... add details ...
-                    addSchemaError.originalError = schemaError;
-                    throw addSchemaError;
-                }
-            } else {
-                // dataSchema key exists but is NOT a valid object (e.g., null, string, number) - ERROR!
-                const actualType = dataSchemaValue === null ? 'null' : typeof dataSchemaValue;
-                const schemaTypeError = new Error(`Invalid dataSchema Type: Component definition '${trimmedComponentId}' from '${filename}' in mod '${modId}' has an invalid type for 'dataSchema' (expected object, got ${actualType}).`);
-                schemaTypeError.reason = 'Invalid dataSchema Type';
-                schemaTypeError.modId = modId;
-                schemaTypeError.filename = filename;
-                schemaTypeError.componentId = trimmedComponentId;
-                schemaTypeError.resolvedPath = resolvedPath;
-                schemaTypeError.invalidSchemaValue = dataSchemaValue; // Include the problematic value
-
-                // Log this specific error before throwing
-                this._logger.error(`ComponentDefinitionLoader [${modId}]: Invalid 'dataSchema' found for component '${trimmedComponentId}' in file '${filename}'. Expected an object but received type '${actualType}'.`, {
+            } catch (removalError) {
+                const removalLogMsg = `ComponentDefinitionLoader [${modId}]: Error during removeSchema for component '${trimmedComponentId}' from file '${filename}'.`;
+                this._logger.error(removalLogMsg, {
                     modId,
                     filename,
                     componentId: trimmedComponentId,
-                    path: resolvedPath,
-                    dataType: actualType,
-                    dataSchemaValue: dataSchemaValue // Log the actual invalid value for debugging
-                }, schemaTypeError); // Log the error object itself
-
-                throw schemaTypeError; // Signal failure - do not proceed to store definition
-            }
-        } else {
-            // dataSchema key is completely missing - This is acceptable, just skip registration
-            this._logger.debug(`ComponentDefinitionLoader [${modId}]: No 'dataSchema' key found for component '${trimmedComponentId}' in ${filename}. Skipping schema registration.`);
-            // If the key is missing, we should remove any potentially stale schema for this ID
-            if (this._schemaValidator.isSchemaLoaded(trimmedComponentId)) {
-                this._logger.warn(`ComponentDefinitionLoader [${modId}]: Component '${trimmedComponentId}' from ${filename} is missing the 'dataSchema' key, but a schema for this ID was previously registered. Removing old schema.`);
-                try {
-                    this._schemaValidator.removeSchema(trimmedComponentId);
-                } catch (removeError) {
-                    this._logger.error(`ComponentDefinitionLoader [${modId}]: Failed to remove previously registered schema for component '${trimmedComponentId}' (missing dataSchema key) during update from '${filename}'.`, { /* details */}, removeError);
-                    // Continue processing the definition even if old schema removal failed? Yes, seems reasonable.
-                }
+                    error: removalError
+                }, removalError);
+                throw removalError; // Re-throw original error
             }
         }
 
-        // 5. --- Store Definition Metadata in Registry ---
-        const definitionToStore = {
-            ...rawData, // Store the validated definition
-            modId: modId, // Track origin mod
-            _sourceFile: filename // Track origin filename
-        };
         try {
-            this._dataRegistry.store('component_definitions', trimmedComponentId, definitionToStore);
-            this._logger.debug(`ComponentDefinitionLoader [${modId}]: Successfully stored component definition metadata for '${trimmedComponentId}'.`, {
-                modId,
-                filename,
-                componentId: trimmedComponentId,
-                path: resolvedPath
-            });
-        } catch (storeError) {
-            // Log the error
-            this._logger.error(`ComponentDefinitionLoader [${modId}]: Failed to store component definition '${trimmedComponentId}' from file '${filename}' in registry.`, {
-                modId,
-                filename,
-                componentId: trimmedComponentId,
-                path: resolvedPath,
-                error: storeError.message
-            }, storeError);
-            // Throw an error to signal failure
-            const registryError = new Error(`Registry Error: Failed to store component definition '${trimmedComponentId}' from '${filename}'. Reason: ${storeError.message}`);
-            registryError.reason = 'Registry Error';
-            registryError.modId = modId;
-            registryError.filename = filename;
-            registryError.componentId = trimmedComponentId;
-            registryError.resolvedPath = resolvedPath;
-            registryError.originalError = storeError;
-            throw registryError;
+            await this._schemaValidator.addSchema(dataSchema, trimmedComponentId);
+            this._logger.debug(`Registered dataSchema for component ID '${trimmedComponentId}' from file '${filename}'.`);
+
+        } catch (error) {
+            const addLogMsg = `ComponentDefinitionLoader [${modId}]: Error during addSchema for component '${trimmedComponentId}' from file '${filename}'.`;
+            this._logger.error(addLogMsg, {modId, filename, componentId: trimmedComponentId, error}, error);
+            throw error; // Re-throw original error
         }
 
+        // --- 5. Store Component Definition Metadata ---
+        this._logger.debug(`ComponentDefinitionLoader [${modId}]: Storing component definition metadata for '${trimmedComponentId}'.`);
 
-        // Return the processed item details (or just the ID) for success tracking in the base class
-        return {
-            id: trimmedComponentId,
-            filename: filename,
-            path: resolvedPath,
-            type: 'component' // Add type for potential differentiation in results
-        };
+        const existingDefinition = this._dataRegistry.get('component_definitions', trimmedComponentId);
+        if (existingDefinition) {
+            this._logger.warn(`Component Definition '${filename}' in mod '${modId}' is overwriting existing component definition metadata for ID '${trimmedComponentId}'.`);
+        }
+
+        try {
+            const dataToStore = {
+                ...data,
+                modId: modId,
+                _sourceFile: filename
+            };
+            this._dataRegistry.store('component_definitions', trimmedComponentId, dataToStore);
+            this._logger.debug(`Successfully stored component definition metadata for '${trimmedComponentId}' from file '${filename}'.`);
+        } catch (error) {
+            this._logger.error(`Failed to store component definition metadata for ID '${trimmedComponentId}' from file '${filename}' in mod '${modId}'. Error: ${error.message}`, {
+                modId,
+                filename,
+                componentId: trimmedComponentId,
+                error
+            });
+            throw error;
+        }
+
+        // --- 6. Implement Success Return Value ---
+        return trimmedComponentId;
     }
+
 }
 
 export default ComponentDefinitionLoader;

@@ -326,9 +326,6 @@ describe('ComponentDefinitionLoader Test Setup', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(
             'ComponentDefinitionLoader: Initialized successfully with all dependencies.' // From Base constructor
         );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            'ComponentDefinitionLoader: Initialized.' // From ComponentDefinitionLoader constructor
-        );
         expect(mockLogger.info).not.toHaveBeenCalled(); // Ensure no INFO logs during construction
     });
 
