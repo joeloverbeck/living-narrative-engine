@@ -9,17 +9,50 @@ export const INITIALIZABLE = ['initializableSystem'];
 
 export function registerInitializers(container) {
     const r = new Registrar(container);
-    const log = container.resolve(tokens.ILogger);
+    const log = container.resolve(tokens.ILogger); // For logging within this function
 
-    r.tagged(INITIALIZABLE).single(tokens.GameStateInitializer, GameStateInitializer,
-        [tokens.EntityManager, tokens.GameStateManager, tokens.GameDataRepository,
-            tokens.ValidatedEventDispatcher, tokens.ILogger]);
+    r.tagged(INITIALIZABLE).singletonFactory( // Use singletonFactory
+        tokens.GameStateInitializer,          // Token
+        (c) => {                              // Custom factory, receives container 'c'
+            // Resolve all individual dependencies
+            const entityManager = c.resolve(tokens.EntityManager);
+            const gameStateManager = c.resolve(tokens.GameStateManager);
+            const gameDataRepository = c.resolve(tokens.GameDataRepository);
+            const validatedDispatcher = c.resolve(tokens.ValidatedEventDispatcher);
+            const logger = c.resolve(tokens.ILogger);
 
+            // Create the single dependency object expected by the constructor
+            const dependencies = {
+                entityManager,
+                gameStateManager,
+                gameDataRepository,
+                validatedDispatcher,
+                logger
+            };
+
+            // Call the constructor correctly with the single object
+            return new GameStateInitializer(dependencies);
+        }
+    );
+
+
+    // Register WorldInitializer - ASSUMING its constructor takes separate args
+    // If WorldInitializer ALSO expects a single object, it needs the same fix as above.
     r.tagged(INITIALIZABLE).single(tokens.WorldInitializer, WorldInitializer,
         [tokens.EntityManager, tokens.GameStateManager, tokens.GameDataRepository]);
 
-    // SystemInitializer stays un-tagged
-    r.single(tokens.SystemInitializer, SystemInitializer, [/* (container + logger via factory) */]);
+
+    // --- Registration for SystemInitializer using singletonFactory ---
+    // This one was already correct from the previous fix
+    r.singletonFactory(
+        tokens.SystemInitializer, // The key/token for this service
+        (c) => {                  // The factory function. 'c' IS the AppContainer instance
+            const logger = c.resolve(tokens.ILogger);
+            // Return a new instance, passing the container 'c' and the resolved logger
+            return new SystemInitializer(c, logger);
+        }
+    );
+    // --- End Registration ---
 
     log.info('Initializer Registration: complete.');
 }

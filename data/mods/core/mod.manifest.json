@@ -4,7 +4,7 @@
   "name": "core",
   "description": "Contains the essential base data and definitions required to run the Living Narrative Engine engine.",
   "author": "joeloverbeck",
-  "gameVersion": ">=1.0.0",
+  "gameVersion": ">=0.0.1",
   "content": {
     "components": [
     ],
