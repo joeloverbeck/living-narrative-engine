@@ -198,13 +198,26 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
     const corePositionFilename = 'core_position.component.json';
     const coreHealthPath = './data/mods/core/components/core_health.component.json';
     const corePositionPath = './data/mods/core/components/core_position.component.json';
+
+    // IDs as they appear *in the file*
+    const coreHealthIdFromFile = 'core:health';
+    const corePositionIdFromFile = 'core:position';
+
+    // Base IDs (extracted)
+    const coreHealthBaseId = 'health';
+    const corePositionBaseId = 'position';
+
+    // Final, correctly prefixed IDs for registry storage/retrieval
+    const coreHealthFinalId = 'core:health';
+    const corePositionFinalId = 'core:position';
+
     const coreHealthDef = {
-        id: 'core:health',
+        id: coreHealthIdFromFile, // Use ID from file
         description: '...',
         dataSchema: {type: 'object', properties: {current: {}, max: {}}, required: ['current', 'max']}
     };
     const corePositionDef = {
-        id: 'core:position',
+        id: corePositionIdFromFile, // Use ID from file
         description: '...',
         dataSchema: {type: 'object', properties: {x: {}, y: {}, z: {}}, required: ['x', 'y', 'z']}
     };
@@ -225,54 +238,42 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
-        mockValidator = createMockSchemaValidator(); // Use the factory
+        mockValidator = createMockSchemaValidator();
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
 
         // --- Setup: Configure Mock Implementations ---
+        // Config: Return component definition schema ID
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
             if (typeName === 'components') return componentDefinitionSchemaId;
             return undefined;
         });
+        // Resolver: Return correct paths
         mockResolver.resolveModContentPath.mockImplementation((modId, typeName, filename) => {
             if (modId === 'core' && typeName === 'components') {
                 if (filename === coreHealthFilename) return coreHealthPath;
                 if (filename === corePositionFilename) return corePositionPath;
             }
+            // Throw if unexpected path requested in this test
             throw new Error(`Unexpected resolveModContentPath call: ${modId}, ${typeName}, ${filename}`);
         });
+        // Fetcher: Return the defined component data for the correct paths
         mockFetcher.fetch.mockImplementation(async (path) => {
-            // Use deep clone from factory to prevent mutation issues
             if (path === coreHealthPath) return Promise.resolve(JSON.parse(JSON.stringify(coreHealthDef)));
             if (path === corePositionPath) return Promise.resolve(JSON.parse(JSON.stringify(corePositionDef)));
             throw new Error(`Unexpected fetch call for path: ${path}`);
         });
 
-        // ***** CORRECTED VALIDATOR SETUP *****
-        // 1. Ensure the main component definition schema is marked as loaded internally
-        //    and has a default (successful) validator function associated.
-        mockValidator._setSchemaLoaded(componentDefinitionSchemaId, { /* Schema data if needed */});
+        // Validator: Ensure main definition schema validates successfully
+        mockValidator._setSchemaLoaded(componentDefinitionSchemaId);
+        mockValidator.mockValidatorFunction(componentDefinitionSchemaId, () => ({isValid: true, errors: null}));
+        // Use default addSchema/isSchemaLoaded behavior for the component data schemas
 
-        // 2. Explicitly ensure the validator function for the main schema returns success.
-        //    This might be redundant if _setSchemaLoaded already does this, but it's clear.
-        mockValidator.mockValidatorFunction(componentDefinitionSchemaId, (data) => {
-            // For a happy path, assume any data passed against this schema is valid
-            return {isValid: true, errors: null};
-        });
-
-        // Use default behavior for data schema handling (addSchema/isSchemaLoaded/removeSchema)
-        // The factory default addSchema should work for registering data schemas.
-        // The factory default isSchemaLoaded will work based on what's added.
-
-        // --- Setup: Configure Mock Registry ---
-        // Make registry.get return undefined for 'components' key initially
+        // Registry: Simulate components not existing initially
         mockRegistry.get.mockImplementation((type, id) => {
-            if (type === 'components') { // <<< Check correct key
-                return undefined; // Simulate no existing definitions
-            }
-            // Fallback for other types if needed
-            const typeMap = mockRegistry._internalRegistryData?.get(type); // Access internal state if needed (use cautiously)
-            return typeMap?.has(id) ? JSON.parse(JSON.stringify(typeMap.get(id))) : undefined;
+            if (type === 'components') return undefined;
+            // Add fallback if other types were used
+            return undefined;
         });
 
         // --- Setup: Instantiate Loader ---
@@ -288,50 +289,64 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.2: Happy Path - Core Mod)', ()
         // --- Verify: Promise Resolves & Count ---
         await expect(promise).resolves.not.toThrow();
         const count = await promise;
-        expect(count).toBe(mockCoreManifest.content.components.length); // Should now be 2
+        expect(count).toBe(2); // Correct number of items
 
         // --- Verify: Mock Calls ---
-        expect(mockRegistry.store).toHaveBeenCalledTimes(2);
-        // Add checks for the stored object including modId and _sourceFile
-        const expectedStoredHealth = {...coreHealthDef, modId: 'core', _sourceFile: coreHealthFilename};
-        const expectedStoredPosition = {...corePositionDef, modId: 'core', _sourceFile: corePositionFilename};
-        // Expect store with 'components' key
-        expect(mockRegistry.store).toHaveBeenCalledWith('components', coreHealthDef.id, expectedStoredHealth); // <<< CORRECTED KEY
-        expect(mockRegistry.store).toHaveBeenCalledWith('components', corePositionDef.id, expectedStoredPosition); // <<< CORRECTED KEY
 
+        // ** Verify Registry Store **
+        expect(mockRegistry.store).toHaveBeenCalledTimes(2);
+        // Data stored should have the FINAL correctly prefixed ID inside
+        const expectedStoredHealth = {
+            ...coreHealthDef,
+            id: coreHealthFinalId,
+            modId: 'core',
+            _sourceFile: coreHealthFilename
+        };
+        const expectedStoredPosition = {
+            ...corePositionDef,
+            id: corePositionFinalId,
+            modId: 'core',
+            _sourceFile: corePositionFilename
+        };
+        // Expect store with category, FINAL ID as key, and augmented data
+        expect(mockRegistry.store).toHaveBeenCalledWith('components', coreHealthFinalId, expectedStoredHealth);
+        expect(mockRegistry.store).toHaveBeenCalledWith('components', corePositionFinalId, expectedStoredPosition);
+
+        // ** Verify Schema Validator addSchema **
+        // Expect addSchema called with the dataSchema and the FULL ID from the file
         expect(mockValidator.addSchema).toHaveBeenCalledTimes(2);
-        expect(mockValidator.addSchema).toHaveBeenCalledWith(coreHealthDef.dataSchema, coreHealthDef.id);
-        expect(mockValidator.addSchema).toHaveBeenCalledWith(corePositionDef.dataSchema, corePositionDef.id);
+        expect(mockValidator.addSchema).toHaveBeenCalledWith(coreHealthDef.dataSchema, coreHealthIdFromFile); // e.g., "core:health"
+        expect(mockValidator.addSchema).toHaveBeenCalledWith(corePositionDef.dataSchema, corePositionIdFromFile); // e.g., "core:position"
 
         // --- Verify: Primary Schema Validation Check ---
-        // Add check for the actual validate call
-        expect(mockValidator.validate).toHaveBeenCalledTimes(2); // Called once per file
+        // Check that the overall definition structure was validated
+        expect(mockValidator.validate).toHaveBeenCalledTimes(2);
         expect(mockValidator.validate).toHaveBeenCalledWith(componentDefinitionSchemaId, coreHealthDef);
         expect(mockValidator.validate).toHaveBeenCalledWith(componentDefinitionSchemaId, corePositionDef);
 
-        // Other checks
+        // --- Verify Other Interactions ---
         expect(mockValidator.removeSchema).not.toHaveBeenCalled();
-        expect(mockRegistry.get).toHaveBeenCalledTimes(2); // Checks for overrides
-        // Expect get with 'components' key
-        expect(mockRegistry.get).toHaveBeenCalledWith('components', coreHealthDef.id); // <<< CORRECTED KEY
-        expect(mockRegistry.get).toHaveBeenCalledWith('components', corePositionDef.id); // <<< CORRECTED KEY
+        expect(mockRegistry.get).toHaveBeenCalledTimes(2); // Checks for overrides before storing
+
+        // Expect get called with category and FINAL ID (which storeItemInRegistry uses)
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', coreHealthFinalId); // "core:health"
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', corePositionFinalId); // "core:position"
 
         // --- Verify: ILogger Calls ---
         expect(mockLogger.info).toHaveBeenCalledTimes(2);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Loading component definitions for mod 'core'"));
-        const expectedSuccessCount = mockCoreManifest.content.components.length;
-        // Note: The log message from BaseManifestItemLoader._loadItemsInternal uses the 'contentKey', which is 'components'.
-        // The test assertion should reflect this.
+        expect(mockLogger.info).toHaveBeenCalledWith("ComponentLoader: Loading component definitions for mod 'core'."); // Match exact message
+        const expectedSuccessCount = 2;
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.`
+            `Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.` // Match exact message
         );
-        // Debug logs checks... (ensure they remain valid)
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            `Found ${mockCoreManifest.content.components.length} potential components files to process for mod core.`
-        );
-        // ... other specific debug checks ...
 
-        // Ensure no warnings or errors
+        // Optional: Verify specific debug logs if crucial
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Extracted and validated properties for component '${coreHealthIdFromFile}' (base: '${coreHealthBaseId}')`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Registered dataSchema for component ID '${coreHealthIdFromFile}'`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Delegating storage of component definition metadata for BASE ID '${coreHealthBaseId}'`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentLoader [core]: Successfully processed component definition from ${coreHealthFilename}. Returning qualified ID: ${coreHealthFinalId}`));
+        // (Similar checks for position component)
+
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
     });

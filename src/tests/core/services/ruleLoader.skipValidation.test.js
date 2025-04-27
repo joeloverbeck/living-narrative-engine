@@ -204,11 +204,8 @@ describe('RuleLoader - Skip Validation Scenario', () => {
 
             // Verify the warning log was called
             expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-            // *** FIXED Assertion: Match the actual log message from ruleLoader.js ***
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Check the exact string logged when schema is not loaded
-                `RuleLoader [${modId}]: Rule schema '${ruleSchemaId}' is configured but not loaded. Skipping validation for ruleToSkip.json.`
-                // Note: This specific log call in ruleLoader.js does NOT pass a context object.
+                `RuleLoader [${modId}]: Rule schema '${ruleSchemaId}' is configured but not loaded. Skipping validation for ${ruleFile}.` // Match exact message
             );
 
             // Verify fetcher was still called
@@ -216,32 +213,39 @@ describe('RuleLoader - Skip Validation Scenario', () => {
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathSkip);
 
             // Verify validator was NOT called
-            expect(mockValidator.getValidator).not.toHaveBeenCalled();
-            expect(mockRuleValidatorFn).not.toHaveBeenCalled(); // The underlying validator function mock
+            expect(mockValidator.validate).not.toHaveBeenCalled(); // Corrected check, validate shouldn't be called
+            expect(mockValidator.getValidator).not.toHaveBeenCalled(); // getValidator also shouldn't be called
+            // No need to check mockRuleValidatorFn if getValidator isn't called
 
             // Verify registry store was called
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
+
+            // ***** CORRECTED ASSERTION for store *****
+            const expectedStoredRuleId = `${modId}:${ruleBasename}`; // "test-mod-skip-validation:ruleToSkip"
+            // Expect the data object passed to store to be the *augmented* one
+            const expectedStoredData = {
+                ...ruleDataSkip,              // Original data properties
+                id: expectedStoredRuleId,     // Augmented with final ID
+                modId: modId,                 // Augmented with mod ID
+                _sourceFile: ruleFile         // Augmented with source file
+            };
+
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,
-                `${modId}:${ruleBasename}`, // Expected generated ID: modId:basename
-                ruleDataSkip // Stored the fetched data
+                ruleType,                // Category "system-rules"
+                expectedStoredRuleId,    // Key "test-mod-skip-validation:ruleToSkip"
+                expectedStoredData       // Expect the AUGMENTED data object
             );
 
             // Verify return value
             expect(count).toBe(1); // The rule was still processed and counted
 
             // Verify summary info log
-            // Verify summary info log
-            // The BaseManifestItemLoader logs the final count.
-            // Since validation was skipped, the message reflects "Processed" items, not "validated".
             expect(mockLogger.info).toHaveBeenCalledWith(
-                // Match the actual final log message observed in the error output
-                `Mod [${modId}] - Processed 1/1 rules items.`
+                `Mod [${modId}] - Processed 1/1 rules items.` // Base loader logs this summary
             );
-            // Optionally, you can also assert the first info log message if it's important
-            expect(mockLogger.info).toHaveBeenCalledWith(
-                `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
-            );
+            // Optionally check the initial log from loadRulesForMod
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`));
+
 
             // Verify no errors were logged
             expect(mockLogger.error).not.toHaveBeenCalled();

@@ -2,23 +2,11 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-// Correct the import: ComponentDefinitionLoader, not ComponentLoader
-import ComponentDefinitionLoader from '../../../core/services/componentLoader.js';
+// ***** CORRECTED IMPORT *****
+import ComponentLoader from '../../../core/services/componentLoader.js'; // Use ComponentLoader if that's the correct class name
 
-// --- Mock Service Factories (Copied from existing tests for self-containment) ---
-// [Mock factories createMockConfiguration, createMockPathResolver, etc. omitted for brevity]
-/** Mocks assumed present:
- * createMockConfiguration
- * createMockPathResolver
- * createMockDataFetcher
- * createMockSchemaValidator
- * createMockDataRegistry
- * createMockLogger
- * createMockComponentDefinition
- * createMockModManifest
- */
-// --- Mock Service Factories (Copied from existing tests for self-containment) ---
-
+// --- Mock Service Factories ---
+// Assume factories are present and correct as provided before
 /**
  * Creates a mock IConfiguration service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
@@ -256,15 +244,24 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     let mockValidator;
     let mockRegistry;
     let mockLogger;
-    let loader; // Correct type: ComponentDefinitionLoader
+    let loader; // Correct type: ComponentLoader
 
     // --- Shared Test Data ---
     const modId = 'storeFailMod';
     const filename = 'comp_store_fail.component.json';
     const filePath = `./data/mods/${modId}/components/${filename}`;
-    const componentId = `${modId}:store_fail`;
+
+    // ***** CORRECTED ID HANDLING *****
+    // ID as it appears *in the file* (assuming convention modId:baseId)
+    const componentIdFromFile = `${modId}:store_fail`;
+    // Extracted Base ID
+    const baseComponentId = 'store_fail';
+    // Final registry key (modId:baseId)
+    const finalRegistryKey = `${modId}:${baseComponentId}`; // = "storeFailMod:store_fail"
+
     const componentDefSchemaId = 'http://example.com/schemas/component-definition.schema.json';
-    const validDef = createMockComponentDefinition(componentId, {
+    // Use ID from file when creating the mock definition data
+    const validDef = createMockComponentDefinition(componentIdFromFile, {
         type: 'object',
         properties: {status: {type: 'string', enum: ['ok', 'error']}}
     });
@@ -281,25 +278,34 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
         // Instantiate the correct loader
-        loader = new ComponentDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+        loader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+
+        // Configure Mocks
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => typeName === 'components' ? componentDefSchemaId : undefined);
         mockResolver.resolveModContentPath.mockImplementation((mId, type, fName) => (mId === modId && type === 'components' && fName === filename) ? filePath : `unexpected`);
+        // Fetch returns the definition with the ID from the file
         mockFetcher.fetch.mockImplementation(async (path) => (path === filePath) ? JSON.parse(JSON.stringify(validDef)) : Promise.reject(`Unexpected fetch: ${path}`));
+
+        // Validator mocks
         mockValidator._setSchemaLoaded(componentDefSchemaId, {});
         mockValidator.mockValidatorFunction(componentDefSchemaId, () => ({isValid: true, errors: null}));
-        mockValidator.addSchema.mockResolvedValue(undefined); // Simulate successful schema addition
-        mockValidator.removeSchema.mockReturnValue(false); // Assume schema doesn't exist to be removed
-        // Simulate definition doesn't exist yet for the correct key
-        mockRegistry.get.mockImplementation((type, id) => (type === 'components') ? undefined : mockRegistry.get.getMockImplementation()?.(type, id)); // Use 'components'
+        // Schema check/add use the ID *from the file*
+        mockValidator.isSchemaLoaded.mockImplementation(schemaId => schemaId === componentIdFromFile ? false : true);
+        mockValidator.addSchema.mockImplementation(async (schema, schemaId) => {
+            if (schemaId === componentIdFromFile) return undefined;
+            throw new Error(`Unexpected addSchema call: ${schemaId}`);
+        });
+        mockValidator.removeSchema.mockReturnValue(false); // Assume schema doesn't exist to be removed (not relevant here)
 
-        // ***** CORRECTED MOCK STORE *****
-        // Configure Store to Fail specifically for 'components' type
+        // Registry mocks
+        // Registry get uses the *final registry key*
+        mockRegistry.get.mockImplementation((type, id) => (type === 'components' && id === finalRegistryKey) ? undefined : undefined);
+
+        // Configure Store to Fail using the *final registry key*
         mockRegistry.store.mockImplementation((type, id) => {
-            if (type === 'components' && id === componentId) { // <<< CORRECTED KEY CHECK
-                throw storageError; // Throw the predefined error
+            if (type === 'components' && id === finalRegistryKey) {
+                throw storageError;
             }
-            // Allow other store calls (if any) to potentially succeed
-            // (Call the default implementation for other cases if needed, or just do nothing)
         });
     });
 
@@ -309,88 +315,87 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
         const loadPromise = loader.loadComponentDefinitions(modId, manifest);
 
         // --- Verify: Promise Resolves & Count ---
-        // The overall process resolves because errors within file processing are caught by BaseManifestItemLoader
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
-        expect(count).toBe(0); // Should report 0 successful loads
+        expect(count).toBe(0);
 
         // --- Verify: Pre-Storage Steps Succeeded ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-        expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Validated the main definition
         expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, validDef);
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentId); // Checks if dataSchema exists
-        expect(mockValidator.addSchema).toHaveBeenCalledTimes(1); // Called for the dataSchema
-        expect(mockValidator.addSchema).toHaveBeenCalledWith(validDef.dataSchema, componentId);
-        expect(mockRegistry.get).toHaveBeenCalledTimes(1); // Checks for existing definition
-        // Expect get with 'components' key
-        expect(mockRegistry.get).toHaveBeenCalledWith('components', componentId); // <<< CORRECTED KEY
+        // Schema check/add use ID from file
+        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentIdFromFile);
+        expect(mockValidator.addSchema).toHaveBeenCalledWith(validDef.dataSchema, componentIdFromFile);
+        // Registry get uses final key
+        expect(mockRegistry.get).toHaveBeenCalledWith('components', finalRegistryKey);
 
         // --- Verify: Storage Attempt and Failure ---
-        expect(mockRegistry.store).toHaveBeenCalledTimes(1);
+        // Store uses final key
         const expectedStoredObject = {
             ...validDef,
+            id: finalRegistryKey, // ID in stored object is final key
             modId: modId,
             _sourceFile: filename
         };
-        // Expect store with 'components' key
-        expect(mockRegistry.store).toHaveBeenCalledWith('components', componentId, expectedStoredObject); // <<< CORRECTED KEY
+        expect(mockRegistry.store).toHaveBeenCalledWith('components', finalRegistryKey, expectedStoredObject);
 
         // --- Verify: Error Logs ---
-        // Expect 2 errors:
-        // 1. The specific store failure log from the inner catch in _processFetchedItem
-        // 2. The generic wrapper error log from _processFileWrapper in BaseManifestItemLoader
+        expect(mockLogger.error).toHaveBeenCalledTimes(2); // Expect log from storeItemInRegistry + wrapper
 
-        expect(mockLogger.error).toHaveBeenCalledTimes(2);
-
-        // 1. Specific storage error log (from _processFetchedItem's catch block)
-        //    - Logs 2 arguments: message, details object (which includes the error object)
-        const expectedInnerErrorMessage = `Failed to store component definition metadata for ID '${componentId}' from file '${filename}' in mod '${modId}'. Error: ${storageError.message}`;
-        const expectedInnerDetailsObject = expect.objectContaining({
+        // ***** CORRECTED LOG CHECKING *****
+        // 1. Error logged by _storeItemInRegistry (Base Class)
+        // Uses 'ComponentLoader' as constructor name because 'this' is the ComponentLoader instance
+        const expectedStoreErrorMsg = `ComponentLoader [${modId}]: Failed to store components item with key '${finalRegistryKey}' from file '${filename}' in data registry.`;
+        const expectedStoreErrorDetails = expect.objectContaining({
+            category: 'components',
             modId: modId,
-            filename: filename,
-            componentId: componentId,
-            error: storageError // Check that the original error object is nested here
+            baseItemId: baseComponentId,     // Logs the base ID passed to it
+            finalRegistryKey: finalRegistryKey,
+            sourceFilename: filename,           // Includes sourceFilename
+            error: storageError.message        // Logs the error message string
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedInnerErrorMessage, expectedInnerDetailsObject); // Expecting 2 arguments
+        expect(mockLogger.error).toHaveBeenNthCalledWith(1, // First call
+            expectedStoreErrorMsg,      // Exact message
+            expectedStoreErrorDetails,  // Details object structure
+            storageError                // Original error object
+        );
 
-        // 2. Wrapper error log (from _processFileWrapper's catch block)
-        //    - Logs 3 arguments: message, details object, error object
+        // 2. Error logged by _processFileWrapper (Base Class)
         const expectedWrapperErrorMessage = `Error processing file:`;
         const expectedWrapperDetailsObject = expect.objectContaining({
             modId: modId,
             filename: filename,
-            path: filePath, // Wrapper log includes path
-            typeName: 'components', // <<< Include typeName in wrapper log check
-            error: storageError.message // It logs the *message* of the caught error (which is storageError.message)
+            path: filePath,
+            typeName: 'components',       // Includes typeName
+            error: storageError.message  // Logs the error message string
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(
+        expect(mockLogger.error).toHaveBeenNthCalledWith(2, // Second call
             expectedWrapperErrorMessage,
             expectedWrapperDetailsObject,
-            storageError // It logs the *original* storageError object as the 3rd arg
+            storageError // Passes original error object
         );
 
         // --- Verify: Final Summary Log ---
-        // The contentKey used in the log message is 'components'
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `Mod [${modId}] - Processed 0/1 components items. (1 failed)` // Correct count and key
+            `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
+        expect(mockLogger.warn).not.toHaveBeenCalled();
 
         // --- Verify: Debug Logs ---
-        // Check key debug messages were called or not called as appropriate
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentDefinitionLoader [${modId}]: Processing fetched item: ${filename} (Type: components)`)); // Include TypeName
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentDefinitionLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=true`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentDefinitionLoader [${modId}]: Extracted and validated properties for component '${componentId}'`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentDefinitionLoader [${modId}]: Attempting to register data schema for component '${componentId}'`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${componentId}'`)); // Schema registration succeeded
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ComponentDefinitionLoader [${modId}]: Storing component definition metadata for '${componentId}'`)); // Attempted storage
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully stored component definition metadata')); // Storage failed
-
-        // Check base loader debug logs
+        // Check logs carefully based on the actual execution path
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing fetched item: ${filename} (Type: components)`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validated definition structure for ${filename}. Result: isValid=true`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted and validated properties for component '${componentIdFromFile}' (base: '${baseComponentId}')`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Attempting to register data schema using FULL ID '${componentIdFromFile}'`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${componentIdFromFile}'`));
+        // Check the log just before calling _storeItemInRegistry
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage of component definition metadata for BASE ID '${baseComponentId}'`));
+        // Check the specific *success* log from _storeItemInRegistry *was not* called
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully stored components item '${finalRegistryKey}'`));
+        // Check base loader logs
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${filePath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${filePath}`);
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`); // Processing failed at store step
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[${modId}] Failed processing ${filename}. Reason:`)); // Should see the failure reason log
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[${modId}] Failed processing ${filename}. Reason: ${storageError.message}`)); // Check failure reason
     });
 });

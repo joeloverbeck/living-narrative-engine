@@ -279,8 +279,8 @@ describe('BaseManifestItemLoader Constructor', () => {
 
 
     describe('Abstract Method Stub', () => {
-        // Test the SYNCHRONOUS throw from the base class implementation
-        it('_processFetchedItem should throw the specific abstract error message synchronously', () => { // Removed async
+        // Test the REJECTED PROMISE from the base class implementation
+        it('_processFetchedItem should reject with the specific abstract error message', async () => { // <<< MODIFIED: Added async
             // Create a new instance to test the original _processFetchedItem
             const freshLoader = new BaseManifestItemLoader(
                 mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger
@@ -292,10 +292,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             // Assign the original method to the instance for this test
             freshLoader._processFetchedItem = originalMethod;
 
-            // Wrap the synchronous call in a function for .toThrow()
-            // Pass undefined for typeName as the original stub doesn't expect it
-            expect(() => freshLoader._processFetchedItem('modId', 'filename', 'path', {}, undefined)) // <<< Pass undefined
-                .toThrow('Abstract method _processFetchedItem must be implemented by subclass.');
+            // Call the async method directly and assert that the promise rejects
+            // Pass all required arguments, including typeName
+            await expect(freshLoader._processFetchedItem('modId', 'filename', 'path', {}, 'someTypeName')) // <<< MODIFIED: Use await, add typeName arg
+                .rejects.toThrow('Abstract method _processFetchedItem must be implemented by subclass.'); // <<< MODIFIED: Use .rejects.toThrow
 
             // No need to restore mock, beforeEach handles it for subsequent tests
         });
@@ -594,7 +594,6 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         expect(mockLogger.error).not.toHaveBeenCalled(); // No errors logged
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${resolvedPath}`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}`);
     });
 
     it('Path Resolution Error: should log error, not fetch/process, and re-throw', async () => {

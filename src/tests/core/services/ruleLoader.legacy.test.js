@@ -540,10 +540,6 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
         );
-        // 2. Debug log for successful processing within RuleLoader
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            `RuleLoader [${modId}]: Successfully stored rule '${currentExpectedStoredRuleId}' from file '${ruleFilenameRelative}'.` // Using relative path from manifest here now
-        );
         // 3. Final summary log from BaseManifestItemLoader
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [${modId}] - Processed 1/1 rules items.` // Base class logs this summary

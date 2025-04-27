@@ -209,6 +209,14 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
         // Prepare the stringified version as it appears in the log
         const stringifiedErrorDetails = JSON.stringify([validationError], null, 2);
 
+        // --- Expected Augmented Data (for the valid rule only) ---
+        const expectedStoredValidData = {
+            ...validRuleData,
+            id: `${modId}:${validRuleData.rule_id}`,
+            modId: modId,
+            _sourceFile: validRuleFile
+        };
+        // --- End Expected Augmented Data ---
 
         const manifest = {
             id: modId,
@@ -228,6 +236,7 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
             });
 
             mockFetcher.fetch.mockImplementation(async (filePath) => {
+                // Return copies
                 if (filePath === resolvedPathValid) return Promise.resolve(JSON.parse(JSON.stringify(validRuleData)));
                 if (filePath === resolvedPathInvalid) return Promise.resolve(JSON.parse(JSON.stringify(invalidRuleData)));
                 return Promise.reject(new Error(`Mock Fetch Error: Unexpected fetch for ${filePath}`));
@@ -235,12 +244,17 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
 
             // Configure ISchemaValidator's mock function to fail for invalidRuleData
             mockRuleValidatorFn.mockImplementation((data) => {
-                if (data.event_type === 'core:test_valid') {
+                // Check based on a unique property of the data
+                if (data.event_type === validRuleData.event_type) {
                     return {isValid: true, errors: null};
-                } else if (data.event_type === 'core:test_invalid') {
+                } else if (data.event_type === invalidRuleData.event_type) {
                     return {isValid: false, errors: [validationError]}; // Return the specific error
                 }
-                return {isValid: false, errors: [{message: 'Unexpected data passed to mock validator'}]};
+                // Fallback for safety, though should not be reached if fetch mock is correct
+                return {
+                    isValid: false,
+                    errors: [{message: `Unexpected data passed to mock validator: ${JSON.stringify(data)}`}]
+                };
             });
 
             // Act
@@ -255,77 +269,71 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
             // Verify validator function calls
             expect(mockValidator.getValidator).toHaveBeenCalledWith('http://example.com/schemas/system-rule.schema.json');
             expect(mockRuleValidatorFn).toHaveBeenCalledTimes(2);
-            expect(mockRuleValidatorFn).toHaveBeenCalledWith(validRuleData);
-            expect(mockRuleValidatorFn).toHaveBeenCalledWith(invalidRuleData);
+            expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(validRuleData));
+            expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(invalidRuleData));
 
-            // Expect two errors: 1 specific from RuleLoader, 1 generic from Base wrapper
-            expect(mockLogger.error).toHaveBeenCalledTimes(2);
+            // Verify error logging (These assertions seem correct)
+            expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific schema error + Generic wrapper error
 
-            // --- CORRECTION: Assert the specific error log using ONE argument matcher ---
             // Assert the SPECIFIC schema validation error from RuleLoader._processFetchedItem
-            // Construct the expected full message string
+            // NOTE: RuleLoader._processFetchedItem logs the error *message* string directly.
             const expectedSpecificErrorMessage = `RuleLoader [${modId}]: Schema validation failed for rule file '${invalidRuleFile}' at ${resolvedPathInvalid}. Errors:\n${stringifiedErrorDetails}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMessage);
-            // --- End Correction ---
-
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMessage); // Logs only the message string
 
             // Assert the GENERIC error from BaseManifestItemLoader._processFileWrapper's catch block
+            const expectedGenericError = new Error(`Schema validation failed for ${invalidRuleFile} in mod ${modId}.`);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                'Error processing file:',
-                expect.objectContaining({
+                'Error processing file:', // Wrapper's message prefix
+                expect.objectContaining({ // Metadata object
                     modId: modId,
                     filename: invalidRuleFile,
                     path: resolvedPathInvalid,
-                    error: `Schema validation failed for ${invalidRuleFile} in mod ${modId}.`
+                    typeName: ruleType,
+                    error: expectedGenericError.message // The message from the error thrown by _processFetchedItem
                 }),
-                expect.any(Error)
+                expectedGenericError // The actual Error object thrown
             );
 
-
-            // Verify registry store call for the valid rule ONLY
+            // Verify registry store call for the valid rule ONLY with AUGMENTED data
+            // --- ** THE CORRECTION IS HERE ** ---
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,
-                `${modId}:${validRuleData.rule_id}`,
-                validRuleData
+                ruleType,                             // category
+                `${modId}:${validRuleData.rule_id}`,  // finalRegistryKey
+                expectedStoredValidData               // Augmented data object
             );
+            // Ensure store was NOT called for the invalid rule
             expect(mockRegistry.store).not.toHaveBeenCalledWith(
                 expect.anything(),
                 expect.stringContaining(invalidRuleData.rule_id),
                 expect.anything()
             );
-
+            // --- ** END CORRECTION ** ---
 
             // Verify return value
             expect(count).toBe(1);
 
-            // Verify the final summary log from BaseManifestItemLoader (INFO level)
+            // Verify summary and debug logging (These assertions seem correct)
             expect(mockLogger.info).toHaveBeenCalledWith(
                 `Mod [${modId}] - Processed 1/2 rules items. (1 failed)`
             );
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // No WARN summary expected
-
-            // Verify the initial delegation info log was called
             expect(mockLogger.info).toHaveBeenCalledWith(
                 expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`)
             );
-            // Ensure other incorrect INFO logs weren't called
-            expect(mockLogger.info).not.toHaveBeenCalledWith(
-                expect.stringContaining(`Successfully processed and registered all`)
-            );
-            expect(mockLogger.info).not.toHaveBeenCalledWith(
-                expect.stringContaining(`Loading 2 rule file(s)`)
-            );
-
-
-            // Verify the debug log for the successfully processed valid rule
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                `RuleLoader [${modId}]: Successfully stored rule '${modId}:${validRuleData.rule_id}' from file '${validRuleFile}'.`
+                // Successful storage log from _storeItemInRegistry for validRule
+                `RuleLoader [${modId}]: Successfully stored system-rules item '${modId}:${validRuleData.rule_id}' from file '${validRuleFile}'.`
             );
-            // Verify debug log for the failed file processing (logged by BaseManifestItemLoader)
             expect(mockLogger.debug).toHaveBeenCalledWith(
+                // Failure log from BaseManifestItemLoader._loadItemsInternal for invalidRule
                 `[${modId}] Failed processing ${invalidRuleFile}. Reason: Schema validation failed for ${invalidRuleFile} in mod ${modId}.`
             );
+            // Ensure the successful storage log was NOT called for the invalid rule
+            expect(mockLogger.debug).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Successfully stored system-rules item '${modId}:${invalidRuleData.rule_id}'`)
+            );
+            expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
+
         });
     });
 });

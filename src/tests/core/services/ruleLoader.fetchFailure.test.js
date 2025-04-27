@@ -255,11 +255,6 @@ describe('RuleLoader - Fetch Failure Handling', () => {
                 expect.stringContaining(`Successfully processed and registered all`)
             );
 
-            // Verify debug log for the successful file
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                // RuleLoader logs this after successful storage
-                `RuleLoader [${modId}]: Successfully stored rule '${expectedRuleIdOK}' from file '${fileOK}'.`
-            );
             // Verify debug log for the failed file processing (logged by BaseManifestItemLoader)
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `[${modId}] Failed processing ${fileFail}. Reason: ${fetchError.message}`

@@ -280,7 +280,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
 
         // --- File 1: invalid_null_id.component.json ---
         // 1a. Specific internal error log (_processFetchedItem check for ID)
-        const expectedSpecificErrorMsg1 = `ComponentDefinitionLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameNullId}'. Found: ${JSON.stringify(invalidDataNullId.id)}`;
+        const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameNullId}'. Found: ${JSON.stringify(invalidDataNullId.id)}`;
         // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails1 = expect.objectContaining({
             resolvedPath: filePathNullId,       // Use resolvedPath
@@ -307,7 +307,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
 
         // --- File 2: invalid_empty_id.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for ID)
-        const expectedSpecificErrorMsg2 = `ComponentDefinitionLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameEmptyId}'. Found: ${JSON.stringify(invalidDataEmptyId.id)}`;
+        const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameEmptyId}'. Found: ${JSON.stringify(invalidDataEmptyId.id)}`;
         // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails2 = expect.objectContaining({
             resolvedPath: filePathEmptyId,       // Use resolvedPath
@@ -378,7 +378,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
 
         // --- File 1: invalid_null_schema.component.json ---
         // 1a. Specific internal error log (_processFetchedItem check for dataSchema type)
-        const expectedSpecificErrorMsg1 = `ComponentDefinitionLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameNullSchema}'. Expected an object but received type 'null'.`;
+        const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameNullSchema}'. Expected an object but received type 'null'.`;
         const schemaTypeError1 = expect.any(Error); // Check it's an error object
         // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails1 = expect.objectContaining({
@@ -404,7 +404,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
 
         // --- File 2: invalid_string_schema.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for dataSchema type)
-        const expectedSpecificErrorMsg2 = `ComponentDefinitionLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameStringSchema}'. Expected an object but received type 'string'.`;
+        const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameStringSchema}'. Expected an object but received type 'string'.`;
         const schemaTypeError2 = expect.any(Error); // Check it's an error object
         // ***** CORRECTED DETAILS OBJECT *****
         const expectedSpecificErrorDetails2 = expect.objectContaining({

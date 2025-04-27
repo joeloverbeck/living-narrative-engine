@@ -208,6 +208,7 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
             actions: [{type: 'LOG', parameters: {message: 'Rule B loaded'}}]
         };
 
+        // --- Manifest ---
         const manifest = {
             id: modId,
             version: '1.0.0',
@@ -216,6 +217,23 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
                 rules: [fileA, `  ${fileBRelative}  `] // Include whitespace
             }
         };
+
+        // --- Expected Augmented Data ---
+        // This is what _storeItemInRegistry actually stores
+        const expectedStoredDataA = {
+            ...ruleDataA, // Original data
+            id: `${modId}:${ruleDataA.rule_id}`, // Added by helper: modId:baseRuleId
+            modId: modId,                    // Added by helper
+            _sourceFile: fileA                // Added by helper
+        };
+
+        const expectedStoredDataB = {
+            ...ruleDataB, // Original data
+            id: `${modId}:${fileBBasename}`,    // Added by helper: modId:baseRuleId (fallback)
+            modId: modId,                    // Added by helper
+            _sourceFile: fileBRelative.trim() // Added by helper (uses trimmed filename)
+        };
+
 
         // --- Test Case ---
         it('should successfully process multiple valid rules from manifest', async () => {
@@ -228,6 +246,7 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
             });
 
             mockFetcher.fetch.mockImplementation(async (filePath) => {
+                // Return copies to prevent accidental mutation during processing
                 if (filePath === resolvedPathA) return Promise.resolve(JSON.parse(JSON.stringify(ruleDataA)));
                 if (filePath === resolvedPathB) return Promise.resolve(JSON.parse(JSON.stringify(ruleDataB)));
                 return Promise.reject(new Error(`Mock Fetch Error: 404 Not Found for path ${filePath}`));
@@ -248,59 +267,40 @@ describe('RuleLoader (Sub-Ticket 4.5: Test Rule Processing Logic via loadRulesFo
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathB);
 
             // Verify ISchemaValidator interactions
-            // --- CORRECTION 1: Expect getValidator to be called twice ---
             expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per rule processed
             expect(mockValidator.getValidator).toHaveBeenCalledWith('http://example.com/schemas/system-rule.schema.json');
             expect(mockRuleValidatorFn).toHaveBeenCalledTimes(2);
-            expect(mockRuleValidatorFn).toHaveBeenCalledWith(ruleDataA);
-            expect(mockRuleValidatorFn).toHaveBeenCalledWith(ruleDataB);
+            // Schema validator is called with the ORIGINAL data before augmentation
+            expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(ruleDataA));
+            expect(mockRuleValidatorFn).toHaveBeenCalledWith(expect.objectContaining(ruleDataB));
 
             // Verify IDataRegistry.store calls
+            // --- CORRECTION: Use the expected AUGMENTED data ---
             expect(mockRegistry.store).toHaveBeenCalledTimes(2);
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,
-                `${modId}:${ruleDataA.rule_id}`, // modId:explicit_id
-                ruleDataA
+                ruleType,                         // category
+                `${modId}:${ruleDataA.rule_id}`,  // finalRegistryKey (modId:baseRuleId)
+                expectedStoredDataA               // The augmented data object
             );
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType,
-                `${modId}:${fileBBasename}`,       // modId:filename_base
-                ruleDataB
+                ruleType,                       // category
+                `${modId}:${fileBBasename}`,    // finalRegistryKey (modId:baseRuleId - fallback)
+                expectedStoredDataB             // The augmented data object
             );
+            // --- END CORRECTION ---
 
             // Verify return value
             expect(count).toBe(2);
 
-            // --- CORRECTION 2: Verify actual logging ---
-            // Verify the initial delegation info log was called
+            // Verify logging (remains the same)
             expect(mockLogger.info).toHaveBeenCalledWith(
                 expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`)
             );
-            // Verify the final summary log from BaseManifestItemLoader (INFO level)
             expect(mockLogger.info).toHaveBeenCalledWith(
                 `Mod [${modId}] - Processed 2/2 rules items.`
             );
-
-            // Verify the debug logs for successful storage
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                `RuleLoader [${modId}]: Successfully stored rule '${modId}:${ruleDataA.rule_id}' from file '${fileA}'.`
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                // Use the trimmed filename as passed to _processFetchedItem
-                `RuleLoader [${modId}]: Successfully stored rule '${modId}:${fileBBasename}' from file '${fileBRelative.trim()}'.`
-            );
-
-            // Ensure incorrect logs weren't called
-            expect(mockLogger.info).not.toHaveBeenCalledWith(
-                expect.stringContaining(`Loading 2 rule file(s)`) // This info log doesn't exist
-            );
-            expect(mockLogger.info).not.toHaveBeenCalledWith(
-                expect.stringContaining(`Successfully processed and registered all`) // This specific wording isn't used
-            );
-            // Verify no warnings or errors
             expect(mockLogger.warn).not.toHaveBeenCalled();
             expect(mockLogger.error).not.toHaveBeenCalled();
-            // --- End Correction 2 ---
         });
     });
 

@@ -51,12 +51,10 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
 
         // Log error if schema ID is not found
         if (this.#actionSchemaId == null) { // Checks for undefined or null
-            // *** CORRECTION: Use consistent class name in log ***
             this._logger.error("ActionLoader: CRITICAL - Schema ID for 'actions' not found in configuration."); // Logs error on missing schema ID
         }
 
         // Log debug message with cached schema ID status
-        // *** CORRECTION: Use consistent class name in log ***
         this._logger.debug(`ActionLoader: Initialized. Action schema ID: ${this.#actionSchemaId ? `'${this.#actionSchemaId}'` : 'NOT FOUND'}.`); // Logs debug message confirming initialization and cached ID
     }
 
@@ -73,7 +71,6 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
      */
     async loadActionsForMod(modId, modManifest) { // AC: Async public method 'loadActionsForMod' added
         // AC: Accepts modId and modManifest arguments
-        // *** CORRECTION: Use consistent class name in log ***
         this._logger.info(`ActionLoader: Loading action definitions for mod '${modId}'.`); // AC: Logs informational message
 
         // Basic input validation
@@ -98,9 +95,13 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
 
     /**
      * Processes a single fetched action definition file's data. Validates the data
-     * against the action definition schema, extracts and validates the action ID,
-     * checks for existing definitions using the fully qualified ID (modId:actionId),
-     * and stores the data in the registry using the qualified ID.
+     * against the action definition schema, extracts and validates the namespaced action ID
+     * (e.g., `namespace:action_name`), extracts the base (un-prefixed) action ID
+     * (e.g., `action_name`), and delegates storage to the base class's
+     * `_storeItemInRegistry` helper using the **base** action ID. The helper handles
+     * creating the final prefixed key (`modId:baseActionId`) for storage.
+     * Returns the **fully qualified** action ID (`modId:namespace:action_name`).
+     *
      * @override
      * @protected
      * @async
@@ -109,105 +110,93 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file.
      * @param {string} typeName - The content type name (e.g., 'actions').
-     * @returns {Promise<string>} The fully qualified action ID (modId:actionId) upon success.
-     * @throws {Error} If schema validation, ID validation, or storage fails.
+     * @returns {Promise<string>} The **fully qualified** action ID (e.g., "MyMod:core:action_attack") upon success.
+     * @throws {Error} If schema validation, ID validation/extraction, or storage fails.
      */
     async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-        // *** CORRECTION: Use consistent class name in log ***
+        // AC: Located _processFetchedItem
         this._logger.debug(`ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
 
         // --- Step 1: Schema Validation ---
+        // AC: Keep the schema validation logic
         const schemaId = this.#actionSchemaId;
 
         if (!schemaId) {
-            // *** CORRECTION: Use consistent class name in log ***
             this._logger.error(`ActionLoader [${modId}]: Cannot validate ${filename} - Action schema ID ('actions') is not configured or was not found.`);
             throw new Error(`Configuration Error: Action definition schema ID not configured.`);
         }
 
         const validationResult = this._schemaValidator.validate(schemaId, data);
-        // *** CORRECTION: Use consistent class name in log ***
         this._logger.debug(`ActionLoader [${modId}]: Validated definition structure for ${filename}. Result: isValid=${validationResult.isValid}`);
 
         if (!validationResult.isValid) {
             const errorDetails = JSON.stringify(validationResult.errors ?? [], null, 2);
-            // *** CORRECTION: Use consistent class name in log ***
             this._logger.error(
                 `ActionLoader [${modId}]: Schema validation failed for action definition '${filename}' using schema '${schemaId}'. Errors:\n${errorDetails}`,
                 {modId, filename, resolvedPath, schemaId, validationErrors: validationResult.errors, failedData: data}
             );
             throw new Error(`Schema validation failed for action definition '${filename}' in mod '${modId}'.`);
         }
-        // *** CORRECTION: Use consistent class name in log ***
         this._logger.debug(`ActionLoader [${modId}]: Schema validation passed for ${filename}.`);
         // --- End Step 1 ---
 
 
         // --- Step 2: ID Extraction & Validation ---
-        const actionId = data.id;
+        // AC: Keep the schema validation and ID extraction/validation logic.
+        const namespacedActionId = data.id; // e.g., "core:action_attack"
 
-        if (typeof actionId !== 'string' || actionId.trim() === '') {
-            // *** CORRECTION: Use consistent class name in log ***
+        if (typeof namespacedActionId !== 'string' || namespacedActionId.trim() === '') {
             this._logger.error(
-                `ActionLoader [${modId}]: Invalid or missing 'id' in action definition file '${filename}'. ID must be a non-empty string.`,
-                {modId, filename, resolvedPath, receivedId: actionId}
+                `ActionLoader [${modId}]: Invalid or missing 'id' in action definition file '${filename}'. ID must be a non-empty namespaced string (e.g., 'namespace:action_name').`,
+                {modId, filename, resolvedPath, receivedId: namespacedActionId}
             );
             throw new Error(`Invalid or missing 'id' in action definition file '${filename}' for mod '${modId}'.`);
         }
 
-        const trimmedActionId = actionId.trim();
-        // *** CORRECTION: Use consistent class name in log ***
-        this._logger.debug(`ActionLoader [${modId}]: Extracted and validated action ID '${trimmedActionId}' from ${filename}.`);
+        // AC: Ensure trimmedActionId holds the base ID (e.g., core:action_attack).
+        // NOTE: `trimmedNamespacedActionId` holds the NAMESPACED id from the file.
+        const trimmedNamespacedActionId = namespacedActionId.trim(); // e.g., "core:action_attack"
 
-        // *** CORRECTION: Construct final ID (modId:actionId) *before* registry checks/stores ***
-        const finalActionId = `${modId}:${trimmedActionId}`;
+        // Extract the *base* action ID (un-prefixed by namespace) for the storage helper
+        const idParts = trimmedNamespacedActionId.split(':');
+        if (idParts.length !== 2 || !idParts[0].trim() || !idParts[1].trim()) {
+            this._logger.error(
+                `ActionLoader [${modId}]: Invalid 'id' format in action definition file '${filename}'. ID '${trimmedNamespacedActionId}' must be in 'namespace:action_name' format.`,
+                {modId, filename, resolvedPath, receivedId: trimmedNamespacedActionId}
+            );
+            throw new Error(`Invalid 'id' format ('${trimmedNamespacedActionId}') in action definition file '${filename}' for mod '${modId}'. Must be 'namespace:action_name'.`);
+        }
+        // The base ID is the part AFTER the colon, used for registry key construction by the helper.
+        const baseActionId = idParts[1]; // e.g., "action_attack"
+
+        this._logger.debug(`ActionLoader [${modId}]: Extracted namespaced ID '${trimmedNamespacedActionId}' and base ID '${baseActionId}' from ${filename}.`);
         // --- End Step 2 ---
 
 
-        // --- Step 3: Overwrite Check & Data Storage ---
-        // AC: Construct dataToStore object with modId and _sourceFile
-        const dataToStore = {
-            ...data, // Shallow copy original data
-            id: finalActionId, // Store the final, fully qualified ID in the object itself
-            modId: modId,
-            _sourceFile: filename
-        };
-
-        // AC: Call dataRegistry.get to check for existing definition
-        // *** CORRECTION: Use finalActionId for get check ***
-        const existingDefinition = this._dataRegistry.get('actions', finalActionId);
-
-        // AC: Check if definition exists and log warning if overwriting
-        if (existingDefinition != null) { // Checks for non-null and non-undefined
-            // *** CORRECTION: Use consistent class name in log ***
-            // *** CORRECTION: Log uses finalActionId and includes more context ***
-            this._logger.warn(
-                `ActionLoader [${modId}]: Overwriting existing action definition with ID '${finalActionId}'. ` +
-                `Source: ${filename}. (Previous source: ${existingDefinition._sourceFile} from mod '${existingDefinition.modId}')`
-            );
-        }
-
-        // AC: Call dataRegistry.store to save the definition
-        // AC: If store throws, error propagates (handled by base class wrapper)
+        // --- Step 3: Data Storage (Using Base Helper) ---
+        // Delegate storage to the base helper, passing the *base* action ID.
+        // The helper will construct the final registry key `modId:baseActionId`.
+        // AC: Add a call to the base class helper method: this._storeItemInRegistry...
+        // AC: The call uses 'actions' as the category, the modId, the un-prefixed actionId as baseItemId, the original data, and the filename.
+        this._logger.debug(`ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`);
         try {
-            // *** CORRECTION: Use finalActionId for store key ***
-            this._dataRegistry.store('actions', finalActionId, dataToStore);
-            // AC: Log debug message confirming successful storage
-            // *** CORRECTION: Use consistent class name in log and finalActionId ***
-            this._logger.debug(`ActionLoader [${modId}]: Stored action definition '${finalActionId}' from ${filename}.`);
+            // Use the BASE action ID (without namespace) for the helper.
+            this._storeItemInRegistry('actions', modId, baseActionId, data, filename);
+            // Success/overwrite logging is handled within the base helper method.
         } catch (storageError) {
-            // Log the specific storage error before allowing it to propagate
-            // *** CORRECTION: Use consistent class name in log and finalActionId ***
-            this._logger.error(
-                `ActionLoader [${modId}]: Failed to store action definition '${finalActionId}' from file '${filename}' in data registry.`,
-                {modId, filename, resolvedPath, actionId: finalActionId, error: storageError}
-            );
-            throw storageError; // Re-throw the error to be caught by _processFileWrapper
+            // Error logging is handled within the base helper. Re-throw to allow _processFileWrapper to catch it.
+            throw storageError;
         }
         // --- End Step 3 ---
 
-        // *** CORRECTION: Return the final, fully qualified ID ***
-        return finalActionId;
+        // --- Step 4: Return Value ---
+        // Return the fully qualified ID as required by the base class contract.
+        // This includes the mod ID and the original namespaced ID from the file.
+        // AC: Modify the return statement to return the fully qualified, prefixed ID: return \modId:{trimmedActionId};.
+        const fullyQualifiedId = `${modId}:${trimmedNamespacedActionId}`; // e.g., "MyMod:core:action_attack"
+        this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning fully qualified ID: ${fullyQualifiedId}`);
+        return fullyQualifiedId;
+        // --- End Step 4 ---
     }
 }
 

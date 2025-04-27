@@ -1,5 +1,3 @@
-// src/core/interfaces/coreServices.js
-
 /**
  * @fileoverview Defines JSDoc typedefs for core service interfaces,
  * promoting dependency injection and loose coupling. These types define
@@ -56,11 +54,18 @@
 /**
  * Interface for storing, retrieving, and managing loaded game data definitions (like entities, items, actions)
  * and the world manifest. Acts as an in-memory cache/registry.
+ *
+ * **Note on Keys:** For definitions loaded via mods (using loaders like ComponentLoader, ActionLoader, etc.),
+ * the `id` used with `store` and `get` methods is expected to be in the fully qualified format: `modId:itemId`.
+ * The specific loader implementations are responsible for constructing this key before storing.
+ *
  * @typedef {object} IDataRegistry
  * @property {(type: string, id: string, data: object) => void} store
  * Stores a data object under a specific category (`type`) and unique identifier (`id`).
+ * For mod-loaded content, `id` should be the fully qualified `modId:itemId`.
  * @property {(type: string, id: string) => object | undefined} get
- * Retrieves a specific data object by its type and ID. Returns `undefined` if not found.
+ * Retrieves a specific data object by its type and fully qualified ID (`modId:itemId` for mod content).
+ * Returns `undefined` if not found.
  * @property {(type: string) => object[]} getAll
  * Retrieves all data objects belonging to a specific type. Returns an empty array if the type is unknown or has no data.
  * @property {() => object[]} getAllSystemRules
@@ -72,6 +77,7 @@
  * @property {(data: object) => void} setManifest
  * Stores the world manifest object.
  * // --- Specific Getters (Added for REFACTOR-014 / TICKET-11) ---
+ * // These getters expect the fully qualified `modId:itemId` as the `id` parameter for mod-loaded definitions.
  * @property {(id: string) => object | undefined} getEntityDefinition Retrieves a definition classified as an 'entity'.
  * @property {(id: string) => object | undefined} getItemDefinition Retrieves a definition classified as an 'item'.
  * @property {(id: string) => object | undefined} getLocationDefinition Retrieves a definition classified as a 'location'.
@@ -213,7 +219,7 @@ export class IPathResolver {
 
 // --- Spatial Indexing ---
 /**
- * @typedef {import('../entities/entityManager.js').default} EntityManager
+ * @typedef {import('../../entities/entityManager.js').default} EntityManager
  */
 
 /**

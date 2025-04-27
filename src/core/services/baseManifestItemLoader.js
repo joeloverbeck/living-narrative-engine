@@ -146,18 +146,21 @@ export class BaseManifestItemLoader {
     /**
      * Abstract method to be implemented by subclasses. Processes the data fetched
      * from a single content file. Subclasses should validate the data against
-     * a schema (if applicable) and store it in the data registry.
+     * a schema (if applicable), extract/determine the **base** item ID (un-prefixed),
+     * and delegate storage to `_storeItemInRegistry`. The implementation MUST return
+     * the **fully qualified** item ID (e.g., `modId:itemId`) which includes the mod prefix.
+     *
      * @abstract
      * @protected
      * @param {string} modId - The ID of the mod owning the file.
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file.
-     * @param {string} typeName - The content type name (e.g., 'items', 'locations'). <<< NEW PARAMETER
-     * @returns {any | Promise<any>} The result of processing (e.g., the validated data object, null, or undefined). Can be async.
+     * @param {string} typeName - The content type name (e.g., 'items', 'locations').
+     * @returns {Promise<string>} A promise resolving with the **fully qualified** item ID (e.g., `modId:itemId`).
      * @throws {Error} If processing or validation fails. This error will be caught by `_processFileWrapper`.
      */
-    _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< ADDED typeName
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< ADDED typeName
         // istanbul ignore next
         throw new Error('Abstract method _processFetchedItem must be implemented by subclass.');
     }
@@ -219,7 +222,7 @@ export class BaseManifestItemLoader {
      * @param {string} filename - The filename to process.
      * @param {string} contentTypeDir - The directory name for this content type (e.g., 'items', 'actions').
      * @param {string} typeName - The content type name (e.g., 'items', 'locations'). <<< NEW PARAMETER
-     * @returns {Promise<any>} A promise that resolves with the result from `_processFetchedItem` or rejects if any step fails.
+     * @returns {Promise<any>} A promise that resolves with the result from `_processFetchedItem` (expected to be the fully qualified ID) or rejects if any step fails.
      * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
      */
     async _processFileWrapper(modId, filename, contentTypeDir, typeName) { // <<< ADDED typeName
@@ -236,9 +239,9 @@ export class BaseManifestItemLoader {
             // 3. Call Abstract Method
             // Pass original filename, resolved path, and typeName for context
             const result = await this._processFetchedItem(modId, filename, resolvedPath, data, typeName); // <<< PASS typeName
-            this._logger.debug(`[${modId}] Successfully processed ${filename}`);
+            this._logger.debug(`[${modId}] Successfully processed ${filename}. Result from _processFetchedItem: ${result}`); // Log the result (qualified ID)
 
-            // 4. Return Result
+            // 4. Return Result (The fully qualified ID from the subclass)
             return result;
 
         } catch (error) {
@@ -301,6 +304,8 @@ export class BaseManifestItemLoader {
         settledResults.forEach((result, index) => {
             if (result.status === 'fulfilled') {
                 processedCount++;
+                // Optionally log the returned qualified ID at debug level for tracing success
+                this._logger.debug(`[${modId}] Successfully processed ${filenames[index]} - Qualified ID: ${result.value}`);
             } else { // result.status === 'rejected'
                 failedCount++;
                 // Error was already logged in detail by _processFileWrapper
@@ -317,5 +322,74 @@ export class BaseManifestItemLoader {
 
         // 7. Return Count
         return processedCount;
+    }
+
+
+    /**
+     * Centralized helper method for storing items in the registry with standardized key prefixing,
+     * overwrite checking, and data augmentation.
+     * This method constructs the final `modId:baseItemId` key, checks if an item with this key already
+     * exists in the specified category, logs a warning if it does, prepares the final data object
+     * (including the final prefixed `id`, `modId`, and `_sourceFile`), and attempts to store it in the registry.
+     * It wraps registry interactions in a try/catch block for robust error handling.
+     *
+     * @protected
+     * @param {string} category - The data registry category (e.g., 'items', 'actions', 'entities').
+     * @param {string} modId - The ID of the mod providing the item.
+     * @param {string} baseItemId - The item's **un-prefixed** base ID (extracted from the item data or filename).
+     * @param {object} dataToStore - The original data object fetched and validated for the item.
+     * @param {string} sourceFilename - The original filename from which the data was loaded (for logging).
+     * @returns {void} Does not return a value.
+     * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
+     */
+    _storeItemInRegistry(category, modId, baseItemId, dataToStore, sourceFilename) {
+        // Construct the final key using the modId and the un-prefixed baseItemId
+        const finalRegistryKey = `${modId}:${baseItemId}`;
+
+        try {
+            // Check for existing definition using the fully qualified key
+            const existingDefinition = this._dataRegistry.get(category, finalRegistryKey);
+
+            if (existingDefinition != null) {
+                this._logger.warn(
+                    `${this.constructor.name} [${modId}]: Overwriting existing ${category} definition with key '${finalRegistryKey}'. ` +
+                    `New Source: ${sourceFilename}. Previous Source: ${existingDefinition._sourceFile || 'unknown'} from mod '${existingDefinition.modId || 'unknown'}.'`
+                );
+            }
+
+            // Prepare the final data object, ensuring required fields are present/overwritten
+            // The object stored should contain the FINAL, PREFIXED ID in its `id` field.
+            const finalData = {
+                ...dataToStore, // Spread the original data
+                id: finalRegistryKey, // Ensure the final, prefixed key is stored within the object itself
+                modId: modId,         // Ensure the mod ID is stored
+                _sourceFile: sourceFilename // Ensure the source filename is stored
+            };
+
+            // Store the augmented data using the final, prefixed key
+            this._dataRegistry.store(category, finalRegistryKey, finalData);
+
+            // Log successful storage at debug level
+            this._logger.debug(
+                `${this.constructor.name} [${modId}]: Successfully stored ${category} item '${finalRegistryKey}' from file '${sourceFilename}'.`
+            );
+
+        } catch (error) {
+            // Log the error encountered during registry interaction
+            this._logger.error(
+                `${this.constructor.name} [${modId}]: Failed to store ${category} item with key '${finalRegistryKey}' from file '${sourceFilename}' in data registry.`,
+                {
+                    category,
+                    modId,
+                    baseItemId,
+                    finalRegistryKey,
+                    sourceFilename,
+                    error: error?.message || String(error)
+                },
+                error // Pass the original error object
+            );
+            // Re-throw the error to be handled by the calling context (e.g., _processFileWrapper)
+            throw error;
+        }
     }
 }

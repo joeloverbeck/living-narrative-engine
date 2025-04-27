@@ -334,42 +334,45 @@ describe('ActionLoader', () => {
     describe('_processFetchedItem', () => {
         const filename = 'test_action.json';
         const resolvedPath = `./data/mods/${TEST_MOD_ID}/${ACTION_CONTENT_DIR}/${filename}`;
+
+        // ***** CORRECTED Test Data *****
+        const namespacedActionIdFromFile = 'core:test_action'; // VALID format
+        const baseActionIdExtracted = 'test_action'; // Part after colon
         const baseActionData = {
-            id: 'test_action_id', // Internal ID within the file
+            id: namespacedActionIdFromFile, // Use valid ID from file
             description: 'A sample action.',
             parameters: {} // Example structure
         };
-        const finalActionId = `${TEST_MOD_ID}:${baseActionData.id}`; // ID used in registry
+
+        // Final ID used as KEY in registry (modId:baseActionId)
+        const finalRegistryKey = `${TEST_MOD_ID}:${baseActionIdExtracted}`; // e.g., "test-action-mod:test_action"
+
+        // Fully qualified ID RETURNED by _processFetchedItem (modId:namespacedActionId)
+        const fullyQualifiedReturnedId = `${TEST_MOD_ID}:${namespacedActionIdFromFile}`; // e.g., "test-action-mod:core:test_action"
+
 
         // Use the real implementation for this suite
         beforeEach(() => {
-            // Ensure actionLoader exists and method is correctly assigned
             if (actionLoader && ActionLoader.prototype._processFetchedItem) {
                 actionLoader._processFetchedItem = ActionLoader.prototype._processFetchedItem.bind(actionLoader);
             } else if (!actionLoader) {
-                // If constructor failed in outer scope (e.g. during schema ID test setup)
-                // We need a valid loader for these tests. Re-instantiate.
                 actionLoader = new ActionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
                 actionLoader._processFetchedItem = ActionLoader.prototype._processFetchedItem.bind(actionLoader);
-                // Also reset base class spy if needed
                 jest.spyOn(BaseManifestItemLoader.prototype, '_loadItemsInternal').mockResolvedValue(0);
                 if (typeof BaseManifestItemLoader.prototype._loadItemsInternal === 'function') {
                     actionLoader._loadItemsInternal = BaseManifestItemLoader.prototype._loadItemsInternal;
                 }
             }
-
-            // Ensure schema validator is configured for the action schema
-            mockValidator.isSchemaLoaded.mockReturnValue(true);
-            mockConfig.getContentTypeSchemaId.mockReturnValue(ACTION_SCHEMA_ID); // Ensure config returns the ID
-
+            mockValidator.isSchemaLoaded.mockReturnValue(true); // Assuming action schema doesn't need loading checks here
+            mockConfig.getContentTypeSchemaId.mockReturnValue(ACTION_SCHEMA_ID);
         });
 
         it('Success Path: should validate, check registry (no override), store, log debug, and return data', async () => {
             expect(actionLoader?._processFetchedItem).toBeDefined();
             // --- Arrange ---
-            const fetchedData = JSON.parse(JSON.stringify(baseActionData)); // Deep clone
+            const fetchedData = JSON.parse(JSON.stringify(baseActionData));
             mockValidator.validate.mockReturnValue({isValid: true, errors: null});
-            mockRegistry.get.mockReturnValue(undefined); // Simulate no existing entry
+            mockRegistry.get.mockReturnValue(undefined);
 
             // --- Act ---
             const resultId = await actionLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, ACTION_TYPE_NAME);
@@ -377,36 +380,36 @@ describe('ActionLoader', () => {
             // --- Assert ---
             // 1. Schema Validation
             expect(mockValidator.validate).toHaveBeenCalledTimes(1);
-            expect(mockValidator.validate).toHaveBeenCalledWith(ACTION_SCHEMA_ID, fetchedData); // Original fetched data passed to validate
+            expect(mockValidator.validate).toHaveBeenCalledWith(ACTION_SCHEMA_ID, fetchedData);
 
-            // 2. Registry Check (for override)
+            // 2. Registry Check (for override) - uses finalRegistryKey
             expect(mockRegistry.get).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.get).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalActionId);
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // No override warning
+            expect(mockRegistry.get).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalRegistryKey); // Use correct key
+            expect(mockLogger.warn).not.toHaveBeenCalled();
 
             // 3. Registry Store
-            // *** CORRECTION: Expect the ID within the stored object to be the MODIFIED finalActionId ***
+            // Stored data includes the final registry key in its 'id' field
             const expectedStoredData = {
-                ...baseActionData, // Original data properties
-                id: finalActionId, // <--- THIS IS THE CORRECTION based on observed behavior
-                modId: TEST_MOD_ID, // Added modId
-                _sourceFile: filename // Added source file
+                ...baseActionData,          // Original data properties
+                id: finalRegistryKey,       // ID within stored object is finalRegistryKey
+                modId: TEST_MOD_ID,         // Added modId
+                _sourceFile: filename       // Added source file
             };
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.store).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalActionId, expectedStoredData);
+            // Store uses finalRegistryKey as the key
+            expect(mockRegistry.store).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalRegistryKey, expectedStoredData);
 
-            // 4. Logging
-            expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Debug logs for: Start processing, Schema validation result, ID extraction, Stored definition
+            // 4. Logging (Adjust count if necessary)
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Processing fetched item: ${filename}`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Schema validation passed for ${filename}`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted and validated action ID '${baseActionData.id}'`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                `ActionLoader [${TEST_MOD_ID}]: Stored action definition '${finalActionId}' from ${filename}.`
-            );
+            // Check log uses the namespaced ID from file and extracted base ID
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted namespaced ID '${namespacedActionIdFromFile}' and base ID '${baseActionIdExtracted}'`));
+            // Base class store helper logs success using finalRegistryKey
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${ACTION_TYPE_NAME} item '${finalRegistryKey}'`));
             expect(mockLogger.error).not.toHaveBeenCalled();
 
-            // 5. Return Value
-            expect(resultId).toEqual(finalActionId);
+            // 5. Return Value - should be fullyQualifiedReturnedId
+            expect(resultId).toEqual(fullyQualifiedReturnedId);
         });
 
         it('Override Path: should validate, check registry (found override), log warning, store, log debug, and return data', async () => {
@@ -414,17 +417,16 @@ describe('ActionLoader', () => {
             // --- Arrange ---
             const fetchedData = JSON.parse(JSON.stringify(baseActionData));
             const existingActionData = {
-                // Simulate the structure of what *would* have been stored previously
-                // including the potentially modified ID if that's the pattern
-                id: `some-other-mod:${baseActionData.id}`, // Assume previous store also modified ID
+                id: finalRegistryKey, // Existing item would have the final registry key as its ID
                 description: 'Old version',
                 parameters: {},
                 modId: 'some-other-mod',
                 _sourceFile: 'old_action.json',
             };
             mockValidator.validate.mockReturnValue({isValid: true, errors: null});
+            // Mock get to return existing data for the finalRegistryKey
             mockRegistry.get.mockImplementation((type, id) => {
-                if (type === ACTION_TYPE_NAME && id === finalActionId) {
+                if (type === ACTION_TYPE_NAME && id === finalRegistryKey) {
                     return existingActionData;
                 }
                 return undefined;
@@ -434,38 +436,35 @@ describe('ActionLoader', () => {
             const resultId = await actionLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, ACTION_TYPE_NAME);
 
             // --- Assert ---
-            // 1. Schema Validation (called)
+            // 1. Schema Validation
             expect(mockValidator.validate).toHaveBeenCalledWith(ACTION_SCHEMA_ID, fetchedData);
 
-            // 2. Registry Check (found)
-            expect(mockRegistry.get).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalActionId);
+            // 2. Registry Check (uses finalRegistryKey)
+            expect(mockRegistry.get).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalRegistryKey);
 
-            // 3. Override Warning Logged
+            // 3. Override Warning Logged (uses finalRegistryKey)
+            // Base class helper logs this warning
             expect(mockLogger.warn).toHaveBeenCalledTimes(1);
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                `ActionLoader [${TEST_MOD_ID}]: Overwriting existing action definition with ID '${finalActionId}'. ` +
-                `Source: ${filename}. (Previous source: ${existingActionData._sourceFile} from mod '${existingActionData.modId}')`
+                expect.stringContaining(`Overwriting existing ${ACTION_TYPE_NAME} definition with key '${finalRegistryKey}'.`)
             );
 
-            // 4. Registry Store (called, overwriting)
-            // *** CORRECTION: Expect the ID within the stored object to be the MODIFIED finalActionId ***
+            // 4. Registry Store (uses finalRegistryKey)
             const expectedStoredData = {
                 ...baseActionData,
-                id: finalActionId, // <--- THIS IS THE CORRECTION based on observed behavior
+                id: finalRegistryKey, // ID within stored object is finalRegistryKey
                 modId: TEST_MOD_ID,
                 _sourceFile: filename
             };
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.store).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalActionId, expectedStoredData);
+            expect(mockRegistry.store).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalRegistryKey, expectedStoredData);
 
-            // 5. Debug Log (still happens)
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                `ActionLoader [${TEST_MOD_ID}]: Stored action definition '${finalActionId}' from ${filename}.`
-            );
+            // 5. Debug Log (Base class store helper logs success)
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${ACTION_TYPE_NAME} item '${finalRegistryKey}'`));
             expect(mockLogger.error).not.toHaveBeenCalled();
 
-            // 6. Return Value
-            expect(resultId).toEqual(finalActionId);
+            // 6. Return Value - should be fullyQualifiedReturnedId
+            expect(resultId).toEqual(fullyQualifiedReturnedId);
         });
 
         it('Schema Validation Failure: should log error, throw, and not store', async () => {
@@ -596,42 +595,57 @@ describe('ActionLoader', () => {
         });
 
 
+        // ***** CORRECTED 'Registry Store Failure' Test *****
         it('Registry Store Failure: should log error, throw after attempting store', async () => {
             expect(actionLoader?._processFetchedItem).toBeDefined();
             // --- Arrange ---
-            const fetchedData = JSON.parse(JSON.stringify(baseActionData));
-            const storeError = new Error('Registry unavailable');
+            const fetchedData = JSON.parse(JSON.stringify(baseActionData)); // Use corrected base data
+            const storeError = new Error('Registry unavailable'); // Error to be thrown by store
             mockValidator.validate.mockReturnValue({isValid: true, errors: null});
             mockRegistry.get.mockReturnValue(undefined); // No override
-            mockRegistry.store.mockImplementation(() => { // Simulate store throwing
+            // Mock store to throw the specific error
+            mockRegistry.store.mockImplementation(() => {
                 throw storeError;
             });
 
             // --- Act & Assert ---
+            // Execution should reach the store call because ID format is now valid
             await expect(actionLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, ACTION_TYPE_NAME))
-                .rejects.toThrow(storeError); // Should re-throw the original error
+                .rejects.toThrow(storeError); // Expect the *original* storeError
 
-            // Assert logging
+            // Assert logging (Check the log from the base class helper _storeItemInRegistry)
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
+
+            // ***** CORRECTED Assertion Arguments *****
+            // 1. Expect the EXACT message logged by _storeItemInRegistry
+            const expectedLogMessage = `ActionLoader [${TEST_MOD_ID}]: Failed to store ${ACTION_TYPE_NAME} item with key '${finalRegistryKey}' from file '${filename}' in data registry.`;
+
+            // 2. Expect the details object logged by _storeItemInRegistry
+            const expectedLogDetails = expect.objectContaining({
+                modId: TEST_MOD_ID,
+                category: ACTION_TYPE_NAME,
+                baseItemId: baseActionIdExtracted, // Base helper logs the base ID
+                finalRegistryKey: finalRegistryKey, // Base helper logs the final key
+                sourceFilename: filename,           // Include sourceFilename
+                error: storeError.message           // Base helper logs the error message string
+            });
+
+            // 3. Expect the original error object passed as the 3rd argument
+            const expectedLogErrorObject = storeError;
+
             expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Failed to store action definition '${finalActionId}'`),
-                expect.objectContaining({ // Check context object
-                    modId: TEST_MOD_ID,
-                    filename: filename,
-                    resolvedPath: resolvedPath,
-                    actionId: finalActionId, // Check ID used during failed store
-                    error: storeError
-                })
+                expectedLogMessage,
+                expectedLogDetails,
+                expectedLogErrorObject
             );
 
             // Assert validation and check happened
             expect(mockValidator.validate).toHaveBeenCalled();
-            expect(mockRegistry.get).toHaveBeenCalled();
-            expect(mockRegistry.store).toHaveBeenCalled(); // Store *was* attempted
+            expect(mockRegistry.get).toHaveBeenCalledWith(ACTION_TYPE_NAME, finalRegistryKey); // Checked with correct key
+            expect(mockRegistry.store).toHaveBeenCalled(); // Store *was* attempted with correct key
 
-            // Assert other logs didn't happen post-attempt
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // No override issue
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Stored action definition`)); // Store success log didn't happen
+            // Assert success log didn't happen
+            expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${ACTION_TYPE_NAME} item`));
         });
     });
 });

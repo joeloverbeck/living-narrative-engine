@@ -218,11 +218,23 @@ describe('RuleLoader Integration (Sub-Ticket 4.7: Rule Override "Last Mod Wins")
         // 1. Load the BaseMod rule
         const countBase = await loader.loadRulesForMod(baseModId, baseModManifest);
 
-        // --- Assert Intermediate State (Optional but good for debugging) ---
+        // --- Assert Intermediate State ---
         expect(countBase).toBe(1);
         expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning yet expected
+
+        // --- ** CORRECTION 1: Define expected STORED data ** ---
+        const expectedStoredBaseData = {
+            ...baseRuleData,
+            id: finalBaseRuleId, // BaseMod:common_rule
+            modId: baseModId,
+            _sourceFile: commonFileName
+        };
+        // --- ** END CORRECTION 1 ** ---
+
         const storedBaseRule = realRegistry.get(ruleType, finalBaseRuleId);
-        expect(storedBaseRule).toEqual(baseRuleData); // Base rule should be stored initially
+        // --- ** CORRECTION 2: Assert against STORED data ** ---
+        expect(storedBaseRule).toEqual(expectedStoredBaseData); // Compare with augmented data
+        // --- ** END CORRECTION 2 ** ---
 
         // --- Act ---
         // 2. Load the OverrideMod rule (which conceptually overrides)
@@ -232,18 +244,31 @@ describe('RuleLoader Integration (Sub-Ticket 4.7: Rule Override "Last Mod Wins")
         expect(countOverride).toBe(1);
 
         // 1. Verify ILogger.warn was NOT called for the overwrite
-        //    (Because the final registry keys are different)
+        //    (Because the final registry keys are different: BaseMod:common_rule vs OverrideMod:common_rule)
         expect(mockLogger.warn).not.toHaveBeenCalled();
+
+        // --- ** CORRECTION 3: Define expected STORED override data ** ---
+        const expectedStoredOverrideData = {
+            ...overrideRuleData,
+            id: finalOverrideRuleId, // OverrideMod:common_rule
+            modId: overrideModId,
+            _sourceFile: commonFileName
+        };
+        // --- ** END CORRECTION 3 ** ---
 
         // 2. Verify IDataRegistry contains the *override* data under the *override* mod's final ID
         const storedOverrideRule = realRegistry.get(ruleType, finalOverrideRuleId);
-        expect(storedOverrideRule).toEqual(overrideRuleData);
+        // --- ** CORRECTION 4: Assert against STORED override data ** ---
+        expect(storedOverrideRule).toEqual(expectedStoredOverrideData); // Compare with augmented data
+        // --- ** END CORRECTION 4 ** ---
 
-        // 3. Verify the rule data under the *base* mod's final ID is still present
+        // 3. Verify the rule data under the *base* mod's final ID is still present and unchanged
         const storedRuleUnderBaseKey = realRegistry.get(ruleType, finalBaseRuleId);
-        expect(storedRuleUnderBaseKey).toEqual(baseRuleData);
+        // --- ** CORRECTION 5: Assert against STORED base data again ** ---
+        expect(storedRuleUnderBaseKey).toEqual(expectedStoredBaseData); // Compare with augmented data
+        // --- ** END CORRECTION 5 ** ---
 
-        // 4. Verify fetcher, resolver, validator calls
+        // 4. Verify fetcher, resolver, validator calls (remain the same)
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(baseModId, ruleType, commonFileName);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(overrideModId, ruleType, commonFileName);
@@ -253,48 +278,33 @@ describe('RuleLoader Integration (Sub-Ticket 4.7: Rule Override "Last Mod Wins")
         expect(mockFetcher.fetch).toHaveBeenCalledWith(overridePath);
 
         // Schema validation was retrieved and called for both rules
-        expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per mod load
-        const validatorFn = mockValidator.getValidator(mockConfig.getRuleSchemaId());
+        expect(mockValidator.getValidator).toHaveBeenCalledTimes(2); // Called once per loadRulesForMod call
+        const validatorFn = mockValidator._mockValidatorFn; // Use the exposed mock function reference
         expect(validatorFn).toHaveBeenCalledTimes(2); // Called once per rule file
-        expect(validatorFn).toHaveBeenCalledWith(baseRuleData);
-        expect(validatorFn).toHaveBeenCalledWith(overrideRuleData);
+        expect(validatorFn).toHaveBeenCalledWith(expect.objectContaining(baseRuleData)); // Validator sees original data
+        expect(validatorFn).toHaveBeenCalledWith(expect.objectContaining(overrideRuleData)); // Validator sees original data
 
-        // --- CORRECTION: Verify actual INFO logs ---
-        // Check delegation logs
+        // Verify logging (remain the same)
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader [${baseModId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader [${overrideModId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
         );
-        // Check final summary logs
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [${baseModId}] - Processed 1/1 rules items.`
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [${overrideModId}] - Processed 1/1 rules items.`
         );
-        // Ensure incorrect logs weren't called
-        expect(mockLogger.info).not.toHaveBeenCalledWith(
-            expect.stringContaining(`Loading 1 rule file(s)`)
-        );
-        expect(mockLogger.info).not.toHaveBeenCalledWith(
-            expect.stringContaining(`Successfully processed and registered all`)
-        );
-        // --- End Correction ---
-
-        // Check debug log for successful registration of *both* rules during their load sequence
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            // Check message from RuleLoader._processFetchedItem after store
-            `RuleLoader [${baseModId}]: Successfully stored rule '${finalBaseRuleId}' from file '${commonFileName}'.`
+            // Debug log from _storeItemInRegistry after successful storage
+            `RuleLoader [${baseModId}]: Successfully stored system-rules item '${finalBaseRuleId}' from file '${commonFileName}'.`
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            // Check message from RuleLoader._processFetchedItem after store
-            `RuleLoader [${overrideModId}]: Successfully stored rule '${finalOverrideRuleId}' from file '${commonFileName}'.`
+            // Debug log from _storeItemInRegistry after successful storage
+            `RuleLoader [${overrideModId}]: Successfully stored system-rules item '${finalOverrideRuleId}' from file '${commonFileName}'.`
         );
-
-
-        // Ensure no errors were logged
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 });

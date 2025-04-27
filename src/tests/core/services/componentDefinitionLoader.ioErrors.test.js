@@ -296,7 +296,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         // --- Verify: Final Summary Log ---
         // *** FIX START: Check info log for summary, not warn ***
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader: Loading component definitions for mod '${modId}'.` // Initial log
+            `ComponentLoader: Loading component definitions for mod '${modId}'.` // Initial log
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             // Summary log from _loadItemsInternal
@@ -371,7 +371,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         // --- Verify: Final Summary Log ---
         // *** FIX START: Check info log for summary, not warn ***
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentDefinitionLoader: Loading component definitions for mod '${modId}'.` // Initial log
+            `ComponentLoader: Loading component definitions for mod '${modId}'.` // Initial log
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             // Summary log from _loadItemsInternal
