@@ -19,19 +19,21 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 
 /** Creates a mock IConfiguration service. */
 const createMockConfiguration = (overrides = {}) => ({
-    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+    // --- Methods required by BaseManifestItemLoader constructor ---
+    getModsBasePath: jest.fn().mockReturnValue('./data/mods'), // Added
     getContentTypeSchemaId: jest.fn((typeName) => {
         if (typeName === 'system-rules') {
             return 'http://example.com/schemas/system-rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
+    // --- Other potentially used methods (good practice to include) ---
+    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
     getSchemaFiles: jest.fn().mockReturnValue([]),
     getWorldBasePath: jest.fn().mockReturnValue('worlds'),
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-    getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
     getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
     getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
@@ -41,6 +43,7 @@ const createMockConfiguration = (overrides = {}) => ({
 /** Creates a mock IPathResolver service. */
 const createMockPathResolver = (overrides = {}) => ({
     resolveModContentPath: jest.fn((modId, typeName, filename) => `/abs/path/to/mods/${modId}/${typeName}/${filename}`),
+    // Mock other methods required by Base constructor or other logic
     resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`),
     resolveSchemaPath: jest.fn(filename => `./data/schemas/${filename}`),
     resolveModManifestPath: jest.fn(modId => `./data/mods/${modId}/mod.manifest.json`),
@@ -57,21 +60,24 @@ const createMockDataFetcher = () => ({
 
 /** Creates a mock ISchemaValidator service. */
 const createMockSchemaValidator = () => {
-    // Default mock validator function passes validation
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
     const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const loadedSchemas = new Map();
+    loadedSchemas.set(ruleSchemaId, {}); // Mark schema as loaded
 
     return {
         validate: jest.fn().mockImplementation((schemaId, data) => {
-            if (schemaId === ruleSchemaId) {
+            if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn(data);
             }
             return {isValid: true, errors: null}; // Default pass for other schemas
         }),
+        // --- Methods required by Base constructor ---
         addSchema: jest.fn().mockResolvedValue(undefined),
-        isSchemaLoaded: jest.fn().mockReturnValue(true), // Assume schema is loaded by default
+        removeSchema: jest.fn().mockReturnValue(true),
+        isSchemaLoaded: jest.fn().mockImplementation((schemaId) => loadedSchemas.has(schemaId)), // Use map
         getValidator: jest.fn().mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) {
+            if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn; // Return the mock validator function
             }
             return undefined; // No validator for other schemas by default
@@ -85,7 +91,31 @@ const createMockSchemaValidator = () => {
 const createMockDataRegistry = () => ({
     store: jest.fn(),
     get: jest.fn().mockReturnValue(undefined), // Default: rule does not exist
+    // --- Methods required by Base constructor ---
+    getAll: jest.fn(() => []),
     getAllSystemRules: jest.fn().mockReturnValue([]),
+    clear: jest.fn(),
+    getManifest: jest.fn().mockReturnValue(null),
+    setManifest: jest.fn(),
+    // Add specific getters if needed by other parts, defaulting to undefined
+    getEntityDefinition: jest.fn().mockReturnValue(undefined),
+    getItemDefinition: jest.fn().mockReturnValue(undefined),
+    getLocationDefinition: jest.fn().mockReturnValue(undefined),
+    getConnectionDefinition: jest.fn().mockReturnValue(undefined),
+    getBlockerDefinition: jest.fn().mockReturnValue(undefined),
+    getActionDefinition: jest.fn().mockReturnValue(undefined),
+    getEventDefinition: jest.fn().mockReturnValue(undefined),
+    getComponentDefinition: jest.fn().mockReturnValue(undefined),
+    getAllEntityDefinitions: jest.fn().mockReturnValue([]),
+    getAllItemDefinitions: jest.fn().mockReturnValue([]),
+    getAllLocationDefinitions: jest.fn().mockReturnValue([]),
+    getAllConnectionDefinitions: jest.fn().mockReturnValue([]),
+    getAllBlockerDefinitions: jest.fn().mockReturnValue([]),
+    getAllActionDefinitions: jest.fn().mockReturnValue([]),
+    getAllEventDefinitions: jest.fn().mockReturnValue([]),
+    getAllComponentDefinitions: jest.fn().mockReturnValue([]),
+    getStartingPlayerId: jest.fn().mockReturnValue(null),
+    getStartingLocationId: jest.fn().mockReturnValue(null),
 });
 
 /** Creates a mock ILogger service. */
@@ -123,7 +153,7 @@ describe('RuleLoader - Rule ID Override Handling', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Instantiate mocks
+        // Instantiate mocks using complete factories
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
@@ -132,13 +162,14 @@ describe('RuleLoader - Rule ID Override Handling', () => {
         mockLogger = createMockLogger();
         mockRuleValidatorFn = mockValidator._mockValidatorFn; // Get reference
 
-        // Common mock setup for rule loading
+        // Ensure rule schema ID is configured
         const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
-        mockValidator.isSchemaLoaded.mockImplementation((schemaId) => schemaId === ruleSchemaId);
-        mockValidator.getValidator.mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) return mockRuleValidatorFn;
-            return undefined;
-        });
+        mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+            typeName === 'system-rules' ? ruleSchemaId : undefined
+        );
+        mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
+
+
         // Ensure validator function defaults to valid
         mockRuleValidatorFn.mockImplementation((data) => ({
             isValid: data && typeof data.event_type === 'string' && Array.isArray(data.actions)
@@ -224,12 +255,11 @@ describe('RuleLoader - Rule ID Override Handling', () => {
 
             // Assert
             // 1. Verify IDataRegistry.get was called with the final ID *before* store
-            // Jest mocks record call order. We check it was called, and later check store was called.
             expect(mockRegistry.get).toHaveBeenCalledWith(ruleType, finalRuleId);
 
             // 2. Verify ILogger.warn was called with the override message
             expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-            // *** FIXED ASSERTION: Expect only the string message that is actually logged ***
+            // Match the exact message logged by RuleLoader
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 `RuleLoader [${modId}]: Overwriting existing rule with ID '${finalRuleId}' from file '${ruleFileName}'.`
             );
@@ -251,12 +281,21 @@ describe('RuleLoader - Rule ID Override Handling', () => {
             expect(count).toBe(1);
 
             // 5. Verify other logs (e.g., success debug log, summary info log)
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`Successfully processed and registered rule '${finalRuleId}' from file '${ruleFileName}'.`)
-            );
+            // --- CORRECTION: Check actual INFO logs ---
+            // Check the initial delegation log
             expect(mockLogger.info).toHaveBeenCalledWith(
-                expect.stringContaining(`Successfully processed and registered all 1 validated rule files for mod`)
+                `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
             );
+            // Check the final summary log from BaseManifestItemLoader
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `Mod [${modId}] - Processed 1/1 rules items.` // Correct summary log
+            );
+            // Ensure incorrect INFO logs were not called
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Successfully processed and registered all`)
+            );
+            // --- End Correction ---
+
             expect(mockLogger.error).not.toHaveBeenCalled(); // No errors expected
         });
     });

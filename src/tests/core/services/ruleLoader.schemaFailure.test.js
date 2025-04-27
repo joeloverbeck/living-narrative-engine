@@ -20,19 +20,21 @@ import RuleLoader from '../../../core/services/ruleLoader.js'; // Adjust path as
 
 /** Creates a mock IConfiguration service. */
 const createMockConfiguration = (overrides = {}) => ({
-    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+    // --- Methods required by BaseManifestItemLoader constructor ---
+    getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
     getContentTypeSchemaId: jest.fn((typeName) => {
         if (typeName === 'system-rules') {
             return 'http://example.com/schemas/system-rule.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
+    // --- Other potentially used methods (good practice to include) ---
+    getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
     getSchemaFiles: jest.fn().mockReturnValue([]),
     getWorldBasePath: jest.fn().mockReturnValue('worlds'),
     getBaseDataPath: jest.fn().mockReturnValue('./data'),
     getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-    getModsBasePath: jest.fn().mockReturnValue('mods'),
     getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
     getRuleBasePath: jest.fn().mockReturnValue('system-rules'),
     getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/system-rule.schema.json'),
@@ -42,7 +44,7 @@ const createMockConfiguration = (overrides = {}) => ({
 /** Creates a mock IPathResolver service. */
 const createMockPathResolver = (overrides = {}) => ({
     resolveModContentPath: jest.fn((modId, typeName, filename) => `/abs/path/to/mods/${modId}/${typeName}/${filename}`),
-    // Add other methods minimally if needed
+    // Mock other methods required by Base constructor or other logic
     resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`),
     resolveSchemaPath: jest.fn(filename => `./data/schemas/${filename}`),
     resolveModManifestPath: jest.fn(modId => `./data/mods/${modId}/mod.manifest.json`),
@@ -61,18 +63,21 @@ const createMockDataFetcher = () => ({
 const createMockSchemaValidator = () => {
     const mockValidatorFn = jest.fn(() => ({isValid: true, errors: null}));
     const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
+    const loadedSchemas = new Map();
+    loadedSchemas.set(ruleSchemaId, {}); // Mark schema as loaded
 
     return {
         validate: jest.fn().mockImplementation((schemaId, data) => {
-            if (schemaId === ruleSchemaId) {
+            if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn(data);
             }
             return {isValid: true, errors: null}; // Default pass for other schemas
         }),
         addSchema: jest.fn().mockResolvedValue(undefined),
-        isSchemaLoaded: jest.fn().mockReturnValue(true), // Default to true
+        removeSchema: jest.fn().mockReturnValue(true), // Added for completeness if Base needs it
+        isSchemaLoaded: jest.fn().mockImplementation((schemaId) => loadedSchemas.has(schemaId)), // Use map
         getValidator: jest.fn().mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) {
+            if (schemaId === ruleSchemaId && loadedSchemas.has(schemaId)) {
                 return mockValidatorFn;
             }
             return undefined; // No validator for other schemas by default
@@ -86,8 +91,33 @@ const createMockSchemaValidator = () => {
 const createMockDataRegistry = () => ({
     store: jest.fn(),
     get: jest.fn().mockReturnValue(undefined), // Default: rule does not exist
+    // --- Methods required by Base constructor ---
+    getAll: jest.fn(() => []),
     getAllSystemRules: jest.fn().mockReturnValue([]),
+    clear: jest.fn(),
+    getManifest: jest.fn().mockReturnValue(null),
+    setManifest: jest.fn(),
+    // Add specific getters if needed by other parts, defaulting to undefined
+    getEntityDefinition: jest.fn().mockReturnValue(undefined),
+    getItemDefinition: jest.fn().mockReturnValue(undefined),
+    getLocationDefinition: jest.fn().mockReturnValue(undefined),
+    getConnectionDefinition: jest.fn().mockReturnValue(undefined),
+    getBlockerDefinition: jest.fn().mockReturnValue(undefined),
+    getActionDefinition: jest.fn().mockReturnValue(undefined),
+    getEventDefinition: jest.fn().mockReturnValue(undefined),
+    getComponentDefinition: jest.fn().mockReturnValue(undefined),
+    getAllEntityDefinitions: jest.fn().mockReturnValue([]),
+    getAllItemDefinitions: jest.fn().mockReturnValue([]),
+    getAllLocationDefinitions: jest.fn().mockReturnValue([]),
+    getAllConnectionDefinitions: jest.fn().mockReturnValue([]),
+    getAllBlockerDefinitions: jest.fn().mockReturnValue([]),
+    getAllActionDefinitions: jest.fn().mockReturnValue([]),
+    getAllEventDefinitions: jest.fn().mockReturnValue([]),
+    getAllComponentDefinitions: jest.fn().mockReturnValue([]),
+    getStartingPlayerId: jest.fn().mockReturnValue(null),
+    getStartingLocationId: jest.fn().mockReturnValue(null),
 });
+
 
 /** Creates a mock ILogger service. */
 const createMockLogger = (overrides = {}) => ({
@@ -124,7 +154,7 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Instantiate mocks
+        // Instantiate mocks using complete factories
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
@@ -133,13 +163,14 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
         mockLogger = createMockLogger();
         mockRuleValidatorFn = mockValidator._mockValidatorFn; // Get reference
 
-        // Common mock setup for rule loading
+        // Ensure rule schema ID is configured
         const ruleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
-        mockValidator.isSchemaLoaded.mockImplementation((schemaId) => schemaId === ruleSchemaId);
-        mockValidator.getValidator.mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) return mockRuleValidatorFn;
-            return undefined;
-        });
+        mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+            typeName === 'system-rules' ? ruleSchemaId : undefined
+        );
+        mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
+
+        // Reset common mocks
         mockRegistry.get.mockReturnValue(undefined); // Default: no rule exists yet
 
         // Instantiate the loader
@@ -174,14 +205,17 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
             // Missing 'actions' field, which should cause schema validation failure
         };
 
-        const validationError = {message: 'Missing required property: actions'}; // Example error
+        const validationError = {message: 'Missing required property: actions'}; // Example error object
+        // Prepare the stringified version as it appears in the log
+        const stringifiedErrorDetails = JSON.stringify([validationError], null, 2);
+
 
         const manifest = {
             id: modId,
             version: '1.0.0',
             name: 'Schema Validation Test Mod',
             content: {
-                rules: [validRuleFile, invalidRuleFile]
+                rules: [validRuleFile, invalidRuleFile] // Process valid then invalid
             }
         };
 
@@ -199,14 +233,13 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
                 return Promise.reject(new Error(`Mock Fetch Error: Unexpected fetch for ${filePath}`));
             });
 
-            // Configure ISchemaValidator.getValidator's mock function
+            // Configure ISchemaValidator's mock function to fail for invalidRuleData
             mockRuleValidatorFn.mockImplementation((data) => {
-                if (data.rule_id === 'validRule') {
-                    return {isValid: true};
-                } else if (data.rule_id === 'invalidRule') {
-                    return {isValid: false, errors: [validationError]};
+                if (data.event_type === 'core:test_valid') {
+                    return {isValid: true, errors: null};
+                } else if (data.event_type === 'core:test_invalid') {
+                    return {isValid: false, errors: [validationError]}; // Return the specific error
                 }
-                // Fallback for unexpected data
                 return {isValid: false, errors: [{message: 'Unexpected data passed to mock validator'}]};
             });
 
@@ -225,68 +258,73 @@ describe('RuleLoader - Schema Validation Failure Handling', () => {
             expect(mockRuleValidatorFn).toHaveBeenCalledWith(validRuleData);
             expect(mockRuleValidatorFn).toHaveBeenCalledWith(invalidRuleData);
 
-            // Verify logger error call for the invalid rule
-            expect(mockLogger.error).toHaveBeenCalledTimes(1);
-            // *** MODIFIED ASSERTION based on error output ***
+            // Expect two errors: 1 specific from RuleLoader, 1 generic from Base wrapper
+            expect(mockLogger.error).toHaveBeenCalledTimes(2);
+
+            // --- CORRECTION: Assert the specific error log using ONE argument matcher ---
+            // Assert the SPECIFIC schema validation error from RuleLoader._processFetchedItem
+            // Construct the expected full message string
+            const expectedSpecificErrorMessage = `RuleLoader [${modId}]: Schema validation failed for rule file '${invalidRuleFile}' at ${resolvedPathInvalid}. Errors:\n${stringifiedErrorDetails}`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMessage);
+            // --- End Correction ---
+
+
+            // Assert the GENERIC error from BaseManifestItemLoader._processFileWrapper's catch block
             expect(mockLogger.error).toHaveBeenCalledWith(
-                // Use the message format from the error output
-                expect.stringContaining(`RuleLoader [${modId}]: Failed to fetch rule file '${invalidRuleFile}'. Skipping.`),
-                // Match the context object structure from the error output
+                'Error processing file:',
                 expect.objectContaining({
                     modId: modId,
-                    filePath: resolvedPathInvalid,
-                    // Expect an 'error' property which is an instance of Error
-                    error: expect.any(Error)
-                    // We can optionally add more specific checks on the error message if needed:
-                    // error: expect.objectContaining({
-                    //     message: expect.stringContaining('Schema validation failed')
-                    // })
-                    // Note: The original assertion expected `errors` and `ruleData` which were not present in the received context.
-                })
+                    filename: invalidRuleFile,
+                    path: resolvedPathInvalid,
+                    error: `Schema validation failed for ${invalidRuleFile} in mod ${modId}.`
+                }),
+                expect.any(Error)
             );
-            // *** END MODIFIED ASSERTION ***
+
 
             // Verify registry store call for the valid rule ONLY
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             expect(mockRegistry.store).toHaveBeenCalledWith(
                 ruleType,
-                `${modId}:${validRuleData.rule_id}`, // Expected ID: modId:explicit_id
+                `${modId}:${validRuleData.rule_id}`,
                 validRuleData
             );
-            // Ensure store was NOT called for the invalid rule data or its potential IDs
             expect(mockRegistry.store).not.toHaveBeenCalledWith(
                 expect.anything(),
                 expect.stringContaining(invalidRuleData.rule_id),
                 expect.anything()
             );
-            expect(mockRegistry.store).not.toHaveBeenCalledWith(
-                expect.anything(),
-                expect.stringContaining(path.basename(invalidRuleFile, '.json')), // ID derived from filename
-                expect.anything()
-            );
+
 
             // Verify return value
-            expect(count).toBe(1); // Only the valid rule was processed
+            expect(count).toBe(1);
 
-            // Verify summary warning log
-            expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(`RuleLoader [${modId}]: Processed 1 out of 2 rule files successfully (some failed).`)
+            // Verify the final summary log from BaseManifestItemLoader (INFO level)
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `Mod [${modId}] - Processed 1/2 rules items. (1 failed)`
             );
+            expect(mockLogger.warn).not.toHaveBeenCalled(); // No WARN summary expected
 
-            // Verify the final "Successfully processed all..." info log was NOT called
+            // Verify the initial delegation info log was called
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                expect.stringContaining(`Delegating rule loading to BaseManifestItemLoader`)
+            );
+            // Ensure other incorrect INFO logs weren't called
             expect(mockLogger.info).not.toHaveBeenCalledWith(
                 expect.stringContaining(`Successfully processed and registered all`)
             );
-
-            // Verify the initial loading log
-            expect(mockLogger.info).toHaveBeenCalledWith(
-                expect.stringContaining(`RuleLoader [${modId}]: Loading 2 rule file(s) specified by manifest.`)
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Loading 2 rule file(s)`)
             );
+
 
             // Verify the debug log for the successfully processed valid rule
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`Successfully processed and registered rule '${modId}:${validRuleData.rule_id}' from file '${validRuleFile}'.`)
+                `RuleLoader [${modId}]: Successfully stored rule '${modId}:${validRuleData.rule_id}' from file '${validRuleFile}'.`
+            );
+            // Verify debug log for the failed file processing (logged by BaseManifestItemLoader)
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `[${modId}] Failed processing ${invalidRuleFile}. Reason: Schema validation failed for ${invalidRuleFile} in mod ${modId}.`
             );
         });
     });

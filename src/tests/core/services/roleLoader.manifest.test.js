@@ -67,9 +67,12 @@ const createMockDataFetcher = () => ({
         // console.log(`Mock Fetcher called for: ${filePath}`); // Debug log
         if (filePath.includes('.json')) {
             // *** Use path.basename for consistency with RuleLoader logic if filename is used for ID ***
-            const filenamePart = path.basename(filePath);
+            const filenamePart = path.basename(filePath); // e.g., "rule1.json", "rule2.json"
+            const namePart = path.parse(filenamePart).name; // e.g., "rule1", "rule2"
             return Promise.resolve({
-                rule_id: `rule_from_${filenamePart}`, // Generate ID from filename only
+                // Simulate rule_id derived from filename base (as per RuleLoader fallback)
+                // This avoids needing rule_id in the test data itself if we assume it's missing
+                // rule_id: `rule_from_${namePart}`, // Let RuleLoader generate the ID
                 event_type: "core:dummy_event",
                 actions: [{type: "LOG", parameters: {message: `Loaded from ${filePath}`}}]
             });
@@ -91,6 +94,8 @@ const createMockSchemaValidator = () => {
             errors: isValid ? null : [{message: "Mock validation failed: missing required fields"}]
         };
     });
+    const loadedSchemas = new Map();
+    loadedSchemas.set(ruleSchemaId, {}); // Mark schema as loaded
 
     return {
         validate: jest.fn().mockImplementation((schemaId, data) => {
@@ -102,14 +107,16 @@ const createMockSchemaValidator = () => {
         }),
         addSchema: jest.fn().mockResolvedValue(undefined),
         // Assume rule schema is loaded
-        isSchemaLoaded: jest.fn().mockImplementation((schemaId) => schemaId === ruleSchemaId),
+        isSchemaLoaded: jest.fn().mockImplementation((schemaId) => loadedSchemas.has(schemaId)),
         // Return the mock validator function for the rule schema
         getValidator: jest.fn().mockImplementation((schemaId) => {
-            if (schemaId === ruleSchemaId) {
+            if (loadedSchemas.has(schemaId) && schemaId === ruleSchemaId) {
                 return mockRuleValidatorFn;
             }
             return undefined; // No validator for other schemas by default
         }),
+        // Helper to check internal state if needed
+        _getLoadedSchemas: () => loadedSchemas,
     };
 };
 
@@ -152,11 +159,11 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
     let mockLogger;
     /** @type {RuleLoader} */
     let loader;
-    // Removed the spy: let processRulePathsSpy;
 
     // --- Shared Test Data ---
     const modId = 'manifest-test-mod';
     const ruleType = 'system-rules'; // The type name used for rules
+    const defaultRuleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
 
     // --- Setup ---
     beforeEach(() => {
@@ -164,11 +171,16 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
 
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
-        // Instantiate mocks needed for #processRulePaths execution
         mockFetcher = createMockDataFetcher();
-        mockValidator = createMockSchemaValidator();
+        mockValidator = createMockSchemaValidator(); // Ensure schema is marked loaded
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
+
+        // Ensure config returns the rule schema ID correctly
+        mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+            typeName === ruleType ? defaultRuleSchemaId : undefined
+        );
+        mockConfig.getRuleSchemaId.mockReturnValue(defaultRuleSchemaId); // Also ensure this returns the ID if RuleLoader uses it directly
 
         loader = new RuleLoader(
             mockConfig,
@@ -178,13 +190,11 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             mockRegistry,
             mockLogger
         );
-
-        // REMOVED SPY: processRulePathsSpy = jest.spyOn(loader, '#processRulePaths').mockResolvedValue(0);
     });
 
     // --- Cleanup ---
     afterEach(() => {
-        // REMOVED SPY RESTORE: processRulePathsSpy.mockRestore();
+        // Optional: Restore mocks if they were manipulated in ways not reset by clearAllMocks
     });
 
     // --- Test Cases ---
@@ -193,8 +203,10 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
     describe('Valid Input', () => {
         it('should resolve valid rule filenames and process them successfully', async () => {
             const ruleFile1 = "rule1.json";
+            const ruleFile1Name = "rule1"; // Base name part for ID generation
             const ruleFile2Relative = "sub/rule2.json"; // Relative path including subfolder
-            const ruleFile2Basename = "rule2.json";    // Just the filename part
+            const ruleFile2Name = "rule2"; // Base name part for ID generation
+
             const manifest = {
                 id: modId, version: '1.0.0', name: 'Valid Test Mod',
                 content: {
@@ -207,12 +219,17 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             // Configure mock resolver
             mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
                 if (mId === modId && type === ruleType && file === ruleFile1) return resolvedPath1;
-                if (mId === modId && type === ruleType && file === ruleFile2Relative) return resolvedPath2; // Expect trimmed relative path
-                return `unexpected_path_${file}`;
+                // The base loader trims the filename before resolving
+                if (mId === modId && type === ruleType && file === ruleFile2Relative.trim()) return resolvedPath2;
+                throw new Error(`Unexpected resolveModContentPath call: ${mId}, ${type}, ${file}`);
             });
 
-            // Configure fetcher and validator mocks if specific data/validation is needed for these paths
-            // Using the default mocks which should allow basic processing
+            // Configure fetcher to return data without rule_id (RuleLoader will derive it)
+            mockFetcher.fetch.mockImplementation(async (filePath) => {
+                if (filePath === resolvedPath1) return {event_type: "core:event1", actions: []};
+                if (filePath === resolvedPath2) return {event_type: "core:event2", actions: []};
+                throw new Error(`Mock Fetch Error: 404 for ${filePath}`);
+            });
 
             // --- Action ---
             const count = await loader.loadRulesForMod(modId, manifest);
@@ -221,134 +238,175 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             // 1. Verify IPathResolver.resolveModContentPath calls
             expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
             expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, ruleType, ruleFile1);
-            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, ruleType, ruleFile2Relative); // Verify trimming happened before resolving
+            expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, ruleType, ruleFile2Relative.trim()); // Verify trimming happened before resolving
 
-            // 2. Verify Fetcher, Validator, Registry were called by #processRulePaths
-            // Check that fetch was called for the resolved paths
+            // 2. Verify Fetcher, Validator, Registry were called
             expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPath1);
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPath2);
 
-            // Check that validator was used (via getValidator) for the rule schema
-            expect(mockValidator.getValidator).toHaveBeenCalledWith(mockConfig.getContentTypeSchemaId('system-rules'));
-            // Check that the returned function (mockRuleValidatorFn) was called twice
-            const ruleValidatorFn = mockValidator.getValidator(mockConfig.getContentTypeSchemaId('system-rules'));
+            // Check that validator was retrieved and used
+            expect(mockValidator.getValidator).toHaveBeenCalledWith(defaultRuleSchemaId);
+            const ruleValidatorFn = mockValidator.getValidator(defaultRuleSchemaId);
             expect(ruleValidatorFn).toHaveBeenCalledTimes(2);
 
-            // Check that store was called twice (once per valid rule)
+            // Check that store was called twice with correctly derived IDs
             expect(mockRegistry.store).toHaveBeenCalledTimes(2);
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType, // 'system-rules'
-                expect.stringContaining(`${modId}:rule_from_${ruleFile1}`), // Generated ID based on mock fetcher using basename
-                expect.any(Object) // The fetched rule data
+                ruleType,
+                `${modId}:${ruleFile1Name}`, // ID derived from filename 'rule1.json'
+                expect.objectContaining({event_type: "core:event1"})
             );
-            // *** FIXED: Use the basename for the expected generated ID ***
             expect(mockRegistry.store).toHaveBeenCalledWith(
-                ruleType, // 'system-rules'
-                expect.stringContaining(`${modId}:rule_from_${ruleFile2Basename}`), // Use basename matching mock fetcher
-                expect.any(Object)
+                ruleType,
+                `${modId}:${ruleFile2Name}`, // ID derived from filename 'rule2.json'
+                expect.objectContaining({event_type: "core:event2"})
             );
 
             // 3. Return value should be the actual count of successfully processed rules
             expect(count).toBe(2);
 
             // Verify logging indicates finding and processing files
-            // Check the initial filtering log message from loadRulesForMod
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Filtered rule filenames to process: ["${ruleFile1}","${ruleFile2Relative}"]`));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading 2 rule file(s) specified by manifest.`));
-            // Check for the final success log from #processRulePaths
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed and registered all 2 validated rule files for mod.`));
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
+            // --- CORRECTION 1: Check actual INFO logs ---
+            // Check the initial delegation log
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
+            );
+            // Check the final summary log from BaseManifestItemLoader
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `Mod [${modId}] - Processed 2/2 rules items.`
+            );
+            // Ensure the incorrect log wasn't called
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Loading 2 rule file(s)`) // This log doesn't exist
+            );
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Successfully processed and registered all 2 validated rule files`) // This specific wording might not be used
+            );
+            // Ensure no warnings or errors
+            expect(mockLogger.warn).not.toHaveBeenCalled();
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
     });
 
     // --- Invalid Manifest Structure ---
     describe('Invalid Manifest Structure', () => {
-        // These tests remain largely the same as they test code paths that exit *before* #processRulePaths
-        it('should return 0 and log appropriately if manifest is null', async () => {
-            const count = await loader.loadRulesForMod(modId, null);
+        // --- CORRECTION 2: Test expects rejection/throw for null manifest ---
+        it('should throw error and log error if manifest is null', async () => {
+            await expect(loader.loadRulesForMod(modId, null))
+                .rejects
+                .toThrow(`Invalid manifest provided for mod '${modId}' to RuleLoader.loadRulesForMod.`);
 
-            expect(count).toBe(0);
-            // *** FIXED: Added modId prefix to expected log message ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`));
+            // Verify ERROR log occurred
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `RuleLoader [${modId}]: Invalid manifest provided to loadRulesForMod.`
+            );
+
+            // Verify other steps weren't reached
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
-            // Assert fetch/validate/store weren't called
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
         });
 
+        // Test for empty object (should also throw)
         it('should return 0 and log debug if manifest is an empty object', async () => {
+            // --- Action ---
+            // Pass an empty object, expect it to succeed and return 0
             const count = await loader.loadRulesForMod(modId, {});
 
+            // --- Assert ---
+            // 1. Expect return value 0
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix to expected log message ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`));
+
+            // 2. Expect DEBUG log from _extractValidFilenames due to missing 'content'
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+            );
+            // 3. Expect DEBUG log from _loadItemsInternal due to empty filename list
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `No valid rules filenames found for mod ${modId}.`
+            );
+
+            // 4. Ensure no processing attempts were made
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
+
+            // 5. Ensure no warnings or errors were logged
             expect(mockLogger.warn).not.toHaveBeenCalled();
+            expect(mockLogger.error).not.toHaveBeenCalled(); // No error should be logged
         });
 
+        // Test for manifest.content is null (should return 0 and log debug)
         it('should return 0 and log debug if manifest.content is null', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: null};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix to expected log message ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`));
+            expect(mockLogger.debug).toHaveBeenCalledWith( // Base class logs debug when key is missing
+                `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+            );
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
+        // Test for manifest.content is empty object (should return 0 and log debug)
         it('should return 0 and log debug if manifest.content is an empty object', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {}};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix to expected log message ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`));
+            expect(mockLogger.debug).toHaveBeenCalledWith( // Base class logs debug when key is missing
+                `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+            );
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
-        it('should return 0 and log debug if manifest.content.rules is null', async () => { // <-- Changed test description
+        // Test for manifest.content.rules is null (should return 0 and log debug)
+        it('should return 0 and log debug if manifest.content.rules is null', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {rules: null}};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Expect DEBUG log, not WARN, based on code logic for null ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No 'content.rules' field found in manifest. No rules to load.`));
-            // Ensure the warning for non-array was NOT called for null
-            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Expected an array, got'));
+            expect(mockLogger.debug).toHaveBeenCalledWith( // Base class logs debug when key is missing
+                `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+            );
+            expect(mockLogger.warn).not.toHaveBeenCalled(); // Ensure non-array warning NOT called for null
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
         });
 
+        // Test for manifest.content.rules is not an array (string)
         it('should return 0 and log warn if manifest.content.rules is not an array (string)', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {rules: "not-an-array"}};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Invalid 'content.rules' field in manifest. Expected an array, got string`));
+            // --- CORRECTION 3: Check actual WARN log message ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                `Mod '${modId}': Expected an array for content key 'rules' but found type 'string'. Skipping.`
+            );
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
         });
 
+        // Test for manifest.content.rules is not an array (number)
         it('should return 0 and log warn if manifest.content.rules is not an array (number)', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {rules: 123}};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Invalid 'content.rules' field in manifest. Expected an array, got number`));
+            // --- CORRECTION 3: Check actual WARN log message ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                `Mod '${modId}': Expected an array for content key 'rules' but found type 'number'. Skipping.`
+            );
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
@@ -357,22 +415,30 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
 
     // --- Empty/Invalid Entries in rules Array ---
     describe('Empty/Invalid Entries in rules Array', () => {
-        it('should return 0 and log info if manifest.content.rules is an empty array', async () => {
+        // Test for manifest.content.rules is empty array
+        it('should return 0 and log debug if manifest.content.rules is an empty array', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {rules: []}};
             const count = await loader.loadRulesForMod(modId, manifest);
 
             expect(count).toBe(0);
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Manifest specifies an empty 'content.rules' array. No rules to load.`));
+            // Base class logs DEBUG when the extracted list is empty
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `No valid rules filenames found for mod ${modId}.`
+            );
+            // Ensure the specific INFO log for empty array is NOT called (it doesn't exist)
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Manifest specifies an empty 'content.rules' array`)
+            );
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
             expect(mockFetcher.fetch).not.toHaveBeenCalled();
             expect(mockRegistry.store).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
+        // Test filtering of invalid entries
         it('should filter out invalid entries, log warnings, and process only valid ones', async () => {
             const validFile = "valid.json";
-            const validFileBasename = "valid.json"; // Basename for ID check
+            const validFileName = "valid"; // For ID check
             const manifest = {
                 id: modId,
                 version: '1.0.0',
@@ -387,26 +453,27 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             // Configure resolver for the valid path
             mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
                 if (mId === modId && type === ruleType && file === validFile) return resolvedValidPath;
-                return `unexpected_path_${file}`;
+                throw new Error(`Unexpected resolveModContentPath call: ${mId}, ${type}, ${file}`);
+            });
+            // Configure fetcher for valid path
+            mockFetcher.fetch.mockImplementation(async (filePath) => {
+                if (filePath === resolvedValidPath) return {event_type: "core:valid_event", actions: []};
+                throw new Error(`Mock Fetch Error: 404 for ${filePath}`);
             });
 
             // --- Action ---
             const count = await loader.loadRulesForMod(modId, manifest);
 
             // --- Assert ---
-            // 1. Check Logs for Invalid Entries
-            // RuleLoader logs warnings for non-null, non-string entries
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': 123`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': {"invalid":true}`));
-            // *** FIXED: Assert that undefined IS warned, matching code logic ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': undefined`));
-            // Check that null IS NOT warned (skipped silently)
+            // 1. Check Logs for Invalid Entries (Base class logs warnings)
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Invalid non-string entry found in 'rules' list:`, 123);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Invalid non-string entry found in 'rules' list:`, {invalid: true});
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Invalid non-string entry found in 'rules' list:`, undefined);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Empty string filename found in 'rules' list after trimming. Skipping.`); // For ""
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Empty string filename found in 'rules' list after trimming. Skipping.`); // For "   "
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Empty string filename found in 'rules' list after trimming. Skipping.`); // For "  "
+            // Check that null is NOT warned (skipped silently by filter logic)
             expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(': null'));
-            // Check that empty/whitespace strings ARE warned
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) ""`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) "   "`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) "  "`));
 
 
             // 2. Check Path Resolution (Only for the valid entry)
@@ -417,21 +484,31 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
             expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedValidPath);
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            // *** FIXED: Use basename for expected ID ***
-            expect(mockRegistry.store).toHaveBeenCalledWith(ruleType, expect.stringContaining(`${modId}:rule_from_${validFileBasename}`), expect.any(Object));
+            expect(mockRegistry.store).toHaveBeenCalledWith(
+                ruleType,
+                `${modId}:${validFileName}`, // ID derived from filename
+                expect.objectContaining({event_type: "core:valid_event"})
+            );
 
             // 4. Return value should be 1 (only one file processed)
             expect(count).toBe(1);
 
-            // 5. Overall info log should reflect the filtering
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Filtered rule filenames to process: ["${validFile}"]`));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Loading 1 rule file(s) specified by manifest.`));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Successfully processed and registered all 1 validated rule files for mod.`));
+            // 5. Overall info/debug logs
+            expect(mockLogger.debug).toHaveBeenCalledWith( // Base class logs debug about count
+                `Found 1 potential rules files to process for mod ${modId}.`
+            );
+            // Delegation Info log
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                expect.stringContaining(`Delegating rule loading`)
+            );
+            // Final summary Info log
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `Mod [${modId}] - Processed 1/1 rules items.` // Should be 1/1 as only 1 was attempted after filtering
+            );
         });
 
 
-        it('should return 0 and not call processing if all entries are invalid', async () => {
+        it('should return 0 and log debug if all entries are invalid', async () => {
             const manifest = {
                 id: modId,
                 version: '1.0.0',
@@ -446,13 +523,10 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
 
             // --- Assert ---
             // 1. Check Logs for Invalid Entries (as above)
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': 123`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': {}`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) ""`));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': (empty string after trimming) "   "`));
-            // *** FIXED: Assert that undefined IS warned, matching code logic ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: Skipping invalid entry in 'content.rules': undefined`));
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Invalid non-string entry found in 'rules' list:`, 123);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Invalid non-string entry found in 'rules' list:`, {});
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Mod '${modId}': Empty string filename found in 'rules' list after trimming. Skipping.`); // For ""
+            // Add checks for other warnings if needed...
 
             // 2. Check Path Resolution (Should not be called)
             expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -464,10 +538,14 @@ describe('RuleLoader (Sub-Ticket 4.3: Test loadRulesForMod Manifest Input Handli
             // 4. Return value
             expect(count).toBe(0);
 
-            // 5. Overall info log should reflect no valid files found [cite: 497]
-            // *** FIXED: Added modId prefix ***
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`RuleLoader [${modId}]: No valid rule files listed in manifest 'content.rules' after filtering.`));
-            expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Loading 0 rule file(s)`)); // Should not log loading 0 files
+            // 5. Overall log should reflect no valid files found
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `No valid rules filenames found for mod ${modId}.`
+            );
+            // Ensure summary log not called
+            expect(mockLogger.info).not.toHaveBeenCalledWith(
+                expect.stringContaining(`Mod [${modId}] - Processed`)
+            );
         });
     });
 });

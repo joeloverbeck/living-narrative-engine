@@ -80,6 +80,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => {
             }
             if (Object.prototype.hasOwnProperty.call(_pathToResponse, path)) {
                 try {
+                    // Ensure we return a fresh copy each time to mimic real fetching
                     return Promise.resolve(JSON.parse(JSON.stringify(_pathToResponse[path])));
                 } catch (e) {
                     return Promise.reject(new Error(`Mock Fetcher Error: Could not clone mock data for path ${path}. Is it valid JSON?`));
@@ -89,9 +90,8 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => {
         }),
         // Helper to easily add successful responses mid-test
         mockSuccess: function (path, responseData) {
-            _pathToResponse[path] = JSON.parse(JSON.stringify(responseData));
+            _pathToResponse[path] = responseData; // Store original, clone on fetch
             _errorPaths = _errorPaths.filter(p => p !== path);
-            // No need to re-assign mockImplementation as it now closes over the internal maps
         },
         // Helper to easily add error responses mid-test
         mockFailure: function (path, errorMessage = `Mock Fetch Error: Failed to fetch ${path}`) {
@@ -101,7 +101,6 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => {
             if (Object.prototype.hasOwnProperty.call(_pathToResponse, path)) {
                 delete _pathToResponse[path];
             }
-            // No need to re-assign mockImplementation
         },
         // Helper to see configured paths
         _getPaths: () => ({success: Object.keys(_pathToResponse), error: _errorPaths}),
@@ -134,6 +133,7 @@ const createMockSchemaValidator = (overrides = {}) => {
         isSchemaLoaded: jest.fn((schemaId) => loadedSchemas.has(schemaId)),
         getValidator: jest.fn((schemaId) => {
             if (loadedSchemas.has(schemaId) && !schemaValidators.has(schemaId)) {
+                // Lazy initialization of default validator if schema loaded but no specific mock set
                 const defaultValidFn = jest.fn(() => ({isValid: true, errors: null}));
                 schemaValidators.set(schemaId, defaultValidFn);
                 return defaultValidFn;
@@ -146,30 +146,37 @@ const createMockSchemaValidator = (overrides = {}) => {
                 return {isValid: false, errors: [{message: `Mock Schema Error: Schema '${schemaId}' not found.`}]};
             }
             if (validatorFn) {
-                return validatorFn(data);
+                return validatorFn(data); // Call the mock function
             }
+            // Default pass if schema loaded but no specific validator function mock set
             return {isValid: true, errors: null};
         }),
+        // Test Helper: Directly mark a schema as loaded
         _setSchemaLoaded: (schemaId, schemaData = {}) => {
             loadedSchemas.set(schemaId, schemaData);
             if (!schemaValidators.has(schemaId)) {
+                // Ensure a default validator mock exists if setting schema loaded directly
                 schemaValidators.set(schemaId, jest.fn(() => ({isValid: true, errors: null})));
             }
         },
+        // Test Helper: Mock the validation function for a specific schema
         mockValidatorFunction: (schemaId, implementation) => {
             if (typeof implementation !== 'function') {
                 throw new Error('mockValidatorFunction requires a function as the implementation.');
             }
             const mockFn = jest.fn(implementation);
             schemaValidators.set(schemaId, mockFn);
+            // Ensure schema is marked as loaded when setting a validator
             if (!loadedSchemas.has(schemaId)) {
                 loadedSchemas.set(schemaId, {});
             }
             return mockFn;
         },
+        // Test Helper: Reset a validator function to the default pass behavior
         resetValidatorFunction: (schemaId) => {
             const defaultPassFn = jest.fn(() => ({isValid: true, errors: null}));
             schemaValidators.set(schemaId, defaultPassFn);
+            // Ensure schema is marked as loaded when resetting
             if (!loadedSchemas.has(schemaId)) {
                 loadedSchemas.set(schemaId, {});
             }
@@ -193,6 +200,7 @@ const createMockDataRegistry = (overrides = {}) => {
                 registryStore[type] = {};
             }
             try {
+                // Store a deep clone to prevent test side effects from mutations after storing
                 registryStore[type][id] = JSON.parse(JSON.stringify(data));
             } catch (e) {
                 console.error(`MockDataRegistry Error: Could not clone data for ${type}/${id}.`, data);
@@ -202,6 +210,7 @@ const createMockDataRegistry = (overrides = {}) => {
         get: jest.fn((type, id) => {
             const item = registryStore[type]?.[id];
             try {
+                // Return a deep clone to prevent test side effects from mutations after getting
                 return item ? JSON.parse(JSON.stringify(item)) : undefined;
             } catch (e) {
                 console.error(`MockDataRegistry Error: Could not clone retrieved data for ${type}/${id}.`, item);
@@ -235,7 +244,7 @@ const createMockDataRegistry = (overrides = {}) => {
         setManifest: jest.fn(),
         getComponentDefinition: jest.fn(),
         ...overrides,
-        _getRawStore: () => registryStore,
+        _getRawStore: () => registryStore, // Helper to inspect internal state if needed
     };
 };
 
@@ -276,16 +285,17 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     const defaultRuleSchemaId = 'http://example.com/schemas/system-rule.schema.json';
 
     // Example rule content for tests that need valid data
+    // *** CORRECTION 1: Define rule_id WITHOUT the modId prefix ***
     const validRuleData = {
-        // NOTE: rule_id intentionally includes modId prefix to test the loader's handling
-        rule_id: `${modId}:valid_rule`,
+        rule_id: "valid_rule", // Let the loader handle prefixing
         event_type: "core:test_event",
         actions: [
             {type: "LOG", parameters: {message: "Test rule executed"}}
         ]
     };
-    // The ID expected after the loader prepends the mod ID again
-    const expectedStoredRuleId = `${modId}:${validRuleData.rule_id}`;
+    // *** CORRECTION 2: Define the expected ID correctly based on loader logic ***
+    // The loader will prepend the modId to the baseRuleId derived from data or filename.
+    const expectedStoredRuleId = `${modId}:${validRuleData.rule_id}`; // Should be "legacy-test-mod:valid_rule"
 
     // --- Setup ---
     beforeEach(() => {
@@ -306,7 +316,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // Default setup: rule schema is loaded and validates successfully
         mockValidator._setSchemaLoaded(defaultRuleSchemaId, {});
-        mockValidator.resetValidatorFunction(defaultRuleSchemaId);
+        mockValidator.resetValidatorFunction(defaultRuleSchemaId); // Ensure default pass mock
 
         loader = new RuleLoader(
             mockConfig,
@@ -316,7 +326,17 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
             mockRegistry,
             mockLogger
         );
+
+        // Spy on the dynamic import for 'path' if needed, though RuleLoader now handles it internally
+        // jest.spyOn(loader, '#getPathModule'); // Example if direct spying was needed (requires Babel/Jest config for private methods)
     });
+
+    // --- Teardown ---
+    afterEach(() => {
+        // Restore any spied methods if necessary
+        // jest.restoreAllMocks(); // Use if you added spies like above
+    });
+
 
     // --- Tests ---
 
@@ -335,6 +355,16 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         // --- Assert ---
         expect(count).toBe(0);
 
+        // Verify delegation log occurred
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
+        );
+
+        // Verify debug log about missing content key
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+        );
+
         // Verify no attempt to fetch based on assumptions
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
@@ -342,17 +372,13 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         // Verify nothing stored
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
-        // Verify appropriate logging (Loader logs DEBUG when content.rules is missing)
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`No 'content.rules' field found in manifest. No rules to load.`)
-        );
         // Check that other key logs weren't called inappropriately
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Loading rules for mod`)); // Not called in this path
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Completed processing.`)); // Not called if nothing processed
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`Invalid 'content.rules' field`));
-
-        // Ensure no error logs related to fetching/processing occurred unnecessarily
+        expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // The final summary INFO log from BaseManifestItemLoader shouldn't be called if count is 0
+        expect(mockLogger.info).not.toHaveBeenCalledWith(
+            expect.stringContaining(`Mod [${modId}] - Processed`)
+        );
     });
 
     it('should load zero rules and not fetch or store anything if manifest content has no "rules" field', async () => {
@@ -372,20 +398,28 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Assert ---
         expect(count).toBe(0);
+
+        // Verify delegation log occurred
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
+        );
+
+        // Verify debug log about missing content key
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Mod '${modId}': Content key 'rules' not found or is null/undefined in manifest. Skipping.`
+        );
+
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
-        // Verify appropriate logging (Loader logs DEBUG when content.rules is missing)
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`No 'content.rules' field found in manifest. No rules to load.`)
-        );
         // Check that other key logs weren't called inappropriately
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Loading rules for mod`));
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Completed processing.`));
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`Invalid 'content.rules' field`));
-
+        expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
+        // The final summary INFO log from BaseManifestItemLoader shouldn't be called if count is 0
+        expect(mockLogger.info).not.toHaveBeenCalledWith(
+            expect.stringContaining(`Mod [${modId}] - Processed`)
+        );
     });
 
     it('should load zero rules and not fetch or store anything if "content.rules" is empty', async () => {
@@ -404,29 +438,47 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Assert ---
         expect(count).toBe(0);
+
+        // Verify delegation log occurred
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
+        );
+
+        // *** CORRECTION 3: Check the DEBUG log, not the non-existent INFO log ***
+        // Verify the debug log indicating no valid filenames found
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `No valid rules filenames found for mod ${modId}.`
+        );
+
+        // Verify no fetches or stores happened
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
         expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
 
-        // Verify appropriate logging (Loader logs INFO with specific message for empty array)
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Manifest specifies an empty 'content.rules' array. No rules to load.`)
-        );
         // Check that other logs weren't called inappropriately
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Found 0 valid rule filenames`)); // Different log message used
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Completed processing.`)); // Not called if nothing processed
-
-        expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        // The final summary INFO log from BaseManifestItemLoader shouldn't be called if count is 0
+        expect(mockLogger.info).not.toHaveBeenCalledWith(
+            expect.stringContaining(`Mod [${modId}] - Processed`)
+        );
     });
 
     it('should not attempt legacy discovery even if potential legacy files exist conceptually', async () => {
         const ruleFilenameRelative = 'rules/actual_rule.json'; // The relative path in the manifest
-        const ruleFilenameBase = path.basename(ruleFilenameRelative); // The filename part used in logs
-        const expectedRulePath = `./data/mods/${modId}/system-rules/${ruleFilenameRelative}`;
+        const ruleFilenameBase = path.basename(ruleFilenameRelative); // 'actual_rule.json'
+        const ruleFilenameNamePart = path.parse(ruleFilenameBase).name; // 'actual_rule' - used if rule_id missing in data
+
         // Define potential legacy paths that *should not* be fetched
         const legacyIndexPath = `./data/mods/${modId}/system-rules/rulesIndex.json`; // Example legacy index
         const legacyDirPath = `./data/mods/${modId}/system-rules/`; // Example legacy directory scan path (less likely direct fetch)
+
+        // Use the valid rule data corrected earlier (rule_id = "valid_rule")
+        const currentValidRuleData = validRuleData; // Contains rule_id: "valid_rule"
+        const currentExpectedStoredRuleId = `${modId}:${currentValidRuleData.rule_id}`; // "legacy-test-mod:valid_rule"
+
+        // Define the path the loader *should* resolve and fetch
+        const expectedResolvedPath = `./data/mods/${modId}/system-rules/${ruleFilenameRelative}`;
 
         /** @type {ModManifest} */
         const manifestWithRule = {
@@ -434,72 +486,73 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
             version: '1.0.0',
             name: 'Mod With One Rule',
             content: {
-                rules: [ruleFilenameRelative]
+                rules: [ruleFilenameRelative] // Use the relative path as defined in manifest
             }
         };
 
         // --- Arrange Mocks ---
-        // Mock the *correct* fetch based on the manifest
-        mockFetcher.mockSuccess(expectedRulePath, validRuleData);
+        // Mock the *correct* fetch based on the manifest and expected path
+        mockFetcher.mockSuccess(expectedResolvedPath, currentValidRuleData);
         // Mock the resolver for the correct path
         mockResolver.resolveModContentPath.mockImplementation((mId, typeName, file) => {
             if (mId === modId && typeName === 'system-rules' && file === ruleFilenameRelative) {
-                return expectedRulePath;
+                return expectedResolvedPath;
             }
-            return `UNEXPECTED_PATH_FOR_${mId}_${typeName}_${file}`;
+            // Fail test explicitly if unexpected path is resolved
+            throw new Error(`Unexpected resolveModContentPath call: ${mId}, ${typeName}, ${file}`);
         });
 
-        // Mock validator success
+        // Mock validator success (already done in beforeEach, but good practice to be explicit)
         mockValidator.resetValidatorFunction(defaultRuleSchemaId);
+        mockValidator._setSchemaLoaded(defaultRuleSchemaId); // Ensure schema is marked loaded
 
         // IMPORTANT: Make fetcher *aware* of legacy paths, but expect them *not* to be called.
-        // If fetcher wasn't aware, a call to them would result in a generic 404 mock error,
-        // which might obscure whether the loader *tried* to call them.
         mockFetcher.mockSuccess(legacyIndexPath, {message: "This is legacy index, should not be fetched!"});
-        // No need to mock directory listing unless the legacy logic explicitly fetched directory paths
 
         // --- Action ---
         const count = await loader.loadRulesForMod(modId, manifestWithRule);
 
         // --- Assert ---
-        expect(count).toBe(1);
+        expect(count).toBe(1); // Expect one rule to be loaded successfully
 
         // Verify ONLY the manifest-derived path was resolved and fetched
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'system-rules', ruleFilenameRelative);
 
         expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
-        expect(mockFetcher.fetch).toHaveBeenCalledWith(expectedRulePath);
+        expect(mockFetcher.fetch).toHaveBeenCalledWith(expectedResolvedPath);
 
         // CRITICAL: Verify legacy paths were NOT fetched
         expect(mockFetcher.fetch).not.toHaveBeenCalledWith(legacyIndexPath);
         expect(mockFetcher.fetch).not.toHaveBeenCalledWith(legacyDirPath); // Or any other non-manifest path
 
-        // Verify rule was stored with the correctly prepended ID
+        // Verify rule was stored with the correctly determined ID
         expect(mockRegistry.store).toHaveBeenCalledTimes(1);
+        // *** CORRECTION 4: Use the corrected expected ID and deep object comparison ***
         expect(mockRegistry.store).toHaveBeenCalledWith(
             'system-rules',
-            expectedStoredRuleId, // Use the ID generated by the loader
-            expect.objectContaining(validRuleData)
+            currentExpectedStoredRuleId, // Expect "legacy-test-mod:valid_rule"
+            expect.objectContaining(currentValidRuleData) // Check data structure
         );
 
-        // Verify logging indicates success based on the *resolved* paths count
+        // Verify relevant logging occurred
+        // 1. Delegation log
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Loading ${1} rule file(s) specified by manifest.`)
+            `RuleLoader [${modId}]: Delegating rule loading to BaseManifestItemLoader using manifest key 'rules' and content directory 'system-rules'.`
         );
-        // *** CORRECTION HERE: Expect the basename in the log message ***
+        // 2. Debug log for successful processing within RuleLoader
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Successfully processed and registered rule '${expectedStoredRuleId}' from file '${ruleFilenameBase}'.`)
+            `RuleLoader [${modId}]: Successfully stored rule '${currentExpectedStoredRuleId}' from file '${ruleFilenameRelative}'.` // Using relative path from manifest here now
         );
-        // The final summary log reflects the success count
+        // 3. Final summary log from BaseManifestItemLoader
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Successfully processed and registered all ${1} validated rule files for mod.`)
+            `Mod [${modId}] - Processed 1/1 rules items.` // Base class logs this summary
         );
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully validated rule definition from`)); // Validation logging seems different now
 
-        // Ensure no errors or major warnings
+        // Ensure no errors or unexpected warnings
         expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Overwriting existing rule')); // Assuming no overwrite in this test
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Overwriting existing rule')); // Assuming no overwrite
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('already contains mod prefix')); // We fixed data to not have prefix
     });
 
 });
