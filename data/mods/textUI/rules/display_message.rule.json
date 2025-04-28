@@ -1,0 +1,15 @@
+{
+  "rule_id": "system:handle_textUI_display_message",
+  "event_type": "textUI:display_message",
+  "actions": [
+    {
+      "type": "APPEND_UI_MESSAGE",
+      "comment": "Displays the message from the event payload in the UI.",
+      "parameters": {
+        "text": "{event.payload.text}",
+        "message_type": "{event.payload.type}",
+        "allow_html": false
+      }
+    }
+  ]
+}

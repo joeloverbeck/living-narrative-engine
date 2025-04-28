@@ -1,0 +1,225 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`registerLoaders (with Mock DI Container) should match snapshot for registration calls 1`] = `
+[
+  [
+    "ILogger",
+    {
+      "debug": [MockFunction] {
+        "calls": [
+          [
+            "Loaders Registration: Starting core services and data loaders...",
+          ],
+          [
+            "Loaders Registration: Registered IConfiguration.",
+          ],
+          [
+            "Loaders Registration: Registered IPathResolver.",
+          ],
+          [
+            "Loaders Registration: Registered ISchemaValidator.",
+          ],
+          [
+            "Loaders Registration: Registered IDataRegistry.",
+          ],
+          [
+            "Loaders Registration: Registered IDataFetcher.",
+          ],
+          [
+            "Loaders Registration: Registered SchemaLoader.",
+          ],
+          [
+            "Loaders Registration: Registered RuleLoader.",
+          ],
+          [
+            "Loaders Registration: Registered ComponentDefinitionLoader.",
+          ],
+          [
+            "Loaders Registration: Registered GameConfigLoader.",
+          ],
+          [
+            "Loaders Registration: Registered ModManifestLoader.",
+          ],
+          [
+            "Loaders Registration: Registered ActionLoader.",
+          ],
+          [
+            "Loaders Registration: Registered EventLoader.",
+          ],
+          [
+            "Loaders Registration: Registered EntityLoader.",
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "error": [MockFunction],
+      "info": [MockFunction] {
+        "calls": [
+          [
+            "Loaders Registration: Completed.",
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      },
+      "warn": [MockFunction],
+    },
+    {
+      "isInstance": true,
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "IConfiguration",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "IPathResolver",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "ISchemaValidator",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "IDataRegistry",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "IDataFetcher",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "SchemaLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "RuleLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "ComponentDefinitionLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "GameConfigLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "ModManifestLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "ActionLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "EventLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
+    "EntityLoader",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+]
+`;

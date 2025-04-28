@@ -1,0 +1,196 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`registerCoreSystems should match snapshot for registration calls 1`] = `
+[
+  [
+    "GameRuleSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "EquipmentEffectSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "EquipmentSlotSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "InventorySystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "CombatSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "DeathSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "WorldPresenceSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "ItemUsageSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "BlockerSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "MovementSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "MoveCoordinatorSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "PerceptionSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "NotificationUISystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "OpenableSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "HealthSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "StatusEffectSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "LockSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "WelcomeMessageService",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "ActionDiscoverySystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+]
+`;
