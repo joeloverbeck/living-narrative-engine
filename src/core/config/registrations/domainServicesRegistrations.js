@@ -22,34 +22,33 @@ export function registerDomainServices(container) {
     const log = container.resolve(tokens.ILogger);
     log.debug('Domain-services Registration: starting…');
 
+    // Register other domain services using the helper or direct registration as preferred
     r.single(tokens.ConditionEvaluationService, ConditionEvaluationService, [tokens.EntityManager]);
     r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
         [tokens.EntityManager, tokens.ValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
     r.single(tokens.TargetResolutionService, TargetResolutionService, []);
-
-    // Now JsonLogicEvaluationService is defined via import
     r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [tokens.ILogger]);
-
     r.single(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder,
         [tokens.EntityManager, tokens.ILogger]);
-
     r.single(tokens.PrerequisiteEvaluationService, PrerequisiteEvaluationService,
         [tokens.ILogger, tokens.JsonLogicEvaluationService, tokens.ActionValidationContextBuilder]);
-
     r.single(tokens.DomainContextCompatibilityChecker, DomainContextCompatibilityChecker, [tokens.ILogger]);
-
     r.single(tokens.ActionValidationService, ActionValidationService,
         [tokens.EntityManager, tokens.ILogger, tokens.DomainContextCompatibilityChecker, tokens.PrerequisiteEvaluationService]);
-
     r.single(tokens.PayloadValueResolverService, PayloadValueResolverService, [tokens.ILogger]);
-
     r.single(tokens.ActionExecutor, ActionExecutor,
         [tokens.GameDataRepository, tokens.TargetResolutionService, tokens.ActionValidationService,
             tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.ValidatedEventDispatcher]);
+    r.single(tokens.GameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
 
-    // Now GameStateManager is defined via import
-    r.single(tokens.GameStateManager, GameStateManager, []);
-    r.single(tokens.CommandParser, CommandParser, [tokens.GameDataRepository]);
+    // --- CommandParser Registration using explicit factory function ---
+    // This structure resolved the previous issue.
+    container.register(tokens.CommandParser, c => {
+        // Explicitly resolve the dependency when CommandParser is requested
+        const gameDataRepoInstance = c.resolve(tokens.GameDataRepository);
+        // Instantiate CommandParser with the resolved dependency
+        return new CommandParser(gameDataRepoInstance);
+    }, {lifecycle: 'singleton'}); // Ensure CommandParser is a singleton if needed
 
     log.info('Domain-services Registration: complete.');
 }

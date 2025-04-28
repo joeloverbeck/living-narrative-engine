@@ -270,11 +270,9 @@ class SystemLogicInterpreter {
         if (evaluationResult.conditionPassed) {
             this.#logger.debug(`[Rule ${ruleId}] Condition passed or absent. Checking for actions.`);
 
-            // +++ DEBUG: Inspect rule.actions before calling _executeActions +++
             let actionsToExecute = null;
             let actionsAreValid = false;
             try {
-                console.log(`!!!!!! DEBUG [${ruleId}]: Checking rule.actions... Type: ${typeof rule.actions}, IsArray: ${Array.isArray(rule.actions)}`);
                 this.#logger.debug(`---> [${ruleId}] Pre-check rule.actions type: ${typeof rule.actions}, isArray: ${Array.isArray(rule.actions)}`);
 
                 if (Array.isArray(rule.actions) && rule.actions.length > 0) {
@@ -283,18 +281,14 @@ class SystemLogicInterpreter {
                     this.#logger.debug(`---> [${ruleId}] rule.actions appears to be a valid, non-empty array. Length: ${actionsToExecute.length}`);
                     // Attempt to log content safely
                     try {
-                        console.log(`!!!!!! DEBUG [${ruleId}]: rule.actions content:`, JSON.stringify(actionsToExecute));
                         this.#logger.debug(`---> [${ruleId}] rule.actions content: ${JSON.stringify(actionsToExecute)}`);
                         // Check the first element explicitly
-                        if(actionsToExecute[0]){
-                            console.log(`!!!!!! DEBUG [${ruleId}]: First action type: ${actionsToExecute[0].type}`);
+                        if (actionsToExecute[0]) {
                             this.#logger.debug(`---> [${ruleId}] First action type: ${actionsToExecute[0].type}`);
                         } else {
-                            console.warn(`!!!!!! DEBUG [${ruleId}]: First action element is null/undefined!`);
                             this.#logger.warn(`---> [${ruleId}] First action element is null/undefined!`);
                         }
                     } catch (stringifyError) {
-                        console.error(`!!!!!! DEBUG [${ruleId}]: FAILED to stringify rule.actions!`, stringifyError);
                         this.#logger.error(`---> [${ruleId}] FAILED to stringify rule.actions!`, stringifyError);
                         // Even if stringify fails, proceed if it's an array
                     }
@@ -302,7 +296,6 @@ class SystemLogicInterpreter {
                     this.#logger.debug(`---> [${ruleId}] rule.actions is not a non-empty array. Type: ${typeof rule.actions}, Length: ${rule.actions ? rule.actions.length : 'N/A'}`);
                 }
             } catch (checkError) {
-                console.error(`!!!!!! DEBUG [${ruleId}]: CRITICAL Error during rule.actions check!`, checkError);
                 this.#logger.error(`---> [${ruleId}] CRITICAL Error during rule.actions check!`, checkError);
                 // Do not proceed if the check itself fails critically
                 actionsAreValid = false;
