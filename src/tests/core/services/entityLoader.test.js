@@ -180,6 +180,7 @@ describe('EntityLoader', () => {
                     return `http://example.com/schemas/${typeName}.schema.json`;
                 })
             });
+            // Instantiate with the temporary logger for this test
             const loader = new EntityLoader(tempConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, tempLogger);
 
             expect(loader).toBeInstanceOf(EntityLoader);
@@ -187,28 +188,41 @@ describe('EntityLoader', () => {
             expect(loader._config).toBe(tempConfig);
             expect(loader._logger).toBe(tempLogger);
             expect(tempLogger.warn).not.toHaveBeenCalled();
-            expect(tempLogger.debug).toHaveBeenCalledWith(expect.stringContaining('EntityLoader: Initialized successfully'));
-            expect(tempLogger.debug).toHaveBeenCalledWith('EntityLoader: Initialized.');
+
+            // --- CHANGE START: Verify both debug logs ---
+            // Check that debug was called twice overall
+            expect(tempLogger.debug).toHaveBeenCalledTimes(2);
+            // Check that the specific messages were logged (order may not matter)
+            expect(tempLogger.debug).toHaveBeenCalledWith(expect.stringContaining('EntityLoader: Initialized successfully with all dependencies.')); // Base class log
+            expect(tempLogger.debug).toHaveBeenCalledWith('EntityLoader: Initialized.'); // EntityLoader log
+            // --- CHANGE END ---
         });
 
-        it('should log initialization message', () => {
-            expect(mockLogger.warn).not.toHaveBeenCalled();
-        });
 
-        it('should log a warning if entity schema ID is not found during construction', () => {
-            const warnLogger = createMockLogger();
+        it('should log warnings if entity schema ID is not found during construction', () => {
+            const warnLogger = createMockLogger(); // Use a temporary logger for this specific test
             const badConfig = createMockConfiguration({
+                // Mock config to return null for 'entities' schema ID
                 getContentTypeSchemaId: jest.fn((typeName) => typeName === 'entities' ? null : 'fallback')
             });
 
+            // Instantiate with the temporary logger and bad config
             new EntityLoader(badConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, warnLogger);
 
-            const expectedBaseWarning = expect.stringContaining("EntityLoader: Schema ID for content type 'entities' not found");
-            const expectedEntityLoaderWarning = `EntityLoader: Schema ID for content type 'entities' not found in configuration.`;
+            // --- CHANGE START: Expect 2 warnings ---
+            const expectedBaseWarning = expect.stringContaining("EntityLoader: Schema ID for content type 'entities' not found in configuration."); // Base class log check
+            const expectedEntityLoaderWarning = `EntityLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`; // EntityLoader log check
 
+            // Expect two warning calls total
             expect(warnLogger.warn).toHaveBeenCalledTimes(2);
+
+            // Check that both specific warning messages were logged
             expect(warnLogger.warn).toHaveBeenCalledWith(expectedBaseWarning);
             expect(warnLogger.warn).toHaveBeenCalledWith(expectedEntityLoaderWarning);
+            // --- CHANGE END ---
+
+            // Debug logs should still happen (base class init + entityloader init)
+            expect(warnLogger.debug).toHaveBeenCalledTimes(2);
             expect(warnLogger.debug).toHaveBeenCalledWith(expect.stringContaining('EntityLoader: Initialized successfully'));
             expect(warnLogger.debug).toHaveBeenCalledWith('EntityLoader: Initialized.');
         });
@@ -239,7 +253,7 @@ describe('EntityLoader', () => {
                 mockManifest,
                 GENERIC_CONTENT_KEY,
                 GENERIC_CONTENT_DIR,
-                GENERIC_TYPE_NAME
+                GENERIC_TYPE_NAME // Pass 'items' here, loader handles storage category internally
             );
             expect(internalLoadSpy).toHaveBeenCalledTimes(1);
             expect(internalLoadSpy).toHaveBeenCalledWith(
@@ -247,7 +261,7 @@ describe('EntityLoader', () => {
                 mockManifest,
                 GENERIC_CONTENT_KEY,
                 GENERIC_CONTENT_DIR,
-                GENERIC_TYPE_NAME
+                GENERIC_TYPE_NAME // Check that original type name is still passed down
             );
         });
 
@@ -283,7 +297,7 @@ describe('EntityLoader', () => {
     describe('_processFetchedItem', () => {
         const filename = 'test_entity.json';
         const resolvedPath = `./data/mods/${TEST_MOD_ID}/${GENERIC_CONTENT_DIR}/${filename}`;
-        const entityType = 'items';
+        const entityType = 'items'; // The typeName passed in, e.g., from the manifest key
 
         const baseEntityDataNoComponents = {
             id: 'core:test_entity_simple', name: 'Simple Test Entity',
@@ -311,7 +325,7 @@ describe('EntityLoader', () => {
             mockRegistry.store.mockClear();
         });
 
-        it('Success Path (No Components): should validate entity, extract ID, skip component validation, store, log, and return final key', async () => {
+        it('Success Path (No Components): should validate entity, extract ID, skip component validation, store under "entities", log, and return final key', async () => {
             const fetchedData = JSON.parse(JSON.stringify(baseEntityDataNoComponents));
             mockValidator.validate.mockImplementation((schemaId, data) => {
                 if (schemaId === ENTITY_SCHEMA_ID) return {isValid: true, errors: null};
@@ -328,15 +342,16 @@ describe('EntityLoader', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage for ${entityType} with base ID '${baseIdSimple}' to base helper for file ${filename}`));
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             const expectedStoredData = {...fetchedData, id: finalKeySimple, modId: TEST_MOD_ID, _sourceFile: filename};
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKeySimple, expectedStoredData);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${entityType} item '${finalKeySimple}'`));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKeySimple, expectedStoredData);
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored entities item '${finalKeySimple}'`)); // Base class log confirms category used
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key: ${finalKeySimple}`));
             expect(resultKey).toEqual(finalKeySimple);
             expect(mockLogger.error).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
-        it('Success Path (With Valid Components): should validate entity, extract ID, validate components, store, log, and return final key', async () => {
+        it('Success Path (With Valid Components): should validate entity, extract ID, validate components, store under "entities", log, and return final key', async () => {
             const fetchedData = JSON.parse(JSON.stringify(baseEntityDataWithComponents));
             mockValidator.validate.mockImplementation((schemaId, data) => {
                 if (schemaId === ENTITY_SCHEMA_ID) return {isValid: true, errors: null};
@@ -358,20 +373,14 @@ describe('EntityLoader', () => {
             expect(mockValidator.validate).toHaveBeenCalledTimes(3);
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
             const expectedStoredData = {...fetchedData, id: finalKeyComplex, modId: TEST_MOD_ID, _sourceFile: filename};
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKeyComplex, expectedStoredData);
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKeyComplex, expectedStoredData);
             expect(resultKey).toEqual(finalKeyComplex);
             expect(mockLogger.error).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
         // --- Failure Scenarios ---
-
-        // *** CHANGE START: Removed this test case as it's unreliable ***
-        // it('Failure: Entity schema ID missing (processes without primary validation)', async () => {
-        //     // ... test logic ...
-        // });
-        // *** CHANGE END ***
-
 
         it('Failure: Entity schema validation fails', async () => {
             const validationErrors = [{message: "Missing required 'name'"}];
@@ -440,7 +449,7 @@ describe('EntityLoader', () => {
 
         it('Failure: Cannot extract base ID (e.g., ID is just "core:") - *Test adjusted for current behavior*', async () => {
             const fetchedData = {id: 'core:', name: 'Entity with bad ID format'};
-            const expectedBaseId = 'core:';
+            const expectedBaseId = 'core:'; // Current logic extracts the whole string if no ':' after first char
             const expectedFinalKey = `${TEST_MOD_ID}:${expectedBaseId}`;
             mockValidator.validate.mockReturnValue({isValid: true, errors: null});
 
@@ -450,7 +459,8 @@ describe('EntityLoader', () => {
             expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Could not derive base ID from \'core:\'')); // Ensure specific error is not logged
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID 'core:' and derived base ID '${expectedBaseId}'`));
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, expectedFinalKey, expect.objectContaining({id: expectedFinalKey}));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', expectedFinalKey, expect.objectContaining({id: expectedFinalKey}));
         });
 
         it('Failure: Runtime component validation fails', async () => {
@@ -473,7 +483,6 @@ describe('EntityLoader', () => {
                 expect.objectContaining({componentId: COMPONENT_HEALTH_ID, errors: componentErrors})
             );
 
-            // *** CHANGE START: Correct the expectation for the second error log ***
             // Verify second error log (the comprehensive summary message)
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expectedErrorMsg,
@@ -484,7 +493,6 @@ describe('EntityLoader', () => {
                     failedComponentIds: COMPONENT_HEALTH_ID // Expect a STRING here now
                 })
             );
-            // *** CHANGE END ***
 
             expect(mockRegistry.store).not.toHaveBeenCalled();
             expect(mockValidator.validate).toHaveBeenCalledWith(COMPONENT_POSITION_ID, expect.any(Object));
@@ -510,9 +518,19 @@ describe('EntityLoader', () => {
 
             const loaderClassName = entityLoader.constructor.name;
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
+            // --- Update expected error message and metadata ---
+            const expectedLogMessage = `${loaderClassName} [${TEST_MOD_ID}]: Failed to store entities item with key '${finalKeySimple}' from file '${filename}' in data registry.`;
+            const expectedLogMetadata = expect.objectContaining({
+                category: 'entities', // Now expects 'entities'
+                modId: TEST_MOD_ID,
+                baseItemId: baseIdSimple,
+                finalRegistryKey: finalKeySimple,
+                sourceFilename: filename,
+                error: storeError.message
+            });
             expect(mockLogger.error).toHaveBeenCalledWith(
-                `${loaderClassName} [${TEST_MOD_ID}]: Failed to store ${entityType} item with key '${finalKeySimple}' from file '${filename}' in data registry.`,
-                expect.objectContaining({error: storeError.message}),
+                expectedLogMessage,
+                expectedLogMetadata,
                 storeError
             );
             expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file`));
@@ -527,7 +545,8 @@ describe('EntityLoader', () => {
             const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
             expect(resultKey).toEqual(finalKey);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID 'my_item' and derived base ID '${baseId}'`));
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKey, expect.objectContaining({id: finalKey}));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKey, expect.objectContaining({id: finalKey}));
         });
 
         it('Edge Case: ID with multiple colons', async () => {
@@ -538,7 +557,8 @@ describe('EntityLoader', () => {
             const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
             expect(resultKey).toEqual(finalKey);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID 'mod:category:complex_item' and derived base ID '${baseId}'`));
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKey, expect.objectContaining({id: finalKey}));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKey, expect.objectContaining({id: finalKey}));
         });
 
         it('Edge Case: Empty `components` object', async () => {
@@ -558,7 +578,8 @@ describe('EntityLoader', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity '${fullId}' in ${filename} has no components or an empty components map. Skipping runtime component validation.`));
             expect(mockValidator.validate).toHaveBeenCalledTimes(1);
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKey, expect.objectContaining({id: finalKey}));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKey, expect.objectContaining({id: finalKey}));
         });
 
         it('Edge Case: `components` field is null', async () => {
@@ -578,7 +599,8 @@ describe('EntityLoader', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity '${fullId}' in ${filename} has no components or an empty components map. Skipping runtime component validation.`));
             expect(mockValidator.validate).toHaveBeenCalledTimes(1);
             expect(mockRegistry.store).toHaveBeenCalledTimes(1);
-            expect(mockRegistry.store).toHaveBeenCalledWith(entityType, finalKey, expect.objectContaining({id: finalKey}));
+            // --- Expect 'entities' as category ---
+            expect(mockRegistry.store).toHaveBeenCalledWith('entities', finalKey, expect.objectContaining({id: finalKey}));
         });
     });
 });

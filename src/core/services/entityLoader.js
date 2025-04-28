@@ -97,7 +97,7 @@ class EntityLoader extends BaseManifestItemLoader {
     /**
      * Processes a single fetched entity-like definition file's data.
      * Validates the entity structure, validates component data schemas, extracts ID,
-     * and delegates storage.
+     * and delegates storage **always under the 'entities' category**.
      *
      * @override
      * @protected
@@ -106,7 +106,7 @@ class EntityLoader extends BaseManifestItemLoader {
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file.
-     * @param {string} typeName - The specific content type name being processed.
+     * @param {string} typeName - The original content type name (e.g., 'items', 'locations') used for logging/context, but not for storage category.
      * @returns {Promise<string>} A promise resolving with the fully qualified item ID.
      * @throws {Error} If processing or validation fails.
      */
@@ -168,22 +168,25 @@ class EntityLoader extends BaseManifestItemLoader {
             this._logger.debug(`EntityLoader [${modId}]: Entity '${trimmedId}' in ${filename} has no components or an empty components map. Skipping runtime component validation.`);
         }
 
-        // --- Step 4: Storage (Using Helper) ---
-        // AC: Log a debug message indicating delegation to the storage helper, including the baseId.
-        this._logger.debug(`EntityLoader [${modId}]: Delegating storage for ${typeName} with base ID '${baseEntityId}' to base helper for file ${filename}.`);
-        // AC: Call the inherited protected method this._storeItemInRegistry(typeName, modId, baseId, data, filename).
-        // AC: Ensure typeName, modId, baseId, data, filename are passed correctly.
-        // AC: The call to _storeItemInRegistry handles the actual storage...
-        this._storeItemInRegistry(typeName, modId, baseEntityId, data, filename); // Pass all required args
+        // --- [Ticket 4 - START] ---
+        // Logic to inject role markers based on typeName was REMOVED here
+        // as per user clarification (markers are not needed).
+        // --- [Ticket 4 - END] ---
 
-        // AC: Construct the fully qualified, prefixed entity ID using the format ${modId}:${baseId}.
-        // Note: Base ID already extracted is baseEntityId
+        // --- Step 4: Storage (Using Helper) ---
+        this._logger.debug(`EntityLoader [${modId}]: Delegating storage for ${typeName} with base ID '${baseEntityId}' to base helper for file ${filename}. Will be stored under 'entities' category.`);
+
+        // --- [Ticket 4 - CHANGE] ---
+        // The first argument (category) is now hardcoded to 'entities'.
+        // The original typeName is still passed for context in logging messages.
+        this._storeItemInRegistry('entities', modId, baseEntityId, data, filename);
+        // --- [Ticket 4 - END CHANGE] ---
+
+        // Construct the fully qualified, prefixed entity ID using the format ${modId}:${baseId}.
         const finalId = `${modId}:${baseEntityId}`;
 
         // --- Step 5: Return Final ID ---
-        // AC: Log a final debug message indicating successful processing for the file and the ID being returned.
         this._logger.debug(`EntityLoader [${modId}]: Successfully processed ${typeName} file '${filename}'. Returning final registry key: ${finalId}`);
-        // AC: The method returns the constructed fully qualified, prefixed entity ID as a string.
         return finalId;
     }
 }
