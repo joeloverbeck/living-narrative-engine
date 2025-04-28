@@ -67,7 +67,7 @@
         "connections": {
           "$ref": "#/definitions/contentFileList"
         },
-        "entities": {
+        "characters": {
           "$ref": "#/definitions/contentFileList"
         },
         "events": {

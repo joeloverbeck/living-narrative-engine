@@ -1,0 +1,8 @@
+{
+  "id": "isekai:adventurers_guild",
+  "components": {
+    "core:name": {
+      "text": "Adventurers' Guild"
+    }
+  }
+}

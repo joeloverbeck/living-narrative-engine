@@ -1,0 +1,14 @@
+{
+  "id": "core:hero",
+  "components": {
+    "core:player": {},
+    "core:name": {
+      "text": "Hero"
+    },
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
+}

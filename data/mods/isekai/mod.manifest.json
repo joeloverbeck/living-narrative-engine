@@ -1,21 +1,20 @@
 {
-  "id": "core",
+  "id": "isekai",
   "version": "1.0.0",
-  "name": "core",
-  "description": "Contains the essential base data and definitions required to run the Living Narrative Engine engine.",
+  "name": "isekai",
+  "description": "Contains the definitions of a demo scenario based on a fantasy setting.",
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
-      "player.component.json",
-      "position.component.json",
-      "name.component.json"
     ],
     "entities": [
+      "hero.entity.json"
     ],
     "items": [
     ],
     "locations": [
+      "adventurers_guild.location.json"
     ],
     "actions": [
     ],
