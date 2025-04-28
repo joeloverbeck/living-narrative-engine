@@ -17,14 +17,14 @@ export function registerRuntime(container) {
         entityManager: c.resolve(tokens.EntityManager),
         gameDataRepository: c.resolve(tokens.GameDataRepository),
         actionDiscoverySystem: c.resolve(tokens.ActionDiscoverySystem),
-        validatedDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+        validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
         logger: c.resolve(tokens.ILogger)
     }));
 
     r.singletonFactory(tokens.InputSetupService, c => new InputSetupService({
         container: c,
         logger: c.resolve(tokens.ILogger),
-        validatedDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+        validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
         gameLoop: c.resolve(tokens.GameLoop)
     }));
 

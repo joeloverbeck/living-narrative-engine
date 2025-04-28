@@ -9,21 +9,106 @@
 
 // --- Using your container's types ---
 /** @typedef {import('../appContainer.js').FactoryFunction} FactoryFunction */
-/** @typedef {import('../appContainer.js').RegistrationOptions} RegistrationOptions */ // Assuming this type *could* include 'tags'
+// Assuming RegistrationOptions might include 'tags' based on your comment
+/** @typedef {{ lifecycle?: 'singleton' | 'transient', tags?: string[] }} RegistrationOptions */
 
-/** @typedef {(...args: any[]) => any} Constructor */
+/** @typedef {(...args: any[]) => any} ConstructorAny */
+/** @template T @typedef {new (...args: any[]) => T} Constructor<T> */
 
 
 /**
- * Creates a factory function suitable for your AppContainer registration
- * that instantiates a class (`Ctor`) resolving its dependencies from the container.
+ * INTERNAL helper function (not exported directly).
+ * Creates a factory function suitable for AppContainer registration
+ * that instantiates a class (`Ctor`) resolving its dependencies into a *single object map*
+ * and injecting that map as the only argument to the constructor.
  *
  * @template T
  * @param {Constructor<T>} Ctor - The class constructor to instantiate.
  * @param {DiToken[]} [deps=[]] - An array of dependency tokens to resolve from the container.
- * @returns {FactoryFunction} A factory function that resolves dependencies and calls the constructor.
+ * @returns {FactoryFunction} A factory function that resolves dependencies into an object and calls the constructor.
  */
-export const asSingleton = (Ctor, deps = []) => c => new Ctor(...deps.map(k => c.resolve(k)));
+const _createFactoryForObjectInjection = (Ctor, deps = []) => {
+    // Ensure Ctor is actually a function (potential constructor)
+    if (typeof Ctor !== 'function') {
+        console.error(`[_createFactoryForObjectInjection] Error: TargetClass provided is not a function. Value:`, Ctor);
+        throw new Error(`Invalid registration attempt: TargetClass must be a constructor function.`);
+    }
+
+    /**
+     * @param {AppContainer} resolver The container instance.
+     * @returns {T} Instance of Ctor
+     */
+    const factoryFn = (resolver) => {
+        const dependenciesMap = {};
+        const targetClassName = Ctor.name || '[AnonymousClass]'; // Get class name for logging
+
+        deps.forEach((token, index) => {
+            let propName = '';
+
+            // --- Dependency Property Name Derivation Logic ---
+            if (typeof token === 'string') {
+                propName = token; // Start with the original token name (e.g., "ILogger", "GameStateManager")
+
+                // ****** START CHANGE ******
+                // Apply naming convention:
+                // 1. If it starts with 'I' followed by an uppercase letter (like "ILogger"), remove 'I'.
+                // 2. Then, lowercase the first letter of the result.
+                if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) {
+                    // Remove the leading 'I' -> e.g., "Logger"
+                    propName = propName.substring(1);
+                }
+                // Lowercase the first letter of the (potentially modified) string
+                // e.g., "Logger" -> "logger", "GameStateManager" -> "gameStateManager"
+                propName = propName.charAt(0).toLowerCase() + propName.slice(1);
+                // ****** END CHANGE ******
+
+            } else if (typeof token === 'symbol') {
+                // Existing logic for symbols seems to match the desired convention already
+                propName = Symbol.keyFor(token); // Get the symbol description (e.g., "ILogger")
+                if (propName) {
+                    // Apply naming convention: Remove leading 'I' if followed by an uppercase letter
+                    if (propName.startsWith('I') && propName.length > 1 && propName[1] === propName[1].toUpperCase()) {
+                        propName = propName.substring(1); // "ILogger" -> "Logger"
+                    }
+                    // Lowercase the first letter
+                    propName = propName.charAt(0).toLowerCase() + propName.slice(1); // "Logger" -> "logger"
+                }
+            }
+
+            // Fallback if propName couldn't be derived
+            if (!propName) {
+                propName = `dependency${index}`;
+                console.warn(`[_createFactory] Could not reliably derive property name for dependency token at index ${index} (value: ${String(token)}) needed by "${targetClassName}". Using fallback name "${propName}". Check token definition and naming conventions.`);
+            }
+            // --- End Derivation ---
+
+            try {
+                // Resolve the dependency using the resolver
+                dependenciesMap[propName] = resolver.resolve(token);
+            } catch (resolveError) {
+                // Add more context to resolution errors to aid debugging
+                console.error(`[_createFactory] Failed to resolve dependency "${String(token)}" (for derived property "${propName}") needed by "${targetClassName}". Root cause:`, resolveError);
+                // Re-throw the error to ensure the container's error handling catches it
+                // Wrap it to provide more context about *which class* failed
+                throw new Error(`Failed to resolve dependency "${String(token)}" for "${targetClassName}": ${resolveError.message}`);
+            }
+        });
+
+        // Debugging: Log the map being passed (optional, can be noisy)
+        // console.debug(`[_createFactory] Instantiating "${targetClassName}" with dependencies object: { ${Object.keys(dependenciesMap).join(', ')} }`);
+
+        try {
+            // Instantiate the class, passing the dependencies AS A SINGLE OBJECT LITERAL
+            return new Ctor(dependenciesMap);
+        } catch (constructorError) {
+            console.error(`[_createFactory] Error occurred during constructor execution for "${targetClassName}". Dependencies passed: { ${Object.keys(dependenciesMap).join(', ')} }`, constructorError);
+            // Re-throw the error from the constructor
+            throw constructorError;
+        }
+    };
+    return factoryFn;
+};
+
 
 /**
  * Provides a fluent interface for registering services with the DI container,
@@ -39,6 +124,9 @@ export class Registrar {
      * @param {AppContainer} container - The DI container instance.
      */
     constructor(container) {
+        if (!container || typeof container.register !== 'function') {
+            throw new Error('Registrar requires a valid AppContainer instance.');
+        }
         this.#container = container;
     }
 
@@ -53,25 +141,25 @@ export class Registrar {
      * @returns {this} The Registrar instance for chaining.
      */
     register(token, factoryOrValue, options = {}) {
-        // Note: The base register should expect a factory. Helpers adapt values.
+        let factoryFn = factoryOrValue;
+        // Ensure we always register a factory function
         if (typeof factoryOrValue !== 'function') {
-            console.warn(`Registrar.register called directly with non-function for token "${String(token)}". Wrapping, but prefer using helpers like .instance() or .singletonFactory().`);
+            // console.warn(`Registrar.register called directly with non-function for token "${String(token)}". Wrapping it.`);
             const value = factoryOrValue;
-            factoryOrValue = () => value;
+            factoryFn = () => value; // Wrap the value in a factory
         }
 
         const registrationOptions = {...options};
         if (this.#tags) {
-            // *** FIX HERE: Uncomment this line ***
-            // Add the pending tags to the options object. Create 'tags' array if it doesn't exist.
+            // Combine existing tags (if any) with the pending tags
             registrationOptions.tags = [...(registrationOptions.tags || []), ...this.#tags];
-            // Optional: Remove the warning if tags are now intended to be supported
-            // console.warn('Registrar: Tagging functionality used, but AppContainer may not support it.');
+            // console.debug(`Registering token "${String(token)}" with tags: [${registrationOptions.tags.join(', ')}]`);
         }
 
-        // Now registrationOptions includes both lifecycle and tags (if any were pending)
-        this.#container.register(token, /** @type {FactoryFunction} */ (factoryOrValue), registrationOptions);
-        this.#tags = null; // Reset tags after registration
+        // Perform the actual registration on the container
+        this.#container.register(token, /** @type {FactoryFunction} */ (factoryFn), registrationOptions);
+
+        this.#tags = null; // Reset tags after registration is done
         return this;
     }
 
@@ -87,7 +175,8 @@ export class Registrar {
 
     /**
      * Registers a class constructor as a singleton.
-     * Automatically resolves constructor dependencies based on the provided tokens.
+     * Automatically resolves constructor dependencies based on the provided tokens,
+     * injecting them as a single object argument.
      *
      * @template T
      * @param {DiToken} token - The key to register the dependency under.
@@ -96,7 +185,10 @@ export class Registrar {
      * @returns {this} The Registrar instance for chaining.
      */
     single(token, Ctor, deps = []) {
-        const factory = asSingleton(Ctor, deps);
+        // *** Use the internal helper to create the correct factory ***
+        // (No change needed here as the helper itself is fixed)
+        const factory = _createFactoryForObjectInjection(Ctor, deps);
+        // Use singletonFactory to handle lifecycle and apply pending tags
         this.singletonFactory(token, factory);
         return this;
     }
@@ -111,26 +203,62 @@ export class Registrar {
      */
     instance(token, instance) {
         const factoryFn = () => instance;
-        // Pass the tags along if instance() is called after tagged()
-        this.register(token, factoryFn, {lifecycle: 'singleton'});
+        // Use the base register method, applying pending tags and setting lifecycle
+        this.register(token, factoryFn, { lifecycle: 'singleton' });
         return this;
     }
 
     /**
      * Registers a factory function as a singleton.
-     * Use this when instantiation logic is more complex than just `new Ctor(...deps)`.
+     * Use this when instantiation logic is more complex than just `new Ctor(depsMap)`.
      *
      * @template T
      * @param {DiToken} token - The key to register the dependency under.
-     * @param {FactoryFunction} factoryFn - The factory function (takes container `c` as arg).
+     * @param {FactoryFunction} factoryFn - The factory function (takes container `c`/`resolver` as arg).
      * @returns {this} The Registrar instance for chaining.
      */
     singletonFactory(token, factoryFn) {
         if (typeof factoryFn !== 'function') {
             throw new Error(`Registrar.singletonFactory requires a function for token "${String(token)}", but received type ${typeof factoryFn}`);
         }
-        // Pass the tags along if singletonFactory() is called after tagged()
-        this.register(token, factoryFn, {lifecycle: 'singleton'});
+        // Use the base register method, applying pending tags and setting lifecycle
+        this.register(token, factoryFn, { lifecycle: 'singleton' });
+        return this;
+    }
+
+    /**
+     * Registers a class constructor for transient lifecycle.
+     * A new instance is created each time it's resolved.
+     * Dependencies are resolved each time and injected as a single object argument.
+     *
+     * @template T
+     * @param {DiToken} token - The key to register the dependency under.
+     * @param {Constructor<T>} Ctor - The class constructor.
+     * @param {DiToken[]} [deps=[]] - An array of dependency tokens for the constructor.
+     * @returns {this} The Registrar instance for chaining.
+     */
+    transient(token, Ctor, deps = []) {
+        const factory = _createFactoryForObjectInjection(Ctor, deps);
+        // Use the base register method, applying pending tags and setting lifecycle
+        this.register(token, factory, { lifecycle: 'transient' });
+        return this;
+    }
+
+    /**
+     * Registers a factory function for transient lifecycle.
+     * A new instance is created via the factory each time it's resolved.
+     *
+     * @template T
+     * @param {DiToken} token - The key to register the dependency under.
+     * @param {FactoryFunction} factoryFn - The factory function (takes container `c`/`resolver` as arg).
+     * @returns {this} The Registrar instance for chaining.
+     */
+    transientFactory(token, factoryFn) {
+        if (typeof factoryFn !== 'function') {
+            throw new Error(`Registrar.transientFactory requires a function for token "${String(token)}", but received type ${typeof factoryFn}`);
+        }
+        // Use the base register method, applying pending tags and setting lifecycle
+        this.register(token, factoryFn, { lifecycle: 'transient' });
         return this;
     }
 }

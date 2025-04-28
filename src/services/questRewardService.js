@@ -20,7 +20,7 @@ class QuestRewardService {
   /** @type {GameStateManager} */
   #gameStateManager;
   /** @type {ValidatedEventDispatcher} */
-  #validatedDispatcher;
+  #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
 
@@ -30,20 +30,20 @@ class QuestRewardService {
      * @param {GameDataRepository} dependencies.gameDataRepository - The game data repository instance.
      * // @param {EventBus} dependencies.eventBus // <-- REMOVED
      * @param {GameStateManager} dependencies.gameStateManager
-     * @param {ValidatedEventDispatcher} dependencies.validatedDispatcher
+     * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
      * @param {ILogger} dependencies.logger
      */
-  constructor({gameDataRepository, gameStateManager, validatedDispatcher, logger}) { // <-- UPDATED signature
+  constructor({gameDataRepository, gameStateManager, validatedEventDispatcher, logger}) { // <-- UPDATED signature
     // Updated error message to reflect new dependency
     if (!gameDataRepository) throw new Error('QuestRewardService requires GameDataRepository.');
     if (!gameStateManager) throw new Error('QuestRewardService requires GameStateManager.');
-    if (!validatedDispatcher) throw new Error('QuestRewardService requires ValidatedEventDispatcher.');
+    if (!validatedEventDispatcher) throw new Error('QuestRewardService requires ValidatedEventDispatcher.');
     if (!logger) throw new Error('QuestRewardService requires ILogger.');
 
     this.#repository = gameDataRepository;
     // this.#eventBus = eventBus;
     this.#gameStateManager = gameStateManager;
-    this.#validatedDispatcher = validatedDispatcher;
+    this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
 
     this.#logger.info('QuestRewardService: Instantiated.'); // <-- UPDATED to use logger
@@ -85,7 +85,7 @@ class QuestRewardService {
       this.#logger.debug(' - Preparing dispatch: event:xp_gain_requested', payload);
       // Replace direct dispatch with validated dispatch
       dispatchPromises.push(
-        this.#validatedDispatcher.dispatchValidated('event:xp_gain_requested', payload)
+        this.#validatedEventDispatcher.dispatchValidated('event:xp_gain_requested', payload)
           .catch(err => this.#logger.error(`Error during dispatchValidated for xp_gain_requested: ${err.message}`, err)) // Catch potential errors in dispatch itself
       );
     }
@@ -104,7 +104,7 @@ class QuestRewardService {
           this.#logger.debug(' - Preparing dispatch: event:item_add_requested', payload);
           // Replace direct dispatch with validated dispatch
           dispatchPromises.push(
-            this.#validatedDispatcher.dispatchValidated('event:item_add_requested', payload)
+            this.#validatedEventDispatcher.dispatchValidated('event:item_add_requested', payload)
               .catch(err => this.#logger.error(`Error during dispatchValidated for item_add_requested: ${err.message}`, err))
           );
         } else {
@@ -129,7 +129,7 @@ class QuestRewardService {
             this.#logger.debug(' - Preparing dispatch: event:currency_add_requested', payload);
             // Replace direct dispatch with validated dispatch
             dispatchPromises.push(
-              this.#validatedDispatcher.dispatchValidated('event:currency_add_requested', payload)
+              this.#validatedEventDispatcher.dispatchValidated('event:currency_add_requested', payload)
                 .catch(err => this.#logger.error(`Error during dispatchValidated for currency_add_requested: ${err.message}`, err))
             );
           } else {
@@ -155,7 +155,7 @@ class QuestRewardService {
             this.#logger.debug(' - Preparing dispatch: event:game_state_flag_set_requested', payload);
             // Replace direct dispatch with validated dispatch
             dispatchPromises.push(
-              this.#validatedDispatcher.dispatchValidated('event:game_state_flag_set_requested', payload)
+              this.#validatedEventDispatcher.dispatchValidated('event:game_state_flag_set_requested', payload)
                 .catch(err => this.#logger.error(`Error during dispatchValidated for game_state_flag_set_requested: ${err.message}`, err))
             );
           } else {

@@ -68,7 +68,7 @@ const mockActionValidationService = {
 };
 
 /** @type {jest.Mocked<EventBus>} */
-const mockEventBus = { // Keep if needed internally by ValidatedDispatcher mock or other tests
+const mockEventBus = { // Keep if needed internally by validatedEventDispatcher mock or other tests
   dispatch: jest.fn(),
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
@@ -76,7 +76,7 @@ const mockEventBus = { // Keep if needed internally by ValidatedDispatcher mock 
 };
 
 /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   dispatchValidated: jest.fn().mockResolvedValue(true), // Assume success by default
 };
 
@@ -112,7 +112,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Pass if constructor requires it
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // Use the dispatcher mock
+    validatedEventDispatcher: mockvalidatedEventDispatcher // Use the dispatcher mock
   });
 };
 
@@ -160,7 +160,7 @@ const createMockActionContext = (actionId = 'test:action', playerEntity, current
       error: null,
     },
     gameDataRepository: mockGameDataRepository, // Pass if context requires it
-    dispatch: mockValidatedDispatcher.dispatchValidated, // Expose dispatch if needed in context operationHandlers (unlikely for this test)
+    dispatch: mockvalidatedEventDispatcher.dispatchValidated, // Expose dispatch if needed in context operationHandlers (unlikely for this test)
   };
   return baseContext;
 };
@@ -259,9 +259,9 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatched Successfu
     // 6. Mock actionValidationService.isValid to return true (action is allowed).
     mockActionValidationService.isValid.mockReturnValue(true);
 
-    // 7. Mock validatedDispatcher.dispatchValidated to resolve successfully (event dispatch occurs).
+    // 7. Mock validatedEventDispatcher.dispatchValidated to resolve successfully (event dispatch occurs).
     //    (Already set by default in the mock definition, but can be reinforced here if needed)
-    mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+    mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
     // 8. Prepare the mockContext with needed data.
     mockContext = createMockActionContext(actionId, mockPlayerEntity, mockLocationEntity, directObjectPhrase);
@@ -300,7 +300,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatched Successfu
     // --- Verify Event Dispatch ---
 
     // 4. Verify Validated Dispatcher was called exactly once
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
     // 5. Verify Dispatcher was called with the CORRECT event name and payload
     const expectedPayload = {
@@ -312,7 +312,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatched Successfu
       literalString: 'test_value'
       // 'missingComponentProp' is correctly NOT present because it resolved to undefined
     };
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
       eventName,          // First argument: eventName
       expectedPayload     // Second argument: The exact payload object
     );
@@ -350,9 +350,9 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatched Successfu
   // --- Acceptance Criteria Check (Manual Review based on test above): ---
   // [X] Test case uses an ActionDefinition with dispatch_event and a complex payload definition.
   // [X] Mocks provide necessary data for all source types used in the payload (actor, target, context, parsed, literal, missing component).
-  // [X] validatedDispatcher.dispatchValidated mock resolves successfully.
-  // [X] Assertions verify validatedDispatcher.dispatchValidated was called once.
-  // [X] Assertion verifies validatedDispatcher.dispatchValidated was called with the correct event name AND the correctly structured payload object (using toHaveBeenCalledWith and exact object matching), implicitly confirming null handling and undefined omission.
+  // [X] validatedEventDispatcher.dispatchValidated mock resolves successfully.
+  // [X] Assertions verify validatedEventDispatcher.dispatchValidated was called once.
+  // [X] Assertion verifies validatedEventDispatcher.dispatchValidated was called with the correct event name AND the correctly structured payload object (using toHaveBeenCalledWith and exact object matching), implicitly confirming null handling and undefined omission.
   // [X] Assertion verifies the final ActionResult indicates success.
   // [X] Assertions verify relevant logger calls (omitting undefined, dispatch success).
   // [X] Test passes. (Verified by running the test suite after these changes)

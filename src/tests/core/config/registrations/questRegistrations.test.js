@@ -17,10 +17,11 @@
 import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 
 // --- Class Under Test ---
-import {registerQuestSystems, INITIALIZABLE} from '../../../../core/config/registrations/questRegistrations.js'; // Adjust path
+import {registerQuestSystems} from '../../../../core/config/registrations/questRegistrations.js'; // Adjust path
 
 // --- Dependencies ---
 import {tokens} from '../../../../core/tokens.js';
+import {INITIALIZABLE} from "../../../../core/tags";
 
 // --- Mock Implementations ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
@@ -43,7 +44,7 @@ const mockGameDataRepository = {
     // Add any other methods that might be checked or used during construction
 };
 
-const mockValidatedDispatcher = {dispatch: jest.fn()};
+const mockvalidatedEventDispatcher = {dispatch: jest.fn()};
 
 // --- Mock DI Container ---
 const createMockContainer = () => {
@@ -71,7 +72,7 @@ const createMockContainer = () => {
             if (token === tokens.ObjectiveStateCheckerService) return mockObjectiveStateCheckerService;
             // Use the improved mock here
             if (token === tokens.GameDataRepository) return mockGameDataRepository;
-            if (token === tokens.ValidatedEventDispatcher) return mockValidatedDispatcher;
+            if (token === tokens.ValidatedEventDispatcher) return mockvalidatedEventDispatcher;
 
 
             const registration = registrations.get(token);
@@ -223,8 +224,8 @@ describe('registerQuestSystems', () => {
         mockContainer.register(tokens.ObjectiveStateCheckerService, mockObjectiveStateCheckerService, {lifecycle: 'singleton'});
         // Register the *corrected* GameDataRepository mock
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
-        // ValidatedDispatcher is needed by QuestRewardService factory, which is a dependency of QuestSystem factory
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'});
+        // validatedEventDispatcher is needed by QuestRewardService factory, which is a dependency of QuestSystem factory
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
 
         // Call the registration function AFTER mocks are set up
         registerQuestSystems(mockContainer);
@@ -248,7 +249,7 @@ describe('registerQuestSystems', () => {
         expect(resolveSpy).toHaveBeenCalledWith(tokens.GameStateManager);
         expect(resolveSpy).toHaveBeenCalledWith(tokens.ObjectiveEventListenerService);
         expect(resolveSpy).toHaveBeenCalledWith(tokens.ObjectiveStateCheckerService);
-        // Note: ValidatedDispatcher is resolved *indirectly* when QuestRewardService is resolved by the factory.
+        // Note: validatedEventDispatcher is resolved *indirectly* when QuestRewardService is resolved by the factory.
         // Spying might not catch it unless the mock resolve explicitly tracks nested calls.
         // But checking the direct dependencies of QuestSystem is usually sufficient here.
 

@@ -13,7 +13,7 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
     console.log('main.js: Bootstrapping application...');
 
     // --- Get Root DOM Elements ---
-    const outputDiv = document.getElementById('output');
+    const outputDiv = document.getElementById('outputDiv');
     const errorDiv = document.getElementById('error-output'); // For fallback errors
     const inputElement = document.getElementById('command-input');
     const titleElement = document.querySelector('h1'); // For engine status and fallback errors

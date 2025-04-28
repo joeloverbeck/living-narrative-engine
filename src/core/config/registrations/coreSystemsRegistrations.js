@@ -34,14 +34,8 @@ import WelcomeMessageService from '../../../services/welcomeMessageService.js'; 
 // --- DI & Helper Imports ---
 import {tokens} from '../../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
-import {formatActionCommand} from '../../../services/actionFormatter.js'; // Needed by ActionDiscoverySystem factory
-
-/**
- * Array containing the tag used to identify systems that require initialization.
- * @constant
- * @type {string[]}
- */
-export const INITIALIZABLE = ['initializableSystem'];
+import {formatActionCommand} from '../../../services/actionFormatter.js';
+import {INITIALIZABLE} from "../../tags"; // Needed by ActionDiscoverySystem factory
 
 /**
  * Registers core game systems tagged as initializable.

@@ -79,7 +79,7 @@ class ValidatedEventDispatcher {
 
                     // --- 3. Check if Schema is Loaded ---
                     if (this.#schemaValidator.isSchemaLoaded(schemaId)) {
-                        this.#logger.debug(`ValidatedDispatcher: Validating payload for event '${eventName}' against schema '${schemaId}'...`);
+                        this.#logger.debug(`validatedEventDispatcher: Validating payload for event '${eventName}' against schema '${schemaId}'...`);
 
                         // --- 4. Validate Payload ---
                         /** @type {ValidationResult} */
@@ -91,39 +91,39 @@ class ValidatedEventDispatcher {
 
                             // --- 5. Handle Failure: Log Error, Skip Dispatch ---
                             // This error should always be logged, regardless of allowSchemaNotFound
-                            this.#logger.error(`ValidatedDispatcher: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`, {
+                            this.#logger.error(`validatedEventDispatcher: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`, {
                                 payload,
                                 errors: validationResult.errors
                             });
                             shouldDispatch = false; // Prevent dispatch
                         } else {
                             // Validation Succeeded
-                            this.#logger.debug(`ValidatedDispatcher: Payload validation SUCCEEDED for event '${eventName}'.`);
+                            this.#logger.debug(`validatedEventDispatcher: Payload validation SUCCEEDED for event '${eventName}'.`);
                             // shouldDispatch remains true
                         }
                     } else {
                         // Schema Not Loaded: Log Warning ONLY IF NOT ALLOWED by options
                         if (!allowSchemaNotFound) { // <<< WRAPPED WARNING
-                            this.#logger.warn(`ValidatedDispatcher: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`);
+                            this.#logger.warn(`validatedEventDispatcher: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation and proceeding with dispatch.`);
                         } else {
                             // Optional: Log debug message when warning is suppressed
-                            this.#logger.debug(`ValidatedDispatcher: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`);
+                            this.#logger.debug(`validatedEventDispatcher: Payload schema '${schemaId}' not found/loaded for event '${eventName}'. Skipping validation as allowed by options.`);
                         }
                         // shouldDispatch remains true (validation skipped, not failed)
                     }
                 } else {
                     // No Schema Defined in Event Definition: Log Debug, Skip Validation, Proceed with Dispatch
                     // This is generally not an error condition.
-                    this.#logger.debug(`ValidatedDispatcher: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`);
+                    this.#logger.debug(`validatedEventDispatcher: Event definition '${eventName}' found, but no 'payloadSchema' defined. Skipping validation and proceeding with dispatch.`);
                     // shouldDispatch remains true
                 }
             } else {
                 // Event Definition Not Found: Log Warning ONLY IF NOT ALLOWED by options
                 if (!allowSchemaNotFound) { // <<< WRAPPED WARNING
-                    this.#logger.warn(`ValidatedDispatcher: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`);
+                    this.#logger.warn(`validatedEventDispatcher: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`);
                 } else {
                     // Optional: Log debug message when warning is suppressed
-                    this.#logger.debug(`ValidatedDispatcher: EventDefinition not found for '${eventName}'. Skipping validation as allowed by options.`);
+                    this.#logger.debug(`validatedEventDispatcher: EventDefinition not found for '${eventName}'. Skipping validation as allowed by options.`);
                 }
                 // shouldDispatch remains true (validation skipped, not failed)
             }
@@ -131,7 +131,7 @@ class ValidatedEventDispatcher {
             // Catch errors in the validation *process* itself (e.g., bug in validator access)
             // This is distinct from a validation *failure*. We should log this as an error
             // and prevent dispatch because the state is uncertain.
-            this.#logger.error(`ValidatedDispatcher: Unexpected error during payload validation process for event '${eventName}'. Dispatch will be skipped.`, validationProcessError);
+            this.#logger.error(`validatedEventDispatcher: Unexpected error during payload validation process for event '${eventName}'. Dispatch will be skipped.`, validationProcessError);
             shouldDispatch = false; // Prevent dispatch due to the process error
             validationPassed = false; // Mark as failed state due to process error
         }
@@ -139,22 +139,22 @@ class ValidatedEventDispatcher {
         // --- Final Dispatch Decision ---
         if (shouldDispatch) {
             try {
-                this.#logger.debug(`ValidatedDispatcher: Dispatching event '${eventName}'...`, payload);
+                this.#logger.debug(`validatedEventDispatcher: Dispatching event '${eventName}'...`, payload);
                 await this.#eventBus.dispatch(eventName, payload);
-                this.#logger.debug(`ValidatedDispatcher: Event '${eventName}' dispatch successful.`);
+                this.#logger.debug(`validatedEventDispatcher: Event '${eventName}' dispatch successful.`);
                 return true; // Dispatch occurred successfully
             } catch (dispatchError) {
-                this.#logger.error(`ValidatedDispatcher: Error occurred during EventBus.dispatch for event '${eventName}':`, dispatchError);
+                this.#logger.error(`validatedEventDispatcher: Error occurred during EventBus.dispatch for event '${eventName}':`, dispatchError);
                 return false; // Dispatch explicitly failed
             }
         } else {
             // Log why dispatch was skipped if it wasn't due to an explicit validation failure (already logged above)
             if (validationAttempted && !validationPassed) {
                 // Already logged error for validation failure
-                this.#logger.debug(`ValidatedDispatcher: Dispatch skipped for '${eventName}' due to validation failure (see error above).`);
+                this.#logger.debug(`validatedEventDispatcher: Dispatch skipped for '${eventName}' due to validation failure (see error above).`);
             } else {
                 // Log if skipped for other reasons (e.g., validation process error, or future logic)
-                this.#logger.debug(`ValidatedDispatcher: Dispatch explicitly skipped for event '${eventName}'.`);
+                this.#logger.debug(`validatedEventDispatcher: Dispatch explicitly skipped for event '${eventName}'.`);
             }
             return false; // Dispatch did not occur
         }

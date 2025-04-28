@@ -29,11 +29,11 @@ import {CONNECTIONS_COMPONENT_TYPE_ID, NAME_COMPONENT_TYPE_ID} from '../../types
 describe('ConnectionResolverService: resolveTargetConnection', () => {
 
   let mockContext;
-  // let mockDispatch; // Replaced by mockValidatedDispatcher
+  // let mockDispatch; // Replaced by mockvalidatedEventDispatcher
   let mockEntityManager;
   let mockCurrentLocation;
   // let mockConnectionsComponentInstance; // Likely no longer needed for resolveTargetConnection tests
-  let mockValidatedDispatcher;
+  let mockvalidatedEventDispatcher;
   let mockLogger;
 
   // --- Helper Function to Create Mock Entities ---
@@ -91,7 +91,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
     };
 
     // --- Mock ValidatedEventDispatcher ---
-    mockValidatedDispatcher = {
+    mockvalidatedEventDispatcher = {
       dispatchValidated: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -134,7 +134,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       entityManager: mockEntityManager,
       currentLocation: mockCurrentLocation, // Use the updated mock
       playerEntity: new Entity('player-test'),
-      validatedDispatcher: mockValidatedDispatcher,
+      validatedEventDispatcher: mockvalidatedEventDispatcher,
       logger: mockLogger,
     };
 
@@ -156,7 +156,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
     ])('should return null and not dispatch for invalid input: %p', async (invalidInput) => {
       const result = await resolveTargetConnection(mockContext, invalidInput);
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
       // Logger checks remain the same
       if (invalidInput === null || invalidInput === undefined || (typeof invalidInput === 'string' && invalidInput.trim() === '')) {
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid or empty connectionTargetName'));
@@ -170,8 +170,8 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       // console.error assertion is tricky, relying on null return is better
     });
 
-    test('should return null if context is invalid (missing validatedDispatcher)', async () => {
-      const invalidContext = {...mockContext, validatedDispatcher: undefined};
+    test('should return null if context is invalid (missing validatedEventDispatcher)', async () => {
+      const invalidContext = {...mockContext, validatedEventDispatcher: undefined};
       const result = await resolveTargetConnection(invalidContext, 'north');
       expect(result).toBeNull();
     });
@@ -205,7 +205,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input);
 
       expect(result).toBe(northEntity); // Should now receive the entity
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
       // Verify internal calls (Updated)
       expect(mockCurrentLocation.getComponentData).toHaveBeenCalledWith(CONNECTIONS_COMPONENT_TYPE_ID); // Check getComponentData call
       // expect(mockConnectionsComponentInstance.getAllConnections).not.toHaveBeenCalled(); // Ensure old path isn't used
@@ -251,12 +251,12 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input, 'go', mockFindMatchesFn);
 
       expect(result).toBeNull(); // Still expect null for ambiguity
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
       // Check the dispatched message
       const expectedMsg = TARGET_MESSAGES.AMBIGUOUS_DIRECTION(input, [getDisplayName(westEntity1), getDisplayName(westEntity2)]);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         {text: expectedMsg, type: 'warning'}
       );
 
@@ -299,7 +299,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input);
 
       expect(result).toBe(doorEntity);
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
       expect(mockCurrentLocation.getComponentData).toHaveBeenCalledWith(CONNECTIONS_COMPONENT_TYPE_ID);
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(doorEntity.id);
       // Check getComponentData was called on the entity itself for name lookup
@@ -337,14 +337,14 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input, actionVerb);
 
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
       const expectedEntities = [pathEntity1, pathEntity2]; // Order might depend on iteration order in findPotential...
       const expectedMsg = TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT(actionVerb, input, expectedEntities);
       // Note: The order in the message might vary based on Object.entries iteration.
       // Consider using expect.arrayContaining or sorting names if order is not guaranteed/important.
-      const receivedCall = mockValidatedDispatcher.dispatchValidated.mock.calls[0];
-      expect(receivedCall[0]).toBe('event:display_message');
+      const receivedCall = mockvalidatedEventDispatcher.dispatchValidated.mock.calls[0];
+      expect(receivedCall[0]).toBe('textUI:display_message');
       expect(receivedCall[1].type).toBe('warning');
       // Check text content flexibly for names
       expect(receivedCall[1].text).toContain(`Which '${input}' did you want to ${actionVerb}?`);
@@ -383,7 +383,7 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input);
 
       expect(result).toBe(eastDirEntity); // Prioritizes direction match
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
       // Check logger confirms direction match was chosen
       // Note: The logger message uses match.direction which comes from the data map key ('east')
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: east -> ${eastDirEntity.id}`));
@@ -414,10 +414,10 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input);
 
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
       const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
@@ -437,10 +437,10 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       // Check findPotentialConnectionMatches logs warning about missing data
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Connections component data (typeId: ${CONNECTIONS_COMPONENT_TYPE_ID}) not found on location`));
       // The main function then finds 0 matches and dispatches Not Found.
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
       const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${input}'`));
@@ -452,10 +452,10 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, input);
 
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
       const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
       // Verify internal calls
@@ -494,10 +494,10 @@ describe('ConnectionResolverService: resolveTargetConnection', () => {
       // Check that findPotentialConnectionMatches logged a warning about the missing entity
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Could not find Connection entity '${danglingId}'`));
       // Check that the main function dispatched the "Not Found" message
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
       const expectedMsg = TARGET_MESSAGES.TARGET_NOT_FOUND_CONTEXT(input);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
       // Verify the dangling ID was requested from entity manager

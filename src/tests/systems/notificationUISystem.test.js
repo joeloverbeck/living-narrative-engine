@@ -71,7 +71,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).not.toHaveBeenCalled(); // No warning if name is provided
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
@@ -83,7 +83,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Received 'DIRECTION_LOCKED' for actor player without a valid blockerDisplayName"));
     expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).not.toHaveBeenCalled();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
@@ -110,7 +110,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Received 'DIRECTION_BLOCKED' for actor player without a valid blockerDisplayName"));
     expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Echoing BlockerSystem error - Blocker entity ID "barrier_abc" not found for actor player at location room_1.'));
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -149,7 +149,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Echoing BlockerSystem error - Blocker entity ID "barrier_xyz" not found for actor player at location room_2.'));
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).not.toHaveBeenCalled();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
@@ -178,7 +178,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).not.toHaveBeenCalled();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
@@ -192,7 +192,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith('NotificationUISystem: Move setup error for actor player - Reason: SETUP_ERROR, Details: Player position unknown');
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -207,7 +207,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith('NotificationUISystem: Move setup error for actor player - Reason: SETUP_ERROR, Details: Current location unknown');
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -227,7 +227,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith('NotificationUISystem: Move data error for actor player - Reason: DATA_ERROR, Direction: east, Details: Invalid connection: missing target');
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -247,7 +247,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith('NotificationUISystem: Move data error for actor player - Reason: DATA_ERROR, Direction: west, Details: Target location definition not found');
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith('NotificationUISystem: Internal move dispatch error for actor player - Reason: INTERNAL_DISPATCH_ERROR, Details: Test error message');
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -275,7 +275,7 @@ describe('NotificationUISystem: _handleMoveFailed', () => {
     notificationUISystem._handleMoveFailed(payload);
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith('event:display_message', expectedDispatchPayload);
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith('textUI:display_message', expectedDispatchPayload);
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy).toHaveBeenCalledWith('NotificationUISystem: Unhandled move failure reasonCode: SOME_UNKNOWN_REASON_CODE for actor player');
     expect(consoleErrorSpy).not.toHaveBeenCalled();

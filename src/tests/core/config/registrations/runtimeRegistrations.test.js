@@ -41,7 +41,7 @@ const mockEventBus = {};
 const mockEntityManager = {};
 const mockGameDataRepository = {};
 const mockActionDiscoverySystem = {};
-const mockValidatedDispatcher = {};
+const mockvalidatedEventDispatcher = {};
 // GameLoop itself is registered here, but InputSetupService depends on it.
 // We'll register the mocked GameLoop instance so InputSetupService factory can resolve it.
 const mockGameLoopInstance = new GameLoop();
@@ -143,7 +143,7 @@ describe('registerRuntime', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ActionDiscoverySystem, mockActionDiscoverySystem, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         // Pre-register the mocked GameLoop instance needed by InputSetupService factory
         mockContainer.register(tokens.GameLoop, mockGameLoopInstance, {lifecycle: 'singleton'});
 

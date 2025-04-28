@@ -131,7 +131,7 @@ describe('Sequential Action Execution – Success Path', () => {
         entityManager = new SimpleEntityManager();
 
         opRegistry = new OperationRegistry({logger});
-        opInterpreter = new OperationInterpreter({logger, registry: opRegistry});
+        opInterpreter = new OperationInterpreter({logger, operationRegistry: opRegistry});
         jsonLogicSvc = new JsonLogicEvaluationService({logger});
 
         // ─── Handler registration ─────────────────────────────────────────

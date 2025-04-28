@@ -1,7 +1,7 @@
 // src/entities/entityManager.js
 
 import Entity from './entity.js';
-import {POSITION_COMPONENT_ID} from '../types/components.js';
+import {POSITION_COMPONENT_ID} from "../types/components.js";
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */

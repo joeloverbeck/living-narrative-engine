@@ -448,7 +448,7 @@ class LockSystem {
     /** @type {UIMessageDisplayPayload} */
     const uiMessagePayload = {text, type};
     console.debug(`LockSystem: Dispatching UI message: "${text}" (Type: ${type})`);
-    this.#eventBus.dispatch('event:display_message', uiMessagePayload);
+    this.#eventBus.dispatch('textUI:display_message', uiMessagePayload);
   }
 
   /**

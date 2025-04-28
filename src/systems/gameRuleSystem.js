@@ -117,7 +117,7 @@ class GameRuleSystem {
         }
       } catch (error) {
         console.error("GameRuleSystem: Uncaught error executing initial 'action:look':", error);
-        this.#eventBus.dispatch('event:display_message', {
+        this.#eventBus.dispatch('textUI:display_message', {
           text: 'Internal Error: Failed to perform initial look.', type: 'error'
         });
       }
@@ -148,7 +148,7 @@ class GameRuleSystem {
 
     if (!newLocationEntity) {
       console.error(`GameRuleSystem: Failed to find instance for location ${newLocationId}! Cannot proceed with post-move logic.`);
-      this.#eventBus.dispatch('event:display_message', {
+      this.#eventBus.dispatch('textUI:display_message', {
         text: `Critical Error: Cannot process arrival at ${newLocationId}. Location data might be missing or corrupted.`,
         type: 'error'
       });
@@ -188,7 +188,7 @@ class GameRuleSystem {
       }
     } catch (error) {
       console.error("GameRuleSystem: Uncaught error executing automatic 'action:look' after move:", error);
-      this.#eventBus.dispatch('event:display_message', {
+      this.#eventBus.dispatch('textUI:display_message', {
         text: 'Internal Error: Failed to perform automatic look after moving.', type: 'error'
       });
     }

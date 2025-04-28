@@ -176,7 +176,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     // 1. Instantiate OperationInterpreter (needs logger AND registry) <-- MODIFY THIS STEP
     operationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. Instantiate the interpreter (remains the same)

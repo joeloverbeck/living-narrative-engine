@@ -183,7 +183,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
     // 1. Instantiate OperationInterpreter (needs logger AND registry) <-- MODIFY THIS STEP
     operationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. Instantiate the interpreter (remains the same)

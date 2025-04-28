@@ -8,10 +8,11 @@
 import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 
 // --- Class Under Test ---
-import {registerCoreSystems, INITIALIZABLE} from '../../../../core/config/registrations/coreSystemsRegistrations.js'; // Adjust path as needed
+import {registerCoreSystems} from '../../../../core/config/registrations/coreSystemsRegistrations.js'; // Adjust path as needed
 
 // --- Dependencies ---
 import {tokens} from '../../../../core/tokens.js';
+import {INITIALIZABLE} from "../../../../core/tags";
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {

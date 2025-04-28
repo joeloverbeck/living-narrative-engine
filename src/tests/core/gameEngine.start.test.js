@@ -38,7 +38,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
     /** @type {jest.Mocked<GameDataRepository>} */
     let mockGameDataRepository;
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-    let mockValidatedDispatcher;
+    let mockvalidatedEventDispatcher;
     /** @type {jest.Mocked<DomRenderer>} */
     let mockDomRenderer;
     /** @type {jest.Mocked<WorldLoader>} */
@@ -110,7 +110,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
             getObjectiveDefinition: jest.fn(),
             getInteractionTest: jest.fn(),
         };
-        mockValidatedDispatcher = {
+        mockvalidatedEventDispatcher = {
             dispatchValidated: jest.fn().mockResolvedValue(true),
         };
         mockDomRenderer = { /* Mock methods if needed */};
@@ -150,7 +150,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
             setCurrentLocation: jest.fn(),
         };
         mockSystemInitializer = {
-            initializeSystems: jest.fn().mockResolvedValue(undefined),
+            initializeAll: jest.fn().mockResolvedValue(undefined), // CORRECTED: Use initializeAll
         };
         // AC3: Add mock for InputSetupService
         mockInputSetupService = {
@@ -176,7 +176,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
                 case 'GameDataRepository':
                     return mockGameDataRepository;
                 case 'ValidatedEventDispatcher':
-                    return mockValidatedDispatcher;
+                    return mockvalidatedEventDispatcher;
                 case 'DomRenderer':
                     return mockDomRenderer;
                 case 'WorldLoader':
@@ -264,11 +264,11 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
         expect(mockGameLoop.start).toHaveBeenCalledTimes(1);
 
         // Basic checks for dispatcher calls
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'event:set_title', expect.any(Object), expect.any(Object)
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+            'textUI:set_title', expect.any(Object), expect.any(Object)
         );
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'event:display_message',
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+            'textUI:display_message',
             {text: 'Game loop started. Good luck!', type: 'info'}
         );
     });
@@ -285,39 +285,39 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
 
         // --- Assert ---
         // These events are part of the initialization flow and remain
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Initializing Engine...'}, earlyDispatchOptions);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initializing Engine...'}, earlyDispatchOptions);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Initializing core systems...',
             type: 'info'
         }, earlyDispatchOptions);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: `Loading Game Data for ${worldName}...`}, earlyDispatchOptions);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: `Loading Game Data for ${worldName}...`}, earlyDispatchOptions);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: `Loading world data for '${worldName}' via WorldLoader...`,
             type: 'info'
         }, earlyDispatchOptions);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: `World data for '${worldName}' loading process complete.`,
             type: 'info'
         });
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Setting Initial Game State...'});
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Setting Initial Game State...'});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Setting initial game state...',
             type: 'info'
         });
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Initializing World Entities...'});
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initializing World Entities...'});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Instantiating world entities...',
             type: 'info'
         });
         // This event still exists and triggers WelcomeMessageService etc.
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:engine_initialized', {inputWorldName: worldName}, {});
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Initialization Complete. Starting...'});
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('event:engine_initialized', {inputWorldName: worldName}, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initialization Complete. Starting...'});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Initialization complete.',
             type: 'success'
         });
         // This final message is from start() itself after the loop starts
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Game loop started. Good luck!',
             type: 'info'
         });

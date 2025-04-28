@@ -65,7 +65,7 @@ const mockEventBus = {
   unsubscribe: jest.fn(),
   listenerCount: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -98,7 +98,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
+    validatedEventDispatcher: mockvalidatedEventDispatcher // <<< --- ADD THIS LINE --- >>>
   });
 };
 

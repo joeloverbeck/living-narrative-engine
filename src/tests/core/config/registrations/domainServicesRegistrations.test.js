@@ -53,7 +53,7 @@ import GameStateManager from '../../../../core/gameStateManager.js';
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
 // Mock other dependencies required by the factories within domainServicesRegistrations
 const mockEntityManager = {}; // Provide a basic object or mock methods if needed by factories
-const mockValidatedDispatcher = {};
+const mockvalidatedEventDispatcher = {};
 const mockGameDataRepository = {};
 const mockEventBus = {};
 // We mock JsonLogicEvaluationService class above, so provide its mock instance here
@@ -154,7 +154,7 @@ describe('registerDomainServices', () => {
         // Pre-register MOCKED core/external dependencies required by domain services
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         // Register the mocked JsonLogicEvaluationService instance

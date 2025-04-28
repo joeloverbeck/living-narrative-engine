@@ -1,475 +1,338 @@
 // src/tests/gameStateInitializer.test.js
 
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import GameStateInitializer from '../core/gameStateInitializer.js'; // Adjust path if needed
-import { POSITION_COMPONENT_ID } from '../types/components.js'; // Adjust path if needed
+import {jest, describe, it, expect, beforeEach} from '@jest/globals';
+import GameStateInitializer from '../core/gameStateInitializer.js';
+import {PLAYER_COMPONENT_ID, POSITION_COMPONENT_ID} from "../types/components.js"; // Adjust path if needed
 
 // --- Mocks for Dependencies ---
 
 // Mock EntityManager
 const mockEntityManager = {
-  createEntityInstance: jest.fn(),
-  addComponent: jest.fn(), // Added for the case where position component needs adding
-  // We don't need getEntityInstance or removeEntityInstance for *these* specific tests
+    createEntityInstance: jest.fn(),
+    addComponent: jest.fn(),
 };
 
 // Mock GameStateManager
 const mockGameStateManager = {
-  setPlayer: jest.fn(),
-  setCurrentLocation: jest.fn(),
-  // getPlayer/getCurrentLocation aren't called by the initializer itself
+    setPlayer: jest.fn(),
+    setCurrentLocation: jest.fn(),
 };
 
 // Mock GameDataRepository
 const mockGameDataRepository = {
-  getEntityDefinition: jest.fn(),
-  getStartingPlayerId: jest.fn(),
-  getStartingLocationId: jest.fn(),
+    getEntityDefinition: jest.fn(),
+    getStartingPlayerId: jest.fn(),
+    getStartingLocationId: jest.fn(),
 };
 
 // Mock ValidatedEventDispatcher
-const mockValidatedDispatcher = {
-  dispatchValidated: jest.fn(), // This will be our spy
+const mockvalidatedEventDispatcher = {
+    dispatchValidated: jest.fn(),
 };
 
 // Mock ILogger
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  warn: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
 };
 
 // --- Mock Entities and Components ---
 
-// Mock Location Entity (simple)
-const mockLocationEntity = { id: 'location_mock' };
+const mockLocationEntity = {id: 'location_mock'};
 
-// Mock Position Component (needs setLocation method if player has it)
 const mockPlayerPositionComponent = {
-  setLocation: jest.fn(),
-  // Add any other properties/methods if the component implementation or usage requires them
+    setLocation: jest.fn(),
 };
 
-// Mock Player Entity
-// Note: We need to mock getComponentData and potentially addComponent based on GameStateInitializer's logic
 const mockPlayerEntity = {
-  id: 'player_mock',
-  // Simulate component storage. In a real Entity, this might be more complex.
-  _components: new Map(), // Use a private-like convention for internal mock state
-
-  // Mock getComponentData - called first to check for PositionComponent
-  getComponentData: jest.fn((componentId) => {
-    return mockPlayerEntity._components.get(componentId);
-  }),
-
-  // Mock addComponent - Not directly called on Entity in the provided code,
-  // EntityManager.addComponent is called instead if getComponentData fails.
-  // We won't mock this directly on the player entity for now.
-
-  // Helper to set up which components the mock player "has" for a test
-  _setComponent: (componentId, componentInstance) => {
-    mockPlayerEntity._components.set(componentId, componentInstance);
-  },
-
-  // Helper to clear mocks and internal state for the entity mock
-  _clearMocksAndState: () => {
-    mockPlayerEntity.getComponentData.mockClear();
-    mockPlayerEntity._components.clear();
-    // Clear mocks on associated component mocks if necessary
-    mockPlayerPositionComponent.setLocation.mockClear();
-  }
+    id: 'player_mock',
+    _components: new Map(),
+    _componentDefinitions: new Map(),
+    hasComponent: jest.fn((componentId) => {
+        return componentId === PLAYER_COMPONENT_ID;
+    }),
+    getComponentData: jest.fn((componentId) => {
+        return mockPlayerEntity._components.get(componentId);
+    }),
+    _setComponent: (componentId, componentInstance) => {
+        mockPlayerEntity._components.set(componentId, componentInstance);
+        mockPlayerEntity._componentDefinitions.set(componentId, {});
+    },
+    _setComponentDefinition: (componentId, definition = {}) => {
+        mockPlayerEntity._componentDefinitions.set(componentId, definition);
+    },
+    _clearMocksAndState: () => {
+        mockPlayerEntity.hasComponent.mockClear();
+        mockPlayerEntity.getComponentData.mockClear();
+        mockPlayerEntity._components.clear();
+        mockPlayerEntity._componentDefinitions.clear();
+        mockPlayerEntity.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
+        mockPlayerPositionComponent.setLocation.mockClear();
+    }
 };
 
 
 // --- Test Suite ---
 describe('GameStateInitializer', () => {
-  const START_PLAYER_ID = 'test:player_start';
-  const START_LOC_ID = 'test:location_start';
-  let initializer;
+    const START_PLAYER_ID = 'test:player_start';
+    const START_LOC_ID = 'test:location_start';
+    let initializer;
 
-  beforeEach(() => {
-    // Reset all framework mocks and mock state before each test
-    jest.clearAllMocks();
-    mockPlayerEntity._clearMocksAndState(); // Clear player entity specific state/mocks
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockPlayerEntity._clearMocksAndState();
 
-    // --- Configure Default Mock Return Values (Success Path) ---
+        mockGameDataRepository.getStartingPlayerId.mockReturnValue(START_PLAYER_ID);
+        mockGameDataRepository.getStartingLocationId.mockReturnValue(START_LOC_ID);
 
-    // GameDataRepository provides starting IDs
-    mockGameDataRepository.getStartingPlayerId.mockReturnValue(START_PLAYER_ID);
-    mockGameDataRepository.getStartingLocationId.mockReturnValue(START_LOC_ID);
+        mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
+            if (id === START_PLAYER_ID || id === START_LOC_ID) {
+                return {id: id, components: {[PLAYER_COMPONENT_ID]: {}}};
+            }
+            return undefined;
+        });
 
-    // GameDataRepository provides valid entity definitions
-    mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
-      if (id === START_PLAYER_ID || id === START_LOC_ID) {
-        return { id: id, components: {} }; // Return a minimal valid definition
-      }
-      return undefined;
+        mockEntityManager.createEntityInstance.mockImplementation((id) => {
+            if (id === START_PLAYER_ID) {
+                return mockPlayerEntity;
+            }
+            if (id === START_LOC_ID) return mockLocationEntity;
+            return null;
+        });
+
+        mockEntityManager.addComponent.mockResolvedValue(undefined);
+        mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
+
+        initializer = new GameStateInitializer({
+            entityManager: mockEntityManager,
+            gameStateManager: mockGameStateManager,
+            gameDataRepository: mockGameDataRepository,
+            validatedEventDispatcher: mockvalidatedEventDispatcher,
+            logger: mockLogger,
+        });
+
+        mockLogger.info.mockClear();
     });
 
-    // EntityManager returns our mock entities when requested
-    mockEntityManager.createEntityInstance.mockImplementation((id) => {
-      if (id === START_PLAYER_ID) return mockPlayerEntity;
-      if (id === START_LOC_ID) return mockLocationEntity;
-      return null;
+    // --- Test Success Case ---
+    it('should setup state, set position via EntityManager, dispatch event:room_entered, and log success', async () => {
+        const success = await initializer.setupInitialState();
+
+        expect(success).toBe(true);
+        expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity);
+        expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(mockLocationEntity);
+        expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(START_PLAYER_ID);
+        expect(mockPlayerEntity.hasComponent).toHaveBeenCalledWith(PLAYER_COMPONENT_ID);
+        expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+            mockPlayerEntity.id,
+            POSITION_COMPONENT_ID,
+            {locationId: mockLocationEntity.id, x: 0, y: 0}
+        );
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+            'event:room_entered',
+            {playerId: mockPlayerEntity.id, newLocationId: mockLocationEntity.id, previousLocationId: null},
+            {allowSchemaNotFound: true}
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Retrieved startingPlayerId: ${START_PLAYER_ID}, startingLocationId: ${START_LOC_ID}`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully instantiated player entity: ${mockPlayerEntity.id}`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully instantiated starting location entity: ${mockLocationEntity.id}`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Player '${mockPlayerEntity.id}' and Location '${mockLocationEntity.id}' set in GameStateManager`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Ensuring player '${mockPlayerEntity.id}' is positioned in starting location '${mockLocationEntity.id}'`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully set/updated position component for player '${mockPlayerEntity.id}' to location '${mockLocationEntity.id}' via EntityManager`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Dispatching initial event:room_entered for player ${mockPlayerEntity.id} entering location ${mockLocationEntity.id}...`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully dispatched initial event:room_entered for player ${mockPlayerEntity.id}.`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`lacks the '${PLAYER_COMPONENT_ID}' component`));
     });
 
-    // EntityManager.addComponent succeeds by default (for the add component test path)
-    mockEntityManager.addComponent.mockResolvedValue(undefined); // Simulate async success
+    // --- Test Warning Case ---
+    it('should log a warning if the instantiated player lacks the player component', async () => {
+        mockPlayerEntity.hasComponent.mockReturnValue(false);
 
-    // Player entity "has" the position component by default in most success cases
-    // We pass the *mock* component instance here
-    mockPlayerEntity._setComponent(POSITION_COMPONENT_ID, mockPlayerPositionComponent);
+        const success = await initializer.setupInitialState();
 
-    // Instantiate the service (System Under Test) with all mocks
-    initializer = new GameStateInitializer({
-      entityManager: mockEntityManager,
-      gameStateManager: mockGameStateManager,
-      gameDataRepository: mockGameDataRepository,
-      validatedDispatcher: mockValidatedDispatcher, // Inject dispatcher mock
-      logger: mockLogger, // Inject logger mock
+        expect(success).toBe(true);
+        expect(mockPlayerEntity.hasComponent).toHaveBeenCalledWith(PLAYER_COMPONENT_ID);
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining(`Instantiated entity '${mockPlayerEntity.id}' designated as starting player, but it lacks the '${PLAYER_COMPONENT_ID}' component.`)
+        );
+        expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
+        expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    // Verify constructor logging (optional but good)
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('GameStateInitializer: Instance created'));
-    mockLogger.info.mockClear(); // Clear constructor log call for cleaner test assertions
-  });
 
-  // --- Test Success Case ---
-  it('should setup state, dispatch event:room_entered, and log success', async () => {
-    // Arrange: Default setup in beforeEach is sufficient for this success case
-    // (Player has PositionComponent)
+    // --- Test Failure Cases ---
 
-    // Act
-    const success = await initializer.setupInitialState();
+    it('should return false, log errors, and NOT dispatch if startingPlayerId is missing', async () => {
+        mockGameDataRepository.getStartingPlayerId.mockReturnValue(null);
+        const expectedErrorMsg = "Missing starting player ID in game data.";
 
-    // Assert
-    expect(success).toBe(true); // Expect setup to succeed
+        const success = await initializer.setupInitialState();
 
-    // Verify GameState changes
-    expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity);
-    expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(mockLocationEntity);
-
-    // Verify player positioning (existing component path)
-    expect(mockPlayerEntity.getComponentData).toHaveBeenCalledWith(POSITION_COMPONENT_ID);
-    expect(mockPlayerPositionComponent.setLocation).toHaveBeenCalledWith(mockLocationEntity.id, 0, 0);
-    expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not be called
-
-    // **** Verify Dispatch ****
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'event:room_entered', // Event Name
-      { // Payload structure and content
-        playerId: mockPlayerEntity.id,
-        newLocationId: mockLocationEntity.id,
-        previousLocationId: null
-      },
-      {} // Default options
-    );
-
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Using startingPlayerId: ${START_PLAYER_ID}, startingLocationId: ${START_LOC_ID}`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Player entity '${mockPlayerEntity.id}' created and set`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting location '${mockLocationEntity.id}' created and set`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Updated player's position data"));
-    // Specific logs around dispatch
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Dispatching initial event:room_entered...'));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Dispatching event:room_entered for player ${mockPlayerEntity.id} entering location ${mockLocationEntity.id}...`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully dispatched initial event:room_entered for player ${mockPlayerEntity.id}.`));
-    // Final success log
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-    expect(mockLogger.error).not.toHaveBeenCalled(); // No errors logged
-  });
-
-  it('should setup state, add PositionComponent if missing, dispatch event, and log success', async () => {
-    // Arrange: Override default - player *does not* have PositionComponent initially
-    mockPlayerEntity._components.delete(POSITION_COMPONENT_ID);
-    // Ensure getComponentData reflects this
-    mockPlayerEntity.getComponentData.mockImplementation((componentId) => {
-      return mockPlayerEntity._components.get(componentId); // Will return undefined for Position
+        expect(success).toBe(false);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
+        expect(mockLogger.error).toHaveBeenCalledTimes(2);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            "GameStateInitializer: Failed to retrieve starting player ID from the repository/manifest. Cannot initialize game state."
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL ERROR during initial game state setup: ${expectedErrorMsg}`),
+            expect.any(Error)
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolled back GameStateManager state'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
     });
 
-    // Act
-    const success = await initializer.setupInitialState();
+    it('should return false, log errors, and NOT dispatch if startingLocationId is missing', async () => {
+        mockGameDataRepository.getStartingLocationId.mockReturnValue(null);
+        const expectedErrorMsg = "Missing starting location ID in game data.";
 
-    // Assert
-    expect(success).toBe(true); // Expect setup to succeed
+        const success = await initializer.setupInitialState();
 
-    // Verify GameState changes
-    expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity);
-    expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(mockLocationEntity);
-
-    // Verify player positioning (add component path)
-    expect(mockPlayerEntity.getComponentData).toHaveBeenCalledWith(POSITION_COMPONENT_ID); // Called, returned undefined
-    expect(mockPlayerPositionComponent.setLocation).not.toHaveBeenCalled(); // Not called on the separate mock instance
-    expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1); // EntityManager used to add
-    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-      mockPlayerEntity.id,
-      POSITION_COMPONENT_ID,
-      { locationId: mockLocationEntity.id, x: 0, y: 0 }
-    );
-
-    // **** Verify Dispatch (should still happen) ****
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'event:room_entered',
-      {
-        playerId: mockPlayerEntity.id,
-        newLocationId: mockLocationEntity.id,
-        previousLocationId: null
-      },
-      {}
-    );
-
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
-    // Check for the specific logs related to adding the component
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Player '${mockPlayerEntity.id}' missing position data or setLocation method. Attempting to add component.`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Added position component via EntityManager to player '${mockPlayerEntity.id}'`));
-    // Check dispatch logs still occurred
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Dispatching initial event:room_entered...'));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully dispatched initial event:room_entered for player ${mockPlayerEntity.id}.`));
-    // Final success log
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-    expect(mockLogger.error).not.toHaveBeenCalled();
-  });
-
-
-  // --- Test Failure Cases ---
-
-  it('should return false, log error, and NOT dispatch if startingPlayerId is missing', async () => {
-    // Arrange: Configure repository mock to fail
-    mockGameDataRepository.getStartingPlayerId.mockReturnValue(null);
-
-    // Act
-    const success = await initializer.setupInitialState();
-
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
-
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error) // Check that an Error object was passed
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to retrieve startingPlayerId'),
-      expect.any(Error)
-    );
-    // Ensure success/dispatch logs are NOT present
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-  });
-
-  it('should return false, log error, and NOT dispatch if startingLocationId is missing', async () => {
-    // Arrange: Configure repository mock to fail
-    mockGameDataRepository.getStartingLocationId.mockReturnValue(null);
-
-    // Act
-    const success = await initializer.setupInitialState();
-
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
-
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error)
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to retrieve startingLocationId'),
-      expect.any(Error)
-    );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-  });
-
-
-  it('should return false, log error, and NOT dispatch if player entity instantiation fails', async () => {
-    // Arrange: Configure EntityManager mock to fail for player
-    mockEntityManager.createEntityInstance.mockImplementation((id) => {
-      if (id === START_PLAYER_ID) return null; // Fail player creation
-      if (id === START_LOC_ID) return mockLocationEntity;
-      return null;
+        expect(success).toBe(false);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
+        expect(mockLogger.error).toHaveBeenCalledTimes(2);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            "GameStateInitializer: Failed to retrieve starting location ID from the repository/manifest. Cannot initialize game state."
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL ERROR during initial game state setup: ${expectedErrorMsg}`),
+            expect.any(Error)
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolled back GameStateManager state'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
     });
 
-    // Act
-    const success = await initializer.setupInitialState();
 
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-    expect(mockGameStateManager.setPlayer).not.toHaveBeenCalled(); // Player wasn't set
+    it('should return false, log errors, and NOT dispatch if player entity instantiation fails', async () => {
+        mockEntityManager.createEntityInstance.mockImplementation((id) => {
+            if (id === START_PLAYER_ID) return null;
+            if (id === START_LOC_ID) return mockLocationEntity;
+            return null;
+        });
+        const expectedErrorMsg = `Failed to instantiate starting player entity '${START_PLAYER_ID}'.`;
 
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        const success = await initializer.setupInitialState();
 
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Using startingPlayerId: ${START_PLAYER_ID}, startingLocationId: ${START_LOC_ID}`));
-    expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Instantiating player entity '${START_PLAYER_ID}'...`));
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error)
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Failed to instantiate player entity '${START_PLAYER_ID}'`),
-      expect.any(Error)
-    );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-  });
-
-  it('should return false, log error, and NOT dispatch if location entity instantiation fails', async () => {
-    // Arrange: Configure EntityManager mock to fail for location
-    mockEntityManager.createEntityInstance.mockImplementation((id) => {
-      if (id === START_PLAYER_ID) return mockPlayerEntity;
-      if (id === START_LOC_ID) return null; // Fail location creation
-      return null;
+        expect(success).toBe(false);
+        expect(mockGameStateManager.setPlayer).not.toHaveBeenCalledWith(mockPlayerEntity);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Setting up initial game state'));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Retrieved startingPlayerId: ${START_PLAYER_ID}, startingLocationId: ${START_LOC_ID}`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Instantiating starting player entity with ID: ${START_PLAYER_ID}...`));
+        expect(mockLogger.error).toHaveBeenCalledTimes(2);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            `GameStateInitializer: EntityManager failed to create instance for starting player ID: ${START_PLAYER_ID}. Check if definition exists and is valid.`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL ERROR during initial game state setup: ${expectedErrorMsg}`),
+            expect.any(Error)
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolled back GameStateManager state'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
     });
 
-    // Act
-    const success = await initializer.setupInitialState();
+    it('should return false, log errors, and NOT dispatch if location entity instantiation fails', async () => {
+        // Arrange: Configure EntityManager mock to fail for location
+        mockEntityManager.createEntityInstance.mockImplementation((id) => {
+            if (id === START_PLAYER_ID) return mockPlayerEntity;
+            if (id === START_LOC_ID) return null; // Fail location creation
+            return null;
+        });
+        const expectedErrorMsg = `Failed to instantiate starting location entity '${START_LOC_ID}'.`;
 
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-    expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity); // Player was set before failure
-    expect(mockGameStateManager.setCurrentLocation).not.toHaveBeenCalled(); // Location wasn't set
+        // Act
+        const success = await initializer.setupInitialState();
 
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        // Assert
+        expect(success).toBe(false); // Expect setup to fail
 
-    // **** Verify Logging ****
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Player entity '${mockPlayerEntity.id}' created and set`));
-    expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Instantiating location entity '${START_LOC_ID}'...`));
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error)
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Failed to instantiate starting location entity '${START_LOC_ID}'`),
-      expect.any(Error)
-    );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-  });
+        // **** Corrected Assertion ****
+        // Location wasn't successfully set with mockLocationEntity, but rollback sets it to null
+        expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(null);
+        expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledTimes(1); // Ensure it was only called during rollback
 
-  it('should return false, log error, and NOT dispatch if adding position component via EntityManager fails', async () => {
-    // Arrange: Player doesn't have component, and EntityManager.addComponent throws error
-    mockPlayerEntity._components.delete(POSITION_COMPONENT_ID);
-    mockPlayerEntity.getComponentData.mockImplementation((componentId) => {
-      return mockPlayerEntity._components.get(componentId);
-    });
-    const addCompError = new Error('EntityManager failed to add component');
-    mockEntityManager.addComponent.mockRejectedValue(addCompError); // Simulate async failure
+        // **** Verify Dispatch NOT Called ****
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
 
-    // Act
-    const success = await initializer.setupInitialState();
+        // **** Verify Logging ****
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully instantiated player entity: ${mockPlayerEntity.id}`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Instantiating starting location entity with ID: ${START_LOC_ID}...`));
+        // **** Expect TWO error calls ****
+        expect(mockLogger.error).toHaveBeenCalledTimes(2); // Corrected expectation
+        // 1. Specific error (logged without error object)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            `GameStateInitializer: EntityManager failed to create instance for starting location ID: ${START_LOC_ID}. Check if definition exists and is valid.`
+            // No second arg for this specific log in the code
+        );
+        // 2. Generic error (logged with error object)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL ERROR during initial game state setup: ${expectedErrorMsg}`),
+            expect.any(Error)
+        );
+        // Check for rollback log (will have set player=null, location=null)
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolled back GameStateManager state'));
 
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-
-    // Player/Location setup likely happened
-    expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity);
-    expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(mockLocationEntity);
-
-    // Attempt to add component was made
-    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(mockPlayerEntity.id, POSITION_COMPONENT_ID, expect.any(Object));
-
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
-
-    // **** Verify Logging ****
-    // Specific log for the addComponent failure path
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Failed to add position data via EntityManager to player '${mockPlayerEntity.id}'`),
-      addCompError // Check the specific error was logged
-    );
-    // The outer catch block log
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`CRITICAL ERROR during initial game state setup: Could not set player's initial position in ${mockLocationEntity.id}`),
-      expect.any(Error) // The error caught will be the one wrapping the addCompError
-    );
-    // Should be 2 error calls total in this specific failure
-    expect(mockLogger.error).toHaveBeenCalledTimes(2);
-
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
-  });
-
-  // Add more specific failure tests if needed (e.g., definition checks fail)
-  it('should return false, log error, and NOT dispatch if player definition is missing', async () => {
-    // Arrange: Configure repository mock to fail definition lookup
-    mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
-      if (id === START_LOC_ID) return { id: id, components: {} };
-      return undefined; // Player definition missing
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
     });
 
-    // Act
-    const success = await initializer.setupInitialState();
+    it('should return false, log errors, and NOT dispatch if adding/updating position component via EntityManager fails', async () => {
+        // Arrange: EntityManager.addComponent throws error
+        const addCompError = new Error('EntityManager failed to add/update component');
+        mockEntityManager.addComponent.mockRejectedValue(addCompError); // Simulate async failure
+        const expectedErrorMsg = `Could not set player's initial position in starting location '${mockLocationEntity.id}'.`;
 
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-    expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled(); // Shouldn't try to create entities
+        // Act
+        const success = await initializer.setupInitialState();
 
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        // Assert
+        expect(success).toBe(false); // Expect setup to fail
 
-    // **** Verify Logging ****
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error)
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Player definition '${START_PLAYER_ID}' (from manifest) not found`),
-      expect.any(Error)
-    );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-  });
+        // Player/Location setup likely happened before failure, but rollback clears them
+        expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity); // Still check pre-rollback state here
+        expect(mockGameStateManager.setCurrentLocation).toHaveBeenCalledWith(mockLocationEntity); // Still check pre-rollback state here
 
-  it('should return false, log error, and NOT dispatch if location definition is missing', async () => {
-    // Arrange: Configure repository mock to fail definition lookup for location
-    mockGameDataRepository.getEntityDefinition.mockImplementation((id) => {
-      if (id === START_PLAYER_ID) return { id: id, components: {} };
-      return undefined; // Location definition missing
+        // Attempt to add component was made
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(mockPlayerEntity.id, POSITION_COMPONENT_ID, expect.any(Object));
+
+        // **** Verify Dispatch NOT Called ****
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+
+        // **** Verify Logging ****
+        // Expect TWO error calls: Specific addComponent failure, and the generic catch-all for the re-thrown error
+        expect(mockLogger.error).toHaveBeenCalledTimes(2);
+
+        // 1. Specific log for the addComponent failure path (inside its own catch, logged with original error)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            `GameStateInitializer: Failed to add/update position component via EntityManager for player '${mockPlayerEntity.id}' in location '${mockLocationEntity.id}': ${addCompError.message}`,
+            addCompError // Check the specific error was logged
+        );
+        // 2. The error message logged by the *outer* catch block (catches the re-thrown error)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`CRITICAL ERROR during initial game state setup: ${expectedErrorMsg}`),
+            expect.any(Error) // The error caught will be the re-thrown one wrapping the addCompError reason
+        );
+
+        // Check for rollback log
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolled back GameStateManager state'));
+
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('setupInitialState method completed successfully'));
     });
-
-    // Act
-    const success = await initializer.setupInitialState();
-
-    // Assert
-    expect(success).toBe(false); // Expect setup to fail
-    expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(START_PLAYER_ID); // Player created
-    expect(mockGameStateManager.setPlayer).toHaveBeenCalledWith(mockPlayerEntity); // Player set
-    expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalledWith(START_LOC_ID); // Location not created
-
-    // **** Verify Dispatch NOT Called ****
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
-
-    // **** Verify Logging ****
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL ERROR'),
-      expect.any(Error)
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Starting location definition '${START_LOC_ID}' (from manifest) not found`),
-      expect.any(Error)
-    );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Successfully dispatched'));
-  });
 
 });

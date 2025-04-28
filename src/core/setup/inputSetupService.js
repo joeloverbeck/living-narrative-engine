@@ -20,7 +20,7 @@ class InputSetupService {
   /** @private @type {ILogger} */
   #logger;
   /** @private @type {ValidatedEventDispatcher} */
-  #validatedDispatcher;
+  #validatedEventDispatcher;
   /** @private @type {GameLoop} */
   #gameLoop;
 
@@ -29,11 +29,11 @@ class InputSetupService {
      * @param {object} options - The dependencies for the service.
      * @param {AppContainer} options.container - The application's dependency injection container, used to resolve the InputHandler.
      * @param {ILogger} options.logger - The logging service for outputting information and errors.
-     * @param {ValidatedEventDispatcher} options.validatedDispatcher - The service used for dispatching validated events (e.g., command echo, disabling input).
+     * @param {ValidatedEventDispatcher} options.validatedEventDispatcher - The service used for dispatching validated events (e.g., command echo, disabling input).
      * @param {GameLoop} options.gameLoop - The main game loop instance, which processes submitted commands when running.
-     * @throws {Error} If any of the required dependencies (container, logger, validatedDispatcher, gameLoop) are missing.
+     * @throws {Error} If any of the required dependencies (container, logger, validatedEventDispatcher, gameLoop) are missing.
      */
-  constructor({ container, logger, validatedDispatcher, gameLoop }) {
+  constructor({ container, logger, validatedEventDispatcher, gameLoop }) {
     // AC5: Check for missing dependencies
     if (!container) {
       throw new Error("InputSetupService: Missing required dependency 'container'.");
@@ -43,9 +43,9 @@ class InputSetupService {
       console.error("InputSetupService: Missing required dependency 'logger'.");
       throw new Error("InputSetupService: Missing required dependency 'logger'.");
     }
-    if (!validatedDispatcher) {
-      logger.error("InputSetupService: Missing required dependency 'validatedDispatcher'.");
-      throw new Error("InputSetupService: Missing required dependency 'validatedDispatcher'.");
+    if (!validatedEventDispatcher) {
+      logger.error("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
+      throw new Error("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
     }
     if (!gameLoop) {
       logger.error("InputSetupService: Missing required dependency 'gameLoop'.");
@@ -55,7 +55,7 @@ class InputSetupService {
     // AC6: Store dependencies in private fields
     this.#container = container;
     this.#logger = logger;
-    this.#validatedDispatcher = validatedDispatcher;
+    this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#gameLoop = gameLoop;
 
     this.#logger.info('InputSetupService: Instance created successfully with dependencies.');
@@ -83,8 +83,8 @@ class InputSetupService {
       // Define the command processing function
       const processInputCommand = async (command) => { // AC3: Ensure async
         // Use service's validated dispatcher
-        if (this.#validatedDispatcher) { // AC3: Use service's validatedDispatcher
-          await this.#validatedDispatcher.dispatchValidated('ui:command_echo', { command });
+        if (this.#validatedEventDispatcher) { // AC3: Use service's validatedEventDispatcher
+          await this.#validatedEventDispatcher.dispatchValidated('ui:command_echo', { command });
         } else {
           // Use service's logger (guaranteed by constructor)
           // Adapt log message prefix
@@ -99,8 +99,8 @@ class InputSetupService {
           // Adapt log message prefix
           this.#logger.warn('InputSetupService: Input received, but GameLoop is not ready/running.'); // AC3: Adapt logging
           // Use service's validated dispatcher
-          if (this.#validatedDispatcher) { // AC3: Use service's validatedDispatcher
-            await this.#validatedDispatcher.dispatchValidated('ui:disable_input', { message: 'Game not running.' });
+          if (this.#validatedEventDispatcher) { // AC3: Use service's validatedEventDispatcher
+            await this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', { message: 'Game not running.' });
           }
         }
       };

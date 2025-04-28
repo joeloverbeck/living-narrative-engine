@@ -20,7 +20,7 @@ describe('WelcomeMessageService', () => {
   /** @type {jest.Mocked<GameDataRepository>} */
   let mockGameDataRepository;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-  let mockValidatedDispatcher;
+  let mockvalidatedEventDispatcher;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;
 
@@ -44,7 +44,7 @@ describe('WelcomeMessageService', () => {
       getWorldName: jest.fn(),
       // Add mocks for other methods if they were used by WelcomeMessageService
     };
-    mockValidatedDispatcher = {
+    mockvalidatedEventDispatcher = {
       // Mock only the methods used by the service
       dispatchValidated: jest.fn(),
     };
@@ -66,7 +66,7 @@ describe('WelcomeMessageService', () => {
     service = new WelcomeMessageService({
       eventBus: mockEventBus,
       gameDataRepository: mockGameDataRepository,
-      validatedDispatcher: mockValidatedDispatcher,
+      validatedEventDispatcher: mockvalidatedEventDispatcher,
       logger: mockLogger,
     });
 
@@ -84,30 +84,30 @@ describe('WelcomeMessageService', () => {
   describe('Constructor Dependency Validation', () => {
     // Test constructor validation logic (from Ticket 6.3 AC4)
     it('should throw error if eventBus is missing or invalid', () => {
-      expect(() => new WelcomeMessageService({ gameDataRepository: mockGameDataRepository, validatedDispatcher: mockValidatedDispatcher, logger: mockLogger }))
+      expect(() => new WelcomeMessageService({ gameDataRepository: mockGameDataRepository, validatedEventDispatcher: mockvalidatedEventDispatcher, logger: mockLogger }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'eventBus'.");
-      expect(() => new WelcomeMessageService({ eventBus: {}, gameDataRepository: mockGameDataRepository, validatedDispatcher: mockValidatedDispatcher, logger: mockLogger }))
+      expect(() => new WelcomeMessageService({ eventBus: {}, gameDataRepository: mockGameDataRepository, validatedEventDispatcher: mockvalidatedEventDispatcher, logger: mockLogger }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'eventBus'.");
     });
 
     it('should throw error if gameDataRepository is missing or invalid', () => {
-      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, validatedDispatcher: mockValidatedDispatcher, logger: mockLogger }))
+      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, validatedEventDispatcher: mockvalidatedEventDispatcher, logger: mockLogger }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'gameDataRepository'.");
-      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: {}, validatedDispatcher: mockValidatedDispatcher, logger: mockLogger }))
+      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: {}, validatedEventDispatcher: mockvalidatedEventDispatcher, logger: mockLogger }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'gameDataRepository'.");
     });
 
-    it('should throw error if validatedDispatcher is missing or invalid', () => {
+    it('should throw error if validatedEventDispatcher is missing or invalid', () => {
       expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, logger: mockLogger }))
-        .toThrow("WelcomeMessageService: Missing or invalid dependency 'validatedDispatcher'.");
-      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedDispatcher: {}, logger: mockLogger }))
-        .toThrow("WelcomeMessageService: Missing or invalid dependency 'validatedDispatcher'.");
+        .toThrow("WelcomeMessageService: Missing or invalid dependency 'validatedEventDispatcher'.");
+      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedEventDispatcher: {}, logger: mockLogger }))
+        .toThrow("WelcomeMessageService: Missing or invalid dependency 'validatedEventDispatcher'.");
     });
 
     it('should throw error if logger is missing or invalid', () => {
-      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedDispatcher: mockValidatedDispatcher }))
+      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedEventDispatcher: mockvalidatedEventDispatcher }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'logger'.");
-      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedDispatcher: mockValidatedDispatcher, logger: { info: jest.fn() /* missing error */ } }))
+      expect(() => new WelcomeMessageService({ eventBus: mockEventBus, gameDataRepository: mockGameDataRepository, validatedEventDispatcher: mockvalidatedEventDispatcher, logger: { info: jest.fn() /* missing error */ } }))
         .toThrow("WelcomeMessageService: Missing or invalid dependency 'logger'.");
     });
   });
@@ -166,7 +166,7 @@ describe('WelcomeMessageService', () => {
       const mockEvent = { ...mockEventBase, data: { inputWorldName } };
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true); // Assume dispatch succeeds
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true); // Assume dispatch succeeds
 
       // Act
       await capturedEventHandler(mockEvent);
@@ -174,15 +174,15 @@ describe('WelcomeMessageService', () => {
       // Assert
       // Verify dependencies were called
       expect(mockGameDataRepository.getWorldName).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
 
       // Verify dispatchValidated calls with correct arguments
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title', // event name
         { text: officialWorldName } // payload
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message', // event name
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message', // event name
         { text: `Welcome to ${officialWorldName}!`, type: 'info' } // payload (no fallback indicator)
       );
 
@@ -192,7 +192,7 @@ describe('WelcomeMessageService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(`WelcomeMessageService: Retrieved official world name from repository: '${officialWorldName}'`);
       expect(mockLogger.info).toHaveBeenCalledWith(`WelcomeMessageService: Using official world name: '${officialWorldName}'`);
       expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching event:set_title with text: '${officialWorldName}'`);
-      expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching event:display_message with text: 'Welcome to ${officialWorldName}!'`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching textUI:display_message with text: 'Welcome to ${officialWorldName}!'`);
       expect(mockLogger.info).toHaveBeenCalledWith(`WelcomeMessageService: Successfully dispatched welcome messages for world: '${officialWorldName}'.`);
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Should not warn about fallback
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -205,7 +205,7 @@ describe('WelcomeMessageService', () => {
       const mockEvent = { ...mockEventBase, data: { inputWorldName } };
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEvent);
@@ -213,15 +213,15 @@ describe('WelcomeMessageService', () => {
       // Assert
       // Verify dependencies were called
       expect(mockGameDataRepository.getWorldName).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
 
       // Verify dispatchValidated calls with correct arguments (using inputWorldName)
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title',
         { text: inputWorldName }
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message',
         { text: `Welcome to ${inputWorldName}! (Name from input)`, type: 'info' } // Note the fallback indicator
       );
 
@@ -231,7 +231,7 @@ describe('WelcomeMessageService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('WelcomeMessageService: Retrieved official world name from repository: \'Not Found/Empty\''); // Reflects null return
       expect(mockLogger.warn).toHaveBeenCalledWith(`WelcomeMessageService: Official world name not available. Falling back to name: '${inputWorldName}'.`); // Fallback warning
       expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching event:set_title with text: '${inputWorldName}'`);
-      expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching event:display_message with text: 'Welcome to ${inputWorldName}! (Name from input)'`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(`WelcomeMessageService: Dispatching textUI:display_message with text: 'Welcome to ${inputWorldName}! (Name from input)'`);
       expect(mockLogger.info).toHaveBeenCalledWith(`WelcomeMessageService: Successfully dispatched welcome messages for world: '${inputWorldName}'.`);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -243,19 +243,19 @@ describe('WelcomeMessageService', () => {
       const mockEvent = { ...mockEventBase, data: { inputWorldName } };
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEvent);
 
       // Assert
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title',
         { text: inputWorldName }
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message',
         { text: `Welcome to ${inputWorldName}! (Name from input)`, type: 'info' } // Fallback indicator
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(`WelcomeMessageService: Official world name not available. Falling back to name: '${inputWorldName}'.`);
@@ -268,19 +268,19 @@ describe('WelcomeMessageService', () => {
       const mockEvent = { ...mockEventBase, data: { inputWorldName } };
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEvent);
 
       // Assert
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title',
         { text: inputWorldName }
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message',
         { text: `Welcome to ${inputWorldName}! (Name from input)`, type: 'info' } // Fallback indicator
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(`WelcomeMessageService: Official world name not available. Falling back to name: '${inputWorldName}'.`);
@@ -294,22 +294,22 @@ describe('WelcomeMessageService', () => {
       const defaultName = 'an Unnamed World';
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEventMissingInputName);
 
       // Assert
       expect(mockGameDataRepository.getWorldName).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
 
       // Verify dispatch uses default name
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title',
         { text: defaultName }
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message',
         { text: `Welcome to ${defaultName}! (Name from input)`, type: 'info' } // Still indicates fallback
       );
 
@@ -327,15 +327,15 @@ describe('WelcomeMessageService', () => {
       const defaultName = 'an Unnamed World';
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEventNullInputName);
 
       // Assert
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'event:set_title', { text: defaultName });
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'event:display_message', { text: `Welcome to ${defaultName}! (Name from input)`, type: 'info' });
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'event:set_title', { text: defaultName });
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'textUI:display_message', { text: `Welcome to ${defaultName}! (Name from input)`, type: 'info' });
 
       expect(mockLogger.warn).toHaveBeenCalledWith("WelcomeMessageService: 'event:engine_initialized' event received without 'inputWorldName' in payload. Using default.", mockEventNullInputName); // Or similar warning
       expect(mockLogger.warn).toHaveBeenCalledWith(`WelcomeMessageService: Official world name not available. Falling back to name: '${defaultName}'.`);
@@ -350,7 +350,7 @@ describe('WelcomeMessageService', () => {
       mockGameDataRepository.getWorldName.mockImplementation(() => {
         throw repoError;
       });
-      mockValidatedDispatcher.dispatchValidated.mockResolvedValue(true);
+      mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
 
       // Act
       await capturedEventHandler(mockEvent);
@@ -360,13 +360,13 @@ describe('WelcomeMessageService', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('WelcomeMessageService: Error retrieving world name from GameDataRepository.', repoError);
 
       // Should still proceed using the fallback name
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1,
         'event:set_title',
         { text: inputWorldName }
       );
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2,
+        'textUI:display_message',
         { text: `Welcome to ${inputWorldName}! (Name from input)`, type: 'info' } // Fallback indicator
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(`WelcomeMessageService: Official world name not available. Falling back to name: '${inputWorldName}'.`);
@@ -381,15 +381,15 @@ describe('WelcomeMessageService', () => {
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
       // Configure dispatchValidated to throw an error ON THE FIRST CALL
-      mockValidatedDispatcher.dispatchValidated.mockRejectedValueOnce(dispatchError);
+      mockvalidatedEventDispatcher.dispatchValidated.mockRejectedValueOnce(dispatchError);
 
       // Act & Assert that the handler itself doesn't throw
       await expect(capturedEventHandler(mockEvent)).resolves.toBeUndefined(); // The handler should catch the error
 
       // Assert that the error was logged
       expect(mockGameDataRepository.getWorldName).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // Only the first call happens
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', { text: officialWorldName });
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // Only the first call happens
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', { text: officialWorldName });
 
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -398,8 +398,8 @@ describe('WelcomeMessageService', () => {
       );
 
       // Check that the second dispatch didn't happen
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
+        'textUI:display_message',
         expect.anything()
       );
       // Ensure success log wasn't called
@@ -417,7 +417,7 @@ describe('WelcomeMessageService', () => {
 
       mockGameDataRepository.getWorldName.mockReturnValue(officialWorldName);
       // Configure dispatchValidated to succeed on the first call, fail on the second
-      mockValidatedDispatcher.dispatchValidated
+      mockvalidatedEventDispatcher.dispatchValidated
         .mockResolvedValueOnce(true) // First call (set_title) succeeds
         .mockRejectedValueOnce(dispatchError); // Second call (display_message) fails
 
@@ -426,9 +426,9 @@ describe('WelcomeMessageService', () => {
 
       // Assert that the error was logged
       expect(mockGameDataRepository.getWorldName).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // Both calls were attempted
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'event:set_title', { text: officialWorldName });
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'event:display_message', { text: `Welcome to ${officialWorldName}!`, type: 'info' });
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // Both calls were attempted
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'event:set_title', { text: officialWorldName });
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'textUI:display_message', { text: `Welcome to ${officialWorldName}!`, type: 'info' });
 
 
       expect(mockLogger.error).toHaveBeenCalledTimes(1);

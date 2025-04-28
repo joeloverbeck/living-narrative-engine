@@ -17,10 +17,10 @@
     "actions": [
     ],
     "rules": [
-      "set_title.rule.json"
+      "set_title.rule.json", "display_message.rule.json"
     ],
     "events": [
-      "set_title.event.json"
+      "set_title.event.json", "display_message.event.json"
     ],
     "operations": [
     ]

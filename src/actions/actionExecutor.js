@@ -41,7 +41,7 @@ class ActionExecutor {
     /** @private @type {EventBus} */ // Still needed if other parts use it directly, otherwise maybe remove
     #eventBus;
     /** @private @type {ValidatedEventDispatcher} */ // Refactoring: Added
-    #validatedDispatcher;
+    #validatedEventDispatcher;
     /** @private @type {ILogger | undefined} */
     #logger;
     // --- Refactoring: Removed direct dependency ---
@@ -55,7 +55,7 @@ class ActionExecutor {
      * @param {TargetResolutionService} dependencies.targetResolutionService
      * @param {ActionValidationService} dependencies.actionValidationService
      * @param {PayloadValueResolverService} dependencies.payloadValueResolverService
-     * @param {ValidatedEventDispatcher} dependencies.validatedDispatcher // Refactoring: Added
+     * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher // Refactoring: Added
      * @param {EventBus} dependencies.eventBus
      * @param {ILogger} [dependencies.logger]
      */
@@ -64,7 +64,7 @@ class ActionExecutor {
                     targetResolutionService,
                     actionValidationService,
                     payloadValueResolverService,
-                    validatedDispatcher,
+                    validatedEventDispatcher,
                     eventBus,
                     logger
                 }) {
@@ -72,7 +72,7 @@ class ActionExecutor {
         if (!targetResolutionService) throw new Error("ActionExecutor: Missing required dependency 'targetResolutionService'.");
         if (!actionValidationService) throw new Error("ActionExecutor: Missing required dependency 'actionValidationService'.");
         if (!payloadValueResolverService) throw new Error("ActionExecutor: Missing required dependency 'payloadValueResolverService'.");
-        if (!validatedDispatcher) throw new Error("ActionExecutor: Missing required dependency 'validatedDispatcher'.");
+        if (!validatedEventDispatcher) throw new Error("ActionExecutor: Missing required dependency 'validatedEventDispatcher'.");
         if (!eventBus) throw new Error("ActionExecutor: Missing required dependency 'eventBus'.");
 
 
@@ -81,7 +81,7 @@ class ActionExecutor {
         this.#targetResolutionService = targetResolutionService;
         this.#actionValidationService = actionValidationService;
         this.#payloadValueResolverService = payloadValueResolverService;
-        this.#validatedDispatcher = validatedDispatcher;
+        this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#eventBus = eventBus;
         this.#logger = logger;
 
@@ -282,7 +282,7 @@ class ActionExecutor {
         try {
             this.#logger.debug(`Helper #prepareAndDispatchEvent: Attempting dispatch for event '${eventName}' via ValidatedEventDispatcher...`);
             // Call the new service - it handles validation internally
-            const dispatchOccurred = await this.#validatedDispatcher.dispatchValidated(eventName, eventPayload);
+            const dispatchOccurred = await this.#validatedEventDispatcher.dispatchValidated(eventName, eventPayload);
 
             if (dispatchOccurred) {
                 this.#logger.debug(`Helper #prepareAndDispatchEvent: Event '${eventName}' dispatch successful for action '${actionId}'.`);

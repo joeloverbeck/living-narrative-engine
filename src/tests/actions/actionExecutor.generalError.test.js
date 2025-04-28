@@ -51,7 +51,7 @@ const mockEventBus = {
   // IMPORTANT: Ensure dispatch returns a resolved promise
   dispatch: jest.fn().mockResolvedValue(undefined),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -101,7 +101,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
+    validatedEventDispatcher: mockvalidatedEventDispatcher // <<< --- ADD THIS LINE --- >>>
   });
 };
 
@@ -301,8 +301,8 @@ describe('ActionExecutor Isolated Tests', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
 
       // Check event dispatch payload is empty
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
         actionDef.dispatch_event.eventName,
         {} // Payload empty as the only field failed resolution
       );

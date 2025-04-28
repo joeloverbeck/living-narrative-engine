@@ -7,6 +7,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
+      "player.component.json", "position.component.json"
     ],
     "entities": [
     ],

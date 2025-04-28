@@ -2,7 +2,8 @@
 
 import {describe, it, expect, beforeEach, jest, afterEach} from '@jest/globals';
 import EntityManager from '../../entities/entityManager.js'; // Adjust path if necessary
-import Entity from '../../entities/entity.js'; // Adjust path if necessary
+import Entity from '../../entities/entity.js';
+import {POSITION_COMPONENT_ID} from "../../types/components.js"; // Adjust path if necessary
 
 // --- Mock Implementations ---
 // Helper functions to create fresh mocks for each test context
@@ -42,7 +43,6 @@ const createMockSpatialIndexManager = () => ({
 });
 
 // --- Constants ---
-const POSITION_COMPONENT_ID = 'component:position';
 const TEST_ENTITY_ID_1 = 'aux-entity-01';
 const TEST_ENTITY_ID_2 = 'aux-entity-02-pos'; // Entity with position
 const NON_EXISTENT_ENTITY_ID = 'ghost-entity-404';

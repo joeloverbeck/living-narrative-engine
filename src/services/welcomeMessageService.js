@@ -12,7 +12,7 @@
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 // --- Required for Dependencies' Dependencies (for type checking/clarity) ---
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */ // GameDataRepo needs this
-/** @typedef {import('../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */ // ValidatedDispatcher needs this
+/** @typedef {import('../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */ // validatedEventDispatcher needs this
 /** @typedef {import('../core/eventBus.js').EventPayload} EventPayload */ // Import EventPayload type for handler
 
 /**
@@ -27,7 +27,7 @@ class WelcomeMessageService {
   /** @private @type {GameDataRepository} */
   #gameDataRepository;
   /** @private @type {ValidatedEventDispatcher} */
-  #validatedDispatcher;
+  #validatedEventDispatcher;
   /** @private @type {ILogger} */
   #logger;
 
@@ -36,11 +36,11 @@ class WelcomeMessageService {
      * @param {object} dependencies - The service dependencies.
      * @param {EventBus} dependencies.eventBus - Used to subscribe to engine events ('event:engine_initialized').
      * @param {GameDataRepository} dependencies.gameDataRepository - Used to get the official world name from the loaded manifest.
-     * @param {ValidatedEventDispatcher} dependencies.validatedDispatcher - Used to dispatch UI events ('event:set_title', 'event:display_message').
+     * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Used to dispatch UI events ('event:set_title', 'textUI:display_message').
      * @param {ILogger} dependencies.logger - Used for logging service activity.
      * @throws {Error} If any required dependency is missing or invalid.
      */
-  constructor({ eventBus, gameDataRepository, validatedDispatcher, logger }) {
+  constructor({ eventBus, gameDataRepository, validatedEventDispatcher, logger }) {
     // AC4 (Ticket 6.3): Dependency Validation Checks
     if (!eventBus || typeof eventBus.subscribe !== 'function') {
       console.error("WelcomeMessageService Constructor Error: Missing or invalid dependency 'eventBus'.");
@@ -50,9 +50,9 @@ class WelcomeMessageService {
       console.error("WelcomeMessageService Constructor Error: Missing or invalid dependency 'gameDataRepository'.");
       throw new Error("WelcomeMessageService: Missing or invalid dependency 'gameDataRepository'.");
     }
-    if (!validatedDispatcher || typeof validatedDispatcher.dispatchValidated !== 'function') {
-      console.error("WelcomeMessageService Constructor Error: Missing or invalid dependency 'validatedDispatcher'.");
-      throw new Error("WelcomeMessageService: Missing or invalid dependency 'validatedDispatcher'.");
+    if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
+      console.error("WelcomeMessageService Constructor Error: Missing or invalid dependency 'validatedEventDispatcher'.");
+      throw new Error("WelcomeMessageService: Missing or invalid dependency 'validatedEventDispatcher'.");
     }
     if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
       console.error("WelcomeMessageService Constructor Error: Missing or invalid dependency 'logger'.");
@@ -62,7 +62,7 @@ class WelcomeMessageService {
     // AC5 (Ticket 6.3): Store Dependencies as Private Members
     this.#eventBus = eventBus;
     this.#gameDataRepository = gameDataRepository;
-    this.#validatedDispatcher = validatedDispatcher;
+    this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
 
     this.#logger.info('WelcomeMessageService: Instance created successfully.');
@@ -142,12 +142,12 @@ class WelcomeMessageService {
 
       // AC6: Dispatch event:set_title using determinedName
       this.#logger.debug(`WelcomeMessageService: Dispatching event:set_title with text: '${determinedName}'`);
-      await this.#validatedDispatcher.dispatchValidated('event:set_title', { text: determinedName });
+      await this.#validatedEventDispatcher.dispatchValidated('event:set_title', { text: determinedName });
 
-      // AC7: Dispatch event:display_message with appropriate text and fallback indication
+      // AC7: Dispatch textUI:display_message with appropriate text and fallback indication
       const welcomeText = `Welcome to ${determinedName}!${isFallback ? ' (Name from input)' : ''}`;
-      this.#logger.debug(`WelcomeMessageService: Dispatching event:display_message with text: '${welcomeText}'`);
-      await this.#validatedDispatcher.dispatchValidated('event:display_message', {
+      this.#logger.debug(`WelcomeMessageService: Dispatching textUI:display_message with text: '${welcomeText}'`);
+      await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
         text: welcomeText,
         type: 'info' // As specified in AC7 example
       });

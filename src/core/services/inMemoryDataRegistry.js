@@ -2,13 +2,16 @@
 
 /**
  * @fileoverview Provides an in-memory implementation for storing and retrieving
- * loaded game data (entities, items, actions, manifest, etc.), fulfilling the
+ * loaded game data (entities, items, actions, etc.), fulfilling the
  * IDataRegistry interface. It uses Maps for efficient lookups.
+ * Starting player and location are dynamically discovered from loaded entity definitions.
  */
 
 /**
  * Implements the IDataRegistry interface using in-memory Maps for data storage.
- * This class acts as a central registry for loaded game definitions and the world manifest.
+ * This class acts as a central registry for loaded game definitions.
+ * It dynamically discovers the starting player and location based on component data
+ * within the registered entity definitions.
  *
  * @implements {IDataRegistry}
  */
@@ -26,14 +29,9 @@ class InMemoryDataRegistry {
          */
         this.data = new Map();
 
-        /**
-         * Internal storage for the loaded world manifest object.
-         * @private
-         * @type {object | null}
-         */
-        this.manifest = null;
+        // Manifest property removed - no longer used.
 
-        // console.log("InMemoryDataRegistry: Instance created."); // Optional: Add logging
+        // console.log("InMemoryDataRegistry: Instance created.");
     }
 
     /**
@@ -55,20 +53,14 @@ class InMemoryDataRegistry {
             return; // Or throw new Error('Invalid id');
         }
         if (typeof data !== 'object' || data === null) {
-            // Allow storing potentially empty objects, but not null/undefined/primitives
             console.error(`InMemoryDataRegistry.store: Invalid data provided for type '${type}', id '${id}'. Must be an object.`);
             return; // Or throw new Error('Invalid data object');
         }
 
-        // Check if a map for the type exists in this.data. If not, create it.
         if (!this.data.has(type)) {
             this.data.set(type, new Map());
         }
-
-        // Get the map for the type.
         const typeMap = this.data.get(type);
-
-        // Store the data object using its id as the key.
         typeMap.set(id, data);
     }
 
@@ -96,114 +88,132 @@ class InMemoryDataRegistry {
         return typeMap ? Array.from(typeMap.values()) : [];
     }
 
-    // =======================================================
-    // --- ADDED METHOD for RULESYS-101 ---
-    // =======================================================
     /**
      * Retrieves all loaded system rule objects.
-     * Uses the specific key 'rules' as agreed upon.
-     *
      * @returns {object[]} An array containing all stored system rule objects.
-     * Returns an empty array `[]` if no system rules have been stored.
      */
     getAllSystemRules() {
-        return this.getAll('rules'); // AC3: Calls this.getAll with the specific key
+        return this.getAll('rules');
     }
 
     // =======================================================
-    // --- END ADDED METHOD ---
+    // --- Specific Definition Getter Methods ---
     // =======================================================
 
+    getEntityDefinition(id) { return this.get('entities', id); }
+    getItemDefinition(id) { return this.get('items', id); }
+    getLocationDefinition(id) { return this.get('locations', id); }
+    getConnectionDefinition(id) { return this.get('connections', id); }
+    getBlockerDefinition(id) { return this.get('blockers', id); }
+    getActionDefinition(id) { return this.get('actions', id); }
+    getEventDefinition(id) { return this.get('events', id); }
+    getComponentDefinition(id) { return this.get('components', id); }
+
+    getAllEntityDefinitions() { return this.getAll('entities'); }
+    getAllItemDefinitions() { return this.getAll('items'); }
+    getAllLocationDefinitions() { return this.getAll('locations'); }
+    getAllConnectionDefinitions() { return this.getAll('connections'); }
+    getAllBlockerDefinitions() { return this.getAll('blockers'); }
+    getAllActionDefinitions() { return this.getAll('actions'); }
+    getAllEventDefinitions() { return this.getAll('events'); }
+    getAllComponentDefinitions() { return this.getAll('components'); }
 
     // =======================================================
-    // --- Existing Definition Getter Methods ---
-    // =======================================================
-
-    /**
-     * Retrieves a specific entity definition by its ID.
-     * @param {string} entityId - The ID of the entity definition.
-     * @returns {object | undefined} The entity definition object or undefined.
-     */
-    getEntityDefinition(entityId) {
-        // Try common categories where entity-like definitions might be stored
-        return this.get('entities', entityId)
-            || this.get('locations', entityId)
-            || this.get('connections', entityId)
-            || this.get('items', entityId) // Add other relevant categories
-            || undefined; // Return undefined if not found in any category
-    }
-
-    /**
-     * Retrieves a specific action definition by its ID.
-     * @param {string} actionId - The ID of the action definition.
-     * @returns {object | undefined} The action definition object or undefined.
-     */
-    getActionDefinition(actionId) {
-        return this.get('actions', actionId);
-    }
-
-    /**
-     * Retrieves all loaded action definitions.
-     * @returns {object[]} An array of all action definition objects.
-     */
-    getAllActionDefinitions() {
-        return this.getAll('actions');
-    }
-
-    getEventDefinition(id) {
-        return this.get('events', id);
-    }
-
-    getAllEventDefinitions() {
-        return this.getAll('events');
-    }
-
-    /**
-     * Retrieves a specific location definition by its ID.
-     * Note: Assumes locations are stored under the 'locations' type OR 'entities' type.
-     * Adjust the types checked ('locations', 'entities') if you store them differently.
-     * @param {string} locationId - The ID of the location definition.
-     * @returns {object | undefined} The location definition object or undefined.
-     */
-    getLocationDefinition(locationId) {
-        // Check both 'locations' and 'entities' types, returning the first match found.
-        // Prioritize 'locations' if it exists as a distinct type.
-        return this.get('locations', locationId) ?? this.get('entities', locationId);
-    }
-
-    // =======================================================
-    // --- End Existing Definition Getter Methods ---
+    // --- End Specific Definition Getter Methods ---
     // =======================================================
 
 
     /**
-     * Removes all stored typed data objects and resets the manifest to null.
+     * Removes all stored typed data objects.
      */
     clear() {
         this.data.clear();
-        this.manifest = null;
-        // console.log("InMemoryDataRegistry: Cleared all data and manifest.");
+        // Manifest removed, no need to clear it.
+        // console.log("InMemoryDataRegistry: Cleared all data.");
     }
 
-    /**
-     * Retrieves the currently loaded world manifest object.
-     * @returns {object | null} The stored manifest object, or null.
-     */
-    getManifest() {
-        return this.manifest;
-    }
+    // getManifest method removed.
+    // setManifest method removed.
+
+
+    // ===============================================================================
+    // --- Dynamically Discovered Starting Player and Location ID Implementations ---
+    // ===============================================================================
 
     /**
-     * Stores the world manifest object. Overwrites any previously stored manifest.
-     * @param {object} data - The manifest object to store. Must be a non-null object.
+     * Dynamically discovers the starting player ID by finding the first entity
+     * definition in the 'entities' type map that contains a 'core:player' component.
+     * The iteration order depends on the insertion order into the underlying Map.
+     *
+     * @returns {string | null} The ID of the first entity definition found with a
+     * 'core:player' component, or null if no such entity is found.
      */
-    setManifest(data) {
-        if (typeof data !== 'object' || data === null) {
-            console.error('InMemoryDataRegistry.setManifest: Attempted to set invalid manifest data. Must be a non-null object.');
-            return;
+    getStartingPlayerId() {
+        const entityMap = this.data.get('entities');
+        if (!entityMap) {
+            console.warn("InMemoryDataRegistry.getStartingPlayerId: No 'entities' data type found in registry.");
+            return null; // No entities loaded at all
         }
-        this.manifest = data;
+
+        for (const [id, definition] of entityMap.entries()) {
+            // Check if definition is a valid object and has the components property,
+            // and if the 'core:player' component exists within components.
+            if (definition && typeof definition === 'object' && definition.components && typeof definition.components['core:player'] === 'object') {
+                // Found the first entity definition with the player component.
+                // console.log(`InMemoryDataRegistry.getStartingPlayerId: Found starting player ID: ${id}`);
+                return id;
+            }
+        }
+
+        // console.warn("InMemoryDataRegistry.getStartingPlayerId: Could not find any entity definition with a 'core:player' component.");
+        return null; // No entity with the player component found
     }
+
+    /**
+     * Dynamically discovers the starting location ID.
+     * It first finds the starting player ID using `getStartingPlayerId()`.
+     * Then, it retrieves the player's entity definition and extracts the 'locationId'
+     * property from the 'core:position' component data within that definition.
+     *
+     * @returns {string | null} The 'locationId' string found in the starting player's
+     * position component data, or null if the player ID, definition, position component,
+     * or locationId property cannot be found.
+     */
+    getStartingLocationId() {
+        const playerId = this.getStartingPlayerId();
+        if (!playerId) {
+            // Warning already logged by getStartingPlayerId if applicable
+            return null; // Cannot determine location without a player
+        }
+
+        // Retrieve the definition for the found player ID
+        const playerDef = this.getEntityDefinition(playerId);
+        if (!playerDef || typeof playerDef !== 'object') {
+            console.warn(`InMemoryDataRegistry.getStartingLocationId: Could not retrieve definition for starting player ID: ${playerId}`);
+            return null;
+        }
+
+        // Safely access the position component data
+        const positionComponent = playerDef.components?.['core:position'];
+        if (!positionComponent || typeof positionComponent !== 'object') {
+            console.warn(`InMemoryDataRegistry.getStartingLocationId: Starting player definition (${playerId}) does not have a 'core:position' component in its components.`);
+            return null;
+        }
+
+        // Safely access the locationId property within the position component
+        const locationId = positionComponent.locationId;
+        if (typeof locationId !== 'string' || locationId.trim() === '') {
+            console.warn(`InMemoryDataRegistry.getStartingLocationId: Position component in starting player definition (${playerId}) does not have a valid 'locationId' property.`);
+            return null;
+        }
+
+        // console.log(`InMemoryDataRegistry.getStartingLocationId: Found starting location ID from player ${playerId}: ${locationId}`);
+        return locationId;
+    }
+
+    // =======================================================
+    // --- END ADDED METHODS ---
+    // =======================================================
 }
 
 // Export the class as the default export of this module

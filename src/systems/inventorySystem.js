@@ -82,7 +82,7 @@ class InventorySystem {
     if (!this.#entityManager.hasComponent(pickerId, INVENTORY_COMPONENT_ID)) { //
       console.error(`InventorySystem (Pickup): Picker entity '${pickerId}' has no InventoryComponent data.`);
       // Optional: Dispatch UI message "You cannot carry items!"
-      // this.#eventBus.dispatch("event:display_message", { text: "You cannot carry items!", type: 'error' });
+      // this.#eventBus.dispatch("textUI:display_message", { text: "You cannot carry items!", type: 'error' });
       return;
     }
 
@@ -119,7 +119,7 @@ class InventorySystem {
       console.warn(`InventorySystem (Pickup): Picker '${pickerId}' already has non-stackable item '${itemId}'. Pickup skipped.`);
       // Optional: Dispatch UI message
       // const itemNameData = this.#entityManager.getComponentData(itemId, NAME_COMPONENT_TYPE_ID);
-      // this.#eventBus.dispatch("event:display_message", { text: `You already have a ${itemNameData?.value ?? itemId}.`, type: 'info' });
+      // this.#eventBus.dispatch("textUI:display_message", { text: `You already have a ${itemNameData?.value ?? itemId}.`, type: 'info' });
       return;
     }
 

@@ -19,6 +19,8 @@
 /**
  * A lightweight Dependency Injection (DI) container.
  * Manages instantiation and lifecycle of registered services/systems.
+ *
+ * @implements {import('../interfaces/container.js').IServiceResolver} // <<< ADDED (REFACTOR-SI-002 AC1)
  */
 class AppContainer {
     /** @type {Map<string, { factory: FactoryFunction, options: RegistrationOptions & { tags?: string[] } }>} */ // Added { tags?: string[] } to options type hint
@@ -89,15 +91,15 @@ class AppContainer {
         }
     }
 
-    // **** ADD THIS METHOD ****
     /**
      * Resolves all registered services that have the specified tag.
      * Assumes synchronous factory functions based on the current resolve() implementation.
+     * This method aligns with the IServiceResolver interface. // VERIFIED (REFACTOR-SI-002 AC2)
      * @template T
-     * @param {string} tag - The tag to search for.
-     * @returns {Array<T>} An array of resolved service instances associated with the tag.
+     * @param {string} tag - The tag to search for. Cannot be null or empty per IServiceResolver contract (though not enforced here).
+     * @returns {Array<T>} An array of resolved service instances associated with the tag. Returns an empty array `[]` if no matching services are found. // VERIFIED (REFACTOR-SI-002 AC2)
      */
-    resolveByTag(tag) {
+    resolveByTag(tag) { // VERIFIED Signature: resolveByTag(tag) (REFACTOR-SI-002 AC2)
         const resolvedInstances = [];
         console.debug(`AppContainer: Resolving instances by tag "${tag}"...`);
 
@@ -115,16 +117,17 @@ class AppContainer {
                     // Log error resolving a specific tagged instance, but allow loop to continue
                     // as SystemInitializer seems designed to try initializing all found systems.
                     console.error(`AppContainer: Error resolving tagged instance "${key}" for tag "${tag}":`, error);
+                    // Note: Per IServiceResolver, catastrophic errors *could* be thrown,
+                    // but errors resolving individual instances might just be logged.
+                    // This implementation chooses to log and continue.
                 }
             }
         }
 
         console.debug(`AppContainer: Found ${resolvedInstances.length} instances for tag "${tag}".`);
         // Return the array of instances that matched the tag
-        return resolvedInstances;
+        return resolvedInstances; // VERIFIED Return Type: Array (Synchronous) (REFACTOR-SI-002 AC2)
     }
-
-    // **** END OF ADDED METHOD ****
 
 
     /**

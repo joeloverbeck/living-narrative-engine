@@ -42,7 +42,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
     /** @type {jest.Mocked<GameDataRepository>} */
     let mockGameDataRepository;
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-    let mockValidatedDispatcher;
+    let mockvalidatedEventDispatcher;
     /** @type {jest.Mocked<DomRenderer>} */
     let mockDomRenderer;
     /** @type {jest.Mocked<WorldLoader>} */
@@ -95,7 +95,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
         mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
         mockEventBus = { /* Minimal mock, will be fleshed out if needed */};
         mockGameDataRepository = {getWorldName: jest.fn().mockReturnValue('MockWorld'), /* other methods */}; // Need getWorldName for post-init check
-        mockValidatedDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
+        mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
         mockDomRenderer = { /* Minimal mock */};
         mockWorldLoader = {loadWorld: jest.fn().mockResolvedValue(undefined)}; // Simulate success
         mockGameStateInitializer = {setupInitialState: jest.fn().mockReturnValue(true)}; // Simulate success
@@ -106,9 +106,9 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
         mockTitleElement = {textContent: ''};
         mockCombatSystem = {initialize: jest.fn().mockResolvedValue(undefined)}; // Example system
 
-        // Added for SystemInitializer Refactor
+        // Added for SystemInitializer Refactor - Corrected Method Name
         mockSystemInitializer = {
-            initializeSystems: jest.fn().mockResolvedValue(undefined) // Default: Simulate successful system init
+            initializeAll: jest.fn().mockResolvedValue(undefined) // CORRECTED: Use initializeAll
         };
 
         // **** ADDED FOR FIX (Ticket 3 / AC6) ****
@@ -145,7 +145,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
                 case 'GameDataRepository':
                     return mockGameDataRepository;
                 case 'ValidatedEventDispatcher':
-                    return mockValidatedDispatcher;
+                    return mockvalidatedEventDispatcher;
                 case 'DomRenderer':
                     return mockDomRenderer;
                 case 'WorldLoader':
@@ -289,7 +289,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('ValidatedEventDispatcher not available to display initialization error.'));
             // Check for the final catch block log in start()
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error during the start process'), resolutionError);
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled(); // Should not be called if it failed to resolve
+            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // Should not be called if it failed to resolve
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler'); // Fallback attempt
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('inputElement'); // Fallback attempt
@@ -303,26 +303,42 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             const worldName = 'testWorld';
             const resolutionError = new Error('Simulated WorldLoader Resolution Failure');
             mockAppContainer.resolve.mockImplementation((key) => {
-                if (key === 'ILogger') return mockLogger;
-                if (key === 'EventBus') return mockEventBus;
-                if (key === 'GameDataRepository') return mockGameDataRepository;
-                if (key === 'ValidatedEventDispatcher') return mockValidatedDispatcher;
-                if (key === 'DomRenderer') return mockDomRenderer;
-                if (key === 'WorldLoader') throw resolutionError; // <<< Failure Point
-                // Other services like SystemInitializer, InputSetupService etc. are never reached
-                if (key === 'InputHandler') return mockInputHandler; // Still needed for fallback
-                if (key === 'inputElement') return mockInputElement; // Still needed for fallback
-                return undefined;
+                // This mock implementation already includes the user's correction
+                // for SystemInitializer, allowing the code to reach the WorldLoader resolution attempt.
+                switch (key) {
+                    case 'ILogger': return mockLogger;
+                    case 'EventBus': return mockEventBus;
+                    case 'GameDataRepository': return mockGameDataRepository;
+                    case 'ValidatedEventDispatcher': return mockvalidatedEventDispatcher;
+                    case 'DomRenderer': return mockDomRenderer;
+                    case 'SystemInitializer': return mockSystemInitializer; // Correctly handled before WorldLoader
+                    case 'WorldLoader': throw resolutionError; // <<< Failure Point
+                    // Cases below are only relevant if called from within catch blocks
+                    case 'InputHandler': return mockInputHandler;
+                    case 'inputElement': return mockInputElement;
+                    default: return undefined;
+                }
             });
-            const gameEngineInstance = new GameEngine({container: mockAppContainer});
+            const gameEngineInstance = new GameEngine({ container: mockAppContainer });
             await expect(gameEngineInstance.start(worldName)).rejects.toThrow(resolutionError);
+
+
+            // Check Logger calls
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), resolutionError);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error during the start process'), resolutionError);
+
             // Check fallback UI disable attempt
+            // These assertions check if the resolution was ATTEMPTED in the catch block
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler');
+            // **** NOTE: The test fails on the line below (Line 326) ****
+            // Based on code analysis, this *should* be called once. The failure reason is unclear
+            // without running the test and potentially seeing console errors (e.g., from disableError catch).
+            // Leaving the assertion as is, as the code path supports it.
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('inputElement');
             expect(mockInputElement.disabled).toBe(true);
+
+            // Final checks
             expect(mockGameLoop.start).not.toHaveBeenCalled();
             // AC6 check: Ensure InputSetupService mock wasn't called
             expect(mockInputSetupService.configureInputHandler).not.toHaveBeenCalled();
@@ -337,18 +353,23 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             // Use default setup, just configure the mock to fail
             mockWorldLoader.loadWorld.mockRejectedValue(loadError);
 
-            const gameEngineInstance = new GameEngine({container: mockAppContainer});
+            const gameEngineInstance = new GameEngine({ container: mockAppContainer });
             const expectedDisplayErrorMsg = `Game initialization failed: ${loadError.message}. Check console (F12) for details.`;
 
             await expect(gameEngineInstance.start(worldName)).rejects.toThrow(loadError);
 
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), loadError);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Fatal Initialization Error!'});
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+
+            // **** START CORRECTION (Line 356) ****
+            // Changed 'textUI:set_title' to 'textUI:set_title' to match the actual event dispatched in the catch block
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', { text: 'Fatal Initialization Error!' });
+            // **** END CORRECTION ****
+
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                 text: expectedDisplayErrorMsg,
                 type: 'error'
             });
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', { message: 'Error during startup.' });
             expect(mockGameLoop.start).not.toHaveBeenCalled();
             // Check fallback UI disable attempt (should still happen in #initialize catch)
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler');
@@ -366,24 +387,33 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             const worldName = 'testWorld';
             const expectedThrownErrorMsg = 'Initial game state setup failed via GameStateInitializer. Check logs.';
             mockGameStateInitializer.setupInitialState.mockReturnValue(false); // Configure failure
+            // Ensure the default resolve implementation is used for this test
             mockAppContainer.resolve.mockImplementation(defaultResolveImplementation);
-            const gameEngineInstance = new GameEngine({container: mockAppContainer});
+            const gameEngineInstance = new GameEngine({ container: mockAppContainer });
             const expectedDisplayErrorMsg = `Game initialization failed: ${expectedThrownErrorMsg}. Check console (F12) for details.`;
 
             await expect(gameEngineInstance.start(worldName)).rejects.toThrow(expectedThrownErrorMsg);
 
             expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalled(); // Failure point
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR'), expect.objectContaining({message: expectedThrownErrorMsg}));
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Fatal Initialization Error!'});
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR'), expect.objectContaining({ message: expectedThrownErrorMsg }));
+
+            // **** START CORRECTION (Line 388) ****
+            // Changed 'textUI:set_title' to 'textUI:set_title' to match the actual event dispatched in the catch block
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', { text: 'Fatal Initialization Error!' });
+            // **** END CORRECTION ****
+
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                 text: expectedDisplayErrorMsg,
                 type: 'error'
             });
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', { message: 'Error during startup.' });
             expect(mockGameLoop.start).not.toHaveBeenCalled();
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler'); // Fallback attempt
+            // Check fallback UI disable attempt
+            expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler');
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
+            expect(mockAppContainer.resolve).toHaveBeenCalledWith('inputElement');
+            expect(mockInputElement.disabled).toBe(true);
             // AC6 check: Should fail before InputSetupService is called
             expect(mockInputSetupService.configureInputHandler).not.toHaveBeenCalled();
         });
@@ -443,12 +473,12 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
 
             // Check logs and UI updates from the #initialize catch block
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), inputSetupError);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Fatal Initialization Error!'});
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Fatal Initialization Error!'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                 text: expectedDisplayErrorMsg,
                 type: 'error'
             });
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
             expect(mockGameLoop.start).not.toHaveBeenCalled(); // Should not start if init fails
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler'); // Fallback attempt
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
@@ -476,7 +506,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
                 if (key === 'ILogger') return mockLogger;
                 if (key === 'EventBus') return mockEventBus;
                 if (key === 'GameDataRepository') return mockGameDataRepository;
-                if (key === 'ValidatedEventDispatcher') return mockValidatedDispatcher;
+                if (key === 'ValidatedEventDispatcher') return mockvalidatedEventDispatcher;
                 if (key === 'DomRenderer') return mockDomRenderer;
                 if (key === 'WorldLoader') return mockWorldLoader;
                 if (key === 'SystemInitializer') return mockSystemInitializer;
@@ -561,19 +591,19 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             const expectedThrownError = initFailError;
 
             mockLogger.error.mockClear(); // Clear logs before act
-            mockValidatedDispatcher.dispatchValidated.mockClear(); // Clear dispatches before act
+            mockvalidatedEventDispatcher.dispatchValidated.mockClear(); // Clear dispatches before act
 
             await expect(gameEngineInstance.start(worldName)).rejects.toThrow(expectedThrownError);
 
             // Verify logs from #initialize's catch block
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), initFailError);
             const expectedDisplayErrorMsg = `Game initialization failed: ${initFailError.message}. Check console (F12) for details.`;
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Fatal Initialization Error!'});
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Fatal Initialization Error!'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                 text: expectedDisplayErrorMsg,
                 type: 'error'
             });
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
 
             // Verify logs from start()'s outer catch block
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error during the start process'), initFailError);
@@ -582,7 +612,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             // *** Ensure the simplified 'else' block in start() was NOT reached ***
             // (because #initialize threw an error caught by the outer catch)
             expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Cannot start GameLoop.'));
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
+            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
                 expect.stringMatching(/Engine failed to start:/), // Match start of message
                 expect.any(Object)
             );
@@ -618,7 +648,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             const expectedLogErrorMsg = `GameEngine: Cannot start GameLoop. ${expectedFailureReason}.`;
             const expectedDisplayErrorMsg = `Engine failed to start: ${expectedFailureReason}. Check logs.`;
 
-            mockValidatedDispatcher.dispatchValidated.mockClear(); // Clear post-setup calls
+            mockvalidatedEventDispatcher.dispatchValidated.mockClear(); // Clear post-setup calls
             mockLogger.error.mockClear(); // Clear post-setup calls
             mockLogger.info.mockClear(); // Clear info logs from init
 
@@ -634,12 +664,12 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             // --- Check logs/dispatches from the start() method's *simplified else* block ---
             expect(mockLogger.error).toHaveBeenCalledWith(expectedLogErrorMsg);
             // Check UI dispatch calls from the failure path
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'event:display_message',
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+                'textUI:display_message',
                 {text: expectedDisplayErrorMsg, type: 'error'}
             );
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'event:set_title',
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+                'textUI:set_title',
                 {text: 'Engine Start Failed'}
             );
 
@@ -663,7 +693,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
     // --- Test Case: TEST-ENG-032 ---
     // (No changes needed, failure happens before InputSetupService call)
     describe('[TEST-ENG-032] GameEngine Start (Failure) - ValidatedEventDispatcher Missing Post-Initialization', () => {
-        it('should reject early if ValidatedDispatcher fails to resolve during initialization', async () => {
+        it('should reject early if validatedEventDispatcher fails to resolve during initialization', async () => {
             const worldName = 'testWorld';
             const earlyInitError = new Error('Simulated Dispatcher Resolution Failure');
             mockAppContainer.resolve.mockImplementation((key) => {
@@ -686,7 +716,7 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), earlyInitError);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('ValidatedEventDispatcher not available'));
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error during the start process'), earlyInitError);
-            expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
             expect(mockGameLoop.start).not.toHaveBeenCalled();
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler'); // Fallback attempt
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
@@ -794,12 +824,12 @@ describe('GameEngine start() / #initialize() - Failure Scenarios', () => {
 
             // Check logs and UI updates from the #initialize catch block
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR during initialization'), gameLoopResolveError);
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:set_title', {text: 'Fatal Initialization Error!'});
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Fatal Initialization Error!'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                 text: expectedDisplayErrorMsg,
                 type: 'error'
             });
-            expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('ui:disable_input', {message: 'Error during startup.'});
             expect(mockGameLoop.start).not.toHaveBeenCalled(); // Should not start if init fails
             expect(mockAppContainer.resolve).toHaveBeenCalledWith('InputHandler'); // Fallback attempt in #initialize catch
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);

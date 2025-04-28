@@ -150,7 +150,7 @@ function findPotentialConnectionMatches(context, connectionTargetName, logger) {
 /**
  * **CONN-5.1.3 Implementation:** Resolves a target Connection entity based on user input.
  * Handles ambiguity and dispatches messages using the validated dispatcher from context.
- * @param {ActionContext & { validatedDispatcher: ValidatedEventDispatcher, logger: ILogger }} context - The action context, **MUST** include `validatedDispatcher` and `logger`. Also needs `eventBus` (implicitly used by dispatcher), `currentLocation`, `entityManager`.
+ * @param {ActionContext & { validatedEventDispatcher: ValidatedEventDispatcher, logger: ILogger }} context - The action context, **MUST** include `validatedEventDispatcher` and `logger`. Also needs `eventBus` (implicitly used by dispatcher), `currentLocation`, `entityManager`.
  * @param {string} connectionTargetName - The raw target string from the user.
  * @param {string} [actionVerb='go'] - The verb used in ambiguity messages.
  * // Update the type definition for findMatchesFn to include the logger
@@ -164,12 +164,12 @@ export async function resolveTargetConnection(
   findMatchesFn = findPotentialConnectionMatches
 ) {
   // --- Get required dependencies from context ---
-  const {validatedDispatcher, logger} = context; // Expect these to be passed in context
+  const {validatedEventDispatcher, logger} = context; // Expect these to be passed in context
 
   // --- Step 1: Validate Inputs & Dependencies ---
-  if (!context || !validatedDispatcher || typeof validatedDispatcher.dispatchValidated !== 'function' || !logger || typeof logger.warn !== 'function' || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+  if (!context || !validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function' || !logger || typeof logger.warn !== 'function' || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
     // Use console.error as logger might be missing
-    console.error('resolveTargetConnection (in ConnectionResolver): Invalid context or missing validatedDispatcher/logger functions provided.');
+    console.error('resolveTargetConnection (in ConnectionResolver): Invalid context or missing validatedEventDispatcher/logger functions provided.');
     return null;
   }
   const trimmedTargetName = typeof connectionTargetName === 'string' ? connectionTargetName.trim() : '';
@@ -207,7 +207,7 @@ export async function resolveTargetConnection(
 
     // --- Refactored Dispatch Logic ---
     // Line: 142 (approx)
-    await validatedDispatcher.dispatchValidated('event:display_message', {text: ambiguousMsg, type: 'warning'});
+    await validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: ambiguousMsg, type: 'warning'});
     // --- End Refactored Dispatch Logic ---
     return null;
   }
@@ -233,7 +233,7 @@ export async function resolveTargetConnection(
 
     // --- Refactored Dispatch Logic ---
     // Line: 165 (approx)
-    await validatedDispatcher.dispatchValidated('event:display_message', {text: ambiguousMsg, type: 'warning'});
+    await validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: ambiguousMsg, type: 'warning'});
     // --- End Refactored Dispatch Logic ---
     return null;
   }
@@ -244,7 +244,7 @@ export async function resolveTargetConnection(
 
   // --- Refactored Dispatch Logic ---
   // Line: 172 (approx)
-  await validatedDispatcher.dispatchValidated('event:display_message', {text: notFoundMsg, type: 'info'});
+  await validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: notFoundMsg, type: 'info'});
   // --- End Refactored Dispatch Logic ---
   return null;
 }

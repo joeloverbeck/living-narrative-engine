@@ -154,28 +154,36 @@ class SystemLogicInterpreter {
      * @param {GameEvent} event - The event object dispatched by the EventBus.
      * @private
      */
-    #handleEvent(event) {
+    #handleEvent(event) { // <<< MODIFY THIS METHOD
         if (!event || typeof event.type !== 'string') {
             this.#logger.warn('Received invalid event object. Ignoring.', {event});
+            // --- Add temporary console log ---
+            console.log('[SystemLogicInterpreter DEBUG] Received invalid event object. Ignoring.');
             return;
         }
 
-        this.#logger.debug(`Received event: ${event.type}`, {payload: event.payload});
+        const eventType = event.type; // Store for clarity and use eventType below
 
-        const matchingRules = this.#ruleCache.get(event.type) || [];
+        const matchingRules = this.#ruleCache.get(eventType);
 
-        if (matchingRules.length === 0) {
-            this.#logger.debug(`No system rules found for event type: ${event.type}`);
-            return;
+        this.#logger.debug(`Received event: ${eventType}`, {payload: event.payload}); // Existing log
+
+        // Use the retrieved value, ensuring it's an array for the length check
+        const rulesToProcess = matchingRules || [];
+
+        if (rulesToProcess.length === 0) {
+            this.#logger.debug(`No system rules found for event type: ${eventType}`);
+            return; // Return early
         }
 
-        this.#logger.debug(`Found ${matchingRules.length} rule(s) matching event type: ${event.type}. Processing...`);
+        // If we reach here, the condition was false
+        this.#logger.debug(`Found ${rulesToProcess.length} rule(s) matching event type: ${eventType}. Processing...`); // Existing log
 
-        matchingRules.forEach(rule => {
+        rulesToProcess.forEach(rule => {
             try {
                 this.#processRule(rule, event);
             } catch (error) {
-                this.#logger.error(`[CRITICAL] Uncaught error during #processRule execution for rule '${rule.rule_id || 'NO_ID'}', event '${event.type}':`, error);
+                this.#logger.error(`[CRITICAL] Uncaught error during #processRule execution for rule '${rule.rule_id || 'NO_ID'}', event '${eventType}':`, error);
             }
         });
     }
@@ -232,7 +240,6 @@ class SystemLogicInterpreter {
      * @param {SystemRule} rule - The system rule definition.
      * @param {GameEvent} event - The triggering event.
      * @private
-     * @fulfils AC2, AC3, AC5 (implicitly by preserving behavior)
      */
     #processRule(rule, event) {
         const ruleId = rule.rule_id || 'NO_ID';
@@ -256,31 +263,71 @@ class SystemLogicInterpreter {
             return; // Stop processing this rule if context fails
         }
 
-        // 2. Evaluate Condition (using the new private method)
-        // AC2: Call the extracted method
+        // 2. Evaluate Condition
         const evaluationResult = this.#evaluateRuleCondition(rule, evaluationContext);
 
         // 3. Execute Actions based on Condition Result
-        // AC2: Use the return value from #evaluateRuleCondition
         if (evaluationResult.conditionPassed) {
             this.#logger.debug(`[Rule ${ruleId}] Condition passed or absent. Checking for actions.`);
-            if (Array.isArray(rule.actions) && rule.actions.length > 0) {
-                this.#logger.debug(`[Rule ${ruleId}] Executing ${rule.actions.length} actions.`);
-                // Pass the assembled context to the action executor
-                // AC3 / AC5: Behavior unchanged - actions executed with context
-                this._executeActions(rule.actions, evaluationContext, `Rule '${ruleId}'`);
-            } else {
-                this.#logger.debug(`[Rule ${ruleId}] No actions defined or action list is empty.`);
+
+            // +++ DEBUG: Inspect rule.actions before calling _executeActions +++
+            let actionsToExecute = null;
+            let actionsAreValid = false;
+            try {
+                console.log(`!!!!!! DEBUG [${ruleId}]: Checking rule.actions... Type: ${typeof rule.actions}, IsArray: ${Array.isArray(rule.actions)}`);
+                this.#logger.debug(`---> [${ruleId}] Pre-check rule.actions type: ${typeof rule.actions}, isArray: ${Array.isArray(rule.actions)}`);
+
+                if (Array.isArray(rule.actions) && rule.actions.length > 0) {
+                    actionsToExecute = rule.actions; // Assign if it's a valid array
+                    actionsAreValid = true;
+                    this.#logger.debug(`---> [${ruleId}] rule.actions appears to be a valid, non-empty array. Length: ${actionsToExecute.length}`);
+                    // Attempt to log content safely
+                    try {
+                        console.log(`!!!!!! DEBUG [${ruleId}]: rule.actions content:`, JSON.stringify(actionsToExecute));
+                        this.#logger.debug(`---> [${ruleId}] rule.actions content: ${JSON.stringify(actionsToExecute)}`);
+                        // Check the first element explicitly
+                        if(actionsToExecute[0]){
+                            console.log(`!!!!!! DEBUG [${ruleId}]: First action type: ${actionsToExecute[0].type}`);
+                            this.#logger.debug(`---> [${ruleId}] First action type: ${actionsToExecute[0].type}`);
+                        } else {
+                            console.warn(`!!!!!! DEBUG [${ruleId}]: First action element is null/undefined!`);
+                            this.#logger.warn(`---> [${ruleId}] First action element is null/undefined!`);
+                        }
+                    } catch (stringifyError) {
+                        console.error(`!!!!!! DEBUG [${ruleId}]: FAILED to stringify rule.actions!`, stringifyError);
+                        this.#logger.error(`---> [${ruleId}] FAILED to stringify rule.actions!`, stringifyError);
+                        // Even if stringify fails, proceed if it's an array
+                    }
+                } else {
+                    this.#logger.debug(`---> [${ruleId}] rule.actions is not a non-empty array. Type: ${typeof rule.actions}, Length: ${rule.actions ? rule.actions.length : 'N/A'}`);
+                }
+            } catch (checkError) {
+                console.error(`!!!!!! DEBUG [${ruleId}]: CRITICAL Error during rule.actions check!`, checkError);
+                this.#logger.error(`---> [${ruleId}] CRITICAL Error during rule.actions check!`, checkError);
+                // Do not proceed if the check itself fails critically
+                actionsAreValid = false;
             }
+            // +++ END DEBUG +++
+
+
+            // --- Original Logic (modified to use checked variables) ---
+            // if (Array.isArray(rule.actions) && rule.actions.length > 0) { // Original check
+            if (actionsAreValid && actionsToExecute) { // Use the result of our checks
+                this.#logger.debug(`[Rule ${ruleId}] Executing ${actionsToExecute.length} actions.`); // Use checked length
+                // Pass the potentially validated actions array
+                this._executeActions(actionsToExecute, evaluationContext, `Rule '${ruleId}'`); // Use checked array
+            } else {
+                this.#logger.debug(`[Rule ${ruleId}] No valid actions defined or action list is empty.`); // Updated log
+            }
+            // --- End Original Logic ---
+
         } else {
-            // AC4: Logging for skipping actions remains in #processRule, using the evaluation result
             const reason = evaluationResult.evaluationErrorOccurred
                 ? 'due to error during condition evaluation'
                 : 'due to condition evaluating to false';
             this.#logger.info(
                 `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
             );
-            // AC3: Behavior unchanged - actions skipped if condition fails or errors
         }
     }
 
@@ -302,36 +349,62 @@ class SystemLogicInterpreter {
         }
 
         this.#logger.info(`---> Entering action sequence for: ${scopeDescription}. ${actions.length} actions total.`);
+        // +++ DEBUG: Log the actions array itself +++
+        try {
+            this.#logger.debug(`---> Actions content for ${scopeDescription}: ${JSON.stringify(actions)}`);
+        } catch (e) {
+            this.#logger.warn(`---> Could not stringify actions array for ${scopeDescription}`);
+        }
+        // +++ END DEBUG +++
+
 
         for (let i = 0; i < actions.length; i++) {
+            // +++ DEBUG: Add very early log inside loop +++
+            this.#logger.debug(`---> [${scopeDescription}] Loop iteration START: i = ${i}`);
+            // +++ END DEBUG +++
+
             const operation = actions[i];
             const operationIndex = i + 1; // 1-based index for logging
+
+            // +++ DEBUG: Check if operation is valid early +++
+            if (!operation || typeof operation !== 'object') {
+                this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL: Operation at index ${i} is not a valid object. Halting sequence. Operation:`, operation);
+                console.error(`!!!!!!!!! CRITICAL: Operation at index ${i} is not a valid object !!!!!!!!!!`, operation); // Direct console fallback
+                break;
+            }
+            // +++ END DEBUG +++
+
             const operationDesc = operation.comment ? `(Comment: ${operation.comment})` : '';
             const opTypeString = operation?.type ?? 'MISSING_TYPE'; // Handle potentially missing type
 
-            // [Review Ticket 11] Kept as-is.
             this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] Processing Operation: ${opTypeString} ${operationDesc}`);
 
             try {
                 if (!this.#operationInterpreter) {
-                    // This is a critical setup error, likely warrants halting.
                     this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL: OperationInterpreter not available! Halting sequence for this rule.`);
+                    console.error(`!!!!!!!!! CRITICAL: OperationInterpreter not available !!!!!!!!!!`); // Direct console fallback
                     break; // Halt the sequence
                 }
 
                 // Handle IF internally first because it controls flow within this interpreter
                 if (opTypeString === 'IF') {
-                    // The #handleIfOperation now re-throws errors, so they are caught here.
                     this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
                 } else {
-                    // For all other operation types, delegate to OperationInterpreter
-                    // Assume OperationInterpreter.execute might throw errors (though its current design logs them internally)
-                    // If OperationInterpreter.execute *is* guaranteed not to throw, this outer catch is less critical for it.
+                    // +++ DEBUG: Log before calling interpreter execute +++
+                    this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}] Calling OperationInterpreter.execute for type: ${opTypeString}`);
+                    // +++ END DEBUG +++
                     this.#operationInterpreter.execute(operation, executionContext);
+                    // +++ DEBUG: Log after calling interpreter execute (if no error) +++
+                    this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}] OperationInterpreter.execute call completed (no error thrown) for type: ${opTypeString}`);
+                    // +++ END DEBUG +++
                 }
 
             } catch (invocationError) {
                 // --- TICKET-12.2: Catch Block Enhancement ---
+                // +++ DEBUG: Use console.error as fallback +++
+                console.error(`!!!!!!!!! ERROR CAUGHT IN _executeActions CATCH BLOCK (Rule: ${scopeDescription}, Action Index: ${i}) !!!!!!!!!!`, invocationError);
+                // +++ END DEBUG +++
+
                 // Log the critical error with context and the error object
                 this.#logger.error(
                     `---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] CRITICAL error during execution of Operation ${opTypeString}. Halting sequence for this rule. Error:`,

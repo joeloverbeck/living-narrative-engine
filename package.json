@@ -4,6 +4,7 @@
     "@eslint/compat": "^1.2.8",
     "@jest/globals": "^29.7.0",
     "ajv": "^8.17.1",
+    "jsdom": "^26.1.0",
     "json-logic-js": "^2.0.5",
     "lint": "^0.8.19",
     "lodash": "^4.17.21",

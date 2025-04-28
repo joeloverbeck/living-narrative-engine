@@ -1,3 +1,5 @@
+// src/core/config/registrations/interpreterRegistrations.js
+
 /**
  * @fileoverview Registers the logic interpretation layer services:
  * OperationRegistry, OperationInterpreter, SystemLogicInterpreter, and their handlers.
@@ -5,11 +7,12 @@
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../appContainer.js').default} AppContainer */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 
 // --- DI & Helper Imports ---
-import {tokens} from '../../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {tokens} from '../../tokens.js'; // Correct path to tokens
+import {Registrar} from '../../dependencyInjection/registrarHelpers.js'; // Correct path if needed
+import {INITIALIZABLE} from '../../tags.js'; // Correct path to tags
 
 // --- Core Service Imports ---
 import OperationRegistry from '../../../logic/operationRegistry.js';
@@ -20,13 +23,11 @@ import SystemLogicInterpreter from '../../../logic/systemLogicInterpreter.js';
 import DispatchEventHandler from '../../../logic/operationHandlers/dispatchEventHandler.js';
 import LogHandler from '../../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../../logic/operationHandlers/modifyComponentHandler.js';
+import AddComponentHandler from '../../../logic/operationHandlers/addComponentHandler.js'; // <<< ADDED IMPORT
 import QueryComponentHandler from '../../../logic/operationHandlers/queryComponentHandler.js';
 import ModifyDomElementHandler from '../../../logic/operationHandlers/modifyDomElementHandler.js';
-
-// --- ADDED: Import or define INITIALIZABLE ---
-// Choose one option:
-// import { INITIALIZABLE } from './coreSystemsRegistrations.js'; // Assuming it's exported there
-const INITIALIZABLE = ['initializableSystem']; // Or define locally if preferred
+import RemoveComponentHandler from "../../../logic/operationHandlers/removeComponentHandler.js";
+import AppendUiMessageHandler from '../../../logic/operationHandlers/appendUiMessageHandler.js';
 
 
 /**
@@ -44,38 +45,52 @@ export function registerInterpreters(container) {
 
     // --- 1. Register Operation Handlers ---
     registrar.singletonFactory(tokens.DispatchEventHandler, c => new DispatchEventHandler({
-        dispatcher: c.resolve(tokens.ValidatedEventDispatcher)
+        dispatcher: c.resolve(tokens.ValidatedEventDispatcher) // Assuming ValidatedEventDispatcher is preferred and registered
+        // dispatcher: c.resolve(tokens.EventBus) // Fallback if needed
     }));
     logger.debug('Interpreter Registrations: Registered DispatchEventHandler.');
 
-    // LogHandler expects { logger }
     registrar.singletonFactory(tokens.LogHandler, c => new LogHandler({
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered LogHandler.');
 
-    // ModifyComponentHandler expects { entityManager, logger }
     registrar.singletonFactory(tokens.ModifyComponentHandler, c => new ModifyComponentHandler({
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered ModifyComponentHandler.');
 
-    // QueryComponentHandler expects { entityManager, logger }
+    // +++ Register New AddComponentHandler +++
+    registrar.singletonFactory(tokens.AddComponentHandler, c => new AddComponentHandler({
+        entityManager: c.resolve(tokens.EntityManager),
+        logger: c.resolve(tokens.ILogger)
+    }));
+    logger.debug('Interpreter Registrations: Registered AddComponentHandler.'); // <<< ADDED LOG
+
+    // Register RemoveComponentHandler
+    registrar.singletonFactory(tokens.RemoveComponentHandler, c => new RemoveComponentHandler({
+        entityManager: c.resolve(tokens.EntityManager),
+        logger: c.resolve(tokens.ILogger)
+    }));
+    logger.debug('Interpreter Registrations: Registered RemoveComponentHandler.');
+
     registrar.singletonFactory(tokens.QueryComponentHandler, c => new QueryComponentHandler({
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered QueryComponentHandler.');
 
-    // ======================================================
-    // <<< CORRECTION HERE >>>
-    // Change registrar.single to registrar.singletonFactory to match constructor signature { logger }
     registrar.singletonFactory(tokens.ModifyDomElementHandler, c => new ModifyDomElementHandler({
         logger: c.resolve(tokens.ILogger)
     }));
-    // ======================================================
     logger.debug('Interpreter Registrations: Registered ModifyDomElementHandler.');
+
+    registrar.singletonFactory(tokens.AppendUiMessageHandler, c => new AppendUiMessageHandler({
+        logger: c.resolve(tokens.ILogger)
+        // domRenderer: c.resolve(tokens.DomRenderer) // Optional: Uncomment if injecting DomRenderer
+    }));
+    logger.debug('Interpreter Registrations: Registered AppendUiMessageHandler.');
 
 
     // --- 2. Register Operation Registry ---
@@ -83,16 +98,35 @@ export function registerInterpreters(container) {
         const internalLogger = c.resolve(tokens.ILogger);
         const registry = new OperationRegistry({logger: internalLogger});
         internalLogger.debug('Interpreter Registrations: OperationRegistry factory creating instance...');
-        registry.register('DISPATCH_EVENT', c.resolve(tokens.DispatchEventHandler).execute.bind(c.resolve(tokens.DispatchEventHandler)));
+
+        // Bind the execute method of the resolved handler instance
+        const bindExecute = (token) => c.resolve(token).execute.bind(c.resolve(token));
+
+        registry.register('DISPATCH_EVENT', bindExecute(tokens.DispatchEventHandler));
         internalLogger.debug('Interpreter Registrations: Registered DISPATCH_EVENT handler within OperationRegistry.');
-        registry.register('LOG', c.resolve(tokens.LogHandler).execute.bind(c.resolve(tokens.LogHandler)));
+
+        registry.register('LOG', bindExecute(tokens.LogHandler));
         internalLogger.debug('Interpreter Registrations: Registered LOG handler within OperationRegistry.');
-        registry.register('MODIFY_COMPONENT', c.resolve(tokens.ModifyComponentHandler).execute.bind(c.resolve(tokens.ModifyComponentHandler)));
+
+        registry.register('MODIFY_COMPONENT', bindExecute(tokens.ModifyComponentHandler));
         internalLogger.debug('Interpreter Registrations: Registered MODIFY_COMPONENT handler within OperationRegistry.');
-        registry.register('QUERY_COMPONENT', c.resolve(tokens.QueryComponentHandler).execute.bind(c.resolve(tokens.QueryComponentHandler)));
+
+        // +++ Register ADD_COMPONENT in the registry +++
+        registry.register('ADD_COMPONENT', bindExecute(tokens.AddComponentHandler));
+        internalLogger.debug('Interpreter Registrations: Registered ADD_COMPONENT handler within OperationRegistry.'); // <<< ADDED LOG
+
+        registry.register('REMOVE_COMPONENT', bindExecute(tokens.RemoveComponentHandler));
+        internalLogger.debug('Interpreter Registrations: Registered REMOVE_COMPONENT handler within OperationRegistry.');
+
+        registry.register('QUERY_COMPONENT', bindExecute(tokens.QueryComponentHandler));
         internalLogger.debug('Interpreter Registrations: Registered QUERY_COMPONENT handler within OperationRegistry.');
-        registry.register('MODIFY_DOM_ELEMENT', c.resolve(tokens.ModifyDomElementHandler).execute.bind(c.resolve(tokens.ModifyDomElementHandler))); // This resolve will now use the corrected factory
+
+        registry.register('MODIFY_DOM_ELEMENT', bindExecute(tokens.ModifyDomElementHandler));
         internalLogger.debug('Interpreter Registrations: Registered MODIFY_DOM_ELEMENT handler within OperationRegistry.');
+
+        registry.register('APPEND_UI_MESSAGE', bindExecute(tokens.AppendUiMessageHandler));
+        internalLogger.debug('Interpreter Registrations: Registered APPEND_UI_MESSAGE handler within OperationRegistry.');
+
         internalLogger.debug('Interpreter Registrations: OperationRegistry instance populated.');
         return registry;
     });
@@ -100,7 +134,6 @@ export function registerInterpreters(container) {
 
 
     // --- 3. Register Operation Interpreter ---
-    // OperationInterpreter expects { logger, operationRegistry }
     registrar.singletonFactory(tokens.OperationInterpreter, c => new OperationInterpreter({
         logger: c.resolve(tokens.ILogger),
         operationRegistry: c.resolve(tokens.OperationRegistry)
@@ -109,7 +142,6 @@ export function registerInterpreters(container) {
 
 
     // --- 4. Register System Logic Interpreter ---
-    // SystemLogicInterpreter expects { logger, eventBus, dataRegistry, jsonLogicEvaluationService, entityManager, operationInterpreter }
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.SystemLogicInterpreter, (c) => {
         const systemLogger = c.resolve(tokens.ILogger);
         systemLogger.debug('Interpreter Registrations: SystemLogicInterpreter factory creating instance...');

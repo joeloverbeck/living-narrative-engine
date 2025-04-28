@@ -124,7 +124,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
     // 1. Instantiate OperationInterpreter (needs logger AND registry) <-- MODIFY THIS STEP
     operationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. Spy specifically on the `execute` method (remains the same)

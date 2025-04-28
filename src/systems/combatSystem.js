@@ -69,7 +69,7 @@ class CombatSystem {
     if (!targetHealthComp) {
       console.warn(`CombatSystem: Target entity ${targetDisplayName} (ID: ${targetId}) does not have a HealthComponent. Cannot request damage.`);
       // Send feedback that the target is invalid for damage
-      this.#eventBus.dispatch('event:display_message', {
+      this.#eventBus.dispatch('textUI:display_message', {
         text: `You cannot damage the ${targetDisplayName}.`,
         type: 'warning'
       });
@@ -108,7 +108,7 @@ class CombatSystem {
     const attackerDisplayName = attackerNameComp ? attackerNameComp.value : 'Attacker';
 
     const hitMessage = `${attackerDisplayName} hit${attackerDisplayName === 'You' ? '' : 's'} the ${targetDisplayName} for ${actualDamage} damage!`;
-    this.#eventBus.dispatch('event:display_message', {text: hitMessage, type: 'combat_hit'});
+    this.#eventBus.dispatch('textUI:display_message', {text: hitMessage, type: 'combat_hit'});
 
     // --- 7. Death Check and Death Event/Message REMOVED ---
     // This logic is now the responsibility of the HealthSystem,

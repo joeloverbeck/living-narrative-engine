@@ -127,7 +127,7 @@ class WorldPresenceSystem {
     const itemEntity = this.#entityManager.getEntityInstance(itemId);
     if (!itemEntity) {
       console.error(`WorldPresenceSystem: Cannot find item entity instance with ID: ${itemId} required for display name. Cannot process drop fully.`);
-      this.#eventBus.dispatch('event:display_message', {
+      this.#eventBus.dispatch('textUI:display_message', {
         text: 'Internal error: Cannot identify dropped item.',
         type: 'error'
       });
@@ -160,7 +160,7 @@ class WorldPresenceSystem {
       if (!added) {
         // Handle case where addComponent might return false without throwing
         console.error(`WorldPresenceSystem: Failed to add/update '${POSITION_COMPONENT_ID}' via EntityManager for item drop [${itemId}]. addComponent returned false.`);
-        this.#eventBus.dispatch('event:display_message', {text: 'Internal error placing item.', type: 'error'});
+        this.#eventBus.dispatch('textUI:display_message', {text: 'Internal error placing item.', type: 'error'});
         return; // Stop processing
       }
       console.log(`WorldPresenceSystem: Set '${POSITION_COMPONENT_ID}' component data via EntityManager for dropped item ${itemId} to location ${newLocationId}.`);
@@ -169,7 +169,7 @@ class WorldPresenceSystem {
       // Dispatch success messages and events
       const itemName = getDisplayName(itemEntity); // Get item name for message
       const successMessage = `You drop the ${itemName}.`;
-      this.#eventBus.dispatch('event:display_message', {text: successMessage, type: 'info'});
+      this.#eventBus.dispatch('textUI:display_message', {text: successMessage, type: 'info'});
 
       this.#eventBus.dispatch('event:item_dropped', {
         playerId: playerId,
@@ -182,7 +182,7 @@ class WorldPresenceSystem {
     } catch (error) {
       // Catch errors from addComponent (validation, entity not found, etc.)
       console.error(`WorldPresenceSystem: Error adding/updating '${POSITION_COMPONENT_ID}' via EntityManager for item drop [${itemId}]:`, error);
-      this.#eventBus.dispatch('event:display_message', {
+      this.#eventBus.dispatch('textUI:display_message', {
         text: `Error dropping item: ${error.message || 'Internal error.'}`, // Provide a fallback message
         type: 'error'
       });

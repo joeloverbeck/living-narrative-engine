@@ -94,7 +94,7 @@ describe('OperationInterpreter', () => {
         // Create a new interpreter instance for isolation
         interpreter = new OperationInterpreter({
             logger: mockLogger,
-            registry: mockRegistry,
+            operationRegistry: mockRegistry,
         });
         // Clear the init log call
         mockLogger.info.mockClear();
@@ -102,18 +102,18 @@ describe('OperationInterpreter', () => {
 
     // --- Constructor Tests ---
     test('constructor should throw if logger is missing or invalid', () => {
-        expect(() => new OperationInterpreter({registry: mockRegistry})).toThrow('ILogger');
+        expect(() => new OperationInterpreter({operationRegistry: mockRegistry})).toThrow('ILogger');
         expect(() => new OperationInterpreter({logger: {}, registry: mockRegistry})).toThrow('ILogger');
     });
 
     test('constructor should throw if registry is missing or invalid', () => {
         expect(() => new OperationInterpreter({logger: mockLogger})).toThrow('OperationRegistry');
-        expect(() => new OperationInterpreter({logger: mockLogger, registry: {}})).toThrow('OperationRegistry');
+        expect(() => new OperationInterpreter({logger: mockLogger, operationRegistry: {}})).toThrow('OperationRegistry');
     });
 
     test('constructor should initialize successfully with valid dependencies', () => {
         // Instantiation happens in beforeEach, check logger was called
-        expect(() => new OperationInterpreter({logger: mockLogger, registry: mockRegistry})).not.toThrow();
+        expect(() => new OperationInterpreter({logger: mockLogger, operationRegistry: mockRegistry})).not.toThrow();
         // Check the init log message from the constructor itself
         expect(mockLogger.info).toHaveBeenCalledWith('OperationInterpreter Initialized (using OperationRegistry).');
     });
@@ -151,7 +151,7 @@ describe('OperationInterpreter', () => {
         expect(mockLogHandler).not.toHaveBeenCalled(); // Ensure no handler was called
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-            'Unknown operation type encountered: "UNKNOWN_OP". No handler registered. Skipping execution.'
+            '---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP". Skipping execution.'
         );
         // Ensure no other errors were logged related to handler execution
         expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Error executing handler'));
@@ -198,7 +198,7 @@ describe('OperationInterpreter', () => {
         // Verify it logged 'Unknown operation type' because IF wasn't found *in the registry*
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-            'Unknown operation type encountered: "IF". No handler registered. Skipping execution.'
+            '---> HANDLER NOT FOUND for operation type: "IF". Skipping execution.'
         );
 
         // Verify no handler was actually called

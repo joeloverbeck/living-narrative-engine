@@ -114,7 +114,7 @@ class ItemUsageSystem {
 
       // Check user entity first
       if (!userEntity) {
-        this.#eventBus.dispatch('event:display_message', {
+        this.#eventBus.dispatch('textUI:display_message', {
           text: 'Error: User entity not found.',
           type: 'error'
         });
@@ -125,7 +125,7 @@ class ItemUsageSystem {
       // Check item instance existence (needed for getDisplayName, potentially other future checks)
       if (!itemInstance) {
         // Item might have been removed between action request and processing
-        this.#eventBus.dispatch('event:display_message', {
+        this.#eventBus.dispatch('textUI:display_message', {
           text: 'Error: The item seems to have disappeared.',
           type: 'error'
         });
@@ -151,7 +151,7 @@ class ItemUsageSystem {
         console.error(`ItemUsageSystem: ${errorMsg}`);
         log(errorMsg, 'error');
         // Provide generic feedback to user, as this is an internal data setup issue
-        this.#eventBus.dispatch('event:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+        this.#eventBus.dispatch('textUI:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
         return; // Exit if definition reference is missing
       }
 
@@ -163,7 +163,7 @@ class ItemUsageSystem {
         const errorMsg = `Item definition '${itemDefinitionId}' (referenced by item instance ${itemInstanceId}) not found in GameDataRepository.`;
         console.error(`ItemUsageSystem: ${errorMsg}`);
         log(errorMsg, 'error');
-        this.#eventBus.dispatch('event:display_message', {
+        this.#eventBus.dispatch('textUI:display_message', {
           text: 'Error: Item definition is missing.',
           type: 'error'
         });
@@ -177,7 +177,7 @@ class ItemUsageSystem {
       // Verify that usableComponentData is accessed via itemDefinition.components?.Usable
       const usableComponentData = itemDefinition.components?.Usable; // This is correct, sourced from definition.
       if (!usableComponentData) {
-        this.#eventBus.dispatch('event:display_message', {text: `You cannot use ${itemName}.`, type: 'info'});
+        this.#eventBus.dispatch('textUI:display_message', {text: `You cannot use ${itemName}.`, type: 'info'});
         log(`Item "${itemName}" (Def: ${itemDefinitionId}, Inst: ${itemInstanceId}) has no Usable component data.`, 'info'); // Log refers to component data
         return;
       }
@@ -203,13 +203,13 @@ class ItemUsageSystem {
 
       if (!usabilityCheckResult.success) {
         if (usabilityCheckResult.failureMessage) {
-          this.#eventBus.dispatch('event:display_message', {
+          this.#eventBus.dispatch('textUI:display_message', {
             text: usabilityCheckResult.failureMessage,
             type: 'warning'
           });
         } else {
           log('Usability check failed, no specific UI message provided.', 'debug');
-          this.#eventBus.dispatch('event:display_message', {
+          this.#eventBus.dispatch('textUI:display_message', {
             text: TARGET_MESSAGES.USE_CONDITION_FAILED(itemName),
             type: 'warning'
           });
@@ -314,7 +314,7 @@ class ItemUsageSystem {
     } catch (error) {
       console.error('ItemUsageSystem: CRITICAL UNHANDLED ERROR during _handleItemUseAttempt:', error);
       log(`CRITICAL ERROR: ${error.message}`, 'error', {stack: error.stack});
-      this.#eventBus.dispatch('event:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
+      this.#eventBus.dispatch('textUI:display_message', {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'});
       overallActionSuccess = false; // Ensure failure on critical error
     } finally {
       // Update final log message reference (implicit via itemDefinitionId variable scope)

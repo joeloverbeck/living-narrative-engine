@@ -151,7 +151,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenarios 2 & 3 (Refactor
     // 1. Instantiate OperationInterpreter (needs logger AND registry) <-- MODIFY THIS STEP
     operationInterpreterInstance = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. Create Spy on the 'execute' method (remains the same)

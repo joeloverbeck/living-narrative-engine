@@ -39,7 +39,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
     /** @type {jest.Mocked<GameDataRepository>} */
     let mockGameDataRepository;
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-    let mockValidatedDispatcher;
+    let mockvalidatedEventDispatcher;
     /** @type {jest.Mocked<DomRenderer>} */
     let mockDomRenderer;
     /** @type {jest.Mocked<WorldLoader>} */
@@ -109,7 +109,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             getObjectiveDefinition: jest.fn(),
             getInteractionTest: jest.fn(),
         };
-        mockValidatedDispatcher = {
+        mockvalidatedEventDispatcher = {
             dispatchValidated: jest.fn().mockResolvedValue(true),
         };
         mockDomRenderer = { /* Minimal mock */};
@@ -162,7 +162,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             if (key === 'ILogger') return mockLogger;
             if (key === 'EventBus') return mockEventBus; // Potentially used by dispatcher/others
             if (key === 'GameDataRepository') return mockGameDataRepository;
-            if (key === 'ValidatedEventDispatcher') return mockValidatedDispatcher;
+            if (key === 'ValidatedEventDispatcher') return mockvalidatedEventDispatcher;
             if (key === 'GameLoop') return mockGameLoop;
             if (key === 'GameStateManager') return mockGameStateManager; // Resolved by GameStateInitializer
 
@@ -336,7 +336,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
                 type: 'info'
             };
 
-            mockValidatedDispatcher.dispatchValidated.mockClear();
+            mockvalidatedEventDispatcher.dispatchValidated.mockClear();
             // --- Clear the CORRECT mock method ---
             mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear();
@@ -350,9 +350,9 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
 
             // Check if the specific final message was dispatched (from start() method)
             // This message IS still dispatched by start() after the loop starts.
-            const dispatchCalls = mockValidatedDispatcher.dispatchValidated.mock.calls;
+            const dispatchCalls = mockvalidatedEventDispatcher.dispatchValidated.mock.calls;
             const finalMessageCall = dispatchCalls.find(call =>
-                call[0] === 'event:display_message' && call[1]?.text === expectedPayload.text && call[1]?.type === expectedPayload.type
+                call[0] === 'textUI:display_message' && call[1]?.text === expectedPayload.text && call[1]?.type === expectedPayload.type
             );
             expect(finalMessageCall).toBeDefined(); // Ensure the message was dispatched
         });

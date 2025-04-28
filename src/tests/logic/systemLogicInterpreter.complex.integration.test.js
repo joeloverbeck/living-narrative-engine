@@ -260,7 +260,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     //    Use the correct variable name for this file: mockOperationInterpreter
     mockOperationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. Create spy on the execute method (remains the same)

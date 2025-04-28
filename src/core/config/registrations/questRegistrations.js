@@ -19,9 +19,9 @@ import {QuestStartTriggerSystem} from '../../../systems/questStartTriggerSystem.
 // --- DI & Helper Imports ---
 import {tokens} from '../../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {INITIALIZABLE} from "../../tags";
 
 // --- Constant Tag ---
-export const INITIALIZABLE = ['initializableSystem'];
 
 /**
  * Registers quest-related services and systems.

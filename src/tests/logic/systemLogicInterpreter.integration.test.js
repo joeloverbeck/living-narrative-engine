@@ -71,7 +71,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     //    Variable name is mockOperationInterpreter in this file
     mockOperationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
     executeSpy = jest.spyOn(mockOperationInterpreter, 'execute');
 

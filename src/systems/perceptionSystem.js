@@ -395,9 +395,9 @@ class PerceptionSystem {
 
   async #dispatchMessage(text, type = 'info', actorId = 'N/A', targetId = 'N/A') {
     const payload = {text, type};
-    await this.eventBus.dispatch('event:display_message', payload);
+    await this.eventBus.dispatch('textUI:display_message', payload);
     // Use logger instance for consistency
-    console.debug(`Dispatched ${'event:display_message'} (Actor: ${actorId}, Target: ${targetId}): "${text}"`);
+    console.debug(`Dispatched ${'textUI:display_message'} (Actor: ${actorId}, Target: ${targetId}): "${text}"`);
   }
 
 

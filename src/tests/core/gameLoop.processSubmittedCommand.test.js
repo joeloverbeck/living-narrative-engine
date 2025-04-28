@@ -37,7 +37,7 @@ const mockActionExecutor = {
 const mockActionDiscoverySystem = {
   getValidActions: jest.fn().mockResolvedValue([]),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   dispatchValidated: jest.fn(),
 };
 const mockLogger = {
@@ -61,7 +61,7 @@ const createValidOptions = () => ({
   actionExecutor: mockActionExecutor,
   eventBus: mockEventBus,
   actionDiscoverySystem: mockActionDiscoverySystem,
-  validatedDispatcher: mockValidatedDispatcher, // ***** ADD THIS LINE *****
+  validatedEventDispatcher: mockvalidatedEventDispatcher, // ***** ADD THIS LINE *****
   logger: mockLogger,
 });
 
@@ -115,7 +115,7 @@ describe('GameLoop - processSubmittedCommand Handling', () => {
 
     await gameLoop.processSubmittedCommand(commandInput);
 
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
       text: 'Parser failed spectacularly!', type: 'error'
     });
     expect(mockActionExecutor.executeAction).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('GameLoop - processSubmittedCommand Handling', () => {
 
     await gameLoop.processSubmittedCommand(commandInput);
 
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
       text: "Unknown command. Try 'help'.", type: 'error'
     });
     expect(mockActionExecutor.executeAction).not.toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe('GameLoop - processSubmittedCommand Handling', () => {
     await gameLoop.processSubmittedCommand(commandInput);
 
     // Crucially check *no* messages are dispatched
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith('event:display_message', expect.any(Object));
+    expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.any(Object));
     expect(mockActionExecutor.executeAction).not.toHaveBeenCalled();
     expect(promptInputSpy).toHaveBeenCalledTimes(1);
   });
@@ -176,8 +176,8 @@ describe('GameLoop - processSubmittedCommand Handling', () => {
     expect(executeActionSpy).toHaveBeenCalledWith(validParsedCmd.actionId, validParsedCmd);
 
     // Verify NO specific error/warning message was dispatched *by processSubmittedCommand itself*
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith('event:display_message', expect.objectContaining({type: 'error'}));
-    expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith('event:display_message', expect.objectContaining({text: "Unknown command. Try 'help'."}));
+    expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({type: 'error'}));
+    expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({text: "Unknown command. Try 'help'."}));
 
     // Verify promptInput was called after processing
     expect(promptInputSpy).toHaveBeenCalledTimes(1);
@@ -201,7 +201,7 @@ describe('GameLoop - processSubmittedCommand Handling', () => {
     await gameLoop.processSubmittedCommand(commandInput);
 
     // Check for the specific internal error message
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith('event:display_message', {
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
       text: 'Internal Error: Game state not fully initialized.', // Or the specific error message from the original code
       type: 'error'
     });

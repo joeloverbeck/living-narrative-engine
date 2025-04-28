@@ -102,7 +102,7 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
         eventBus = new EventBus();
         entityManager = new SimpleEntityManager();
         opRegistry = new OperationRegistry({logger});
-        opInterpreter = new OperationInterpreter({logger, registry: opRegistry});
+        opInterpreter = new OperationInterpreter({logger, operationRegistry: opRegistry});
         jsonLogicSvc = new JsonLogicEvaluationService({logger});
 
         // ---- Handlers we actually need -----------------------------------------

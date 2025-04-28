@@ -1,6 +1,6 @@
 // src/core/spatialIndexManager.js
 
-import {POSITION_COMPONENT_ID} from '../types/components.js';
+import {POSITION_COMPONENT_ID} from "../types/components";
 
 /**
  * Manages a spatial index mapping location IDs to the entities present

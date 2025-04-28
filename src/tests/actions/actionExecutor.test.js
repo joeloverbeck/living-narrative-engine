@@ -28,7 +28,7 @@ const mockActionValidationService = {
 const mockEventBus = {
   dispatch: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -122,7 +122,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
+    validatedEventDispatcher: mockvalidatedEventDispatcher // <<< --- ADD THIS LINE --- >>>
   });
 };
 
@@ -174,7 +174,7 @@ const createMockActionContext = (overrides = {}) => {
       error: null,
     },
     gameDataRepository: mockGameDataRepository,
-    dispatch: mockValidatedDispatcher.dispatchValidated,
+    dispatch: mockvalidatedEventDispatcher.dispatchValidated,
     ...overrides, // Apply specific overrides for the test case
   };
   return baseContext;
@@ -269,7 +269,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
           expect.objectContaining({sourceString: null})
         );
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('should log error and omit payload field if sourceString is undefined', async () => {
@@ -293,7 +293,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
           expect.objectContaining({sourceString: undefined})
         );
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('should log error and omit payload field if sourceString is an empty string', async () => {
@@ -317,7 +317,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`Invalid or empty sourceString provided for action '${actionDef.id}'`),
           expect.objectContaining({sourceString: ''})
         );
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
     });
 
@@ -344,7 +344,7 @@ describe('ActionExecutor', () => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(`Unknown source prefix 'foo' in source string '${sourceString}' for action '${actionDef.id}'.`)
         );
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('should log warn for incomplete "actor." string and omit field', async () => {
@@ -374,8 +374,8 @@ describe('ActionExecutor', () => {
         expect(mockLogger.error).not.toHaveBeenCalled(); // Should be warn
 
         // Check event dispatch payload
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       // NOTE: Malformed target tests are now in actionExecutor.targetSources.test.js

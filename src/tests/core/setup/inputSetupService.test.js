@@ -15,7 +15,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals'; // Adjust 
 describe('InputSetupService', () => {
   /** @type {AppContainer} */ let mockContainer;
   /** @type {ILogger} */ let mockLogger;
-  /** @type {ValidatedEventDispatcher} */ let mockValidatedDispatcher;
+  /** @type {ValidatedEventDispatcher} */ let mockvalidatedEventDispatcher;
   /** @type {GameLoop} */ let mockGameLoop;
   /** @type {InputHandler} */ let mockInputHandler;
   /** @type {Function | null} */ let capturedCallback = null; // To capture the function passed to setCommandCallback
@@ -33,7 +33,7 @@ describe('InputSetupService', () => {
       debug: jest.fn(),
     };
 
-    mockValidatedDispatcher = {
+    mockvalidatedEventDispatcher = {
       dispatchValidated: jest.fn().mockResolvedValue(true), // Default to resolving successfully
     };
 
@@ -76,7 +76,7 @@ describe('InputSetupService', () => {
       const service = new InputSetupService({
         container: mockContainer,
         logger: mockLogger,
-        validatedDispatcher: mockValidatedDispatcher,
+        validatedEventDispatcher: mockvalidatedEventDispatcher,
         gameLoop: mockGameLoop,
       });
       expect(service).toBeInstanceOf(InputSetupService);
@@ -89,7 +89,7 @@ describe('InputSetupService', () => {
         new InputSetupService({
           // container: undefined, // or null
           logger: mockLogger,
-          validatedDispatcher: mockValidatedDispatcher,
+          validatedEventDispatcher: mockvalidatedEventDispatcher,
           gameLoop: mockGameLoop,
         });
       }).toThrow("InputSetupService: Missing required dependency 'container'.");
@@ -102,7 +102,7 @@ describe('InputSetupService', () => {
         new InputSetupService({
           container: mockContainer,
           // logger: undefined, // or null
-          validatedDispatcher: mockValidatedDispatcher,
+          validatedEventDispatcher: mockvalidatedEventDispatcher,
           gameLoop: mockGameLoop,
         });
       }).toThrow("InputSetupService: Missing required dependency 'logger'.");
@@ -110,17 +110,17 @@ describe('InputSetupService', () => {
       consoleErrorSpy.mockRestore(); // Clean up spy
     });
 
-    it('should throw an error if validatedDispatcher is missing', () => {
+    it('should throw an error if validatedEventDispatcher is missing', () => {
       expect(() => {
         new InputSetupService({
           container: mockContainer,
           logger: mockLogger,
-          // validatedDispatcher: undefined, // or null
+          // validatedEventDispatcher: undefined, // or null
           gameLoop: mockGameLoop,
         });
-      }).toThrow("InputSetupService: Missing required dependency 'validatedDispatcher'.");
+      }).toThrow("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
       // Check logger was used to report the missing dependency *before* throwing
-      expect(mockLogger.error).toHaveBeenCalledWith("InputSetupService: Missing required dependency 'validatedDispatcher'.");
+      expect(mockLogger.error).toHaveBeenCalledWith("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
     });
 
     it('should throw an error if gameLoop is missing', () => {
@@ -128,7 +128,7 @@ describe('InputSetupService', () => {
         new InputSetupService({
           container: mockContainer,
           logger: mockLogger,
-          validatedDispatcher: mockValidatedDispatcher,
+          validatedEventDispatcher: mockvalidatedEventDispatcher,
           // gameLoop: undefined, // or null
         });
       }).toThrow("InputSetupService: Missing required dependency 'gameLoop'.");
@@ -146,7 +146,7 @@ describe('InputSetupService', () => {
       service = new InputSetupService({
         container: mockContainer,
         logger: mockLogger,
-        validatedDispatcher: mockValidatedDispatcher,
+        validatedEventDispatcher: mockvalidatedEventDispatcher,
         gameLoop: mockGameLoop,
       });
     });
@@ -200,7 +200,7 @@ describe('InputSetupService', () => {
       service = new InputSetupService({
         container: mockContainer,
         logger: mockLogger,
-        validatedDispatcher: mockValidatedDispatcher,
+        validatedEventDispatcher: mockvalidatedEventDispatcher,
         gameLoop: mockGameLoop,
       });
       service.configureInputHandler(); // Set up the callback
@@ -211,9 +211,9 @@ describe('InputSetupService', () => {
       }
     });
 
-    it('should call validatedDispatcher.dispatchValidated with ui:command_echo', async () => {
+    it('should call validatedEventDispatcher.dispatchValidated with ui:command_echo', async () => {
       await capturedCallback(testCommand);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
         'ui:command_echo',
         { command: testCommand }
       );
@@ -225,15 +225,15 @@ describe('InputSetupService', () => {
       expect(mockGameLoop.processSubmittedCommand).toHaveBeenCalledWith(testCommand);
     });
 
-    it("should NOT call validatedDispatcher.dispatchValidated with 'ui:disable_input'", async () => {
+    it("should NOT call validatedEventDispatcher.dispatchValidated with 'ui:disable_input'", async () => {
       await capturedCallback(testCommand);
       // Check all calls to dispatchValidated
-      const dispatchCalls = mockValidatedDispatcher.dispatchValidated.mock.calls;
+      const dispatchCalls = mockvalidatedEventDispatcher.dispatchValidated.mock.calls;
       // Filter calls to see if 'ui:disable_input' was ever the first argument
       const disableInputCalls = dispatchCalls.filter(call => call[0] === 'ui:disable_input');
       expect(disableInputCalls.length).toBe(0);
       // Or more simply:
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
         'ui:disable_input',
         expect.anything() // We don't care about the payload here
       );
@@ -243,7 +243,7 @@ describe('InputSetupService', () => {
       await capturedCallback(testCommand);
 
       // Find the index of the 'ui:command_echo' call within dispatchValidated's calls
-      const echoCallIndex = mockValidatedDispatcher.dispatchValidated.mock.calls.findIndex(
+      const echoCallIndex = mockvalidatedEventDispatcher.dispatchValidated.mock.calls.findIndex(
         call => call && call[0] === 'ui:command_echo'
       );
 
@@ -251,7 +251,7 @@ describe('InputSetupService', () => {
       expect(echoCallIndex).toBeGreaterThanOrEqual(0);
 
       // Get the global invocation order for that specific call
-      const echoGlobalOrder = mockValidatedDispatcher.dispatchValidated.mock.invocationCallOrder[echoCallIndex];
+      const echoGlobalOrder = mockvalidatedEventDispatcher.dispatchValidated.mock.invocationCallOrder[echoCallIndex];
 
       // Get the global invocation order for the processSubmittedCommand call (assuming it's called once)
       const processGlobalOrder = mockGameLoop.processSubmittedCommand.mock.invocationCallOrder[0];
@@ -274,7 +274,7 @@ describe('InputSetupService', () => {
       service = new InputSetupService({
         container: mockContainer,
         logger: mockLogger,
-        validatedDispatcher: mockValidatedDispatcher,
+        validatedEventDispatcher: mockvalidatedEventDispatcher,
         gameLoop: mockGameLoop,
       });
       service.configureInputHandler(); // Set up the callback
@@ -285,17 +285,17 @@ describe('InputSetupService', () => {
       }
     });
 
-    it('should call validatedDispatcher.dispatchValidated with ui:command_echo', async () => {
+    it('should call validatedEventDispatcher.dispatchValidated with ui:command_echo', async () => {
       await capturedCallback(testCommand);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
         'ui:command_echo',
         { command: testCommand }
       );
     });
 
-    it("should call validatedDispatcher.dispatchValidated with 'ui:disable_input' and message", async () => {
+    it("should call validatedEventDispatcher.dispatchValidated with 'ui:disable_input' and message", async () => {
       await capturedCallback(testCommand);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
         'ui:disable_input',
         { message: 'Game not running.' }
       );
@@ -315,11 +315,11 @@ describe('InputSetupService', () => {
       await capturedCallback(testCommand);
 
       // Find the index of the 'ui:command_echo' call within dispatchValidated's calls
-      const echoCallIndex = mockValidatedDispatcher.dispatchValidated.mock.calls.findIndex(
+      const echoCallIndex = mockvalidatedEventDispatcher.dispatchValidated.mock.calls.findIndex(
         call => call && call[0] === 'ui:command_echo'
       );
       // Find the index of the 'ui:disable_input' call within dispatchValidated's calls
-      const disableCallIndex = mockValidatedDispatcher.dispatchValidated.mock.calls.findIndex(
+      const disableCallIndex = mockvalidatedEventDispatcher.dispatchValidated.mock.calls.findIndex(
         call => call && call[0] === 'ui:disable_input'
       );
 
@@ -328,8 +328,8 @@ describe('InputSetupService', () => {
       expect(disableCallIndex).toBeGreaterThanOrEqual(0);
 
       // Get the global invocation order for each specific call
-      const echoGlobalOrder = mockValidatedDispatcher.dispatchValidated.mock.invocationCallOrder[echoCallIndex];
-      const disableGlobalOrder = mockValidatedDispatcher.dispatchValidated.mock.invocationCallOrder[disableCallIndex];
+      const echoGlobalOrder = mockvalidatedEventDispatcher.dispatchValidated.mock.invocationCallOrder[echoCallIndex];
+      const disableGlobalOrder = mockvalidatedEventDispatcher.dispatchValidated.mock.invocationCallOrder[disableCallIndex];
 
       // Ensure both orders are defined before comparing
       expect(echoGlobalOrder).toBeDefined();

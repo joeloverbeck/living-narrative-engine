@@ -31,7 +31,7 @@ import {getDisplayName, TARGET_MESSAGES} from '../../utils/messages.js';
 
 // --- Mocks ---
 const mockEventBusDispatch = jest.fn();
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   dispatchValidated: jest.fn(async (eventType, payload) => {
     mockEventBusDispatch(eventType, payload);
     return Promise.resolve();
@@ -65,7 +65,7 @@ const mockContext = {
   targets: [],
   gameDataRepository: {},
   eventBus: mockEventBus,
-  validatedDispatcher: mockValidatedDispatcher,
+  validatedEventDispatcher: mockvalidatedEventDispatcher,
   logger: mockLogger,
 };
 
@@ -159,7 +159,7 @@ const placeInLocation = (entityId, locationId) => {
 beforeEach(() => {
   // Clear/Reset Mocks and Data
   mockEventBusDispatch.mockClear();
-  mockValidatedDispatcher.dispatchValidated.mockClear();
+  mockvalidatedEventDispatcher.dispatchValidated.mockClear();
   mockLogger.warn.mockClear();
   mockLogger.info.mockClear();
   mockLogger.error.mockClear();
@@ -172,7 +172,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockEntityManager.getEntityInstance.mockImplementation((id) => mockEntityManager.entities.get(id));
   mockEntityManager.getEntitiesInLocation.mockImplementation((locId) => mockEntityManager.locations.get(locId) || new Set());
-  mockValidatedDispatcher.dispatchValidated.mockImplementation(async (eventType, payload) => {
+  mockvalidatedEventDispatcher.dispatchValidated.mockImplementation(async (eventType, payload) => {
     mockEventBusDispatch(eventType, payload);
     return Promise.resolve();
   });
@@ -188,7 +188,7 @@ beforeEach(() => {
   mockContext.playerEntity = mockPlayerEntity;
   mockContext.currentLocation = mockCurrentLocation;
   mockContext.targets = [];
-  mockContext.validatedDispatcher = mockValidatedDispatcher;
+  mockContext.validatedEventDispatcher = mockvalidatedEventDispatcher;
   mockContext.logger = mockLogger;
 });
 
@@ -206,7 +206,7 @@ describe('resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, targetName);
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid or empty connectionTargetName provided.'));
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     test('should return null and log warning when connectionTargetName is undefined', async () => {
@@ -214,7 +214,7 @@ describe('resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, targetName);
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid or empty connectionTargetName provided.'));
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     test('should return null and log warning when connectionTargetName is an empty string', async () => {
@@ -222,7 +222,7 @@ describe('resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, targetName);
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid or empty connectionTargetName provided.'));
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     test('should return null and log warning when connectionTargetName is only whitespace', async () => {
@@ -230,17 +230,17 @@ describe('resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, targetName);
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid or empty connectionTargetName provided.'));
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     // Dependency checks remain the same
     test('should return null and console.error when context is missing dispatcher', async () => {
-      const incompleteContext = {...mockContext, validatedDispatcher: undefined};
+      const incompleteContext = {...mockContext, validatedEventDispatcher: undefined};
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
       });
       const result = await resolveTargetConnection(incompleteContext, 'north');
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid context or missing validatedDispatcher/logger functions provided.'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid context or missing validatedEventDispatcher/logger functions provided.'));
       consoleErrorSpy.mockRestore();
     });
 
@@ -250,7 +250,7 @@ describe('resolveTargetConnection', () => {
       });
       const result = await resolveTargetConnection(incompleteContext, 'north');
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid context or missing validatedDispatcher/logger functions provided.'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid context or missing validatedEventDispatcher/logger functions provided.'));
       consoleErrorSpy.mockRestore();
     });
   }); // End Input Validation describe
@@ -292,7 +292,7 @@ describe('resolveTargetConnection', () => {
       ])('should return the correct entity for direction input "%s"', async (input) => {
         const result = await resolveTargetConnection(mockContext, input);
         expect(result).toBe(mockNorthEntity);
-        expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: north -> ${mockNorthEntity.id}`));
       });
     });
@@ -305,7 +305,7 @@ describe('resolveTargetConnection', () => {
         // Assuming getDisplayName is adapted to read from name component object
         const expectedDisplayName = getDisplayName(mockWestDoorEntity);
         expect(result).toBe(mockWestDoorEntity);
-        expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique name match: ${expectedDisplayName} (${mockWestDoorEntity.id}) via direction west`));
       });
     });
@@ -317,7 +317,7 @@ describe('resolveTargetConnection', () => {
         const input = 'east'; // Matches 'east' direction AND part of 'East Passage' name (linked via 'up')
         const result = await resolveTargetConnection(mockContext, input);
         expect(result).toBe(mockEastDirectionEntity); // Should prioritize the direction match
-        expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+        expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found unique direction match: east -> ${mockEastDirectionEntity.id}`));
       });
     });
@@ -362,9 +362,9 @@ describe('resolveTargetConnection', () => {
         );
 
         expect(result).toBeNull();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-          'event:display_message',
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          'textUI:display_message',
           expect.objectContaining({text: expectedMsg, type: 'warning'})
         );
         // Check the mock finder function was called correctly (including logger)
@@ -407,9 +407,9 @@ describe('resolveTargetConnection', () => {
         const result = await resolveTargetConnection(mockContext, ambiguousInput, actionVerb);
 
         expect(result).toBeNull();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-          'event:display_message',
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          'textUI:display_message',
           expect.objectContaining({text: expectedMsg, type: 'warning'})
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Ambiguous name match for '${ambiguousInput}'. Dispatching message.`));
@@ -439,9 +439,9 @@ describe('resolveTargetConnection', () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         expect.objectContaining({text: expectedMsg, type: 'info'})
       );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${targetName}'. Dispatching message.`));
@@ -462,9 +462,9 @@ describe('resolveTargetConnection', () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         expect.objectContaining({text: expectedMsg, type: 'info'})
       );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${targetName}'. Dispatching message.`));
@@ -477,9 +477,9 @@ describe('resolveTargetConnection', () => {
       const result = await resolveTargetConnection(mockContext, targetName);
 
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         expect.objectContaining({text: expectedMsg, type: 'info'})
       );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`No direction or name matches found for '${targetName}'. Dispatching message.`));
@@ -511,9 +511,9 @@ describe('resolveTargetConnection', () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
-        'event:display_message',
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        'textUI:display_message',
         expect.objectContaining({text: expectedMsg, type: 'info'})
       );
       // Check that the system tried to get the missing entity
@@ -546,13 +546,13 @@ describe('resolveTargetConnection', () => {
       expect(mockEntityManager.locations.get('loc-lobby')?.has('player-1')).toBe(true);
 
       // Verify mocks are present and correctly assigned
-      expect(mockContext.validatedDispatcher).toBe(mockValidatedDispatcher);
-      expect(typeof mockContext.validatedDispatcher.dispatchValidated).toBe('function');
+      expect(mockContext.validatedEventDispatcher).toBe(mockvalidatedEventDispatcher);
+      expect(typeof mockContext.validatedEventDispatcher.dispatchValidated).toBe('function');
       expect(mockContext.logger).toBe(mockLogger);
       expect(typeof mockContext.logger.warn).toBe('function');
 
       // Initial state checks
-      expect(mockValidatedDispatcher.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();

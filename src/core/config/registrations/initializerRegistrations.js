@@ -4,8 +4,9 @@ import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameStateInitializer from '../../gameStateInitializer.js';
 import WorldInitializer from '../../worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
+// Import the necessary tag constant (Task 2: Verified, already present)
+import {INITIALIZABLE} from "../../tags.js";
 
-export const INITIALIZABLE = ['initializableSystem'];
 
 export function registerInitializers(container) {
     const r = new Registrar(container);
@@ -18,7 +19,7 @@ export function registerInitializers(container) {
             const entityManager = c.resolve(tokens.EntityManager);
             const gameStateManager = c.resolve(tokens.GameStateManager);
             const gameDataRepository = c.resolve(tokens.GameDataRepository);
-            const validatedDispatcher = c.resolve(tokens.ValidatedEventDispatcher);
+            const validatedEventDispatcher = c.resolve(tokens.ValidatedEventDispatcher);
             const logger = c.resolve(tokens.ILogger);
 
             // Create the single dependency object expected by the constructor
@@ -26,7 +27,7 @@ export function registerInitializers(container) {
                 entityManager,
                 gameStateManager,
                 gameDataRepository,
-                validatedDispatcher,
+                validatedEventDispatcher,
                 logger
             };
 
@@ -43,13 +44,16 @@ export function registerInitializers(container) {
 
 
     // --- Registration for SystemInitializer using singletonFactory ---
-    // This one was already correct from the previous fix
+    // Task 1: Identified instantiation point within this factory
     r.singletonFactory(
         tokens.SystemInitializer, // The key/token for this service
         (c) => {                  // The factory function. 'c' IS the AppContainer instance
             const logger = c.resolve(tokens.ILogger);
-            // Return a new instance, passing the container 'c' and the resolved logger
-            return new SystemInitializer(c, logger);
+            // Task 3: Modify the new SystemInitializer(...) call
+            // Pass AppContainer (c), ILogger (logger), and the tag string (INITIALIZABLE[0])
+            // AC1: Passes container (IServiceResolver), logger (ILogger), and tag (string).
+            // AC2: Passes the correct tag string.
+            return new SystemInitializer(c, logger, INITIALIZABLE[0]); // <<< UPDATED LINE
         }
     );
     // --- End Registration ---

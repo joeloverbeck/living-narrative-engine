@@ -390,7 +390,7 @@ describe('TargetResolutionService', () => {
       // Check that the generic internal error message was dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'}
       );
     });
@@ -460,7 +460,7 @@ describe('TargetResolutionService', () => {
       // Verify message dispatch
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
     });
@@ -488,7 +488,7 @@ describe('TargetResolutionService', () => {
       // Verify message dispatch
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
     });
@@ -532,7 +532,7 @@ describe('TargetResolutionService', () => {
         expect(findTarget).not.toHaveBeenCalled();
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'event:display_message',
+          'textUI:display_message',
           {text: expectedMsg, type: 'info'}
         );
       });
@@ -565,7 +565,7 @@ describe('TargetResolutionService', () => {
         expect(findTarget).not.toHaveBeenCalled();
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'event:display_message',
+          'textUI:display_message',
           {text: expectedMsg, type: 'info'}
         );
       });
@@ -622,7 +622,7 @@ describe('TargetResolutionService', () => {
         // Verify message dispatch
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'event:display_message',
+          'textUI:display_message',
           {text: expectedMsg, type: 'info'}
         );
         // findTarget should not be called
@@ -662,7 +662,7 @@ describe('TargetResolutionService', () => {
         expect(result.details).toEqual({searchedName: mockParsedCommand.directObjectPhrase});
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'event:display_message',
+          'textUI:display_message',
           {text: expectedMsg, type: 'info'}
         );
       });
@@ -689,7 +689,7 @@ describe('TargetResolutionService', () => {
         expect(result.details).toEqual({searchedName: mockParsedCommand.directObjectPhrase});
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'event:display_message',
+          'textUI:display_message',
           {text: expectedMsg, type: 'warning'} // Type should be 'warning' for ambiguous
         );
       });
@@ -740,7 +740,7 @@ describe('TargetResolutionService', () => {
       expect(result.error).toContain('Error during resolution: FindTarget Failed');
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: TARGET_MESSAGES.INTERNAL_ERROR, type: 'error'}
       );
     });
@@ -774,7 +774,7 @@ describe('TargetResolutionService', () => {
       // Assert
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1); // Should now pass
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
     });
@@ -803,7 +803,7 @@ describe('TargetResolutionService', () => {
       // Assert
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'event:display_message',
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
     });
@@ -826,7 +826,7 @@ describe('TargetResolutionService', () => {
 
       // Assert
       expect(mockEventBus.dispatch).toHaveBeenCalledWith( // Should now pass
-        'event:display_message',
+        'textUI:display_message',
         {text: expectedMsg, type: 'info'}
       );
     });

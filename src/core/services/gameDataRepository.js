@@ -1,4 +1,3 @@
-// ────────────────────────────────────────────────────────────────────────────────
 // src/core/services/gameDataRepository.js
 // ────────────────────────────────────────────────────────────────────────────────
 
@@ -15,6 +14,8 @@
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger}        ILogger
  * @typedef {import('../../types/actionDefinition.js').ActionDefinition} ActionDefinition
+ * @typedef {import('../../types/eventDefinition.js').EventDefinition} EventDefinition // Assuming this type exists
+ * @typedef {import('../../types/entityDefinition.js').EntityDefinition} EntityDefinition // Assuming this type exists
  */
 
 export class GameDataRepository {
@@ -26,10 +27,11 @@ export class GameDataRepository {
      * @param {ILogger}       logger
      */
     constructor(registry, logger) {
-        if (!registry?.get || !registry?.getAll) {
-            throw new Error('GameDataRepository requires a valid IDataRegistry.');
+        // Updated checks to include necessary IDataRegistry methods
+        if (!registry?.get || !registry?.getAll || !registry?.getStartingPlayerId || !registry?.getStartingLocationId || !registry?.getEventDefinition || !registry?.getAllEventDefinitions) {
+            throw new Error('GameDataRepository requires a valid IDataRegistry with expected methods (get, getAll, getStartingPlayerId, getStartingLocationId, getEventDefinition, getAllEventDefinitions).');
         }
-        if (!logger?.info || !logger?.debug || !logger?.error) {
+        if (!logger?.info || !logger?.debug || !logger?.error || !logger.warn) { // Added warn check
             throw new Error('GameDataRepository requires a valid ILogger.');
         }
 
@@ -38,6 +40,46 @@ export class GameDataRepository {
 
         this.#logger.info('GameDataRepository initialised (no internal cache).');
     }
+
+    // ────────────────────────────────────────────────────────────────────────────
+    //  Manifest / World Info
+    // ────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Retrieves the official name of the loaded world/game.
+     * Assumes the name is stored in a manifest object in the registry.
+     * @returns {string | null} The world name, or null if not found.
+     */
+    getWorldName() {
+        // TODO: Implement fetching world name from registry manifest if needed
+        const manifest = this.#registry.getManifest();
+        return manifest?.worldName ?? "Unknown World"; // Example access
+    }
+
+    /**
+     * Retrieves the starting player ID from the manifest stored in the registry.
+     * @returns {string | null} The starting player entity definition ID, or null if not found in the manifest.
+     */
+    getStartingPlayerId() {
+        const playerId = this.#registry.getStartingPlayerId();
+        if (!playerId) {
+            this.#logger.warn('GameDataRepository: getStartingPlayerId called, but no ID found in registry/manifest.');
+        }
+        return playerId;
+    }
+
+    /**
+     * Retrieves the starting location ID from the manifest stored in the registry.
+     * @returns {string | null} The starting location entity definition ID, or null if not found in the manifest.
+     */
+    getStartingLocationId() {
+        const locationId = this.#registry.getStartingLocationId();
+        if (!locationId) {
+            this.#logger.warn('GameDataRepository: getStartingLocationId called, but no ID found in registry/manifest.');
+        }
+        return locationId;
+    }
+
 
     // ────────────────────────────────────────────────────────────────────────────
     //  Action definitions
@@ -49,12 +91,8 @@ export class GameDataRepository {
      * @returns {ActionDefinition[]}
      */
     getAllActionDefinitions() {
-        const collection = this.#registry.getAll('actions');
-        if (!collection) return [];
-        // convert Map | Record | whatever into an array
-        return Array.isArray(collection)
-            ? collection
-            : Array.from(collection.values?.() ?? Object.values(collection));
+        // Use the specific getter from IDataRegistry
+        return this.#registry.getAllActionDefinitions();
     }
 
     /**
@@ -63,7 +101,8 @@ export class GameDataRepository {
      */
     getActionDefinition(id) {
         if (typeof id !== 'string' || !id.trim()) return null;
-        return this.#registry.get('actions', id) ?? null;
+        // Use the specific getter from IDataRegistry
+        return this.#registry.getActionDefinition(id) ?? null;
     }
 
     // ────────────────────────────────────────────────────────────────────────────
@@ -72,40 +111,46 @@ export class GameDataRepository {
 
     /**
      * @param   {string} id
-     * @returns {object | null}  raw entity definition as stored
+     * @returns {EntityDefinition | null}  raw entity definition as stored
      */
     getEntityDefinition(id) {
         if (typeof id !== 'string' || !id.trim()) return null;
-        return this.#registry.get('entities', id) ?? null;
+        // Use the specific getter from IDataRegistry
+        return this.#registry.getEntityDefinition(id) ?? null;
     }
 
     /**
-     * @returns {object[]} array of **all** entity definitions
+     * @returns {EntityDefinition[]} array of **all** entity definitions
      */
     getAllEntityDefinitions() {
-        const collection = this.#registry.getAll('entities');
-        if (!collection) return [];
-        return Array.isArray(collection)
-            ? collection
-            : Array.from(collection.values?.() ?? Object.values(collection));
+        // Use the specific getter from IDataRegistry
+        return this.#registry.getAllEntityDefinitions();
     }
+
+    // ────────────────────────────────────────────────────────────────────────────
+    //  Event definitions
+    // ────────────────────────────────────────────────────────────────────────────
 
     /**
      * Retrieves a definition classified as an 'event'.
-     * @param {string} id - The event ID (e.g., 'event:display_message').
-     * @returns {EventDefinition | null} // Use specific EventDefinition type if available
+     * @param {string} id - The event ID (e.g., 'textUI:display_message').
+     * @returns {EventDefinition | null}
      */
     getEventDefinition(id) {
+        if (typeof id !== 'string' || !id.trim()) return null;
+        // Delegate to the specific method on IDataRegistry
         return this.#registry.getEventDefinition(id) ?? null;
     }
 
     /**
-     * @returns {EventDefinition[]} // Use specific EventDefinition type if available
+     * @returns {EventDefinition[]}
      */
     getAllEventDefinitions() {
         // Delegate to the specific method on IDataRegistry
         return this.#registry.getAllEventDefinitions();
     }
+
+    // Add getters for other types (items, locations, etc.) as needed, delegating to IDataRegistry
 }
 
 // Optional default export for `import GameDataRepository from ...` style

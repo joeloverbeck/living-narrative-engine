@@ -53,7 +53,7 @@ const mockEntityManager = {
     removeComponent: jest.fn(),
     hasComponent: jest.fn()
 };
-const mockValidatedDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)}; // Needed by DispatchEventHandler factory
+const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)}; // Needed by DispatchEventHandler factory
 
 
 // --- Mock Custom DI Container (Copied from uiRegistrations.test.js) ---
@@ -160,7 +160,7 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
         mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'}); // For DispatchEventHandler
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'}); // For DispatchEventHandler
 
         // Clear call counts on the mock service functions
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -168,7 +168,7 @@ describe('registerInterpreters', () => {
         Object.values(mockDataRegistry).forEach(fn => fn.mockClear?.());
         Object.values(mockJsonLogicService).forEach(fn => fn.mockClear?.());
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
-        Object.values(mockValidatedDispatcher).forEach(fn => fn.mockClear?.());
+        Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
 
         // Clear call counts on the MOCKED Class constructors
         OperationRegistry.mockClear();

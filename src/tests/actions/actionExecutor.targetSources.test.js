@@ -28,7 +28,7 @@ const mockActionValidationService = {
 const mockEventBus = {
   dispatch: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -121,7 +121,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
+    validatedEventDispatcher: mockvalidatedEventDispatcher // <<< --- ADD THIS LINE --- >>>
   });
 };
 
@@ -183,7 +183,7 @@ const createMockActionContext = (overrides = {}) => {
       error: null,
     },
     gameDataRepository: mockGameDataRepository,
-    dispatch: mockValidatedDispatcher.dispatchValidated, // Ensure dispatch function is available
+    dispatch: mockvalidatedEventDispatcher.dispatchValidated, // Ensure dispatch function is available
     ...overrides, // Apply specific overrides for the test case
   };
   return baseContext;
@@ -300,7 +300,7 @@ describe('ActionExecutor', () => {
 
           await executor.executeAction(actionDef.id, mockContext);
 
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             expect.objectContaining({[payloadKey]: mockTargetEntity.id}) // 'target1'
           );
@@ -334,7 +334,7 @@ describe('ActionExecutor', () => {
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'direction', not 'entity'.`)
           );
           // Expect empty payload as the source resolution failed
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
         test('should log warn and return undefined if targetType is "none"', async () => {
@@ -356,7 +356,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'none', not 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
 
@@ -383,7 +383,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target entity not found in resolutionResult despite type 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
       });
 
@@ -411,7 +411,7 @@ describe('ActionExecutor', () => {
           await executor.executeAction(actionDef.id, mockContext);
 
           expect(mockGetDisplayName).toHaveBeenCalledWith(mockTargetEntity); // getDisplayName still takes the entity
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             expect.objectContaining({[payloadKey]: targetName})
           );
@@ -435,7 +435,7 @@ describe('ActionExecutor', () => {
           await executor.executeAction(actionDef.id, mockContext);
 
           expect(mockGetDisplayName).toHaveBeenCalledWith(mockTargetEntity);
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             expect.objectContaining({[payloadKey]: expectedFallbackName})
           );
@@ -467,7 +467,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'direction', not 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
           expect(mockGetDisplayName).not.toHaveBeenCalled(); // Should not attempt to get name
         });
 
@@ -493,7 +493,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target entity not found in resolutionResult despite type 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
           expect(mockGetDisplayName).not.toHaveBeenCalled(); // Should not attempt to get name
         });
       });
@@ -535,7 +535,7 @@ describe('ActionExecutor', () => {
 
           await executor.executeAction(actionDef.id, mockContext);
 
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             expect.objectContaining({[payloadKey]: expectedValue})
           );
@@ -560,7 +560,7 @@ describe('ActionExecutor', () => {
           // PayloadValueResolverService is expected to handle this logging
           expect.stringContaining(`Property '${missingPropName}' not found in component data for ID '${compName}' for source '${sourceStringMissing}' on target ${mockTargetEntity.id}`); // Match actual phrasing more closely
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             {} // Payload is empty because resolution failed
           );
@@ -584,7 +584,7 @@ describe('ActionExecutor', () => {
           // PayloadValueResolverService should log this
           expect.stringContaining(`Component data for ID '${missingCompName}' not found on target entity ${mockTargetEntity.id} for source '${sourceStringMissingComp}'`);
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             {}
           );
@@ -622,7 +622,7 @@ describe('ActionExecutor', () => {
           // Expect the PayloadValueResolverService to log this warning
           expect.stringContaining(`Could not find component class '${unknownCompName}' in registry for source '${sourceStringUnknownComp}'`); // Match actual phrasing
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             actionDef.dispatch_event.eventName,
             {}
           );
@@ -652,7 +652,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target type is 'direction', not 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
         test('should log warn and return undefined if targetEntity is null', async () => {
@@ -677,7 +677,7 @@ describe('ActionExecutor', () => {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(`Cannot resolve 'target.*' source '${sourceString}' for action '${actionDef.id}'. Target entity not found in resolutionResult despite type 'entity'.`)
           );
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
       });
 
@@ -709,7 +709,7 @@ describe('ActionExecutor', () => {
             expect.stringContaining(`PayloadValueResolverService (#resolveTargetSource): Unhandled 'target' source string format '${sourceString}' for action '${actionDef.id}'. Field: ''`)
           );
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
         test('should log warn for "target.component.CompName" (missing property) and omit field', async () => {
@@ -746,7 +746,7 @@ describe('ActionExecutor', () => {
             // Or less specific:
           );
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
         test('should log warn for "target.foo" (unknown field) and omit field', async () => {
@@ -770,7 +770,7 @@ describe('ActionExecutor', () => {
             // expect.stringContaining(`Unhandled 'target' source string format '<span class="math-inline">\{sourceString\}' for action '</span>{actionDef.id}'. Field: 'foo'`)
           );
           expect(mockLogger.error).not.toHaveBeenCalled();
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
 
         test('should log warn for "target" (incomplete string) and omit field', async () => {
@@ -794,8 +794,8 @@ describe('ActionExecutor', () => {
           expect(mockLogger.error).not.toHaveBeenCalled(); // Should be warn
 
           // Check event dispatch payload - should be empty
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-          expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+          expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
         });
       });
 

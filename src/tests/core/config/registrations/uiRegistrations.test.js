@@ -35,7 +35,7 @@ const mockLogger = {
 const mockEventBus = {
     subscribe: jest.fn(), publish: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
     dispatch: jest.fn(), dispatchValidated: jest.fn().mockResolvedValue(true), // Add mock for dispatchValidated if needed by DomRenderer mock interaction later
 };
 
@@ -86,21 +86,28 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
     // No longer need constructor spies as the classes are fully mocked
 
     beforeEach(() => {
-        // Reset mocks defined via jest.mock
-        jest.clearAllMocks(); // Clears calls to DomRenderer, InputHandler mocks etc.
-
+        // Reset mocks
+        jest.clearAllMocks();
         mockContainer = createMockContainer();
 
-        // Pre-register dependency mocks (unchanged)
+        // Pre-register dependencies
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'});
+        // ***** Registering with tokens.ValidatedEventDispatcher is CORRECT *****
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        // Register DOM elements (instances provided via registerUI are wrapped in factories)
+        // We still need the base instances registered if the factory relies on resolving them first.
+        // Let's register them directly for simplicity in the mock container,
+        // although registerUI will re-register them via factories.
+        mockContainer.register(tokens.outputDiv, mockOutputDiv);
+        mockContainer.register(tokens.inputElement, mockInputElement);
+        mockContainer.register(tokens.titleElement, mockTitleElement);
 
-        // Clear other mocks (unchanged)
+
+        // Clear mock function calls (not instances)
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
         Object.values(mockEventBus).forEach(fn => fn.mockClear?.());
-        Object.values(mockValidatedDispatcher).forEach(fn => fn.mockClear?.());
-        // Don't clear mockContainer mocks here, clear them specifically or use clearAllMocks
+        Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
     });
 
     // afterEach: jest.restoreAllMocks() is good practice if using jest.spyOn,
@@ -209,15 +216,25 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
         // Assert: Check arguments passed to the MOCKED DomRenderer constructor
         expect(DomRenderer).toHaveBeenCalledTimes(1);
+
+        // ***** CORRECTED ASSERTION (AGAIN) *****
+        // Expect the mock to have been called with ONE argument: an object
+        // containing the dependencies as properties. Match the keys from the
+        // 'Received' error output, which reflects what the DI is *actually* providing.
         expect(DomRenderer).toHaveBeenCalledWith(
-            mockOutputDiv,
-            mockInputElement,
-            mockTitleElement,
-            mockEventBus,
-            mockValidatedDispatcher,
-            mockLogger
+            expect.objectContaining({
+                outputDiv: mockOutputDiv,
+                inputElement: mockInputElement,
+                titleElement: mockTitleElement,
+                eventBus: mockEventBus,
+                // ****** THE FIX IS HERE ******
+                validatedEventDispatcher: mockvalidatedEventDispatcher, // Use 'validatedEventDispatcher' key to match the RECEIVED object
+                // ******************************
+                logger: mockLogger
+            })
         );
     });
+
 
     it('should inject correct dependencies (including null) into InputHandler when resolved', () => {
         // Arrange

@@ -13,7 +13,9 @@
 import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 
 // --- Class Under Test ---
-import {registerInitializers, INITIALIZABLE} from '../../../../core/config/registrations/initializerRegistrations.js'; // Adjust path if needed
+import {registerInitializers} from '../../../../core/config/registrations/initializerRegistrations.js'; // Adjust path if needed
+
+import {INITIALIZABLE} from "../../../../core/tags.js";
 
 // --- Dependencies ---
 import {tokens} from '../../../../core/tokens.js';
@@ -34,7 +36,7 @@ const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: j
 const mockEntityManager = {};
 const mockGameStateManager = {};
 const mockGameDataRepository = {};
-const mockValidatedDispatcher = {};
+const mockvalidatedEventDispatcher = {};
 
 
 // --- Mock Custom DI Container (Copied from interpreterRegistrations.test.js) ---
@@ -136,7 +138,7 @@ describe('registerInitializers', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockValidatedDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
 
         // Clear call counts on the mock service functions/constructors
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());

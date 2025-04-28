@@ -36,19 +36,19 @@ class OperationInterpreter {
      * Creates an instance of OperationInterpreter.
      * @param {object} dependencies - The required services.
      * @param {ILogger} dependencies.logger - Logging service.
-     * @param {OperationRegistry} dependencies.registry - Service holding operation operationHandlers. // Added registry dependency
+     * @param {OperationRegistry} dependencies.operationRegistry - Service holding operation operationHandlers. // Added registry dependency
      * @throws {Error} If logger or registry dependency is missing or invalid.
      */
-    constructor({logger, registry}) {
+    constructor({logger, operationRegistry}) {
         if (!logger || typeof logger.error !== 'function') { // Basic check
             throw new Error('OperationInterpreter requires a valid ILogger instance.');
         }
         // --- AC: Validate and store registry ---
-        if (!registry || typeof registry.getHandler !== 'function') {
+        if (!operationRegistry || typeof operationRegistry.getHandler !== 'function') {
             throw new Error('OperationInterpreter requires a valid OperationRegistry instance.');
         }
         this.#logger = logger;
-        this.#registry = registry;
+        this.#registry = operationRegistry;
         // --- End AC ---
         this.#logger.info('OperationInterpreter Initialized (using OperationRegistry).');
     }
@@ -74,10 +74,10 @@ class OperationInterpreter {
             return;
         }
 
-        const opType = operation.type.trim(); // Trim for consistent lookup
-
-        // --- AC: Registry Lookup ---
+        const opType = operation.type.trim();
+        this.#logger.debug(`OperationInterpreter: Attempting to get handler for type: '${opType}'`); // Added Log
         const handler = this.#registry.getHandler(opType);
+        this.#logger.debug(`OperationInterpreter: Handler found for '${opType}': ${!!handler}`); // Added Log
 
         if (handler) {
             // --- NEW: Resolve placeholders before calling handler ---
@@ -114,8 +114,8 @@ class OperationInterpreter {
             }
         } else {
             // --- AC: Unknown Type Handling ---
-            // Log an error if no handler was found for this operation type
-            this.#logger.error(`Unknown operation type encountered: "${opType}". No handler registered. Skipping execution.`);
+            // Make the existing error log more prominent temporarily if needed
+            this.#logger.error(`---> HANDLER NOT FOUND for operation type: "${opType}". Skipping execution.`); // Emphasized Log
             // Do not throw an error; execution continues.
         }
     }

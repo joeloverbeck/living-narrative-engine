@@ -34,7 +34,7 @@ describe('GameEngine stop()', () => {
   /** @type {jest.Mocked<GameDataRepository>} */
   let mockGameDataRepository;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-  let mockValidatedDispatcher;
+  let mockvalidatedEventDispatcher;
   /** @type {jest.SpyInstance} */
   let consoleLogSpy;
 
@@ -67,7 +67,7 @@ describe('GameEngine stop()', () => {
     // --- Mocks needed for internal state reset test (TEST-ENG-040) ---
     mockEventBus = { /* Basic mock, methods not called by stop() */ };
     mockGameDataRepository = { /* Basic mock, methods not called by stop() */ };
-    mockValidatedDispatcher = { /* Basic mock, methods not called by stop() */ };
+    mockvalidatedEventDispatcher = { /* Basic mock, methods not called by stop() */ };
 
     // 4. Mock AppContainer (Default setup includes disposeSingletons for TEST-ENG-038)
     mockAppContainer = {
@@ -104,7 +104,7 @@ describe('GameEngine stop()', () => {
     gameEngineInstance['#gameDataRepository'] = mockGameDataRepository;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - Accessing private field for test setup
-    gameEngineInstance['#validatedDispatcher'] = mockValidatedDispatcher;
+    gameEngineInstance['#validatedEventDispatcher'] = mockvalidatedEventDispatcher;
 
 
     // 8. Spy on console.log for TEST-ENG-040
@@ -203,7 +203,7 @@ describe('GameEngine stop()', () => {
       // @ts-ignore
       gameEngineInstance['#gameDataRepository'] = mockGameDataRepository;
       // @ts-ignore
-      gameEngineInstance['#validatedDispatcher'] = mockValidatedDispatcher;
+      gameEngineInstance['#validatedEventDispatcher'] = mockvalidatedEventDispatcher;
       mockLogger.info.mockClear(); // Clear constructor log
       mockLogger.warn.mockClear();
       // *** FIX END ***
@@ -298,7 +298,7 @@ describe('GameEngine stop()', () => {
       // @ts-ignore
       gameEngineInstance['#gameDataRepository'] = mockGameDataRepository;
       // @ts-ignore
-      gameEngineInstance['#validatedDispatcher'] = mockValidatedDispatcher;
+      gameEngineInstance['#validatedEventDispatcher'] = mockvalidatedEventDispatcher;
       mockLogger.info.mockClear();
       mockLogger.warn.mockClear();
     });

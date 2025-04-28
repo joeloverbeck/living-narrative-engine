@@ -88,7 +88,7 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
     //    Pass both logger and registry
     mockOperationInterpreter = new OperationInterpreterStub({
       logger: mockLoggerForOperationInterpreter,
-      registry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry // <-- Pass the registry instance
     });
 
     // 2. --- AC1: Spy on OperationInterpreter.execute --- (remains the same)

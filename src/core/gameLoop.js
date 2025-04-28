@@ -28,7 +28,7 @@
  * @property {ActionExecutor} actionExecutor
  * @property {EventBus} eventBus
  * @property {ActionDiscoverySystem} actionDiscoverySystem
- * @property {ValidatedEventDispatcher} validatedDispatcher // [EVENT-MIGR-015] Task 1: ADDED Property
+ * @property {ValidatedEventDispatcher} validatedEventDispatcher // [EVENT-MIGR-015] Task 1: ADDED Property
  * @property {ILogger} logger
  */
 
@@ -47,7 +47,7 @@ class GameLoop {
   #actionExecutor;
   #eventBus; // Still needed for subscribe and potentially other dispatches not covered by this refactor
   #actionDiscoverySystem;
-  #validatedDispatcher; // [EVENT-MIGR-015] Task 1: ADDED Private Field
+  #validatedEventDispatcher; // [EVENT-MIGR-015] Task 1: ADDED Private Field
   #logger;
 
   #isRunning = false;
@@ -66,7 +66,7 @@ class GameLoop {
       actionExecutor,
       eventBus,
       actionDiscoverySystem,
-      validatedDispatcher, // [EVENT-MIGR-015] Task 1: ADDED Destructuring
+      validatedEventDispatcher, // [EVENT-MIGR-015] Task 1: ADDED Destructuring
       logger
     } = options || {};
 
@@ -90,8 +90,8 @@ class GameLoop {
       throw new Error('GameLoop requires a valid options.actionDiscoverySystem object.');
     }
     // [EVENT-MIGR-015] Task 1: ADDED Validation START
-    if (!validatedDispatcher || typeof validatedDispatcher.dispatchValidated !== 'function') {
-      throw new Error('GameLoop requires a valid options.validatedDispatcher object.');
+    if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
+      throw new Error('GameLoop requires a valid options.validatedEventDispatcher object.');
     }
     // [EVENT-MIGR-015] Task 1: ADDED Validation END
     if (!logger || typeof logger.info !== 'function') {
@@ -107,7 +107,7 @@ class GameLoop {
     this.#actionExecutor = actionExecutor;
     this.#eventBus = eventBus; // Still needed for subscribe and potentially other dispatches
     this.#actionDiscoverySystem = actionDiscoverySystem;
-    this.#validatedDispatcher = validatedDispatcher; // [EVENT-MIGR-015] Task 1: ADDED Assignment
+    this.#validatedEventDispatcher = validatedEventDispatcher; // [EVENT-MIGR-015] Task 1: ADDED Assignment
     this.#logger = logger;
 
     this.#isRunning = false; // Initialize running state
@@ -165,14 +165,14 @@ class GameLoop {
       const errorMsg = 'Critical Error: GameLoop cannot start because initial game state (player/location) is missing!';
       this.#logger.error('GameLoop:', errorMsg);
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~157)
-      this.#validatedDispatcher.dispatchValidated('event:display_message', {text: errorMsg, type: 'error'});
+      this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: errorMsg, type: 'error'});
       this.#isRunning = false;
       const stopMessage = 'Game stopped due to initialization error.';
       this.#inputHandler.disable();
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~163)
-      this.#validatedDispatcher.dispatchValidated('event:disable_input', {message: stopMessage});
+      this.#validatedEventDispatcher.dispatchValidated('event:disable_input', {message: stopMessage});
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~164)
-      this.#validatedDispatcher.dispatchValidated('event:display_message', {text: stopMessage, type: 'info'});
+      this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: stopMessage, type: 'info'});
       return;
     }
 
@@ -207,7 +207,7 @@ class GameLoop {
 
       if (message) {
         // [EVENT-MIGR-015] Task 3: Refactored (Line ~181)
-        this.#validatedDispatcher.dispatchValidated('event:display_message', {text: message, type: 'error'});
+        this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {text: message, type: 'error'});
       }
       // Even on error, discover actions for the *next* turn and re-enable input
       await this._discoverPlayerActions();
@@ -219,7 +219,7 @@ class GameLoop {
     if (!this.#gameStateManager.getPlayer() || !this.#gameStateManager.getCurrentLocation()) {
       this.#logger.error('GameLoop Error: Attempted to execute action but game state is missing!');
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~198)
-      this.#validatedDispatcher.dispatchValidated('event:display_message', {
+      this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
         text: 'Internal Error: Game state not fully initialized.',
         type: 'error'
       });
@@ -252,7 +252,7 @@ class GameLoop {
     if (!currentPlayer || !currentLocationBeforeAction) {
       this.#logger.error('GameLoop executeAction called but state missing from GameStateManager.');
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~227)
-      this.#validatedDispatcher.dispatchValidated('event:display_message', {
+      this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
         text: 'Internal Error: Game state inconsistent.',
         type: 'error'
       });
@@ -272,7 +272,7 @@ class GameLoop {
       dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
       // NOTE: Passing raw eventBus into context as well.
       eventBus: this.#eventBus
-      // NOTE: validatedDispatcher is NOT passed into the ActionContext yet.
+      // NOTE: validatedEventDispatcher is NOT passed into the ActionContext yet.
     };
 
     this.#logger.debug(`Executing action: ${actionId}`);
@@ -340,7 +340,7 @@ class GameLoop {
       /** @type {UIUpdateActionsPayload} */
       const payload = {actions: validActions}; // AC4: Payload structure
       // [EVENT-MIGR-015] Task 3: Refactored (Line ~301)
-      this.#validatedDispatcher.dispatchValidated('event:update_available_actions', payload); // AC2: Dispatch in finally, AC3: Use constant event name
+      this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload); // AC2: Dispatch in finally, AC3: Use constant event name
       this.#logger.debug(`Dispatched ${'event:update_available_actions'} with ${validActions.length} actions.`); // AC5: Logging dispatch
       // *** FEAT-CORE-ACTIONS-02: AC2, AC3, AC4, AC5 END ***
     }
@@ -360,7 +360,7 @@ class GameLoop {
     // Dispatch event for UI update (e.g., DomRenderer listens for this)
     // [EVENT-MIGR-015] Task 3: Refactored (Line ~317)
     const payload = {placeholder: message};
-    this.#validatedDispatcher.dispatchValidated('event:enable_input', payload); // Signal UI
+    this.#validatedEventDispatcher.dispatchValidated('event:enable_input', payload); // Signal UI
     this.#logger.debug(`Input enabled via 'event:enable_input' event. Placeholder: "${message}"`);
   }
 
@@ -378,11 +378,11 @@ class GameLoop {
     this.#inputHandler.disable(); // Logically disable input capture
     // [EVENT-MIGR-015] Task 3: Refactored (Line ~329)
     const disablePayload = {message: stopMessage};
-    this.#validatedDispatcher.dispatchValidated('event:disable_input', disablePayload); // Signal UI
+    this.#validatedEventDispatcher.dispatchValidated('event:disable_input', disablePayload); // Signal UI
     // [EVENT-MIGR-015] Task 3: Refactored (Line ~331)
     /** @type {UIMessageDisplayPayload} */ // Optional: Explicit type for clarity
     const messagePayload = {text: stopMessage, type: 'info'};
-    this.#validatedDispatcher.dispatchValidated('event:display_message', messagePayload);
+    this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', messagePayload);
 
     this.#logger.info('GameLoop: Stopped.');
   }

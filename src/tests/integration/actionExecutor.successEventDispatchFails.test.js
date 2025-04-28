@@ -68,7 +68,7 @@ const mockEventBus = {
   unsubscribe: jest.fn(),
   listenerCount: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -112,7 +112,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher // <<< --- ADD THIS LINE --- >>>
+    validatedEventDispatcher: mockvalidatedEventDispatcher // <<< --- ADD THIS LINE --- >>>
   });
 };
 /**
@@ -149,7 +149,7 @@ const createMockActionContext = (actionId = 'test:action', playerEntity, current
       error: null,
     },
     gameDataRepository: mockGameDataRepository,
-    dispatch: mockValidatedDispatcher.dispatchValidated,
+    dispatch: mockvalidatedEventDispatcher.dispatchValidated,
   };
   return baseContext;
 };
@@ -243,7 +243,7 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
 
     // 6. Define the error to be rejected by dispatch and mock eventBus.dispatch.
     expectedDispatchError = new Error('Dispatch Failed');
-    mockValidatedDispatcher.dispatchValidated.mockRejectedValue(expectedDispatchError);
+    mockvalidatedEventDispatcher.dispatchValidated.mockRejectedValue(expectedDispatchError);
 
     // 7. Prepare the mockContext.
     mockContext = createMockActionContext(actionId, mockPlayerEntity, mockLocationEntity, 'target object');
@@ -284,10 +284,10 @@ describe('ActionExecutor: Integration Test - Success (Event Dispatch Fails) (Sub
     );
 
     // Assert: eventBus.dispatch was called exactly once.
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
     // Assert: eventBus.dispatch was called with the correct eventName and payload.
-    expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
       eventName,
       expectedPayload
     );

@@ -21,25 +21,25 @@ import {
  */
 export class ItemTargetResolverService {
   #em;
-  #validatedDispatcher; // Changed from #bus
+  #validatedEventDispatcher; // Changed from #bus
   #ce;
   #logger; // Added
 
   /**
      * @param {object} dependencies
      * @param {EntityManager} dependencies.entityManager
-     * @param {ValidatedEventDispatcher} dependencies.validatedDispatcher - Changed from eventBus
+     * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Changed from eventBus
      * @param {ConditionEvaluationService} dependencies.conditionEvaluationService
      * @param {ILogger} dependencies.logger - Added
      */
-  constructor({entityManager, validatedDispatcher, conditionEvaluationService, logger}) {
+  constructor({entityManager, validatedEventDispatcher, conditionEvaluationService, logger}) {
     if (!entityManager) throw new Error("ItemTargetResolverService: Missing dependency 'entityManager'.");
-    if (!validatedDispatcher) throw new Error("ItemTargetResolverService: Missing dependency 'validatedDispatcher'.");
+    if (!validatedEventDispatcher) throw new Error("ItemTargetResolverService: Missing dependency 'validatedEventDispatcher'.");
     if (!conditionEvaluationService) throw new Error("ItemTargetResolverService: Missing dependency 'conditionEvaluationService'.");
     if (!logger) throw new Error("ItemTargetResolverService: Missing dependency 'logger'.");
 
     this.#em = entityManager;
-    this.#validatedDispatcher = validatedDispatcher; // Store validated dispatcher
+    this.#validatedEventDispatcher = validatedEventDispatcher; // Store validated dispatcher
     this.#ce = conditionEvaluationService;
     this.#logger = logger; // Store logger
 
@@ -109,7 +109,7 @@ export class ItemTargetResolverService {
 
     // --- Refactored Dispatch Logic ---
     // Line: 54 (approx)
-    await this.#validatedDispatcher.dispatchValidated('event:display_message', {
+    await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
       text: failureText,
       type: failureType
     });

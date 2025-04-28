@@ -24,7 +24,7 @@ class DomRenderer {
   #eventBus;
   // --- EVENT-MIGR-018: Inject ValidatedEventDispatcher ---
   /** @type {ValidatedEventDispatcher} */
-  #validatedDispatcher;
+  #validatedEventDispatcher;
   // --- EVENT-MIGR-018: Inject ILogger ---
   /** @type {ILogger} */
   #logger;
@@ -47,10 +47,10 @@ class DomRenderer {
      * @param {HTMLInputElement} inputElement - The input element for player commands.
      * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
      * @param {EventBus} eventBus - The application's event bus instance.
-     * @param {ValidatedEventDispatcher} validatedDispatcher - Service for dispatching validated events.
+     * @param {ValidatedEventDispatcher} validatedEventDispatcher - Service for dispatching validated events.
      * @param {ILogger} logger - Service for logging messages.
      */
-  constructor(outputDiv, inputElement, titleElement, eventBus, validatedDispatcher, logger) {
+  constructor({outputDiv, inputElement, titleElement, eventBus, validatedEventDispatcher, logger}) {
     // --- Constructor Validation ---
     if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
       throw new Error('DomRenderer requires a valid output HTMLElement.');
@@ -65,7 +65,7 @@ class DomRenderer {
       throw new Error('DomRenderer requires a valid EventBus instance.');
     }
     // --- EVENT-MIGR-018: Validate new dependencies ---
-    if (!validatedDispatcher || typeof validatedDispatcher.dispatchValidated !== 'function') {
+    if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
       throw new Error('DomRenderer requires a valid ValidatedEventDispatcher instance.'); // AC5
     }
     if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
@@ -76,7 +76,7 @@ class DomRenderer {
     this.#inputElement = inputElement;
     this.#titleElement = titleElement;
     this.#eventBus = eventBus;
-    this.#validatedDispatcher = validatedDispatcher; // AC5
+    this.#validatedEventDispatcher = validatedEventDispatcher; // AC5
     this.#logger = logger; // AC5
 
     // --- Initialize Inventory UI ---
@@ -126,12 +126,10 @@ class DomRenderer {
 
   #subscribeToEvents() {
     // --- Standard UI Events ---
-    this.#eventBus.subscribe('event:display_message', this.#handleMessageDisplay.bind(this));
     this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this));
     this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
     this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
     this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
-    this.#eventBus.subscribe('set_title', this.#handleSetTitle.bind(this));
 
     // --- Inventory UI Events ---
     this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
@@ -145,15 +143,6 @@ class DomRenderer {
   }
 
   // --- Private Event Handlers ---
-
-  /** @private @param {{text: string, type?: string}} message */
-  #handleMessageDisplay(message) {
-    if (message && typeof message.text === 'string') {
-      this.renderMessage(message.text, message.type || 'info');
-    } else {
-      this.#logger.warn('DomRenderer received "event:display_message" with invalid data:', message);
-    }
-  }
 
   /** @private @param {{command: string}} data */
   #handleCommandEcho(data) {
@@ -183,14 +172,6 @@ class DomRenderer {
     this.setInputState(false, message);
   }
 
-  /** @private @param {{text: string}} data */
-  #handleSetTitle(data) {
-    if (data && typeof data.text === 'string') {
-      this.#titleElement.textContent = data.text;
-    } else {
-      this.#logger.warn("DomRenderer received 'set_title' with invalid data:", data);
-    }
-  }
 
   /** @private @param {InventoryRenderPayload} payload */
   #handleRenderInventory(payload) {
@@ -261,7 +242,7 @@ class DomRenderer {
 
           // AC1, AC2: Use ValidatedEventDispatcher for 'command:submit'
           // AC4: Implicitly uses EventDefinition/payloadSchema via dispatcher
-          const dispatched = await this.#validatedDispatcher.dispatchValidated(
+          const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
             'command:submit',
             {command: commandToSubmit}
           );
@@ -434,7 +415,7 @@ class DomRenderer {
 
           // AC1, AC2: Use ValidatedEventDispatcher for 'command:submit'
           // AC4: Implicitly uses EventDefinition/payloadSchema via dispatcher
-          const dispatched = await this.#validatedDispatcher.dispatchValidated(
+          const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
             'command:submit',
             {command: commandString}
           );

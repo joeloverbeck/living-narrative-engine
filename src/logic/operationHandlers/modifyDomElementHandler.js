@@ -89,6 +89,7 @@ class ModifyDomElementHandler {
      */
     execute(params, executionContext) {
         const logger = executionContext?.logger ?? this.#logger; // Prefer context logger
+        logger.debug('MODIFY_DOM_ELEMENT: Handler executing with params:', JSON.stringify(params)); // Log received params
 
         if (!params || typeof params.selector !== 'string' || !params.selector.trim() ||
             typeof params.property !== 'string' || !params.property.trim() ||
@@ -108,6 +109,7 @@ class ModifyDomElementHandler {
             // though for things like a title ID, we usually expect one.
             const elements = document.querySelectorAll(trimmedSelector);
 
+            logger.debug(`MODIFY_DOM_ELEMENT: Found ${elements.length} elements for selector "${trimmedSelector}"`); // Log element count
             if (elements.length === 0) {
                 logger.warn(`MODIFY_DOM_ELEMENT: No DOM elements found matching selector "${trimmedSelector}".`);
                 return;

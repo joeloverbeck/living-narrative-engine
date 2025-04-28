@@ -27,7 +27,7 @@ const mockActionValidationService = {
 const mockEventBus = {
   dispatch: jest.fn(),
 };
-const mockValidatedDispatcher = {
+const mockvalidatedEventDispatcher = {
   // Mock the method used by ActionExecutor.
   // .mockResolvedValue(true) assumes successful dispatch by default for most tests.
   // You can override this in specific tests if needed.
@@ -73,7 +73,7 @@ const createExecutor = (logger = mockLogger) => {
     eventBus: mockEventBus, // Keep if still needed elsewhere or by dispatcher internally
     logger: logger,
     payloadValueResolverService: resolverServiceInstance,
-    validatedDispatcher: mockValidatedDispatcher
+    validatedEventDispatcher: mockvalidatedEventDispatcher
   });
 };
 
@@ -111,7 +111,7 @@ const createMockActionContext = (overrides = {}) => {
       error: null,
     },
     gameDataRepository: mockGameDataRepository,
-    dispatch: mockValidatedDispatcher.dispatchValidated,
+    dispatch: mockvalidatedEventDispatcher.dispatchValidated,
     ...overrides,
   };
   return baseContext;
@@ -198,7 +198,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -217,7 +217,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -237,7 +237,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -257,7 +257,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -277,7 +277,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -301,7 +301,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -320,7 +320,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -339,7 +339,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -365,7 +365,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue}) // Should contain 1.2
         );
@@ -395,7 +395,7 @@ describe('ActionExecutor', () => {
           // expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '<span class="math-inline">\{sourceString\}' for action '</span>{actionDef.id}'. Value: '${valueString}'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
     });
 
@@ -414,7 +414,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -433,7 +433,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -452,7 +452,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -475,7 +475,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Invalid boolean value in literal source '${sourceString}'\. Value\: '${valueString}'. Expected 'true' or 'false'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
     });
 
@@ -494,7 +494,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -513,7 +513,7 @@ describe('ActionExecutor', () => {
 
         await executor.executeAction(actionDef.id, mockContext);
 
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
           actionDef.dispatch_event.eventName,
           expect.objectContaining({[payloadKey]: expectedValue})
         );
@@ -539,7 +539,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`Unknown literal type '${unknownType}' in source '${sourceString}' for action '${actionDef.id}'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
     });
 
@@ -569,7 +569,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '${sourceString}'\. Value\: '${valueString}'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('literal.boolean. should return undefined and log error', async () => {
@@ -588,7 +588,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Invalid boolean value in literal source '${sourceString}'\. Value\: '${valueString}'. Expected 'true' or 'false'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('literal.null. should return null (covered by null tests)', () => {
@@ -611,7 +611,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Type '' requires a value part ('literal.<type>.<value>').`)
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('literal.string (no final dot) should return undefined and log warn', async () => {
@@ -629,7 +629,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Type 'string' requires a value part ('literal.<type>.<value>').`)
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
 
       test('literal (just prefix) should return undefined and log warn', async () => {
@@ -647,7 +647,7 @@ describe('ActionExecutor', () => {
           expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Malformed 'literal' source string '${sourceString}'. Requires at least 'literal.<type>'.`)
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockValidatedDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});
       });
     });
 

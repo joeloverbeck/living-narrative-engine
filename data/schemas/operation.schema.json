@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
-  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events) or control the flow of execution (conditional logic). Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
+  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events), control the flow of execution (conditional logic), or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
   "type": "object",
   "$ref": "#/$defs/Operation",
   "$defs": {
@@ -16,10 +16,13 @@
           "enum": [
             "QUERY_COMPONENT",
             "MODIFY_COMPONENT",
+            "ADD_COMPONENT",
+            "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
             "IF",
             "LOG",
-            "MODIFY_DOM_ELEMENT"
+            "MODIFY_DOM_ELEMENT",
+            "APPEND_UI_MESSAGE"
           ]
         },
         "comment": {
@@ -38,32 +41,42 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "QUERY_COMPONENT"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/QueryComponentParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
+          "if": { "properties": { "type": { "const": "QUERY_COMPONENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/QueryComponentParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "MODIFY_COMPONENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/ModifyComponentParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "ADD_COMPONENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/AddComponentParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "REMOVE_COMPONENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/RemoveComponentParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "DISPATCH_EVENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/DispatchEventParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "IF" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/IfParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "LOG" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/LogParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "MODIFY_DOM_ELEMENT" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/ModifyDomElementParameters" } }, "required": [ "parameters" ] }
         },
         {
           "if": {
             "properties": {
               "type": {
-                "const": "MODIFY_COMPONENT"
+                "const": "APPEND_UI_MESSAGE"
               }
             },
             "required": [
@@ -73,95 +86,7 @@
           "then": {
             "properties": {
               "parameters": {
-                "$ref": "#/$defs/ModifyComponentParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "DISPATCH_EVENT"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/DispatchEventParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "IF"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/IfParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "LOG"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/LogParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "MODIFY_DOM_ELEMENT"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/ModifyDomElementParameters"
+                "$ref": "#/$defs/AppendUiMessageParameters"
               }
             },
             "required": [
@@ -182,20 +107,6 @@
         },
         {
           "type": "MODIFY_COMPONENT",
-          "comment": "Replace the entire status_effect component on the target",
-          "parameters": {
-            "entity_ref": "target",
-            "component_type": "game:status_effect",
-            "mode": "set",
-            "value": {
-              "duration": 10,
-              "effect_id": "poison",
-              "potency": 2
-            }
-          }
-        },
-        {
-          "type": "MODIFY_COMPONENT",
           "comment": "Decrease the actor's current HP by 10",
           "parameters": {
             "entity_ref": "actor",
@@ -203,6 +114,27 @@
             "field": "current",
             "mode": "inc",
             "value": -10
+          }
+        },
+        {
+          "type": "ADD_COMPONENT",
+          "comment": "Add a 'burning' status effect component to the target",
+          "parameters": {
+            "entity_ref": "target",
+            "component_type": "effect:status",
+            "value": {
+              "id": "burning",
+              "duration": 5,
+              "damagePerTick": 2
+            }
+          }
+        },
+        {
+          "type": "REMOVE_COMPONENT",
+          "comment": "Remove the 'frozen' status effect from the target",
+          "parameters": {
+            "entity_ref": "target",
+            "component_type": "effect:status_frozen"
           }
         },
         {
@@ -223,6 +155,24 @@
             "selector": "#title-element",
             "property": "textContent",
             "value": "{event.payload.text}"
+          }
+        },
+        {
+          "type": "APPEND_UI_MESSAGE",
+          "comment": "Append a message received from an event to the default output area.",
+          "parameters": {
+            "text": "You hear a strange noise from the {event.payload.direction}.",
+            "message_type": "info"
+          }
+        },
+        {
+          "type": "APPEND_UI_MESSAGE",
+          "comment": "Append an error message to a specific log panel.",
+          "parameters": {
+            "selector": "#error-log-panel",
+            "text": "Error: {event.payload.errorMessage}",
+            "message_type": "error",
+            "allow_html": false
           }
         }
       ]
@@ -255,7 +205,7 @@
     },
     "ModifyComponentParameters": {
       "type": "object",
-      "description": "Parameters for the MODIFY_COMPONENT operation (refactored by ticket T-05).",
+      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component.",
       "properties": {
         "entity_ref": {
           "$ref": "./common.schema.json#/definitions/entityReference",
@@ -263,11 +213,11 @@
         },
         "component_type": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. Namespaced ID of the component."
+          "description": "Required. Namespaced ID of the component containing the field."
         },
         "field": {
           "type": "string",
-          "description": "Optional dot-separated path within the component. Omit to replace the whole component.",
+          "description": "Required. Dot-separated path within the component to the field to modify.",
           "minLength": 1
         },
         "mode": {
@@ -285,6 +235,7 @@
       "required": [
         "entity_ref",
         "component_type",
+        "field",
         "mode",
         "value"
       ],
@@ -313,6 +264,50 @@
           }
         }
       ]
+    },
+    "AddComponentParameters": {
+      "type": "object",
+      "description": "Parameters for the ADD_COMPONENT operation. Adds a component to an entity, replacing it if it already exists.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "./common.schema.json#/definitions/entityReference",
+          "description": "Required. Specifies the entity to add the component to."
+        },
+        "component_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. The namespaced ID of the component type to add."
+        },
+        "value": {
+          "type": "object",
+          "description": "Required. The data object representing the component instance to add.",
+          "minProperties": 0
+        }
+      },
+      "required": [
+        "entity_ref",
+        "component_type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveComponentParameters": {
+      "type": "object",
+      "description": "Parameters for the REMOVE_COMPONENT operation. Removes a component from an entity.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "./common.schema.json#/definitions/entityReference",
+          "description": "Required. Specifies the entity to remove the component from."
+        },
+        "component_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Required. The namespaced ID of the component type to remove."
+        }
+      },
+      "required": [
+        "entity_ref",
+        "component_type"
+      ],
+      "additionalProperties": false
     },
     "DispatchEventParameters": {
       "type": "object",
@@ -371,7 +366,7 @@
       "properties": {
         "message": {
           "type": "string",
-          "description": "Required. Message template to log (can contain placeholders).",
+          "description": "Required. Message template to log (can contain placeholders like {actor.id}).",
           "minLength": 1
         },
         "level": {
@@ -413,6 +408,38 @@
         "selector",
         "property",
         "value"
+      ],
+      "additionalProperties": false
+    },
+    "AppendUiMessageParameters": {
+      "type": "object",
+      "description": "Parameters for the APPEND_UI_MESSAGE operation. Appends a formatted message to a UI container.",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "Optional. CSS selector for the container element to append the message to. Defaults to a pre-configured output area (e.g., '#outputDiv').",
+          "default": "#outputDiv",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}').",
+          "minLength": 1
+        },
+        "message_type": {
+          "type": "string",
+          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}'). Defaults to 'info'.",
+          "default": "info",
+          "minLength": 1
+        },
+        "allow_html": {
+          "type": "boolean",
+          "description": "Optional. If true, treats the 'text' as raw HTML. If false (default), treats 'text' as plain text content for safety.",
+          "default": false
+        }
+      },
+      "required": [
+        "text"
       ],
       "additionalProperties": false
     }
