@@ -180,9 +180,9 @@ class WorldLoader {
             },
             {
                 loader: this.#entityDefinitionLoader,
-                contentKey: 'entities',
-                contentTypeDir: 'entities',
-                typeName: 'entities'
+                contentKey: 'characters',
+                contentTypeDir: 'characters',
+                typeName: 'characters'
             },
             {
                 loader: this.#entityDefinitionLoader,
