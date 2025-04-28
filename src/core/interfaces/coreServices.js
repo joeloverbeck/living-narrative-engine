@@ -65,35 +65,27 @@
  * For mod-loaded content, `id` should be the fully qualified `modId:itemId`.
  * @property {(type: string, id: string) => object | undefined} get
  * Retrieves a specific data object by its type and fully qualified ID (`modId:itemId` for mod content).
- * Returns `undefined` if not found.
+ * Returns `undefined` if not found. (Preferred method over specific getters).
  * @property {(type: string) => object[]} getAll
  * Retrieves all data objects belonging to a specific type. Returns an empty array if the type is unknown or has no data.
+ * (Preferred method over specific getAll methods).
  * @property {() => object[]} getAllSystemRules
  * Retrieves all loaded system rule objects. Returns an empty array `[]` if no system rules are stored. (Added for RULESYS-101)
  * @property {() => void} clear
  * Removes all stored data objects and the manifest from the registry. Typically used when loading a new world or resetting state.
- * @property {() => object | null} getManifest
- * Retrieves the currently loaded world manifest object. Returns `null` if no manifest is loaded.
- * @property {(data: object) => void} setManifest
- * Stores the world manifest object.
- * // --- Specific Getters (Added for REFACTOR-014 / TICKET-11) ---
+ *
+ * // --- Specific Getters (Some Deprecated, others added for REFACTOR-014 / TICKET-11) ---
  * // These getters expect the fully qualified `modId:itemId` as the `id` parameter for mod-loaded definitions.
+ *
  * @property {(id: string) => object | undefined} getEntityDefinition Retrieves a definition classified as an 'entity'.
- * @property {(id: string) => object | undefined} getItemDefinition Retrieves a definition classified as an 'item'.
- * @property {(id: string) => object | undefined} getLocationDefinition Retrieves a definition classified as a 'location'.
- * @property {(id: string) => object | undefined} getConnectionDefinition Retrieves a definition classified as a 'connection'.
- * @property {(id: string) => object | undefined} getBlockerDefinition Retrieves a definition classified as a 'blocker'.
+ *
  * @property {(id: string) => object | undefined} getActionDefinition Retrieves a definition classified as an 'action'.
  * @property {(id: string) => object | undefined} getEventDefinition Retrieves a definition classified as an 'event'.
- * @property {(id: string) => object | undefined} getComponentDefinition Retrieves a definition classified as a 'component'.
+ * @property {(id: string) => object | undefined} getComponentDefinition Retrieves a definition classified as a 'component'.*
  * @property {() => object[]} getAllEntityDefinitions Retrieves all 'entity' definitions.
- * @property {() => object[]} getAllItemDefinitions Retrieves all 'item' definitions.
- * @property {() => object[]} getAllLocationDefinitions Retrieves all 'location' definitions.
- * @property {() => object[]} getAllConnectionDefinitions Retrieves all 'connection' definitions.
- * @property {() => object[]} getAllBlockerDefinitions Retrieves all 'blocker' definitions.
  * @property {() => object[]} getAllActionDefinitions Retrieves all 'action' definitions.
  * @property {() => object[]} getAllEventDefinitions Retrieves all 'event' definitions.
- * @property {() => object[]} getAllComponentDefinitions Retrieves all 'component' definitions.
+ * @property {() => object[]} getAllComponentDefinitions Retrieves all 'component' definitions.*
  * // --- Manifest Specific Data (Added for REFACTOR-014 / TICKET-11) ---
  * @property {() => string | null} getStartingPlayerId Retrieves the starting player ID from the manifest.
  * @property {() => string | null} getStartingLocationId Retrieves the starting location ID from the manifest.

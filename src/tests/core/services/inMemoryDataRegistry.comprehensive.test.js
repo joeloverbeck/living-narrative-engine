@@ -294,36 +294,6 @@ describe('InMemoryDataRegistry', () => {
         });
     });
 
-    describe('getLocationDefinition()', () => {
-        const loc1 = {id: 'town', type: 'location', description: 'bustling'};
-        const loc2AsEntity = {id: 'forest', type: 'area', description: 'ancient'}; // Stored under 'entities'
-
-        beforeEach(() => {
-            registry.store('locations', loc1.id, loc1);
-            // Assuming getLocationDefinition ONLY checks 'locations' based on implementation
-            registry.store('entities', loc2AsEntity.id, loc2AsEntity);
-            registry.store('items', 'key', {id: 'key'}); // Other type
-        });
-
-        it('should retrieve location stored under "locations"', () => {
-            expect(registry.getLocationDefinition('town')).toEqual(loc1);
-        });
-
-        // ADJUSTED: Based on the simple implementation `getLocationDefinition(id) { return this.get('locations', id); }`
-        it('should return undefined if location is stored under "entities" but not "locations"', () => {
-            expect(registry.getLocationDefinition('forest')).toBeUndefined();
-        });
-
-        it('should return undefined if location ID not found', () => {
-            expect(registry.getLocationDefinition('castle')).toBeUndefined();
-        });
-
-        it('should return undefined for ID of different type', () => {
-            expect(registry.getLocationDefinition('key')).toBeUndefined(); // key is an item
-            expect(registry.getLocationDefinition('forest')).toBeUndefined(); // forest is an entity
-        });
-    });
-
     // Add tests for getStartingPlayerId and getStartingLocationId if desired
     describe('getStartingPlayerId() / getStartingLocationId()', () => {
         const playerEntity = {

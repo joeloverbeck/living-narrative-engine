@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview Provides an in-memory implementation for storing and retrieving
- * loaded game data (entities, items, actions, etc.), fulfilling the
+ * loaded game data definitions (like entities, actions, components, etc.), fulfilling the
  * IDataRegistry interface. It uses Maps for efficient lookups.
  * Starting player and location are dynamically discovered from loaded entity definitions.
  */
@@ -22,7 +22,7 @@ class InMemoryDataRegistry {
     constructor() {
         /**
          * Internal storage for typed game data definitions.
-         * The outer Map's key is the data type (e.g., 'actions', 'entities', 'items').
+         * The outer Map's key is the data type (e.g., 'actions', 'entities', 'components').
          * The inner Map's key is the specific item's ID, and the value is the data object.
          * @private
          * @type {Map<string, Map<string, object>>}
@@ -79,7 +79,7 @@ class InMemoryDataRegistry {
     /**
      * Retrieves all data objects belonging to a specific type as an array.
      *
-     * @param {string} type - The category of data (e.g., 'items').
+     * @param {string} type - The category of data (e.g., 'entities').
      * @returns {object[]} An array of data objects for the given type. Returns an empty array
      * if the type is unknown or has no data stored.
      */
@@ -97,26 +97,48 @@ class InMemoryDataRegistry {
     }
 
     // =======================================================
-    // --- Specific Definition Getter Methods ---
+    // --- Specific Definition Getter Methods (Verified against Interface) ---
     // =======================================================
 
-    getEntityDefinition(id) { return this.get('entities', id); }
-    getItemDefinition(id) { return this.get('items', id); }
-    getLocationDefinition(id) { return this.get('locations', id); }
-    getConnectionDefinition(id) { return this.get('connections', id); }
-    getBlockerDefinition(id) { return this.get('blockers', id); }
-    getActionDefinition(id) { return this.get('actions', id); }
-    getEventDefinition(id) { return this.get('events', id); }
-    getComponentDefinition(id) { return this.get('components', id); }
+    getEntityDefinition(id) {
+        return this.get('entities', id);
+    }
 
-    getAllEntityDefinitions() { return this.getAll('entities'); }
-    getAllItemDefinitions() { return this.getAll('items'); }
-    getAllLocationDefinitions() { return this.getAll('locations'); }
-    getAllConnectionDefinitions() { return this.getAll('connections'); }
-    getAllBlockerDefinitions() { return this.getAll('blockers'); }
-    getAllActionDefinitions() { return this.getAll('actions'); }
-    getAllEventDefinitions() { return this.getAll('events'); }
-    getAllComponentDefinitions() { return this.getAll('components'); }
+    // getItemDefinition removed
+    // getLocationDefinition removed
+    // getConnectionDefinition removed
+    // getBlockerDefinition removed
+    getActionDefinition(id) {
+        return this.get('actions', id);
+    }
+
+    getEventDefinition(id) {
+        return this.get('events', id);
+    }
+
+    getComponentDefinition(id) {
+        return this.get('components', id);
+    }
+
+    getAllEntityDefinitions() {
+        return this.getAll('entities');
+    }
+
+    // getAllItemDefinitions removed
+    // getAllLocationDefinitions removed
+    // getAllConnectionDefinitions removed
+    // getAllBlockerDefinitions removed
+    getAllActionDefinitions() {
+        return this.getAll('actions');
+    }
+
+    getAllEventDefinitions() {
+        return this.getAll('events');
+    }
+
+    getAllComponentDefinitions() {
+        return this.getAll('components');
+    }
 
     // =======================================================
     // --- End Specific Definition Getter Methods ---
@@ -149,9 +171,11 @@ class InMemoryDataRegistry {
      * 'core:player' component, or null if no such entity is found.
      */
     getStartingPlayerId() {
+        // Verify: Uses 'entities' category via this.data.get('entities')
         const entityMap = this.data.get('entities');
         if (!entityMap) {
-            console.warn("InMemoryDataRegistry.getStartingPlayerId: No 'entities' data type found in registry.");
+            // Log adjusted slightly to avoid implying 'type' is the problem when it might just be empty
+            console.warn("InMemoryDataRegistry.getStartingPlayerId: No 'entities' data found in registry.");
             return null; // No entities loaded at all
         }
 
@@ -180,14 +204,15 @@ class InMemoryDataRegistry {
      * or locationId property cannot be found.
      */
     getStartingLocationId() {
+        // Verify: Uses 'entities' category indirectly via getStartingPlayerId() and getEntityDefinition()
         const playerId = this.getStartingPlayerId();
         if (!playerId) {
             // Warning already logged by getStartingPlayerId if applicable
             return null; // Cannot determine location without a player
         }
 
-        // Retrieve the definition for the found player ID
-        const playerDef = this.getEntityDefinition(playerId);
+        // Retrieve the definition for the found player ID using the verified getter
+        const playerDef = this.getEntityDefinition(playerId); // Uses this.get('entities', playerId)
         if (!playerDef || typeof playerDef !== 'object') {
             console.warn(`InMemoryDataRegistry.getStartingLocationId: Could not retrieve definition for starting player ID: ${playerId}`);
             return null;
