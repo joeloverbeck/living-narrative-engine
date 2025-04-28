@@ -136,9 +136,13 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             setPlayer: jest.fn(),
             setCurrentLocation: jest.fn(),
         };
+        // ======================================================
+        // <<< CORRECTION HERE >>>
+        // The GameEngine code calls '.initializeAll()', so the mock must provide that method name.
         mockSystemInitializer = {
-            initializeSystems: jest.fn().mockResolvedValue(undefined), // Simulate successful async initialization
+            initializeAll: jest.fn().mockResolvedValue(undefined), // Simulate successful async initialization
         };
+        // ======================================================
         // AC3: Create mock InputSetupService instance with a mocked method
         mockInputSetupService = {
             configureInputHandler: jest.fn(), // The method GameEngine will call
@@ -168,7 +172,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             if (key === 'GameStateInitializer') return mockGameStateInitializer;
             if (key === 'WorldInitializer') return mockWorldInitializer;
             if (key === 'InputHandler') return mockInputHandler; // Resolved by InputSetupService internally
-            if (key === 'SystemInitializer') return mockSystemInitializer;
+            if (key === 'SystemInitializer') return mockSystemInitializer; // Returns the mock corrected above
             if (key === 'InputSetupService') return mockInputSetupService;
 
             // Default for unexpected resolutions in this context
@@ -178,6 +182,8 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
 
         // Ensure mocks specific to new ACs are cleared
         mockInputSetupService.configureInputHandler.mockClear();
+        // Clear the (now correctly named) mock function too
+        mockSystemInitializer.initializeAll.mockClear(); // Clear the corrected mock
     });
 
     // --- Test Case: TEST-ENG-023 ---
@@ -192,13 +198,17 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             // Clear relevant mocks before Act
             mockLogger.info.mockClear();
             mockGameDataRepository.getWorldName.mockClear();
-            mockSystemInitializer.initializeSystems.mockClear();
+            // --- Clear the CORRECT mock method ---
+            mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear(); // Clear this specific mock too
 
             // --- Act ---
             await gameEngine.start(inputWorldName); // Let start run through the mocked successful init
 
             // --- Assert ---
+
+            // Verify SystemInitializer was called (happens during #initialize called by start)
+            expect(mockSystemInitializer.initializeAll).toHaveBeenCalledTimes(1);
 
             // Verify delegation log and service call (happens during #initialize called by start)
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Delegating input handler setup to InputSetupService...');
@@ -220,13 +230,16 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
 
             mockLogger.info.mockClear();
             mockGameDataRepository.getWorldName.mockClear();
-            mockSystemInitializer.initializeSystems.mockClear();
+            // --- Clear the CORRECT mock method ---
+            mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear();
 
             // --- Act ---
             await gameEngine.start(inputWorldName);
 
             // --- Assert ---
+            // Verify SystemInitializer was called (happens during #initialize called by start)
+            expect(mockSystemInitializer.initializeAll).toHaveBeenCalledTimes(1);
 
             // Verify delegation log and service call (happens during #initialize called by start)
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Delegating input handler setup to InputSetupService...');
@@ -257,7 +270,8 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             mockAppContainer.resolve.mockClear(); // Clear resolve calls from constructor/setup
             mockGameStateManager.getPlayer.mockClear();
             mockGameStateManager.getCurrentLocation.mockClear();
-            mockSystemInitializer.initializeSystems.mockClear();
+            // --- Clear the CORRECT mock method ---
+            mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear();
 
 
@@ -266,6 +280,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
 
             // --- Assert ---
             // Verify key initialization steps were called (implicitly required for post-init logic to run)
+            expect(mockSystemInitializer.initializeAll).toHaveBeenCalledTimes(1); // From initialize call
             expect(mockInputSetupService.configureInputHandler).toHaveBeenCalledTimes(1);
             expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalledTimes(1); // From initialize call
 
@@ -294,13 +309,15 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             const gameEngine = new GameEngine({container: mockAppContainer});
 
             mockGameLoop.start.mockClear();
-            mockSystemInitializer.initializeSystems.mockClear();
+            // --- Clear the CORRECT mock method ---
+            mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear();
 
             // --- Act ---
             await gameEngine.start(inputWorldName);
 
             // --- Assert ---
+            expect(mockSystemInitializer.initializeAll).toHaveBeenCalledTimes(1);
             expect(mockInputSetupService.configureInputHandler).toHaveBeenCalledTimes(1);
 
             // Check call from start() method
@@ -320,13 +337,15 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             };
 
             mockValidatedDispatcher.dispatchValidated.mockClear();
-            mockSystemInitializer.initializeSystems.mockClear();
+            // --- Clear the CORRECT mock method ---
+            mockSystemInitializer.initializeAll.mockClear();
             mockInputSetupService.configureInputHandler.mockClear();
 
             // --- Act ---
             await gameEngine.start(inputWorldName);
 
             // --- Assert ---
+            expect(mockSystemInitializer.initializeAll).toHaveBeenCalledTimes(1);
             expect(mockInputSetupService.configureInputHandler).toHaveBeenCalledTimes(1);
 
             // Check if the specific final message was dispatched (from start() method)
