@@ -43,48 +43,246 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "type": { "const": "QUERY_COMPONENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/QueryComponentParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "QUERY_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/QueryComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "MODIFY_COMPONENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/ModifyComponentParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MODIFY_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ModifyComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "ADD_COMPONENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/AddComponentParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ADD_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/AddComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "REMOVE_COMPONENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/RemoveComponentParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "REMOVE_COMPONENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/RemoveComponentParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "DISPATCH_EVENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/DispatchEventParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DISPATCH_EVENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/DispatchEventParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "IF" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/IfParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "IF"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/IfParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "LOG" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/LogParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "LOG"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/LogParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "MODIFY_DOM_ELEMENT" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/ModifyDomElementParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MODIFY_DOM_ELEMENT"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ModifyDomElementParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "APPEND_UI_MESSAGE" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/AppendUiMessageParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "APPEND_UI_MESSAGE"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/AppendUiMessageParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "SET_VARIABLE" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/SetVariableParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SET_VARIABLE"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/SetVariableParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "QUERY_SYSTEM_DATA" } }, "required": [ "type" ] },
-          "then": { "properties": { "parameters": { "$ref": "#/$defs/QuerySystemDataParameters" } }, "required": [ "parameters" ] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "QUERY_SYSTEM_DATA"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/QuerySystemDataParameters"
+              }
+            },
+            "required": [
+              "parameters"
+            ]
+          }
         }
       ],
       "examples": [
@@ -134,9 +332,9 @@
           "parameters": {
             "eventType": "event:quest_updated",
             "payload": {
-              "questId": "$event.payload.questId",
+              "questId": "{event.payload.questId}",
               "newState": "completed",
-              "completedBy": "$actor.id"
+              "completedBy": "{actor.id}"
             }
           }
         },
@@ -172,7 +370,7 @@
           "comment": "Store the player's current gold amount in a variable",
           "parameters": {
             "variable_name": "playerGold",
-            "value": "$actor.components['core:inventory'].gold"
+            "value": "{actor.components['core:inventory'].gold}"
           }
         },
         {
@@ -180,7 +378,10 @@
           "comment": "Query the weather system for the current temperature",
           "parameters": {
             "source": "weather_system",
-            "query": { "type": "get_current_temperature", "unit": "celsius" },
+            "query": {
+              "type": "get_current_temperature",
+              "unit": "celsius"
+            },
             "result_variable": "currentTemperature"
           }
         }
@@ -238,7 +439,7 @@
           ]
         },
         "value": {
-          "description": "Required. The value to assign (for 'set') or numeric delta (for 'inc'). Placeholder resolution may apply."
+          "description": "Required. The value to assign (for 'set') or numeric delta (for 'inc'). Placeholder resolution (using '{...}' syntax) may apply."
         }
       },
       "required": [
@@ -265,7 +466,7 @@
             "properties": {
               "value": {
                 "type": "number",
-                "description": "Required numeric delta for 'inc' mode. Placeholder resolution may apply."
+                "description": "Required numeric delta for 'inc' mode. Placeholder resolution (using '{...}' syntax) may apply."
               }
             },
             "required": [
@@ -289,7 +490,7 @@
         },
         "value": {
           "type": "object",
-          "description": "Required. The data object representing the component instance to add. Placeholder resolution may apply within values.",
+          "description": "Required. The data object representing the component instance to add. Placeholder resolution (using '{...}' syntax) may apply within values.",
           "minProperties": 0
         }
       },
@@ -329,7 +530,7 @@
         },
         "payload": {
           "type": "object",
-          "description": "Optional event payload object. Defaults to {} if omitted. Strings beginning with '$' or using '{...}' syntax are treated as placeholders resolved at runtime.",
+          "description": "Optional event payload object. Defaults to {} if omitted. Strings using '{...}' syntax are treated as placeholders resolved at runtime.",
           "default": {}
         }
       },
@@ -337,7 +538,7 @@
         "eventType"
       ],
       "additionalProperties": false,
-      "$comment": "Placeholders (e.g., \"$actor.id\", \"{event.payload.value}\") are resolved by DispatchEventHandler before dispatch."
+      "$comment": "Placeholders (e.g., \"{actor.id}\", \"{event.payload.value}\") are resolved by DispatchEventHandler before dispatch."
     },
     "IfParameters": {
       "type": "object",
@@ -376,7 +577,7 @@
       "properties": {
         "message": {
           "type": "string",
-          "description": "Required. Message template to log (can contain placeholders like {actor.id} or $variableName).",
+          "description": "Required. Message template to log (can contain placeholders like {actor.id} or {variableName}).",
           "minLength": 1
         },
         "level": {
@@ -411,7 +612,7 @@
           "minLength": 1
         },
         "value": {
-          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}', '$variableName') which will be resolved at runtime."
+          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}', '{variableName}') which will be resolved at runtime."
         }
       },
       "required": [
@@ -433,12 +634,12 @@
         },
         "text": {
           "type": "string",
-          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}', '$variableName').",
+          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}', '{variableName}').",
           "minLength": 1
         },
         "message_type": {
           "type": "string",
-          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}', '$messageClass'). Defaults to 'info'.",
+          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}', '{messageClass}'). Defaults to 'info'.",
           "default": "info",
           "minLength": 1
         },
@@ -464,7 +665,7 @@
           "pattern": "^\\S(.*\\S)?$"
         },
         "value": {
-          "description": "Required. The value to assign to the variable. Can be any valid JSON type (string, number, boolean, object, array, null). Placeholder resolution applies."
+          "description": "Required. The value to assign to the variable. Can be any valid JSON type (string, number, boolean, object, array, null). Placeholder resolution (using '{...}' syntax) applies."
         }
       },
       "required": [
@@ -483,8 +684,11 @@
           "minLength": 1
         },
         "query": {
-          "type": ["string", "object"],
-          "description": "Required. The query details to send to the source. Can be a simple string or a structured object, depending on the source's requirements. Placeholder resolution may apply."
+          "type": [
+            "string",
+            "object"
+          ],
+          "description": "Required. The query details to send to the source. Can be a simple string or a structured object, depending on the source's requirements. Placeholder resolution (using '{...}' syntax) may apply."
         },
         "result_variable": {
           "type": "string",

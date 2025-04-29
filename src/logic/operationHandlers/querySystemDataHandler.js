@@ -1,5 +1,4 @@
 // src/logic/operationHandlers/querySystemDataHandler.js
-// (Keep JSDoc imports and class definition as they are)
 
 /**
  * @fileoverview Defines the QuerySystemDataHandler class, responsible for

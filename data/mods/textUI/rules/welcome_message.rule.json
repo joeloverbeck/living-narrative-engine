@@ -48,7 +48,7 @@
               "value": {
                 "or": [
                   {
-                    "var": "event.data.inputWorldName"
+                    "var": "event.payload.inputWorldName"
                   },
                   "an Unnamed World"
                 ]
@@ -68,7 +68,7 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch event to set the application/UI title.",
+      "comment": "Dispatch event to set the application/UI title using the determined name.",
       "parameters": {
         "eventType": "textUI:set_title",
         "payload": {
@@ -78,7 +78,7 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch event to display the welcome message text in the UI.",
+      "comment": "Dispatch event to display the welcome message text in the UI using the determined text.",
       "parameters": {
         "eventType": "textUI:display_message",
         "payload": {
@@ -91,7 +91,7 @@
       "type": "LOG",
       "comment": "Log successful execution of the welcome message rule.",
       "parameters": {
-        "message": "Rule textUI:show_welcome_message: Successfully dispatched welcome messages for world: '{context.determinedName}'.",
+        "message": "Rule show_welcome_message: Successfully dispatched welcome messages for world: '{context.determinedName}'.",
         "level": "info"
       }
     }

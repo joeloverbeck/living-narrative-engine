@@ -32,6 +32,12 @@ const createMockLogger = () => ({
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
+    // Add a simple way to track logged messages if needed for complex assertions
+    // loggedMessages: [],
+    // info: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'info', message: args[0], details: args[1] })),
+    // warn: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'warn', message: args[0], details: args[1] })),
+    // error: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'error', message: args[0], details: args[1] })),
+    // debug: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'debug', message: args[0], details: args[1] })),
 });
 
 // --- Helper – ExecutionContext factory -------------------------------------
@@ -270,7 +276,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['message']).toBe('Hello World');
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "message" to ORIGINAL value: "Hello World"');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "message" to value: "Hello World"');
             expect(mockLogger.warn).not.toHaveBeenCalled();
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
@@ -282,7 +289,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['count']).toBe(42);
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "count" to ORIGINAL value: 42');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "count" to value: 42');
         });
 
         test('sets literal boolean value (true)', () => {
@@ -292,7 +300,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['isActive']).toBe(true);
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isActive" to ORIGINAL value: true');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isActive" to value: true');
         });
 
         test('sets literal boolean value (false)', () => {
@@ -302,7 +311,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['isDisabled']).toBe(false);
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isDisabled" to ORIGINAL value: false');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isDisabled" to value: false');
         });
 
         test('sets literal null value', () => {
@@ -312,7 +322,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['optionalData']).toBeNull();
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "optionalData" to ORIGINAL value: null');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "optionalData" to value: null');
         });
 
         test('sets literal object value', () => {
@@ -323,7 +334,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['config']).toEqual(objValue); // Use toEqual for objects/arrays
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "config" to ORIGINAL value: ${JSON.stringify(objValue)}`);
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "config" to value: ${JSON.stringify(objValue)}`);
         });
 
         test('sets literal array value', () => {
@@ -334,7 +346,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context ---
             expect(execCtx.context['items']).toEqual(arrValue);
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "items" to ORIGINAL value: ${JSON.stringify(arrValue)}`);
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "items" to value: ${JSON.stringify(arrValue)}`);
         });
 
         test('trims whitespace from variable_name before setting', () => {
@@ -346,7 +359,8 @@ describe('SetVariableHandler', () => {
             expect(execCtx.context['paddedVar']).toBe('trimmed');
             expect(execCtx.context).not.toHaveProperty('  paddedVar  ');
             // --- ASSERTION FIX: Expect correct log message (uses trimmed name) ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "paddedVar" to ORIGINAL value: "trimmed"');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "paddedVar" to value: "trimmed"');
         });
 
         test('overwrites existing variable', () => {
@@ -358,7 +372,8 @@ describe('SetVariableHandler', () => {
             // --- ASSERTION FIX: Check correct context for overwritten value ---
             expect(execCtx.context['existingVar']).toBe('new value'); // Verify overwritten value
             // --- ASSERTION FIX: Expect correct log message ---
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "existingVar" to ORIGINAL value: "new value"');
+            // *** UPDATED EXPECTED LOG MESSAGE ***
+            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "existingVar" to value: "new value"');
         });
     });
 
