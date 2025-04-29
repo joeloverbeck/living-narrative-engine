@@ -127,7 +127,8 @@ export class SystemDataRegistry {
         try {
             // ** Specific Case: GameDataRepository / worldName **
             // AC: query correctly calls gameDataRepository.getWorldName() for the specified case.
-            if (sourceId === 'GameDataRegistry' && queryDetails === 'worldName') {
+            // --- FIX: Corrected sourceId and queryDetails check ---
+            if (sourceId === 'GameDataRepository' && queryDetails === 'getWorldName') {
                 // Check if the method exists and is callable before attempting the call
                 if (typeof sourceInstance.getWorldName === 'function') {
                     const result = sourceInstance.getWorldName();
@@ -138,6 +139,7 @@ export class SystemDataRegistry {
                     return undefined; // Method not found on source
                 }
             }
+            // --- END FIX ---
 
             // --- Add other specific query handlers here as needed ---
             // Example:
@@ -164,5 +166,3 @@ export class SystemDataRegistry {
         }
     }
 }
-
-// AC: SystemDataRegistry class exists and is exported.
