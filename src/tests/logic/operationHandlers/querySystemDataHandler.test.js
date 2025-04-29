@@ -9,15 +9,20 @@ import QuerySystemDataHandler from '../../../logic/operationHandlers/querySystem
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
-// *** Corrected typedef for ExecutionContext based on buildMockExecutionContext usage ***
+// *** CORRECTED ExecutionContext typedef based on handler's actual usage and needed test structure ***
 /**
  * Represents the overall execution environment for an operation.
- * Note: Based on user feedback, this context should NOT contain its own logger.
+ * The handler now expects a 'context' property directly on this object.
  * @typedef {object} ExecutionContext
- * @property {import('../../../logic/defs.js').JsonLogicEvaluationContext} evaluationContext - The context specific to JsonLogic rules.
+ * @property {object} context - The shared context object for storing/retrieving variables.
  * @property {any} entityManager - Mocked entity manager.
  * @property {any} validatedEventDispatcher - Mocked event dispatcher.
- * @property {ILogger} logger - The logger instance (problematic according to user feedback, but present in mock builder).
+ * @property {ILogger} logger - DEPRECATED logger on context, should be ignored by handler.
+ * @property {any} [event] - Optional event details (added for completeness in mock).
+ * @property {any} [actor] - Optional actor details (added for completeness in mock).
+ * @property {any} [target] - Optional target details (added for completeness in mock).
+ * @property {any} [globals] - Optional globals (added for completeness in mock).
+ * @property {any} [entities] - Optional entities (added for completeness in mock).
  */
 /** @typedef {import('../../../logic/operationHandlers/querySystemDataHandler.js').QuerySystemDataParams} QuerySystemDataParams */
 
@@ -43,34 +48,31 @@ const createMockSystemDataRegistry = () => ({
 });
 
 // --- Helper – ExecutionContext factory -------------------------------------
+// *** CORRECTED Mock Builder to match handler's expectation of executionContext.context ***
 /**
- * Builds a mock ExecutionContext.
- * @param {object} [contextData={}] - Initial data for evaluationContext.context.
- * @param {ILogger} [contextLogger=null] - **DEPRECATED**: Logger should come from constructor. Kept for existing tests but ideally removed.
+ * Builds a mock ExecutionContext with the 'context' property at the top level.
+ * @param {object} [contextData={}] - Initial data for executionContext.context.
+ * @param {ILogger} [contextLogger=null] - **DEPRECATED**: Logger should come from constructor. Kept for testing the ignore mechanism.
  * @returns {ExecutionContext}
  */
 function buildMockExecutionContext(contextData = {}, contextLogger = null) {
-    // If a specific logger isn't passed, create a new mock one.
-    // This logger in the context is problematic based on user feedback.
     const loggerToUse = contextLogger ?? createMockLogger();
     return {
-        evaluationContext: {
-            event: {type: 'TEST_EVENT', payload: {}},
-            actor: null,
-            target: null,
-            context: {...contextData}, // Clone to prevent mutation across tests
-            globals: {},
-            entities: {},
-            // evaluationContext should NOT have a logger per user feedback
-        },
+        // --- Core properties expected by the handler/tests ---
+        context: {...contextData}, // Context is now directly on executionContext
         entityManager: {}, // Mock or provide if needed
         validatedEventDispatcher: {}, // Mock if needed
-        // This logger property on the ExecutionContext itself seems to be the source of confusion.
-        // Ideally, ExecutionContext would only contain evaluationContext, entityManager, etc.
-        // and the handler would *only* use the constructor-injected logger.
-        // However, to make existing tests pass with minimal changes, we keep it for now.
-        logger: loggerToUse,
-        // gameDataRepository: {}, // Mock if needed
+
+        // --- Deprecated logger property ---
+        logger: loggerToUse, // Present for testing it's ignored
+
+        // --- Other potential properties (might be needed by registry.query implementations) ---
+        event: {type: 'TEST_EVENT', payload: {}},
+        actor: null,
+        target: null,
+        globals: {},
+        entities: {},
+        // No nested evaluationContext needed based on handler's current logic
     };
 }
 
@@ -176,33 +178,40 @@ describe('QuerySystemDataHandler', () => {
         const successResult = 'TestWorld';
 
         // --- Parameter Validation ---
-        // *** CORRECTED ASSERTION BLOCK ***
+        // *** This block should remain the same as it tests 'params' object, not 'executionContext' ***
         describe('Parameter Validation', () => {
-            // Test cases for invalid 'params' object itself
+            // Tests for invalid 'params' object (null, undefined, non-object) - These should still expect { params: ... }
             test.each([
                 ['null params', null, 'Missing or invalid parameters object.', {params: null}],
                 ['undefined params', undefined, 'Missing or invalid parameters object.', {params: undefined}],
                 ['non-object params', 123, 'Missing or invalid parameters object.', {params: 123}],
-                // Array passes object check, fails source_id check because source_id becomes undefined
-                ['array params', [], 'Missing or invalid required "source_id" parameter (must be non-empty string).', {params: []}],
             ])('logs error and returns if params are invalid (%s)', (desc, invalidParams, expectedMsg, expectedPayload) => {
-                // Note: buildMockExecutionContext creates a context with its OWN logger by default.
-                // However, the handler should IGNORE ctx.logger and ALWAYS use mockLogger (from constructor).
-                const ctx = buildMockExecutionContext(); // We still need a valid structure for evaluationContext.context
+                const ctx = buildMockExecutionContext();
                 handler.execute(invalidParams, ctx);
-
-                // --- CORRECTED ASSERTION: Use mockLogger (constructor injected) ---
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     `QUERY_SYSTEM_DATA: ${expectedMsg}`,
-                    expectedPayload
+                    expectedPayload // Expecting { params: ... } here is CORRECT
                 );
-                // Ensure the actual evaluation context wasn't accidentally modified
-                expect(ctx.evaluationContext.context).toEqual({});
-                // Verify the logger within ctx was NOT used (as per user requirement)
+                expect(ctx.context).toEqual({});
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
-            // Test cases for invalid 'source_id'
+            // Test case for array params - Fails source_id check AFTER destructuring attempt
+            test('logs error and returns if params are invalid (array params)', () => {
+                const invalidParams = [];
+                const ctx = buildMockExecutionContext();
+                handler.execute(invalidParams, ctx);
+                expect(mockLogger.error).toHaveBeenCalledWith(
+                    'QUERY_SYSTEM_DATA: Missing or invalid required "source_id" parameter (must be non-empty string).',
+                    // ***** CORRECTION: Expect receivedParams *****
+                    {receivedParams: invalidParams}
+                );
+                expect(ctx.context).toEqual({});
+                expect(ctx.logger.error).not.toHaveBeenCalled();
+            });
+
+
+            // Test cases for invalid 'source_id' - These should expect { receivedParams: ... }
             test.each([
                 ['missing', {query_details: 'q', result_variable: 'r'}],
                 ['null', {source_id: null, query_details: 'q', result_variable: 'r'}],
@@ -213,50 +222,50 @@ describe('QuerySystemDataHandler', () => {
             ])('logs error and returns if "source_id" is invalid (%s)', (desc, params) => {
                 const ctx = buildMockExecutionContext();
                 handler.execute(params, ctx);
-                // --- CORRECTED ASSERTION: Use mockLogger ---
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     'QUERY_SYSTEM_DATA: Missing or invalid required "source_id" parameter (must be non-empty string).',
-                    {params}
+                    // ***** CORRECTION: Expect receivedParams *****
+                    {receivedParams: params}
                 );
-                expect(ctx.evaluationContext.context).toEqual({});
+                expect(ctx.context).toEqual({});
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
-            // Test cases for invalid 'query_details'
+            // Test cases for invalid 'query_details' - These should expect { receivedParams: ... }
             test.each([
                 ['missing', {source_id: 's', result_variable: 'r'}],
-                // ['null', { source_id: 's', query_details: null, result_variable: 'r' }], // null is a valid value
                 ['undefined', {source_id: 's', query_details: undefined, result_variable: 'r'}],
             ])('logs error and returns if "query_details" is invalid (%s)', (desc, params) => {
                 const ctx = buildMockExecutionContext();
                 handler.execute(params, ctx);
-                // --- CORRECTED ASSERTION: Use mockLogger ---
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     'QUERY_SYSTEM_DATA: Missing required "query_details" parameter.',
-                    {params}
+                    // ***** CORRECTION: Expect receivedParams *****
+                    {receivedParams: params}
                 );
-                expect(ctx.evaluationContext.context).toEqual({});
+                expect(ctx.context).toEqual({});
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
+            // Test for 'allows null as query_details' remains logically the same (checks NO error is logged)
             test('allows null as query_details', () => {
                 const ctx = buildMockExecutionContext();
                 const paramsWithNull = {...defaultParams, query_details: null};
-                mockSystemDataRegistry.query.mockReturnValue('result from null query'); // Simulate success
+                mockSystemDataRegistry.query.mockReturnValue('result from null query');
+
                 handler.execute(paramsWithNull, ctx);
-                // --- CORRECTED ASSERTION: Use mockLogger ---
-                // Should NOT log the "missing query_details" error
+
                 expect(mockLogger.error).not.toHaveBeenCalledWith(
                     expect.stringContaining('Missing required "query_details"'),
-                    expect.anything()
+                    expect.anything() // No need to check payload key if no error logged
                 );
-                // Should proceed to query
+                expect(mockSystemDataRegistry.query).toHaveBeenCalledTimes(1);
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, null);
-                expect(ctx.evaluationContext.context[defaultResultVariable]).toBe('result from null query');
-                expect(ctx.logger.error).not.toHaveBeenCalled(); // Also check ctx logger wasn't used
+                expect(ctx.context[defaultResultVariable]).toBe('result from null query');
+                expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
-            // Test cases for invalid 'result_variable'
+            // Test cases for invalid 'result_variable' - These should expect { receivedParams: ... }
             test.each([
                 ['missing', {source_id: 's', query_details: 'q'}],
                 ['null', {source_id: 's', query_details: 'q', result_variable: null}],
@@ -267,45 +276,43 @@ describe('QuerySystemDataHandler', () => {
             ])('logs error and returns if "result_variable" is invalid (%s)', (desc, params) => {
                 const ctx = buildMockExecutionContext();
                 handler.execute(params, ctx);
-                // --- CORRECTED ASSERTION: Use mockLogger ---
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     'QUERY_SYSTEM_DATA: Missing or invalid required "result_variable" parameter (must be non-empty string).',
-                    {params}
+                    // ***** CORRECTION: Expect receivedParams *****
+                    {receivedParams: params}
                 );
-                expect(ctx.evaluationContext.context).toEqual({});
+                expect(ctx.context).toEqual({});
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
         });
-        // *** END CORRECTED BLOCK ***
+        // *** END Parameter Validation block ***
 
 
         // --- Execution Context Validation ---
-        // *** CORRECTED ASSERTION BLOCK ***
+        // *** CORRECTED ASSERTION BLOCK AND TEST CASES ***
         describe('Execution Context Validation', () => {
             const validParams = {...defaultParams};
 
             // Define test cases for various invalid execution context structures
-            // Note: The concept of passing a logger within the context is flawed per user feedback.
-            // These tests primarily validate the check for `evaluationContext.context` being a valid object.
+            // targeting the check: !executionContext || typeof executionContext.context !== 'object' || executionContext.context === null
             test.each([
                 ['null executionContext', null],
                 ['undefined executionContext', undefined],
-                // Cases where evaluationContext itself is missing or invalid
-                ['executionContext without evaluationContext', {logger: createMockLogger()}], // Still has logger, but no eval ctx
-                ['executionContext with null evaluationContext', {logger: createMockLogger(), evaluationContext: null}],
-                // Cases where evaluationContext exists, but its 'context' property is invalid
-                ['evaluationContext without context', {evaluationContext: {}}], // Missing context property
-                ['evaluationContext with null context', {evaluationContext: {context: null}}],
-                ['evaluationContext with non-object context', {evaluationContext: {context: 'string'}}],
+                // Cases where executionContext exists, but its 'context' property is invalid
+                ['executionContext without context', {}], // context is undefined
+                ['executionContext with null context', {context: null}], // context is null
+                ['executionContext with non-object context', {context: 'string'}], // context is not an object
+                // Added case: context is an array (technically typeof 'object', but might be undesired)
+                // Note: The current code allows arrays. Add this if stricter checking is needed.
+                // ['executionContext with array context', { context: [] }],
             ])('logs error and returns if execution context structure is invalid (%s)', (desc, invalidCtx) => {
                 // Execute the handler with valid operation parameters but an invalid context structure
                 handler.execute(validParams, invalidCtx);
 
-                // --- CORRECTED ASSERTION: Always use mockLogger and expect correct payload key ---
-                // The handler MUST use the constructor-injected logger (mockLogger).
-                // The log payload key should be 'executionContext' as fixed in the code.
+                // --- CORRECTED ASSERTION: Expect the *new* error message ---
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    'QUERY_SYSTEM_DATA: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
+                    // The NEW message reflecting the check on executionContext.context
+                    'QUERY_SYSTEM_DATA: executionContext.context is missing or invalid. Cannot store result.',
                     // The logged object should contain the invalid context structure under the key 'executionContext'
                     {executionContext: invalidCtx}
                 );
@@ -320,17 +327,22 @@ describe('QuerySystemDataHandler', () => {
 
 
         // --- Core Execution Paths ---
+        // *** CORRECTED ASSERTION BLOCK ***
         describe('Core Execution Scenarios', () => {
+            // *** CORRECTED TEST FOR SUCCESSFUL EXECUTION ***
             test('executes successfully, calls registry.query, stores result in context', () => {
-                const ctx = buildMockExecutionContext({initialVar: 'exists'});
+                const ctx = buildMockExecutionContext({initialVar: 'exists'}); // Correct builder provides ctx.context
                 mockSystemDataRegistry.query.mockReturnValue(successResult);
 
                 handler.execute(defaultParams, ctx);
 
+                // --- ASSERTION FIX: Should now be called because ctx.context is valid ---
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledTimes(1);
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context).toHaveProperty(defaultResultVariable, successResult);
-                expect(ctx.evaluationContext.context['initialVar']).toBe('exists');
+
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context).toHaveProperty(defaultResultVariable, successResult);
+                expect(ctx.context['initialVar']).toBe('exists'); // Check initial data preserved
 
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Attempting to query source "${defaultSourceId}"`));
@@ -343,15 +355,17 @@ describe('QuerySystemDataHandler', () => {
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
+            // *** CORRECTED COMPLEX OBJECT TEST ***
             test('handles successful query returning complex object', () => {
-                const ctx = buildMockExecutionContext();
+                const ctx = buildMockExecutionContext(); // Correct builder provides ctx.context
                 const complexResult = {data: [1, 2], nested: {flag: true}};
                 mockSystemDataRegistry.query.mockReturnValue(complexResult);
 
                 handler.execute(defaultParams, ctx);
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context[defaultResultVariable]).toEqual(complexResult);
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context[defaultResultVariable]).toEqual(complexResult);
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Stored result in "${defaultResultVariable}": ${JSON.stringify(complexResult)}`));
                 expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -362,14 +376,16 @@ describe('QuerySystemDataHandler', () => {
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
+            // *** CORRECTED NULL RESULT TEST ***
             test('handles successful query returning null', () => {
-                const ctx = buildMockExecutionContext();
+                const ctx = buildMockExecutionContext(); // Correct builder provides ctx.context
                 mockSystemDataRegistry.query.mockReturnValue(null);
 
                 handler.execute(defaultParams, ctx);
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context[defaultResultVariable]).toBeNull();
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context[defaultResultVariable]).toBeNull();
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Stored result in "${defaultResultVariable}": null`));
                 expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -380,17 +396,18 @@ describe('QuerySystemDataHandler', () => {
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
 
-
+            // *** CORRECTED QUERY FAILURE (UNDEFINED RETURN) TEST ***
             test('handles query failure (registry returns undefined), stores undefined, logs warning', () => {
-                const ctx = buildMockExecutionContext({initialVar: 'exists'});
+                const ctx = buildMockExecutionContext({initialVar: 'exists'}); // Correct builder provides ctx.context
                 mockSystemDataRegistry.query.mockReturnValue(undefined);
 
                 handler.execute(defaultParams, ctx);
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledTimes(1);
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context).toHaveProperty(defaultResultVariable, undefined);
-                expect(ctx.evaluationContext.context['initialVar']).toBe('exists');
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context).toHaveProperty(defaultResultVariable, undefined);
+                expect(ctx.context['initialVar']).toBe('exists'); // Check initial data preserved
 
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Attempting to query source "${defaultSourceId}"`));
@@ -407,9 +424,10 @@ describe('QuerySystemDataHandler', () => {
 
             });
 
-            // ##### Test Block Corrected #####
+            // *** CORRECTED QUERY ERROR (THROW) TEST ***
+            // Note: This test had correct assertions already regarding logging, just needs context access fix.
             test('handles query error (registry throws), stores undefined, logs error', () => {
-                const ctx = buildMockExecutionContext({initialVar: 'exists'});
+                const ctx = buildMockExecutionContext({initialVar: 'exists'}); // Correct builder provides ctx.context
                 const queryError = new Error('Database connection failed');
                 mockSystemDataRegistry.query.mockImplementation(() => {
                     throw queryError;
@@ -419,32 +437,24 @@ describe('QuerySystemDataHandler', () => {
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledTimes(1);
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context).toHaveProperty(defaultResultVariable, undefined);
-                expect(ctx.evaluationContext.context['initialVar']).toBe('exists');
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context).toHaveProperty(defaultResultVariable, undefined);
+                expect(ctx.context['initialVar']).toBe('exists'); // Check initial data preserved
 
-                // --- Assert against mockLogger ---
+                // --- Assert against mockLogger (Error and Warning logs) ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Attempting to query source "${defaultSourceId}"`));
-
-                // --- Assert Error Log Call ---
-                // *** CORRECTED VARIABLE IN STRING ***
-                // Check the error message logged when the registry.query throws
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    `QUERY_SYSTEM_DATA: Error occurred while executing query on source "${defaultSourceId}". Storing 'undefined' in "${defaultResultVariable}".`, // Use defaultResultVariable here
+                    `QUERY_SYSTEM_DATA: Error occurred while executing query on source "${defaultSourceId}". Storing 'undefined' in "${defaultResultVariable}".`,
                     expect.objectContaining({ // Check the payload details
-                        sourceId: defaultSourceId, // Expect trimmed source ID (which is defaultSourceId here)
-                        queryDetails: defaultQueryDetails, // Expect original query details
-                        resultVariable: defaultResultVariable, // Expect trimmed result variable (which is defaultResultVariable here)
-                        error: queryError.message, // Expect the error message
+                        sourceId: defaultSourceId,
+                        queryDetails: defaultQueryDetails,
+                        resultVariable: defaultResultVariable,
+                        error: queryError.message,
                     })
                 );
-
-                // --- Assert Final Warning Log Call ---
-                // Check the warning message logged after handling the error (since result is undefined)
                 expect(mockLogger.warn).toHaveBeenCalledWith(
                     `QUERY_SYSTEM_DATA: Query to source "${defaultSourceId}" failed or returned no result. Stored 'undefined' in "${defaultResultVariable}".`
                 );
-
-                // --- Assert Absence of Success Log ---
                 expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully queried source'));
 
                 // --- Verify ctx logger not used ---
@@ -454,9 +464,9 @@ describe('QuerySystemDataHandler', () => {
             });
             // ##### End Corrected Test Block #####
 
-
+            // *** CORRECTED TRIMMING TEST ***
             test('trims whitespace from source_id and result_variable', () => {
-                const ctx = buildMockExecutionContext();
+                const ctx = buildMockExecutionContext(); // Correct builder provides ctx.context
                 const paramsWithWhitespace = {
                     source_id: `  ${defaultSourceId}  `,
                     query_details: defaultQueryDetails,
@@ -467,8 +477,9 @@ describe('QuerySystemDataHandler', () => {
                 handler.execute(paramsWithWhitespace, ctx);
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails); // Trimmed source_id used
-                expect(ctx.evaluationContext.context).toHaveProperty(defaultResultVariable, successResult); // Trimmed result_variable used
-                expect(ctx.evaluationContext.context).not.toHaveProperty(`  ${defaultResultVariable}  `);
+                // --- ASSERTION FIX: Check the correct context location with trimmed key ---
+                expect(ctx.context).toHaveProperty(defaultResultVariable, successResult); // Trimmed result_variable used as key
+                expect(ctx.context).not.toHaveProperty(`  ${defaultResultVariable}  `); // Verify spacey key wasn't used
 
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`query source "${defaultSourceId}"`));
@@ -477,11 +488,10 @@ describe('QuerySystemDataHandler', () => {
                 expect(ctx.logger.debug).not.toHaveBeenCalled();
             });
 
-            // This test is now confirming the *absence* of using the context logger
+            // This test confirms the absence of using the context logger (already correct)
             test('uses ONLY the constructor logger, ignoring any logger in execution context', () => {
-                // Create a specific logger intended for the context (which should be ignored)
                 const specificContextLogger = createMockLogger();
-                // Pass it via the (now discouraged) second argument of buildMockExecutionContext
+                // Use the corrected builder, passing the specific logger to be ignored
                 const ctx = buildMockExecutionContext({}, specificContextLogger);
                 mockSystemDataRegistry.query.mockReturnValue(successResult);
 
@@ -498,9 +508,9 @@ describe('QuerySystemDataHandler', () => {
                 expect(specificContextLogger.error).not.toHaveBeenCalled();
             });
 
-
+            // *** CORRECTED NON-STRINGIFIABLE RESULT TEST ***
             test('handles non-stringifiable result during logging gracefully', () => {
-                const ctx = buildMockExecutionContext();
+                const ctx = buildMockExecutionContext(); // Correct builder provides ctx.context
                 const circularResult = {};
                 circularResult.myself = circularResult;
                 mockSystemDataRegistry.query.mockReturnValue(circularResult);
@@ -508,7 +518,8 @@ describe('QuerySystemDataHandler', () => {
                 handler.execute(defaultParams, ctx);
 
                 expect(mockSystemDataRegistry.query).toHaveBeenCalledWith(defaultSourceId, defaultQueryDetails);
-                expect(ctx.evaluationContext.context[defaultResultVariable]).toBe(circularResult);
+                // --- ASSERTION FIX: Check the correct context location ---
+                expect(ctx.context[defaultResultVariable]).toBe(circularResult);
 
                 // --- Assert against mockLogger ---
                 expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully queried source "${defaultSourceId}". Stored result in "${defaultResultVariable}": [Could not stringify result]`));
@@ -520,5 +531,6 @@ describe('QuerySystemDataHandler', () => {
                 expect(ctx.logger.error).not.toHaveBeenCalled();
             });
         });
+        // *** END Core Execution Scenarios block ***
     });
 });

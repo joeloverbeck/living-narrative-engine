@@ -47,8 +47,8 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
             "type": "QUERY_SYSTEM_DATA",
             "comment": "Get the official world name from the game data manifest.",
             "parameters": {
-                "source": "GameDataRepository",
-                "query": "getWorldName",
+                "source_id": "GameDataRepository",
+                "query_details": "getWorldName",
                 "result_variable": "officialWorldName"
             }
         },
