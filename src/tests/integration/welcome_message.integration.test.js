@@ -57,7 +57,9 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
             "comment": "Determine the actual world name to use and construct the appropriate welcome message text.",
             "parameters": {
                 "condition": {
-                    "!!": {"var": "context.officialWorldName"}
+                    "!!": {
+                        "var": "context.officialWorldName"
+                    }
                 },
                 "then_actions": [
                     {
@@ -65,7 +67,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
                         "comment": "Use the official name found.",
                         "parameters": {
                             "variable_name": "determinedName",
-                            "value": "$context.officialWorldName"
+                            "value": "{context.officialWorldName}"
                         }
                     },
                     {
@@ -73,7 +75,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
                         "comment": "Set the welcome message text using the official name.",
                         "parameters": {
                             "variable_name": "welcomeMessageText",
-                            "value": "Welcome to $context.determinedName!"
+                            "value": "Welcome to {context.determinedName}!"
                         }
                     }
                 ],
@@ -85,7 +87,9 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
                             "variable_name": "determinedName",
                             "value": {
                                 "or": [
-                                    {"var": "event.data.inputWorldName"},
+                                    {
+                                        "var": "event.data.inputWorldName"
+                                    },
                                     "an Unnamed World"
                                 ]
                             }
@@ -96,7 +100,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
                         "comment": "Set the welcome message text using the fallback name and add suffix.",
                         "parameters": {
                             "variable_name": "welcomeMessageText",
-                            "value": "Welcome to $context.determinedName! (Name from input)"
+                            "value": "Welcome to {context.determinedName}! (Name from input)"
                         }
                     }
                 ]
@@ -108,7 +112,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
             "parameters": {
                 "eventType": "textUI:set_title",
                 "payload": {
-                    "text": "$context.determinedName"
+                    "text": "{context.determinedName}"
                 }
             }
         },
@@ -118,7 +122,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
             "parameters": {
                 "eventType": "textUI:display_message",
                 "payload": {
-                    "text": "$context.welcomeMessageText",
+                    "text": "{context.welcomeMessageText}",
                     "type": "info"
                 }
             }
@@ -127,7 +131,7 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
             "type": "LOG",
             "comment": "Log successful execution of the welcome message rule.",
             "parameters": {
-                "message": "Rule textUI:show_welcome_message: Successfully dispatched welcome messages for world: '$context.determinedName'.",
+                "message": "Rule textUI:show_welcome_message: Successfully dispatched welcome messages for world: '{context.determinedName}'.",
                 "level": "info"
             }
         }
