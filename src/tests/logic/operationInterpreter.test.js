@@ -99,7 +99,7 @@ const querySystemDataOperation = {
     type: 'QUERY_SYSTEM_DATA',
     parameters: {
         source: 'test_source',
-        query: { detail: 'query detail for {event.type}' },
+        query: {detail: 'query detail for {event.type}'},
         result_variable: 'queryResult'
     },
     comment: 'Query system data using event type'
@@ -107,17 +107,17 @@ const querySystemDataOperation = {
 // Note: This expected value is likely not being produced currently based on test failures
 const resolvedQuerySystemDataParameters = {
     source: 'test_source',
-    query: { detail: 'query detail for TEST_EVENT' },
+    query: {detail: 'query detail for TEST_EVENT'},
     result_variable: 'queryResult'
 };
 
 // --- Sample Execution Context ---
 /** @type {ExecutionContext} */
 const mockExecutionContext = {
-    event: {type: 'TEST_EVENT', payload: { someValue: 'payloadValue'}},
+    event: {type: 'TEST_EVENT', payload: {someValue: 'payloadValue'}},
     actor: {id: 'player', name: 'Hero'},
     target: null,
-    context: { existingVar: 'abc' },
+    context: {existingVar: 'abc'},
     getService: jest.fn(),
     logger: mockLogger,
 };
@@ -146,7 +146,10 @@ describe('OperationInterpreter', () => {
 
     test('constructor should throw if registry is missing or invalid', () => {
         expect(() => new OperationInterpreter({logger: mockLogger})).toThrow('OperationRegistry');
-        expect(() => new OperationInterpreter({logger: mockLogger, operationRegistry: {}})).toThrow('OperationRegistry');
+        expect(() => new OperationInterpreter({
+            logger: mockLogger,
+            operationRegistry: {}
+        })).toThrow('OperationRegistry');
     });
 
     test('constructor should initialize successfully with valid dependencies', () => {
@@ -251,7 +254,7 @@ describe('OperationInterpreter', () => {
             interpreter.execute(null, mockExecutionContext);
         }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({ operation: null }));
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({operation: null}));
     });
 
     test('execute should log error if operation.type is missing or empty', () => {
@@ -260,7 +263,7 @@ describe('OperationInterpreter', () => {
             interpreter.execute(opMissingType, mockExecutionContext);
         }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({ operation: opMissingType }));
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({operation: opMissingType}));
         mockLogger.error.mockClear();
 
         const opWhitespaceType = {type: '  ', parameters: {}};
@@ -268,7 +271,7 @@ describe('OperationInterpreter', () => {
             interpreter.execute(opWhitespaceType, mockExecutionContext);
         }).not.toThrow();
         expect(mockRegistry.getHandler).not.toHaveBeenCalled();
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({ operation: opWhitespaceType }));
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('invalid operation object'), expect.objectContaining({operation: opWhitespaceType}));
     });
 
     // --- AC Test: Placeholder Resolution Errors ---
@@ -277,7 +280,7 @@ describe('OperationInterpreter', () => {
         // Arrange: Create an operation with an invalid placeholder path
         const opInvalidPlaceholder = {
             type: 'LOG',
-            parameters: { message: '{invalid.path.that.does.not.exist}' }
+            parameters: {message: '{invalid.path.that.does.not.exist}'}
         };
         // No expectedResolvedParamsWithError needed, we expect the original params to be passed
         mockRegistry.getHandler.mockReturnValue(mockLogHandler); // Provide a handler
@@ -298,7 +301,7 @@ describe('OperationInterpreter', () => {
             expect.any(Error)
         );
         // Verify the warning from resolvePlaceholders itself was likely called (via the interpreter passing the logger)
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Placeholder path "invalid.path.that.does.not.exist" could not be resolved'));
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Placeholder path "invalid.path.that.does.not.exist" from {invalid.path.that.does.not.exist} could not be resolved'));
         // Verify the interpreter still logged the attempt to resolve and execute
         expect(mockLogger.debug).toHaveBeenCalledWith('Resolved parameters for operation type "LOG".'); // It still logs this even if resolution fails
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "LOG"...');

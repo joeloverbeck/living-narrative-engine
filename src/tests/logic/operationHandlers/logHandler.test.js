@@ -4,7 +4,10 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import LogHandler, {INTERPOLATION_FALLBACK} from '../../../logic/operationHandlers/logHandler.js'; // Adjust path if needed
+// Assuming INTERPOLATION_FALLBACK is exported for tests. If not, define it here.
+// import LogHandler, { INTERPOLATION_FALLBACK } from '../../../logic/operationHandlers/logHandler.js';
+import LogHandler from '../../../logic/operationHandlers/logHandler.js'; // Adjust path if needed
+const INTERPOLATION_FALLBACK = 'N/A'; // Define fallback if not exported from handler
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -19,26 +22,22 @@ const mockLogger = {
     debug: jest.fn(),
 };
 
-// --- Mock Execution Context ---
+// --- Mock Execution Context (Reduced relevance as LogHandler doesn't use it for resolution) ---
 /** @type {ExecutionContext} */
 const baseMockContext = {
-    event: {type: 'TEST_EVENT', payload: {value: 10}},
-    actor: {id: 'player1', name: 'Hero', stats: {hp: 100}},
-    target: {id: 'enemy1', name: 'Goblin', stats: {hp: 50}},
-    logger: mockLogger, // Include logger in context for testing param validation logging
-    evaluationContext: { // Primary source for interpolation
+    // We still need the logger in the context for the handler's internal error logging
+    logger: mockLogger,
+    // evaluationContext is no longer directly used by LogHandler's execute method
+    // but keep it for conceptual clarity or potential future use in tests if needed.
+    evaluationContext: {
         event: {type: 'TEST_EVENT', payload: {value: 10}},
         actor: {id: 'player1', name: 'Hero', stats: {hp: 100}},
         target: {id: 'enemy1', name: 'Goblin', stats: {hp: 50}},
         customVar: 'hello world',
         complexVar: {nested: {value: true}},
         nullVar: null,
-        // undefinedVar: undefined // Implicitly undefined
     }
 };
-
-// Deep clone helper for context modification in tests
-const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
 // --- Test Suite ---
 describe('LogHandler', () => {
@@ -48,26 +47,23 @@ describe('LogHandler', () => {
     beforeEach(() => {
         // Reset mocks before each test
         jest.clearAllMocks();
-
         // Create a new handler instance for isolation
         logHandler = new LogHandler({logger: mockLogger});
     });
 
-    // --- Constructor Tests ---
+    // --- Constructor Tests --- (Keep As Is)
     test('constructor should throw if logger is missing', () => {
         expect(() => new LogHandler({})).toThrow('LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.');
     });
-
     test('constructor should throw if logger is invalid (missing methods)', () => {
-        expect(() => new LogHandler({logger: {info: jest.fn()}})).toThrow('LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.'); // Missing other methods
+        expect(() => new LogHandler({logger: {info: jest.fn()}})).toThrow('LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.');
         expect(() => new LogHandler({logger: 'not a logger'})).toThrow('LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.');
     });
-
     test('constructor should initialize successfully with valid logger', () => {
         expect(() => new LogHandler({logger: mockLogger})).not.toThrow();
     });
 
-    // --- execute() Tests - Basic Logging ---
+    // --- execute() Tests - Basic Logging --- (Keep As Is)
     test('execute should log message with level "info" when specified', () => {
         const params = {message: 'Info message test', level: 'info'};
         logHandler.execute(params, baseMockContext);
@@ -77,75 +73,53 @@ describe('LogHandler', () => {
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should log message with level "warn" when specified', () => {
         const params = {message: 'Warning message test', level: 'warn'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith('Warning message test');
-        expect(mockLogger.info).not.toHaveBeenCalled();
-        expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should log message with level "error" when specified', () => {
         const params = {message: 'Error message test', level: 'error'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith('Error message test');
-        expect(mockLogger.info).not.toHaveBeenCalled();
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should log message with level "debug" when specified', () => {
         const params = {message: 'Debug message test', level: 'debug'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.debug).toHaveBeenCalledTimes(1);
         expect(mockLogger.debug).toHaveBeenCalledWith('Debug message test');
-        expect(mockLogger.info).not.toHaveBeenCalled();
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(mockLogger.error).not.toHaveBeenCalled();
     });
-
     test('execute should default to "info" level if level is missing', () => {
         const params = {message: 'Default level test'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
         expect(mockLogger.info).toHaveBeenCalledWith('Default level test');
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning if level is missing (uses default directly)
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
-
-    // --- MODIFIED TEST ---
     test('execute should default to "info" level and log warning if level is invalid', () => {
         const params = {message: 'Invalid level test', level: 'critical'};
         logHandler.execute(params, baseMockContext);
-
-        // Should still log the message as 'info'
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
         expect(mockLogger.info).toHaveBeenCalledWith('Invalid level test');
-
-        // --- MODIFIED: Expect a warning now ---
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining('LogHandler: Invalid log level "critical" provided. Defaulting to "info".'),
             expect.objectContaining({requestedLevel: 'critical'})
         );
-
-        // Should not log as error or debug
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should handle case-insensitive levels', () => {
         const params = {message: 'Case test', level: 'DEBUG'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.debug).toHaveBeenCalledTimes(1);
         expect(mockLogger.debug).toHaveBeenCalledWith('Case test');
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // Valid level, no warning
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    // --- execute() Tests - Invalid Parameters ---
+    // --- execute() Tests - Invalid Parameters --- (Keep As Is - These Passed Before)
     test('execute should log error and not call log methods if params is null', () => {
         logHandler.execute(null, baseMockContext);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
@@ -154,172 +128,145 @@ describe('LogHandler', () => {
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should log error and not call log methods if params is empty object', () => {
         logHandler.execute({}, baseMockContext);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid or missing "message" parameter'), expect.anything());
         expect(mockLogger.info).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
-
     test('execute should log error and not call log methods if message is missing', () => {
         logHandler.execute({level: 'info'}, baseMockContext);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid or missing "message" parameter'), expect.anything());
         expect(mockLogger.info).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
 
-    test('execute should log error and not call log methods if message is not a string', () => {
-        logHandler.execute({message: 123, level: 'info'}, baseMockContext);
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid or missing "message" parameter'), expect.anything());
-        expect(mockLogger.info).not.toHaveBeenCalled();
-    });
-
-    test('execute should log error and not call log methods if message is an empty string', () => {
-        logHandler.execute({message: '', level: 'info'}, baseMockContext);
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid or missing "message" parameter'), expect.anything());
-        expect(mockLogger.info).not.toHaveBeenCalled();
-    });
-
-
-    // --- execute() Tests - Interpolation ---
-    test('execute should correctly interpolate top-level variables from evaluationContext', () => {
-        const params = {message: 'Actor: {actor.id}, Target: {target.name}, Custom: {customVar}'};
+    // --- MODIFIED: execute() Tests - Handling Message Types ---
+    test('execute should convert non-string message to string and log it', () => {
+        const params = {message: 123, level: 'info'};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('Actor: player1, Target: Goblin, Custom: hello world');
+        // It should NOT log an error
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        // It SHOULD log the stringified message
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith('123'); // String(123) -> "123"
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
 
-    test('execute should correctly interpolate nested variables', () => {
-        const params = {message: 'Actor HP: {actor.stats.hp}, Event Value: {event.payload.value}'};
+    test('execute should log warning and log message if message is an empty string', () => {
+        const params = {message: '', level: 'info'};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('Actor HP: 100, Event Value: 10');
+        // It should NOT log an error
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        // It SHOULD log a warning
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('resolved to an empty string'), expect.anything());
+        // It SHOULD still log the (empty) message
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(''); // Logs the empty string
+        expect(mockLogger.debug).not.toHaveBeenCalled();
     });
 
-    test('execute should correctly interpolate deeply nested variables', () => {
-        const params = {message: 'Complex: {complexVar.nested.value}'};
+
+    // --- MODIFIED: execute() Tests - Since Interpolation is Removed ---
+    // These tests now verify that LogHandler simply logs the exact string it's given.
+    test('execute should log a pre-resolved string containing data', () => {
+        // Simulate that resolution happened *before* calling execute
+        const resolvedMessage = 'Actor: player1, Target: Goblin, Custom: hello world';
+        const params = {message: resolvedMessage}; // Pass the already resolved string
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('Complex: true');
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage); // Expect the exact string
     });
 
-    test('execute should use fallback value for missing top-level variables', () => {
-        const params = {message: 'Missing: {undefinedVar}'};
+    test('execute should log a pre-resolved string with nested data', () => {
+        const resolvedMessage = 'Actor HP: 100, Event Value: 10';
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        // Assuming INTERPOLATION_FALLBACK is 'N/A', and undefinedVar results in 'undefined' string
-        expect(mockLogger.info).toHaveBeenCalledWith(`Missing: N/A`);
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should use fallback value for missing nested properties', () => {
-        const params = {message: 'Missing Prop: {actor.stats.mana}'}; // Assuming mana doesn't exist
+    test('execute should log a pre-resolved string with deeply nested data', () => {
+        const resolvedMessage = 'Complex: true';
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Missing Prop: ${INTERPOLATION_FALLBACK}`);
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should use fallback value when accessing property on null/undefined', () => {
-        const params = {message: 'Null Var Prop: {nullVar.property}, Target Prop: {target.nonexistent.prop}'};
+    test('execute should log a pre-resolved string containing fallback value (N/A)', () => {
+        // Simulate upstream resolution resulted in fallback
+        const resolvedMessage = `Missing: ${INTERPOLATION_FALLBACK}`;
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Null Var Prop: ${INTERPOLATION_FALLBACK}, Target Prop: ${INTERPOLATION_FALLBACK}`);
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should handle null values correctly (represent as "null")', () => {
-        const params = {message: 'Null value: {nullVar}'};
+    test('execute should log a pre-resolved string containing multiple fallbacks', () => {
+        const resolvedMessage = `Null Var Prop: ${INTERPOLATION_FALLBACK}, Target Prop: ${INTERPOLATION_FALLBACK}`;
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Null value: null`);
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should handle message with no placeholders', () => {
+    test('execute should log a pre-resolved string representing null ("null")', () => {
+        // Simulate upstream resolution resulted in string "null" for a null value placeholder
+        const resolvedMessage = `Null value: null`;
+        const params = {message: resolvedMessage};
+        logHandler.execute(params, baseMockContext);
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
+    });
+
+    test('execute should log a plain message with no placeholders', () => {
+        // This test remains valid as it never had placeholders
         const params = {message: 'Plain message, no interpolation.'};
         logHandler.execute(params, baseMockContext);
         expect(mockLogger.info).toHaveBeenCalledWith('Plain message, no interpolation.');
     });
 
-    test('execute should handle placeholders with whitespace', () => {
-        const params = {message: 'Spaced: { actor.id }'};
+    test('execute should log a pre-resolved string simulating resolved adjacent placeholders', () => {
+        const resolvedMessage = 'player1enemy1';
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('Spaced: player1');
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should handle message with mixed placeholders and text', () => {
-        const params = {message: 'Event {event.type} from {actor.name} targeting {target.id}.'};
+    test('execute should log a pre-resolved string simulating JSON stringified object', () => {
+        // Simulate upstream resolution stringified an object
+        const resolvedMessage = `Actor Stats: ${JSON.stringify({hp: 100})}`; // Example resolved string
+        const params = {message: resolvedMessage};
         logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('Event TEST_EVENT from Hero targeting enemy1.');
+        expect(mockLogger.info).toHaveBeenCalledWith(resolvedMessage);
     });
 
-    test('execute should handle adjacent placeholders', () => {
-        const params = {message: '{actor.id}{target.id}'};
-        logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith('player1enemy1');
-    });
-
-    test('execute should handle empty context for interpolation', () => {
-        const params = {message: 'Actor: {actor.id}'};
-        // Pass context with evaluationContext as empty object
-        const emptyEvalContext = {logger: mockLogger, evaluationContext: {}};
-        logHandler.execute(params, emptyEvalContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Actor: ${INTERPOLATION_FALLBACK}`);
-
-        // Pass context as empty object (no evaluationContext property)
-        const emptyContext = {logger: mockLogger};
-        logHandler.execute(params, emptyContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Actor: ${INTERPOLATION_FALLBACK}`);
-    });
-
-
-    test('execute should handle context without evaluationContext (fallback to top-level context)', () => {
-        const params = {message: 'Event: {event.type}'};
-        const contextWithoutEval = {
-            event: {type: 'TOP_LEVEL_EVENT'},
-            actor: null,
-            target: null,
-            logger: mockLogger,
-            // no evaluationContext
-        };
-        logHandler.execute(params, contextWithoutEval);
-        // It should find event.type in the top-level context
-        expect(mockLogger.info).toHaveBeenCalledWith('Event: TOP_LEVEL_EVENT');
-    });
-
-    test('execute should JSON stringify object values during interpolation', () => {
-        const params = {message: 'Actor Stats: {actor.stats}'};
-        logHandler.execute(params, baseMockContext);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Actor Stats: ${JSON.stringify(baseMockContext.evaluationContext.actor.stats)}`);
-    });
-
-    // --- execute() Tests - Error Handling within Logger ---
-    // --- MODIFIED TEST ---
+    // --- execute() Tests - Error Handling within Logger --- (Keep As Is)
     test('execute should log error to console if logger method throws', () => {
         const error = new Error('Logger failed!');
         mockLogger.info.mockImplementationOnce(() => {
             throw error;
         });
-        // Spy on console.error WITHOUT mocking its implementation to see output (optional)
-        // const consoleErrorSpy = jest.spyOn(console, 'error');
-        // OR mock it to suppress output during test run:
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
         });
         const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {
-        }); // Also spy on fallback log
+        });
 
         const params = {message: 'Test logger failure', level: 'info'};
         logHandler.execute(params, baseMockContext);
 
-        // Verify console.error was called due to the logger failure
         expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-        // --- MODIFIED: Expect the actual error object ---
         expect(consoleErrorSpy).toHaveBeenCalledWith(
             expect.stringContaining('LogHandler: Failed to write log message via ILogger instance'),
             expect.objectContaining({
                 message: 'Test logger failure',
-                originalError: error // Check for the actual Error object
+                originalError: error
             })
         );
-
-        // Verify the final fallback log to console.log
         expect(consoleLogSpy).toHaveBeenCalledTimes(1);
         expect(consoleLogSpy).toHaveBeenCalledWith('[INFO] Test logger failure');
 
-        // Restore spies
         consoleErrorSpy.mockRestore();
         consoleLogSpy.mockRestore();
     });

@@ -1,17 +1,14 @@
 // src/logic/operationHandlers/dispatchEventHandler.js
-
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Correct type for 2nd arg
+/** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
 /** @typedef {import('../../core/eventBus.js').default} EventBus */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-
-// --- External Utilities ---
-import resolvePath from '../../utils/resolvePath.js';
 
 // --- Handler Implementation ---
 /**
  * Parameters accepted by {@link DispatchEventHandler#execute}.
+ * Placeholders in `eventType` or `payload` values are assumed to be pre-resolved by OperationInterpreter.
  * @typedef {object} DispatchEventParameters
  * @property {string}                eventType                Namespaced event id.
  * @property {Record<string, any>=}  payload                  Optional payload object.
@@ -20,95 +17,60 @@ import resolvePath from '../../utils/resolvePath.js';
 class DispatchEventHandler {
     /** @type {ValidatedEventDispatcher | EventBus} */
     #dispatcher;
-    /** @type {ILogger} */ // Logger dependency
+    /** @type {ILogger} */
     #logger;
 
     /**
-     * --- MODIFIED: Added logger dependency ---
      * @param {object} deps
      * @param {ValidatedEventDispatcher|EventBus} deps.dispatcher
      * @param {ILogger} deps.logger - The logger service instance.
      * @throws {Error} If dependencies are invalid.
      */
-    constructor({dispatcher, logger}) { // Added logger
-        // Validate Dispatcher
+    constructor({dispatcher, logger}) {
         const dispatcherValid = dispatcher && (typeof dispatcher.dispatchValidated === 'function' || typeof dispatcher.dispatch === 'function');
         if (!dispatcherValid) {
             throw new Error('DispatchEventHandler requires a valid ValidatedEventDispatcher (preferred) or EventBus instance.');
         }
-        this.#dispatcher = dispatcher;
-
-        // Validate Logger
-        if (!logger || typeof logger.debug !== 'function') { // Basic check
+        if (!logger || typeof logger.debug !== 'function') {
             throw new Error('DispatchEventHandler requires a valid ILogger instance.');
         }
-        this.#logger = logger; // Store injected logger
+        this.#dispatcher = dispatcher;
+        this.#logger = logger;
     }
 
     /**
-     * Emit a new game-event.
-     * --- MODIFIED: Uses this.#logger, uses evaluationContext for placeholders ---
-     * @param {DispatchEventParameters|null|undefined} params
-     * @param {JsonLogicEvaluationContext} evaluationContext - The dynamic rule context (event, actor, target, context vars).
+     * Emit a new game-event using pre-resolved parameters.
+     * @param {DispatchEventParameters|null|undefined} params - Parameters with placeholders already resolved.
+     * @param {ExecutionContext} executionContext - The context (used for services, not resolution here).
      */
-    execute(params, evaluationContext) { // Renamed second arg
-        // -----------------------------------------------------------------------
-        // 0 • Use injected logger
-        // -----------------------------------------------------------------------
-        const logger = this.#logger; // Use the logger injected via constructor
+    execute(params, executionContext) {
+        const logger = this.#logger; // Use the injected logger
 
-        // --- Logger validation during execution (optional, belt-and-suspenders) ---
-        // const hasLogger = logger && ['debug', 'info', 'warn', 'error'].every((m) => typeof logger[m] === 'function');
-        // if (!hasLogger) {
-        //     console.error('DispatchEventHandler: CRITICAL - Injected logger is missing or invalid at execution time.', { loggerInstance: logger });
-        //     return; // Cannot proceed
-        // }
-        // --- End optional validation ---
-
-
-        // -----------------------------------------------------------------------
-        // 1 • Validate params / eventType (unchanged logic)
-        // -----------------------------------------------------------------------
-        if (!params || typeof params.eventType !== 'string') {
-            logger.error('DispatchEventHandler: Invalid or missing "eventType" parameter. Dispatch cancelled.', {params});
+        // 1. Validate resolved params and Trim eventType
+        // Ensure params exists and eventType is a non-blank string *after* trimming.
+        if (!params || typeof params.eventType !== 'string' || !params.eventType.trim()) {
+            logger.error('DispatchEventHandler: Invalid or missing "eventType" parameter (must be a non-blank string). Dispatch cancelled.', {params});
             return;
         }
+        // *** CORRECTION: Trim eventType before using it ***
         const eventType = params.eventType.trim();
-        if (!eventType) {
-            logger.error('DispatchEventHandler: Invalid or missing "eventType" parameter. Dispatch cancelled.', {params});
-            return;
-        }
 
-        // -----------------------------------------------------------------------
-        // 2 • Normalise payload & Resolve Placeholders using evaluationContext
-        // -----------------------------------------------------------------------
-        let rawPayload = params.payload ?? {};
-        if (typeof rawPayload !== 'object' || rawPayload === null) {
-            logger.warn(`DispatchEventHandler: Invalid 'payload' provided (expected object or null/undefined, got ${typeof rawPayload}). Defaulting to empty object {}.`, {
-                eventType,
-                providedPayload: rawPayload
+        // 2. Use the resolved payload (handle if it's not an object after resolution, though rare)
+        let payload = params.payload ?? {}; // Default to {} if null/undefined
+        if (typeof payload !== 'object' || payload === null) {
+            logger.warn(`DispatchEventHandler: Resolved 'payload' is not an object (got ${typeof payload}). Using empty object {}.`, {
+                eventType, // Use the trimmed eventType for context
+                resolvedPayload: params.payload // Log the original non-object payload received
             });
-            rawPayload = {};
+            payload = {};
         }
 
-        // Resolve placeholders against the evaluationContext object
-        const payload = {};
-        for (const [k, v] of Object.entries(rawPayload)) {
-            if (typeof v === 'string' && v.startsWith('$')) {
-                // Pass evaluationContext as the root for resolving $event, $actor, $context etc.
-                const resolved = resolvePath(evaluationContext, v.slice(1));
-                payload[k] = resolved !== undefined ? resolved : v; // Keep literal if not found
-            } else {
-                payload[k] = v;
-            }
-        }
+        // --- REMOVED Placeholder Resolution Logic ---
+        // The payload received here is assumed to be fully resolved by OperationInterpreter.
 
-        // -----------------------------------------------------------------------
-        // 3 • Dispatch (uses logger correctly now)
-        // -----------------------------------------------------------------------
-        logger.debug(`DispatchEventHandler: Attempting to dispatch event "${eventType}"...`, {payload});
+        // 3. Dispatch
+        logger.debug(`DispatchEventHandler: Attempting to dispatch event "${eventType}" with resolved payload...`, {payload});
         try {
-            // Prefer ValidatedEventDispatcher if available
             if (typeof this.#dispatcher.dispatchValidated === 'function') {
                 this.#dispatcher.dispatchValidated(eventType, payload)
                     .then(() => {
@@ -121,15 +83,16 @@ class DispatchEventHandler {
                             payload
                         });
                     });
-            }
-            // Fallback to regular EventBus dispatch
-            else if (typeof this.#dispatcher.dispatch === 'function') {
+            } else if (typeof this.#dispatcher.dispatch === 'function') {
+                // Fallback to EventBus interface
                 Promise.resolve(this.#dispatcher.dispatch(eventType, payload))
                     .then(() => {
+                        // Check listener count if the method exists (best effort)
                         const listenerCount = typeof this.#dispatcher.listenerCount === 'function' ? this.#dispatcher.listenerCount(eventType) : NaN;
                         if (listenerCount === 0) {
                             logger.warn(`DispatchEventHandler: No listeners for event "${eventType}".`);
                         } else {
+                            // Log success, handle NaN case for unknown count
                             logger.debug(`DispatchEventHandler: Dispatched "${eventType}" to ${Number.isNaN(listenerCount) ? 'unknown' : listenerCount} listener(s) via EventBus.`);
                         }
                     })
@@ -141,7 +104,7 @@ class DispatchEventHandler {
                         });
                     });
             } else {
-                // Should not happen due to constructor validation
+                // This case should ideally be prevented by the constructor check
                 logger.error(`DispatchEventHandler: Internal error – dispatcher lacks a recognised dispatch method. "${eventType}" not sent.`);
             }
         } catch (syncError) {
