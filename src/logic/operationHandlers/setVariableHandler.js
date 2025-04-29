@@ -1,20 +1,15 @@
 // src/logic/operationHandlers/setVariableHandler.js
 
-// -----------------------------------------------------------------------------
-//  SET_VARIABLE Handler
-//  Sets or updates a variable within the current rule execution context.
-//  Handles placeholder resolution for values starting with '$'.
-// -----------------------------------------------------------------------------
-
 // --- Utility Imports ---
-import resolvePath from '../../utils/resolvePath.js'; // <-- ADDED: Import resolvePath utility
+import resolvePath from '../../utils/resolvePath.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
-/** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Correct type for 2nd arg
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
-/** @typedef {import('../../../data/schemas/operation.schema.json').$defs.SetVariableParameters} SetVariableParameters */ // More specific type if needed, but schema path might change
+// Optional: More specific type if needed and stable
+// /** @typedef {import('../../../data/schemas/operation.schema.json').$defs.SetVariableParameters} SetVariableParameters */
 
 /**
  * Parameters expected by the SetVariableHandler#execute method.
@@ -22,7 +17,7 @@ import resolvePath from '../../utils/resolvePath.js'; // <-- ADDED: Import resol
  *
  * @typedef {object} SetVariableOperationParams
  * @property {string} variable_name - Required. The name of the variable to set or update in the evaluationContext.context. Must not be empty or contain only whitespace.
- * @property {*} value - Required. The value to assign to the variable. Can be any valid JSON type. If the value is a string starting with '$', it will be treated as a placeholder path and resolved against the executionContext.evaluationContext.
+ * @property {*} value - Required. The value to assign to the variable. Can be any valid JSON type. If the value is a string starting with '$', it will be treated as a placeholder path and resolved against the evaluationContext.
  */
 
 // -----------------------------------------------------------------------------
@@ -33,9 +28,9 @@ import resolvePath from '../../utils/resolvePath.js'; // <-- ADDED: Import resol
  * @class SetVariableHandler
  * Implements the OperationHandler interface for the "SET_VARIABLE" operation type.
  * Takes a variable name and a value. If the value is a string starting with '$',
- * it resolves the placeholder path against the `executionContext.evaluationContext`.
+ * it resolves the placeholder path against the `evaluationContext`.
  * Stores the resulting key-value pair in the
- * `executionContext.evaluationContext.context` object.
+ * `evaluationContext.context` object.
  *
  * @implements {OperationHandler}
  */
@@ -45,7 +40,7 @@ class SetVariableHandler {
      * @readonly
      * @type {ILogger}
      */
-    #logger;
+    #logger; // Logger is injected via constructor
 
     /**
      * Creates an instance of SetVariableHandler.
@@ -53,7 +48,7 @@ class SetVariableHandler {
      * @param {ILogger} dependencies.logger - The logging service instance.
      * @throws {Error} If the logger dependency is missing or invalid.
      */
-    constructor({ logger }) {
+    constructor({logger}) {
         // Validate the logger dependency
         if (!logger || typeof logger.debug !== 'function' || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function') {
             throw new Error('SetVariableHandler requires a valid ILogger instance with debug, info, warn, and error methods.');
@@ -64,47 +59,53 @@ class SetVariableHandler {
 
     /**
      * Executes the SET_VARIABLE operation.
-     * Sets or updates a variable in the `executionContext.evaluationContext.context`.
-     * Performs placeholder resolution if `params.value` is a string starting with '$'.
+     * Sets or updates a variable in the `evaluationContext.context`.
+     * Performs placeholder resolution against `evaluationContext` if `params.value` is a string starting with '$'.
+     * Uses the constructor-injected logger for logging.
      *
      * @param {OperationParams | SetVariableOperationParams | null | undefined} params - The parameters for the operation. Requires `variable_name` (string) and `value` (*).
-     * @param {ExecutionContext} executionContext - The context of the execution, providing `evaluationContext` for resolution and storage.
+     * @param {JsonLogicEvaluationContext} evaluationContext - The dynamic rule context, providing source for resolution and the target `context` object for storage.
      * @returns {void}
      * @implements {OperationHandler}
      */
-    execute(params, executionContext) {
-        // --- Get logger (prefer context logger if available) ---
-        const logger = executionContext?.logger ?? this.#logger;
+    execute(params, evaluationContext) {
+        // --- Use constructor-injected logger ---
+        const logger = this.#logger;
 
         // --- 1. Validate Parameters ---
         if (!params || typeof params !== 'object') {
-            logger.error('SET_VARIABLE: Missing or invalid parameters object.', { params });
+            logger.error('SET_VARIABLE: Missing or invalid parameters object.', {params});
             return;
         }
 
-        const { variable_name, value } = params; // Keep original `value` for reference
+        const {variable_name, value} = params; // Keep original `value` for reference
 
         // Validate variable_name
         if (typeof variable_name !== 'string' || !variable_name.trim()) {
-            logger.error('SET_VARIABLE: Invalid or missing "variable_name" parameter. Must be a non-empty string.', { variable_name });
+            logger.error('SET_VARIABLE: Invalid or missing "variable_name" parameter. Must be a non-empty string.', {variable_name});
             return;
         }
         const trimmedVariableName = variable_name.trim();
 
         // Validate value: must be defined
         if (value === undefined) {
-            logger.error(`SET_VARIABLE: Missing "value" parameter for variable "${trimmedVariableName}".`, { params });
+            logger.error(`SET_VARIABLE: Missing "value" parameter for variable "${trimmedVariableName}".`, {params});
             return;
         }
 
-        // --- 2. Validate Execution Context ---
-        // Ensure the target context and evaluation context exist and are objects
-        if (!executionContext?.evaluationContext?.context || typeof executionContext.evaluationContext.context !== 'object' || executionContext.evaluationContext.context === null || typeof executionContext.evaluationContext !== 'object' || executionContext.evaluationContext === null) {
-            logger.error('SET_VARIABLE: executionContext or evaluationContext or evaluationContext.context is missing or invalid. Cannot resolve or store variable.', { executionContext });
-            return;
+        // --- 2. Validate evaluationContext and the target context object within it ---
+        if (!evaluationContext || typeof evaluationContext !== 'object' || evaluationContext === null) {
+            logger.error('SET_VARIABLE: evaluationContext is missing or invalid. Cannot resolve or store variable.', {evaluationContext});
+            return; // Cannot resolve if the source context doesn't exist
+        }
+        // Specifically check the nested 'context' property needed for storage
+        if (typeof evaluationContext.context !== 'object' || evaluationContext.context === null) {
+            logger.error('SET_VARIABLE: evaluationContext.context is missing or invalid. Cannot store variable.', {evaluationContext});
+            return; // Cannot store if the target 'context' object doesn't exist
         }
 
-        // --- 3. Resolve Placeholder (if applicable) ---
+
+        // --- 3. Resolve Placeholder (if applicable) using evaluationContext ---
         let finalValue = value; // Default to the original value
         let resolutionAttempted = false;
         let resolvedValueString = '[Not resolved]'; // For logging
@@ -116,23 +117,19 @@ class SetVariableHandler {
             // Check for empty path after removing '$'
             if (!placeholderPath) {
                 logger.warn(`SET_VARIABLE: Value was '$' with no path. Using empty string as path for resolution against context root for variable "${trimmedVariableName}".`);
-                // Allow resolvePath to handle empty string path if desired, or treat as error
-                // Current resolvePath might throw on empty string - let's see behavior.
-                // Decision: Log warning, let resolvePath proceed (likely returns undefined or throws).
             } else {
                 logger.debug(`SET_VARIABLE: Detected placeholder "${value}" for variable "${trimmedVariableName}". Attempting to resolve path "${placeholderPath}"...`);
             }
 
-
             try {
                 // Use the entire evaluationContext as the root for resolution
-                // This allows accessing event, actor, target, context etc.
-                const resolvedValue = resolvePath(executionContext.evaluationContext, placeholderPath);
+                // This allows accessing event, actor, target, context etc. via $event.x, $actor.y, $context.z etc.
+                const resolvedValue = resolvePath(evaluationContext, placeholderPath);
                 finalValue = resolvedValue; // Use the result, even if undefined
 
                 // Log the outcome of the resolution
                 if (resolvedValue === undefined) {
-                    logger.warn(`SET_VARIABLE: Placeholder path "${placeholderPath}" resolved to UNDEFINED in executionContext.evaluationContext for variable "${trimmedVariableName}". Storing undefined.`);
+                    logger.warn(`SET_VARIABLE: Placeholder path "${placeholderPath}" resolved to UNDEFINED in evaluationContext for variable "${trimmedVariableName}". Storing undefined.`);
                     resolvedValueString = 'undefined';
                 } else {
                     // Safely stringify the resolved value for logging
@@ -148,11 +145,11 @@ class SetVariableHandler {
             } catch (resolveError) {
                 // Catch errors from resolvePath (e.g., invalid path type)
                 logger.error(`SET_VARIABLE: Error during resolvePath for path "${placeholderPath}" (variable: "${trimmedVariableName}"). Assigning UNDEFINED.`, {
-                    error: resolveError,
+                    error: resolveError.message, // Log error message
                     originalValue: value,
                     pathAttempted: placeholderPath
                 });
-                finalValue = undefined; // Assign undefined on resolution error, as per AC decision.
+                finalValue = undefined; // Assign undefined on resolution error
                 resolvedValueString = '[Error during resolution]';
             }
         } else {
@@ -160,7 +157,7 @@ class SetVariableHandler {
             logger.debug(`SET_VARIABLE: Value for variable "${trimmedVariableName}" is not a placeholder string starting with '$'. Using original value directly.`);
         }
 
-        // --- 4. Implement Core Logic (Assignment) ---
+        // --- 4. Implement Core Logic (Assignment into evaluationContext.context) ---
         // Log the final value being assigned
         let finalValueStringForLog;
         try {
@@ -177,22 +174,24 @@ class SetVariableHandler {
             let originalValueStringForLog;
             try {
                 originalValueStringForLog = JSON.stringify(value);
-            } catch { originalValueStringForLog = '[Could not stringify]'; }
+            } catch {
+                originalValueStringForLog = '[Could not stringify]';
+            }
             logger.info(`SET_VARIABLE: Setting context variable "${trimmedVariableName}" to ORIGINAL value: ${originalValueStringForLog}`);
         }
 
-        // Perform the assignment
+        // Perform the assignment into the nested context object
         try {
-            executionContext.evaluationContext.context[trimmedVariableName] = finalValue;
+            evaluationContext.context[trimmedVariableName] = finalValue;
             // Optional: Log success after setting
             // logger.debug(`SET_VARIABLE: Successfully set context variable "${trimmedVariableName}".`);
         } catch (assignmentError) {
             logger.error(`SET_VARIABLE: Unexpected error during assignment for variable "${trimmedVariableName}".`, {
-                error: assignmentError,
+                error: assignmentError.message,
                 variableName: trimmedVariableName,
                 valueBeingAssigned: finalValue // Log the value that caused the error
             });
-            // Consider if assignment errors should halt execution (re-throw)
+            // Optionally re-throw if assignment errors should halt execution
             // throw assignmentError;
         }
     }

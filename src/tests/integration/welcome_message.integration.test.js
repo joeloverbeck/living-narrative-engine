@@ -22,7 +22,7 @@
 import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../logic/operationInterpreter.js';
 import OperationRegistry from '../../logic/operationRegistry.js';
-import { SystemDataRegistry } from '../../core/services/systemDataRegistry.js'; // Import concrete class for mocking its methods if needed, but we mock the instance
+import {SystemDataRegistry} from '../../core/services/systemDataRegistry.js'; // Import concrete class for mocking its methods if needed, but we mock the instance
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Import real service
 
 // --- Handler Imports (Needed for Manual Registration in this test) ---
@@ -33,108 +33,102 @@ import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDat
 // We don't need ModifyComponent etc. for this specific rule
 
 // --- Jest Imports ---
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 
 // --- Mock Data Definitions (Constants) ---
 
 // The rule being tested
 const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
-    rule_id: "show_welcome_message",
-    event_type: "core:engine_initialized",
-    comment: "Displays the initial welcome message upon engine startup, setting the title and showing a greeting.",
-    actions: [
+    "rule_id": "show_welcome_message",
+    "event_type": "core:engine_initialized",
+    "comment": "Displays the initial welcome message upon engine startup, setting the title and showing a greeting.",
+    "actions": [
         {
-            type: "QUERY_SYSTEM_DATA",
-            comment: "Get the official world name from the game data manifest.",
-            parameters: {
-                // NOTE: The rule uses 'source' and 'query', but our SystemDataRegistry expects 'sourceId' and 'queryDetails'.
-                // This highlights a potential mismatch needs alignment. Assuming SystemDataRegistry is correct for now.
-                // Let's modify the test to use the parameters SystemDataRegistry expects.
-                // OR, modify the mock SystemDataRegistry.query to handle the rule's parameters. Let's adapt the mock.
-                source: "GameDataRepository", // Keep rule's param name
-                query: "getWorldName",         // Keep rule's param name
-                result_variable: "officialWorldName"
+            "type": "QUERY_SYSTEM_DATA",
+            "comment": "Get the official world name from the game data manifest.",
+            "parameters": {
+                "source": "GameDataRepository",
+                "query": "getWorldName",
+                "result_variable": "officialWorldName"
             }
         },
         {
-            type: "IF",
-            comment: "Determine the actual world name to use and construct the appropriate welcome message text.",
-            parameters: {
-                condition: {
-                    "!!": { "var": "context.officialWorldName" } // Checks if officialWorldName is truthy
+            "type": "IF",
+            "comment": "Determine the actual world name to use and construct the appropriate welcome message text.",
+            "parameters": {
+                "condition": {
+                    "!!": {"var": "context.officialWorldName"}
                 },
-                then_actions: [
+                "then_actions": [
                     {
-                        type: "SET_VARIABLE",
-                        comment: "Use the official name found.",
-                        parameters: {
-                            variable_name: "determinedName",
-                            value: "$context.officialWorldName" // Use the variable set by QUERY_SYSTEM_DATA
+                        "type": "SET_VARIABLE",
+                        "comment": "Use the official name found.",
+                        "parameters": {
+                            "variable_name": "determinedName",
+                            "value": "$context.officialWorldName"
                         }
                     },
                     {
-                        type: "SET_VARIABLE",
-                        comment: "Set the welcome message text using the official name.",
-                        parameters: {
-                            variable_name: "welcomeMessageText",
-                            value: "Welcome to $context.determinedName!" // Interpolate the name
+                        "type": "SET_VARIABLE",
+                        "comment": "Set the welcome message text using the official name.",
+                        "parameters": {
+                            "variable_name": "welcomeMessageText",
+                            "value": "Welcome to $context.determinedName!"
                         }
                     }
                 ],
-                else_actions: [
+                "else_actions": [
                     {
-                        type: "SET_VARIABLE",
-                        comment: "Use the input name from the event payload, or a default if missing.",
-                        parameters: {
-                            variable_name: "determinedName",
-                            value: {
-                                // JsonLogic to get event.payload.inputWorldName or default
+                        "type": "SET_VARIABLE",
+                        "comment": "Use the input name from the event payload, or a default if missing.",
+                        "parameters": {
+                            "variable_name": "determinedName",
+                            "value": {
                                 "or": [
-                                    { "var": "event.payload.inputWorldName" }, // Corrected path based on context structure
+                                    {"var": "event.data.inputWorldName"},
                                     "an Unnamed World"
                                 ]
                             }
                         }
                     },
                     {
-                        type: "SET_VARIABLE",
-                        comment: "Set the welcome message text using the fallback name and add suffix.",
-                        parameters: {
-                            variable_name: "welcomeMessageText",
-                            // Interpolate the fallback name and add the suffix
-                            value: "Welcome to $context.determinedName! (Name from input)"
+                        "type": "SET_VARIABLE",
+                        "comment": "Set the welcome message text using the fallback name and add suffix.",
+                        "parameters": {
+                            "variable_name": "welcomeMessageText",
+                            "value": "Welcome to $context.determinedName! (Name from input)"
                         }
                     }
                 ]
             }
         },
         {
-            type: "DISPATCH_EVENT",
-            comment: "Dispatch event to set the application/UI title.",
-            parameters: {
-                eventType: "textUI:set_title",
-                payload: {
-                    text: "$context.determinedName" // Use the determined name
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch event to set the application/UI title.",
+            "parameters": {
+                "eventType": "textUI:set_title",
+                "payload": {
+                    "text": "$context.determinedName"
                 }
             }
         },
         {
-            type: "DISPATCH_EVENT",
-            comment: "Dispatch event to display the welcome message text in the UI.",
-            parameters: {
-                eventType: "textUI:display_message",
-                payload: {
-                    text: "$context.welcomeMessageText", // Use the constructed message text
-                    type: "info"
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch event to display the welcome message text in the UI.",
+            "parameters": {
+                "eventType": "textUI:display_message",
+                "payload": {
+                    "text": "$context.welcomeMessageText",
+                    "type": "info"
                 }
             }
         },
         {
-            type: "LOG",
-            comment: "Log successful execution of the welcome message rule.",
-            parameters: {
-                message: "Rule show_welcome_message: Successfully dispatched welcome messages for world: '$context.determinedName'.",
-                level: "info"
+            "type": "LOG",
+            "comment": "Log successful execution of the welcome message rule.",
+            "parameters": {
+                "message": "Rule textUI:show_welcome_message: Successfully dispatched welcome messages for world: '$context.determinedName'.",
+                "level": "info"
             }
         }
     ]
@@ -142,10 +136,10 @@ const MOCK_RULE_SHOW_WELCOME_MESSAGE = {
 
 
 // Mock GameEvent Data Definitions
-const MOCK_EVENT_SCENARIO_1 = { type: 'core:engine_initialized', payload: {} }; // Official Name
-const MOCK_EVENT_SCENARIO_2 = { type: 'core:engine_initialized', payload: { inputWorldName: "Input World" } }; // Input Fallback
-const MOCK_EVENT_SCENARIO_3_NULL = { type: 'core:engine_initialized', payload: { inputWorldName: null } }; // Default Fallback (null input)
-const MOCK_EVENT_SCENARIO_3_MISSING = { type: 'core:engine_initialized', payload: {} }; // Default Fallback (missing input)
+const MOCK_EVENT_SCENARIO_1 = {type: 'core:engine_initialized', payload: {}}; // Official Name
+const MOCK_EVENT_SCENARIO_2 = {type: 'core:engine_initialized', payload: {inputWorldName: "Input World"}}; // Input Fallback
+const MOCK_EVENT_SCENARIO_3_NULL = {type: 'core:engine_initialized', payload: {inputWorldName: null}}; // Default Fallback (null input)
+const MOCK_EVENT_SCENARIO_3_MISSING = {type: 'core:engine_initialized', payload: {}}; // Default Fallback (missing input)
 
 
 // --- Test Suite ---
@@ -184,12 +178,21 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
     beforeEach(() => {
         // Standard Mocks (Logger, EventBus, EntityManager, DataRegistry)
         mockLogger = {
-            info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
             loggedMessages: [],
-            _log(level, message, ...args) { this.loggedMessages.push({ level, message, args: args.length > 0 ? args : undefined }); },
-            info: jest.fn((m, ...a) => mockLogger._log('info', m, ...a)), warn: jest.fn((m, ...a) => mockLogger._log('warn', m, ...a)),
-            error: jest.fn((m, ...a) => mockLogger._log('error', m, ...a)), debug: jest.fn((m, ...a) => mockLogger._log('debug', m, ...a)),
-            clearLogs: () => { mockLogger.loggedMessages = []; }
+            _log(level, message, ...args) {
+                this.loggedMessages.push({level, message, args: args.length > 0 ? args : undefined});
+            },
+            info: jest.fn((m, ...a) => mockLogger._log('info', m, ...a)),
+            warn: jest.fn((m, ...a) => mockLogger._log('warn', m, ...a)),
+            error: jest.fn((m, ...a) => mockLogger._log('error', m, ...a)),
+            debug: jest.fn((m, ...a) => mockLogger._log('debug', m, ...a)),
+            clearLogs: () => {
+                mockLogger.loggedMessages = [];
+            }
         };
 
         capturedEventListener = null;
@@ -253,14 +256,14 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
 
 
         // Real JsonLogicEvaluationService (no complex custom ops needed here)
-        jsonLogicEvaluationService = new JsonLogicEvaluationService({ logger: mockLogger }); // Instantiated here
+        jsonLogicEvaluationService = new JsonLogicEvaluationService({logger: mockLogger}); // Instantiated here
 
         // Instantiate OperationRegistry and Manually Register Handlers needed by the rule
-        operationRegistry = new OperationRegistry({ logger: mockLogger });
+        operationRegistry = new OperationRegistry({logger: mockLogger});
 
         // Instantiate handlers with their dependencies (using mocks where needed)
-        const dispatchHandler = new DispatchEventHandler({ dispatcher: mockEventBus, logger: mockLogger });
-        const logHandler = new LogHandler({ logger: mockLogger });
+        const dispatchHandler = new DispatchEventHandler({dispatcher: mockEventBus, logger: mockLogger});
+        const logHandler = new LogHandler({logger: mockLogger});
         // --- FIX: Provide JsonLogicEvaluationService to SetVariableHandler ---
         const setVariableHandler = new SetVariableHandler({
             logger: mockLogger,
@@ -268,7 +271,10 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
         });
         // --- END FIX ---
         // QuerySystemDataHandler instantiation uses the corrected mockSystemDataRegistry
-        const querySystemDataHandler = new QuerySystemDataHandler({ logger: mockLogger, systemDataRegistry: mockSystemDataRegistry });
+        const querySystemDataHandler = new QuerySystemDataHandler({
+            logger: mockLogger,
+            systemDataRegistry: mockSystemDataRegistry
+        });
 
         // Register only the handlers used by show_welcome_message rule
         operationRegistry.register('QUERY_SYSTEM_DATA', querySystemDataHandler.execute.bind(querySystemDataHandler));
@@ -312,8 +318,8 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
             // Arrange
             const expectedWorldName = "Official World";
             mockGameDataRepository.getWorldName.mockReturnValue(expectedWorldName);
-            const expectedTitlePayload = { text: expectedWorldName };
-            const expectedMessagePayload = { text: `Welcome to ${expectedWorldName}!`, type: "info" };
+            const expectedTitlePayload = {text: expectedWorldName};
+            const expectedMessagePayload = {text: `Welcome to ${expectedWorldName}!`, type: "info"};
             const expectedFinalLogMessage = `Rule show_welcome_message: Successfully dispatched welcome messages for world: '${expectedWorldName}'.`;
 
             // Act
@@ -366,8 +372,8 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
             // Arrange
             const expectedWorldName = "Input World"; // From MOCK_EVENT_SCENARIO_2 payload
             mockGameDataRepository.getWorldName.mockReturnValue(null); // No official name
-            const expectedTitlePayload = { text: expectedWorldName };
-            const expectedMessagePayload = { text: `Welcome to ${expectedWorldName}! (Name from input)`, type: "info" };
+            const expectedTitlePayload = {text: expectedWorldName};
+            const expectedMessagePayload = {text: `Welcome to ${expectedWorldName}! (Name from input)`, type: "info"};
             const expectedFinalLogMessage = `Rule show_welcome_message: Successfully dispatched welcome messages for world: '${expectedWorldName}'.`;
 
             // Act
@@ -426,9 +432,9 @@ describe('SystemLogicInterpreter - E2E Test: Welcome Message Rule', () => {
             // Arrange
             const expectedWorldName = "an Unnamed World"; // Default from rule's 'or'
             mockGameDataRepository.getWorldName.mockReturnValue(null); // No official name
-            const expectedTitlePayload = { text: expectedWorldName };
+            const expectedTitlePayload = {text: expectedWorldName};
             // Note: Rule adds suffix even for the default
-            const expectedMessagePayload = { text: `Welcome to ${expectedWorldName}! (Name from input)`, type: "info" };
+            const expectedMessagePayload = {text: `Welcome to ${expectedWorldName}! (Name from input)`, type: "info"};
             const expectedFinalLogMessage = `Rule show_welcome_message: Successfully dispatched welcome messages for world: '${expectedWorldName}'.`;
 
             // Act

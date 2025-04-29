@@ -3,13 +3,14 @@
 /**
  * @fileoverview Defines the QuerySystemDataHandler class, responsible for
  * executing the QUERY_SYSTEM_DATA operation. It queries non-ECS data sources
- * via the SystemDataRegistry and stores the result in the execution context.
+ * via the SystemDataRegistry and stores the result in the evaluation context.
  */
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */ // Corrected path from previous request
+/** @typedef {import('../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
+// *** Corrected JSDoc Import: The second argument represents the whole execution environment ***
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 
@@ -18,14 +19,15 @@
  * @typedef {object} QuerySystemDataParams
  * @property {string} source_id - Required. The unique identifier of the data source registered in SystemDataRegistry.
  * @property {string | object} query_details - Required. Details about the query (e.g., method name, query object). Passed directly to `SystemDataRegistry.query`.
- * @property {string} result_variable - Required. The variable name within `evaluationContext.context` where the query result will be stored.
+ * @property {string} result_variable - Required. The variable name within `executionContext.evaluationContext.context` where the query result will be stored.
  */
 
 /**
  * @class QuerySystemDataHandler
  * Implements the OperationHandler interface for the "QUERY_SYSTEM_DATA" operation type.
  * Fetches data from a registered system data source (like a repository) using the
- * SystemDataRegistry and stores the result in the rule's execution context.
+ * SystemDataRegistry and stores the result in the rule's dynamic evaluation context.
+ * Uses constructor-injected logger and SystemDataRegistry.
  *
  * @implements {OperationHandler}
  */
@@ -35,14 +37,14 @@ class QuerySystemDataHandler {
      * @readonly
      * @type {ILogger}
      */
-    #logger;
+    #logger; // Injected dependency
 
     /**
      * @private
      * @readonly
      * @type {SystemDataRegistry}
      */
-    #systemDataRegistry;
+    #systemDataRegistry; // Injected dependency
 
     /**
      * Creates an instance of QuerySystemDataHandler.
@@ -51,7 +53,7 @@ class QuerySystemDataHandler {
      * @param {SystemDataRegistry} dependencies.systemDataRegistry - The central registry for system data sources.
      * @throws {TypeError} If logger or systemDataRegistry dependencies are missing or invalid.
      */
-    constructor({ logger, systemDataRegistry }) {
+    constructor({logger, systemDataRegistry}) {
         // 1. Validate Logger dependency
         if (!logger || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
             throw new TypeError('QuerySystemDataHandler requires a valid ILogger instance with info, warn, error, and debug methods.');
@@ -60,8 +62,7 @@ class QuerySystemDataHandler {
 
         // 2. Validate SystemDataRegistry dependency
         if (!systemDataRegistry || typeof systemDataRegistry.query !== 'function') {
-            // Log the error before throwing, as logger is now validated and available
-            this.#logger.error('QuerySystemDataHandler: Invalid SystemDataRegistry dependency provided.', { systemDataRegistry });
+            this.#logger.error('QuerySystemDataHandler: Invalid SystemDataRegistry dependency provided.', {systemDataRegistry});
             throw new TypeError('QuerySystemDataHandler requires a valid SystemDataRegistry instance with a query method.');
         }
         this.#systemDataRegistry = systemDataRegistry;
@@ -72,88 +73,93 @@ class QuerySystemDataHandler {
     /**
      * Executes the QUERY_SYSTEM_DATA operation.
      * Validates parameters, calls systemDataRegistry.query(), handles errors,
-     * and stores the result (or undefined) in executionContext.evaluationContext.context.
+     * and stores the result (or undefined) in `executionContext.evaluationContext.context[params.result_variable]`.
+     * Uses the constructor-injected logger ONLY.
      *
      * @param {OperationParams | QuerySystemDataParams | null | undefined} params - The parameters for the operation.
-     * @param {ExecutionContext} executionContext - The context of the execution, used for logging and storing results.
+     * @param {ExecutionContext} executionContext - The overall execution environment containing the evaluation context.
      * @returns {undefined} Operation handlers typically return void/undefined.
      * @implements {OperationHandler}
      */
-    execute(params, executionContext) {
-        // 1. Get logger from executionContext or fallback to injected logger.
-        const logger = executionContext?.logger ?? this.#logger;
+    execute(params, executionContext) { // *** RENAMED PARAMETER ***
+        // 1. Get logger from constructor-injected dependency.
+        const logger = this.#logger;
 
-        // 2. Validate 'params' structure (source_id, query_details, result_variable).
-        if (!params || typeof params !== 'object') {
-            logger.error('QUERY_SYSTEM_DATA: Missing or invalid parameters object.', { params });
+        // 2. Validate 'params' structure
+        if (params === null || typeof params !== 'object') {
+            logger.error('QUERY_SYSTEM_DATA: Missing or invalid parameters object.', {params});
             return undefined;
         }
 
-        const { source_id, query_details, result_variable } = params;
+        const {source_id, query_details, result_variable} = params;
 
         if (typeof source_id !== 'string' || !source_id.trim()) {
-            logger.error('QUERY_SYSTEM_DATA: Missing or invalid required "source_id" parameter (must be non-empty string).', { params });
+            logger.error('QUERY_SYSTEM_DATA: Missing or invalid required "source_id" parameter (must be non-empty string).', {params});
             return undefined;
         }
         const trimmedSourceId = source_id.trim();
 
-        // query_details can be almost anything, just needs to be defined. SystemDataRegistry handles its specifics.
         if (query_details === undefined) {
-            logger.error('QUERY_SYSTEM_DATA: Missing required "query_details" parameter.', { params });
+            logger.error('QUERY_SYSTEM_DATA: Missing required "query_details" parameter.', {params});
             return undefined;
         }
 
         if (typeof result_variable !== 'string' || !result_variable.trim()) {
-            logger.error('QUERY_SYSTEM_DATA: Missing or invalid required "result_variable" parameter (must be non-empty string).', { params });
+            logger.error('QUERY_SYSTEM_DATA: Missing or invalid required "result_variable" parameter (must be non-empty string).', {params});
             return undefined;
         }
         const trimmedResultVariable = result_variable.trim();
 
-        // 3. Validate 'executionContext.evaluationContext.context' exists.
-        if (!executionContext?.evaluationContext?.context || typeof executionContext.evaluationContext.context !== 'object') {
-            logger.error('QUERY_SYSTEM_DATA: evaluationContext.context is missing or invalid. Cannot store result.', { executionContext });
-            return undefined;
+        // --- CORRECTED VALIDATION ---
+        // 3. Validate the target context object within executionContext.evaluationContext.
+        // Check the nested structure properly.
+        const evaluationCtx = executionContext?.evaluationContext; // Safely access nested property
+        if (!evaluationCtx || typeof evaluationCtx.context !== 'object' || evaluationCtx.context === null) {
+            // Log the whole executionContext that was passed and caused the failure
+            logger.error(
+                'QUERY_SYSTEM_DATA: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
+                {executionContext: executionContext} // Log the problematic structure
+            );
+            return undefined; // Cannot store if the target 'context' object doesn't exist
         }
+        // --- END CORRECTED VALIDATION ---
+
 
         logger.debug(`QUERY_SYSTEM_DATA: Attempting to query source "${trimmedSourceId}" with details: ${JSON.stringify(query_details)}. Storing result in context variable "${trimmedResultVariable}".`);
 
-        // Initialize result to undefined. It will be overwritten on success.
+        // Initialize result to undefined.
         let result = undefined;
         try {
-            // 4. Call this.#systemDataRegistry.query(params.source_id, params.query_details).
+            // 4. Call systemDataRegistry.query
             result = this.#systemDataRegistry.query(trimmedSourceId, query_details);
-            // AC: execute correctly calls systemDataRegistry.query with parameters from params.
 
         } catch (error) {
-            // Catch potential synchronous errors thrown by the registry's query method itself.
+            // Catch errors during query execution
             logger.error(`QUERY_SYSTEM_DATA: Error occurred while executing query on source "${trimmedSourceId}". Storing 'undefined' in "${trimmedResultVariable}".`, {
                 sourceId: trimmedSourceId,
                 queryDetails: query_details,
                 resultVariable: trimmedResultVariable,
-                error: error.message,
-                // Optionally include stack for deeper debugging if needed: stack: error.stack
+                error: error instanceof Error ? error.message : String(error),
             });
-            // 'result' remains undefined as initialized.
-            // AC: Query failures (return undefined or throw) result in undefined being stored and appropriate errors/warnings logged.
+            // 'result' remains undefined.
         }
 
-        // 5. Store the result (or undefined on failure/error) in executionContext.evaluationContext.context[params.result_variable].
+        // 5. Store the result (or undefined) in the correct context location.
         try {
-            executionContext.evaluationContext.context[trimmedResultVariable] = result;
+            // *** CORRECTED STORAGE LOCATION ***
+            evaluationCtx.context[trimmedResultVariable] = result;
         } catch (contextError) {
             logger.error(`QUERY_SYSTEM_DATA: Failed to store result in context variable "${trimmedResultVariable}" after query.`, {
                 resultVariable: trimmedResultVariable,
-                resultValue: result, // Log the value that failed to be stored
-                contextError: contextError.message,
+                resultValue: result,
+                contextError: contextError instanceof Error ? contextError.message : String(contextError),
             });
-            // Even if storing fails, we don't re-throw, just log the issue.
-            return undefined; // Still return undefined as per handler convention.
+            // Still return undefined as per handler convention.
+            return undefined;
         }
 
-
-        // 6. Add appropriate debug/error logging for the outcome.
+        // 6. Add logging for the outcome.
         if (result !== undefined) {
-            // AC: Successful query results are stored in the correct context variable.
             let resultString;
             try {
                 resultString = JSON.stringify(result);
@@ -162,9 +168,7 @@ class QuerySystemDataHandler {
             }
             logger.debug(`QUERY_SYSTEM_DATA: Successfully queried source "${trimmedSourceId}". Stored result in "${trimmedResultVariable}": ${resultString}`);
         } else {
-            // This covers cases where query() returned undefined (e.g., source not found, query not supported)
-            // OR where an error was caught during the query call.
-            // AC: Query failures (return undefined or throw) result in undefined being stored and appropriate errors/warnings logged. (Error logged in catch, warning implied here if registry returned undefined)
+            // Covers query() returning undefined OR errors caught above.
             logger.warn(`QUERY_SYSTEM_DATA: Query to source "${trimmedSourceId}" failed or returned no result. Stored 'undefined' in "${trimmedResultVariable}".`);
         }
 
