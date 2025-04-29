@@ -7,14 +7,14 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
-/** @typedef {import('../../../../core/services/schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('../../../../core/services/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../../../core/services/componentLoader.js').default} ComponentDefinitionLoader */
-/** @typedef {import('../../../../core/services/gameConfigLoader.js').default} GameConfigLoader */
-/** @typedef {import('../../../../core/services/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../../../core/services/actionLoader.js').default} ActionLoader */
-/** @typedef {import('../../../../core/services/eventLoader.js').default} EventLoader */
-/** @typedef {import('../../../../core/services/entityLoader.js').default} EntityLoader */ // Corrected path
+/** @typedef {import('../../../../core/loaders/schemaLoader.js').default} SchemaLoader */
+/** @typedef {import('../../../../core/loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../../../core/loaders/componentLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
+/** @typedef {import('../../../../core/modding/modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('../../../../core/loaders/actionLoader.js').default} ActionLoader */
+/** @typedef {import('../../../../core/loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../../../core/loaders/entityLoader.js').default} EntityLoader */ // Corrected path
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -24,16 +24,16 @@ import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 import {registerLoaders} from '../../../../core/config/registrations/loadersRegistrations.js'; // Corrected path
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
-import SchemaLoader from '../../../../core/services/schemaLoader.js'; // Import actual class
+import {tokens} from '../../../../core/config/tokens.js';
+import SchemaLoader from '../../../../core/loaders/schemaLoader.js'; // Import actual class
 // Import other actual loader classes if needed for instanceof checks
-import RuleLoader from '../../../../core/services/ruleLoader.js';
-import ComponentLoader from '../../../../core/services/componentLoader.js';
-import GameConfigLoader from '../../../../core/services/gameConfigLoader.js';
-import ModManifestLoader from '../../../../core/services/modManifestLoader.js';
-import ActionLoader from '../../../../core/services/actionLoader.js';
-import EventLoader from '../../../../core/services/eventLoader.js';
-import EntityLoader from '../../../../core/services/entityLoader.js';
+import RuleLoader from '../../../../core/loaders/ruleLoader.js';
+import ComponentLoader from '../../../../core/loaders/componentLoader.js';
+import GameConfigLoader from '../../../../core/loaders/gameConfigLoader.js';
+import ModManifestLoader from '../../../../core/modding/modManifestLoader.js';
+import ActionLoader from '../../../../core/loaders/actionLoader.js';
+import EventLoader from '../../../../core/loaders/eventLoader.js';
+import EntityLoader from '../../../../core/loaders/entityLoader.js';
 import StaticConfiguration from '../../../../core/services/staticConfiguration.js';
 import DefaultPathResolver from '../../../../core/services/defaultPathResolver.js';
 import AjvSchemaValidator from '../../../../core/services/ajvSchemaValidator.js';

@@ -1,0 +1,95 @@
+{
+  "rule_id": "show_welcome_message",
+  "event_type": "core:engine_initialized",
+  "comment": "Displays the initial welcome message upon engine startup, setting the title and showing a greeting.",
+  "actions": [
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Get the official world name from the game data manifest.",
+      "parameters": {
+        "source": "GameDataRepository",
+        "query": "getWorldName",
+        "result_variable": "officialWorldName"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Determine the actual world name to use and construct the appropriate welcome message text.",
+      "parameters": {
+        "condition": {
+          "!!": { "var": "context.officialWorldName" }
+        },
+        "then_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Use the official name found.",
+            "parameters": {
+              "variable_name": "determinedName",
+              "value": "$context.officialWorldName"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set the welcome message text using the official name.",
+            "parameters": {
+              "variable_name": "welcomeMessageText",
+              "value": "Welcome to $context.determinedName!"
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Use the input name from the event payload, or a default if missing.",
+            "parameters": {
+              "variable_name": "determinedName",
+              "value": {
+                "or": [
+                  { "var": "event.data.inputWorldName" },
+                  "an Unnamed World"
+                ]
+              }
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Set the welcome message text using the fallback name and add suffix.",
+            "parameters": {
+              "variable_name": "welcomeMessageText",
+              "value": "Welcome to $context.determinedName! (Name from input)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch event to set the application/UI title.",
+      "parameters": {
+        "eventType": "textUI:set_title",
+        "payload": {
+          "text": "$context.determinedName"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch event to display the welcome message text in the UI.",
+      "parameters": {
+        "eventType": "textUI:display_message",
+        "payload": {
+          "text": "$context.welcomeMessageText",
+          "type": "info"
+        }
+      }
+    },
+    {
+      "type": "LOG",
+      "comment": "Log successful execution of the welcome message rule.",
+      "parameters": {
+        "message": "Rule textUI:show_welcome_message: Successfully dispatched welcome messages for world: '$context.determinedName'.",
+        "level": "info"
+      }
+    }
+  ]
+}

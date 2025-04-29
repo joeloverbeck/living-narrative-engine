@@ -2,17 +2,19 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentLoader from '../../../core/services/componentLoader.js';
-import {BaseManifestItemLoader} from '../../../core/services/baseManifestItemLoader.js'; // Import base class if needed for type hints or inspection
+import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Adjusted path
+import {BaseManifestItemLoader} from '../../../core/loaders/baseManifestItemLoader.js'; // Adjusted path
 
-// --- Mock Service Factories (Copied from previous test files for self-containment) ---
+// --- Mock Service Factories (Keep these as they are, they are utility functions) ---
+// ... (createMockConfiguration, createMockPathResolver, createMockDataFetcher, createMockSchemaValidator, createMockDataRegistry, createMockLogger - unchanged) ...
+// ... (createMockModManifest - unchanged) ...
 
 /**
  * Creates a mock IConfiguration service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
+ * @returns {import('../../../core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
-const createMockConfiguration = (overrides = {}) => ({
+const createMockConfiguration = (overrides = {})  => ({
     getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
     getContentTypeSchemaId: jest.fn((typeName) => {
         if (typeName === 'components') {
@@ -35,7 +37,7 @@ const createMockConfiguration = (overrides = {}) => ({
 /**
  * Creates a mock IPathResolver service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
+ * @returns {import('../../../core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
 const createMockPathResolver = (overrides = {}) => ({
     resolveModContentPath: jest.fn((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
@@ -52,7 +54,7 @@ const createMockPathResolver = (overrides = {}) => ({
  * Creates a mock IDataFetcher service.
  * @param {object} [pathToResponse={}] - Map of path strings to successful response data.
  * @param {string[]} [errorPaths=[]] - List of paths that should trigger a rejection.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
+ * @returns {import('../../../core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
  */
 const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
     fetch: jest.fn(async (path) => {
@@ -70,7 +72,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
 /**
  * Creates a mock ISchemaValidator service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
+ * @returns {import('../../../core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
  */
 const createMockSchemaValidator = (overrides = {}) => {
     const loadedSchemas = new Map();
@@ -79,8 +81,6 @@ const createMockSchemaValidator = (overrides = {}) => {
     const mockValidator = {
         addSchema: jest.fn(async (schemaData, schemaId) => {
             if (loadedSchemas.has(schemaId)) {
-                // Simulate potential real-world behavior - allow override but maybe warn?
-                // For testing purposes, just overwrite. If strict checking is needed, throw here.
                 // console.warn(`Mock Schema Warning: Overwriting schema with ID '${schemaId}'`);
             }
             loadedSchemas.set(schemaId, schemaData);
@@ -102,6 +102,12 @@ const createMockSchemaValidator = (overrides = {}) => {
             if (validatorFn) {
                 return validatorFn(data);
             }
+            // Simulate base class behavior: If schema not loaded/mocked specifically, assume validation passes
+            // This is important so tests for *internal* errors (like invalid ID) are not blocked
+            // by an unexpected primary schema validation failure in the base class part.
+            if (loadedSchemas.has(schemaId)) {
+                return {isValid: true, errors: null};
+            }
             // Default to invalid if schema isn't specifically mocked/loaded
             return {
                 isValid: false,
@@ -114,12 +120,14 @@ const createMockSchemaValidator = (overrides = {}) => {
             } else {
                 const newMockFn = jest.fn(implementation);
                 schemaValidators.set(schemaId, newMockFn);
+                loadedSchemas.set(schemaId, {}); // Ensure schema is marked as 'loaded' if mocking function
             }
         },
         _setSchemaLoaded: (schemaId, schemaData = {}) => {
             if (!loadedSchemas.has(schemaId)) {
                 loadedSchemas.set(schemaId, schemaData);
                 if (!schemaValidators.has(schemaId)) {
+                    // Default mock function passes validation
                     const mockValidationFn = jest.fn((data) => ({isValid: true, errors: null}));
                     schemaValidators.set(schemaId, mockValidationFn);
                 }
@@ -134,7 +142,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 /**
  * Creates a mock IDataRegistry service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IDataRegistry} Mocked data registry service.
+ * @returns {import('../../../core/interfaces/coreServices.js').IDataRegistry} Mocked data registry service.
  */
 const createMockDataRegistry = (overrides = {}) => {
     const registryData = new Map();
@@ -187,7 +195,7 @@ const createMockDataRegistry = (overrides = {}) => {
 /**
  * Creates a mock ILogger service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger} Mocked logger service.
+ * @returns {import('../../../core/interfaces/coreServices.js').ILogger} Mocked logger service.
  */
 const createMockLogger = (overrides = {}) => ({
     info: jest.fn(),
@@ -212,9 +220,10 @@ const createMockModManifest = (modId, componentFiles = []) => ({
     },
 });
 
+
 // --- Test Suite ---
 
-describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)', () => {
+describe('ComponentLoader (Internal Definition Errors)', () => {
     // --- Declare Mocks & Loader ---
     let mockConfig;
     let mockResolver;
@@ -230,22 +239,37 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
 
     // --- Setup ---
     beforeEach(() => {
+        // Option A: Keep clearAllMocks and add specific reset
         jest.clearAllMocks();
         mockConfig = createMockConfiguration();
         mockResolver = createMockPathResolver();
         mockFetcher = createMockDataFetcher();
-        mockValidator = createMockSchemaValidator();
+        mockValidator = createMockSchemaValidator(); // Create it first
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
+
+        // Explicitly reset the state AND implementation of addSchema
+        if (mockValidator && mockValidator.addSchema && mockValidator.addSchema.mockReset) {
+            mockValidator.addSchema.mockReset();
+        }
+
         loader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+
+        // Ensure base class gets schema ID
         mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => typeName === 'components' ? componentDefSchemaId : undefined);
+        // Ensure base class *passes* primary validation for these tests focusing on internal errors
         mockValidator._setSchemaLoaded(componentDefSchemaId, {});
-        // Ensure component def schema validation passes by default for these tests
-        mockValidator.mockValidatorFunction(componentDefSchemaId, (data) => ({isValid: true, errors: null}));
+        // mockValidator.mockValidatorFunction(componentDefSchemaId, (data) => ({isValid: true, errors: null})); // Redundant due to _setSchemaLoaded default
+
         // Common resolver setup
         mockResolver.resolveModContentPath.mockImplementation((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`);
+
+        // Spy on base helper methods if needed
+        jest.spyOn(loader, '_storeItemInRegistry');
+        jest.spyOn(loader, '_validatePrimarySchema'); // To check it's NOT called internally
     });
 
+    // --- Test Case: Scenario 1 (Invalid ID) ---
     // --- Test Case: Scenario 1 (Invalid ID) ---
     it('should handle definitions with invalid "id" (null or empty string)', async () => {
         // --- Setup: Scenario 1 ---
@@ -253,8 +277,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         const filenameEmptyId = 'invalid_empty_id.component.json';
         const filePathNullId = `./data/mods/${modId}/components/${filenameNullId}`;
         const filePathEmptyId = `./data/mods/${modId}/components/${filenameEmptyId}`;
-        const invalidDataNullId = {id: null, dataSchema: {}}; // dataSchema is valid obj here
-        const invalidDataEmptyId = {id: "", dataSchema: {}}; // dataSchema is valid obj here
+        const invalidDataNullId = {id: null, dataSchema: {type: 'object'}}; // dataSchema is valid obj here
+        const invalidDataEmptyId = {id: "", dataSchema: {type: 'object'}}; // dataSchema is valid obj here
         const errorManifest = createMockModManifest(modId, [filenameNullId, filenameEmptyId]);
 
         // Setup mock fetcher for this scenario
@@ -265,24 +289,32 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         });
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,           // modId
             errorManifest,   // modManifest
             'components',    // contentKey
-            'components',    // contentTypeDir
-            'components'     // typeName
+            'components',    // contentTypeDir <<< FIXED: Argument provided
+            'components'     // typeName       <<< FIXED: Argument provided
         );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
         expect(count).toBe(0); // No components should be successfully loaded
-        expect(mockRegistry.store).not.toHaveBeenCalled(); // Nothing should be stored
+        expect(loader._storeItemInRegistry).not.toHaveBeenCalled(); // Nothing should be stored via helper
+        expect(mockRegistry.store).not.toHaveBeenCalled(); // Verify registry wasn't called directly either
         expect(mockValidator.addSchema).not.toHaveBeenCalled(); // No data schemas registered
 
+        // --- Verify: Primary schema validation check ---
+        // Base class *will* attempt validation before _processFetchedItem is called
+        // It should pass because we mocked it to pass in beforeEach
+        // Expect the validator to have been called twice (once per file) by the base class wrapper
+        expect(mockValidator.validate).toHaveBeenCalledTimes(2);
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataNullId);
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataEmptyId);
+
         // --- Verify: Error Log Messages ---
-        // Expect 4 error logs: 1 specific + 1 wrapper per file
+        // Expect 2 specific internal errors + 2 wrapper errors from base class
         expect(mockLogger.error).toHaveBeenCalledTimes(4);
 
         // --- File 1: invalid_null_id.component.json ---
@@ -297,16 +329,22 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1);
 
         // 1b. Wrapper error log (_processFileWrapper catch)
-        const expectedWrapperMsg = `Error processing file:`;
+        const expectedWrapperMsgBase = `Error processing file:`; // Base class logs this prefix
         const idError1 = expect.objectContaining({message: `Invalid Component ID in ${filenameNullId}`});
         const expectedWrapperDetails1 = expect.objectContaining({
             filename: filenameNullId,
             path: filePathNullId,
             modId: modId,
             typeName: 'components', // Check typeName is included
-            error: `Invalid Component ID in ${filenameNullId}`
+            error: `Invalid Component ID in ${filenameNullId}` // The specific error thrown
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, idError1);
+        // Check if either base or specific loader logs the wrapper error
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expectedWrapperMsgBase, // Check for the base prefix
+            expectedWrapperDetails1,
+            idError1
+        );
+
 
         // --- File 2: invalid_empty_id.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for ID)
@@ -326,29 +364,23 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
             path: filePathEmptyId,
             modId: modId,
             typeName: 'components', // Check typeName is included
-            error: `Invalid Component ID in ${filenameEmptyId}`
+            error: `Invalid Component ID in ${filenameEmptyId}` // Specific error
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, idError2);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expectedWrapperMsgBase, // Check for the base prefix
+            expectedWrapperDetails2,
+            idError2
+        );
 
         // --- Verify: Final Info Log ---
-        // <<< MODIFIED EXPECTATION: Check for the new log messages >>>
-        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary logs
-        // Check the initial log message from loadItemsForMod
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary logs from base class
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+            expect.stringContaining(`Loading components definitions for mod '${modId}'.`)
         );
-        // Check the summary log from _loadItemsInternal, indicating failure
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Correct summary for two failures
+            expect.stringContaining(`Mod [${modId}] - Processed 0/2 components items. (2 failed)`) // Correct summary for two failures
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-
-        // --- Verify Other Interactions ---
-        expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
-        // Structure validation happens *before* the ID check
-        expect(mockValidator.validate).toHaveBeenCalledTimes(2);
-        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataNullId);
-        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataEmptyId);
     });
 
     // --- Test Case: Scenario 2 (Invalid dataSchema) ---
@@ -371,30 +403,35 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         });
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,           // modId
             errorManifest,   // modManifest
             'components',    // contentKey
-            'components',    // contentTypeDir
-            'components'     // typeName
+            'components',    // contentTypeDir <<< FIXED: Argument provided
+            'components'     // typeName       <<< FIXED: Argument provided
         );
 
         // --- Verify: Promise Resolves & Count ---
         await expect(loadPromise).resolves.not.toThrow();
         const count = await loadPromise;
         expect(count).toBe(0);
+        expect(loader._storeItemInRegistry).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();
 
+        // --- Verify: Primary schema validation check ---
+        // Expect the validator to have been called twice (once per file) by the base class wrapper
+        expect(mockValidator.validate).toHaveBeenCalledTimes(2);
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataNullSchema);
+        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataStringSchema);
+
         // --- Verify: Error Log Messages ---
-        // Expect 4 error logs: 1 specific + 1 wrapper per file
-        expect(mockLogger.error).toHaveBeenCalledTimes(4);
+        expect(mockLogger.error).toHaveBeenCalledTimes(4); // 2 specific internal + 2 wrapper
 
         // --- File 1: invalid_null_schema.component.json ---
         // 1a. Specific internal error log (_processFetchedItem check for dataSchema type)
         const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameNullSchema}'. Expected an object but received type 'null'.`;
-        const schemaTypeError1 = expect.any(Error);
+        const schemaTypeError1 = expect.objectContaining({message: `Invalid dataSchema type in ${filenameNullSchema} for component ${validId}`});
         const expectedSpecificErrorDetails1 = expect.objectContaining({
             componentId: validId,
             resolvedPath: filePathNullSchema,
@@ -405,20 +442,25 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
         expect(mockLogger.error).toHaveBeenCalledWith(expectedSpecificErrorMsg1, expectedSpecificErrorDetails1, schemaTypeError1);
 
         // 1b. Wrapper error log (_processFileWrapper catch)
-        const expectedWrapperMsg = `Error processing file:`;
+        const expectedWrapperMsgBase = `Error processing file:`; // Base class logs this prefix
         const expectedWrapperDetails1 = expect.objectContaining({
             filename: filenameNullSchema,
             path: filePathNullSchema,
             modId: modId,
-            typeName: 'components', // Check typeName is included
-            error: expect.stringContaining(`Invalid dataSchema type in ${filenameNullSchema} for component ${validId}`)
+            typeName: 'components',
+            error: `Invalid dataSchema type in ${filenameNullSchema} for component ${validId}` // Specific error
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails1, schemaTypeError1);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expectedWrapperMsgBase, // Check for base prefix
+            expectedWrapperDetails1,
+            schemaTypeError1
+        );
+
 
         // --- File 2: invalid_string_schema.component.json ---
         // 2a. Specific internal error log (_processFetchedItem check for dataSchema type)
         const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${validId}' in file '${filenameStringSchema}'. Expected an object but received type 'string'.`;
-        const schemaTypeError2 = expect.any(Error);
+        const schemaTypeError2 = expect.objectContaining({message: `Invalid dataSchema type in ${filenameStringSchema} for component ${validId}`});
         const expectedSpecificErrorDetails2 = expect.objectContaining({
             componentId: validId,
             resolvedPath: filePathStringSchema,
@@ -433,29 +475,24 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.5: Internal Definition Errors)
             filename: filenameStringSchema,
             path: filePathStringSchema,
             modId: modId,
-            typeName: 'components', // Check typeName is included
-            error: expect.stringContaining(`Invalid dataSchema type in ${filenameStringSchema} for component ${validId}`)
+            typeName: 'components',
+            error: `Invalid dataSchema type in ${filenameStringSchema} for component ${validId}` // Specific error
         });
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedWrapperMsg, expectedWrapperDetails2, schemaTypeError2);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expectedWrapperMsgBase, // Check for base prefix
+            expectedWrapperDetails2,
+            schemaTypeError2
+        );
+
 
         // --- Verify: Final Info Log ---
-        // <<< MODIFIED EXPECTATION: Check for the new log messages >>>
         expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and summary logs
-        // Check the initial log message from loadItemsForMod
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `ComponentLoader: Loading components definitions for mod '${modId}'.`
+            expect.stringContaining(`Loading components definitions for mod '${modId}'.`)
         );
-        // Check the summary log from _loadItemsInternal, indicating failure
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `Mod [${modId}] - Processed 0/2 components items. (2 failed)` // Correct summary for two failures
+            expect.stringContaining(`Mod [${modId}] - Processed 0/2 components items. (2 failed)`) // Correct summary
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
-
-        // --- Verify Other Interactions ---
-        expect(mockFetcher.fetch).toHaveBeenCalledTimes(2);
-        // Structure validation happens *before* dataSchema check
-        expect(mockValidator.validate).toHaveBeenCalledTimes(2);
-        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataNullSchema);
-        expect(mockValidator.validate).toHaveBeenCalledWith(componentDefSchemaId, invalidDataStringSchema);
     });
 }); // End of describe block

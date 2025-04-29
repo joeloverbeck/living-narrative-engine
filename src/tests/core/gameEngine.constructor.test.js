@@ -3,7 +3,7 @@
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameEngine from '../../core/gameEngine.js'; // Class under test
-import AppContainer from '../../core/appContainer.js'; // Needed for type checking and mock structure reference
+import AppContainer from '../../core/config/appContainer.js'; // Needed for type checking and mock structure reference
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */

@@ -33,6 +33,10 @@
             "$ref": "operation.schema.json#/$defs/Operation",
             "description": "A single Operation object conforming to the structure defined in operation.schema.json. Defines a specific step like QUERY_COMPONENT, MODIFY_COMPONENT, IF, DISPATCH_EVENT, etc."
           }
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
         }
       },
       "required": [

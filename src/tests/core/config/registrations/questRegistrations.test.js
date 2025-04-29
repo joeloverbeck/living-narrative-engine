@@ -20,8 +20,8 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerQuestSystems} from '../../../../core/config/registrations/questRegistrations.js'; // Adjust path
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
-import {INITIALIZABLE} from "../../../../core/tags";
+import {tokens} from '../../../../core/config/tokens.js';
+import {INITIALIZABLE} from "../../../../core/config/tags";
 
 // --- Mock Implementations ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};

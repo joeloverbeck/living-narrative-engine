@@ -1,5 +1,5 @@
 {
-  "rule_id": "rule:ui_set_title_from_event",
+  "rule_id": "ui_set_title_from_event",
   "event_type": "textUI:set_title",
   "condition": {
     "and": [

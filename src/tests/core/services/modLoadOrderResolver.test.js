@@ -1,14 +1,14 @@
 // src/tests/core/services/modLoadOrderResolver.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import {buildDependencyGraph, resolveOrder} from '../../../core/services/modLoadOrderResolver.js';
+import {buildDependencyGraph, resolveOrder} from '../../../core/modding/modLoadOrderResolver.js';
 import ModDependencyError from '../../../core/errors/modDependencyError.js';
 
 /**
  * Convenience factory for a minimal manifest object.
  * @param {string} id
  * @param {Array<object>} [dependencies]
- * @returns {import('../../../core/services/modDependencyValidator.js').ModManifest}
+ * @returns {import('../../../core/modding/modDependencyValidator.js').ModManifest}
  */
 const makeManifest = (id, dependencies = []) => ({
     id,
@@ -50,7 +50,7 @@ const createMockLogger = () => ({
 
 /**
  * Helper to create an empty Map for manifests.
- * @returns {Map<string, import('../../../core/services/modDependencyValidator.js').ModManifest>}
+ * @returns {Map<string, import('../../../core/modding/modDependencyValidator.js').ModManifest>}
  */
 const createEmptyManifestMap = () => new Map();
 

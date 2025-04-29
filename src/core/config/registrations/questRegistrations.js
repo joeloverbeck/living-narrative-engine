@@ -5,7 +5,7 @@
  */
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../appContainer.js').default} AppContainer */
+/** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Service/System Imports ---
@@ -17,9 +17,9 @@ import QuestSystem from '../../../systems/questSystem.js';
 import {QuestStartTriggerSystem} from '../../../systems/questStartTriggerSystem.js';
 
 // --- DI & Helper Imports ---
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
-import {INITIALIZABLE} from "../../tags";
+import {INITIALIZABLE} from "../tags";
 
 // --- Constant Tag ---
 

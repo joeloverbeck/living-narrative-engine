@@ -1,11 +1,11 @@
 // Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ActionLoader from '../../core/services/actionLoader.js'; // Adjust path if needed
-import ComponentLoader from '../../core/services/componentLoader.js'; // Adjust path if needed
+import ActionLoader from '../../core/loaders/actionLoader.js'; // Adjust path if needed
+import ComponentLoader from '../../core/loaders/componentLoader.js'; // Adjust path if needed
 import InMemoryDataRegistry from '../../core/services/inMemoryDataRegistry.js'; // Use the real registry
 // Import the base class to potentially spy on its methods if needed later
-import {BaseManifestItemLoader} from '../../core/services/baseManifestItemLoader.js';
+import {BaseManifestItemLoader} from '../../core/loaders/baseManifestItemLoader.js';
 
 // --- Mock Service Factories (Copied from provided examples) ---
 

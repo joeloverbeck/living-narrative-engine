@@ -4,7 +4,7 @@
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/appContainer.js').default} AppContainer */ // Optional, if needed elsewhere
+/** @typedef {import('../core/config/appContainer.js').default} AppContainer */ // Optional, if needed elsewhere
 
 // --- Utility Imports ---
 import {getDisplayName} from '../utils/messages.js';

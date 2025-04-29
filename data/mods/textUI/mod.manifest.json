@@ -18,7 +18,8 @@
     ],
     "rules": [
       "set_title.rule.json",
-      "display_message.rule.json"
+      "display_message.rule.json",
+      "welcome_message.rule.json"
     ],
     "events": [
       "set_title.event.json",

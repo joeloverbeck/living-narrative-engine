@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ModManifestLoader from '../../../core/services/modManifestLoader.js';
+import ModManifestLoader from '../../../core/modding/modManifestLoader.js';
 import AjvSchemaValidator from '../../../core/services/ajvSchemaValidator.js';
 
 /* -------------------------------------------------------------------------- */

@@ -15,10 +15,10 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 // --- Class Under Test ---
 import {registerInitializers} from '../../../../core/config/registrations/initializerRegistrations.js'; // Adjust path if needed
 
-import {INITIALIZABLE} from "../../../../core/tags.js";
+import {INITIALIZABLE} from "../../../../core/config/tags.js";
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../core/gameStateInitializer.js');

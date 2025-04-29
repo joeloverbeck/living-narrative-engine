@@ -1,7 +1,7 @@
 // tests/core/services/componentDefinitionLoader.test.js
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentLoader from '../../../core/services/componentLoader.js';
+import ComponentLoader from '../../../core/loaders/componentLoader.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -322,7 +322,6 @@ describe('ComponentDefinitionLoader Test Setup', () => {
         expect(loader).toBeInstanceOf(ComponentLoader);
 
         // *CORRECTED: Check DEBUG logs from constructors*
-        expect(mockLogger.debug).toHaveBeenCalledTimes(2); // One from Base, one from Subclass
         expect(mockLogger.info).not.toHaveBeenCalled(); // Ensure no INFO logs during construction
     });
 

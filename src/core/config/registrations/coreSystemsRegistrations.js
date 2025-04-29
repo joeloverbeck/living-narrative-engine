@@ -5,7 +5,7 @@
  */
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../appContainer.js').default} AppContainer */
+/** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 // --- System Imports ---
@@ -29,13 +29,12 @@ import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
 import LockSystem from '../../../systems/lockSystem.js';
 import PerceptionSystem from '../../../systems/perceptionSystem.js';
 import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
-import WelcomeMessageService from '../../../services/welcomeMessageService.js'; // Included as it's tagged
 
 // --- DI & Helper Imports ---
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import {formatActionCommand} from '../../../services/actionFormatter.js';
-import {INITIALIZABLE} from "../../tags"; // Needed by ActionDiscoverySystem factory
+import {INITIALIZABLE} from "../tags"; // Needed by ActionDiscoverySystem factory
 
 /**
  * Registers core game systems tagged as initializable.
@@ -144,15 +143,6 @@ export function registerCoreSystems(container) {
     ]);
     logger.debug(`Core Systems Registration: Registered ${tokens.LockSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
 
-
-    // Special cases (Services/Systems that also need initialization)
-    registrar.tagged(INITIALIZABLE).single(tokens.WelcomeMessageService, WelcomeMessageService, [
-        tokens.EventBus,
-        tokens.GameDataRepository,
-        tokens.ValidatedEventDispatcher,
-        tokens.ILogger
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.WelcomeMessageService} tagged with ${INITIALIZABLE.join(', ')}.`);
 
     // Use singletonFactory for ActionDiscoverySystem due to function dependencies
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ActionDiscoverySystem, (c) => new ActionDiscoverySystem({

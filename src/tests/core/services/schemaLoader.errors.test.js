@@ -1,7 +1,7 @@
 // src/tests/core/services/schemaLoader.errors.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import SchemaLoader from '../../../core/services/schemaLoader.js'; // Adjust path as needed
+import SchemaLoader from '../../../core/loaders/schemaLoader.js'; // Adjust path as needed
 
 // --- Mocks Setup (Minimal for Error Tests) ---
 const mockConfiguration = {

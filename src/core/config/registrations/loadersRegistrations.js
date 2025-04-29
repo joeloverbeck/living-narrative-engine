@@ -5,22 +5,22 @@
  */
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../appContainer.js').default} AppContainer */
+/** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../interfaces/coreServices.js').IPathResolver} IPathResolver */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').IDataFetcher} IDataFetcher */
-/** @typedef {import('../../services/schemaLoader.js').default} SchemaLoader */
+/** @typedef {import('../../loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../services/manifestLoader.js').default} ManifestLoader */
-/** @typedef {import('../../services/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../services/componentLoader.js').default} ComponentDefinitionLoader */
-/** @typedef {import('../../services/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
-/** @typedef {import('../../services/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
-/** @typedef {import('../../services/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
-/** @typedef {import('../../services/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
-/** @typedef {import('../../services/entityLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
+/** @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
+/** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
+/** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
+/** @typedef {import('../../loaders/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
+/** @typedef {import('../../loaders/entityLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
 /** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../services/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../services/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -36,18 +36,18 @@ import InMemoryDataRegistry from '../../services/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../services/workspaceDataFetcher.js';
 
 // --- Loader Imports ---
-import SchemaLoader from '../../services/schemaLoader.js';
-import RuleLoader from '../../services/ruleLoader.js';
-import ComponentLoader from '../../services/componentLoader.js';
-import GameConfigLoader from '../../services/gameConfigLoader.js'; // <<< ADDED
-import ModManifestLoader from '../../services/modManifestLoader.js'; // <<< ADDED: MODLOADER-005 A
-import ActionLoader from '../../services/actionLoader.js'; // <<< ADDED: LOADER-001
-import EventLoader from '../../services/eventLoader.js'; // <<< ADDED: LOADER-003
-import EntityLoader from '../../services/entityLoader.js'; // <<< ADDED: LOADER-004-F
+import SchemaLoader from '../../loaders/schemaLoader.js';
+import RuleLoader from '../../loaders/ruleLoader.js';
+import ComponentLoader from '../../loaders/componentLoader.js';
+import GameConfigLoader from '../../loaders/gameConfigLoader.js';
+import ModManifestLoader from '../../modding/modManifestLoader.js';
+import ActionLoader from '../../loaders/actionLoader.js';
+import EventLoader from '../../loaders/eventLoader.js';
+import EntityLoader from '../../loaders/entityLoader.js';
 
 
 // --- DI & Helper Imports ---
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 
 /**

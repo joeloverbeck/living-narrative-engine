@@ -1,5 +1,5 @@
 {
-  "rule_id": "system:handle_textUI_display_message",
+  "rule_id": "handle_textUI_display_message",
   "event_type": "textUI:display_message",
   "actions": [
     {

@@ -3,25 +3,25 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 // --- SUT ---
-import WorldLoader from '../../core/services/worldLoader.js';
+import WorldLoader from '../../core/loaders/worldLoader.js';
 
 // --- Dependencies to Mock ---
 // Mock static/imported functions BEFORE importing WorldLoader if they are used at module level or constructor indirectly
 // Note: resolveOrder is directly used. ModDependencyValidator.validate and validateModEngineVersions are also used directly.
-import * as ModDependencyValidatorModule from '../../core/services/modDependencyValidator.js';
+import * as ModDependencyValidatorModule from '../../core/modding/modDependencyValidator.js';
 
-jest.mock('../../core/services/modDependencyValidator.js', () => ({
+jest.mock('../../core/modding/modDependencyValidator.js', () => ({
     validate: jest.fn(), // Mock the static validate method
     // Include other exports if needed, potentially mocking them too
 }));
 
-import * as ModVersionValidatorModule from '../../core/services/modVersionValidator.js';
+import * as ModVersionValidatorModule from '../../core/modding/modVersionValidator.js';
 
-jest.mock('../../core/services/modVersionValidator.js', () => jest.fn()); // Mock the default export function
+jest.mock('../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
-import * as ModLoadOrderResolverModule from '../../core/services/modLoadOrderResolver.js';
+import * as ModLoadOrderResolverModule from '../../core/modding/modLoadOrderResolver.js';
 
-jest.mock('../../core/services/modLoadOrderResolver.js', () => ({
+jest.mock('../../core/modding/modLoadOrderResolver.js', () => ({
     resolveOrder: jest.fn(), // Mock the exported resolveOrder function
     // Include other exports if needed
 }));
@@ -32,14 +32,14 @@ jest.mock('../../core/services/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('../../core/services/actionLoader.js').default} ActionLoader */
-/** @typedef {import('../../core/services/eventLoader.js').default} EventLoader */
-/** @typedef {import('../../core/services/componentLoader.js').default} ComponentLoader */
-/** @typedef {import('../../core/services/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../core/services/schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('../../core/services/gameConfigLoader.js').default} GameConfigLoader */
-/** @typedef {import('../../core/services/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../core/services/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../core/loaders/actionLoader.js').default} ActionLoader */
+/** @typedef {import('../../core/loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../core/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../core/loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../core/loaders/schemaLoader.js').default} SchemaLoader */
+/** @typedef {import('../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
+/** @typedef {import('../../core/modding/modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('../../core/loaders/entityLoader.js').default} EntityLoader */
 /** @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest */
 
 

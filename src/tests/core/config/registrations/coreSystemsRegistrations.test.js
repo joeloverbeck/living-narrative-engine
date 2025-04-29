@@ -1,7 +1,7 @@
 // src/core/config/registrations/coreSystemsRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {any} AppContainer */ // Using 'any' as the custom container type isn't defined
 
 // --- Jest Imports ---
@@ -11,8 +11,8 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerCoreSystems} from '../../../../core/config/registrations/coreSystemsRegistrations.js'; // Adjust path as needed
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
-import {INITIALIZABLE} from "../../../../core/tags";
+import {tokens} from '../../../../core/config/tokens.js';
+import {INITIALIZABLE} from "../../../../core/config/tags";
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -85,13 +85,11 @@ describe('registerCoreSystems', () => {
         tokens.GameRuleSystem, tokens.EquipmentEffectSystem, tokens.EquipmentSlotSystem,
         tokens.InventorySystem, tokens.CombatSystem, tokens.DeathSystem,
         tokens.WorldPresenceSystem, tokens.ItemUsageSystem, tokens.BlockerSystem,
-        tokens.MovementSystem, tokens.MoveCoordinatorSystem, // QuestSystem removed
-        // QuestStartTriggerSystem removed
+        tokens.MovementSystem, tokens.MoveCoordinatorSystem,
         tokens.PerceptionSystem, tokens.NotificationUISystem,
         tokens.OpenableSystem, tokens.HealthSystem, tokens.StatusEffectSystem,
-        tokens.LockSystem, tokens.WelcomeMessageService, tokens.ActionDiscoverySystem
+        tokens.LockSystem, tokens.ActionDiscoverySystem
     ];
-    // Expected count is now 19 (Original 21 - 2 removed)
     const expectedCount = 19;
 
     beforeEach(() => {
@@ -102,32 +100,32 @@ describe('registerCoreSystems', () => {
         mockContainer.register(tokens.ILogger, mockLogger); // No lifecycle needed for this mock setup
     });
 
-    it(`should register ${expectedCount} systems/services with the '${INITIALIZABLE[0]}' tag`, () => {
+    it(`should register ${expectedCount} systems/services with the '${INITIALIZABLE[0]}' tag`, () => { // <-- Test description updates automatically
         // Arrange
         registerCoreSystems(mockContainer);
 
-        // Assert: Check that each whitelisted token was registered with the correct tag
+        // Assert: Check that each whitelisted token was registered...
         initializableSystemTokens.forEach(token => {
+            // ... this loop now won't check for WelcomeMessageService
             expect(mockContainer.register).toHaveBeenCalledWith(
                 token,
-                expect.any(Function), // All are registered via factories (single or singletonFactory)
+                expect.any(Function),
                 expect.objectContaining({
-                    tags: expect.arrayContaining(INITIALIZABLE), // Check if the tag array is present
-                    lifecycle: 'singleton' // All should be singletons
+                    tags: expect.arrayContaining(INITIALIZABLE),
+                    lifecycle: 'singleton'
                 })
             );
         });
 
-        // Assert: Check the total number of registrations (+1 for the pre-registered logger)
-        expect(mockContainer.register).toHaveBeenCalledTimes(expectedCount + 1);
+        expect(mockContainer.register).toHaveBeenCalledTimes(expectedCount);
 
-        // Assert: Check logger calls (debug level for each system)
+        // Assert: Check logger calls
         expect(mockLogger.debug).toHaveBeenCalledWith('Core Systems Registration: Starting...');
-        initializableSystemTokens.forEach(token => {
-            // Match the specific log format used in the bundle
+        initializableSystemTokens.forEach(token => { // <-- This loop also won't check for WelcomeMessageService log
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(token)} tagged with ${INITIALIZABLE[0]}`));
         });
         // Check final info log message count - should match the updated expectedCount
+        // NOTE: You might need to update the count *inside* registerCoreSystems.js's final log message too if it's hardcoded!
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Core Systems Registration: Completed registering ${expectedCount} systems`));
     });
 

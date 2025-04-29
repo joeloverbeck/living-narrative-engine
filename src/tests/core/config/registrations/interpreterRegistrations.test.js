@@ -1,9 +1,10 @@
-// src/core/config/registrations/interpreterRegistrations.test.js
+// src/tests/core/config/registrations/interpreterRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../core/eventBus.js').default} EventBus */
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */ // <<< ADDED Type Hint
 /** @typedef {import('../../../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
@@ -18,7 +19,7 @@ import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 import {registerInterpreters} from '../../../../core/config/registrations/interpreterRegistrations.js'; // Adjust path if needed
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules to prevent constructor errors and simplify testing ---
 // Mock the core services that SystemLogicInterpreter and its dependencies need
@@ -29,7 +30,14 @@ jest.mock('../../../../logic/systemLogicInterpreter.js');
 jest.mock('../../../../logic/operationHandlers/dispatchEventHandler.js');
 jest.mock('../../../../logic/operationHandlers/logHandler.js');
 jest.mock('../../../../logic/operationHandlers/modifyComponentHandler.js');
+jest.mock('../../../../logic/operationHandlers/addComponentHandler.js'); // <<< ADDED MOCK
+jest.mock('../../../../logic/operationHandlers/removeComponentHandler.js'); // <<< ADDED MOCK
 jest.mock('../../../../logic/operationHandlers/queryComponentHandler.js');
+jest.mock('../../../../logic/operationHandlers/modifyDomElementHandler.js'); // <<< ADDED MOCK
+jest.mock('../../../../logic/operationHandlers/appendUiMessageHandler.js'); // <<< ADDED MOCK
+jest.mock('../../../../logic/operationHandlers/setVariableHandler.js'); // <<< ADDED MOCK
+jest.mock('../../../../logic/operationHandlers/querySystemDataHandler.js'); // <<< ADDED MOCK
+
 
 // --- Import AFTER mocking ---
 import OperationRegistry from '../../../../logic/operationRegistry.js';
@@ -38,7 +46,13 @@ import SystemLogicInterpreter from '../../../../logic/systemLogicInterpreter.js'
 import DispatchEventHandler from '../../../../logic/operationHandlers/dispatchEventHandler.js';
 import LogHandler from '../../../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../../../logic/operationHandlers/modifyComponentHandler.js';
+import AddComponentHandler from '../../../../logic/operationHandlers/addComponentHandler.js'; // <<< ADDED IMPORT
+import RemoveComponentHandler from '../../../../logic/operationHandlers/removeComponentHandler.js'; // <<< ADDED IMPORT
 import QueryComponentHandler from '../../../../logic/operationHandlers/queryComponentHandler.js';
+import ModifyDomElementHandler from '../../../../logic/operationHandlers/modifyDomElementHandler.js'; // <<< ADDED IMPORT
+import AppendUiMessageHandler from '../../../../logic/operationHandlers/appendUiMessageHandler.js'; // <<< ADDED IMPORT
+import SetVariableHandler from '../../../../logic/operationHandlers/setVariableHandler.js'; // <<< ADDED IMPORT
+import QuerySystemDataHandler from '../../../../logic/operationHandlers/querySystemDataHandler.js'; // <<< ADDED IMPORT
 
 
 // --- Mock Implementations (Core Services) ---
@@ -54,6 +68,10 @@ const mockEntityManager = {
     hasComponent: jest.fn()
 };
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)}; // Needed by DispatchEventHandler factory
+const mockSystemDataRegistry = { // <<< ADDED MOCK IMPLEMENTATION
+    query: jest.fn(),
+    registerSource: jest.fn()
+};
 
 
 // --- Mock Custom DI Container (Copied from uiRegistrations.test.js) ---
@@ -115,6 +133,7 @@ const createMockContainer = () => {
                         // Store the created instance back for subsequent resolves
                         registration.instance = factoryOrValue(container); // Pass container
                     } catch (e) {
+                        // Use console.error for actual test failures during resolution
                         console.error(`Mock container: Error executing factory during resolve for ${String(token)}: ${e.message}`);
                         throw e; // Re-throw resolve errors
                     }
@@ -132,6 +151,7 @@ const createMockContainer = () => {
                 try {
                     return factoryOrValue(container); // Pass container
                 } catch (e) {
+                    // Use console.error for actual test failures during resolution
                     console.error(`Mock container: Error executing transient factory during resolve for ${String(token)}: ${e.message}`);
                     throw e; // Re-throw resolve errors
                 }
@@ -161,6 +181,8 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'}); // For DispatchEventHandler
+        // <<< ADDED: Register the missing SystemDataRegistry mock >>>
+        mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
 
         // Clear call counts on the mock service functions
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -169,6 +191,7 @@ describe('registerInterpreters', () => {
         Object.values(mockJsonLogicService).forEach(fn => fn.mockClear?.());
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
+        Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.()); // <<< ADDED: Clear mock calls
 
         // Clear call counts on the MOCKED Class constructors
         OperationRegistry.mockClear();
@@ -177,7 +200,13 @@ describe('registerInterpreters', () => {
         DispatchEventHandler.mockClear();
         LogHandler.mockClear();
         ModifyComponentHandler.mockClear();
+        AddComponentHandler.mockClear(); // <<< ADDED CLEAR
+        RemoveComponentHandler.mockClear(); // <<< ADDED CLEAR
         QueryComponentHandler.mockClear();
+        ModifyDomElementHandler.mockClear(); // <<< ADDED CLEAR
+        AppendUiMessageHandler.mockClear(); // <<< ADDED CLEAR
+        SetVariableHandler.mockClear(); // <<< ADDED CLEAR
+        QuerySystemDataHandler.mockClear(); // <<< ADDED CLEAR
     });
 
     it('should register required services without throwing errors', () => {
@@ -187,10 +216,19 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
 
         // Assert registration calls (optional but good sanity check)
+        // Existing handlers
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.DispatchEventHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.LogHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ModifyComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.AddComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.RemoveComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.QueryComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ModifyDomElementHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.AppendUiMessageHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        // New Handlers
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.SetVariableHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'})); // <<< ADDED ASSERTION
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.QuerySystemDataHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'})); // <<< ADDED ASSERTION
+        // Core interpreters/registry
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationRegistry, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
@@ -256,10 +294,18 @@ describe('registerInterpreters', () => {
         // Because OperationRegistry itself is mocked, we need to check the mock's methods
         // The mock instance is returned by resolve()
         const mockRegistryInstance = OperationRegistry.mock.instances[0];
+        // Existing
         expect(mockRegistryInstance.register).toHaveBeenCalledWith('LOG', expect.any(Function)); // Expecting the bound execute fn
         expect(mockRegistryInstance.register).toHaveBeenCalledWith('DISPATCH_EVENT', expect.any(Function));
         expect(mockRegistryInstance.register).toHaveBeenCalledWith('MODIFY_COMPONENT', expect.any(Function));
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('ADD_COMPONENT', expect.any(Function));
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('REMOVE_COMPONENT', expect.any(Function));
         expect(mockRegistryInstance.register).toHaveBeenCalledWith('QUERY_COMPONENT', expect.any(Function));
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('MODIFY_DOM_ELEMENT', expect.any(Function));
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('APPEND_UI_MESSAGE', expect.any(Function));
+        // New
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('SET_VARIABLE', expect.any(Function)); // <<< ADDED ASSERTION
+        expect(mockRegistryInstance.register).toHaveBeenCalledWith('QUERY_SYSTEM_DATA', expect.any(Function)); // <<< ADDED ASSERTION
     });
 
     it('interpreters are registered as singletons', () => {
@@ -281,5 +327,27 @@ describe('registerInterpreters', () => {
         expect(SystemLogicInterpreter).toHaveBeenCalledTimes(1); // Constructor mock called only once
     });
 
+    // <<< ADDED: Test specifically for new handler resolution >>>
+    it('resolving SetVariableHandler does not throw', () => {
+        registerInterpreters(mockContainer);
+        expect(() => {
+            mockContainer.resolve(tokens.SetVariableHandler);
+        }).not.toThrow();
+        expect(SetVariableHandler).toHaveBeenCalledTimes(1); // Constructor mock called
+        expect(SetVariableHandler).toHaveBeenCalledWith({ logger: mockLogger }); // Verify deps
+    });
 
+    // <<< ADDED: Test specifically for new handler resolution >>>
+    it('resolving QuerySystemDataHandler does not throw', () => {
+        registerInterpreters(mockContainer);
+        expect(() => {
+            mockContainer.resolve(tokens.QuerySystemDataHandler);
+        }).not.toThrow();
+        expect(QuerySystemDataHandler).toHaveBeenCalledTimes(1); // Constructor mock called
+        // Verify dependencies were passed correctly to the MOCKED constructor
+        expect(QuerySystemDataHandler).toHaveBeenCalledWith({
+            logger: mockLogger,
+            systemDataRegistry: mockSystemDataRegistry // Check the mock was passed
+        });
+    });
 });

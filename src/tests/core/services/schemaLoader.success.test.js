@@ -1,7 +1,7 @@
 // src/tests/core/services/schemaLoader.success.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals'; // Added beforeEach
-import SchemaLoader from '../../../core/services/schemaLoader.js'; // Adjust path RELATIVE TO THIS NEW FILE
+import SchemaLoader from '../../../core/loaders/schemaLoader.js'; // Adjust path RELATIVE TO THIS NEW FILE
 
 // --- Test Constants (Copied from original file - Keep as is) ---
 const commonSchemaFile = 'common.schema.json';

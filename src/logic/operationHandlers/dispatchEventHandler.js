@@ -34,7 +34,7 @@ class DispatchEventHandler {
         const valid =
             dispatcher &&
             (typeof dispatcher.dispatchValidated === 'function' ||
-                typeof dispatcher.publish === 'function');
+                typeof dispatcher.dispatch === 'function');
 
         if (!valid) {
             throw new Error(

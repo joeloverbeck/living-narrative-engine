@@ -1,7 +1,7 @@
 // src/core/gameEngine.js
 
 // --- Type Imports ---
-/** @typedef {import('./appContainer.js').default} AppContainer */
+/** @typedef {import('./config/appContainer.js').default} AppContainer */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('./gameStateManager.js').default} GameStateManager */
@@ -9,7 +9,7 @@
 /** @typedef {import('./gameLoop.js').default} GameLoop */
 /** @typedef {import('./gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('./worldInitializer.js').default} WorldInitializer */
-/** @typedef {import('./services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('./loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 // --- Refactoring: Import new services ---
@@ -170,22 +170,19 @@ class GameEngine {
             this.#gameLoop = this.#container.resolve('GameLoop'); // AC2 Location Dependency
             this.#logger.info('GameEngine: GameLoop resolved.');
 
-
-            // --- Dispatch event:engine_initialized Event (Ticket 6.2 START) ---
             // This event now triggers WelcomeMessageService to handle the welcome messages.
-            this.#logger.info('GameEngine: Dispatching event:engine_initialized event...');
+            this.#logger.info('GameEngine: Dispatching core:engine_initialized event...');
             await this.#validatedEventDispatcher.dispatchValidated(
-                'event:engine_initialized', // Event Name
+                'core:engine_initialized', // Event Name
                 {inputWorldName: worldName}, // Payload
                 {} // Options
             );
-            // --- Dispatch event:engine_initialized Event (Ticket 6.2 END) ---
 
 
             this.#isInitialized = true;
             this.#logger.info(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
             // Note: The final "Initialization Complete. Starting..." title/message might be quickly overwritten
-            // by the WelcomeMessageService triggered by event:engine_initialized, which is expected.
+            // by the WelcomeMessageService triggered by core:engine_initialized, which is expected.
             await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Initialization Complete. Starting...'});
             await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                 text: 'Initialization complete.',

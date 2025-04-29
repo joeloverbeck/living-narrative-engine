@@ -1,8 +1,8 @@
 // main.js
 
 import GameEngine from './src/core/gameEngine.js';
-import AppContainer from './src/core/appContainer.js';
-import {configureContainer} from './src/core/containerConfig.js';
+import AppContainer from './src/core/config/appContainer.js';
+import {configureContainer} from './src/core/config/containerConfig.js';
 
 // --- Define the Active World ---
 const ACTIVE_WORLD = 'demo'; // Specify the world to load

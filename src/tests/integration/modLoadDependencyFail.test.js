@@ -3,8 +3,8 @@
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
 // Core services under test
-import WorldLoader from '../../core/services/worldLoader.js';
-import ModManifestLoader from '../../core/services/modManifestLoader.js';
+import WorldLoader from '../../core/loaders/worldLoader.js';
+import ModManifestLoader from '../../core/modding/modManifestLoader.js';
 import AjvSchemaValidator from '../../core/services/ajvSchemaValidator.js';
 import ModDependencyError from '../../core/errors/modDependencyError.js';
 

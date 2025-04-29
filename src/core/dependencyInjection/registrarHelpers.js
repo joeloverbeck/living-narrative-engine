@@ -4,11 +4,11 @@
  * @fileoverview Helper functions and classes to simplify DI container registration.
  */
 
-/** @typedef {import('../appContainer.js').default} AppContainer */
-/** @typedef {import('../tokens.js').DiToken} DiToken */
+/** @typedef {import('../config/appContainer.js').default} AppContainer */
+/** @typedef {import('../config/tokens.js').DiToken} DiToken */
 
 // --- Using your container's types ---
-/** @typedef {import('../appContainer.js').FactoryFunction} FactoryFunction */
+/** @typedef {import('../config/appContainer.js').FactoryFunction} FactoryFunction */
 // Assuming RegistrationOptions might include 'tags' based on your comment
 /** @typedef {{ lifecycle?: 'singleton' | 'transient', tags?: string[] }} RegistrationOptions */
 

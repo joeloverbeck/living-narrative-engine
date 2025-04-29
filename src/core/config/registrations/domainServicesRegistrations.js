@@ -1,5 +1,5 @@
 // src/core/config/registrations/domainServicesRegistrations.js
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
 import {ItemTargetResolverService} from "../../../services/itemTargetResolver.js";

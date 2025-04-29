@@ -3,11 +3,11 @@
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
 // --- Core Components Under Test ---
-import AppContainer from '../../core/appContainer.js';
-import {configureContainer} from '../../core/containerConfig.js';
-import {tokens} from '../../core/tokens.js';
+import AppContainer from '../../core/config/appContainer.js';
+import {configureContainer} from '../../core/config/containerConfig.js';
+import {tokens} from '../../core/config/tokens.js';
 import SystemInitializer from '../../core/initializers/systemInitializer.js'; // Need the class for type checking
-import {INITIALIZABLE} from '../../core/tags.js'; // Need the tag for SystemInitializer context
+import {INITIALIZABLE} from '../../core/config/tags.js'; // Need the tag for SystemInitializer context
 
 describe('Application Bootstrap Integration Test', () => {
     let container;

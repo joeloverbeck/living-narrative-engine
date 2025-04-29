@@ -1,7 +1,7 @@
 // src/core/setup/inputSetupService.js
 
 // --- Type Imports ---
-/** @typedef {import('../appContainer.js').default} AppContainer */
+/** @typedef {import('../config/appContainer.js').default} AppContainer */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../gameLoop.js').default} GameLoop */

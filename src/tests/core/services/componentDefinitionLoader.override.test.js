@@ -2,8 +2,8 @@
 
 // --- Imports (remain the same) ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentLoader from '../../../core/services/componentLoader.js'; // Corrected import name
-import {BaseManifestItemLoader} from '../../../core/services/baseManifestItemLoader.js'; // Added base class import
+import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Corrected import name
+import {BaseManifestItemLoader} from '../../../core/loaders/baseManifestItemLoader.js'; // Added base class import
 
 // --- Mock Service Factories (remain the same) ---
 // [Mocks omitted for brevity - use the ones provided]

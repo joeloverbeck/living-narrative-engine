@@ -1,5 +1,5 @@
 // src/core/config/registrations/runtimeRegistrations.js
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameLoop from "../../gameLoop.js";
 import InputSetupService from "../../setup/inputSetupService.js";

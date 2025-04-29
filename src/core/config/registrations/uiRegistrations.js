@@ -6,10 +6,10 @@
 
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js';
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 
-/** @typedef {import('../../appContainer.js').default} AppContainer */
+/** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../domRenderer.js').default} DomRenderer */
 
 /** @typedef {import('../../inputHandler.js').default} InputHandler */

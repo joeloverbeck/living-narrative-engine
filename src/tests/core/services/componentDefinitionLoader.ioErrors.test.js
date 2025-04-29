@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ComponentLoader from '../../../core/services/componentLoader.js'; // Adjust path if necessary
+import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Adjust path if necessary
 
 // --- Mock Service Factories (Keep as they are) ---
 // ... (createMockConfiguration, createMockPathResolver, etc. - NO CHANGES NEEDED HERE based on provided errors) ...

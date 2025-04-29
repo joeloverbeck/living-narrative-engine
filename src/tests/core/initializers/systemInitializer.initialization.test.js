@@ -4,7 +4,7 @@
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../../core/initializers/systemInitializer.js';
-import {INITIALIZABLE} from "../../../core/tags.js";
+import {INITIALIZABLE} from "../../../core/config/tags.js";
 
 // --- Type Imports for Mocks ---
 // Using correct interface types based on SystemInitializer's constructor

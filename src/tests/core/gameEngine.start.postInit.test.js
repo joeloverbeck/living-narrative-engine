@@ -3,7 +3,7 @@
 // --- Imports ---
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 import GameEngine from '../../core/gameEngine.js'; // Class under test
-import AppContainer from '../../core/appContainer.js'; // Needed for type checking and mock structure reference
+import AppContainer from '../../core/config/appContainer.js'; // Needed for type checking and mock structure reference
 
 // --- Type Imports for Mocks ---
 // Core Services
@@ -12,7 +12,7 @@ import AppContainer from '../../core/appContainer.js'; // Needed for type checki
 /** @typedef {import('../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../rendering/domRenderer.js').default} DomRenderer */
-/** @typedef {import('../../core/services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../core/loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../../core/gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('../../core/worldInitializer.js').default} WorldInitializer */
 // /** @typedef {import('../../core/inputHandler.js').default} InputHandler */ // No longer directly asserted in these tests (delegated)

@@ -17,7 +17,7 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerDomainServices} from '../../../../core/config/registrations/domainServicesRegistrations.js'; // Adjust path if needed
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) to simplify testing ---
 // Mocking the actual classes ensures their constructors don't cause issues

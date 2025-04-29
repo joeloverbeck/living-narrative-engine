@@ -14,7 +14,7 @@ import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 import {registerUI} from '../../../../core/config/registrations/uiRegistrations.js';
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules to prevent constructor errors ---
 // Jest replaces the actual imports with mock constructors

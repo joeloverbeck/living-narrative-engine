@@ -173,16 +173,6 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
-    "WelcomeMessageService",
-    [Function],
-    {
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-      ],
-    },
-  ],
-  [
     "ActionDiscoverySystem",
     [Function],
     {

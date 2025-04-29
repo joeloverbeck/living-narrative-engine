@@ -9,7 +9,7 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
 /** @typedef {import('../../../../core/eventBus.js').default} EventBus */
-/** @typedef {import('../../../../core/services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../../../core/loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../../../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -22,12 +22,12 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerInfrastructure} from '../../../../core/config/registrations/infrastructureRegistrations.js'; // Adjust path if needed
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../core/eventBus.js');
 jest.mock('../../../../core/spatialIndexManager.js'); // Mock the concrete implementation
-jest.mock('../../../../core/services/worldLoader.js');
+jest.mock('../../../../core/loaders/worldLoader.js');
 jest.mock('../../../../core/services/gameDataRepository.js');
 jest.mock('../../../../entities/entityManager.js');
 jest.mock('../../../../services/validatedEventDispatcher.js');
@@ -35,7 +35,7 @@ jest.mock('../../../../services/validatedEventDispatcher.js');
 // --- Import AFTER mocking ---
 import EventBus from '../../../../core/eventBus.js';
 import SpatialIndexManager from '../../../../core/spatialIndexManager.js';
-import WorldLoader from '../../../../core/services/worldLoader.js';
+import WorldLoader from '../../../../core/loaders/worldLoader.js';
 import {GameDataRepository} from '../../../../core/services/gameDataRepository.js';
 import EntityManager from '../../../../entities/entityManager.js';
 import ValidatedEventDispatcher from '../../../../services/validatedEventDispatcher.js';

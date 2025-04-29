@@ -5,7 +5,7 @@
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import {cloneDeep} from 'lodash'; // Using lodash cloneDeep as requested
 
-import validateModEngineVersions from '../../../core/services/modVersionValidator.js';
+import validateModEngineVersions from '../../../core/modding/modVersionValidator.js';
 import ModDependencyError from '../../../core/errors/modDependencyError.js';
 import {ENGINE_VERSION} from '../../../core/engineVersion.js'; // Use the actual engine version
 

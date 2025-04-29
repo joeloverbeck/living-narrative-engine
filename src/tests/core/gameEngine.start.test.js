@@ -3,7 +3,7 @@
 // --- Imports ---
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 import GameEngine from '../../core/gameEngine.js'; // Class under test
-import AppContainer from '../../core/appContainer.js'; // Needed for type checking and mock structure reference
+import AppContainer from '../../core/config/appContainer.js'; // Needed for type checking and mock structure reference
 
 // --- Type Imports for Mocks ---
 // Core Services
@@ -12,7 +12,7 @@ import AppContainer from '../../core/appContainer.js'; // Needed for type checki
 /** @typedef {import('../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../rendering/domRenderer.js').default} DomRenderer */ // Assuming path
-/** @typedef {import('../../core/services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../core/loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../../core/gameStateInitializer.js').default} GameStateInitializer */
 /** @typedef {import('../../core/worldInitializer.js').default} WorldInitializer */
 // AC1: Removed InputHandler type import as GameEngine doesn't resolve it directly anymore for setup.
@@ -310,7 +310,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
             type: 'info'
         });
         // This event still exists and triggers WelcomeMessageService etc.
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('event:engine_initialized', {inputWorldName: worldName}, {});
+        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:engine_initialized', {inputWorldName: worldName}, {});
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initialization Complete. Starting...'});
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: 'Initialization complete.',
@@ -412,7 +412,7 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Delegating input handler setup to InputSetupService...'); // AC6 check
         expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: InputHandler resolved and configured.'); // Ensure old log gone
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameLoop resolved.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Dispatching event:engine_initialized event...'); // Keep this one
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Dispatching core:engine_initialized event...'); // Keep this one
         expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
 
         // Check logs from start() after #initialize() succeeds

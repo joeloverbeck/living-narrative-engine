@@ -1,11 +1,11 @@
 // src/core/config/registrations/initializerRegistrations.js
-import {tokens} from '../../tokens.js';
+import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameStateInitializer from '../../gameStateInitializer.js';
 import WorldInitializer from '../../worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
 // Import the necessary tag constant (Task 2: Verified, already present)
-import {INITIALIZABLE} from "../../tags.js";
+import {INITIALIZABLE} from "../tags.js";
 
 
 export function registerInitializers(container) {

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
-  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events), control the flow of execution (conditional logic), or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
+  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events), control the flow of execution (conditional logic), manage variables, query external system data, or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
   "type": "object",
   "$ref": "#/$defs/Operation",
   "$defs": {
@@ -22,7 +22,9 @@
             "IF",
             "LOG",
             "MODIFY_DOM_ELEMENT",
-            "APPEND_UI_MESSAGE"
+            "APPEND_UI_MESSAGE",
+            "SET_VARIABLE",
+            "QUERY_SYSTEM_DATA"
           ]
         },
         "comment": {
@@ -73,26 +75,16 @@
           "then": { "properties": { "parameters": { "$ref": "#/$defs/ModifyDomElementParameters" } }, "required": [ "parameters" ] }
         },
         {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "APPEND_UI_MESSAGE"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/AppendUiMessageParameters"
-              }
-            },
-            "required": [
-              "parameters"
-            ]
-          }
+          "if": { "properties": { "type": { "const": "APPEND_UI_MESSAGE" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/AppendUiMessageParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "SET_VARIABLE" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/SetVariableParameters" } }, "required": [ "parameters" ] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "QUERY_SYSTEM_DATA" } }, "required": [ "type" ] },
+          "then": { "properties": { "parameters": { "$ref": "#/$defs/QuerySystemDataParameters" } }, "required": [ "parameters" ] }
         }
       ],
       "examples": [
@@ -174,6 +166,23 @@
             "message_type": "error",
             "allow_html": false
           }
+        },
+        {
+          "type": "SET_VARIABLE",
+          "comment": "Store the player's current gold amount in a variable",
+          "parameters": {
+            "variable_name": "playerGold",
+            "value": "$actor.components['core:inventory'].gold"
+          }
+        },
+        {
+          "type": "QUERY_SYSTEM_DATA",
+          "comment": "Query the weather system for the current temperature",
+          "parameters": {
+            "source": "weather_system",
+            "query": { "type": "get_current_temperature", "unit": "celsius" },
+            "result_variable": "currentTemperature"
+          }
         }
       ]
     },
@@ -191,7 +200,7 @@
         },
         "result_variable": {
           "type": "string",
-          "description": "Required. Variable name in evaluationContext.context where the result will be stored.",
+          "description": "Required. Variable name in evaluationContext.context where the result will be stored. Must not contain leading/trailing whitespace.",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$"
         }
@@ -229,7 +238,7 @@
           ]
         },
         "value": {
-          "description": "Required. The value to assign (for 'set') or numeric delta (for 'inc')."
+          "description": "Required. The value to assign (for 'set') or numeric delta (for 'inc'). Placeholder resolution may apply."
         }
       },
       "required": [
@@ -255,7 +264,8 @@
           "then": {
             "properties": {
               "value": {
-                "type": "number"
+                "type": "number",
+                "description": "Required numeric delta for 'inc' mode. Placeholder resolution may apply."
               }
             },
             "required": [
@@ -279,7 +289,7 @@
         },
         "value": {
           "type": "object",
-          "description": "Required. The data object representing the component instance to add.",
+          "description": "Required. The data object representing the component instance to add. Placeholder resolution may apply within values.",
           "minProperties": 0
         }
       },
@@ -319,7 +329,7 @@
         },
         "payload": {
           "type": "object",
-          "description": "Optional event payload object. Defaults to {} if omitted.\nStrings beginning with '$' are treated as placeholders resolved at runtime (see DispatchEventHandler).",
+          "description": "Optional event payload object. Defaults to {} if omitted. Strings beginning with '$' or using '{...}' syntax are treated as placeholders resolved at runtime.",
           "default": {}
         }
       },
@@ -327,7 +337,7 @@
         "eventType"
       ],
       "additionalProperties": false,
-      "$comment": "Placeholders (e.g., \"$actor.id\") are resolved by DispatchEventHandler before dispatch."
+      "$comment": "Placeholders (e.g., \"$actor.id\", \"{event.payload.value}\") are resolved by DispatchEventHandler before dispatch."
     },
     "IfParameters": {
       "type": "object",
@@ -335,7 +345,7 @@
       "properties": {
         "condition": {
           "$ref": "./json-logic.schema.json#",
-          "description": "Required. JSON-Logic condition to evaluate."
+          "description": "Required. JSON-Logic condition to evaluate. Variables from the evaluation context (e.g., results from previous operations) can be accessed using the 'var' operator."
         },
         "then_actions": {
           "type": "array",
@@ -366,7 +376,7 @@
       "properties": {
         "message": {
           "type": "string",
-          "description": "Required. Message template to log (can contain placeholders like {actor.id}).",
+          "description": "Required. Message template to log (can contain placeholders like {actor.id} or $variableName).",
           "minLength": 1
         },
         "level": {
@@ -401,7 +411,7 @@
           "minLength": 1
         },
         "value": {
-          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}') which will be resolved at runtime."
+          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}', '$variableName') which will be resolved at runtime."
         }
       },
       "required": [
@@ -423,12 +433,12 @@
         },
         "text": {
           "type": "string",
-          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}').",
+          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}', '$variableName').",
           "minLength": 1
         },
         "message_type": {
           "type": "string",
-          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}'). Defaults to 'info'.",
+          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}', '$messageClass'). Defaults to 'info'.",
           "default": "info",
           "minLength": 1
         },
@@ -440,6 +450,53 @@
       },
       "required": [
         "text"
+      ],
+      "additionalProperties": false
+    },
+    "SetVariableParameters": {
+      "type": "object",
+      "description": "Parameters for the SET_VARIABLE operation. Sets or updates a variable within the current rule execution context.",
+      "properties": {
+        "variable_name": {
+          "type": "string",
+          "description": "Required. The name of the variable to set or update in the evaluation context. Must not contain leading/trailing whitespace.",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        },
+        "value": {
+          "description": "Required. The value to assign to the variable. Can be any valid JSON type (string, number, boolean, object, array, null). Placeholder resolution applies."
+        }
+      },
+      "required": [
+        "variable_name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "QuerySystemDataParameters": {
+      "type": "object",
+      "description": "Parameters for the QUERY_SYSTEM_DATA operation. Queries an external system or data source and stores the result in a context variable.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Required. Identifier for the target system or data source (e.g., 'world_state', 'weather_api', 'player_stats_db').",
+          "minLength": 1
+        },
+        "query": {
+          "type": ["string", "object"],
+          "description": "Required. The query details to send to the source. Can be a simple string or a structured object, depending on the source's requirements. Placeholder resolution may apply."
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Required. Variable name in evaluationContext.context where the query result will be stored. Must not contain leading/trailing whitespace.",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "result_variable"
       ],
       "additionalProperties": false
     }

@@ -20,7 +20,7 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerRuntime} from '../../../../core/config/registrations/runtimeRegistrations.js'; // Adjust path if needed
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../core/gameLoop.js');
