@@ -56,8 +56,6 @@ export class SystemDataRegistry {
 
         this.#logger = logger;
         this.#dataSources = new Map();
-
-        this.#logger.info('SystemDataRegistry: Instance created.');
     }
 
     /**

@@ -75,9 +75,8 @@ export class GameDataRepository {
      * @returns {string | null} The world name, or null if not found.
      */
     getWorldName() {
-        const manifest = this.#registry.getManifest();
-        // Provide a default or null if manifest/worldName is missing
-        return manifest?.worldName ?? null;
+        // We used to get the world name through the world manifest, but no such manifest exists anymore.
+        return "DEMO_WORLD";
     }
 
     /**

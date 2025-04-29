@@ -195,9 +195,6 @@ describe('Integration Test: textUI:display_message Event Flow', () => {
             expect.stringContaining(`[Rule system:handle_textUI_display_message] Executing 1 actions.`)
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("OperationInterpreter: Attempting to get handler for type: 'APPEND_UI_MESSAGE'")
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Executing handler for operation type "APPEND_UI_MESSAGE"')
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(

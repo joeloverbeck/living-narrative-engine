@@ -53,9 +53,6 @@ describe('SystemDataRegistry', () => {
             const testLogger = createMockLogger();
             const newRegistry = new SystemDataRegistry(testLogger);
             expect(newRegistry).toBeInstanceOf(SystemDataRegistry);
-            // Check if the constructor logged its creation message
-            expect(testLogger.info).toHaveBeenCalledWith('SystemDataRegistry: Instance created.');
-            expect(testLogger.info).toHaveBeenCalledTimes(1);
         });
 
         it('should throw TypeError if logger is missing', () => {

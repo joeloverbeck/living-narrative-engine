@@ -47,7 +47,6 @@ export function registerCoreSystems(container) {
     const registrar = new Registrar(container);
     /** @type {ILogger} */
     const logger = container.resolve(tokens.ILogger);
-    logger.debug('Core Systems Registration: Starting...');
 
     // --- Systems (Tagged as Initializable) ---
 

@@ -179,8 +179,6 @@ class SystemLogicInterpreter {
             // Create the initial context object using the utility function
             sharedExecutionContext = createJsonLogicContext(event, actorId, targetId, this.#entityManager, this.#logger);
 
-            this.#logger.debug('sharedExecutionContext', sharedExecutionContext);
-
             // Ensure the 'context' property exists and is an object
             if (!sharedExecutionContext || typeof sharedExecutionContext.context !== 'object' || sharedExecutionContext.context === null) {
                 this.#logger.warn(`[Event: ${eventType}] createJsonLogicContext did not return a valid structure with a context object. Creating default context.`);
@@ -281,8 +279,6 @@ class SystemLogicInterpreter {
 
         // 3. Execute Actions based on Condition Result
         if (evaluationResult.conditionPassed) {
-            this.#logger.debug(`[Rule ${ruleId}] Condition passed or absent. Checking for actions.`);
-
             // Basic check for actions array
             if (Array.isArray(rule.actions) && rule.actions.length > 0) {
                 this.#logger.debug(`[Rule ${ruleId}] Executing ${rule.actions.length} actions.`);
@@ -347,7 +343,6 @@ class SystemLogicInterpreter {
                     // <<< Pass the shared context down >>>
                     this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
                 } else {
-                    this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}] Calling OperationInterpreter.execute for type: ${opTypeString}`);
                     // <<< Pass the shared context down >>>
                     this.#operationInterpreter.execute(operation, executionContext);
                     this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}] OperationInterpreter.execute call completed (no error thrown) for type: ${opTypeString}`);

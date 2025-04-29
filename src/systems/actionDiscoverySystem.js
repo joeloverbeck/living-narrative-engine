@@ -86,7 +86,6 @@ export class ActionDiscoverySystem {
      */
     async getValidActions(actorEntity, context) {
         // --- ADD THIS LINE ---
-        this.#logger.debug(`--- MARKER 2: GETVALIDACTIONS ENTRY for ${actorEntity.id} ---`);
         this.#logger.debug(`Starting action discovery for actor: ${actorEntity.id}`);
         const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
         // Assumes validCommandStrings is initialized (per Ticket 4.3.4)

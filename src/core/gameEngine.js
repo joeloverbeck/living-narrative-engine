@@ -93,35 +93,12 @@ class GameEngine {
             this.#logger.info('GameEngine: DomRenderer resolved.');
 
             const earlyDispatchOptions = {allowSchemaNotFound: true};
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Initializing Engine...'}, earlyDispatchOptions);
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Initializing core systems...',
-                type: 'info'
-            }, earlyDispatchOptions);
 
             // --- Load Data (using WorldLoader) ---
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: `Loading Game Data for ${worldName}...`}, earlyDispatchOptions);
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: `Loading world data for '${worldName}' via WorldLoader...`,
-                type: 'info'
-            }, earlyDispatchOptions);
-
             const worldLoader = this.#container.resolve('WorldLoader');
             await worldLoader.loadWorld(worldName);
 
-            this.#logger.info(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: `World data for '${worldName}' loading process complete.`,
-                type: 'info'
-            });
-
             // **** START: Initialize Tagged Systems ****
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Initializing Core Systems...'});
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Initializing remaining core systems...',
-                type: 'info'
-            });
-
             this.#logger.info('GameEngine: Resolving SystemInitializer...');
             const systemInitializer = /** @type {SystemInitializer} */ (this.#container.resolve('SystemInitializer'));
             this.#logger.info('GameEngine: Initializing tagged systems via SystemInitializer...');
@@ -129,6 +106,11 @@ class GameEngine {
             this.#logger.info('GameEngine: Tagged system initialization complete.');
             // **** END: Initialize Tagged Systems ****
 
+            this.#logger.info(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: `World data for '${worldName}' loading process complete.`,
+                type: 'info'
+            });
 
             // --- Core Game Setup (Player & Starting Location via Service) ---
             await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Setting Initial Game State...'});

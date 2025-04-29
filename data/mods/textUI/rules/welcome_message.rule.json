@@ -60,7 +60,7 @@
             "comment": "Set the welcome message text using the fallback name and add suffix.",
             "parameters": {
               "variable_name": "welcomeMessageText",
-              "value": "Welcome to {context.determinedName}! (Name from input)"
+              "value": "Welcome to {context.determinedName}!"
             }
           }
         ]

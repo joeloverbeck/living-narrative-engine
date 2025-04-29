@@ -79,7 +79,6 @@ class ComponentLoader extends BaseManifestItemLoader {
     async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
         // AC: Located _processFetchedItem method
         this._logger.debug(`ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
-        console.log(`[DEBUG][${modId}] START _processFetchedItem for ${filename}`); // DEBUG START
 
         // AC: ComponentLoader._processFetchedItem no longer contains the manual code block for primary schema validation.
         // --- REMOVED: Definition Schema Validation Block ---
@@ -92,15 +91,12 @@ class ComponentLoader extends BaseManifestItemLoader {
         // AC: Retain the existing logic for extracting and validating componentId (base ID) and dataSchema.
         const componentIdFromFile = data.id; // e.g., "core:health" or "health"
         const dataSchema = data.dataSchema;
-        console.log(`[DEBUG][${modId}] Extracted id: ${JSON.stringify(componentIdFromFile)}, dataSchema type: ${typeof dataSchema}`); // DEBUG VALUES
 
         // --- 2. Property Validation --- (Was step 3)
         // Use toString() before trim() for safety in case componentIdFromFile is not a string (e.g., null)
         const trimmedComponentIdFromFile = componentIdFromFile?.toString().trim();
-        console.log(`[DEBUG][${modId}] Trimmed id: ${JSON.stringify(trimmedComponentIdFromFile)}`); // DEBUG TRIMMED ID
 
         if (!trimmedComponentIdFromFile) {
-            console.error(`[DEBUG][${modId}] INVALID ID DETECTED in ${filename}. Throwing...`); // DEBUG THROW POINT 1
             const errorMsg = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filename}'. Found: ${JSON.stringify(componentIdFromFile)}`;
             this._logger.error(errorMsg, {modId, filename, resolvedPath, componentIdValue: componentIdFromFile});
             throw new Error(`Invalid Component ID in ${filename}`);
@@ -110,18 +106,15 @@ class ComponentLoader extends BaseManifestItemLoader {
         // This ID is used for constructing the final storage key.
         const idParts = trimmedComponentIdFromFile.split(':');
         const baseComponentId = idParts.length > 1 ? idParts.slice(1).join(':') : idParts[0];
-        console.log(`[DEBUG][${modId}] Base id: ${JSON.stringify(baseComponentId)}`); // DEBUG BASE ID
 
         // Also check if baseComponentId became empty after splitting/trimming
         if (!baseComponentId) {
-            console.error(`[DEBUG][${modId}] INVALID BASE ID DETECTED from '${trimmedComponentIdFromFile}' in ${filename}. Throwing...`); // DEBUG THROW POINT 1.5
             this._logger.error(`ComponentLoader [${modId}]: Could not extract valid base ID from component ID '${trimmedComponentIdFromFile}' in file '${filename}'.`);
             throw new Error(`Could not extract base Component ID from '${trimmedComponentIdFromFile}' in ${filename}`);
         }
 
         if (typeof dataSchema !== 'object' || dataSchema === null) {
             const dataType = dataSchema === null ? 'null' : typeof dataSchema;
-            console.error(`[DEBUG][${modId}] INVALID dataSchema DETECTED in ${filename} (type: ${dataType}). Throwing...`); // DEBUG THROW POINT 2
             const errorMsg = `ComponentLoader [${modId}]: Invalid 'dataSchema' found for component '${trimmedComponentIdFromFile}' in file '${filename}'. Expected an object but received type '${dataType}'.`;
             const error = new Error(`Invalid dataSchema type in ${filename} for component ${trimmedComponentIdFromFile}`);
             this._logger.error(errorMsg, {
@@ -136,7 +129,6 @@ class ComponentLoader extends BaseManifestItemLoader {
 
         // Log uses the full ID from the file for clarity during processing steps
         this._logger.debug(`ComponentLoader [${modId}]: Extracted full ID '${trimmedComponentIdFromFile}' and base ID '${baseComponentId}' from ${filename}.`);
-        console.log(`[DEBUG][${modId}] Validation PASSED for ${filename}. Proceeding to schema registration.`); // DEBUG PRE-ADD-SCHEMA
 
         // --- 3. Schema Registration with Override Check --- (Was step 4)
         // AC: Retain logic for handling overrides, registering dataSchema via this._schemaValidator.addSchema
@@ -167,9 +159,7 @@ class ComponentLoader extends BaseManifestItemLoader {
 
         try {
             // AC: Ensure registering dataSchema via this._schemaValidator.addSchema remains functional
-            console.log(`[DEBUG][${modId}] Calling addSchema for ${trimmedComponentIdFromFile}`); // DEBUG ADD SCHEMA CALL
             await this._schemaValidator.addSchema(dataSchema, trimmedComponentIdFromFile);
-            console.log(`[DEBUG][${modId}] addSchema call finished for ${trimmedComponentIdFromFile}`); // DEBUG ADD SCHEMA DONE
             this._logger.debug(`ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`);
         } catch (error) {
             const addLogMsg = `ComponentLoader [${modId}]: Error during addSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
@@ -208,7 +198,6 @@ class ComponentLoader extends BaseManifestItemLoader {
         // AC: Ensure the method returns the finalItemId.
         // The final ID represents the key used in the registry.
         this._logger.debug(`ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final ID: ${finalItemId}`);
-        console.log(`[DEBUG][${modId}] END _processFetchedItem for ${filename}`); // DEBUG END
         return finalItemId;
     }
 

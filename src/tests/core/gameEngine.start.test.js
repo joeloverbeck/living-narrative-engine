@@ -265,9 +265,6 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
 
         // Basic checks for dispatcher calls
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'textUI:set_title', expect.any(Object), expect.any(Object)
-        );
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'textUI:display_message',
             {text: 'Game loop started. Good luck!', type: 'info'}
         );
@@ -285,16 +282,6 @@ describe('GameEngine start() / #initialize() - Success Path (InputSetupService D
 
         // --- Assert ---
         // These events are part of the initialization flow and remain
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initializing Engine...'}, earlyDispatchOptions);
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: 'Initializing core systems...',
-            type: 'info'
-        }, earlyDispatchOptions);
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: `Loading Game Data for ${worldName}...`}, earlyDispatchOptions);
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: `Loading world data for '${worldName}' via WorldLoader...`,
-            type: 'info'
-        }, earlyDispatchOptions);
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
             text: `World data for '${worldName}' loading process complete.`,
             type: 'info'

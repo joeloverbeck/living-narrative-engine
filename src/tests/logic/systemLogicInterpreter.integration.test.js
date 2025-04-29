@@ -159,7 +159,6 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Event: ${eventType}] Assembling shared JsonLogic context...`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Event: ${eventType}] Shared context assembled successfully.`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] No condition defined or condition is empty. Defaulting to passed.`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] Condition passed`));
 
         // Action execution logs - Check via the spy on OperationInterpreter
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
@@ -232,7 +231,6 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         );
         expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition evaluation raw result: true`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition passed`));
 
         // Action execution logs - Check via the spy on OperationInterpreter
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));

@@ -12,7 +12,7 @@ export function registerInitializers(container) {
     const r = new Registrar(container);
     const log = container.resolve(tokens.ILogger); // For logging within this function
 
-    r.tagged(INITIALIZABLE).singletonFactory( // Use singletonFactory
+    r.singletonFactory( // Use singletonFactory
         tokens.GameStateInitializer,          // Token
         (c) => {                              // Custom factory, receives container 'c'
             // Resolve all individual dependencies
@@ -39,7 +39,7 @@ export function registerInitializers(container) {
 
     // Register WorldInitializer - ASSUMING its constructor takes separate args
     // If WorldInitializer ALSO expects a single object, it needs the same fix as above.
-    r.tagged(INITIALIZABLE).single(tokens.WorldInitializer, WorldInitializer,
+    r.single(tokens.WorldInitializer, WorldInitializer,
         [tokens.EntityManager, tokens.GameStateManager, tokens.GameDataRepository]);
 
 

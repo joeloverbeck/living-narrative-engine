@@ -120,7 +120,6 @@ describe('registerCoreSystems', () => {
         expect(mockContainer.register).toHaveBeenCalledTimes(expectedCount);
 
         // Assert: Check logger calls
-        expect(mockLogger.debug).toHaveBeenCalledWith('Core Systems Registration: Starting...');
         initializableSystemTokens.forEach(token => { // <-- This loop also won't check for WelcomeMessageService log
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(token)} tagged with ${INITIALIZABLE[0]}`));
         });

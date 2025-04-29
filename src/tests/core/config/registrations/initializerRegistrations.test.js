@@ -156,16 +156,6 @@ describe('registerInitializers', () => {
         // Assert: Check if main services were registered
         // Check for the tags as well for the tagged registrations
         expect(mockContainer.register).toHaveBeenCalledWith(
-            tokens.GameStateInitializer,
-            expect.any(Function),
-            expect.objectContaining({tags: expect.arrayContaining([INITIALIZABLE[0]])}) // Check tag
-        );
-        expect(mockContainer.register).toHaveBeenCalledWith(
-            tokens.WorldInitializer,
-            expect.any(Function),
-            expect.objectContaining({tags: expect.arrayContaining([INITIALIZABLE[0]])}) // Check tag
-        );
-        expect(mockContainer.register).toHaveBeenCalledWith(
             tokens.SystemInitializer,
             expect.any(Function),
             expect.anything() // Not tagged explicitly in the test check

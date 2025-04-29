@@ -678,12 +678,12 @@
       "type": "object",
       "description": "Parameters for the QUERY_SYSTEM_DATA operation. Queries an external system or data source and stores the result in a context variable.",
       "properties": {
-        "source": {
+        "source_id": {
           "type": "string",
           "description": "Required. Identifier for the target system or data source (e.g., 'world_state', 'weather_api', 'player_stats_db').",
           "minLength": 1
         },
-        "query": {
+        "query_details": {
           "type": [
             "string",
             "object"
@@ -698,8 +698,8 @@
         }
       },
       "required": [
-        "source",
-        "query",
+        "source_id",
+        "query_details",
         "result_variable"
       ],
       "additionalProperties": false

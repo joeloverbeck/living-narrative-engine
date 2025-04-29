@@ -62,9 +62,6 @@ export class SystemServiceRegistry {
 
         // 3. Initialize the internal map for storing services.
         this.#services = new Map();
-
-        // 4. Log successful initialization using the injected logger.
-        this.#logger.info('SystemServiceRegistry: Instance created.');
     }
 
     /**
