@@ -1,5 +1,4 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
   "id": "core:actor",
   "description": "Marker component identifying entities that can participate in the turn-based cycle and perform actions.",
   "dataSchema": {

@@ -282,15 +282,19 @@ export class TurnOrderService extends ITurnOrderService {
         try {
             this.#logger.debug(`TurnOrderService: Attempting to remove entity "${entityId}" from the turn order.`);
             const removedEntity = this.#currentQueue.remove(entityId); // Call the queue's remove method
-            if (removedEntity !== null) {
-                // Note: InitiativePriorityQueue's remove returns null due to lazy removal.
-                // SimpleRoundRobinQueue returns the entity or null.
-                // We log based on non-null for Simple, and just log the attempt for Initiative.
+
+            // --- CORRECTED LOGIC ---
+            // Log success info if the entity was directly removed (non-null return)
+            // OR if it's the initiative strategy (where null signifies processing for lazy removal).
+            if (removedEntity !== null || this.#currentStrategy === 'initiative') {
                 this.#logger.info(`TurnOrderService: Entity "${entityId}" processed for removal (actual removal may be lazy depending on queue type).`);
-            } else if (this.#currentStrategy !== 'initiative') {
-                // Only log "not found" if it wasn't the lazy-remove queue (where null is expected)
+            }
+            // Log a warning only if the entity was truly not found (remove returned null AND it wasn't initiative strategy)
+            else { // Implicitly: removedEntity === null && this.#currentStrategy !== 'initiative'
                 this.#logger.warn(`TurnOrderService.removeEntity: Entity "${entityId}" not found in the current turn order queue.`);
             }
+            // --- END CORRECTED LOGIC ---
+
         } catch (error) {
             this.#logger.error(`TurnOrderService.removeEntity: Error while trying to remove entity "${entityId}": ${error.message}`, error);
             throw error; // Re-throw after logging

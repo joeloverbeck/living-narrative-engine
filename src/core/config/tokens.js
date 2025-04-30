@@ -140,7 +140,7 @@ export const tokens = Object.freeze({
     ActionExecutor: 'ActionExecutor',
     GameStateManager: 'GameStateManager',
     CommandParser: 'CommandParser',
-    ITurnOrderService: 'ITurnOrderService', // <<< ADDED
+    ITurnOrderService: 'ITurnOrderService',
     GameStateInitializer: 'GameStateInitializer',
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',

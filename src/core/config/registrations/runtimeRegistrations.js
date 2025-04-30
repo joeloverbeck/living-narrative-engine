@@ -18,6 +18,7 @@ export function registerRuntime(container) {
         gameDataRepository: c.resolve(tokens.GameDataRepository),
         actionDiscoverySystem: c.resolve(tokens.ActionDiscoverySystem),
         validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+        turnOrderService: c.resolve(tokens.ITurnOrderService),
         logger: c.resolve(tokens.ILogger)
     }));
 
