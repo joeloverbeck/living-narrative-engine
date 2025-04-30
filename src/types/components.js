@@ -5,6 +5,7 @@ export const NAME_COMPONENT_TYPE_ID = 'component:name';
 export const DESCRIPTION_COMPONENT_ID = 'component:description';
 export const ITEM_COMPONENT_ID = 'component:item';
 export const PLAYER_COMPONENT_ID = 'core:player';
+export const ACTOR_COMPONENT_ID = 'core:actor';
 export const POSITION_COMPONENT_ID = 'core:position'; // Define constant for clarity
 export const CONNECTIONS_COMPONENT_TYPE_ID = 'component:connections';
 export const PASSAGE_DETAILS_COMPONENT_TYPE_ID = 'component:passage_details';

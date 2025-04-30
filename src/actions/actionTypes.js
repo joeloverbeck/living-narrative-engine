@@ -8,6 +8,8 @@
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 // --- ADDED Import for ActionTargetContext ---
 /** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
+// --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
+/** @typedef {import('../models/ActionDefinition.js').ActionDefinition} ActionDefinition */
 
 
 /**
@@ -31,14 +33,14 @@
 /**
  * The context object provided to action operationHandlers. It contains the structured
  * command input (`parsedCommand`) and all necessary game state references
- * and dependencies (player, location, managers, event dispatcher) required
+ * and dependencies (acting entity, location, managers, event dispatcher) required
  * for the handler to perform its work. Handlers should rely *solely* on this context.
  *
  * @typedef {object} ActionContext
- * @property {Entity} playerEntity - The entity instance representing the player.
- * @property {Entity} currentLocation - The entity instance representing the player's current location.
- * @property {ParsedCommand} parsedCommand - The structured output from the command parser, containing the identified action, objects, preposition, and original input.
- * @property {GameDataRepository} gameDataRepository - Provides access to loaded game definition data via the data registry. // <<< MODIFIED Type and Description
+ * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action. // <<< MODIFIED: Renamed from playerEntity & Updated Description (SUBTASK-TURN-ORDER-001.8.2)
+ * @property {Entity} currentLocation - The entity instance representing the acting entity's current location.
+ * @property {ParsedCommand} [parsedCommand] - The structured output from the command parser, containing the identified action, objects, preposition, and original input. Optional for contexts like discovery.
+ * @property {GameDataRepository} gameDataRepository - Provides access to loaded game definition data via the data registry.
  * @property {EntityManager} entityManager - The manager for creating and tracking entity instances.
  * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events (via EventBus).
  * @property {EventBus} eventBus - The event bus instance for dispatching events.
@@ -60,7 +62,7 @@
  * `GameLoop` is responsible for processing this structure.
  *
  * @typedef {object} ActionNewState
- * @property {string} [currentLocationId] - If present, signals the GameLoop to change the player's location to the entity with this ID.
+ * @property {string} [currentLocationId] - If present, signals the GameLoop to change the *acting entity's* location to the entity with this ID.
  * // Add other state change signals here if needed (e.g., playerRespawn: true)
  */
 

@@ -1,8 +1,8 @@
 // src/core/config/registrations/initializerRegistrations.js
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
-import GameStateInitializer from '../../gameStateInitializer.js';
-import WorldInitializer from '../../worldInitializer.js';
+import GameStateInitializer from '../../initializers/gameStateInitializer.js';
+import WorldInitializer from '../../initializers/worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
 // Import the necessary tag constant (Task 2: Verified, already present)
 import {INITIALIZABLE} from "../tags.js";
@@ -12,50 +12,59 @@ export function registerInitializers(container) {
     const r = new Registrar(container);
     const log = container.resolve(tokens.ILogger); // For logging within this function
 
-    r.singletonFactory( // Use singletonFactory
-        tokens.GameStateInitializer,          // Token
-        (c) => {                              // Custom factory, receives container 'c'
-            // Resolve all individual dependencies
-            const entityManager = c.resolve(tokens.EntityManager);
-            const gameStateManager = c.resolve(tokens.GameStateManager);
-            const gameDataRepository = c.resolve(tokens.GameDataRepository);
-            const validatedEventDispatcher = c.resolve(tokens.ValidatedEventDispatcher);
-            const logger = c.resolve(tokens.ILogger);
-
-            // Create the single dependency object expected by the constructor
+    // --- GameStateInitializer ---
+    // Already correctly registered with a dependency object constructor
+    r.singletonFactory(
+        tokens.GameStateInitializer,
+        (c) => {
             const dependencies = {
-                entityManager,
-                gameStateManager,
-                gameDataRepository,
-                validatedEventDispatcher,
-                logger
+                entityManager: c.resolve(tokens.EntityManager),
+                gameStateManager: c.resolve(tokens.GameStateManager),
+                gameDataRepository: c.resolve(tokens.GameDataRepository),
+                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+                logger: c.resolve(tokens.ILogger)
             };
-
-            // Call the constructor correctly with the single object
             return new GameStateInitializer(dependencies);
         }
     );
+    log.debug(`Initializer Registration: Registered ${tokens.GameStateInitializer}.`);
 
 
-    // Register WorldInitializer - ASSUMING its constructor takes separate args
-    // If WorldInitializer ALSO expects a single object, it needs the same fix as above.
-    r.single(tokens.WorldInitializer, WorldInitializer,
-        [tokens.EntityManager, tokens.GameStateManager, tokens.GameDataRepository]);
-
-
-    // --- Registration for SystemInitializer using singletonFactory ---
-    // Task 1: Identified instantiation point within this factory
+    // --- WorldInitializer (Ticket 15) ---
+    // Updated to use factory for object dependency constructor
     r.singletonFactory(
-        tokens.SystemInitializer, // The key/token for this service
-        (c) => {                  // The factory function. 'c' IS the AppContainer instance
-            const logger = c.resolve(tokens.ILogger);
-            // Task 3: Modify the new SystemInitializer(...) call
-            // Pass AppContainer (c), ILogger (logger), and the tag string (INITIALIZABLE[0])
-            // AC1: Passes container (IServiceResolver), logger (ILogger), and tag (string).
-            // AC2: Passes the correct tag string.
-            return new SystemInitializer(c, logger, INITIALIZABLE[0]); // <<< UPDATED LINE
+        tokens.WorldInitializer,
+        (c) => {
+            const dependencies = {
+                entityManager: c.resolve(tokens.EntityManager),
+                gameStateManager: c.resolve(tokens.GameStateManager),
+                gameDataRepository: c.resolve(tokens.GameDataRepository),
+                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher), // <<< ADDED Ticket 15
+                logger: c.resolve(tokens.ILogger) // <<< ADDED (assuming it needs logger too)
+            };
+            return new WorldInitializer(dependencies);
         }
     );
+    log.debug(`Initializer Registration: Registered ${tokens.WorldInitializer} (with VED dependency).`);
+
+
+    // --- SystemInitializer (Ticket 15) ---
+    // Updated to use factory for object dependency constructor
+    r.singletonFactory(
+        tokens.SystemInitializer,
+        (c) => {
+            const dependencies = {
+                resolver: c, // Pass the container (AppContainer) as the resolver
+                logger: c.resolve(tokens.ILogger),
+                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher), // <<< ADDED Ticket 15
+                initializationTag: INITIALIZABLE[0] // Pass the tag string
+            };
+            // AC1: Passes container (IServiceResolver), logger (ILogger), VED, and tag (string).
+            // AC2: Passes the correct tag string.
+            return new SystemInitializer(dependencies); // <<< UPDATED LINE
+        }
+    );
+    log.debug(`Initializer Registration: Registered ${tokens.SystemInitializer} (with VED dependency).`);
     // --- End Registration ---
 
     log.info('Initializer Registration: complete.');

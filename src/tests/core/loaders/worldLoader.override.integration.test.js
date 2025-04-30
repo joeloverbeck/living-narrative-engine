@@ -1,39 +1,40 @@
-// Filename: test/integration/worldLoader.override.integration.test.js
+// Filename: src/tests/core/loaders/worldLoader.override.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- SUT ---
-import WorldLoader from '../../core/loaders/worldLoader.js';
+import WorldLoader from '../../../core/loaders/worldLoader.js';
 
 // --- Dependencies to Mock ---
 // Mock static/imported functions BEFORE importing WorldLoader if they are used at module level or constructor indirectly
-import * as ModDependencyValidatorModule from '../../core/modding/modDependencyValidator.js';
-jest.mock('../../core/modding/modDependencyValidator.js', () => ({
+import * as ModDependencyValidatorModule from '../../../core/modding/modDependencyValidator.js';
+jest.mock('../../../core/modding/modDependencyValidator.js', () => ({
     validate: jest.fn(),
 }));
 
-import * as ModVersionValidatorModule from '../../core/modding/modVersionValidator.js';
-jest.mock('../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
+import * as ModVersionValidatorModule from '../../../core/modding/modVersionValidator.js';
+jest.mock('../../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
-import * as ModLoadOrderResolverModule from '../../core/modding/modLoadOrderResolver.js';
-jest.mock('../../core/modding/modLoadOrderResolver.js', () => ({
+import * as ModLoadOrderResolverModule from '../../../core/modding/modLoadOrderResolver.js';
+jest.mock('../../../core/modding/modLoadOrderResolver.js', () => ({
     resolveOrder: jest.fn(),
 }));
 
 // --- Type‑only JSDoc imports for Mocks ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('../../core/loaders/actionLoader.js').default} ActionLoader */
-/** @typedef {import('../../core/loaders/eventLoader.js').default} EventLoader */
-/** @typedef {import('../../core/loaders/componentLoader.js').default} ComponentLoader */
-/** @typedef {import('../../core/loaders/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../core/loaders/schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
-/** @typedef {import('../../core/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../core/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
+/** @typedef {import('../../../core/loaders/actionLoader.js').default} ActionLoader */
+/** @typedef {import('../../../core/loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../../core/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../../core/loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../../core/loaders/schemaLoader.js').default} SchemaLoader */
+/** @typedef {import('../../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
+/** @typedef {import('../../../core/modding/modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('../../../core/loaders/entityLoader.js').default} EntityLoader */
 /** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Added for the new dependency
 
 
 describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () => {
@@ -65,6 +66,8 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
     let mockGameConfigLoader;
     /** @type {jest.Mocked<ModManifestLoader>} */
     let mockModManifestLoader;
+    /** @type {jest.Mocked<ValidatedEventDispatcher>} */ // Added mock type for the new dependency
+    let mockValidatedEventDispatcher;
 
     // --- Mock Data ---
     /** @type {ModManifest} */
@@ -98,8 +101,9 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
             get: jest.fn((type, id) => {
                 // Handle manifest lookups first (WorldLoader uses lower-case keys)
                 if (type === 'mod_manifests') {
-                    if (id === coreModId.toLowerCase()) return mockCoreManifest;
-                    if (id === overrideModId.toLowerCase()) return mockOverrideManifest;
+                    const lowerId = id.toLowerCase(); // Ensure lookup is case-insensitive
+                    if (lowerId === coreModId.toLowerCase()) return mockCoreManifest;
+                    if (lowerId === overrideModId.toLowerCase()) return mockOverrideManifest;
                 }
                 // Handle regular data lookups from the internal store
                 const result = internalStore[type]?.[id];
@@ -118,7 +122,11 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
             }),
             // Add other methods with basic mocks if they might be called
             getAllSystemRules: jest.fn(() => []),
-            getManifest: jest.fn(() => null),
+            getManifest: jest.fn((id) => { // Simulate case-insensitive manifest retrieval
+                if (id.toLowerCase() === coreModId.toLowerCase()) return mockCoreManifest;
+                if (id.toLowerCase() === overrideModId.toLowerCase()) return mockOverrideManifest;
+                return null;
+            }),
             setManifest: jest.fn(),
             getEntityDefinition: jest.fn((id) => internalStore['entities']?.[id]),
             getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
@@ -181,6 +189,11 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         mockRuleLoader = { loadItemsForMod: jest.fn() };
         mockEntityLoader = { loadItemsForMod: jest.fn() };
 
+        // --- Added mock for ValidatedEventDispatcher ---
+        mockValidatedEventDispatcher = {
+            dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the method used by WorldLoader
+        };
+
         // --- 2. Define Mock Data ---
         mockCoreManifest = {
             id: coreModId,
@@ -190,6 +203,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
             content: {
                 // Core defines one action
                 actions: ['core/action1.json'],
+                // NO events, rules, entities etc. defined here
             },
         };
         mockOverrideManifest = {
@@ -205,6 +219,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
                 actions: ['core/action1.json', 'override/action2.json'],
                 // OverrideMod also adds a component (not defined in core)
                 components: ['override/component1.json'],
+                // NO events, rules, entities etc. defined here
             },
         };
 
@@ -219,18 +234,31 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
         // Configure IConfiguration to return IDs for essential schemas
         mockConfiguration.getContentTypeSchemaId.mockImplementation((typeName) => {
+            // This implementation should match what WorldLoader expects for its essential checks
             switch (typeName) {
                 case 'game': return 'schema:game';
                 case 'components': return 'schema:components';
                 case 'mod-manifest': return 'schema:mod-manifest';
-                case 'entities': return 'schema:entities'; // Example, add others if needed
-                default: return `schema:${typeName}`;
+                case 'entities': return 'schema:entities';
+                case 'actions': return 'schema:actions';
+                case 'events': return 'schema:events';
+                case 'rules': return 'schema:rules';
+                default: return `schema:${typeName}`; // Default fallback
             }
         });
 
-        // Configure ISchemaValidator for essential schemas
+        // Configure ISchemaValidator for ALL essential schemas checked by WorldLoader
         mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-            return ['schema:game', 'schema:components', 'schema:mod-manifest', 'schema:entities'].includes(schemaId);
+            const essentialSchemas = [
+                'schema:game',
+                'schema:components',
+                'schema:mod-manifest',
+                'schema:entities',
+                'schema:actions',
+                'schema:events',
+                'schema:rules'
+            ];
+            return essentialSchemas.includes(schemaId);
         });
 
         // Configure GameConfigLoader - Request both mods
@@ -252,74 +280,85 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         // --- Configure Content Loader Mocks ---
 
         // Configure ActionLoader:
-        // It needs to simulate storing different data based on which mod is calling
-        // and return the number of *files listed in the manifest* for that type.
         mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
-            if (typeNameArg !== 'actions') return 0; // Only handle actions
+            // This *SHOULD* be called because 'actions' exists in manifests
+            if (typeNameArg !== 'actions') return { count: 0, overrides: 0, errors: 0 };
+
+            let count = 0;
+            let overrides = 0;
 
             if (modIdArg === coreModId) {
-                // Simulate core loading its action
                 const itemId = `${coreModId}:action1`;
-                const itemData = { value: 'core_value' }; // Core version
+                const itemData = { value: 'core_value' };
                 mockRegistry.store('actions', itemId, itemData);
                 mockLogger.debug(`Mock ActionLoader: Stored ${itemId} for ${modIdArg}`, itemData);
-                return 1; // core manifest lists 1 action file
+                count = 1; // Assumes 1 file maps to 1 item for simplicity in mock
             } else if (modIdArg === overrideModId) {
-                // Simulate overrideMod loading its actions
-                // 1. Override core:action1
-                const overrideItemId = `${coreModId}:action1`; // NOTE: Use CORE's ID for override
-                const overrideItemData = { value: 'override_value' }; // Override version
+                const overrideItemId = `${coreModId}:action1`;
+                const overrideItemData = { value: 'override_value' };
+                if (mockRegistry.get('actions', overrideItemId)) {
+                    overrides++;
+                }
                 mockRegistry.store('actions', overrideItemId, overrideItemData);
                 mockLogger.debug(`Mock ActionLoader: Stored override for ${overrideItemId} by ${modIdArg}`, overrideItemData);
 
-                // 2. Add new action overrideMod:action2
                 const newItemId = `${overrideModId}:action2`;
-                const newItemData = { value: 'new_value' }; // New item data
+                const newItemData = { value: 'new_value' };
                 mockRegistry.store('actions', newItemId, newItemData);
                 mockLogger.debug(`Mock ActionLoader: Stored ${newItemId} for ${modIdArg}`, newItemData);
 
-                return 2; // overrideMod manifest lists 2 action files
+                // Count based on number of successful operations if mock were more complex,
+                // here simplified to match number of files listed in manifest.
+                count = 2;
             }
-            return 0; // Should not happen in this test
+            return { count, overrides, errors: 0 };
         });
 
         // Configure ComponentLoader:
-        // Only overrideMod defines components
         mockComponentLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
-            if (typeNameArg !== 'components') return 0; // Only handle components
+            // This *SHOULD* be called for overrideMod because 'components' exists in its manifest
+            if (typeNameArg !== 'components') return { count: 0, overrides: 0, errors: 0 };
+
+            let count = 0;
+            let overrides = 0;
 
             if (modIdArg === overrideModId) {
-                // Simulate overrideMod loading its component
                 const itemId = `${overrideModId}:component1`;
                 const itemData = { value: 'comp_value' };
                 mockRegistry.store('components', itemId, itemData);
                 mockLogger.debug(`Mock ComponentLoader: Stored ${itemId} for ${modIdArg}`, itemData);
-                return 1; // overrideMod manifest lists 1 component file
+                count = 1; // Assumes 1 file maps to 1 item
             }
-            return 0; // Core mod doesn't define components
+            // It will be called for coreMod too, but the manifest check inside WorldLoader prevents it
+            // unless coreMod's manifest ALSO had components listed. Since it doesn't,
+            // the internal logic of this mock won't run for coreMod.
+            return { count, overrides, errors: 0 };
         });
 
-        // Other loaders are mocked but won't be called based on manifests
-        mockEventLoader.loadItemsForMod.mockResolvedValue(0);
-        mockRuleLoader.loadItemsForMod.mockResolvedValue(0);
-        mockEntityLoader.loadItemsForMod.mockResolvedValue(0);
+        // Other loaders: Mock to return default structure, but expect them NOT to be called
+        // with specific content processing logic *if* the manifests don't list their content types.
+        // WorldLoader's internal `hasContent` check prevents the call.
+        mockEventLoader.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+        mockRuleLoader.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+        mockEntityLoader.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
 
 
         // --- 4. Instantiate SUT ---
-        worldLoader = new WorldLoader(
-            mockRegistry,
-            mockLogger,
-            mockSchemaLoader,
-            mockComponentLoader,
-            mockRuleLoader,
-            mockActionLoader,
-            mockEventLoader,
-            mockEntityLoader,
-            mockValidator,
-            mockConfiguration,
-            mockGameConfigLoader,
-            mockModManifestLoader
-        );
+        worldLoader = new WorldLoader({
+            registry: mockRegistry,
+            logger: mockLogger,
+            schemaLoader: mockSchemaLoader,
+            componentLoader: mockComponentLoader,
+            ruleLoader: mockRuleLoader,
+            actionLoader: mockActionLoader,
+            eventLoader: mockEventLoader,
+            entityLoader: mockEntityLoader,
+            validator: mockValidator,
+            configuration: mockConfiguration,
+            gameConfigLoader: mockGameConfigLoader,
+            modManifestLoader: mockModManifestLoader,
+            validatedEventDispatcher: mockValidatedEventDispatcher
+        });
     });
 
     // ── Test Case: Load with Overrides ─────────────────────────────────────
@@ -328,8 +367,6 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         await expect(worldLoader.loadWorld(worldName)).resolves.not.toThrow();
 
         // --- Assertions ---
-
-        // Verify loadWorld resolves successfully (covered by expect(...).resolves)
 
         // Verify registry.store was called to store meta.final_mod_order
         expect(mockRegistry.store).toHaveBeenCalledWith('meta', 'final_mod_order', [coreModId, overrideModId]);
@@ -344,86 +381,122 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         expect(mockedResolveOrder).toHaveBeenCalledWith([coreModId, overrideModId], expectedValidationMap, mockLogger);
 
 
-        // Verify ActionLoader.loadItemsForMod was called for both mods
+        // --- Assert Loader Calls ---
+
+        // ActionLoader: Called for core (1 action listed) and overrideMod (2 actions listed)
         expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledTimes(2);
-        expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(
-            coreModId, // Mod ID
-            mockCoreManifest, // Correct Manifest
-            'actions', 'actions', 'actions' // Correct params
-        );
-        expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(
-            overrideModId, // Mod ID
-            mockOverrideManifest, // Correct Manifest
-            'actions', 'actions', 'actions' // Correct params
-        );
+        expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(coreModId, mockCoreManifest, 'actions', 'actions', 'actions');
+        expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(overrideModId, mockOverrideManifest, 'actions', 'actions', 'actions');
 
-        // Verify ComponentLoader.loadItemsForMod was called ONLY for overrideMod
+        // ComponentLoader: Called ONLY for overrideMod (1 component listed)
         expect(mockComponentLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
-        expect(mockComponentLoader.loadItemsForMod).toHaveBeenCalledWith(
-            overrideModId, // Mod ID
-            mockOverrideManifest, // Correct Manifest
-            'components', 'components', 'components' // Correct params
-        );
+        // Verify it was called with overrideMod's details
+        expect(mockComponentLoader.loadItemsForMod).toHaveBeenCalledWith(overrideModId, mockOverrideManifest, 'components', 'components', 'components');
+        // Verify it was NOT called trying to process 'components' for coreMod (since core manifest doesn't list them)
+        expect(mockComponentLoader.loadItemsForMod).not.toHaveBeenCalledWith(coreModId, mockCoreManifest, 'components', 'components', 'components');
 
-        // Verify other loaders (Event, Rule, Entity) were NOT called
-        expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
-        expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalled();
-        expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalled();
+        // EventLoader: SHOULD NOT be called because NEITHER manifest lists 'events'
+        expect(mockEventLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
+        // These subsequent checks are now redundant if calledTimes is 0, but harmless
+        expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalledWith(coreModId, mockCoreManifest, 'events', 'events', 'events');
+        expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalledWith(overrideModId, mockOverrideManifest, 'events', 'events', 'events');
+
+        // RuleLoader: SHOULD NOT be called because NEITHER manifest lists 'rules'
+        expect(mockRuleLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
+        // Redundant but harmless checks:
+        expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalledWith(coreModId, mockCoreManifest, 'rules', 'rules', 'rules');
+        expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalledWith(overrideModId, mockOverrideManifest, 'rules', 'rules', 'rules');
+
+        // EntityLoader: SHOULD NOT be called because NEITHER manifest lists any entity types
+        expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
+        // Spot check one type (redundant but harmless):
+        expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(coreModId, mockCoreManifest, 'items', 'items', 'items');
+        expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(overrideModId, mockOverrideManifest, 'items', 'items', 'items');
+        // --- End Loader Call Assertions ---
 
 
-        // Verify the final state of the registry for the OVERRIDDEN item
-        // Use the mockRegistry's internal store via its mocked 'get' method
+        // --- Assert Registry State ---
         const overriddenAction = mockRegistry.get('actions', 'core:action1');
         expect(overriddenAction).toBeDefined();
-        expect(overriddenAction).toEqual({ value: 'override_value' }); // Should have the override value
+        expect(overriddenAction).toEqual({ value: 'override_value' });
         expect(overriddenAction?.value).not.toBe('core_value');
 
-
-        // Verify the final state of the registry for the NEW item from overrideMod
         const newAction = mockRegistry.get('actions', 'overrideMod:action2');
         expect(newAction).toBeDefined();
         expect(newAction).toEqual({ value: 'new_value' });
 
-        // Verify the final state of the registry for the NEW component from overrideMod
         const newComponent = mockRegistry.get('components', 'overrideMod:component1');
         expect(newComponent).toBeDefined();
         expect(newComponent).toEqual({ value: 'comp_value' });
+        // --- End Registry State Assertions ---
 
-        // Verify the summary log reports the correct *total* loaded item counts
-        // The counts are the SUM of what each loader returned for each type
+
+        // --- Assert Summary Logging ---
         const infoCalls = mockLogger.info.mock.calls;
-        const summaryStart = infoCalls.findIndex(call => call[0].includes(`WorldLoader Load Summary (World: '${worldName}')`));
-        expect(summaryStart).toBeGreaterThan(-1); // Summary block should exist
+        const summaryStartIndex = infoCalls.findIndex(call => call[0].includes(`WorldLoader Load Summary (World: '${worldName}')`));
+        expect(summaryStartIndex).toBeGreaterThan(-1);
 
-        const summaryLines = infoCalls.slice(summaryStart).map(call => call[0]);
+        const summaryLines = infoCalls.slice(summaryStartIndex).map(call => call[0]);
 
+        // Basic structure - Match the exact formatting from WorldLoader's #logLoadSummary
         expect(summaryLines).toEqual(expect.arrayContaining([
-            expect.stringContaining(`WorldLoader Load Summary (World: '${worldName}')`),
-            expect.stringContaining(`Requested Mods (raw): [${coreModId}, ${overrideModId}]`),
-            expect.stringContaining(`Final Load Order    : [${coreModId}, ${overrideModId}]`),
-            expect.stringContaining(`Content Loading Summary:`),
-            // Counts based on return values of mockLoaders.loadItemsForMod
-            // actions: 1 (from core) + 2 (from override) -> REGISTRY has 2 unique items BUT summary logs SUM of returned counts
-            // Let's adjust expected sum: core returned 1, override returned 2 => total 3?
-            // Re-check mock: core returns 1, override returns 2. Yes, sum is 3.
-            // Re-check WorldLoader code: `totalCounts[config.typeName] = (totalCounts[config.typeName] || 0) + count;` - It sums the return values.
-            // Okay, let's re-evaluate the mock return values vs manifest content.
-            // core manifest lists 1 action -> mock returns 1.
-            // override manifest lists 2 actions -> mock returns 2.
-            // override manifest lists 1 component -> mock returns 1.
-            // Total actions count logged = 1 + 2 = 3.
-            // Total components count logged = 0 + 1 = 1.
-            expect.stringMatching(/actions\s+: 3 loaded/),      // 1 from core + 2 from overrideMod manifest list
-            expect.stringMatching(/components\s+: 1 loaded/),   // 0 from core + 1 from overrideMod manifest list
-            expect.stringContaining('———————————————————————————————————————————')
+            // Use stringContaining to be slightly flexible, but include formatting elements
+            expect.stringContaining(`— WorldLoader Load Summary (World: '${worldName}') —`),
+            expect.stringContaining(`• Requested Mods (raw): [${coreModId}, ${overrideModId}]`), // Added bullet, space, brackets
+            expect.stringContaining(`• Final Load Order    : [${coreModId}, ${overrideModId}]`), // Added bullet, space, brackets
+            expect.stringContaining(`• Content Loading Summary (Totals):`), // Added bullet, space
+            expect.stringContaining('———————————————————————————————————————————') // Separator line
         ]));
 
-        // Ensure types not loaded aren't in the summary counts
-        expect(summaryLines.some(line => /events\s+:/.test(line))).toBe(false);
-        expect(summaryLines.some(line => /rules\s+:/.test(line))).toBe(false);
-        expect(summaryLines.some(line => /entities\s+:/.test(line))).toBe(false);
+        // Specific counts based on mock return values - Use regex for flexibility with padding
+        // Actions: C:3, O:1, E:0
+        expect(summaryLines.some(line => /actions\s+: C:3, O:1, E:0/.test(line))).toBe(true);
+        // Components: C:1, O:0, E:0
+        expect(summaryLines.some(line => /components\s+: C:1, O:0, E:0/.test(line))).toBe(true);
+
+        // Grand totals: C:4, O:1, E:0 - Use regex for flexibility with padding
+        expect(summaryLines.some(line => /TOTAL\s+: C:4, O:1, E:0/.test(line))).toBe(true);
+
+        // Ensure types NOT processed aren't in summary counts > 0 (regex allows for C:0)
+        expect(summaryLines.some(line => /events\s+: C:[1-9]/.test(line))).toBe(false);
+        expect(summaryLines.some(line => /rules\s+: C:[1-9]/.test(line))).toBe(false);
+        expect(summaryLines.some(line => /items\s+: C:[1-9]/.test(line))).toBe(false);
+        // --- End Summary Logging Assertions ---
+
 
         // Verify registry.clear was called only once at the beginning
         expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
+
+        // --- Assert Event Dispatching ---
+        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // started and completed
+
+        // Check 'started' event
+        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+            'initialization:world_loader:started',
+            { worldName },
+            { allowSchemaNotFound: true }
+        );
+
+        // ***** CORRECTION HERE *****
+        // Check 'completed' event payload
+        // The actual `totalCounts` object ONLY includes keys for content types that were processed.
+        const expectedTotalCounts = {
+            actions: { count: 3, overrides: 1, errors: 0 },     // Populated because ActionLoader ran
+            components: { count: 1, overrides: 0, errors: 0 }, // Populated because ComponentLoader ran
+            // Other keys (events, rules, items, etc.) are intentionally omitted
+            // because their loaders were not invoked due to lack of manifest content,
+            // and thus they won't appear in the actual `totalCounts` object passed in the event.
+        };
+        const expectedCompletedPayload = {
+            worldName,
+            modsLoaded: [coreModId, overrideModId],
+            counts: expectedTotalCounts // Use the corrected counts object
+        };
+        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+            'initialization:world_loader:completed',
+            expectedCompletedPayload, // Compare against the accurately structured payload
+            { allowSchemaNotFound: true }
+        );
+        // --- End Event Dispatching Assertions ---
     });
 });

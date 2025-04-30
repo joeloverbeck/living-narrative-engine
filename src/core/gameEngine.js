@@ -2,58 +2,54 @@
 
 // --- Type Imports ---
 /** @typedef {import('./config/appContainer.js').default} AppContainer */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
-/** @typedef {import('./gameStateManager.js').default} GameStateManager */
-/** @typedef {import('./inputHandler.js').default} InputHandler */
 /** @typedef {import('./gameLoop.js').default} GameLoop */
-/** @typedef {import('./gameStateInitializer.js').default} GameStateInitializer */
-/** @typedef {import('./worldInitializer.js').default} WorldInitializer */
-/** @typedef {import('./loaders/worldLoader.js').default} WorldLoader */
-/** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 // --- Refactoring: Import new services ---
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('./initializers/systemInitializer.js').default} SystemInitializer */ // Added for type hinting
-/** @typedef {import('./setup/inputSetupService.js').default} InputSetupService */ // AC2: Added JSDoc type import
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Keep for local resolution in start/stop
+/** @typedef {import('./initializers/services/initializationService.js').default} InitializationService */ // <<< ADDED for delegation
+/** @typedef {import('./initializers/services/initializationService.js').InitializationResult} InitializationResult */ // <<< ADDED for delegation
+/** @typedef {import('./shutdown/services/shutdownService.js').default} ShutdownService */ // <<< ADDED for delegation
+
 
 /**
- * Encapsulates core game systems, manages initialization using a dependency container,
- * orchestrates the game start, and uses ValidatedEventDispatcher for event dispatches.
+ * Encapsulates the core game engine, managing state, coordinating initialization
+ * via InitializationService, starting the game loop, and coordinating shutdown
+ * via ShutdownService.
  */
 class GameEngine {
-    /** @type {AppContainer} */
+    /** @private @type {AppContainer} */
     #container;
-    // /** @type {EventBus | null} */ // REMOVED: No longer a member variable
-    // #eventBus = null;
-    /** @type {GameLoop | null} */
+    /** @private @type {GameLoop | null} */
     #gameLoop = null;
-    /** @type {boolean} */
+    /** @private @type {boolean} */
     #isInitialized = false;
-
-    // --- Core Service Dependencies ---
-    /** @private @type {GameDataRepository | null} */
-    #gameDataRepository = null;
     /** @private @type {ILogger | null} */
     #logger = null; // Use console as fallback if logger is not provided/resolved
-    /** @private @type {ValidatedEventDispatcher | null} */ // Refactoring: Added
-    #validatedEventDispatcher = null;
 
+    // --- REMOVED Member Variables (Ticket 8) ---
+    // /** @private @type {GameDataRepository | null} */
+    // #gameDataRepository = null; // Now handled transiently by InitializationService/ShutdownService
+    // /** @private @type {ValidatedEventDispatcher | null} */
+    // #validatedEventDispatcher = null; // Now resolved locally when needed or handled by services
 
     /**
      * Creates a new GameEngine instance.
      * @param {object} options
      * @param {AppContainer} options.container - The application's dependency container.
      */
-    constructor({container}) {
+    constructor({ container }) {
         if (!container) {
+            // Cannot use logger here as it's not resolved yet
+            console.error('GameEngine requires a valid AppContainer instance.');
             throw new Error('GameEngine requires a valid AppContainer instance.');
         }
         this.#container = container;
 
         // --- Resolve logger early ---
         try {
-            this.#logger = this.#container.resolve('ILogger');
+            // Use a temporary variable in case resolution fails before assignment
+            const loggerInstance = this.#container.resolve('ILogger');
+            this.#logger = loggerInstance;
         } catch (error) {
             console.warn('GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console for logging.', error);
             this.#logger = { // Basic fallback logger
@@ -61,284 +57,189 @@ class GameEngine {
             };
         }
 
-        this.#logger.info('GameEngine: Instance created with AppContainer. Ready to initialize.');
+        this.#logger.info('GameEngine: Instance created with AppContainer. Ready to start.');
     }
 
     /**
-     * Initializes all core game systems asynchronously.
-     * @param {string} worldName - The identifier of the world to load.
-     * @returns {Promise<boolean>} True if initialization succeeded, false otherwise.
-     * @private
+     * Checks if the game engine has been successfully initialized and hasn't been stopped.
+     * @returns {boolean} True if the engine is considered initialized, false otherwise.
      */
-    async #initialize(worldName) {
-        if (!worldName) {
-            (this.#logger || console).error('GameEngine.#initialize requires a worldName parameter.');
-            throw new Error('GameEngine.#initialize requires a worldName parameter.');
-        }
-        this.#logger?.info(`GameEngine: Starting initialization sequence for world: ${worldName}...`);
-
-        try {
-            // --- Resolve core components early ---
-            if (!this.#logger) {
-                console.error('GameEngine.#initialize: Logger is unexpectedly null. Initialization cannot reliably proceed.');
-                throw new Error('Logger unavailable during initialization.');
-            }
-
-            this.#gameDataRepository = this.#container.resolve('GameDataRepository');
-            this.#logger.info('GameEngine: GameDataRepository resolved.');
-            this.#validatedEventDispatcher = this.#container.resolve('ValidatedEventDispatcher');
-            this.#logger.info('GameEngine: ValidatedEventDispatcher resolved.');
-
-            this.#container.resolve('DomRenderer'); // Resolve early for UI updates
-            this.#logger.info('GameEngine: DomRenderer resolved.');
-
-            const earlyDispatchOptions = {allowSchemaNotFound: true};
-
-            // --- Load Data (using WorldLoader) ---
-            const worldLoader = this.#container.resolve('WorldLoader');
-            await worldLoader.loadWorld(worldName);
-
-            // **** START: Initialize Tagged Systems ****
-            this.#logger.info('GameEngine: Resolving SystemInitializer...');
-            const systemInitializer = /** @type {SystemInitializer} */ (this.#container.resolve('SystemInitializer'));
-            this.#logger.info('GameEngine: Initializing tagged systems via SystemInitializer...');
-            await systemInitializer.initializeAll(); // Call the initialization method
-            this.#logger.info('GameEngine: Tagged system initialization complete.');
-            // **** END: Initialize Tagged Systems ****
-
-            this.#logger.info(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: `World data for '${worldName}' loading process complete.`,
-                type: 'info'
-            });
-
-            // --- Core Game Setup (Player & Starting Location via Service) ---
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Setting Initial Game State...'});
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Setting initial game state...',
-                type: 'info'
-            });
-
-            const gameStateInitializer = this.#container.resolve('GameStateInitializer');
-            // *** NOTE: GameStateInitializer.setupInitialState now handles the initial event:room_entered dispatch ***
-            const setupSuccess = await gameStateInitializer.setupInitialState(); // Await the async setup
-            if (!setupSuccess) {
-                throw new Error('Initial game state setup failed via GameStateInitializer. Check logs.');
-            }
-            this.#logger.info('GameEngine: Initial game state setup completed via GameStateInitializer.');
-
-            // --- Instantiate Other Initial Entities & Build Spatial Index ---
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Initializing World Entities...'});
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Instantiating world entities...',
-                type: 'info'
-            });
-
-            const worldInitializer = this.#container.resolve('WorldInitializer');
-            const worldInitSuccess = worldInitializer.initializeWorldEntities();
-            if (!worldInitSuccess) {
-                throw new Error('World initialization failed via WorldInitializer.');
-            }
-            this.#logger.info('GameEngine: Initial world entities instantiated and spatial index built via WorldInitializer.');
-
-
-            // --- Configure Input Handler ---
-            this.#logger.info('GameEngine: Delegating input handler setup to InputSetupService...');
-            const inputSetupService = /** @type {InputSetupService} */ (this.#container.resolve('InputSetupService'));
-            inputSetupService.configureInputHandler(); // AC2 Location Dependency
-
-
-            // --- Resolve Game Loop ---
-            this.#gameLoop = this.#container.resolve('GameLoop'); // AC2 Location Dependency
-            this.#logger.info('GameEngine: GameLoop resolved.');
-
-            // This event now triggers WelcomeMessageService to handle the welcome messages.
-            this.#logger.info('GameEngine: Dispatching core:engine_initialized event...');
-            await this.#validatedEventDispatcher.dispatchValidated(
-                'core:engine_initialized', // Event Name
-                {inputWorldName: worldName}, // Payload
-                {} // Options
-            );
-
-
-            this.#isInitialized = true;
-            this.#logger.info(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
-            // Note: The final "Initialization Complete. Starting..." title/message might be quickly overwritten
-            // by the WelcomeMessageService triggered by core:engine_initialized, which is expected.
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Initialization Complete. Starting...'});
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Initialization complete.',
-                type: 'success'
-            });
-
-            return true;
-
-        } catch (error) {
-            // AC6: Existing error handling is untouched
-            (this.#logger || console).error(`GameEngine: CRITICAL ERROR during initialization sequence for world '${worldName}':`, error);
-            const errorMsg = `Game initialization failed: ${error.message}. Check console (F12) for details.`;
-
-            if (this.#validatedEventDispatcher) {
-                try {
-                    await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Fatal Initialization Error!'});
-                    await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                        text: errorMsg,
-                        type: 'error'
-                    });
-                    await this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', {message: 'Error during startup.'});
-                } catch (dispatchError) {
-                    (this.#logger || console).error('GameEngine: Failed to dispatch error messages via validatedEventDispatcher during initialization failure:', dispatchError);
-                }
-            } else {
-                (this.#logger || console).error('GameEngine: ValidatedEventDispatcher not available to display initialization error.');
-            }
-
-            try {
-                const inputHandler = this.#container.resolve('InputHandler');
-                if (inputHandler && typeof inputHandler.disable === 'function') inputHandler.disable();
-                const inputElement = this.#container.resolve('inputElement');
-                if (inputElement) inputElement.disabled = true;
-            } catch (disableError) {
-                (this.#logger || console).error('GameEngine: Could not resolve InputHandler or inputElement to disable on error during initialization failure.', disableError);
-            }
-
-            this.#isInitialized = false;
-            throw error; // Re-throw the error after attempting to log/display it
-        }
+    get isInitialized() {
+        return this.#isInitialized;
     }
 
     /**
-     * Starts the game engine after successful initialization.
-     * Retrieves world name using GameDataRepository.
-     * @param {string} worldName - The identifier of the world that was loaded.
-     * @returns {Promise<void>}
+     * Gets the current GameLoop instance, or null if not initialized or stopped.
+     * Primarily intended for testing or internal checks where direct access might be needed.
+     * @returns {GameLoop | null} The current game loop instance or null.
+     * @internal // Mark as internal if it's mainly for testing/advanced use
+     */
+    get gameLoop() {
+        return this.#gameLoop;
+    }
+
+    /**
+     * Initializes the game using InitializationService and then starts the game loop.
+     * Handles errors during initialization setup and propagates errors from the initialization sequence.
+     * Prevents the game loop from starting if initialization fails.
+     * @param {string} worldName - The identifier of the world to load and start.
+     * @returns {Promise<void>} A promise that resolves when the game loop has successfully started, or rejects if initialization or startup fails.
+     * @throws {Error} Throws an error if the worldName is invalid, if the InitializationService cannot be resolved/executed, or if the initialization sequence itself fails (propagated from InitializationService).
      */
     async start(worldName) {
-        // Argument validation (remains the same)
-        if (!worldName) {
-            this.#logger?.error('GameEngine: Fatal Error - start() called without providing a worldName.');
-            alert('Fatal Error: No world specified to start the game engine. Application cannot continue.');
-            try {
-                const inputElement = this.#container.resolve('inputElement');
-                if (inputElement) inputElement.disabled = true;
-                const titleElement = this.#container.resolve('titleElement');
-                if (titleElement) titleElement.textContent = 'Fatal Error!';
-            } catch (e) {
-                this.#logger?.error('GameEngine start(): Failed to disable UI elements on missing worldName error.', e);
-            }
-            throw new Error('GameEngine.start requires a worldName argument.');
+        // --- Argument Validation ---
+        if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
+            this.#logger?.error('GameEngine: Fatal Error - start() called without a valid worldName.');
+            throw new Error('GameEngine.start requires a valid non-empty worldName argument.');
         }
 
+        // --- Prevent Re-initialization ---
+        if (this.isInitialized) {
+            this.#logger?.warn(`GameEngine: start('${worldName}') called, but engine is already initialized. Ignoring.`);
+            return;
+        }
+
+        this.#logger?.info(`GameEngine: Starting initialization sequence for world: ${worldName}...`);
+
+        let initResult;
         try {
-            // Call initialize. If it throws, the outer catch will handle it.
-            await this.#initialize(worldName);
+            // --- Resolve and Run Initialization Service ---
+            const initializationService = /** @type {InitializationService} */ (
+                this.#container.resolve('InitializationService')
+            );
+            this.#logger?.debug('GameEngine: InitializationService resolved.');
+            initResult = await initializationService.runInitializationSequence(worldName);
 
-            // --- Simplified Post-Initialization Check (Ticket 5 / AC1) ---
-            if (this.#isInitialized && this.#gameLoop) {
-                // Dependencies like logger, gameDataRepository, validatedEventDispatcher are assumed
-                // to be present if #isInitialized is true, as #initialize should have thrown otherwise.
-                this.#logger.info('GameEngine: Initialization successful. Starting GameLoop...');
-
-                // Start the game loop
-                this.#gameLoop.start(); // Start the loop using the guaranteed #gameLoop reference
-                this.#logger.info('GameEngine: GameLoop started.');
-
-                // Display message indicating the loop has started (this is different from the welcome message)
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: 'Game loop started. Good luck!', type: 'info'
-                });
-
-            } else {
-                // --- Simplified Else Block (Ticket 5 / AC2 - Remains Intact) ---
-                const failureReason = !this.#isInitialized
-                    ? '#isInitialized is false (initialization likely failed or incomplete)'
-                    : '#gameLoop is null post-initialization';
-
-                this.#logger.error(`GameEngine: Cannot start GameLoop. ${failureReason}.`);
-
-                if (this.#validatedEventDispatcher) {
-                    try {
-                        await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                            text: `Engine failed to start: ${failureReason}. Check logs.`, type: 'error'
-                        });
-                        await this.#validatedEventDispatcher.dispatchValidated('textUI:set_title', {text: 'Engine Start Failed'});
-                    } catch (dispatchError) {
-                        this.#logger.error('GameEngine: Failed to dispatch error message in start() else block:', dispatchError);
-                    }
-                }
-                // Throw an error here to prevent the game from starting silently in a broken state
-                throw new Error(`Inconsistent engine state after initialization: ${failureReason}.`);
-            }
         } catch (error) {
-            // Outer catch handles errors from #initialize() or from the post-init logic block
-            this.#logger?.error(`GameEngine: Error during the start process for world '${worldName}':`, error);
-            // Final attempt to disable UI (remains the same)
-            try { /* UI disable */
-                const inputElement = this.#container.resolve('inputElement');
-                if (inputElement) inputElement.disabled = true;
-                const titleElement = this.#container.resolve('titleElement');
-                if (titleElement) titleElement.textContent = 'Fatal Start Error!';
-            } catch (finalError) { /* log */
-                this.#logger?.error('GameEngine start(): Failed to disable UI elements on start error.', finalError);
+            // --- Handle Critical Service Setup/Invocation Errors ---
+            this.#logger?.error(`GameEngine: CRITICAL ERROR during initialization service setup or invocation for world '${worldName}'.`, error);
+            this.#isInitialized = false; // Ensure state reflects failure
+            this.#gameLoop = null;
+            throw error; // Re-throw critical setup error
+        }
+
+        // --- Process Initialization Result ---
+        if (initResult.success) {
+            // --- Handle Successful Initialization Report ---
+            this.#logger?.info('GameEngine: Initialization sequence reported success.');
+
+            // Explicitly check for the contract violation: success reported but no game loop provided.
+            if (!initResult.gameLoop) {
+                const inconsistentStateError = new Error('GameEngine: Inconsistent state - Initialization reported success but provided no GameLoop.');
+                this.#logger?.error(inconsistentStateError.message);
+                this.#isInitialized = false; // Reset state on inconsistency
+                this.#gameLoop = null;
+                throw inconsistentStateError; // Throw the specific error for this scenario
             }
-            // It's crucial to re-throw the error so the calling context (main.js) knows initialization failed
-            throw error;
+
+            // --- Proceed with Valid Successful Initialization ---
+            this.#isInitialized = true;
+            this.#gameLoop = initResult.gameLoop; // Store the provided game loop
+
+            // Start the game loop (using the getter for consistency)
+            this.#logger?.info('GameEngine: Starting GameLoop...');
+            await this.gameLoop.start();
+            this.#logger?.info('GameEngine: GameLoop started successfully.');
+
+            // --- Dispatch Post-Start Message (Optional) ---
+            try {
+                const dispatcher = /** @type {ValidatedEventDispatcher} */ (
+                    this.#container.resolve('ValidatedEventDispatcher')
+                );
+                await dispatcher.dispatchValidated('textUI:display_message', {
+                    text: 'Game loop started.',
+                    type: 'info'
+                });
+                this.#logger?.debug('GameEngine: Dispatched game loop started message.');
+            } catch (dispatchError) {
+                // Log failure but don't halt execution
+                this.#logger?.error('GameEngine: Failed to resolve or use ValidatedEventDispatcher to send post-start message.', dispatchError);
+            }
+
+        } else {
+            // --- Handle Failed Initialization Report ---
+            // Initialization failed as reported by InitializationService.
+            // Logging/Events are assumed to be handled within the service.
+            const failureReason = initResult.error?.message || 'Unknown initialization error';
+            this.#logger?.error(`GameEngine: Initialization sequence failed for world '${worldName}'. Reason: ${failureReason}`, initResult.error);
+
+            // Ensure engine state reflects failure.
+            this.#isInitialized = false;
+            this.#gameLoop = null;
+
+            // Propagate the error reported by the InitializationService.
+            throw initResult.error || new Error(`Game engine initialization failed: ${failureReason}`);
         }
     }
+
 
     /**
-     * Stops the game loop and performs necessary cleanup.
+     * Stops the game engine by delegating to the ShutdownService and resetting internal state.
+     * This includes stopping the game loop, cleaning up systems, and disposing resources.
+     * Old complex shutdown logic is removed as per Ticket 11.
      */
-    stop() {
+    async stop() {
+        // Log initiation (Task 6 - part 1)
         this.#logger?.info('GameEngine: Stop requested.');
-        if (this.#gameLoop && this.#gameLoop.isRunning) {
-            this.#gameLoop.stop();
-            this.#logger?.info('GameEngine: GameLoop stopped.');
-        } else {
-            this.#logger?.info('GameEngine: GameLoop already stopped or not initialized.');
+
+        // Check if already stopped or never initialized - Use getters
+        if (!this.isInitialized && !this.gameLoop) { // <<< Use getters
+            this.#logger?.info('GameEngine: Stop requested, but engine is already stopped or was never initialized. No action needed.');
+            return;
         }
 
-        // Call shutdown on systems that might need it
+        // --- Replace body with delegation (Task 1) ---
         try {
-            const systemsWithShutdown = ['WorldPresenceSystem']; // Add others if needed
-            for (const key of systemsWithShutdown) {
+            // Resolve ShutdownService (Task 2)
+            this.#logger?.debug('GameEngine: Resolving ShutdownService...');
+            const shutdownService = /** @type {ShutdownService} */ (
+                this.#container.resolve('ShutdownService')
+            );
+            this.#logger?.info('GameEngine: Executing shutdown sequence via ShutdownService...');
+
+            // Call ShutdownService (Task 3)
+            await shutdownService.runShutdownSequence(); // Delegates shutdown (AC2)
+
+            this.#logger?.info('GameEngine: Shutdown sequence completed successfully via ShutdownService.');
+
+        } catch (shutdownError) {
+            // Log errors from the service call (Task 4)
+            this.#logger?.error('GameEngine: Error resolving or running ShutdownService.', shutdownError);
+            // Optional: Keep minimal fallback logic for robustness, although not strictly required by ticket.
+            // This part is no longer the primary shutdown path (AC1)
+            this.#logger?.warn('GameEngine: Attempting minimal fallback cleanup after ShutdownService error...');
+            // Use getter to access gameLoop for check
+            if (this.gameLoop && typeof this.gameLoop.stop === 'function' /* && this.gameLoop.isRunning */) { // isRunning might be on mock, not reliable here
                 try {
-                    const system = this.#container.resolve(key);
-                    if (system && typeof system.shutdown === 'function') {
-                        this.#logger?.info(`GameEngine: Shutting down system: ${key}...`);
-                        system.shutdown(); // Assuming synchronous
-                    }
-                } catch (resolveError) {
-                    this.#logger?.warn(`GameEngine: Could not resolve system '${key}' during shutdown.`, resolveError);
+                    this.gameLoop.stop(); // Use getter
+                    this.#logger?.warn('GameEngine: Fallback - Manually stopped GameLoop.');
+                } catch (loopStopError) {
+                    this.#logger?.error('GameEngine: Fallback - Error stopping GameLoop directly.', loopStopError);
                 }
             }
-        } catch (error) {
-            this.#logger?.error('GameEngine: Error during system shutdown:', error);
-        }
-
-        // Dispose container singletons if method exists
-        if (this.#container) {
-            if (typeof this.#container.disposeSingletons === 'function') {
-                this.#logger?.info('GameEngine: Disposing container singletons...');
+            if (this.#container && typeof this.#container.disposeSingletons === 'function') {
                 try {
                     this.#container.disposeSingletons();
+                    this.#logger?.warn('GameEngine: Fallback - Manually disposed container singletons.');
                 } catch (disposeError) {
-                    this.#logger?.error('GameEngine: Error during container singleton disposal:', disposeError);
+                    this.#logger?.error('GameEngine: Fallback - Error disposing container singletons.', disposeError);
                 }
-            } else {
-                this.#logger?.warn('GameEngine: Container does not have a disposeSingletons method.');
             }
-        }
+        } finally {
+            // --- Reset Internal State (Task 5 & AC3) ---
+            this.#isInitialized = false;
+            this.#gameLoop = null; // Release reference
 
-        // Reset internal state
-        this.#isInitialized = false;
-        this.#gameLoop = null;
-        this.#gameDataRepository = null;
-        this.#validatedEventDispatcher = null; // Refactoring: Clear new service
-        // Logger persists potentially
-        console.log('GameEngine: Engine stopped and internal state reset.'); // Keep console log for clarity during stop
-        this.#logger?.info('GameEngine: Engine stopped and internal state reset.'); // Also log via logger if available
+            // Log completion (Task 6 - part 2)
+            console.log('GameEngine: Engine stop sequence finished, internal state reset.'); // Keep console log for visibility
+            this.#logger?.info('GameEngine: Engine stop sequence finished, internal state reset.');
+        }
+        // --- Complex shutdown logic (stopping loop, iterating systems, disposing container) is removed from primary path (AC1) ---
     }
+
+    // --- REMOVED #initialize Method (Ticket 8) ---
+    // The private #initialize method has been removed. Its responsibilities
+    // are now handled by the InitializationService, which is called from the start() method.
 }
 
 export default GameEngine;

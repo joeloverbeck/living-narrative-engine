@@ -3,12 +3,9 @@
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Adjusted path
-import {BaseManifestItemLoader} from '../../../core/loaders/baseManifestItemLoader.js'; // Adjusted path
+// BaseManifestItemLoader is implicitly tested via ComponentLoader, no direct import needed unless testing base directly
 
 // --- Mock Service Factories (Keep these as they are, they are utility functions) ---
-// ... (createMockConfiguration, createMockPathResolver, createMockDataFetcher, createMockSchemaValidator, createMockDataRegistry, createMockLogger - unchanged) ...
-// ... (createMockModManifest - unchanged) ...
-
 /**
  * Creates a mock IConfiguration service.
  * @param {object} [overrides={}] - Optional overrides for mock methods.
@@ -266,10 +263,10 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
         // Spy on base helper methods if needed
         jest.spyOn(loader, '_storeItemInRegistry');
-        jest.spyOn(loader, '_validatePrimarySchema'); // To check it's NOT called internally
+        // No need to spy on _validatePrimarySchema for these tests
+        // jest.spyOn(loader, '_validatePrimarySchema');
     });
 
-    // --- Test Case: Scenario 1 (Invalid ID) ---
     // --- Test Case: Scenario 1 (Invalid ID) ---
     it('should handle definitions with invalid "id" (null or empty string)', async () => {
         // --- Setup: Scenario 1 ---
@@ -293,14 +290,17 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
             modId,           // modId
             errorManifest,   // modManifest
             'components',    // contentKey
-            'components',    // contentTypeDir <<< FIXED: Argument provided
-            'components'     // typeName       <<< FIXED: Argument provided
+            'components',    // contentTypeDir
+            'components'     // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result Object ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0); // No components should be successfully loaded
+        const result = await loadPromise; // <<< MODIFIED: Capture the result object
+        expect(result.count).toBe(0);     // <<< MODIFIED: Check the 'count' property
+        expect(result.errors).toBe(2);    // Optional: Check errors count in result
+        expect(result.overrides).toBe(0); // Optional: Check overrides count in result
+
         expect(loader._storeItemInRegistry).not.toHaveBeenCalled(); // Nothing should be stored via helper
         expect(mockRegistry.store).not.toHaveBeenCalled(); // Verify registry wasn't called directly either
         expect(mockValidator.addSchema).not.toHaveBeenCalled(); // No data schemas registered
@@ -407,14 +407,17 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
             modId,           // modId
             errorManifest,   // modManifest
             'components',    // contentKey
-            'components',    // contentTypeDir <<< FIXED: Argument provided
-            'components'     // typeName       <<< FIXED: Argument provided
+            'components',    // contentTypeDir
+            'components'     // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result Object ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise;  // <<< MODIFIED: Capture the result object
+        expect(result.count).toBe(0);      // <<< MODIFIED: Check the 'count' property
+        expect(result.errors).toBe(2);     // Optional: Check errors count in result
+        expect(result.overrides).toBe(0);  // Optional: Check overrides count in result
+
         expect(loader._storeItemInRegistry).not.toHaveBeenCalled();
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockValidator.addSchema).not.toHaveBeenCalled();

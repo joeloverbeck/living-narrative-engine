@@ -89,7 +89,7 @@ export class ActionDiscoverySystem {
         this.#logger.debug(`Starting action discovery for actor: ${actorEntity.id}`);
         const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
         // Assumes validCommandStrings is initialized (per Ticket 4.3.4)
-        console.log('>>> DEBUG ADS: Processing Action Definition IDs:', JSON.stringify(allActionDefinitions.map(a => a.id))); // <-- Add this
+
         const validCommandStrings = new Set(); // Use a Set to automatically handle duplicates
 
         // --- 1. Iterate through all Action Definitions ---

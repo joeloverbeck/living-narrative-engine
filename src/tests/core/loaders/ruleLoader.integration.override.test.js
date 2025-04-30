@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.integration.override.test.js
+// src/tests/core/loaders/ruleLoader.integration.override.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
@@ -229,7 +229,8 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     it('should correctly apply the "last mod wins" principle for rules with overlapping IDs', async () => {
         // --- Act ---
         // 1. Load the BaseMod rule
-        const countBase = await loader.loadItemsForMod(
+        // *** CORRECTED: Assign result object, not just count ***
+        const resultBase = await loader.loadItemsForMod(
             baseModId,
             baseModManifest,
             RULE_CONTENT_KEY,
@@ -238,7 +239,10 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
         );
 
         // --- Assert Intermediate State ---
-        expect(countBase).toBe(1);
+        // *** CORRECTED: Check the count property of the result object ***
+        expect(resultBase.count).toBe(1);
+        expect(resultBase.errors).toBe(0); // Good practice to check other fields too
+        expect(resultBase.overrides).toBe(0); // No overrides expected on first load
         expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning expected, keys are different
 
         const expectedStoredBaseData = {
@@ -252,7 +256,8 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
 
         // --- Act ---
         // 2. Load the OverrideMod rule
-        const countOverride = await loader.loadItemsForMod(
+        // *** CORRECTED: Assign result object, not just count ***
+        const resultOverride = await loader.loadItemsForMod(
             overrideModId,
             overrideModManifest,
             RULE_CONTENT_KEY,
@@ -261,9 +266,19 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
         );
 
         // --- Assert Final State ---
-        expect(countOverride).toBe(1);
+        // *** CORRECTED: Check the count property of the result object ***
+        expect(resultOverride.count).toBe(1);
+        expect(resultOverride.errors).toBe(0);
+        // *** NOTE: Check the override flag if your base class logic sets it. ***
+        // The current `_processFetchedItem` in RuleLoader doesn't seem to trigger
+        // the base class's overwrite warning/flag because the FINAL IDs are different
+        // (`BaseMod:common_rule` vs `OverrideMod:common_rule`).
+        // If you EXPECTED an overwrite based on the *baseRuleId* before prefixing,
+        // the base class or the _processFetchedItem logic would need adjustment.
+        // Assuming the current behavior (no warning/override flag for different final IDs) is intended:
+        expect(resultOverride.overrides).toBe(0);
 
-        // 1. Verify ILogger.warn was NOT called for overwrite
+        // 1. Verify ILogger.warn was NOT called for overwrite (as final IDs differ)
         expect(mockLogger.warn).not.toHaveBeenCalled();
 
         const expectedStoredOverrideData = {

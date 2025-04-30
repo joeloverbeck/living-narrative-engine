@@ -27,8 +27,9 @@
  * @property {DiToken} ManifestLoader - Token for the manifest loading service.
  * @property {DiToken} RuleLoader - Token for the rule loading service.
  * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
- * @property {DiToken} ActionLoader - Token for the action loading service. // <<< ADDED
- * @property {DiToken} EventLoader - Token for the event loading service. // <<< ADDED
+ * @property {DiToken} ActionLoader - Token for the action loading service.
+ * @property {DiToken} EventLoader - Token for the event loading service.
+ * @property {DiToken} EntityLoader - Token for loading entity definitions.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
@@ -45,10 +46,10 @@
  * @property {DiToken} ActionValidationService - Token for validating actions.
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
  * @property {DiToken} ValidatedEventDispatcher - Token for dispatching validated events.
- * @property {DiToken} WelcomeMessageService - Token for the initial welcome message service.
  * @property {DiToken} ActionExecutor - Token for executing game actions.
  * @property {DiToken} GameStateManager - Token for managing the overall game state.
  * @property {DiToken} CommandParser - Token for parsing player commands.
+ * @property {DiToken} ITurnOrderService - Token for the turn order management service. // <<< ADDED
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
  * @property {DiToken} QuestRewardService - Token for quest reward logic.
  * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
@@ -56,10 +57,14 @@
  * @property {DiToken} GameStateInitializer - Token for initializing the game state.
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
+ * @property {DiToken} InitializationService - Token for the main initialization orchestration service.
+ * @property {DiToken} ShutdownService - Token for the main shutdown orchestration service.
  * @property {DiToken} ActionDiscoverySystem - Token for the action discovery system.
  * @property {DiToken} InputHandler - Token for handling player input.
  * @property {DiToken} GameLoop - Token for the main game loop.
  * @property {DiToken} InputSetupService - Token for setting up input handling.
+ * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
+ * @property {DiToken} SystemDataRegistry - Token for the registry mapping system IDs to data sources.
  * @property {DiToken} GameRuleSystem - Token for the game rule system.
  * @property {DiToken} EquipmentEffectSystem - Token for the equipment effect system.
  * @property {DiToken} EquipmentSlotSystem - Token for the equipment slot system.
@@ -85,7 +90,13 @@
  * @property {DiToken} DispatchEventHandler - Token for the 'DISPATCH_EVENT' operation handler.
  * @property {DiToken} LogHandler - Token for the 'LOG' operation handler.
  * @property {DiToken} ModifyComponentHandler - Token for the 'MODIFY_COMPONENT' operation handler.
+ * @property {DiToken} AddComponentHandler - Token for the 'ADD_COMPONENT' operation handler.
+ * @property {DiToken} RemoveComponentHandler - Token for the 'REMOVE_COMPONENT' operation handler.
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
+ * @property {DiToken} ModifyDomElementHandler - Token for the 'MODIFY_DOM_ELEMENT' operation handler.
+ * @property {DiToken} AppendUiMessageHandler - Token for the 'APPEND_UI_MESSAGE' operation handler.
+ * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
+ * @property {DiToken} QuerySystemDataHandler - Token for the 'QUERY_SYSTEM_DATA' operation handler.
  */
 export const tokens = Object.freeze({
     // Core Interfaces/Abstractions & Externals
@@ -105,8 +116,8 @@ export const tokens = Object.freeze({
     SchemaLoader: 'SchemaLoader',
     RuleLoader: 'RuleLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
-    ActionLoader: 'ActionLoader', // <<< ADDED
-    EventLoader: 'EventLoader',   // <<< ADDED
+    ActionLoader: 'ActionLoader',
+    EventLoader: 'EventLoader',
     EntityLoader: 'EntityLoader',
     WorldLoader: 'WorldLoader',
     GameConfigLoader: 'GameConfigLoader',
@@ -129,14 +140,18 @@ export const tokens = Object.freeze({
     ActionExecutor: 'ActionExecutor',
     GameStateManager: 'GameStateManager',
     CommandParser: 'CommandParser',
+    ITurnOrderService: 'ITurnOrderService', // <<< ADDED
     GameStateInitializer: 'GameStateInitializer',
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
+    InitializationService: 'InitializationService',
+    ShutdownService: 'ShutdownService',
     InputHandler: 'InputHandler',
     GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
+
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',
@@ -175,10 +190,10 @@ export const tokens = Object.freeze({
     DispatchEventHandler: 'DispatchEventHandler',
     LogHandler: 'LogHandler',
     ModifyComponentHandler: 'ModifyComponentHandler',
-    QueryComponentHandler: 'QueryComponentHandler',
-    ModifyDomElementHandler: 'ModifyDomElementHandler',
     AddComponentHandler: 'AddComponentHandler',
     RemoveComponentHandler: 'RemoveComponentHandler',
+    QueryComponentHandler: 'QueryComponentHandler',
+    ModifyDomElementHandler: 'ModifyDomElementHandler',
     AppendUiMessageHandler: 'AppendUiMessageHandler',
     SetVariableHandler: 'SetVariableHandler',
     QuerySystemDataHandler: 'QuerySystemDataHandler',

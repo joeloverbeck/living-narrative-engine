@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
-  "id": "event:enable_input",
+  "id": "textUI:enable_input",
   "description": "Signals the UI to enable the command input field, optionally setting its placeholder text, and potentially focusing it.",
   "payloadSchema": {
     "type": "object",

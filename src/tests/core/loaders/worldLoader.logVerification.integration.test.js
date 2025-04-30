@@ -1,39 +1,40 @@
-// Filename: test/integration/worldLoader.logVerification.integration.test.js
+// Filename: src/tests/core/loaders/worldLoader.logVerification.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- SUT ---
-import WorldLoader from '../../core/loaders/worldLoader.js';
+import WorldLoader from '../../../core/loaders/worldLoader.js';
 
 // --- Dependencies to Mock ---
 // Mock static/imported functions BEFORE importing WorldLoader
-import * as ModDependencyValidatorModule from '../../core/modding/modDependencyValidator.js';
-jest.mock('../../core/modding/modDependencyValidator.js', () => ({
+import * as ModDependencyValidatorModule from '../../../core/modding/modDependencyValidator.js';
+jest.mock('../../../core/modding/modDependencyValidator.js', () => ({
     validate: jest.fn(),
 }));
 
-import * as ModVersionValidatorModule from '../../core/modding/modVersionValidator.js';
-jest.mock('../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
+import * as ModVersionValidatorModule from '../../../core/modding/modVersionValidator.js';
+jest.mock('../../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
-import * as ModLoadOrderResolverModule from '../../core/modding/modLoadOrderResolver.js';
-jest.mock('../../core/modding/modLoadOrderResolver.js', () => ({
+import * as ModLoadOrderResolverModule from '../../../core/modding/modLoadOrderResolver.js';
+jest.mock('../../../core/modding/modLoadOrderResolver.js', () => ({
     resolveOrder: jest.fn(),
 }));
 
 // --- Type‑only JSDoc imports for Mocks ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('../../core/loaders/actionLoader.js').default} ActionLoader */
-/** @typedef {import('../../core/loaders/eventLoader.js').default} EventLoader */
-/** @typedef {import('../../core/loaders/componentLoader.js').default} ComponentLoader */
-/** @typedef {import('../../core/loaders/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../core/loaders/schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
-/** @typedef {import('../../core/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../core/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration */
+/** @typedef {import('../../../core/loaders/actionLoader.js').default} ActionLoader */
+/** @typedef {import('../../../core/loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../../core/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../../core/loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../../core/loaders/schemaLoader.js').default} SchemaLoader */
+/** @typedef {import('../../../core/loaders/gameConfigLoader.js').default} GameConfigLoader */
+/** @typedef {import('../../../core/modding/modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('../../../core/loaders/entityLoader.js').default} EntityLoader */
 /** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 
 describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7)', () => {
@@ -65,6 +66,8 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     let mockGameConfigLoader;
     /** @type {jest.Mocked<ModManifestLoader>} */
     let mockModManifestLoader;
+    /** @type {jest.Mocked<ValidatedEventDispatcher>} */
+    let mockValidatedEventDispatcher;
 
     // --- Mock Data ---
     /** @type {ModManifest} */
@@ -89,7 +92,8 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     const mockedResolveOrder = ModLoadOrderResolverModule.resolveOrder;
 
     // Helper function for mocks that should return 0
-    const defaultReturnZero = async () => 0;
+    // Updated to return the expected structure with 0 counts
+    const defaultReturnZero = async () => ({ count: 0, overrides: 0, errors: 0 });
 
     beforeEach(() => {
         jest.clearAllMocks(); // Reset mocks between tests
@@ -129,13 +133,16 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         };
         mockGameConfigLoader = { loadConfig: jest.fn() };
         mockModManifestLoader = { loadRequestedManifests: jest.fn() };
+        mockValidatedEventDispatcher = {
+            dispatchValidated: jest.fn().mockResolvedValue(undefined) // Mock the method used
+        };
 
-        // Mock individual content loaders - *** REMOVE default mockResolvedValue ***
-        mockActionLoader = { loadItemsForMod: jest.fn() };
-        mockComponentLoader = { loadItemsForMod: jest.fn() };
-        mockEventLoader = { loadItemsForMod: jest.fn() };
-        mockRuleLoader = { loadItemsForMod: jest.fn() };
-        mockEntityLoader = { loadItemsForMod: jest.fn() };
+        // Mock individual content loaders - Ensure they return the expected { count, overrides, errors } structure
+        mockActionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+        mockComponentLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+        mockEventLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+        mockRuleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+        mockEntityLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
 
         // --- 2. Define Base Mock Data (can be overridden in tests) ---
         coreManifest = { id: coreModId, version: '1.0.0', name: 'Core', gameVersion: '1.0.0', content: {} };
@@ -147,9 +154,18 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         // --- 3. Configure Mocks (Default Success Paths) ---
         mockSchemaLoader.loadAndCompileAllSchemas.mockResolvedValue(undefined);
         mockConfiguration.getContentTypeSchemaId.mockImplementation((typeName) => `schema:${typeName}`);
+
+        // Assume ALL essential schemas checked by WorldLoader are loaded for these tests
         mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-            // Assume essential schemas are loaded
-            return ['schema:game', 'schema:components', 'schema:mod-manifest', 'schema:entities'].includes(schemaId);
+            return [
+                'schema:game',
+                'schema:components',
+                'schema:mod-manifest',
+                'schema:entities',
+                'schema:actions', // Essential schema
+                'schema:events',  // Essential schema
+                'schema:rules'    // Essential schema
+            ].includes(schemaId);
         });
 
         // Default mocks for validation/resolution - configure per test
@@ -158,20 +174,22 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         mockedResolveOrder.mockReturnValue([]); // Configure per test
 
         // --- 4. Instantiate SUT ---
-        worldLoader = new WorldLoader(
-            mockRegistry,
-            mockLogger,
-            mockSchemaLoader,
-            mockComponentLoader,
-            mockRuleLoader,
-            mockActionLoader,
-            mockEventLoader,
-            mockEntityLoader,
-            mockValidator,
-            mockConfiguration,
-            mockGameConfigLoader,
-            mockModManifestLoader
-        );
+        // Pass dependencies as a single object
+        worldLoader = new WorldLoader({
+            registry: mockRegistry,
+            logger: mockLogger,
+            schemaLoader: mockSchemaLoader,
+            componentLoader: mockComponentLoader,
+            ruleLoader: mockRuleLoader,
+            actionLoader: mockActionLoader,
+            eventLoader: mockEventLoader,
+            entityLoader: mockEntityLoader,
+            validator: mockValidator,
+            configuration: mockConfiguration,
+            gameConfigLoader: mockGameConfigLoader,
+            modManifestLoader: mockModManifestLoader,
+            validatedEventDispatcher: mockValidatedEventDispatcher
+        });
     });
 
     // ── Test Case: Basic 'Core' Load Summary (like 7.1) ────────────────────
@@ -193,21 +211,23 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
 
         // Configure registry.get to return the manifest
         mockRegistry.get.mockImplementation((type, id) => {
-            if (type === 'mod_manifests' && id === coreModId.toLowerCase()) return coreManifest;
+            if (type === 'mod_manifests' && id === coreModId.toLowerCase()) {
+                return coreManifest;
+            }
             return undefined;
         });
 
-        // *** Configure ALL content loaders explicitly for this test ***
+        // Configure content loaders to return expected counts for this test
         mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === coreModId && typeNameArg === 'actions') ? coreActionCount : 0
+            (modIdArg === coreModId && typeNameArg === 'actions') ? { count: coreActionCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
         mockComponentLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === coreModId && typeNameArg === 'components') ? coreComponentCount : 0
+            (modIdArg === coreModId && typeNameArg === 'components') ? { count: coreComponentCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
         mockRuleLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === coreModId && typeNameArg === 'rules') ? coreRuleCount : 0
+            (modIdArg === coreModId && typeNameArg === 'rules') ? { count: coreRuleCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
-        // Explicitly set others to return 0 for this test case
+        // Explicitly set others to return 0 using the helper
         mockEventLoader.loadItemsForMod.mockImplementation(defaultReturnZero);
         mockEntityLoader.loadItemsForMod.mockImplementation(defaultReturnZero); // Covers blockers, connections, entities, items, locations
 
@@ -220,40 +240,47 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         expect(summaryStart).toBeGreaterThan(-1); // Summary block should exist
 
         const summaryLines = infoCalls.slice(summaryStart).map(call => call[0]);
-        // console.log("Test 1 Log Calls:", JSON.stringify(infoCalls, null, 2)); // <<< DEBUGGING LINE
+        // console.log("Test 1 Log Calls:", JSON.stringify(infoCalls, null, 2)); // DEBUGGING LINE
 
         // Find specific lines within the summary block
         const summaryBlock = summaryLines.join('\n');
 
         expect(summaryBlock).toContain(`• Requested Mods (raw): [${coreModId}]`);
         expect(summaryBlock).toContain(`• Final Load Order    : [${coreModId}]`);
-        expect(summaryBlock).toContain(`• Content Loading Summary:`);
+        expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
         // Check for specific counts and alphabetical order
-        // ---- VVV CHANGE VVV ----
-        const actionLine = summaryLines.find(line => line.trim().startsWith('- actions'));
-        const componentLine = summaryLines.find(line => line.trim().startsWith('- components'));
-        const ruleLine = summaryLines.find(line => line.trim().startsWith('- rules'));
-        // ---- ^^^ CHANGE ^^^ ----
+        const actionLine = summaryLines.find(line => line.startsWith('    - actions')); // Check untrimmed line
+        const componentLine = summaryLines.find(line => line.startsWith('    - components')); // Check untrimmed line
+        const ruleLine = summaryLines.find(line => line.startsWith('    - rules')); // Check untrimmed line
 
-        expect(actionLine).toBeDefined();    // Line 237 (original failure point)
+        expect(actionLine).toBeDefined();
         expect(componentLine).toBeDefined();
         expect(ruleLine).toBeDefined();
 
-        expect(actionLine).toMatch(/actions\s+: 2 loaded/);
-        expect(componentLine).toMatch(/components\s+: 1 loaded/);
-        expect(ruleLine).toMatch(/rules\s+: 3 loaded/);
+        expect(actionLine).toMatch(/actions\s+: C:2, O:0, E:0/);
+        expect(componentLine).toMatch(/components\s+: C:1, O:0, E:0/);
+        expect(ruleLine).toMatch(/rules\s+: C:3, O:0, E:0/);
 
-        // Verify alphabetical sorting (actions, components, rules)
-        const countLines = summaryLines.filter(line => line.trim().startsWith('-'));
+        // ---- VVV THIS IS THE FIX VVV ----
+        // Verify alphabetical sorting (actions, components, rules) - Filter UNTRIMMED lines
+        const countLines = summaryLines.filter(line => line.startsWith('    - ') && !line.includes('------') && !line.includes('TOTAL'));
+        // ---- ^^^ THIS IS THE FIX ^^^ ----
         expect(countLines).toHaveLength(3);
         expect(countLines[0]).toContain('actions');
         expect(countLines[1]).toContain('components');
         expect(countLines[2]).toContain('rules');
 
         // Verify other types are not present
-        expect(summaryBlock).not.toMatch(/events\s+:/);
-        expect(summaryBlock).not.toMatch(/entities\s+:/); // Check one specific entity type
+        expect(summaryBlock).not.toMatch(/    - blockers\s+:/);
+        expect(summaryBlock).not.toMatch(/    - characters\s+:/);
+        expect(summaryBlock).not.toMatch(/    - connections\s+:/);
+        expect(summaryBlock).not.toMatch(/    - events\s+:/);
+        expect(summaryBlock).not.toMatch(/    - items\s+:/);
+        expect(summaryBlock).not.toMatch(/    - locations\s+:/);
+
+        // Check total line
+        expect(summaryBlock).toContain('TOTAL'.padEnd(20, ' ') + ': C:6, O:0, E:0');
 
         expect(summaryLines[summaryLines.length - 1]).toContain('———————————————————————————————————————————');
     });
@@ -285,18 +312,17 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
             return undefined;
         });
 
-        // *** Configure ALL content loaders explicitly for this test ***
+        // Configure ALL content loaders explicitly for this test
         mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
-            if (typeNameArg !== 'actions') return 0;
-            if (modIdArg === coreModId) return coreActionCount;
-            if (modIdArg === overrideModId) return overrideActionCount;
-            return 0;
+            if (typeNameArg !== 'actions') return { count: 0, overrides: 0, errors: 0 };
+            if (modIdArg === coreModId) return { count: coreActionCount, overrides: 0, errors: 0 };
+            if (modIdArg === overrideModId) return { count: overrideActionCount, overrides: 0, errors: 0 }; // Assuming override count applies elsewhere or is tracked internally
+            return { count: 0, overrides: 0, errors: 0 };
         });
         mockComponentLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
-            if (typeNameArg !== 'components') return 0;
-            if (modIdArg === overrideModId) return overrideComponentCount;
-            // Note: coreMod doesn't list components, so WorldLoader won't call this for coreMod + components
-            return 0;
+            if (typeNameArg !== 'components') return { count: 0, overrides: 0, errors: 0 };
+            if (modIdArg === overrideModId) return { count: overrideComponentCount, overrides: 0, errors: 0 }; // Only overrideMod defines components
+            return { count: 0, overrides: 0, errors: 0 };
         });
         // Explicitly set others to return 0
         mockRuleLoader.loadItemsForMod.mockImplementation(defaultReturnZero);
@@ -312,38 +338,42 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         expect(summaryStart).toBeGreaterThan(-1);
 
         const summaryLines = infoCalls.slice(summaryStart).map(call => call[0]);
-        // console.log("Test 2 Log Calls:", JSON.stringify(infoCalls, null, 2)); // <<< DEBUGGING LINE
+        // console.log("Test 2 Log Calls:", JSON.stringify(infoCalls, null, 2)); // DEBUGGING LINE
         const summaryBlock = summaryLines.join('\n');
 
         expect(summaryBlock).toContain(`• Requested Mods (raw): [${coreModId}, ${overrideModId}]`);
         expect(summaryBlock).toContain(`• Final Load Order    : [${coreModId}, ${overrideModId}]`);
-        expect(summaryBlock).toContain(`• Content Loading Summary:`);
+        expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
         // Check aggregated counts and alphabetical order
-        // ---- VVV CHANGE VVV ----
-        const actionLine = summaryLines.find(line => line.trim().startsWith('- actions'));
-        const componentLine = summaryLines.find(line => line.trim().startsWith('- components'));
-        // ---- ^^^ CHANGE ^^^ ----
+        const actionLine = summaryLines.find(line => line.startsWith('    - actions')); // Check untrimmed line
+        const componentLine = summaryLines.find(line => line.startsWith('    - components')); // Check untrimmed line
 
-        expect(actionLine).toBeDefined();    // Line 324 (original failure point)
+        expect(actionLine).toBeDefined();
         expect(componentLine).toBeDefined();
 
-        // Total count = sum of returned counts from loaders
+        // Total count = sum of returned counts from loaders FOR THE SPECIFIED TYPE
         const expectedTotalActions = coreActionCount + overrideActionCount; // 1 + 2 = 3
         const expectedTotalComponents = overrideComponentCount; // 0 + 1 = 1
 
-        expect(actionLine).toMatch(new RegExp(`actions\\s+: ${expectedTotalActions} loaded`));
-        expect(componentLine).toMatch(new RegExp(`components\\s+: ${expectedTotalComponents} loaded`));
+        expect(actionLine).toMatch(new RegExp(`actions\\s+: C:${expectedTotalActions}, O:0, E:0`));
+        expect(componentLine).toMatch(new RegExp(`components\\s+: C:${expectedTotalComponents}, O:0, E:0`));
 
-        // Verify alphabetical sorting (actions, components)
-        const countLines = summaryLines.filter(line => line.trim().startsWith('-'));
+        // ---- VVV THIS IS THE FIX VVV ----
+        // Verify alphabetical sorting (actions, components) - Filter UNTRIMMED lines
+        const countLines = summaryLines.filter(line => line.startsWith('    - ') && !line.includes('------') && !line.includes('TOTAL'));
+        // ---- ^^^ THIS IS THE FIX ^^^ ----
         expect(countLines).toHaveLength(2);
         expect(countLines[0]).toContain('actions');
         expect(countLines[1]).toContain('components');
 
         // Verify other types are not present
-        expect(summaryBlock).not.toMatch(/rules\s+:/);
-        expect(summaryBlock).not.toMatch(/events\s+:/);
+        expect(summaryBlock).not.toMatch(/    - rules\s+:/);
+        expect(summaryBlock).not.toMatch(/    - events\s+:/);
+
+        // Check total line
+        const expectedTotalCount = expectedTotalActions + expectedTotalComponents;
+        expect(summaryBlock).toContain('TOTAL'.padEnd(20, ' ') + `: C:${expectedTotalCount}, O:0, E:0`);
 
         expect(summaryLines[summaryLines.length - 1]).toContain('———————————————————————————————————————————');
     });
@@ -381,18 +411,19 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
             return undefined;
         });
 
-        // *** Configure ALL content loaders explicitly for this test ***
+        // Configure ALL content loaders explicitly for this test
         mockComponentLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === coreModId && typeNameArg === 'components') ? coreCompCount : 0
+            (modIdArg === coreModId && typeNameArg === 'components') ? { count: coreCompCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
         mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === modAId && typeNameArg === 'actions') ? modAActionCount : 0
+            (modIdArg === modAId && typeNameArg === 'actions') ? { count: modAActionCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
         mockRuleLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) =>
-            (modIdArg === modBId && typeNameArg === 'rules') ? modBRuleCount : 0
+            (modIdArg === modBId && typeNameArg === 'rules') ? { count: modBRuleCount, overrides: 0, errors: 0 } : { count: 0, overrides: 0, errors: 0 }
         );
         // Explicitly set others to return 0
-        mockEventLoader.loadItemsForMod.mockImplementation(defaultReturnZero); // Will be skipped by WorldLoader logic anyway
+        // Event loader won't be called for modA or modB due to WorldLoader's internal check
+        mockEventLoader.loadItemsForMod.mockImplementation(defaultReturnZero);
         mockEntityLoader.loadItemsForMod.mockImplementation(defaultReturnZero);
 
         // Action
@@ -404,51 +435,66 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         expect(summaryStart).toBeGreaterThan(-1);
 
         const summaryLines = infoCalls.slice(summaryStart).map(call => call[0]);
-        // console.log("Test 3 Log Calls:", JSON.stringify(infoCalls, null, 2)); // <<< DEBUGGING LINE
+        // console.log("Test 3 Info Calls:", JSON.stringify(mockLogger.info.mock.calls, null, 2)); // DEBUGGING LINE INFO
+        // console.log("Test 3 Debug Calls:", JSON.stringify(mockLogger.debug.mock.calls, null, 2)); // DEBUGGING LINE DEBUG
         const summaryBlock = summaryLines.join('\n');
 
         expect(summaryBlock).toContain(`• Requested Mods (raw): [${coreModId}, ${modAId}, ${modBId}]`);
         expect(summaryBlock).toContain(`• Final Load Order    : [${coreModId}, ${modAId}, ${modBId}]`);
-        expect(summaryBlock).toContain(`• Content Loading Summary:`);
+        expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
         // Check counts ONLY for loaded types (actions, components, rules)
-        // ---- VVV CHANGE VVV ----
-        const actionLine = summaryLines.find(line => line.trim().startsWith('- actions'));
-        const componentLine = summaryLines.find(line => line.trim().startsWith('- components'));
-        const ruleLine = summaryLines.find(line => line.trim().startsWith('- rules'));
-        // ---- ^^^ CHANGE ^^^ ----
+        const actionLine = summaryLines.find(line => line.startsWith('    - actions')); // Check untrimmed line
+        const componentLine = summaryLines.find(line => line.startsWith('    - components')); // Check untrimmed line
+        const ruleLine = summaryLines.find(line => line.startsWith('    - rules')); // Check untrimmed line
 
-        expect(actionLine).toBeDefined();    // Line 415 (original failure point)
+        expect(actionLine).toBeDefined();
         expect(componentLine).toBeDefined();
         expect(ruleLine).toBeDefined();
 
-        expect(actionLine).toMatch(/actions\s+: 1 loaded/);
-        expect(componentLine).toMatch(/components\s+: 1 loaded/);
-        expect(ruleLine).toMatch(/rules\s+: 1 loaded/);
+        expect(actionLine).toMatch(/actions\s+: C:1, O:0, E:0/);    // Only from modA
+        expect(componentLine).toMatch(/components\s+: C:1, O:0, E:0/); // Only from core
+        expect(ruleLine).toMatch(/rules\s+: C:1, O:0, E:0/);      // Only from modB
 
-        // Verify alphabetical sorting (actions, components, rules)
-        const countLines = summaryLines.filter(line => line.trim().startsWith('-'));
+        // ---- VVV THIS IS THE FIX VVV ----
+        // Verify alphabetical sorting (actions, components, rules) - Filter UNTRIMMED lines
+        const countLines = summaryLines.filter(line => line.startsWith('    - ') && !line.includes('------') && !line.includes('TOTAL'));
+        // ---- ^^^ THIS IS THE FIX ^^^ ----
         expect(countLines).toHaveLength(3);
         expect(countLines[0]).toContain('actions');
         expect(countLines[1]).toContain('components');
         expect(countLines[2]).toContain('rules');
 
         // Verify 'events' and other unloaded types are NOT present in the counts
-        expect(summaryBlock).not.toMatch(/events\s+:/);
-        expect(summaryBlock).not.toMatch(/entities\s+:/);
-        expect(summaryBlock).not.toMatch(/blockers\s+:/);
+        expect(summaryBlock).not.toMatch(/    - events\s+:/);
+        expect(summaryBlock).not.toMatch(/    - entities\s+:/); // Generic check
+        expect(summaryBlock).not.toMatch(/    - blockers\s+:/);
+        expect(summaryBlock).not.toMatch(/    - characters\s+:/);
+        expect(summaryBlock).not.toMatch(/    - connections\s+:/);
+        expect(summaryBlock).not.toMatch(/    - items\s+:/);
+        expect(summaryBlock).not.toMatch(/    - locations\s+:/);
+
+        // Check total line
+        const expectedTotalCount = coreCompCount + modAActionCount + modBRuleCount; // 1 + 1 + 1 = 3
+        expect(summaryBlock).toContain('TOTAL'.padEnd(20, ' ') + `: C:${expectedTotalCount}, O:0, E:0`);
 
         expect(summaryLines[summaryLines.length - 1]).toContain('———————————————————————————————————————————');
 
-        // Optional: Check debug logs for skipping events
-        // Note: The actual debug log checks if manifest.content[config.contentKey] exists and has length > 0
-        // For ModA, events exists but is empty (length 0)
+        // Check debug logs for skipping events based on WorldLoader logic
+        // WorldLoader checks: if (!manifest.content || !Array.isArray(manifest.content[contentKey]) || manifest.content[contentKey].length === 0)
+        // Debug message: `WorldLoader [${modId}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
+
+        // For ModA, content.events exists but length is 0
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`WorldLoader [${modAId}]: No 'events' listed in manifest. Skipping loading for type 'events'.`) // Corrected expected message
+            expect.stringContaining(`WorldLoader [${modAId}]: Skipping content type 'events' (key: 'events')`)
         );
-        // For ModB, events key doesn't exist
+        // For ModB, content.events key doesn't exist
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`WorldLoader [${modBId}]: No 'events' listed in manifest. Skipping loading for type 'events'.`) // Corrected expected message
+            expect.stringContaining(`WorldLoader [${modBId}]: Skipping content type 'events' (key: 'events')`)
+        );
+        // Core mod also doesn't have 'events'
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining(`WorldLoader [${coreModId}]: Skipping content type 'events' (key: 'events')`)
         );
     });
 

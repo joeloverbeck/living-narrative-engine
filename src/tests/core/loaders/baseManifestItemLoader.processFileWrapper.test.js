@@ -152,7 +152,8 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
     const typeName = 'items';
     const resolvedPath = `./data/mods/${modId}/${contentTypeDir}/${filename}`;
     const mockData = {id: 'test-item', value: 123};
-    const mockResult = 'test-mod:test-item'; // Example result from _processFetchedItem
+    // --- MODIFIED: Mock result should match the expected object structure ---
+    const mockProcessResult = { qualifiedId: 'test-mod:test-item', didOverride: false };
 
     // Note: loader, mocks are initialized in the global beforeEach.
 
@@ -167,26 +168,42 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         // loader._logger = mockLogger;
         // Clear mocks used within _processFileWrapper (also done by global beforeEach)
         // jest.clearAllMocks(); // Redundant
+
+        // --- MODIFIED: Mock the return value of _validatePrimarySchema for this suite ---
+        // Ensure it doesn't throw in success cases and returns a valid result object
+        loader._validatePrimarySchema = jest.fn().mockReturnValue({ isValid: true, errors: null });
     });
 
-    it('Success Path: should resolve, fetch, process, log debugs, and return result', async () => {
+    it('Success Path: should resolve, fetch, validate, process, log debugs, and return result', async () => {
         // --- Arrange ---
         mockResolver.resolveModContentPath.mockReturnValue(resolvedPath);
         mockFetcher.fetch.mockResolvedValue(mockData);
-        loader._processFetchedItem.mockResolvedValue(mockResult); // Configure the mock
+        // --- MODIFIED: Configure the mock to return the object ---
+        loader._processFetchedItem.mockResolvedValue(mockProcessResult);
 
         // --- Act ---
         const result = await loader._processFileWrapper(modId, filename, contentTypeDir, typeName);
 
         // --- Assert ---
-        expect(result).toEqual(mockResult); // Check returned value
+        // --- MODIFIED: Check returned value is the object ---
+        expect(result).toEqual(mockProcessResult);
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, contentTypeDir, filename);
         expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPath);
+        // --- ADDED: Assert primary schema validation was called ---
+        expect(loader._validatePrimarySchema).toHaveBeenCalledWith(mockData, filename, modId, resolvedPath);
+        // --- Assert _processFetchedItem was called ---
         expect(loader._processFetchedItem).toHaveBeenCalledWith(modId, filename, resolvedPath, mockData, typeName);
         expect(mockLogger.error).not.toHaveBeenCalled(); // No errors logged
+
+        // --- Assert Debug Logs ---
+        // Use expect.stringContaining or specific calls if order is not guaranteed by implementation details outside the tested function
+        // Note: Constructor logs might appear first depending on how jest handles mock calls across setup and test execution.
+        // Filter constructor logs if necessary or adjust expectations.
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${resolvedPath}`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}. Result from _processFetchedItem: ${mockResult}`);
+        // Assume _validatePrimarySchema logs its own debug message if needed. We already asserted it was called.
+        // --- MODIFIED: Check the success log format ---
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Successfully processed ${filename}. Result: ID=${mockProcessResult.qualifiedId}, Overwrite=${mockProcessResult.didOverride}`);
     });
 
     it('Path Resolution Error: should log error, not fetch/process, and re-throw', async () => {
@@ -216,8 +233,9 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
         // Assert other methods not called
         expect(mockFetcher.fetch).not.toHaveBeenCalled();
+        expect(loader._validatePrimarySchema).not.toHaveBeenCalled(); // <<< ADDED check
         expect(loader._processFetchedItem).not.toHaveBeenCalled();
-        // Debug logs should not have been called either
+        // Debug logs should not have been called either (except potentially constructor logs)
     });
 
     it('Data Fetching Error: should log error, not process, and re-throw', async () => {
@@ -245,6 +263,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         );
 
         // Assert other methods not called
+        expect(loader._validatePrimarySchema).not.toHaveBeenCalled(); // <<< ADDED check
         expect(loader._processFetchedItem).not.toHaveBeenCalled();
         // Debug logs for resolve would have happened before the error
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
@@ -253,11 +272,51 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
     });
 
+    // --- ADDED: Test for _validatePrimarySchema Error ---
+    it('_validatePrimarySchema Error: should log error, not process, and re-throw', async () => {
+        // --- Arrange ---
+        const validationError = new Error('Schema validation failed');
+        mockResolver.resolveModContentPath.mockReturnValue(resolvedPath);
+        mockFetcher.fetch.mockResolvedValue(mockData);
+        // Simulate _validatePrimarySchema throwing an error
+        loader._validatePrimarySchema = jest.fn().mockImplementation(() => {
+            throw validationError;
+        });
+
+        // --- Act & Assert ---
+        await expect(loader._processFileWrapper(modId, filename, contentTypeDir, typeName))
+            .rejects.toThrow(validationError); // Verify re-throw
+
+        // Assert logging (Error is logged by _processFileWrapper's catch block)
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            'Error processing file:',
+            {
+                modId: modId,
+                filename: filename,
+                path: resolvedPath, // Path resolved, data fetched
+                typeName: typeName,
+                error: validationError.message
+            },
+            validationError // Original error object
+        );
+
+        // Assert _processFetchedItem not called
+        expect(loader._processFetchedItem).not.toHaveBeenCalled();
+
+        // Debug logs for resolve/fetch would have happened before the error
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${resolvedPath}`);
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully processed'));
+    });
+
+
     it('_processFetchedItem Error: should log error and re-throw', async () => {
         // --- Arrange ---
         const processError = new Error('Processing failed');
         mockResolver.resolveModContentPath.mockReturnValue(resolvedPath);
         mockFetcher.fetch.mockResolvedValue(mockData);
+        // _validatePrimarySchema should succeed (mocked in beforeEach)
         loader._processFetchedItem.mockRejectedValue(processError); // Simulate processing failure
 
         // --- Act & Assert ---
@@ -271,15 +330,16 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
             {
                 modId: modId,
                 filename: filename,
-                path: resolvedPath, // Path was resolved, data fetched
+                path: resolvedPath, // Path was resolved, data fetched, validated
                 typeName: typeName,
                 error: processError.message
             },
             processError // Original error object
         );
-        // Debug logs for resolve/fetch would have happened before the error
+        // Debug logs for resolve/fetch/validation would have happened before the error
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Resolved path for ${filename}: ${resolvedPath}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`[${modId}] Fetched data from ${resolvedPath}`);
+        expect(loader._validatePrimarySchema).toHaveBeenCalledWith(mockData, filename, modId, resolvedPath); // Validation was called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Successfully processed'));
     });
 });

@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.legacy.test.js
+// src/tests/core/loaders/ruleLoader.legacy.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals'; // Assuming Jest environment
@@ -348,7 +348,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Action ---
         // *** UPDATED: Call loadItemsForMod ***
-        const count = await loader.loadItemsForMod(
+        // *** CHANGED: Capture result object instead of just count ***
+        const result = await loader.loadItemsForMod(
             modId,
             manifestWithoutContent,
             RULE_CONTENT_KEY,
@@ -357,7 +358,10 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         );
 
         // --- Assert ---
-        expect(count).toBe(0);
+        // *** CHANGED: Assert result.count ***
+        expect(result.count).toBe(0);
+        expect(result.errors).toBe(0);
+        expect(result.overrides).toBe(0);
 
         // Verify initial INFO log from base class
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -379,7 +383,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
-        // Ensure final summary log NOT called
+        // Ensure final summary log NOT called (because count is 0)
         expect(mockLogger.info).not.toHaveBeenCalledWith(
             expect.stringContaining(`Mod [${modId}] - Processed`)
         );
@@ -398,7 +402,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Action ---
         // *** UPDATED: Call loadItemsForMod ***
-        const count = await loader.loadItemsForMod(
+        // *** CHANGED: Capture result object instead of just count ***
+        const result = await loader.loadItemsForMod(
             modId,
             manifestWithoutRules,
             RULE_CONTENT_KEY,
@@ -407,7 +412,11 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         );
 
         // --- Assert ---
-        expect(count).toBe(0);
+        // *** CHANGED: Assert result.count ***
+        expect(result.count).toBe(0);
+        expect(result.errors).toBe(0);
+        expect(result.overrides).toBe(0);
+
         // Verify initial INFO log
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
@@ -426,7 +435,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
-        // Ensure final summary log NOT called
+        // Ensure final summary log NOT called (because count is 0)
         expect(mockLogger.info).not.toHaveBeenCalledWith(
             expect.stringContaining(`Mod [${modId}] - Processed`)
         );
@@ -446,7 +455,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Action ---
         // *** UPDATED: Call loadItemsForMod ***
-        const count = await loader.loadItemsForMod(
+        // *** CHANGED: Capture result object instead of just count ***
+        const result = await loader.loadItemsForMod(
             modId,
             manifestWithEmptyRules,
             RULE_CONTENT_KEY,
@@ -455,7 +465,11 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         );
 
         // --- Assert ---
-        expect(count).toBe(0);
+        // *** CHANGED: Assert result.count ***
+        expect(result.count).toBe(0);
+        expect(result.errors).toBe(0);
+        expect(result.overrides).toBe(0);
+
         // Verify initial INFO log
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
@@ -471,14 +485,14 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         expect(mockRegistry.store).not.toHaveBeenCalled();
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
-        // Ensure final summary log NOT called
+        // Ensure final summary log NOT called (because count is 0)
         expect(mockLogger.info).not.toHaveBeenCalledWith(
             expect.stringContaining(`Mod [${modId}] - Processed`)
         );
     });
 
     it('should not attempt legacy discovery even if potential legacy files exist conceptually', async () => {
-        const ruleFilenameRelative = 'rules/actual_rule.json'; // The relative path in the manifest
+        const ruleFilenameRelative = 'actual_rule.json'; // The relative path in the manifest
 
         // Define potential legacy paths that *should not* be fetched
         const legacyIndexPath = `./data/mods/${modId}/${RULE_CONTENT_DIR}/rulesIndex.json`; // Example legacy index
@@ -518,7 +532,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
 
         // --- Action ---
         // *** UPDATED: Call loadItemsForMod ***
-        const count = await loader.loadItemsForMod(
+        // *** CHANGED: Capture result object instead of just count ***
+        const result = await loader.loadItemsForMod(
             modId,
             manifestWithRule,
             RULE_CONTENT_KEY,
@@ -527,7 +542,10 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         );
 
         // --- Assert ---
-        expect(count).toBe(1); // Expect one rule to be loaded successfully
+        // *** CHANGED: Assert result.count ***
+        expect(result.count).toBe(1); // Expect one rule to be loaded successfully
+        expect(result.errors).toBe(0);
+        expect(result.overrides).toBe(0);
 
         // Verify ONLY the manifest-derived path was resolved and fetched
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(1);
@@ -552,6 +570,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
         expect(mockLogger.info).toHaveBeenCalledWith(
             `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
         );
+        // Verify final summary log IS called (because count > 0)
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [${modId}] - Processed 1/1 ${RULE_CONTENT_KEY} items.`
         );

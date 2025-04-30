@@ -321,6 +321,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
 
     });
 
+
     test('should successfully load and register component definitions from the core mod', async () => {
         // --- Action ---
         // Call loadItemsForMod with all required arguments
@@ -332,10 +333,17 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
             'components'      // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result Object --- // <<< MODIFIED SECTION START
         await expect(promise).resolves.not.toThrow();
-        const count = await promise;
-        expect(count).toBe(2); // Correct number of items
+        const result = await promise; // Get the result object
+        expect(result).toBeDefined();
+        expect(result).toHaveProperty('count');
+        expect(result).toHaveProperty('errors');
+        expect(result).toHaveProperty('overrides');
+        expect(result.count).toBe(2);     // Check the 'count' property
+        expect(result.errors).toBe(0);    // Explicitly check errors
+        expect(result.overrides).toBe(0); // Explicitly check overrides (based on received value)
+        // <<< MODIFIED SECTION END
 
         // --- Verify: Mock Calls ---
 
@@ -375,7 +383,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
         // --- Verify: Primary Schema Validation Check ---
         // Check that the base class wrapper (_processFileWrapper) *did* call the _validatePrimarySchema helper.
         // This confirms the primary validation step occurred as expected in the base class logic.
-        expect(componentLoader._validatePrimarySchema).toHaveBeenCalledTimes(2); // <<< CORRECTED ASSERTION
+        expect(componentLoader._validatePrimarySchema).toHaveBeenCalledTimes(2); // <<< Keep assertion as is (it was likely correct)
         // Optionally, verify the arguments it was called with:
         expect(componentLoader._validatePrimarySchema).toHaveBeenCalledWith(coreHealthDef, coreHealthFilename, 'core', coreHealthPath);
         expect(componentLoader._validatePrimarySchema).toHaveBeenCalledWith(corePositionDef, corePositionFilename, 'core', corePositionPath);
@@ -402,9 +410,10 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
         // --- Verify: ILogger Calls ---
         // Check standard logging flow
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Loading components definitions for mod 'core'.`)); // Start log from loadItemsForMod
-        const expectedSuccessCount = 2;
+        const expectedSuccessCount = 2; // Use the count from the result object for consistency
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Mod [core] - Processed ${expectedSuccessCount}/${expectedSuccessCount} components items.`) // Summary log from _loadItemsInternal
+            // Use the result.count from the actual execution
+            expect.stringContaining(`Mod [core] - Processed ${result.count}/${expectedSuccessCount} components items.`) // Summary log from _loadItemsInternal
         );
 
         expect(mockLogger.warn).not.toHaveBeenCalled();

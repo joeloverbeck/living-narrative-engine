@@ -88,8 +88,9 @@ class TestableLoader extends BaseManifestItemLoader {
     // Dummy implementation for the abstract method to satisfy the base class
     // We won't call this directly in these tests, as we mock _loadItemsInternal
     async _processFetchedItem(modId, filename, resolvedPath, fetchedData, typeName) {
-        // Not used in loadItemsForMod tests
-        return `${modId}:${fetchedData?.id || 'dummyId'}`; // Return a plausible qualified ID
+        // Mock implementation required by the abstract class, needs to return the correct shape now
+        // based on the JSDoc for _processFetchedItem. Assume no override for simplicity here.
+        return { qualifiedId: `${modId}:${fetchedData?.id || 'dummyId'}`, didOverride: false };
     }
 
     // Allow spying on the protected method
@@ -121,7 +122,8 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
             [TEST_CONTENT_KEY]: ['item1.json']
         }
     };
-    const EXPECTED_LOAD_COUNT = 5; // Arbitrary number for testing return value
+    // --- CORRECTED: Mock return value for successful load ---
+    const EXPECTED_LOAD_RESULT = { count: 5, overrides: 0, errors: 0 }; // Mock result object
 
     beforeEach(() => {
         // Create fresh mocks for each test
@@ -132,80 +134,73 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         mockRegistry = createMockDataRegistry();
         mockLogger = createMockLogger();
 
-        // --- CORRECTED INSTANTIATION ---
-        // Instantiate the test loader with contentType as the first argument
         testLoader = new TestableLoader(
-            TEST_TYPE_NAME, // <-- Pass the contentType string
+            TEST_TYPE_NAME,
             mockConfig,
             mockResolver,
             mockFetcher,
             mockValidator,
             mockRegistry,
-            mockLogger      // <-- Pass the logger
+            mockLogger
         );
-        // --- END CORRECTION ---
 
         // --- Spy on the protected _loadItemsInternal method ON THE INSTANCE ---
-        // This allows us to check if loadItemsForMod calls it correctly and control its behavior.
-        // We default it to resolving with a specific count.
+        // --- CORRECTED: Mock resolve with the object structure ---
         loadItemsInternalSpy = jest.spyOn(testLoader, '_loadItemsInternal')
-            .mockResolvedValue(EXPECTED_LOAD_COUNT);
+            .mockResolvedValue(EXPECTED_LOAD_RESULT); // Mock with the result object
 
         // Clear mocks *after* instantiation and spying to isolate test calls
-        // Important: Clear mocks associated with dependencies, not the spy itself here.
-        // Use mockClear() for Jest mock functions
         Object.values(mockConfig).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
         Object.values(mockResolver).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
         Object.values(mockFetcher).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
         Object.values(mockValidator).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
         Object.values(mockRegistry).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
         Object.values(mockLogger).forEach(fn => typeof fn === 'function' && fn.mockClear?.());
-
     });
 
     // --- Input Validation Tests ---
     describe('Input Validation', () => {
-        // ***** CORRECTED TESTS for modId/modManifest: Expect ERROR log and return 0 *****
-        it('should return 0 and log ERROR if modId is invalid', async () => {
+        // ***** CORRECTED TESTS for modId/modManifest: Expect ERROR log and return { count: 0, ... } *****
+        it('should return { count: 0, overrides: 0, errors: 0 } and log ERROR if modId is invalid', async () => {
             const invalidModIds = [null, undefined, ''];
+            const expectedReturn = { count: 0, overrides: 0, errors: 0 }; // Expected object
+
             for (const invalidId of invalidModIds) {
-                mockLogger.error.mockClear(); // Check error logger NOW
+                mockLogger.error.mockClear();
                 loadItemsInternalSpy.mockClear();
 
-                // Expect promise to resolve to 0
+                // --- CORRECTED ASSERTION: Use .toEqual for object comparison ---
                 await expect(testLoader.loadItemsForMod(
                     invalidId, MOCK_MANIFEST, TEST_CONTENT_KEY, TEST_CONTENT_DIR, TEST_TYPE_NAME
-                )).resolves.toBe(0); // Check resolves to 0
+                )).resolves.toEqual(expectedReturn); // Check resolves to the expected object
 
-                // Check the ERROR log with the message from the implementation
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    // Use the exact message format from the implementation
                     `TestableLoader: Invalid 'modId' provided for loading ${TEST_TYPE_NAME}. Must be a non-empty string. Received: ${invalidId}`
                 );
                 expect(mockLogger.error).toHaveBeenCalledTimes(1);
-                expect(mockLogger.warn).not.toHaveBeenCalled(); // No warn log expected
-                expect(loadItemsInternalSpy).not.toHaveBeenCalled(); // Internal method should not be called
+                expect(mockLogger.warn).not.toHaveBeenCalled();
+                expect(loadItemsInternalSpy).not.toHaveBeenCalled();
             }
         });
 
-        it('should return 0 and log ERROR if modManifest is invalid', async () => {
+        it('should return { count: 0, overrides: 0, errors: 0 } and log ERROR if modManifest is invalid', async () => {
             const invalidManifests = [null, undefined, 'not-an-object', 123];
+            const expectedReturn = { count: 0, overrides: 0, errors: 0 }; // Expected object
+
             for (const invalidManifest of invalidManifests) {
-                mockLogger.error.mockClear(); // Check error logger NOW
+                mockLogger.error.mockClear();
                 loadItemsInternalSpy.mockClear();
 
-                // Expect promise to resolve to 0
+                // --- CORRECTED ASSERTION: Use .toEqual for object comparison ---
                 await expect(testLoader.loadItemsForMod(
                     TEST_MOD_ID, invalidManifest, TEST_CONTENT_KEY, TEST_CONTENT_DIR, TEST_TYPE_NAME
-                )).resolves.toBe(0); // Check resolves to 0
+                )).resolves.toEqual(expectedReturn); // Check resolves to the expected object
 
-                // Check the ERROR log with the message from the implementation
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    // Use the exact message format from the implementation
                     `TestableLoader: Invalid 'modManifest' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-null object. Received: ${typeof invalidManifest}`
                 );
                 expect(mockLogger.error).toHaveBeenCalledTimes(1);
-                expect(mockLogger.warn).not.toHaveBeenCalled(); // No warn log expected
+                expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(loadItemsInternalSpy).not.toHaveBeenCalled();
             }
         });
@@ -213,25 +208,22 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
 
 
         // ***** KEPT TESTS for contentKey/contentTypeDir/typeName: Expect TypeError *****
+        // These tests expect errors to be *thrown*, not resolved values, so they remain correct.
         it('should throw TypeError and log error if contentKey is invalid', async () => {
             const invalidKeys = [null, undefined, ''];
             for (const invalidKey of invalidKeys) {
-                mockLogger.error.mockClear(); // Use error logger
+                mockLogger.error.mockClear();
                 loadItemsInternalSpy.mockClear();
 
-                // Use expect(...).rejects.toThrow(TypeError)
                 await expect(testLoader.loadItemsForMod(
                     TEST_MOD_ID, MOCK_MANIFEST, invalidKey, TEST_CONTENT_DIR, TEST_TYPE_NAME
-                )).rejects.toThrow(TypeError); // Check for TypeError
+                )).rejects.toThrow(TypeError);
 
-                // Check the specific error message based on the failure log / implementation
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    // Exact message from implementation
                     `TestableLoader: Programming Error - Invalid 'contentKey' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidKey}`
                 );
-                expect(mockLogger.error).toHaveBeenCalledTimes(1); // Ensure only one error log
-                expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning log expected
-
+                expect(mockLogger.error).toHaveBeenCalledTimes(1);
+                expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(loadItemsInternalSpy).not.toHaveBeenCalled();
             }
         });
@@ -239,22 +231,18 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         it('should throw TypeError and log error if contentTypeDir is invalid', async () => {
             const invalidDirs = [null, undefined, ''];
             for (const invalidDir of invalidDirs) {
-                mockLogger.error.mockClear(); // Use error logger
+                mockLogger.error.mockClear();
                 loadItemsInternalSpy.mockClear();
 
-                // Use expect(...).rejects.toThrow(TypeError)
                 await expect(testLoader.loadItemsForMod(
                     TEST_MOD_ID, MOCK_MANIFEST, TEST_CONTENT_KEY, invalidDir, TEST_TYPE_NAME
-                )).rejects.toThrow(TypeError); // Check for TypeError
+                )).rejects.toThrow(TypeError);
 
-                // Check the specific error message based on the failure log / implementation
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    // Exact message from implementation
                     `TestableLoader: Programming Error - Invalid 'contentTypeDir' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`
                 );
                 expect(mockLogger.error).toHaveBeenCalledTimes(1);
-                expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning log expected
-
+                expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(loadItemsInternalSpy).not.toHaveBeenCalled();
             }
         });
@@ -262,22 +250,18 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         it('should throw TypeError and log error if typeName is invalid', async () => {
             const invalidTypeNames = [null, undefined, ''];
             for (const invalidTypeName of invalidTypeNames) {
-                mockLogger.error.mockClear(); // Use error logger
+                mockLogger.error.mockClear();
                 loadItemsInternalSpy.mockClear();
 
-                // Use expect(...).rejects.toThrow(TypeError)
                 await expect(testLoader.loadItemsForMod(
                     TEST_MOD_ID, MOCK_MANIFEST, TEST_CONTENT_KEY, TEST_CONTENT_DIR, invalidTypeName
-                )).rejects.toThrow(TypeError); // Check for TypeError
+                )).rejects.toThrow(TypeError);
 
-                // Check the specific error message based on the failure log / implementation
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    // Exact message from implementation
                     `TestableLoader: Programming Error - Invalid 'typeName' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidTypeName}`
                 );
                 expect(mockLogger.error).toHaveBeenCalledTimes(1);
-                expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning log expected
-
+                expect(mockLogger.warn).not.toHaveBeenCalled();
                 expect(loadItemsInternalSpy).not.toHaveBeenCalled();
             }
         });
@@ -293,11 +277,10 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
 
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
         expect(mockLogger.info).toHaveBeenCalledWith(
-            // Note: The class name comes from the instance (TestableLoader)
             `TestableLoader: Loading ${TEST_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
         );
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings for valid input
-        expect(mockLogger.error).not.toHaveBeenCalled(); // No errors for valid input
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     // --- Internal Call Test ---
@@ -316,14 +299,15 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         );
     });
 
-    // --- Return Value Test ---
-    it('should return the numerical value returned by _loadItemsInternal', async () => {
-        // Spy is already configured in beforeEach to return EXPECTED_LOAD_COUNT
+    // --- CORRECTED Return Value Test ---
+    it('should return the object value returned by _loadItemsInternal', async () => {
+        // Spy is configured in beforeEach to return EXPECTED_LOAD_RESULT (the object)
         const result = await testLoader.loadItemsForMod(
             TEST_MOD_ID, MOCK_MANIFEST, TEST_CONTENT_KEY, TEST_CONTENT_DIR, TEST_TYPE_NAME
         );
 
-        expect(result).toBe(EXPECTED_LOAD_COUNT);
+        // --- CORRECTED ASSERTION: Expect the object ---
+        expect(result).toEqual(EXPECTED_LOAD_RESULT);
     });
 
     // --- Error Handling Test ---
@@ -333,25 +317,26 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
 
         await expect(testLoader.loadItemsForMod(
             TEST_MOD_ID, MOCK_MANIFEST, TEST_CONTENT_KEY, TEST_CONTENT_DIR, TEST_TYPE_NAME
-        )).rejects.toThrow(internalError); // Expect the *same* error to be re-thrown
+        )).rejects.toThrow(internalError);
 
-        // Verify the initial info log still happened before the error
         expect(mockLogger.info).toHaveBeenCalledWith(
             `TestableLoader: Loading ${TEST_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
         );
-        // We don't expect loadItemsForMod itself to log the error, it just propagates it.
-        // Error logging typically happens higher up or within the called method (_loadItemsInternal or _processFileWrapper)
+        // No error expected to be logged *by loadItemsForMod* itself when propagating
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should return 0 if _loadItemsInternal returns 0', async () => {
-        loadItemsInternalSpy.mockResolvedValue(0); // Configure spy to return 0
+    // --- CORRECTED Return Value Test (Zero Case) ---
+    it('should return { count: 0, ... } if _loadItemsInternal returns { count: 0, ... }', async () => {
+        const zeroResult = { count: 0, overrides: 0, errors: 0 };
+        loadItemsInternalSpy.mockResolvedValue(zeroResult); // Configure spy to return the zero object
         const result = await testLoader.loadItemsForMod(
             TEST_MOD_ID, MOCK_MANIFEST, TEST_CONTENT_KEY, TEST_CONTENT_DIR, TEST_TYPE_NAME
         );
 
-        expect(result).toBe(0);
-        expect(loadItemsInternalSpy).toHaveBeenCalledTimes(1); // Still called
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // Still logs info message
+        // --- CORRECTED ASSERTION: Expect the zero object ---
+        expect(result).toEqual(zeroResult);
+        expect(loadItemsInternalSpy).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
     });
 });

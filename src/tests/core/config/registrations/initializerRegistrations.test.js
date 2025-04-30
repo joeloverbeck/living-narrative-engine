@@ -4,8 +4,8 @@
 /** @typedef {import('../../../../core/gameStateManager.js').default} GameStateManager */
 /** @typedef {import('../../../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../../../core/gameStateInitializer.js').default} GameStateInitializer */
-/** @typedef {import('../../../../core/worldInitializer.js').default} WorldInitializer */
+/** @typedef {import('../../../../core/initializers/gameStateInitializer.js').default} GameStateInitializer */
+/** @typedef {import('../../../../core/initializers/worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../../../core/initializers/systemInitializer.js').default} SystemInitializer */
 /** @typedef {any} AppContainer */
 
@@ -21,13 +21,13 @@ import {INITIALIZABLE} from "../../../../core/config/tags.js";
 import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) ---
-jest.mock('../../../../core/gameStateInitializer.js');
-jest.mock('../../../../core/worldInitializer.js');
+jest.mock('../../../../core/initializers/gameStateInitializer.js');
+jest.mock('../../../../core/initializers/worldInitializer.js');
 jest.mock('../../../../core/initializers/systemInitializer.js');
 
 // --- Import AFTER mocking ---
-import GameStateInitializer from '../../../../core/gameStateInitializer.js';
-import WorldInitializer from '../../../../core/worldInitializer.js';
+import GameStateInitializer from '../../../../core/initializers/gameStateInitializer.js';
+import WorldInitializer from '../../../../core/initializers/worldInitializer.js';
 import SystemInitializer from '../../../../core/initializers/systemInitializer.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---

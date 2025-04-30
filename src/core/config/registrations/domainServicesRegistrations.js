@@ -11,14 +11,30 @@ import {ActionValidationService} from "../../../services/actionValidationService
 import PayloadValueResolverService from "../../../services/payloadValueResolverService.js";
 import ActionExecutor from "../../../actions/actionExecutor.js";
 import CommandParser from "../../commandParser.js";
-// --- ADDED IMPORTS ---
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
-import GameStateManager from '../../gameStateManager.js'; // Corrected path relative to this file
-// --- END ADDED IMPORTS ---
+import GameStateManager from '../../gameStateManager.js';
+// --- ADDED TurnOrderService IMPORT ---
+import {TurnOrderService} from "../../turnOrder/turnOrderService.js"; // Adjust path if needed
+
+// --- Type Imports for JSDoc ---
+/** @typedef {import('../appContainer.js').default} AppContainer */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+
+/** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 
 
+/**
+ * Registers core domain logic services.
+ * These services typically encapsulate business rules and orchestrate interactions
+ * between different parts of the game state, but are not necessarily systems
+ * run every tick.
+ *
+ * @export
+ * @param {AppContainer} container - The application's DI container.
+ */
 export function registerDomainServices(container) {
     const r = new Registrar(container);
+    /** @type {ILogger} */
     const log = container.resolve(tokens.ILogger);
     log.debug('Domain-services Registration: starting…');
 
@@ -42,13 +58,24 @@ export function registerDomainServices(container) {
     r.single(tokens.GameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
 
     // --- CommandParser Registration using explicit factory function ---
-    // This structure resolved the previous issue.
     container.register(tokens.CommandParser, c => {
-        // Explicitly resolve the dependency when CommandParser is requested
-        const gameDataRepoInstance = c.resolve(tokens.GameDataRepository);
-        // Instantiate CommandParser with the resolved dependency
+        const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository));
         return new CommandParser(gameDataRepoInstance);
-    }, {lifecycle: 'singleton'}); // Ensure CommandParser is a singleton if needed
+    }, {lifecycle: 'singleton'});
+
+    // --- ADDED TurnOrderService REGISTRATION ---
+    // Register TurnOrderService as a singleton using a factory function
+    // to explicitly pass the dependency object.
+    r.singletonFactory(tokens.ITurnOrderService, (c) => {
+        const dependencies = {
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+            // Add other dependencies here if TurnOrderService constructor changes
+        };
+        return new TurnOrderService(dependencies);
+    });
+    log.debug(`Domain-services Registration: Registered ${tokens.ITurnOrderService}.`);
+    // --- END ADDED REGISTRATION ---
+
 
     log.info('Domain-services Registration: complete.');
 }

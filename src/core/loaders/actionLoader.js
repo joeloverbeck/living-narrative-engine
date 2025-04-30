@@ -49,9 +49,10 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
      * Processes a single fetched action definition file's data. Validates the data
      * using the base class's primary schema validation, extracts and validates the
      * namespaced action ID (e.g., `namespace:action_name`), extracts the base
-     * (un-prefixed) action ID (e.g., `action_name`), and delegates storage to the
-     * base class's `_storeItemInRegistry` helper using the **base** action ID.
-     * Returns the **fully qualified** action ID (`modId:namespace:action_name`).
+     * (un-prefixed) action ID (e.g., `action_name`), delegates storage to the
+     * base class's `_storeItemInRegistry` helper using the **base** action ID,
+     * and returns an object containing the **final registry key** (`modId:baseActionId`)
+     * and a flag indicating if an overwrite occurred.
      *
      * @override
      * @protected
@@ -61,18 +62,14 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file.
      * @param {string} typeName - The content type name ('actions').
-     * @returns {Promise<string>} The **fully qualified** action ID (e.g., "MyMod:core:action_attack") upon success.
+     * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
      * @throws {Error} If validation, ID validation/extraction, or storage fails. Propagated from base helpers or thrown directly.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< MODIFIED Return Type in JSDoc
         this._logger.debug(`ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
 
-        try {
-            this._validatePrimarySchema(data, filename, modId, resolvedPath);
-        } catch (validationError) {
-            this._logger.error(`ActionLoader [${modId}]: Halting processing for '${filename}' due to primary schema validation error.`);
-            throw validationError;
-        }
+        // Primary validation happens in BaseManifestItemLoader._processFileWrapper now
+        // No need to call this._validatePrimarySchema(data, filename, modId, resolvedPath); here
 
         // --- Step 2: ID Extraction & Validation ---
         const idFromFile = data.id;
@@ -117,21 +114,25 @@ class ActionLoader extends BaseManifestItemLoader { // Inheritance specified
         }
         // --- END CORRECTION ---
 
-        this._logger.debug(`ActionLoader [${modId}]: Extracted full ID '${trimmedIdFromFile}' and base ID '${baseActionId}' from ${filename}.`);
+        const finalRegistryKey = `${modId}:${baseActionId}`; // This IS the key used in the registry by the helper
 
-        const fullyQualifiedId = `${modId}:${trimmedIdFromFile}`;
+        this._logger.debug(`ActionLoader [${modId}]: Extracted full ID '${trimmedIdFromFile}' and base ID '${baseActionId}' from ${filename}. Final registry key will be '${finalRegistryKey}'.`);
 
         // --- Step 3: Data Storage (Using Base Helper) ---
         this._logger.debug(`ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`);
+        let didOverride = false; // <<< Initialize override flag
         try {
-            this._storeItemInRegistry('actions', modId, baseActionId, data, filename);
+            // Capture the boolean return value from the helper
+            didOverride = this._storeItemInRegistry('actions', modId, baseActionId, data, filename); // <<< CAPTURE result
         } catch (storageError) {
+            // Error logging happens in helper, re-throw
             throw storageError;
         }
 
         // --- Step 4: Return Value ---
-        this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning fully qualified ID: ${fullyQualifiedId}`);
-        return fullyQualifiedId;
+        this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`);
+        // Return the object as required by the base class contract
+        return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
     }
 }
 

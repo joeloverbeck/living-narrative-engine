@@ -29,6 +29,7 @@ import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
  * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
+ * @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher // For WorldLoader
  */
 
 export function registerInfrastructure(container) {
@@ -44,23 +45,29 @@ export function registerInfrastructure(container) {
     container.register(tokens.ISpatialIndexManager, () => new SpatialIndexManager(), {lifecycle: 'singleton'});
     log.debug(`Infrastructure Registration: Registered ${tokens.ISpatialIndexManager}.`);
 
-    // UPDATED WorldLoader factory function for REFACTOR-LOADER-3
-    container.register(tokens.WorldLoader, c => new WorldLoader(
-        // Arguments must match the WorldLoader constructor order exactly:
-        c.resolve(tokens.IDataRegistry),             // 1st: registry
-        c.resolve(tokens.ILogger),                  // 2nd: logger
-        c.resolve(tokens.SchemaLoader),             // 3rd: schemaLoader
-        c.resolve(tokens.ComponentDefinitionLoader), // 4th: componentDefinitionLoader
-        c.resolve(tokens.RuleLoader),               // 5th: ruleLoader
-        c.resolve(tokens.ActionLoader),             // 6th: actionLoader <<< ADDED
-        c.resolve(tokens.EventLoader),              // 7th: eventLoader <<< ADDED
-        c.resolve(tokens.EntityLoader),             // 8th: entityLoader <<< ADDED
-        c.resolve(tokens.ISchemaValidator),         // 9th: validator
-        c.resolve(tokens.IConfiguration),           // 10th: configuration
-        c.resolve(tokens.GameConfigLoader),         // 11th: gameConfigLoader
-        c.resolve(tokens.ModManifestLoader)         // 12th: modManifestLoader
-    ), {lifecycle: 'singleton'});
-    log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader}.`);
+    // --- UPDATED WorldLoader Factory (Ticket 15) ---
+    // Now uses a dependency object constructor.
+    container.register(tokens.WorldLoader, c => {
+        // Create the dependency object required by the constructor
+        const dependencies = {
+            registry: c.resolve(tokens.IDataRegistry),
+            logger: c.resolve(tokens.ILogger),
+            schemaLoader: c.resolve(tokens.SchemaLoader),
+            componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
+            ruleLoader: c.resolve(tokens.RuleLoader),
+            actionLoader: c.resolve(tokens.ActionLoader),
+            eventLoader: c.resolve(tokens.EventLoader),
+            entityLoader: c.resolve(tokens.EntityLoader),
+            validator: c.resolve(tokens.ISchemaValidator),
+            configuration: c.resolve(tokens.IConfiguration),
+            gameConfigLoader: c.resolve(tokens.GameConfigLoader),
+            modManifestLoader: c.resolve(tokens.ModManifestLoader),
+            validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher) // <<< ADDED Ticket 15
+        };
+        // Pass the single dependency object to the constructor
+        return new WorldLoader(dependencies);
+    }, {lifecycle: 'singleton'});
+    log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader} (with VED dependency).`);
 
     container.register(tokens.GameDataRepository,
         c => new GameDataRepository(

@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.processing.test.js
+// src/tests/core/loaders/ruleLoader.processing.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
@@ -269,7 +269,8 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
 
             // Act
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // 'result' now holds the { count, errors, overrides } object
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -312,16 +313,23 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
                 expectedStoredDataB             // The augmented data object
             );
 
-            // Verify return value
-            expect(count).toBe(2);
+            // --- !!! CORRECTED ASSERTION !!! ---
+            // Verify return value (check properties of the result object)
+            expect(result.count).toBe(2);      // Check the 'count' property
+            expect(result.errors).toBe(0);     // Check the 'errors' property
+            expect(result.overrides).toBe(0);  // Check the 'overrides' property
+            // --- !!! END OF CORRECTION !!! ---
 
             // Verify logging
             expect(mockLogger.info).toHaveBeenCalledWith(
                 `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
             );
+            // --- !!! CORRECTED LOG ASSERTION !!! ---
+            // Check the log message from the *base* class - matches the actual output
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `Mod [${modId}] - Processed 2/2 ${RULE_CONTENT_KEY} items.`
+                `Mod [${modId}] - Processed ${result.count}/${manifest.content[RULE_CONTENT_KEY].length} ${RULE_CONTENT_KEY} items.` // Removed Overrides/Errors part
             );
+            // --- !!! END OF CORRECTION !!! ---
             expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected on happy path
             expect(mockLogger.error).not.toHaveBeenCalled(); // No errors expected on happy path
         });

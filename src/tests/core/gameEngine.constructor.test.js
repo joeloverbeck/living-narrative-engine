@@ -72,7 +72,7 @@ describe('GameEngine Constructor', () => {
 
     // 3. Then the resolved mockLogger.info method was called with the expected message.
     expect(mockLogger.info).toHaveBeenCalledTimes(1); // Ensure logger.info was called
-    expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to initialize.'); // Ensure the correct message was logged
+    expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to start.'); // Ensure the correct message was logged
   });
 
   // --- Test Case: TEST-ENG-003 ---
@@ -129,7 +129,7 @@ describe('GameEngine Constructor', () => {
 
     // 4. Then console.info was called *by the fallback logger* with the standard creation message
     expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-    expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to initialize.');
+    expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to start.');
 
     // 5. Check the actual mockLogger (which wasn't returned) was NOT called
     expect(mockLogger.info).not.toHaveBeenCalled();

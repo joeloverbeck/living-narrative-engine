@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.fetchFailure.test.js
+// src/tests/core/loaders/ruleLoader.fetchFailure.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
@@ -207,8 +207,8 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
             });
 
             // Act
-            // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** UPDATED: Call loadItemsForMod and store the result object ***
+            const loadResult = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -256,18 +256,25 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
                 expect.anything()
             );
 
-            // Verify return count
-            expect(count).toBe(1); // Only one rule was successfully processed
+            // Verify return results object
+            // *** UPDATED: Check properties of the loadResult object ***
+            expect(loadResult).toEqual({
+                count: 1, // Only one rule was successfully processed
+                errors: 1, // One file failed to fetch/process
+                overrides: 0 // No existing rules were overridden
+            });
+            // *** REMOVED old assertion: expect(count).toBe(1); ***
 
             // Verify summary logs
             expect(mockLogger.info).toHaveBeenCalledWith(
                 `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log
             );
+            // *** UPDATED: Ensure the summary log reflects the numbers from loadResult ***
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)` // Final summary log
+                `Mod [${modId}] - Processed ${loadResult.count}/${manifest.content[RULE_CONTENT_KEY].length} ${RULE_CONTENT_KEY} items. (${loadResult.errors} failed)` // Final summary log
             );
 
-            // Ensure no warnings
+            // Ensure no warnings (apart from potential deprecation warnings from loadAllRules, which wasn't called here)
             expect(mockLogger.warn).not.toHaveBeenCalled();
 
         });

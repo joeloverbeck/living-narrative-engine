@@ -8,408 +8,216 @@ import AppContainer from '../../core/config/appContainer.js'; // Needed for type
 // --- Type Imports for Mocks ---
 // Core Services
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/eventBus.js').default} EventBus */
-/** @typedef {import('../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../rendering/domRenderer.js').default} DomRenderer */ // Assuming path
-/** @typedef {import('../../core/loaders/worldLoader.js').default} WorldLoader */
-/** @typedef {import('../../core/gameStateInitializer.js').default} GameStateInitializer */
-/** @typedef {import('../../core/worldInitializer.js').default} WorldInitializer */
-// AC1: Removed InputHandler type import as GameEngine doesn't resolve it directly anymore for setup.
-// /** @typedef {import('../../core/inputHandler.js').default} InputHandler */
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */
-/** @typedef {import('../../core/gameStateManager.js').default} GameStateManager */ // Still needed type
-/** @typedef {import('../../core/initializers/systemInitializer.js').default} SystemInitializer */
-/** @typedef {import('../../core/setup/inputSetupService.js').default} InputSetupService */ // AC3: Added type import
+// --- Refactoring Specific Imports ---
+/** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
+/** @typedef {import('../../core/initializers/services/initializationService.js').InitializationResult} InitializationResult */
+// --- Type Imports for MOCKS previously needed but no longer asserted directly ---
+// /** @typedef {import('../../core/loaders/worldLoader.js').default} WorldLoader */
+// /** @typedef {import('../../core/initializers/gameStateInitializer.js').default} GameStateInitializer */
+// /** @typedef {import('../../core/initializers/worldInitializer.js').default} WorldInitializer */
+// /** @typedef {import('../../core/initializers/systemInitializer.js').default} SystemInitializer */
+// /** @typedef {import('../../core/setup/inputSetupService.js').default} InputSetupService */
 
-// Entities (simplified for testing)
-/** @typedef {{ id: string }} MockEntity */
 
 // --- Test Suite ---
-describe('GameEngine start() / #initialize() - Success Path (InputSetupService Delegated)', () => { // Updated description
+describe('GameEngine start() - Success Path (Initialization Delegated)', () => { // Updated description
 
     // --- Mocks ---
     /** @type {jest.Mocked<AppContainer>} */
     let mockAppContainer;
     /** @type {jest.Mocked<ILogger>} */
     let mockLogger;
-    /** @type {jest.Mocked<EventBus>} */
-    let mockEventBus;
-    /** @type {jest.Mocked<GameDataRepository>} */
-    let mockGameDataRepository;
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
     let mockvalidatedEventDispatcher;
-    /** @type {jest.Mocked<DomRenderer>} */
-    let mockDomRenderer;
-    /** @type {jest.Mocked<WorldLoader>} */
-    let mockWorldLoader;
-    /** @type {jest.Mocked<GameStateInitializer>} */
-    let mockGameStateInitializer;
-    /** @type {jest.Mocked<WorldInitializer>} */
-    let mockWorldInitializer;
-    // AC1: Removed mockInputHandler as GameEngine doesn't directly interact with its setup methods anymore
-    // /** @type {jest.Mocked<InputHandler>} */
-    // let mockInputHandler;
     /** @type {jest.Mocked<GameLoop>} */
     let mockGameLoop;
-    /** @type {jest.Mocked<GameStateManager>} */ // Mock instance still needed
-    let mockGameStateManager;
-    /** @type {jest.Mocked<SystemInitializer>} */
-    let mockSystemInitializer;
-    /** @type {jest.Mocked<InputSetupService>} */ // AC3: Added mock variable
-    let mockInputSetupService;
+    /** @type {jest.Mocked<InitializationService>} */ // THE key mock
+    let mockInitializationService;
 
-    // --- Mock Entities ---
-    /** @type {MockEntity} */
-    let mockPlayer;
-    /** @type {MockEntity} */
-    let mockLocation;
-
-    // AC1: Removed callback capture as GameEngine no longer sets it directly.
-    // /** @type {(command: string) => Promise<void>} */
-    // let capturedInputCallback;
+    // --- MOCKS NO LONGER NEEDED for direct assertion in *these* tests ---
+    // /** @type {jest.Mocked<WorldLoader>} */ let mockWorldLoader;
+    // /** @type {jest.Mocked<GameStateInitializer>} */ let mockGameStateInitializer;
+    // /** @type {jest.Mocked<WorldInitializer>} */ let mockWorldInitializer;
+    // /** @type {jest.Mocked<SystemInitializer>} */ let mockSystemInitializer;
+    // /** @type {jest.Mocked<InputSetupService>} */ let mockInputSetupService;
+    // /** @type {jest.Mocked<GameStateManager>} */ let mockGameStateManager; // Only needed if start() directly used it post-init
 
 
     beforeEach(() => {
-        // Clear mocks before each test for isolation
         jest.clearAllMocks();
-        // AC1: Removed callback reset
-        // capturedInputCallback = undefined;
-
-        // --- Mock Entities ---
-        mockPlayer = {id: 'player1'};
-        mockLocation = {id: 'location1'};
 
         // --- Create Mock Logger ---
-        mockLogger = {
-            info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
-        };
+        mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-        // --- Create Mock Core Services ---
-        mockEventBus = {
-            subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn(), listenerCount: jest.fn(),
-        };
-        mockGameDataRepository = {
-            getStartingPlayerId: jest.fn().mockReturnValue(mockPlayer.id),
-            getStartingLocationId: jest.fn().mockReturnValue(mockLocation.id),
-            getEntityDefinition: jest.fn().mockImplementation((id) => ({id, components: {}})),
-            getAllEntityDefinitions: jest.fn().mockReturnValue([]),
-            getAllLocationDefinitions: jest.fn().mockReturnValue([]),
-            getAllItemDefinitions: jest.fn().mockReturnValue([]),
-            getAllConnectionDefinitions: jest.fn().mockReturnValue([]),
-            getAllBlockerDefinitions: jest.fn().mockReturnValue([]),
-            getWorldName: jest.fn().mockReturnValue('Mock World'),
-            getEventDefinition: jest.fn().mockReturnValue({id: 'mockEvent', payloadSchema: null}),
-            getAllEventDefinitions: jest.fn().mockReturnValue([]),
-            getAction: jest.fn(),
-            getAllActionDefinitions: jest.fn(),
-            getTrigger: jest.fn(),
-            getAllTriggers: jest.fn(),
-            getQuestDefinition: jest.fn(),
-            getAllQuestDefinitions: jest.fn(),
-            getObjectiveDefinition: jest.fn(),
-            getInteractionTest: jest.fn(),
-        };
-        mockvalidatedEventDispatcher = {
-            dispatchValidated: jest.fn().mockResolvedValue(true),
-        };
-        mockDomRenderer = { /* Mock methods if needed */};
-        mockWorldLoader = {
-            loadWorld: jest.fn().mockResolvedValue(undefined),
-        };
-        mockGameStateInitializer = {
-            // Now async, assumed to handle dispatch internally
-            setupInitialState: jest.fn().mockResolvedValue(true),
-        };
-        mockWorldInitializer = {
-            initializeWorldEntities: jest.fn().mockReturnValue(true),
-        };
-        // AC1: Removed mockInputHandler instantiation
-        /*
-            mockInputHandler = { ... };
-            */
-        // Mock GameLoop with a controllable isRunning state
+        // --- Create Mocks for Services GameEngine Directly Interacts With ---
+        mockvalidatedEventDispatcher = { dispatchValidated: jest.fn().mockResolvedValue(true) };
         const gameLoopState = {isRunning: false};
-        mockGameLoop = {
-            start: jest.fn(() => {
-                gameLoopState.isRunning = true;
-            }),
-            stop: jest.fn(() => {
-                gameLoopState.isRunning = false;
-            }),
+        mockGameLoop = { // Instance needs to be returned by InitializationService mock
+            start: jest.fn(() => { gameLoopState.isRunning = true; }),
+            stop: jest.fn(() => { gameLoopState.isRunning = false; }),
             processSubmittedCommand: jest.fn(),
-            get isRunning() {
-                return gameLoopState.isRunning;
-            },
+            get isRunning() { return gameLoopState.isRunning; },
+        };
+        // Configure InitializationService mock to report SUCCESS and provide the GameLoop mock
+        const successfulInitResult = { success: true, error: null, gameLoop: mockGameLoop };
+        mockInitializationService = {
+            runInitializationSequence: jest.fn().mockResolvedValue(successfulInitResult),
         };
 
-        mockGameStateManager = { // Instance still needed
-            getPlayer: jest.fn().mockReturnValue(mockPlayer),
-            getCurrentLocation: jest.fn().mockReturnValue(mockLocation),
-            setPlayer: jest.fn(),
-            setCurrentLocation: jest.fn(),
-        };
-        mockSystemInitializer = {
-            initializeAll: jest.fn().mockResolvedValue(undefined), // CORRECTED: Use initializeAll
-        };
-        // AC3: Add mock for InputSetupService
-        mockInputSetupService = {
-            configureInputHandler: jest.fn(), // Mock the delegated method
-        };
+        // --- MOCKS NO LONGER INSTANTIATED HERE ---
+        // mockWorldLoader = { loadWorld: jest.fn().mockResolvedValue(undefined) };
+        // mockGameStateInitializer = { setupInitialState: jest.fn().mockResolvedValue(true) };
+        // mockWorldInitializer = { initializeWorldEntities: jest.fn().mockReturnValue(true) };
+        // mockSystemInitializer = { initializeAll: jest.fn().mockResolvedValue(undefined) };
+        // mockInputSetupService = { configureInputHandler: jest.fn() };
+        // mockGameStateManager = { getPlayer: jest.fn(), getCurrentLocation: jest.fn(), ... };
 
 
         // --- Create Mock AppContainer ---
         mockAppContainer = {
-            resolve: jest.fn(),
-            register: jest.fn(),
-            disposeSingletons: jest.fn(),
-            reset: jest.fn(),
+            resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn(),
         };
 
-        // --- Configure Mock AppContainer.resolve --- // AC4: Updated
+        // --- Configure Mock AppContainer.resolve ---
+        // Only specify mocks for services DIRECTLY resolved by GameEngine.start()
         mockAppContainer.resolve.mockImplementation((key) => {
             switch (key) {
-                case 'ILogger':
-                    return mockLogger;
-                case 'EventBus':
-                    return mockEventBus;
-                case 'GameDataRepository':
-                    return mockGameDataRepository;
-                case 'ValidatedEventDispatcher':
-                    return mockvalidatedEventDispatcher;
-                case 'DomRenderer':
-                    return mockDomRenderer;
-                case 'WorldLoader':
-                    return mockWorldLoader;
-                case 'SystemInitializer':
-                    return mockSystemInitializer;
-                case 'GameStateInitializer':
-                    return mockGameStateInitializer;
-                case 'WorldInitializer':
-                    return mockWorldInitializer;
-                case 'InputSetupService':
-                    return mockInputSetupService; // AC4: Return the mock service
-                case 'GameLoop':
-                    return mockGameLoop;
-                case 'GameStateManager':
-                    return mockGameStateManager; // Still resolved (by GameStateInitializer)
+                case 'ILogger': return mockLogger; // Constructor
+                case 'InitializationService': return mockInitializationService; // Resolved by start()
+                case 'ValidatedEventDispatcher': return mockvalidatedEventDispatcher; // Resolved by start() post-init
 
-                // -- Potentially resolved by InputSetupService or GameStateInitializer --
-                // We only need to mock things GameEngine *itself* resolves directly.
-                // case 'InputHandler': return mockInputHandler; // Leave commented out
+                // GameLoop is obtained from initResult, not resolved again here
+                // Other initializers/loaders are resolved *within* InitializationService
 
                 default:
-                    // Keep throwing error for unexpected resolutions
                     throw new Error(`MockAppContainer: Success Path Tests - Unexpected resolution attempt for key "${key}".`);
             }
         });
-
-        // --- Configure critical mock behaviors for success path ---
-        // These mocks are primarily for the services called *during* initialize
-        mockGameStateManager.getPlayer.mockReturnValue(mockPlayer);
-        mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
     });
 
     // --- Test Case: TEST-ENG-004 (Updated) ---
-    it('[TEST-ENG-004] should resolve expected dependencies and delegate initializations', async () => {
+    // Focus on GameEngine resolving its direct needs and calling InitializationService
+    it('[TEST-ENG-004 Updated] should resolve required services, call InitializationService, start loop, and dispatch final message', async () => {
         // --- Arrange ---
         const worldName = 'testWorld';
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
+        mockAppContainer.resolve.mockClear(); // Clear constructor resolve
+        mockInitializationService.runInitializationSequence.mockClear();
+        mockGameLoop.start.mockClear();
+        mockvalidatedEventDispatcher.dispatchValidated.mockClear();
 
         // --- Act ---
         await gameEngineInstance.start(worldName);
 
         // --- Assert ---
-        // **** NOTE: This list reflects dependencies *directly* resolved by GameEngine.#initialize or GameEngine.start ****
-        const expectedCoreDependenciesResolvedByGameEngine = [
-            'ILogger',                      // Constructor/Early Init
-            'GameDataRepository',           // Init
-            'ValidatedEventDispatcher',     // Init & Post-Init
-            'DomRenderer',                  // Init (early resolve)
-            'WorldLoader',                  // Init
-            'GameStateInitializer',         // Init <--- GameEngine resolves THIS
-            'WorldInitializer',             // Init
-            'InputSetupService',            // Init
-            'GameLoop',                     // Init & Post-Init
-        ];
+        // 1. Verify InitializationService was resolved
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith('InitializationService');
 
-        // **** UPDATE THIS LIST ****
-        // Keep only the dependencies directly resolved by GameEngine or its direct path
-        const allExpectedDependenciesResolvedDuringStart = [
-            ...expectedCoreDependenciesResolvedByGameEngine,
-            // 'GameStateManager' // REMOVED - Resolved indirectly by GameStateInitializer
-        ];
-        // **** END UPDATE ****
+        // 2. Verify InitializationService.runInitializationSequence was called correctly
+        expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledTimes(1);
+        expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(worldName);
 
-
-        const resolveCalls = mockAppContainer.resolve.mock.calls;
-        const resolvedKeys = resolveCalls.map(callArgs => callArgs[0]);
-
-        // Check that all expected dependencies were resolved *at least once* during start()
-        allExpectedDependenciesResolvedDuringStart.forEach(key => {
-            // Use expect(resolvedKeys).toEqual(expect.arrayContaining([key])) for potentially better error messages
-            expect(resolvedKeys).toContain(key);
-        });
-
-        // ... rest of the assertions remain the same ...
-        expect(mockWorldLoader.loadWorld).toHaveBeenCalledWith(worldName);
-        expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalledTimes(1); // GameEngine calls this mock
-        expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledTimes(1);
-
-        // Verify delegation calls
-        expect(mockInputSetupService.configureInputHandler).toHaveBeenCalledTimes(1);
-        expect(mockInputSetupService.configureInputHandler).toHaveBeenCalledWith();
-
-        // Check game loop start
+        // 3. Verify GameLoop.start was called (using the loop instance provided by the service result)
         expect(mockGameLoop.start).toHaveBeenCalledTimes(1);
 
-        // Basic checks for dispatcher calls
+        // 4. Verify ValidatedEventDispatcher was resolved for the final message
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith('ValidatedEventDispatcher');
+
+        // 5. Verify the final "Game loop started" message was dispatched
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'textUI:display_message',
-            {text: 'Game loop started. Good luck!', type: 'info'}
+            {text: 'Game loop started.', type: 'info'} // Adjusted message based on GameEngine code
         );
+
+        // --- REMOVED Assertions for internal initializer/loader resolution/calls ---
+        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('WorldLoader');
+        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('GameStateInitializer');
+        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('WorldInitializer');
+        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('SystemInitializer');
+        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('InputSetupService');
+        // expect(mockWorldLoader.loadWorld).not.toHaveBeenCalled(); // No longer asserted here
+        // expect(mockGameStateInitializer.setupInitialState).not.toHaveBeenCalled(); // No longer asserted here
+        // etc.
     });
 
-    // --- Test Case: TEST-ENG-005 (Should Pass - No Changes Needed) ---
-    it('[TEST-ENG-005] should dispatch specific UI events via ValidatedEventDispatcher during successful initialization', async () => {
+    // --- Test Case: TEST-ENG-005 (Removed) ---
+    // REASON: Specific detailed progress events are no longer dispatched directly by GameEngine.start().
+    // InitializationService and its components are responsible. Only the final message remains.
+
+    // --- Test Case: TEST-ENG-006 (Removed) ---
+    // REASON: WorldLoader.loadWorld call is internal to InitializationService.
+
+    // --- Test Case: TEST-ENG-008 (Removed) ---
+    // REASON: GameStateInitializer.setupInitialState call is internal to InitializationService.
+
+    // --- Test Case: TEST-ENG-009 (Removed) ---
+    // REASON: WorldInitializer.initializeWorldEntities call is internal to InitializationService.
+
+    // --- Test Case: TEST-ENG-012 (Revised) ---
+    // Focus: GameEngine gets GameLoop instance from InitializationService result, doesn't resolve it again.
+    it('[TEST-ENG-012 Revised] should use the GameLoop instance provided by InitializationService result', async () => {
         // --- Arrange ---
         const worldName = 'testWorld';
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
-        const earlyDispatchOptions = {allowSchemaNotFound: true};
+        mockAppContainer.resolve.mockClear(); // Clear constructor resolve
 
         // --- Act ---
         await gameEngineInstance.start(worldName);
 
         // --- Assert ---
-        // These events are part of the initialization flow and remain
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: `World data for '${worldName}' loading process complete.`,
-            type: 'info'
-        });
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Setting Initial Game State...'});
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: 'Setting initial game state...',
-            type: 'info'
-        });
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initializing World Entities...'});
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: 'Instantiating world entities...',
-            type: 'info'
-        });
-        // This event still exists and triggers WelcomeMessageService etc.
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:engine_initialized', {inputWorldName: worldName}, {});
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:set_title', {text: 'Initialization Complete. Starting...'});
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: 'Initialization complete.',
-            type: 'success'
-        });
-        // This final message is from start() itself after the loop starts
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
-            text: 'Game loop started. Good luck!',
-            type: 'info'
-        });
+        // Verify GameLoop was NOT resolved directly by GameEngine.start() post-init
+        const resolveCallsAfterConstructor = mockAppContainer.resolve.mock.calls;
+        const resolvedKeysAfterConstructor = resolveCallsAfterConstructor.map(callArgs => callArgs[0]);
+        expect(resolvedKeysAfterConstructor).not.toContain('GameLoop');
+
+        // Verify the provided mockGameLoop's start method was called
+        expect(mockGameLoop.start).toHaveBeenCalledTimes(1);
     });
 
-    // --- Test Case: TEST-ENG-006 (Should Pass - No Changes Needed) ---
-    it('[TEST-ENG-006] should call WorldLoader.loadWorld with the correct worldName during successful initialization', async () => {
-        // --- Arrange ---
-        const worldName = 'testWorld';
-        const gameEngineInstance = new GameEngine({container: mockAppContainer});
-
-        // --- Act ---
-        await gameEngineInstance.start(worldName);
-
-        // --- Assert ---
-        expect(mockWorldLoader.loadWorld).toHaveBeenCalledTimes(1);
-        expect(mockWorldLoader.loadWorld).toHaveBeenCalledWith(worldName);
-    });
-
-    // --- Test Case: TEST-ENG-007 (Already Removed - Correct) ---
-
-    // --- Test Case: TEST-ENG-008 (Should Pass - No Changes Needed) ---
-    it('[TEST-ENG-008] should call GameStateInitializer.setupInitialState exactly once during successful initialization', async () => {
-        // --- Arrange ---
-        const worldName = 'testWorld';
-        const gameEngineInstance = new GameEngine({container: mockAppContainer});
-
-        // --- Act ---
-        await gameEngineInstance.start(worldName);
-
-        // --- Assert ---
-        expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalledTimes(1);
-        expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalledWith();
-    });
-
-    // --- Test Case: TEST-ENG-009 (Should Pass - No Changes Needed) ---
-    it('[TEST-ENG-009] should call WorldInitializer.initializeWorldEntities exactly once during successful initialization', async () => {
-        // --- Arrange ---
-        const worldName = 'testWorld';
-        const gameEngineInstance = new GameEngine({container: mockAppContainer});
-
-        // --- Act ---
-        await gameEngineInstance.start(worldName);
-
-        // --- Assert ---
-        expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledTimes(1);
-        expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledWith();
-    });
-
-    // --- Test Case: TEST-ENG-010 (Already Removed - Correct) ---
-
-    // --- Test Case: TEST-ENG-011 (Already Removed - Correct) ---
-
-    // --- Test Case: TEST-ENG-012 (Should Pass - No Changes Needed) ---
-    it('[TEST-ENG-012] should resolve GameLoop from the container during successful initialization', async () => {
-        // --- Arrange ---
-        const worldName = 'testWorld';
-        const gameEngineInstance = new GameEngine({container: mockAppContainer});
-
-        // --- Act ---
-        await gameEngineInstance.start(worldName);
-
-        // --- Assert ---
-        const resolvedKeys = mockAppContainer.resolve.mock.calls.map(call => call[0]);
-        expect(resolvedKeys).toContain('GameLoop');
-        // Verify GameLoop is resolved *after* InputSetupService (as per GameEngine code dependency)
-        const inputSetupIndex = resolvedKeys.indexOf('InputSetupService');
-        const gameLoopIndex = resolvedKeys.indexOf('GameLoop');
-        expect(inputSetupIndex).toBeDefined(); // Ensure InputSetupService was resolved
-        expect(gameLoopIndex).toBeDefined(); // Ensure GameLoop was resolved
-        expect(inputSetupIndex).toBeLessThan(gameLoopIndex); // Ensure InputSetupService is resolved first
-    });
 
     // --- Test Case: TEST-ENG-013 (Updated) ---
-    it('[TEST-ENG-013] should log key informational messages during successful initialization and delegation', async () => {
+    // Focus on logs generated *directly* by GameEngine.start() during its orchestration role.
+    it('[TEST-ENG-013 Updated] should log key orchestration messages during successful delegated initialization', async () => {
         // --- Arrange ---
         const worldName = 'testWorld';
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
+        mockLogger.info.mockClear(); // Clear constructor log
+        mockLogger.debug.mockClear(); // Also clear debug logs if checking them
 
         // --- Act ---
         await gameEngineInstance.start(worldName);
 
         // --- Assert ---
-        // Check logs from #initialize()
+        // Check logs from start() related to orchestration
         expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Starting initialization sequence for world: ${worldName}...`);
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameDataRepository resolved.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: ValidatedEventDispatcher resolved.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: DomRenderer resolved.');
-        expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: WorldLoader resolved and finished loading for world: ${worldName}.`);
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Initial game state setup completed via GameStateInitializer.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Initial world entities instantiated and spatial index built via WorldInitializer.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Delegating input handler setup to InputSetupService...'); // AC6 check
-        expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: InputHandler resolved and configured.'); // Ensure old log gone
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameLoop resolved.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Dispatching core:engine_initialized event...'); // Keep this one
-        expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Initialization sequence for world '${worldName}' completed successfully.`);
+        expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: InitializationService resolved.'); // Added debug log check
 
-        // Check logs from start() after #initialize() succeeds
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Initialization successful. Starting GameLoop...');
-        // *** REMOVED THIS LINE - Log message no longer seems applicable / present ***
-        // expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Retrieved world name from GameDataRepository: Mock World.`);
-        // *** REMOVED THIS LINE - Log message corresponds to removed dispatch logic ***
-        // expect(mockLogger.info).toHaveBeenCalledWith("GameEngine: Initial 'event:room_entered' dispatch attempted.");
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameLoop started.'); // This log remains
+        // Log after InitializationService returns successfully - THIS IS THE CORRECTED LINE
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Initialization sequence reported success.'); // Changed from 'completed successfully'
+
+        // Logs related to starting the loop
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting GameLoop...');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameLoop started successfully.');
+        // Log related to dispatching the final message
+        expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Dispatched game loop started message.');
+
+
+        // --- Ensure logs related to the *internal steps* of initialization are GONE ---
+        // (These assertions remain the same)
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('GameDataRepository resolved'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('WorldLoader resolved'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Initial game state setup completed'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Initial world entities instantiated'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Delegating input handler setup'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('InputHandler resolved'));
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('GameLoop resolved.')); // Resolved internally now
+        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Dispatching core:engine_initialized event'));
+        // This specific wording check might need adjustment if the logging within InitializationService changes significantly.
+        // For now, focusing on GameEngine's direct logs.
+        // expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`Initialization sequence for world '${worldName}' completed successfully.`));
 
     });
 
-}); // End describe block
+}); // End describe block for gameEngine.start.test.js

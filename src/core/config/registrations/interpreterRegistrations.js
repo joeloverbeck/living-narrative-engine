@@ -7,13 +7,14 @@
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
-import {INITIALIZABLE} from '../tags.js';
+// --- MODIFIED: Import SHUTDOWNABLE tag ---
+import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 
 // --- Core Service Imports ---
 import OperationRegistry from '../../../logic/operationRegistry.js';
@@ -46,11 +47,10 @@ export function registerInterpreters(container) {
     const logger = container.resolve(tokens.ILogger);
     logger.info('Interpreter Registrations: Starting...');
 
-    // --- 1. Register Operation Handlers ---
-    // *** MODIFIED: Inject ILogger into DispatchEventHandler ***
+    // --- 1. Register Operation Handlers (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.DispatchEventHandler, c => new DispatchEventHandler({
-        logger: c.resolve(tokens.ILogger), // <-- ADDED LOGGER INJECTION
-        dispatcher: c.resolve(tokens.ValidatedEventDispatcher) // Or tokens.EventBus if preferred
+        logger: c.resolve(tokens.ILogger),
+        dispatcher: c.resolve(tokens.ValidatedEventDispatcher)
     }));
     logger.debug('Interpreter Registrations: Registered DispatchEventHandler.');
 
@@ -101,24 +101,21 @@ export function registerInterpreters(container) {
 
     registrar.singletonFactory(tokens.QuerySystemDataHandler, c => new QuerySystemDataHandler({
         logger: c.resolve(tokens.ILogger),
-        systemDataRegistry: c.resolve(tokens.SystemDataRegistry) // Ensure this is registered
+        systemDataRegistry: c.resolve(tokens.SystemDataRegistry)
     }));
     logger.debug('Interpreter Registrations: Registered QuerySystemDataHandler.');
 
 
-    // --- 2. Register Operation Registry ---
+    // --- 2. Register Operation Registry (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.OperationRegistry, (c) => {
         const internalLogger = c.resolve(tokens.ILogger);
         const registry = new OperationRegistry({logger: internalLogger});
         internalLogger.debug('Interpreter Registrations: OperationRegistry factory creating instance...');
 
-        // Bind the execute method of the resolved handler instance
         const bindExecute = (token) => {
             const handlerInstance = c.resolve(token);
-            // Ensure the instance was created and has an execute method before binding
             if (!handlerInstance || typeof handlerInstance.execute !== 'function') {
                 internalLogger.error(`Interpreter Registrations: Failed to resolve or find execute method for handler token "${token.description || token.toString()}". Cannot register in OperationRegistry.`);
-                // Return a no-op function or throw an error, depending on desired strictness
                 return (params, context) => {
                     internalLogger.error(`Operation handler for token "${token.description || token.toString()}" was not properly resolved or bound. Operation skipped.`);
                 };
@@ -126,7 +123,6 @@ export function registerInterpreters(container) {
             return handlerInstance.execute.bind(handlerInstance);
         };
 
-        // Register all handlers
         registry.register('DISPATCH_EVENT', bindExecute(tokens.DispatchEventHandler));
         registry.register('LOG', bindExecute(tokens.LogHandler));
         registry.register('MODIFY_COMPONENT', bindExecute(tokens.ModifyComponentHandler));
@@ -138,14 +134,13 @@ export function registerInterpreters(container) {
         registry.register('SET_VARIABLE', bindExecute(tokens.SetVariableHandler));
         registry.register('QUERY_SYSTEM_DATA', bindExecute(tokens.QuerySystemDataHandler));
 
-        // Log successful registrations after attempting all
         internalLogger.debug('Interpreter Registrations: Finished registering handlers within OperationRegistry instance.');
         return registry;
     });
     logger.info('Interpreter Registrations: Registered OperationRegistry factory.');
 
 
-    // --- 3. Register Operation Interpreter ---
+    // --- 3. Register Operation Interpreter (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.OperationInterpreter, c => new OperationInterpreter({
         logger: c.resolve(tokens.ILogger),
         operationRegistry: c.resolve(tokens.OperationRegistry)
@@ -154,7 +149,9 @@ export function registerInterpreters(container) {
 
 
     // --- 4. Register System Logic Interpreter ---
-    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.SystemLogicInterpreter, (c) => {
+    // --- MODIFIED: Added SHUTDOWNABLE tag ---
+    // Ensure SystemLogicInterpreter has a shutdown() method to clean up subscriptions if necessary.
+    registrar.tagged([...INITIALIZABLE, ...SHUTDOWNABLE]).singletonFactory(tokens.SystemLogicInterpreter, (c) => {
         const systemLogger = c.resolve(tokens.ILogger);
         systemLogger.debug('Interpreter Registrations: SystemLogicInterpreter factory creating instance...');
         return new SystemLogicInterpreter({
@@ -163,10 +160,10 @@ export function registerInterpreters(container) {
             dataRegistry: c.resolve(tokens.IDataRegistry),
             jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
             entityManager: c.resolve(tokens.EntityManager),
-            operationInterpreter: c.resolve(tokens.OperationInterpreter) // This depends on OperationRegistry being populated
+            operationInterpreter: c.resolve(tokens.OperationInterpreter)
         });
     });
-    logger.info(`Interpreter Registrations: Registered SystemLogicInterpreter factory tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.info(`Interpreter Registrations: Registered SystemLogicInterpreter factory tagged with ${[...INITIALIZABLE, ...SHUTDOWNABLE].join(', ')}.`);
 
     logger.info('Interpreter Registrations: Complete.');
 }

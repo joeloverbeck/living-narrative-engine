@@ -6,6 +6,25 @@
 
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 
+// --- Import Specific Event Payload Types (if available/defined) ---
+/** @typedef {import('../../types/events.js').InitializationStartedPayload} InitializationStartedPayload */
+/** @typedef {import('../../types/events.js').InitializationCompletedPayload} InitializationCompletedPayload */
+/** @typedef {import('../../types/events.js').InitializationFailedPayload} InitializationFailedPayload */
+/** @typedef {import('../../types/events.js').InitializationStepStartedPayload} InitializationStepStartedPayload */
+/** @typedef {import('../../types/events.js').InitializationStepCompletedPayload} InitializationStepCompletedPayload */
+/** @typedef {import('../../types/events.js').InitializationStepFailedPayload} InitializationStepFailedPayload */
+/** @typedef {import('../../types/events.js').LocationDisplayPayload} LocationDisplayPayload */
+/** @typedef {import('../../types/events.js').InventoryRenderPayload} InventoryRenderPayload */
+/** @typedef {import('../../types/events.js').ItemUIData} ItemUIData */
+/** @typedef {import('../../types/events.js').UIUpdateActionsPayload} UIUpdateActionsPayload */
+/** @typedef {import('../../types/events.js').UIShowMessagePayload} UIShowMessagePayload */ // Added
+/** @typedef {import('../../types/events.js').UIShowFatalErrorPayload} UIShowFatalErrorPayload */ // Added
+/** @typedef {import('../../types/events.js').UISetTitlePayload} UISetTitlePayload */ // Added
+/** @typedef {import('../../types/events.js').EventEnableInputPayload} EventEnableInputPayload */ // Added
+/** @typedef {import('../../types/events.js').EventDisableInputPayload} EventDisableInputPayload */ // Added
+/** @typedef {import('../../types/events.js').EventCommandEchoPayload} EventCommandEchoPayload */ // Added
+
+
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.
  * Handles rendering messages, location details, controlling the input element's visual state,
@@ -42,14 +61,14 @@ class DomRenderer {
   #actionButtonsContainer = null;
 
   /**
-     * Creates an instance of DomRenderer.
-     * @param {HTMLElement} outputDiv - The main element where game output is displayed.
-     * @param {HTMLInputElement} inputElement - The input element for player commands.
-     * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
-     * @param {EventBus} eventBus - The application's event bus instance.
-     * @param {ValidatedEventDispatcher} validatedEventDispatcher - Service for dispatching validated events.
-     * @param {ILogger} logger - Service for logging messages.
-     */
+   * Creates an instance of DomRenderer.
+   * @param {HTMLElement} outputDiv - The main element where game output is displayed.
+   * @param {HTMLInputElement} inputElement - The input element for player commands.
+   * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
+   * @param {EventBus} eventBus - The application's event bus instance.
+   * @param {ValidatedEventDispatcher} validatedEventDispatcher - Service for dispatching validated events.
+   * @param {ILogger} logger - Service for logging messages.
+   */
   constructor({outputDiv, inputElement, titleElement, eventBus, validatedEventDispatcher, logger}) {
     // --- Constructor Validation ---
     if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
@@ -125,51 +144,69 @@ class DomRenderer {
 
 
   #subscribeToEvents() {
-    // --- Standard UI Events ---
-    this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this));
-    this.#eventBus.subscribe('event:enable_input', this.#handleEnableInput.bind(this));
-    this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this));
+    // --- Standard UI Events (Ticket 18) ---
+    this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this)); // Often useful for UI debugging
+    this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // Standardized input disable
+    this.#eventBus.subscribe('ui:show_message', this.#handleShowMessage.bind(this)); // Standardized message display
+    this.#eventBus.subscribe('ui:show_fatal_error', this.#handleFatalError.bind(this)); // Standardized fatal error display
+    this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this)); // Standardized title update - NEW (Ticket 18)
+
+    // --- Game Specific UI Events ---
     this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
 
     // --- Inventory UI Events ---
     this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
     this.#eventBus.subscribe('event:toggle_inventory', () => this.toggleInventory());
-    // EVENT-MIGR-018: 'ui:request_inventory_render' requires no validation (Line: 105 in ticket description, now in toggleInventory)
+    // Note: 'ui:request_inventory_render' is dispatched internally by toggleInventory
 
     // --- Action Buttons Events (FEAT-UI-ACTIONS-03) ---
     this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
 
-    this.#logger.info('DomRenderer event subscriptions complete (including action updates).');
+    // --- Initialization Events (Ticket 17) ---
+    this.#eventBus.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this));
+    this.#eventBus.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this));
+    this.#eventBus.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this));
+    this.#eventBus.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this));
+    this.#eventBus.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this));
+    this.#eventBus.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this));
+    this.#eventBus.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this));
+    this.#eventBus.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this));
+    this.#eventBus.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this));
+    this.#eventBus.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+    this.#eventBus.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+    this.#eventBus.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+    this.#eventBus.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this));
+
+    this.#logger.info('DomRenderer event subscriptions complete (including standardized UI, initialization, actions).');
   }
 
   // --- Private Event Handlers ---
 
-  /** @private @param {{command: string}} data */
+  /**
+   * Handles command echo events.
+   * @private
+   * @param {EventCommandEchoPayload} data
+   */
   #handleCommandEcho(data) {
     if (data && typeof data.command === 'string') {
       this.renderMessage(`> ${data.command}`, 'command');
     } else {
-      this.#logger.warn("DomRenderer received 'ui:command_echo' with invalid data:", data);
+      this.#logger.warn("DomRenderer received 'event:command_echo' with invalid data:", data);
     }
   }
 
-  /** @private @param {{placeholder: string}} data */
-  #handleEnableInput(data) {
-    if (data && typeof data.placeholder === 'string') {
-      this.setInputState(true, data.placeholder);
-    } else {
-      this.#logger.warn("DomRenderer received 'event:enable_input' with invalid/missing data, using default placeholder:", data);
-      this.setInputState(true, 'Enter command...');
-    }
-  }
-
-  /** @private @param {{message?: string}} data */
+  /**
+   * Handles disabling the input field. (Ticket 18: Standardized Event)
+   * @private
+   * @param {EventDisableInputPayload} data - Payload may contain a `message` to use as placeholder.
+   */
   #handleDisableInput(data) {
+    // Verify payload and update input state/placeholder
     const message = (data && typeof data.message === 'string') ? data.message : 'Input disabled.';
     if (!data || typeof data.message !== 'string') {
-      this.#logger.warn("DomRenderer received 'ui:disable_input' without specific message, using default:", data, ` -> "${message}"`);
+      this.#logger.warn("DomRenderer received 'event:disable_input' without specific message, using default:", data, ` -> "${message}"`);
     }
-    this.setInputState(false, message);
+    this.setInputState(false, message); // Set disabled state and placeholder message
   }
 
 
@@ -180,7 +217,7 @@ class DomRenderer {
       return;
     }
     if (!payload || !Array.isArray(payload.items)) {
-      this.#logger.warn("DomRenderer received 'ui:render_inventory' with invalid data:", payload);
+      this.#logger.warn("DomRenderer received 'event:render_inventory' with invalid data:", payload);
       this.#inventoryList.innerHTML = '<li>Error loading inventory.</li>';
       return;
     }
@@ -190,16 +227,72 @@ class DomRenderer {
   /** @private @param {LocationDisplayPayload} locationData */
   #handleDisplayLocation(locationData) {
     if (locationData &&
-            typeof locationData.name === 'string' &&
-            typeof locationData.description === 'string' &&
-            Array.isArray(locationData.exits) &&
-            (!locationData.items || Array.isArray(locationData.items)) &&
-            (!locationData.entities || Array.isArray(locationData.entities))
+        typeof locationData.name === 'string' &&
+        typeof locationData.description === 'string' &&
+        Array.isArray(locationData.exits) &&
+        (!locationData.items || Array.isArray(locationData.items)) &&
+        (!locationData.entities || Array.isArray(locationData.entities))
     ) {
       this.renderLocation(locationData);
     } else {
       this.#logger.warn("DomRenderer received '" + 'event:display_location' + "' event with invalid or incomplete data:", locationData);
       this.renderMessage('Error: Could not display location details due to invalid data format received.', 'error');
+    }
+  }
+
+  /**
+   * Handles general message display events. (Ticket 18: Standardized Event)
+   * @private
+   * @param {UIShowMessagePayload} payload - Should contain `text` and optional `type`.
+   */
+  #handleShowMessage(payload) {
+    // Verify payload and render message
+    if (payload && typeof payload.text === 'string') {
+      const type = ['info', 'warn', 'error', 'debug', 'system', 'system-success'].includes(payload.type) ? payload.type : 'info';
+      this.renderMessage(payload.text, type);
+    } else {
+      this.#logger.warn("DomRenderer received 'ui:show_message' with invalid payload:", payload);
+    }
+  }
+
+  /**
+   * Handles fatal error display events. (Ticket 18: Standardized Event)
+   * Clears output, shows error in title and message area.
+   * @private
+   * @param {UIShowFatalErrorPayload} payload - Should contain `title`, `message`, and optional `details`.
+   */
+  #handleFatalError(payload) {
+    // Verify payload and update UI for fatal error
+    if (payload && typeof payload.title === 'string' && typeof payload.message === 'string') {
+      this.clearOutput();
+      this.setTitle(`FATAL ERROR: ${payload.title}`); // Update H1 Title
+      // Render formatted error message in output div
+      this.renderMessage(`<strong>${payload.title}</strong><br>${payload.message}`, 'error');
+      if (payload.details) {
+        // Render details if provided
+        this.renderMessage(`Details: <pre>${payload.details}</pre>`, 'error');
+      }
+      this.#logger.error(`FATAL ERROR displayed: ${payload.title} - ${payload.message}`);
+    } else {
+      this.#logger.warn("DomRenderer received 'ui:show_fatal_error' with invalid payload:", payload);
+      this.setTitle('FATAL ERROR'); // Fallback title
+      this.renderMessage('An unspecified fatal error occurred.', 'error'); // Fallback message
+    }
+    // Input should generally be disabled by the service dispatching the fatal error.
+    // If not, uncomment the line below, but it might conflict with explicit disable events.
+    // this.setInputState(false, 'System halted.');
+  }
+
+  /**
+   * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
+   * @private
+   * @param {UISetTitlePayload} payload - Should contain `title` text.
+   */
+  #handleSetTitle(payload) {
+    if (payload && typeof payload.title === 'string') {
+      this.setTitle(payload.title); // Update H1 Title
+    } else {
+      this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload:", payload);
     }
   }
 
@@ -243,8 +336,8 @@ class DomRenderer {
           // AC1, AC2: Use ValidatedEventDispatcher for 'command:submit'
           // AC4: Implicitly uses EventDefinition/payloadSchema via dispatcher
           const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
-            'command:submit',
-            {command: commandToSubmit}
+              'command:submit',
+              {command: commandToSubmit}
           );
 
           // AC3: Failure handling (log, skip) is done *inside* dispatchValidated
@@ -264,48 +357,174 @@ class DomRenderer {
     });
   }
 
+  // --- Ticket 17: Initialization Event Handlers ---
+
+  /**
+   * Handles the overall initialization sequence starting.
+   * @private
+   * @param {InitializationStartedPayload} [payload] - Optional payload (e.g., worldName).
+   */
+  #handleInitializationStarted(payload) {
+    const worldName = payload?.worldName ? ` for world '${payload.worldName}'` : '';
+    const message = `Initializing game${worldName}...`;
+    this.#logger.info(`DomRenderer: ${message}`);
+    this.setTitle(message);
+    this.clearOutput(); // Clear previous game output
+    this.renderMessage(message, 'system');
+  }
+
+  /**
+   * Handles the start of a specific initialization step (e.g., world loading).
+   * Updates the title to show progress.
+   * @private
+   * @param {InitializationStepStartedPayload} payload - Event payload (contains eventName).
+   * @param {string} eventName - The specific event name (e.g., 'initialization:world_loader:started').
+   */
+  #handleInitializationStepStarted(payload, eventName) {
+    let statusMessage = "Initializing..."; // Default
+
+    // Determine message based on which step started
+    switch (eventName) {
+      case 'initialization:world_loader:started':
+        statusMessage = `Loading world data${payload?.worldName ? ` for '${payload.worldName}'` : ''}...`;
+        break;
+      case 'initialization:system_initializer:started':
+        statusMessage = `Initializing core systems${payload?.tag ? ` (tag: ${payload.tag})` : ''}...`;
+        break;
+      case 'initialization:game_state_initializer:started':
+        statusMessage = "Setting up initial game state...";
+        break;
+      case 'initialization:world_initializer:started':
+        statusMessage = "Creating world entities...";
+        break;
+      case 'initialization:input_setup_service:started':
+        statusMessage = "Configuring input handler...";
+        break;
+      default:
+        // Try to derive from event name if possible
+        const parts = eventName.split(':');
+        if (parts.length >= 3) {
+          statusMessage = `Initializing ${parts[1].replace(/_/g, ' ')}...`;
+        }
+    }
+
+    this.#logger.info(`DomRenderer: Initialization Step Started - ${statusMessage}`);
+    this.setTitle(statusMessage);
+    this.renderMessage(statusMessage, 'system');
+  }
+
+
+  /**
+   * Handles the completion of the overall initialization sequence.
+   * @private
+   * @param {InitializationCompletedPayload} [payload] - Optional payload.
+   */
+  #handleInitializationCompleted(payload) {
+    const message = "Initialization complete. Ready to start!";
+    this.#logger.info(`DomRenderer: ${message}`);
+    this.setTitle("Game Ready"); // Or clear it, depending on preference
+    this.renderMessage(message, 'system-success'); // Use a distinct style
+    // Note: GameLoop will typically enable input after this via textUI:enable_input.
+  }
+
+  /**
+   * Handles the failure of the overall initialization sequence.
+   * Uses the fatal error handler for consistency.
+   * @private
+   * @param {InitializationFailedPayload} payload - Payload containing error details.
+   */
+  #handleInitializationFailed(payload) {
+    this.#logger.error("DomRenderer: Received overall initialization failure event.", payload);
+    // Use the standardized fatal error handler
+    this.#handleFatalError({
+      title: `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`,
+      message: payload?.error || 'An unknown initialization error occurred.',
+      details: payload?.stack
+    });
+    // Input should already be disabled by InitializationService logic triggering this.
+  }
+
+  /**
+   * Handles the failure of a specific initialization step.
+   * Displays a non-fatal error message indicating the step that failed.
+   * The overall sequence might still fail later, which would trigger #handleInitializationFailed.
+   * @private
+   * @param {InitializationStepFailedPayload} payload - Payload containing error details.
+   * @param {string} eventName - The specific event name (e.g., 'initialization:world_loader:failed').
+   */
+  #handleInitializationStepFailed(payload, eventName) {
+    // Try to derive step name from event name
+    let stepName = 'A specific initialization step';
+    const parts = eventName.split(':');
+    if (parts.length >= 3) {
+      stepName = `${parts[1].replace(/_/g, ' ')} initialization`;
+    }
+
+    const errorMessage = payload?.error || 'Unknown error during step.';
+    const fullMessage = `${stepName} failed: ${errorMessage}`;
+
+    this.#logger.error(`DomRenderer: Initialization Step Failed - ${fullMessage}`, payload);
+    // Update title to show failure, but maybe not FATAL yet
+    this.setTitle(`${stepName} Failed`);
+    this.renderMessage(fullMessage, 'error');
+    if (payload?.stack) {
+      this.renderMessage(`Details: <pre>${payload.stack}</pre>`, 'error');
+    }
+    // Don't necessarily clear output or disable input here,
+    // as the main InitializationService handles the final failure state.
+  }
+  // --- End Ticket 17 Handlers ---
+
 
   // --- Public Rendering Methods ---
 
-  /** @param {string} message, @param {string} [type='info'] */
+  /**
+   * Sets the main H1 title/status text.
+   * @param {string} titleText
+   */
+  setTitle(titleText) {
+    if (this.#titleElement) {
+      this.#titleElement.textContent = titleText;
+    } else {
+      this.#logger.warn("DomRenderer: Cannot set title, #titleElement is null.");
+    }
+  }
+
+  /**
+   * Renders a message to the output area.
+   * @param {string} message - The message text (can be HTML).
+   * @param {string} [type='info'] - The type of message (used for CSS class 'message-{type}'). Valid types: 'info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'.
+   */
   renderMessage(message, type = 'info') {
     const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', `message-${type}`);
-    messageDiv.innerHTML = message;
+    // Ensure type is one of the known/styled types
+    const validTypes = ['info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'];
+    const finalType = validTypes.includes(type) ? type : 'info';
+    messageDiv.classList.add('message', `message-${finalType}`);
+    messageDiv.innerHTML = message; // Allow basic HTML for formatting
     this.#outputDiv.appendChild(messageDiv);
+    // Auto-scroll to the bottom
     this.#outputDiv.scrollTop = this.#outputDiv.scrollHeight;
   }
 
   /**
-     * Renders the location details based on the provided payload.
-     * NOTE (Ticket 4.4): This method receives pre-processed data in `locationData`.
-     * The system *generating* this payload (e.g., LookSystem, MovementSystem) needs to be refactored
-     * to use `entityManager.getComponentData('core:name')` and `entityManager.getComponentData('core:description')`
-     * (or the `getDisplayName`/`getDisplayDescription` helpers) to populate the `name`, `description`,
-     * `items[].name`, and `entities[].name` fields before dispatching the 'event:display_location' event.
-     * This renderer itself just displays the provided strings.
-     *
-     * @param {LocationDisplayPayload} locationData
-     */
+   * Renders the location details based on the provided payload.
+   * @param {LocationDisplayPayload} locationData
+   */
   renderLocation(locationData) {
     let outputHtml = '';
-    // TICKET 4.4 NOTE: Uses locationData.name (assumed pre-fetched using core:name)
     outputHtml += `<h2 class="location__name">${locationData.name || 'Unnamed Location'}</h2>`;
-    // TICKET 4.4 NOTE: Uses locationData.description (assumed pre-fetched using core:description)
     outputHtml += `<p class="location__description">${locationData.description || 'You see nothing remarkable.'}</p>`;
 
     if (locationData.items && locationData.items.length > 0) {
-      // TICKET 4.4 NOTE: Uses item.name from payload (assumed pre-fetched using core:name)
       const itemNames = locationData.items.map(item => item.name || 'unnamed item').join(', ');
       outputHtml += `<p class="location__items">Items here: ${itemNames}</p>`;
     }
     if (locationData.entities && locationData.entities.length > 0) {
-      // TICKET 4.4 NOTE: Uses entity.name from payload (assumed pre-fetched using core:name)
       const entityNames = locationData.entities.map(entity => entity.name || 'unnamed entity').join(', ');
       outputHtml += `<p class="location__entities">Others here: ${entityNames}</p>`;
     }
     if (locationData.exits && locationData.exits.length > 0) {
-      // TICKET 4.4 NOTE: Uses exit.description from payload (likely pre-fetched using core:description or similar for connections)
       const exitDescriptions = locationData.exits.map(exit => exit.description || 'an exit').join('<br>  ');
       outputHtml += `<p class="location__exits">Exits:<br>  ${exitDescriptions}</p>`;
     } else {
@@ -318,21 +537,32 @@ class DomRenderer {
     this.#outputDiv.innerHTML = '';
   }
 
-  /** @param {boolean} enabled, @param {string} placeholderText */
+  /**
+   * Sets the enabled/disabled state and placeholder text of the input element.
+   * @param {boolean} enabled - True to enable, false to disable.
+   * @param {string} placeholderText - Text to display when the input is empty.
+   */
   setInputState(enabled, placeholderText) {
+    if (!this.#inputElement) {
+      this.#logger.error("DomRenderer: Cannot set input state, #inputElement is null.");
+      return;
+    }
     this.#inputElement.disabled = !enabled;
     this.#inputElement.placeholder = placeholderText;
   }
 
-  /** @param {boolean} [forceState] */
+  /**
+   * Toggles the visibility of the inventory panel.
+   * If the inventory is being shown, dispatches an event to request its content.
+   * @param {boolean} [forceState] - Optional: true to force show, false to force hide.
+   */
   toggleInventory(forceState) {
     if (!this.#inventoryPanel) return;
     const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
 
     if (shouldBeVisible) {
-      // EVENT-MIGR-018: 'ui:request_inventory_render' dispatch remains here.
-      // As per ticket, Validation N/A (Empty Payload). Using direct EventBus.
-      this.#eventBus.dispatch('ui:request_inventory_render', {}); // (Ticket Line 105)
+      // Dispatch event to request inventory data
+      this.#eventBus.dispatch('ui:request_inventory_render', {});
       this.#inventoryPanel.classList.remove('hidden');
       this.#isInventoryVisible = true;
     } else {
@@ -342,15 +572,10 @@ class DomRenderer {
   }
 
   /**
-     * Updates the inventory UI based on the provided item data payload.
-     * NOTE (Ticket 4.4): This method receives pre-processed data in `itemsData`.
-     * The system generating the `InventoryRenderPayload` (e.g., InventorySystem) needs to be refactored
-     * to use `entityManager.getComponentData('core:name')` (or `getDisplayName`)
-     * to populate the `name` field for each item in the payload before dispatching the 'event:render_inventory' event.
-     *
-     * @private
-     * @param {ItemUIData[]} itemsData - Array of item data for UI rendering.
-     */
+   * Updates the inventory UI based on the provided item data payload.
+   * @private
+   * @param {ItemUIData[]} itemsData - Array of item data for UI rendering.
+   */
   #updateInventoryUI(itemsData) {
     if (!this.#inventoryList) {
       this.#logger.error('DomRenderer: Cannot update inventory UI, list element is null.');
@@ -369,12 +594,12 @@ class DomRenderer {
         li.classList.add('inventory-item');
         li.dataset.itemId = item.id;
 
-        const itemName = item.name || '(Unnamed Item)'; // TICKET 4.4 NOTE: Uses name from payload
+        const itemName = item.name || '(Unnamed Item)';
 
         if (item.icon) {
           const img = document.createElement('img');
           img.src = item.icon;
-          img.alt = itemName; // Use fetched name
+          img.alt = itemName;
           img.classList.add('inventory-item-icon');
           li.appendChild(img);
         } else {
@@ -386,16 +611,15 @@ class DomRenderer {
 
         const nameSpan = document.createElement('span');
         nameSpan.classList.add('inventory-item-name');
-        nameSpan.textContent = itemName; // Use fetched name
+        nameSpan.textContent = itemName;
         li.appendChild(nameSpan);
 
         const dropButton = document.createElement('button');
         dropButton.textContent = 'Drop';
         dropButton.classList.add('inventory-item-drop-button');
-        dropButton.dataset.itemName = itemName; // Use fetched name for command context
+        dropButton.dataset.itemName = itemName;
 
-        // --- EVENT-MIGR-018: Refactor click listener for validation ---
-        dropButton.addEventListener('click', async (event) => { // Make listener async
+        dropButton.addEventListener('click', async (event) => {
           event.stopPropagation();
           const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
           const parentLi = clickedButton.closest('li');
@@ -404,23 +628,20 @@ class DomRenderer {
             return;
           }
           const itemIdToDrop = parentLi.dataset.itemId;
-          const itemNameToDrop = clickedButton.dataset.itemName; // Gets name from dataset (which came from payload)
+          const itemNameToDrop = clickedButton.dataset.itemName;
           if (!itemIdToDrop || !itemNameToDrop) {
             this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.');
             return;
           }
 
-          const commandString = `drop ${itemNameToDrop}`; // Example: "drop Rusty Sword"
+          const commandString = `drop ${itemNameToDrop}`;
           this.#logger.debug(`DomRenderer: Inventory Drop button for "${itemNameToDrop}" clicked. Attempting validated dispatch...`);
 
-          // AC1, AC2: Use ValidatedEventDispatcher for 'command:submit'
-          // AC4: Implicitly uses EventDefinition/payloadSchema via dispatcher
           const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
-            'command:submit',
-            {command: commandString}
+              'command:submit',
+              {command: commandString}
           );
 
-          // AC3: Failure handling (log, skip) is done *inside* dispatchValidated
           if (dispatched) {
             this.#logger.debug(`DomRenderer: Event 'command:submit' for "${commandString}" dispatched successfully.`);
             this.toggleInventory(false); // Close inventory on successful drop command dispatch
@@ -436,7 +657,7 @@ class DomRenderer {
             currentSelected.classList.remove('selected');
           }
           li.classList.add('selected');
-          this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`); // Use fetched name
+          this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`);
         });
 
         this.#inventoryList.appendChild(li);

@@ -23,8 +23,9 @@ import {registerCoreSystems} from './registrations/coreSystemsRegistrations.js';
 import {registerInterpreters} from './registrations/interpreterRegistrations.js';
 import {registerInitializers} from './registrations/initializerRegistrations.js';
 import {registerRuntime} from './registrations/runtimeRegistrations.js';
+import {registerOrchestration} from './registrations/orchestrationRegistrations.js'; // <<< ADDED
 
-/** @typedef {import('../appContainer.js').default} AppContainer */
+/** @typedef {import('./appContainer.js').default} AppContainer */
 
 /**
  * Configures the application's dependency‑injection container.
@@ -70,13 +71,17 @@ export function configureContainer(
     // --- Logic interpretation layer -----------------------------------------
     registerInterpreters(container); // Register handlers and interpreters
 
-    // --- Initializers --------------------------------------------------------
+    // --- Initializers (Sub-components like SystemInitializer, not the main orchestration) ---
     registerInitializers(container);
 
     // --- Runtime loop & input plumbing --------------------------------------
-    registerRuntime(container);
+    registerRuntime(container); // Registers GameLoop
 
-    logger.info('Container Config: all bundles registered.');
+    // --- High-level Orchestration Services (Init/Shutdown) -----------------
+    // <<< ADDED: Register orchestration services AFTER their dependencies (Logger, VED, GameLoop) are registered.
+    registerOrchestration(container);
+
+    logger.info('Container Config: all core bundles registered.');
 
     // --- Populate Registries (Post-Registration Steps) ---
     // This section executes *after* all service registrations are complete,

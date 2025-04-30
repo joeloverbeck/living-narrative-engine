@@ -123,7 +123,7 @@ class EntityLoader extends BaseManifestItemLoader {
      * 1. Extracts and validates the entity's `id`.
      * 2. Performs runtime validation of `components` against their schemas.
      * 3. Delegates storage to the base class helper, always using the 'entities' category.
-     * 4. Returns the final, fully qualified entity ID.
+     * 4. Returns an object containing the final, fully qualified entity ID and whether an overwrite occurred.
      *
      * @override
      * @protected
@@ -133,21 +133,15 @@ class EntityLoader extends BaseManifestItemLoader {
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file (already validated against the primary 'entities' schema).
      * @param {string} typeName - The original content type name (e.g., 'items', 'locations') used for logging/context, but not for storage category.
-     * @returns {Promise<string>} A promise resolving with the fully qualified item ID (e.g., `modId:baseEntityId`).
+     * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
      * @throws {Error} If entity-specific processing (ID extraction, component validation, storage) fails.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-        // --- [LOADER-REFACTOR-04 Change START]: Primary validation happens BEFORE this method ---
-        // The call `this._validatePrimarySchema(data, filename, modId, resolvedPath)` is now made
-        // by the `_processFileWrapper` in BaseManifestItemLoader before calling this method.
-        // Therefore, the manual validation block is removed from here.
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< MODIFIED Return Type in JSDoc
         this._logger.debug(`EntityLoader [${modId}]: Processing fetched item (post-primary validation): ${filename} (Original Type: ${typeName})`);
 
-        // --- [LOADER-REFACTOR-04 Change START]: Removed manual primary validation block ---
-        // if (!this.#entitySchemaId) { ... } else { ... validationResult = ... } block removed.
-        // --- [LOADER-REFACTOR-04 Change END] ---
+        // Primary validation happens in BaseManifestItemLoader._processFileWrapper
 
-        // --- Step 1 (was 2): ID Extraction & Validation ---
+        // --- Step 1: ID Extraction & Validation ---
         const idFromFile = data?.id;
         if (typeof idFromFile !== 'string' || idFromFile.trim() === '') {
             this._logger.error(
@@ -156,55 +150,53 @@ class EntityLoader extends BaseManifestItemLoader {
             );
             throw new Error(`Invalid or missing 'id' in ${typeName} file '${filename}' for mod '${modId}'.`);
         }
-        const trimmedId = idFromFile.trim(); // This is the full ID (e.g., core:player, mymod:special_item)
+        const trimmedId = idFromFile.trim();
         let baseEntityId = '';
         const colonIndex = trimmedId.indexOf(':');
 
-        // Extract base ID: everything after the first colon, or the whole ID if no colon or colon is at start/end
         if (colonIndex !== -1 && colonIndex > 0 && colonIndex < trimmedId.length - 1) {
             baseEntityId = trimmedId.substring(colonIndex + 1);
         } else {
-            // Handle cases like "my_item" (no namespace) or "core:" (invalid format but handled gracefully)
-            baseEntityId = trimmedId;
-            if (colonIndex === -1) {
-                this._logger.debug(`EntityLoader [${modId}]: ID '${trimmedId}' in ${filename} has no namespace prefix. Using full ID as base ID.`);
-            } else {
-                this._logger.warn(`EntityLoader [${modId}]: ID '${trimmedId}' in ${filename} has an unusual format (colon at start/end). Using full ID as base ID.`);
+            baseEntityId = trimmedId; // Includes no-colon case and potentially invalid formats
+            if (colonIndex !== -1) { // Warn only if format is weird (colon at start/end)
+                this._logger.warn(`EntityLoader [${modId}]: ID '${trimmedId}' in ${filename} has an unusual format. Using full ID as base ID.`);
             }
         }
 
-        // Final check for empty base ID (should be rare after previous checks)
-        if (!baseEntityId) { // Check if baseEntityId became empty string somehow
+        if (!baseEntityId) {
             this._logger.error(`EntityLoader [${modId}]: Could not derive a non-empty base ID from '${trimmedId}' in file '${filename}'.`);
             throw new Error(`Could not derive a valid base ID from '${trimmedId}' in ${filename}`);
         }
         this._logger.debug(`EntityLoader [${modId}]: Extracted full ID '${trimmedId}' and derived base ID '${baseEntityId}' from ${filename}.`);
 
 
-        // --- Step 2 (was 3): Runtime Component Validation ---
+        // --- Step 2: Runtime Component Validation ---
         const components = data?.components;
         if (components && typeof components === 'object' && Object.keys(components).length > 0) {
-            // Call the dedicated private method for component validation
             this.#validateEntityComponents(modId, trimmedId, filename, components);
         } else {
             this._logger.debug(`EntityLoader [${modId}]: Entity '${trimmedId}' in ${filename} has no components or an empty/invalid components map. Skipping runtime component validation.`);
         }
 
-        // --- Step 3 (was 4): Storage (Using Helper) ---
+        // --- Step 3: Storage (Using Helper) ---
         this._logger.debug(`EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entities' category.`);
-
-        // Use the base class helper to store the item.
-        // IMPORTANT: The category is hardcoded to 'entities' as per requirements.
-        this._storeItemInRegistry('entities', modId, baseEntityId, data, filename);
-        // The _storeItemInRegistry helper handles prefixing the ID in the stored data,
-        // logging success/failure, and checking for overwrites.
+        let didOverride = false; // <<< Initialize override flag
+        try {
+            // IMPORTANT: The category is hardcoded to 'entities' as per requirements.
+            // Capture the boolean return value from the helper
+            didOverride = this._storeItemInRegistry('entities', modId, baseEntityId, data, filename); // <<< CAPTURE result
+        } catch (storageError) {
+            // Error logging happens in helper, re-throw
+            throw storageError;
+        }
 
         // Construct the final fully qualified ID that was used as the registry key.
-        const finalId = `${modId}:${baseEntityId}`;
+        const finalRegistryKey = `${modId}:${baseEntityId}`;
 
-        // --- Step 4 (was 5): Return Final ID ---
-        this._logger.debug(`EntityLoader [${modId}]: Successfully processed ${typeName} file '${filename}'. Returning final registry key: ${finalId}`);
-        return finalId; // Return the key used in the registry
+        // --- Step 4: Return Result Object ---
+        this._logger.debug(`EntityLoader [${modId}]: Successfully processed ${typeName} file '${filename}'. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`);
+        // Return the object as required by the base class contract
+        return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
     }
 }
 

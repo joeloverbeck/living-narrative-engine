@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.storeFailure.test.js
+// src/tests/core/loaders/ruleLoader.storeFailure.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
@@ -255,7 +255,8 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
 
             // Act
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // The 'count' variable now holds the result object { count, errors, overrides }
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -314,8 +315,9 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
                 storageError // Match the full error object
             );
 
-            // Verify the return value (only ruleOK succeeded)
-            expect(count).toBe(1);
+            // Verify the return value object (only ruleOK succeeded, ruleFailStore errored)
+            // *** CORRECTED ASSERTION ***
+            expect(result).toEqual({ count: 1, errors: 1, overrides: 0 });
 
             // Verify summary and debug logging
             expect(mockLogger.info).toHaveBeenCalledWith(

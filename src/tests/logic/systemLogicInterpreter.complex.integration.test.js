@@ -277,7 +277,10 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     });
 
     // Verify constructor logging
-    expect(mockLogger.info).toHaveBeenCalledWith('SystemLogicInterpreter initialized. Ready to process events.');
+    // **************************************************************************
+    // **** CORRECTED LINE: Expect the message from the constructor ************
+    // **************************************************************************
+    expect(mockLogger.info).toHaveBeenCalledWith('SystemLogicInterpreter instance created. Ready for initialization.');
     mockLogger.info.mockClear(); // Clear this initial call for subsequent tests
   });
 
@@ -297,15 +300,18 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
 
   it('should use the mocked logger for internal logging', () => {
     interpreter.initialize(); // This logs internally
+    // Now we expect the log messages from the initialize() method
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Loading and caching system rules'));
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Finished caching rules'));
+    // Add the final initialization message check here if desired
+    expect(mockLogger.info).toHaveBeenCalledWith('SystemLogicInterpreter successfully initialized and subscribed to events.');
   });
 
   it('should subscribe to the EventBus during initialization if rules are loaded', () => {
     mockDataRegistry.getAllSystemRules.mockReturnValue([MOCK_RULE_NO_CONDITION]); // Provide a rule
     interpreter.initialize();
     expect(mockEventBus.subscribe).toHaveBeenCalledWith('*', expect.any(Function));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Subscribed to all events ('*')"));
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Subscribed to all events ('*')")); // Check correct subscribe log
     expect(capturedEventListener).toBeInstanceOf(Function); // Listener should be captured
   });
 
@@ -313,7 +319,8 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     mockDataRegistry.getAllSystemRules.mockReturnValue([]); // No rules
     interpreter.initialize();
     expect(mockEventBus.subscribe).not.toHaveBeenCalled();
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No system rules loaded or cached'));
+    // Check the correct warning log when no rules are found during initialization
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No system rules loaded or cached. SystemLogicInterpreter will not actively listen'));
     expect(capturedEventListener).toBeNull(); // Listener should not be captured
   });
 
@@ -339,7 +346,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     mockDataRegistry.getAllSystemRules.mockReturnValue([rule]);
     mockJsonLogicEvaluationService.evaluate.mockReturnValue(true); // Condition passes
 
-    interpreter.initialize();
+    interpreter.initialize(); // Must initialize to subscribe
 
     expect(capturedEventListener).toBeInstanceOf(Function);
     capturedEventListener(event); // Simulate event
@@ -348,8 +355,8 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);
     const expectedContext = createExpectedContext(event, MOCK_PLAYER_WITH_BUFF, MOCK_ENEMY_HP_5);
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
-      rule.condition,
-      expectedContext // Use corrected helper
+        rule.condition,
+        expectedContext // Use corrected helper
     );
 
     // AC3 & AC4: Verify OperationInterpreter.execute was called (because condition passed)
@@ -366,7 +373,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     // Assume condition passes to check context assembly during execution call
     mockJsonLogicEvaluationService.evaluate.mockReturnValue(true);
 
-    interpreter.initialize();
+    interpreter.initialize(); // Must initialize to subscribe
 
     expect(capturedEventListener).toBeInstanceOf(Function);
     capturedEventListener(event); // Simulate event
@@ -393,7 +400,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     mockDataRegistry.getAllSystemRules.mockReturnValue([ruleNoCond, ruleCondTrue]);
     mockJsonLogicEvaluationService.evaluate.mockReturnValue(true); // Ensure condition rule passes
 
-    interpreter.initialize();
+    interpreter.initialize(); // Must initialize to subscribe
 
     expect(capturedEventListener).toBeInstanceOf(Function);
 
@@ -402,7 +409,8 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     const expectedContextItem = createExpectedContext(eventItem, MOCK_PLAYER_NO_BUFF, null);
     expect(executeSpy).toHaveBeenCalledTimes(1); // Rule has 1 action
     expect(executeSpy).toHaveBeenCalledWith(ruleNoCond.actions[0], expectedContextItem); // Use corrected helper
-    expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled(); // No condition to evaluate
+    // Verify evaluate was NOT called for the rule without a condition
+    expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
 
     executeSpy.mockClear(); // Clear calls before next event
     mockJsonLogicEvaluationService.evaluate.mockClear(); // Clear this too
@@ -432,7 +440,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       return true; // Default pass
     });
 
-    interpreter.initialize();
+    interpreter.initialize(); // Must initialize to subscribe
 
     expect(capturedEventListener).toBeInstanceOf(Function);
     capturedEventListener(event); // Simulate event
@@ -444,8 +452,10 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(rule.condition, expectedContext); // Use corrected helper
 
     expect(executeSpy).not.toHaveBeenCalled(); // AC3: Check spy was NOT called
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rule '${rule.rule_id}' actions skipped`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('condition evaluating to false'));
+    // Check the specific log message for condition failure
+    expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringMatching(/Rule 'RULE_INVISIBILITY_BUFF' actions skipped for event 'ENEMY_SPOTTED' due to condition evaluating to false/)
+    );
   });
 
   // This test structure was already correct, just verifying it remains so.
@@ -458,7 +468,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       throw evaluationError;
     });
 
-    interpreter.initialize();
+    interpreter.initialize(); // Must initialize to subscribe
 
     expect(capturedEventListener).toBeInstanceOf(Function);
     capturedEventListener(event); // Simulate event
@@ -471,11 +481,13 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     expect(executeSpy).not.toHaveBeenCalled(); // AC3: Check spy was NOT called
     // Verify logging for the error and skipping
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error during condition evaluation'), // Check core message
-      evaluationError // Check the error object itself was logged
+        expect.stringContaining(`Error during condition evaluation. Treating condition as FALSE.`), // Check core message from #evaluateRuleCondition
+        evaluationError // Check the error object itself was logged
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rule '${rule.rule_id}' actions skipped`));
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('due to error during condition evaluation'));
+    // Check the specific log message for skipping due to error
+    expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringMatching(/Rule 'RULE_INVALID_CONDITION' actions skipped for event 'DOOR_OPENED' due to error during condition evaluation/)
+    );
   });
 
   // Test for Mock Data Presence (Unchanged)
@@ -506,4 +518,4 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     expect(MOCK_EVENT_CUSTOM).toBeDefined();
   });
 
-});
+}); // End describe block

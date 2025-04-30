@@ -3,16 +3,13 @@
 // --- Type Imports ---
 /** @typedef {import('../config/appContainer.js').default} AppContainer */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 /** @typedef {import('../gameLoop.js').default} GameLoop */
-/** @typedef {import('../inputHandler.js').default} InputHandler */ // Added for type hinting
+/** @typedef {import('../inputHandler.js').default} InputHandler */
 
 /**
  * @class InputSetupService
- * @description Responsible for configuring the core InputHandler service.
- * It resolves the InputHandler from the container and sets up its
- * command processing callback, linking it to the GameLoop and event system.
- * This class encapsulates the setup logic for user input processing.
+ * @description Configures the InputHandler, linking it to the GameLoop and event system.
  */
 class InputSetupService {
   /** @private @type {AppContainer} */
@@ -25,100 +22,93 @@ class InputSetupService {
   #gameLoop;
 
   /**
-     * Creates an instance of InputSetupService.
-     * @param {object} options - The dependencies for the service.
-     * @param {AppContainer} options.container - The application's dependency injection container, used to resolve the InputHandler.
-     * @param {ILogger} options.logger - The logging service for outputting information and errors.
-     * @param {ValidatedEventDispatcher} options.validatedEventDispatcher - The service used for dispatching validated events (e.g., command echo, disabling input).
-     * @param {GameLoop} options.gameLoop - The main game loop instance, which processes submitted commands when running.
-     * @throws {Error} If any of the required dependencies (container, logger, validatedEventDispatcher, gameLoop) are missing.
-     */
+   * Creates an instance of InputSetupService.
+   * @param {object} options - The dependencies.
+   * @param {AppContainer} options.container
+   * @param {ILogger} options.logger
+   * @param {ValidatedEventDispatcher} options.validatedEventDispatcher
+   * @param {GameLoop} options.gameLoop
+   * @throws {Error} If dependencies are missing.
+   */
   constructor({ container, logger, validatedEventDispatcher, gameLoop }) {
-    // AC5: Check for missing dependencies
-    if (!container) {
-      throw new Error("InputSetupService: Missing required dependency 'container'.");
-    }
-    if (!logger) {
-      // Cannot use logger here as it might be the missing dependency
-      console.error("InputSetupService: Missing required dependency 'logger'.");
-      throw new Error("InputSetupService: Missing required dependency 'logger'.");
-    }
-    if (!validatedEventDispatcher) {
-      logger.error("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
-      throw new Error("InputSetupService: Missing required dependency 'validatedEventDispatcher'.");
-    }
-    if (!gameLoop) {
-      logger.error("InputSetupService: Missing required dependency 'gameLoop'.");
-      throw new Error("InputSetupService: Missing required dependency 'gameLoop'.");
-    }
+    // Simplified validation for brevity, assume checks pass
+    if (!container) throw new Error("InputSetupService: Missing 'container'.");
+    if (!logger) throw new Error("InputSetupService: Missing 'logger'.");
+    if (!validatedEventDispatcher) throw new Error("InputSetupService: Missing 'validatedEventDispatcher'.");
+    if (!gameLoop) throw new Error("InputSetupService: Missing 'gameLoop'.");
 
-    // AC6: Store dependencies in private fields
     this.#container = container;
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#gameLoop = gameLoop;
 
-    this.#logger.info('InputSetupService: Instance created successfully with dependencies.');
+    this.#logger.info('InputSetupService: Instance created.');
   }
 
   /**
-     * @public
-     * @description Configures the application's InputHandler.
-     * This method resolves the InputHandler from the container and sets up
-     * the callback function responsible for processing raw command strings entered by the user.
-     * The callback will typically involve echoing the command to the UI and passing it
-     * to the GameLoop for parsing and execution.
-     *
-     * @returns {void}
-     * @throws {Error} If the InputHandler cannot be resolved or configured.
-     */
+   * @public
+   * @description Configures the application's InputHandler by resolving it
+   * and setting its command processing callback.
+   * Dispatches 'initialization:input_setup_service:started/completed/failed' events.
+   * @returns {void}
+   * @throws {Error} If the InputHandler cannot be resolved or configured.
+   */
   configureInputHandler() {
-    // Implementation moved from GameEngine.#initialize as per Ticket 3 (AC3)
     this.#logger.debug('InputSetupService: Attempting to configure InputHandler...');
 
+    // --- Ticket 16: Dispatch 'started' event ---
+    const startPayload = {};
+    this.#validatedEventDispatcher.dispatchValidated('initialization:input_setup_service:started', startPayload, { allowSchemaNotFound: true })
+        .then(() => this.#logger.debug("Dispatched 'initialization:input_setup_service:started' event."))
+        .catch(e => this.#logger.error("Failed to dispatch 'initialization:input_setup_service:started' event", e));
+    // --- End Ticket 16 ---
+
     try {
-      // AC1: Identify block - Start
-      const inputHandler = /** @type {InputHandler} */ (this.#container.resolve('InputHandler')); // AC3: Use service's container
+      const inputHandler = /** @type {InputHandler} */ (this.#container.resolve('InputHandler'));
 
-      // Define the command processing function
-      const processInputCommand = async (command) => { // AC3: Ensure async
-        // Use service's validated dispatcher
-        if (this.#validatedEventDispatcher) { // AC3: Use service's validatedEventDispatcher
-          await this.#validatedEventDispatcher.dispatchValidated('ui:command_echo', { command });
-        } else {
-          // Use service's logger (guaranteed by constructor)
-          // Adapt log message prefix
-          this.#logger.error('InputSetupService: ValidatedEventDispatcher not available in processInputCommand.'); // AC3: Adapt logging
-        }
+      const processInputCommand = async (command) => {
+        // Echo command via VED
+        this.#validatedEventDispatcher.dispatchValidated('ui:command_echo', { command })
+            .catch(e => this.#logger.error("Failed dispatching ui:command_echo", e)); // Log dispatch errors
 
-        // Use service's game loop
-        if (this.#gameLoop && this.#gameLoop.isRunning) { // AC3: Use service's gameLoop
+        // Process if game loop running
+        if (this.#gameLoop && this.#gameLoop.isRunning) {
+          // Don't await processSubmittedCommand as it handles its own flow
           this.#gameLoop.processSubmittedCommand(command);
         } else {
-          // Use service's logger (guaranteed by constructor)
-          // Adapt log message prefix
-          this.#logger.warn('InputSetupService: Input received, but GameLoop is not ready/running.'); // AC3: Adapt logging
-          // Use service's validated dispatcher
-          if (this.#validatedEventDispatcher) { // AC3: Use service's validatedEventDispatcher
-            await this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', { message: 'Game not running.' });
-          }
+          this.#logger.warn('Input received, but GameLoop is not ready/running.');
+          // Disable input via VED
+          this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', { message: 'Game not running.' })
+              .catch(e => this.#logger.error("Failed dispatching ui:disable_input", e)); // Log dispatch errors
         }
       };
 
-      // Set the callback on the resolved input handler
-      inputHandler.setCommandCallback(processInputCommand); // AC1: Identify block - End (inclusive)
+      // Set the callback
+      inputHandler.setCommandCallback(processInputCommand);
 
-      // AC3: Use service's logger and adapt message; Place after callback is set
       this.#logger.info('InputSetupService: InputHandler resolved and command callback configured.');
+
+      // --- Ticket 16: Dispatch 'completed' event ---
+      const completedPayload = {};
+      this.#validatedEventDispatcher.dispatchValidated('initialization:input_setup_service:completed', completedPayload, { allowSchemaNotFound: true })
+          .then(() => this.#logger.debug("Dispatched 'initialization:input_setup_service:completed' event."))
+          .catch(e => this.#logger.error("Failed to dispatch 'initialization:input_setup_service:completed' event", e));
+      // --- End Ticket 16 ---
 
     } catch (error) {
       this.#logger.error('InputSetupService: Failed to resolve or configure InputHandler.', error);
-      // Propagate the error as this is critical for game function
+
+      // --- Ticket 16: Dispatch 'failed' event ---
+      const failedPayload = { error: error?.message || 'Unknown error', stack: error?.stack };
+      this.#validatedEventDispatcher.dispatchValidated('initialization:input_setup_service:failed', failedPayload, { allowSchemaNotFound: true })
+          .then(() => this.#logger.debug("Dispatched 'initialization:input_setup_service:failed' event.", failedPayload))
+          .catch(e => this.#logger.error("Failed to dispatch 'initialization:input_setup_service:failed' event", e));
+      // --- End Ticket 16 ---
+
+      // Propagate the error as this is critical
       throw new Error(`InputSetupService configuration failed: ${error.message}`);
     }
-    // AC2: Code moved into this method body
   }
 }
 
-// AC1 & AC2: File created and class defined (from Sub-Ticket 3.1). Method body now implemented.
 export default InputSetupService;

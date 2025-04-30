@@ -144,7 +144,7 @@ beforeEach(() => {
 
 // --- Test Suite ---
 
-// --- Existing Test Suite for _loadItemsInternal ---
+// --- Corrected Test Suite for _loadItemsInternal ---
 describe('BaseManifestItemLoader _loadItemsInternal', () => {
     const modId = 'test-mod';
     const manifest = {id: modId, content: {}}; // Basic manifest structure
@@ -161,12 +161,10 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         // Ensure its dependencies (_extractValidFilenames, _processFileWrapper) ARE mocked (done by global beforeEach)
         // loader._extractValidFilenames = jest.fn(); // Already mocked globally
         // loader._processFileWrapper = jest.fn(); // Already mocked globally
-        // Clear mocks (already done by global beforeEach)
-        // jest.clearAllMocks();
     });
 
 
-    it('No Files Found: should return 0, log debug, and not call processFileWrapper', async () => {
+    it('No Files Found: should return 0 count/errors/overrides, log debug, and not call processFileWrapper', async () => {
         // --- Arrange ---
         loader._extractValidFilenames.mockReturnValue([]); // Configure mock
 
@@ -174,51 +172,59 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName);
 
         // --- Assert ---
-        expect(result).toBe(0);
+        expect(result).toEqual({ count: 0, overrides: 0, errors: 0 }); // <<< CORRECTED: Expect the result object
+        // Or check properties individually:
+        // expect(result.count).toBe(0);
+        // expect(result.overrides).toBe(0);
+        // expect(result.errors).toBe(0);
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(mockLogger.debug).toHaveBeenCalledWith(`No valid ${contentKey} filenames found for mod ${modId}.`);
         expect(loader._processFileWrapper).not.toHaveBeenCalled();
         expect(mockLogger.info).not.toHaveBeenCalled(); // No summary log needed
     });
 
-    it('All Files Process Successfully: should return count, call wrapper for each, log success summary', async () => {
+    it('All Files Process Successfully: should return correct counts, call wrapper for each, log success summary', async () => {
         // --- Arrange ---
         const filenames = ['file1.json', 'file2.json'];
         const qualifiedId1 = `${modId}:file1`;
         const qualifiedId2 = `${modId}:file2`;
         loader._extractValidFilenames.mockReturnValue(filenames);
-        // Mock wrapper to return different values based on input for more robust testing
+        // Mock wrapper to return the expected { qualifiedId, didOverride } object
         loader._processFileWrapper.mockImplementation(async (mId, fname) => {
-            if (fname === 'file1.json') return qualifiedId1;
-            if (fname === 'file2.json') return qualifiedId2;
-            return 'unexpected-success';
+            if (fname === 'file1.json') return { qualifiedId: qualifiedId1, didOverride: false }; // Assume no override
+            if (fname === 'file2.json') return { qualifiedId: qualifiedId2, didOverride: false }; // Assume no override
+            return { qualifiedId: 'unexpected-success', didOverride: false };
         });
 
         // --- Act ---
         const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName);
 
         // --- Assert ---
-        expect(result).toBe(2);
+        expect(result).toEqual({ count: 2, overrides: 0, errors: 0 }); // <<< CORRECTED: Expect the result object
+        // Or check properties individually:
+        // expect(result.count).toBe(2);
+        // expect(result.overrides).toBe(0);
+        // expect(result.errors).toBe(0);
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(2);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/2 ${contentKey} items.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/2 ${contentKey} items.`); // Assumes 0 overrides/errors
         expect(mockLogger.debug).toHaveBeenCalledWith(`Found 2 potential ${contentKey} files to process for mod ${modId}.`);
     });
 
-    it('Some Files Fail: should return success count, call wrapper for each, log summary with failures', async () => {
+    it('Some Files Fail, Some Override: should return correct counts, call wrapper for each, log summary with failures/overrides', async () => {
         // --- Arrange ---
         const filenames = ['file1.json', 'file2.json', 'file3.json'];
-        const qualifiedId1 = `${modId}:file1`;
-        const qualifiedId3 = `${modId}:file3`;
+        const qualifiedId1 = `${modId}:file1`; // Will succeed with override
+        const qualifiedId3 = `${modId}:file3`; // Will succeed without override
         const failureError = new Error('Failed to process file2');
         loader._extractValidFilenames.mockReturnValue(filenames);
         loader._processFileWrapper.mockImplementation(async (mId, fname, cTypeDir, tName) => {
             expect(tName).toBe(typeName); // Add assertion for typeName within mock
-            if (fname === 'file1.json') return qualifiedId1;
+            if (fname === 'file1.json') return { qualifiedId: qualifiedId1, didOverride: true }; // Simulate success with override
             if (fname === 'file2.json') throw failureError; // Simulate rejection
-            if (fname === 'file3.json') return qualifiedId3;
+            if (fname === 'file3.json') return { qualifiedId: qualifiedId3, didOverride: false };// Simulate success without override
             throw new Error(`Unexpected filename in mock: ${fname}`);
         });
 
@@ -226,17 +232,22 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName);
 
         // --- Assert ---
-        expect(result).toBe(2); // Only file1 and file3 succeeded
+        expect(result).toEqual({ count: 2, overrides: 1, errors: 1 }); // <<< CORRECTED: Expect the result object
+        // Or check properties individually:
+        // expect(result.count).toBe(2); // file1 and file3 succeeded
+        // expect(result.overrides).toBe(1); // file1 overwrote
+        // expect(result.errors).toBe(1); // file2 failed
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(3);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file3.json', contentTypeDir, typeName);
-        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/3 ${contentKey} items. (1 failed)`);
+        // <<< CORRECTED: Updated expected log message to include overrides and failures
+        expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 2/3 ${contentKey} items. (1 overrides) (1 failed)`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`Found 3 potential ${contentKey} files to process for mod ${modId}.`);
     });
 
-    it('All Files Fail: should return 0, call wrapper for each, log summary with all failures', async () => {
+    it('All Files Fail: should return 0 count/overrides, correct error count, call wrapper for each, log summary with all failures', async () => {
         // --- Arrange ---
         const filenames = ['file1.json', 'file2.json'];
         const failureError1 = new Error('Failed file1');
@@ -253,11 +264,16 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
         const result = await loader._loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName);
 
         // --- Assert ---
-        expect(result).toBe(0);
+        expect(result).toEqual({ count: 0, overrides: 0, errors: 2 }); // <<< CORRECTED: Expect the result object
+        // Or check properties individually:
+        // expect(result.count).toBe(0);
+        // expect(result.overrides).toBe(0);
+        // expect(result.errors).toBe(2);
         expect(loader._extractValidFilenames).toHaveBeenCalledWith(manifest, contentKey, modId);
         expect(loader._processFileWrapper).toHaveBeenCalledTimes(2);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file1.json', contentTypeDir, typeName);
         expect(loader._processFileWrapper).toHaveBeenCalledWith(modId, 'file2.json', contentTypeDir, typeName);
+        // <<< CORRECTED: Updated expected log message
         expect(mockLogger.info).toHaveBeenCalledWith(`Mod [${modId}] - Processed 0/2 ${contentKey} items. (2 failed)`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`Found 2 potential ${contentKey} files to process for mod ${modId}.`);
     });

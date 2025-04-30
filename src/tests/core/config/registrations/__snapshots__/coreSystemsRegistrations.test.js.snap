@@ -49,6 +49,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -69,6 +70,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -119,6 +121,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -129,6 +132,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -139,6 +143,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -149,6 +154,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -159,6 +165,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -169,6 +176,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+        "shutdownable",
       ],
     },
   ],

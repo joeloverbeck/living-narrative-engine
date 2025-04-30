@@ -2,8 +2,7 @@
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-// ***** CORRECTED IMPORT *****
-import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Use ComponentLoader if that's the correct class name
+import ComponentLoader from '../../../core/loaders/componentLoader.js'; // Using the correct class name
 
 // --- Mock Service Factories ---
 // Assume factories are present and correct as provided before
@@ -320,10 +319,16 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
             'components'     // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result Object --- <<<< CORRECTED VERIFICATION
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise; // Get the result object
+
+        // Check the structure and values of the result object
+        expect(result).toEqual({
+            count: 0,       // 0 items successfully processed
+            errors: 1,      // 1 error occurred (storage failed)
+            overrides: 0    // 0 overrides occurred
+        });
 
         // --- Verify: Pre-Storage Steps Succeeded ---
         expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(modId, 'components', filename);
@@ -382,6 +387,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
         );
 
         // --- Verify: Final Summary Log ---
+        // The log message correctly reflects the counts from the returned object
         expect(mockLogger.info).toHaveBeenCalledWith(
             `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
         );

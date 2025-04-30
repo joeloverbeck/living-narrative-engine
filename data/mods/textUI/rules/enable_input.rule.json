@@ -1,0 +1,25 @@
+{
+  "rule_id": "handle_enable_input",
+  "comment": "Handles the textUI:enable_input event to enable the main command input field and set its placeholder text via MODIFY_DOM_ELEMENT operations.",
+  "event_type": "textUI:enable_input",
+  "actions": [
+    {
+      "type": "MODIFY_DOM_ELEMENT",
+      "comment": "Enable the command input field by setting its disabled property to false.",
+      "parameters": {
+        "selector": "#command-input",
+        "property": "disabled",
+        "value": false
+      }
+    },
+    {
+      "type": "MODIFY_DOM_ELEMENT",
+      "comment": "Set the placeholder text using the value from the event payload.",
+      "parameters": {
+        "selector": "#command-input",
+        "property": "placeholder",
+        "value": "{event.payload.placeholder}"
+      }
+    }
+  ]
+}

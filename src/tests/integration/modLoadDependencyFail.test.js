@@ -166,14 +166,16 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     let registry;
     let logger; // Declared here
     let schemaLoader;
-    let componentDefinitionLoader;
+    let componentDefinitionLoader; // Variable name in test scope
     let ruleLoader;
     let actionLoader;
     let eventLoader;
-    let entityLoader; // <<< ADDED: Declare mock entityLoader
+    let entityLoader;
     let gameConfigLoader;
     let modManifestLoader; // The real instance will be created here
+    let validatedEventDispatcher; // <<< ADDED: Declare mock validatedEventDispatcher
     let worldLoader;
+
 
     // Lean JSON schemas (just enough to satisfy the loader)
     const MOD_MANIFEST_SCHEMA_ID = 'http://example.com/schemas/mod.manifest.schema.json';
@@ -246,7 +248,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
                     if (!validator.isSchemaLoaded(GAME_SCHEMA_ID)) await validator.addSchema(gameSchema, GAME_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(COMPONENTS_SCHEMA_ID)) await validator.addSchema(componentsSchema, COMPONENTS_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(MOD_MANIFEST_SCHEMA_ID)) await validator.addSchema(manifestSchema, MOD_MANIFEST_SCHEMA_ID);
-                    if (!validator.isSchemaLoaded(ENTITY_SCHEMA_ID)) await validator.addSchema(entitySchema, ENTITY_SCHEMA_ID); // <<< ADDED
+                    if (!validator.isSchemaLoaded(ENTITY_SCHEMA_ID)) await validator.addSchema(entitySchema, ENTITY_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(ACTION_SCHEMA_ID)) await validator.addSchema(actionSchema, ACTION_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(EVENT_SCHEMA_ID)) await validator.addSchema(eventSchema, EVENT_SCHEMA_ID);
                     if (!validator.isSchemaLoaded(RULE_SCHEMA_ID)) await validator.addSchema(ruleSchema, RULE_SCHEMA_ID);
@@ -278,14 +280,19 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
         /* -------------------- Auxiliary loaders ------------------------------ */
         ruleLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
-        componentDefinitionLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
+        componentDefinitionLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)}; // Keep test variable name
         actionLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
         eventLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
-        entityLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)}; // <<< ADDED: Mock entityLoader
+        entityLoader = {loadItemsForMod: jest.fn().mockResolvedValue(0)};
 
         // Mock GameConfigLoader to return the *list* of mod IDs
         gameConfigLoader = {
             loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod'])
+        };
+
+        // <<< ADDED: Mock ValidatedEventDispatcher >>>
+        validatedEventDispatcher = {
+            dispatchValidated: jest.fn().mockResolvedValue(), // Simple mock returning a resolved promise
         };
 
         /* -------------------- Real ModManifestLoader ------------------------- */
@@ -299,22 +306,24 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         );
 
         /* -------------------- System under test ------------------------------ */
-        // <<< FIXED: Pass all 12 arguments in the correct order >>>
-        worldLoader = new WorldLoader(
-            registry,                   // 1
-            logger,                     // 2
-            schemaLoader,               // 3
-            componentDefinitionLoader,  // 4
-            ruleLoader,                 // 5
-            actionLoader,               // 6
-            eventLoader,                // 7
-            entityLoader,               // 8 <<< Correctly pass mock entityLoader
-            validator,                  // 9 <<< Correctly pass REAL validator
-            configuration,              // 10
-            gameConfigLoader,           // 11
-            modManifestLoader           // 12 <<< Correctly pass REAL modManifestLoader
-        );
+        // <<< FIXED: Pass a single object with named properties >>>
+        worldLoader = new WorldLoader({
+            registry,                   // Property name matches variable name
+            logger,                     // Property name matches variable name
+            schemaLoader,               // Property name matches variable name
+            componentLoader: componentDefinitionLoader,  // Map test variable to constructor property 'componentLoader'
+            ruleLoader,                 // Property name matches variable name
+            actionLoader,               // Property name matches variable name
+            eventLoader,                // Property name matches variable name
+            entityLoader,               // Property name matches variable name
+            validator,                  // Property name matches variable name
+            configuration,              // Property name matches variable name
+            gameConfigLoader,           // Property name matches variable name
+            modManifestLoader,          // Property name matches variable name
+            validatedEventDispatcher    // <<< Pass the new mock >>>
+        });
     });
+
 
 
     it('rejects with ModDependencyError and fetches only mod manifests (no content)', async () => {

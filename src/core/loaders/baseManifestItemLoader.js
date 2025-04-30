@@ -1,4 +1,4 @@
-// src/core/loaders/baseManifestItemLoader.js
+// Filename: src/core/loaders/baseManifestItemLoader.js
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -9,6 +9,13 @@
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest
  * @typedef {import('../interfaces/validation.js').ValidationResult} ValidationResult
+ */
+// --- Add LoadItemsResult typedef here for clarity ---
+/**
+ * @typedef {object} LoadItemsResult
+ * @property {number} count - Number of items successfully loaded.
+ * @property {number} overrides - Number of items that overwrote existing ones.
+ * @property {number} errors - Number of individual file processing errors encountered.
  */
 
 /**
@@ -195,20 +202,21 @@ export class BaseManifestItemLoader {
      * **Implementation Guidance:**
      * 1.  **Extract Base ID:** Determine the **base** item ID (un-prefixed) from the validated `data` or `filename`.
      * 2.  **Further Validation/Processing:** Perform any additional type-specific validation (e.g., component `dataSchema` validation) or data transformation.
-     * 3.  **Store Item:** Delegate storage to `this._storeItemInRegistry`, passing the required parameters including the **base** item ID.
-     * 4.  **Return Qualified ID:** The implementation MUST return the **fully qualified** item ID (e.g., `modId:baseItemId`) which includes the mod prefix. This ID should match the key used in the registry.
+     * 3.  **Store Item:** Delegate storage to `this._storeItemInRegistry`, passing the required parameters including the **base** item ID. **Crucially, `_storeItemInRegistry` must now return a boolean indicating if an overwrite occurred.**
+     * 4.  **Return Result Object:** The implementation MUST return an object `{ qualifiedId: string, didOverride: boolean }` where `qualifiedId` is the fully qualified item ID (e.g., `modId:baseItemId`) and `didOverride` is the boolean returned by `_storeItemInRegistry`.
      *
      * @abstract
      * @protected
+     * @async
      * @param {string} modId - The ID of the mod owning the file.
      * @param {string} filename - The original filename from the manifest.
      * @param {string} resolvedPath - The fully resolved path to the file.
      * @param {any} data - The raw data fetched from the file (already validated against the primary schema).
      * @param {string} typeName - The content type name (e.g., 'items', 'locations').
-     * @returns {Promise<string>} A promise resolving with the **fully qualified** item ID (e.g., `modId:itemId`).
+     * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise resolving with an object containing the fully qualified item ID and whether an overwrite occurred.
      * @throws {Error} If processing or validation fails. This error will be caught by `_processFileWrapper`.
      */
-    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< MODIFIED: Updated JSDoc Guidance
+    async _processFetchedItem(modId, filename, resolvedPath, data, typeName) { // <<< MODIFIED: Updated JSDoc Guidance and Return Type
         // istanbul ignore next
         throw new Error('Abstract method _processFetchedItem must be implemented by subclass.');
     }
@@ -252,16 +260,17 @@ export class BaseManifestItemLoader {
      * fetching, primary schema validation, calling the abstract processing method,
      * and central error logging.
      * Ensures errors are caught and logged centrally.
+     *
      * @protected
      * @async
      * @param {string} modId - The ID of the mod owning the file.
      * @param {string} filename - The filename to process.
      * @param {string} contentTypeDir - The directory name for this content type (e.g., 'items', 'actions').
      * @param {string} typeName - The content type name (e.g., 'items', 'locations').
-     * @returns {Promise<any>} A promise that resolves with the result from `_processFetchedItem` (expected to be the fully qualified ID) or rejects if any step fails.
+     * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise that resolves with the result object from `_processFetchedItem` (containing qualifiedId and didOverride) or rejects if any step fails.
      * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
      */
-    async _processFileWrapper(modId, filename, contentTypeDir, typeName) {
+    async _processFileWrapper(modId, filename, contentTypeDir, typeName) { // <<< MODIFIED RETURN TYPE
         let resolvedPath = null;
         try {
             // 1. Resolve Path
@@ -272,16 +281,17 @@ export class BaseManifestItemLoader {
             const data = await this._dataFetcher.fetch(resolvedPath);
             this._logger.debug(`[${modId}] Fetched data from ${resolvedPath}`);
 
-            // 3. Primary Schema Validation <<< --- FIXED: Added call here --- >>>
+            // 3. Primary Schema Validation
             this._validatePrimarySchema(data, filename, modId, resolvedPath);
-            // No need for separate success log here, it's implied if we proceed
 
             // 4. Subclass Processing
             // Pass original filename, resolved path, and typeName for context
+            // _processFetchedItem now returns { qualifiedId, didOverride }
             const result = await this._processFetchedItem(modId, filename, resolvedPath, data, typeName);
-            this._logger.debug(`[${modId}] Successfully processed ${filename}. Result from _processFetchedItem: ${result}`);
+            this._logger.debug(`[${modId}] Successfully processed ${filename}. Result: ID=${result.qualifiedId}, Overwrite=${result.didOverride}`);
 
-            return result;
+            // Return the object received from _processFetchedItem
+            return result; // <<< MODIFIED RETURNED VALUE
 
         } catch (error) {
             // 5. Central Error Logging
@@ -303,7 +313,8 @@ export class BaseManifestItemLoader {
     /**
      * Orchestrates the loading of all items for a specific content type from a mod manifest.
      * Uses `_extractValidFilenames` and `_processFileWrapper`, handling results via `Promise.allSettled`.
-     * Logs a summary of the results.
+     * Logs a summary of the results and returns detailed counts.
+     *
      * @protected
      * @async
      * @param {string} modId - The ID of the mod being processed.
@@ -311,15 +322,16 @@ export class BaseManifestItemLoader {
      * @param {string} contentKey - The key within `manifest.content` (e.g., 'components').
      * @param {string} contentTypeDir - The directory name for this content type (e.g., 'components').
      * @param {string} typeName - The content type name (e.g., 'components', 'locations').
-     * @returns {Promise<number>} A promise that resolves with the count of successfully processed items.
+     * @returns {Promise<LoadItemsResult>} A promise that resolves with an object containing the counts of successfully processed items (`count`), items that caused an overwrite (`overrides`), and items that failed processing (`errors`).
      */
-    async _loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName) {
+    async _loadItemsInternal(modId, manifest, contentKey, contentTypeDir, typeName) { // <<< MODIFIED RETURN TYPE
         const filenames = this._extractValidFilenames(manifest, contentKey, modId);
         const totalAttempted = filenames.length;
 
         if (totalAttempted === 0) {
             this._logger.debug(`No valid ${contentKey} filenames found for mod ${modId}.`);
-            return 0;
+            // Return zero counts if no files to process
+            return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
         }
 
         this._logger.debug(`Found ${totalAttempted} potential ${contentKey} files to process for mod ${modId}.`);
@@ -331,30 +343,35 @@ export class BaseManifestItemLoader {
         const settledResults = await Promise.allSettled(processingPromises);
 
         let processedCount = 0;
+        let overrideCount = 0; // <<< ADDED override counter
         let failedCount = 0;
 
         settledResults.forEach((result, index) => {
             const currentFilename = filenames[index]; // Get filename for logging context
             if (result.status === 'fulfilled') {
                 processedCount++;
-                // Debug log for success is already in _processFileWrapper, maybe redundant here
-                // this._logger.debug(`[${modId}] Successfully processed ${currentFilename} - Qualified ID: ${result.value}`);
+                // Check the didOverride flag from the result value
+                if (result.value && result.value.didOverride === true) { // <<< CHECK for override
+                    overrideCount++;
+                }
+                // Debug log for success is already in _processFileWrapper
             } else {
                 failedCount++;
                 // Error logging is already handled comprehensively in _processFileWrapper
                 // Only log a debug message here indicating which file failed in the batch
                 this._logger.debug(`[${modId}] Failure recorded for ${currentFilename} in batch processing. Reason logged previously.`);
-                // Original reason logging (can be verbose if already logged):
-                // this._logger.debug(`[${modId}] Failed processing ${filenames[index]}. Reason: ${result.reason?.message || result.reason}`);
             }
         });
 
+        // Log summary using the calculated counts
+        const overrideMessage = overrideCount > 0 ? ` (${overrideCount} overrides)` : '';
         const failureMessage = failedCount > 0 ? ` (${failedCount} failed)` : '';
         this._logger.info(
-            `Mod [${modId}] - Processed ${processedCount}/${totalAttempted} ${contentKey} items.${failureMessage}`
+            `Mod [${modId}] - Processed ${processedCount}/${totalAttempted} ${contentKey} items.${overrideMessage}${failureMessage}`
         );
 
-        return processedCount;
+        // Return the detailed result object
+        return { count: processedCount, overrides: overrideCount, errors: failedCount }; // <<< MODIFIED RETURN VALUE
     }
 
 
@@ -372,14 +389,16 @@ export class BaseManifestItemLoader {
      * @param {string} baseItemId - The item's **un-prefixed** base ID (extracted from the item data or filename).
      * @param {object} dataToStore - The original data object fetched and validated for the item.
      * @param {string} sourceFilename - The original filename from which the data was loaded (for logging).
-     * @returns {void} Does not return a value.
+     * @returns {boolean} Returns `true` if an existing item was overwritten, `false` otherwise.
      * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
      */
-    _storeItemInRegistry(category, modId, baseItemId, dataToStore, sourceFilename) {
+    _storeItemInRegistry(category, modId, baseItemId, dataToStore, sourceFilename) { // <<< MODIFIED RETURN TYPE
         const finalRegistryKey = `${modId}:${baseItemId}`;
+        let didOverwrite = false; // <<< ADDED flag
         try {
             const existingDefinition = this._dataRegistry.get(category, finalRegistryKey);
             if (existingDefinition != null) {
+                didOverwrite = true; // <<< SET flag if item exists
                 this._logger.warn(
                     `${this.constructor.name} [${modId}]: Overwriting existing ${category} definition with key '${finalRegistryKey}'. ` +
                     `New Source: ${sourceFilename}. Previous Source: ${existingDefinition._sourceFile || 'unknown'} from mod '${existingDefinition.modId || 'unknown'}.'`
@@ -395,6 +414,7 @@ export class BaseManifestItemLoader {
             this._logger.debug(
                 `${this.constructor.name} [${modId}]: Successfully stored ${category} item '${finalRegistryKey}' from file '${sourceFilename}'.`
             );
+            return didOverwrite; // <<< RETURN the flag
         } catch (error) {
             this._logger.error(
                 `${this.constructor.name} [${modId}]: Failed to store ${category} item with key '${finalRegistryKey}' from file '${sourceFilename}' in data registry.`,
@@ -418,19 +438,19 @@ export class BaseManifestItemLoader {
      * @param {string} contentKey - The key in the manifest's `content` section (e.g., 'actions', 'components'). Must be a non-empty string.
      * @param {string} contentTypeDir - The subdirectory within the mod's folder containing the content files (e.g., 'actions', 'components'). Must be a non-empty string.
      * @param {string} typeName - A descriptive name for the content type being loaded (e.g., 'actions', 'components'). Used for logging and context. Must be a non-empty string.
-     * @returns {Promise<number>} A promise that resolves with the numerical count of items successfully loaded and processed for this type and mod. Returns 0 if initial validation fails.
+     * @returns {Promise<LoadItemsResult>} A promise that resolves with an object containing the counts (`count`, `overrides`, `errors`) for this type and mod. Returns `{ count: 0, overrides: 0, errors: 0 }` if initial validation fails.
      * @throws {TypeError} If `contentKey`, `contentTypeDir`, or `typeName` are invalid (indicates a programming error in the calling subclass).
      */
-    async loadItemsForMod(modId, modManifest, contentKey, contentTypeDir, typeName) {
+    async loadItemsForMod(modId, modManifest, contentKey, contentTypeDir, typeName) { // <<< MODIFIED RETURN TYPE
         this._logger.info(`${this.constructor.name}: Loading ${typeName} definitions for mod '${modId}'.`);
         if (typeof modId !== 'string' || modId.trim() === '') {
             this._logger.error(`${this.constructor.name}: Invalid 'modId' provided for loading ${typeName}. Must be a non-empty string. Received: ${modId}`);
-            return 0;
+            return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
         }
         const trimmedModId = modId.trim();
         if (!modManifest || typeof modManifest !== 'object') {
             this._logger.error(`${this.constructor.name}: Invalid 'modManifest' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-null object. Received: ${typeof modManifest}`);
-            return 0;
+            return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
         }
         if (typeof contentKey !== 'string' || contentKey.trim() === '') {
             const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`; this._logger.error(errorMsg); throw new TypeError(errorMsg);
@@ -446,14 +466,15 @@ export class BaseManifestItemLoader {
         const trimmedTypeName = typeName.trim();
 
         this._logger.debug(`${this.constructor.name} [${trimmedModId}]: Delegating loading for type '${trimmedTypeName}' to _loadItemsInternal.`);
-        const count = await this._loadItemsInternal(
+        // _loadItemsInternal now returns the LoadItemsResult object
+        const result = await this._loadItemsInternal( // <<< CAPTURE full result
             trimmedModId,
             modManifest,
             trimmedContentKey,
             trimmedContentTypeDir,
             trimmedTypeName
         );
-        this._logger.debug(`${this.constructor.name} [${trimmedModId}]: Finished loading for type '${trimmedTypeName}'. Count: ${count}`);
-        return count;
+        this._logger.debug(`${this.constructor.name} [${trimmedModId}]: Finished loading for type '${trimmedTypeName}'. Result: C:${result.count}, O:${result.overrides}, E:${result.errors}`);
+        return result; // <<< RETURN the full result object
     }
 }

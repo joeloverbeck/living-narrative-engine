@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.manifest.test.js
+// src/tests/core/loaders/ruleLoader.manifest.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
@@ -236,7 +236,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
 
             // --- Action ---
             // *** UPDATED: Call loadItemsForMod with all required arguments ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -290,7 +291,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
 
 
             // 5. Return value should be the actual count of successfully processed rules
-            expect(count).toBe(2);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(2);
 
             // 6. Verify logging
             expect(mockLogger.info).toHaveBeenCalledWith(
@@ -310,7 +312,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         // *** UPDATED TEST for null manifest based on BaseManifestItemLoader behavior ***
         it('should return 0 and log error if manifest is null', async () => {
             // --- Action ---
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 null, // Invalid manifest
                 RULE_CONTENT_KEY,
@@ -319,7 +322,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
             );
 
             // --- Assert ---
-            expect(count).toBe(0); // Should return 0 based on base class validation
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0); // Should return 0 based on base class validation
 
             // Verify ERROR log occurred from base class
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -335,7 +339,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log debug if manifest is an empty object', async () => {
             // --- Action ---
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 {}, // Empty manifest
                 RULE_CONTENT_KEY,
@@ -344,7 +349,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
             );
 
             // --- Assert ---
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Mod '${modId}': Content key '${RULE_CONTENT_KEY}' not found or is null/undefined in manifest. Skipping.`
             );
@@ -361,15 +367,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log debug if manifest.content is null', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: null};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Mod '${modId}': Content key '${RULE_CONTENT_KEY}' not found or is null/undefined in manifest. Skipping.`
             );
@@ -382,15 +389,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log debug if manifest.content is an empty object', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {}};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Mod '${modId}': Content key '${RULE_CONTENT_KEY}' not found or is null/undefined in manifest. Skipping.`
             );
@@ -403,15 +411,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log debug if manifest.content.rules is null', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {[RULE_CONTENT_KEY]: null}};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `Mod '${modId}': Content key '${RULE_CONTENT_KEY}' not found or is null/undefined in manifest. Skipping.`
             );
@@ -424,15 +433,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log warn if manifest.content.rules is not an array (string)', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {[RULE_CONTENT_KEY]: "not-an-array"}};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 `Mod '${modId}': Expected an array for content key '${RULE_CONTENT_KEY}' but found type 'string'. Skipping.`
             );
@@ -444,15 +454,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log warn if manifest.content.rules is not an array (number)', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {[RULE_CONTENT_KEY]: 123}};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 `Mod '${modId}': Expected an array for content key '${RULE_CONTENT_KEY}' but found type 'number'. Skipping.`
             );
@@ -467,15 +478,16 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         it('should return 0 and log debug if manifest.content.rules is an empty array', async () => {
             const manifest = {id: modId, version: '1.0.0', name: 'Test', content: {[RULE_CONTENT_KEY]: []}};
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
                 RULE_CONTENT_DIR,
                 RULE_TYPE_NAME
             );
-
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
             expect(mockLogger.debug).toHaveBeenCalledWith(
                 `No valid ${RULE_CONTENT_KEY} filenames found for mod ${modId}.`
             );
@@ -512,7 +524,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
 
             // --- Action ---
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -556,7 +569,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
             );
 
             // 4. Return value should be 1
-            expect(count).toBe(1);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(1);
 
             // 5. Overall logs
             expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -584,7 +598,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
 
             // --- Action ---
             // *** UPDATED: Call loadItemsForMod ***
-            const count = await loader.loadItemsForMod(
+            // *** RENAMED count to result ***
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -609,7 +624,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
             expect(mockRegistry.store).not.toHaveBeenCalled();
 
             // 3. Return value
-            expect(count).toBe(0);
+            // *** FIXED: Assert result.count ***
+            expect(result.count).toBe(0);
 
             // 4. Overall log should reflect no valid files found
             expect(mockLogger.debug).toHaveBeenCalledWith(

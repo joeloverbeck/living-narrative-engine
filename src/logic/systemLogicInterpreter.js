@@ -45,6 +45,8 @@ class SystemLogicInterpreter {
     #ruleCache = new Map();
     /** @private @type {boolean} */
     #initialized = false;
+    /** @private @type {Function | null} */ // To store the bound handler for removal
+    #boundEventHandler = null;
 
     /**
      * Creates an instance of SystemLogicInterpreter.
@@ -86,7 +88,10 @@ class SystemLogicInterpreter {
         this.#entityManager = entityManager;
         this.#operationInterpreter = operationInterpreter;
 
-        this.#logger.info('SystemLogicInterpreter initialized. Ready to process events.');
+        // --- Store the bound handler ---
+        this.#boundEventHandler = this.#handleEvent.bind(this);
+
+        this.#logger.info('SystemLogicInterpreter instance created. Ready for initialization.');
     }
 
     /**
@@ -141,7 +146,12 @@ class SystemLogicInterpreter {
     #subscribeToEvents() {
         const eventTypesToListen = Array.from(this.#ruleCache.keys());
         if (eventTypesToListen.length > 0) {
-            this.#eventBus.subscribe('*', this.#handleEvent.bind(this));
+            // Use the stored bound handler
+            if (!this.#boundEventHandler) {
+                this.#logger.error('SystemLogicInterpreter: Bound event handler is null during subscription attempt.');
+                return; // Cannot subscribe
+            }
+            this.#eventBus.subscribe('*', this.#boundEventHandler);
             this.#logger.info('Subscribed to all events (\'*\') using the EventBus.');
         } else {
             this.#logger.warn('No system rules loaded or cached. SystemLogicInterpreter will not actively listen for specific events.');
@@ -154,14 +164,14 @@ class SystemLogicInterpreter {
      * @param {GameEvent} event - The event object dispatched by the EventBus.
      * @private
      */
-    #handleEvent(event) { // <<< MODIFIED METHOD >>>
+    #handleEvent(event) {
         if (!event || typeof event.type !== 'string') {
             this.#logger.warn('Received invalid event object. Ignoring.', {event});
             return;
         }
 
         const eventType = event.type;
-        const matchingRules = this.#ruleCache.get(eventType) || []; // Ensure it's an array
+        const matchingRules = this.#ruleCache.get(eventType) || [];
 
         this.#logger.debug(`Received event: ${eventType}. Found ${matchingRules.length} potential rule(s).`, {payload: event.payload});
 
@@ -170,46 +180,43 @@ class SystemLogicInterpreter {
             return;
         }
 
-        // --- FIX: Create ONE shared execution context for all rules triggered by THIS event ---
         let sharedExecutionContext = null;
         try {
             const actorId = event.payload?.actorId ?? event.payload?.entityId ?? null;
             const targetId = event.payload?.targetId ?? null;
             this.#logger.debug(`[Event: ${eventType}] Assembling shared JsonLogic context... (Actor: ${actorId}, Target: ${targetId})`);
-            // Create the initial context object using the utility function
             sharedExecutionContext = createJsonLogicContext(event, actorId, targetId, this.#entityManager, this.#logger);
 
-            // Ensure the 'context' property exists and is an object
             if (!sharedExecutionContext || typeof sharedExecutionContext.context !== 'object' || sharedExecutionContext.context === null) {
                 this.#logger.warn(`[Event: ${eventType}] createJsonLogicContext did not return a valid structure with a context object. Creating default context.`);
-                // Fallback if createJsonLogicContext is flawed or needs update
                 if (!sharedExecutionContext) sharedExecutionContext = {};
-                sharedExecutionContext.context = {}; // Ensure the mutable part exists
-                // Manually add event if needed, assuming createJsonLogicContext should ideally do this
+                sharedExecutionContext.context = {};
                 sharedExecutionContext.event = event;
             }
 
             this.#logger.debug(`[Event: ${eventType}] Shared context assembled successfully.`);
         } catch (contextError) {
             this.#logger.error(`[Event: ${eventType}] Failed to assemble shared JsonLogicEvaluationContext. Cannot proceed with rule processing for this event.`, contextError);
-            return; // Stop processing rules for this event if context fails fundamentally
+            return;
         }
-        // --- END FIX ---
 
         this.#logger.debug(`Processing ${matchingRules.length} rule(s) for event type: ${eventType} with shared context...`);
 
-        // Process rules sequentially, passing the SAME shared context
         matchingRules.forEach(rule => {
             try {
-                // <<< Pass the shared context to #processRule >>>
                 this.#processRule(rule, event, sharedExecutionContext);
             } catch (error) {
                 this.#logger.error(`[CRITICAL] Uncaught error during #processRule execution for rule '${rule.rule_id || 'NO_ID'}', event '${eventType}':`, error);
-                // Continue to the next rule even if one fails catastrophically? Or break? For now, continue.
             }
         });
 
-        this.#logger.debug('Final state of sharedExecutionContext.context: ' + sharedExecutionContext.context);
+        // --- Updated Log to avoid potential circular references in complex contexts ---
+        try {
+            this.#logger.debug('Final state of sharedExecutionContext.context keys: ' + Object.keys(sharedExecutionContext.context).join(', '));
+        } catch (logError) {
+            this.#logger.warn('Could not log final shared context keys.', logError);
+        }
+        // --- End Updated Log ---
 
         this.#logger.debug(`Finished processing rules for event: ${eventType}.`);
     }
@@ -227,18 +234,16 @@ class SystemLogicInterpreter {
         let conditionPassed = true;
         let evaluationErrorOccurred = false;
 
-        // Check if a valid condition object exists
         if (rule.condition && typeof rule.condition === 'object' && Object.keys(rule.condition).length > 0) {
             this.#logger.debug(`[Rule ${ruleId}] Condition found. Evaluating using shared context...`);
             let conditionResult = false;
             try {
-                // Pass the shared evaluation context to the service
                 conditionResult = this.#jsonLogicEvaluationService.evaluate(rule.condition, evaluationContext);
                 this.#logger.debug(`[Rule ${ruleId}] Condition evaluation raw result: ${conditionResult}`);
-                conditionPassed = !!conditionResult; // Convert to boolean
+                conditionPassed = !!conditionResult;
             } catch (evalError) {
                 evaluationErrorOccurred = true;
-                conditionPassed = false; // Treat evaluation errors as condition failure
+                conditionPassed = false;
                 this.#logger.error(
                     `[Rule ${ruleId}] Error during condition evaluation. Treating condition as FALSE.`,
                     evalError
@@ -261,28 +266,20 @@ class SystemLogicInterpreter {
      * @param {JsonLogicEvaluationContext} sharedExecutionContext - The shared context object for this event.
      * @private
      */
-    #processRule(rule, event, sharedExecutionContext) { // <<< MODIFIED Signature >>>
+    #processRule(rule, event, sharedExecutionContext) {
         const ruleId = rule.rule_id || 'NO_ID';
         this.#logger.debug(`Processing rule '${ruleId}' for event '${event.type}' using shared context...`);
 
-        // --- FIX: Use the shared context directly ---
-        // No need to assemble context here, it's passed in.
-        // Optional: Add validation if sharedExecutionContext might be null/invalid despite checks in #handleEvent
         if (!sharedExecutionContext || typeof sharedExecutionContext.context !== 'object') {
             this.#logger.error(`[Rule ${ruleId}] Invalid sharedExecutionContext received. Halting processing for this rule.`);
             return;
         }
-        // --- END FIX ---
 
-        // 2. Evaluate Condition (using the shared context)
         const evaluationResult = this.#evaluateRuleCondition(rule, sharedExecutionContext);
 
-        // 3. Execute Actions based on Condition Result
         if (evaluationResult.conditionPassed) {
-            // Basic check for actions array
             if (Array.isArray(rule.actions) && rule.actions.length > 0) {
                 this.#logger.debug(`[Rule ${ruleId}] Executing ${rule.actions.length} actions.`);
-                // <<< Pass the shared context to _executeActions >>>
                 this._executeActions(rule.actions, sharedExecutionContext, `Rule '${ruleId}'`);
             } else {
                 this.#logger.debug(`[Rule ${ruleId}] No valid actions defined or action list is empty.`);
@@ -309,14 +306,13 @@ class SystemLogicInterpreter {
      * @param {string} scopeDescription - A description for logging (e.g., "Rule 'X'", "IF THEN branch").
      * @private
      */
-    _executeActions(actions, executionContext, scopeDescription) { // <<< Signature unchanged, but receives shared context >>>
+    _executeActions(actions, executionContext, scopeDescription) {
         if (!Array.isArray(actions) || actions.length === 0) {
             this.#logger.debug(`No actions to execute for scope: ${scopeDescription}.`);
             return;
         }
 
         this.#logger.info(`---> Entering action sequence for: ${scopeDescription}. ${actions.length} actions total.`);
-        // Logging actions content removed for brevity, but can be added back if needed
 
         for (let i = 0; i < actions.length; i++) {
             const operation = actions[i];
@@ -324,7 +320,7 @@ class SystemLogicInterpreter {
 
             if (!operation || typeof operation !== 'object') {
                 this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL: Operation at index ${i} is not a valid object. Halting sequence. Operation:`, operation);
-                break; // Halt this sequence
+                break;
             }
 
             const operationDesc = operation.comment ? `(Comment: ${operation.comment})` : '';
@@ -335,26 +331,23 @@ class SystemLogicInterpreter {
             try {
                 if (!this.#operationInterpreter) {
                     this.#logger.error(`---> [${scopeDescription} - Action ${operationIndex}] CRITICAL: OperationInterpreter not available! Halting sequence for this rule.`);
-                    break; // Halt the sequence
+                    break;
                 }
 
-                // Handle IF internally first
                 if (opTypeString === 'IF') {
-                    // <<< Pass the shared context down >>>
                     this.#handleIfOperation(operation, executionContext, scopeDescription, operationIndex);
                 } else {
-                    // <<< Pass the shared context down >>>
                     this.#operationInterpreter.execute(operation, executionContext);
                     this.#logger.debug(`---> [${scopeDescription} - Action ${operationIndex}] OperationInterpreter.execute call completed (no error thrown) for type: ${opTypeString}`);
                 }
 
             } catch (invocationError) {
-                console.error(`!!!!!!!!! ERROR CAUGHT IN _executeActions CATCH BLOCK (Rule: ${scopeDescription}, Action Index: ${i}) !!!!!!!!!!`, invocationError);
+                // console.error(`!!!!!!!!! ERROR CAUGHT IN _executeActions CATCH BLOCK (Rule: ${scopeDescription}, Action Index: ${i}) !!!!!!!!!!`, invocationError); // Keep if helpful for deep debugging
                 this.#logger.error(
                     `---> [${scopeDescription} - Action ${operationIndex}/${actions.length}] CRITICAL error during execution of Operation ${opTypeString}. Halting sequence for this rule. Error:`,
-                    invocationError // Log the actual error object
+                    invocationError
                 );
-                break; // Halt the sequence for this rule/scope
+                break;
             }
         }
 
@@ -372,13 +365,13 @@ class SystemLogicInterpreter {
      * @private
      * @throws {Error} Rethrows errors from evaluation or nested execution to be caught by caller (_executeActions).
      */
-    #handleIfOperation(ifOperation, executionContext, parentScopeDesc, operationIndex) { // <<< Signature unchanged, but receives shared context >>>
+    #handleIfOperation(ifOperation, executionContext, parentScopeDesc, operationIndex) {
         const parentIfDesc = `${parentScopeDesc} - IF Action ${operationIndex}`;
 
         const params = ifOperation.parameters;
         if (!params || typeof params.condition !== 'object' || params.condition === null || !Array.isArray(params.then_actions)) {
             this.#logger.error(`---> [${parentIfDesc}] Invalid IF operation structure: Missing or invalid 'condition' or 'then_actions'. Skipping IF block execution.`);
-            return; // Skip this IF
+            return;
         }
         const condition = params.condition;
         const then_actions = params.then_actions;
@@ -387,36 +380,60 @@ class SystemLogicInterpreter {
         let conditionResult = false;
         try {
             this.#logger.debug(`---> [${parentIfDesc}] Evaluating IF condition using shared context...`);
-            // <<< Pass the shared context >>>
             conditionResult = this.#jsonLogicEvaluationService.evaluate(condition, executionContext);
             this.#logger.info(`---> [${parentIfDesc}] IF condition evaluation result: ${conditionResult}`);
         } catch (evalError) {
             this.#logger.error(`---> [${parentIfDesc}] Error evaluating IF condition. Error:`, evalError);
-            throw evalError; // Propagate error to halt _executeActions loop
+            throw evalError;
         }
 
         try {
             if (conditionResult) {
                 this.#logger.debug(`---> [${parentIfDesc}] Condition TRUE. Executing THEN branch.`);
-                // <<< Pass the shared context >>>
                 this._executeActions(then_actions, executionContext, `${parentIfDesc} / THEN`);
             } else {
                 if (else_actions && Array.isArray(else_actions) && else_actions.length > 0) {
                     this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE. Executing ELSE branch.`);
-                    // <<< Pass the shared context >>>
                     this._executeActions(else_actions, executionContext, `${parentIfDesc} / ELSE`);
                 } else {
                     this.#logger.debug(`---> [${parentIfDesc}] Condition FALSE and no ELSE branch present or actions empty. Continuing after IF block.`);
                 }
             }
         } catch (nestedExecutionError) {
-            // Log here if needed, but primarily rely on _executeActions catch block
             this.#logger.error(`---> [${parentIfDesc}] Error during nested action execution (THEN/ELSE). Rethrowing. Error:`, nestedExecutionError);
-            throw nestedExecutionError; // Ensure propagation
+            throw nestedExecutionError;
         }
 
         this.#logger.debug(`---> [${parentIfDesc}] Finished processing IF block.`);
     }
+
+    // --- ADDED Shutdown Method (Ticket 14) ---
+    /**
+     * Cleans up resources, specifically unsubscribing from the event bus.
+     */
+    shutdown() {
+        this.#logger.info('SystemLogicInterpreter: Shutting down...');
+        if (this.#eventBus && typeof this.#eventBus.unsubscribe === 'function' && this.#boundEventHandler) {
+            try {
+                this.#eventBus.unsubscribe('*', this.#boundEventHandler);
+                this.#logger.info('SystemLogicInterpreter: Unsubscribed from all events (\'*\') on the EventBus.');
+            } catch (error) {
+                this.#logger.error('SystemLogicInterpreter: Error during event bus unsubscription:', error);
+            }
+        } else {
+            if (!this.#boundEventHandler) {
+                this.#logger.warn('SystemLogicInterpreter: Shutdown called, but no event handler was stored (possibly never initialized or subscribed).');
+            } else {
+                this.#logger.warn('SystemLogicInterpreter: Shutdown called, but EventBus or unsubscribe method is unavailable.');
+            }
+        }
+        // Clear cache and reset initialization flag if desired
+        this.#ruleCache.clear();
+        this.#initialized = false;
+        this.#boundEventHandler = null; // Release reference
+        this.#logger.info('SystemLogicInterpreter: Shutdown complete.');
+    }
+    // --- End Added Shutdown Method ---
 
 }
 

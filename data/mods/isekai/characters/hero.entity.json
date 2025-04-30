@@ -1,6 +1,7 @@
 {
   "id": "core:hero",
   "components": {
+    "core:actor": {},
     "core:player": {},
     "core:name": {
       "text": "Hero"

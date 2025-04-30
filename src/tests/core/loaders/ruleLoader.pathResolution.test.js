@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.pathResolution.test.js
+// src/tests/core/loaders/ruleLoader.pathResolution.test.js
 
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
@@ -14,6 +14,7 @@ import RuleLoader from '../../../core/loaders/ruleLoader.js'; // Adjust path as 
  * @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../../core/interfaces/coreServices.js').ModManifest} ModManifest
+ * @typedef {import('../../../core/interfaces/coreServices.js').LoadItemsResult} LoadItemsResult // Import the return type
  */
 
 // --- Mock Service Factories (CORRECTED to be complete) ---
@@ -226,8 +227,9 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
             });
 
             // --- Action ---
-            // *** UPDATED: Call loadItemsForMod with all required arguments ***
-            const count = await loader.loadItemsForMod(
+            // *** UPDATED: Capture the result object ***
+            /** @type {LoadItemsResult} */
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -236,7 +238,10 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
             );
 
             // --- Assert ---
-            expect(count).toBe(2); // Both should succeed
+            // *** UPDATED: Assert properties of the result object ***
+            expect(result.count).toBe(2); // Check the count property
+            expect(result.errors).toBe(0); // Expect no errors
+            expect(result.overrides).toBe(0); // Expect no overrides in this basic case
 
             expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
             // Arguments passed to resolveModContentPath by _processFileWrapper
@@ -295,8 +300,9 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
 
 
             // --- Action ---
-            // *** UPDATED: Call loadItemsForMod with all required arguments ***
-            const resultCount = await loader.loadItemsForMod(
+            // *** UPDATED: Capture the result object ***
+            /** @type {LoadItemsResult} */
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -338,8 +344,11 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
                 expect.objectContaining({...dataA, id: `${modId}:${ruleNameA}`, modId: modId, _sourceFile: ruleFileA})
             );
 
-            // 5. Expect count to be 1 due to Promise.allSettled
-            expect(resultCount).toBe(1); // Should return 1 (for file A)
+            // 5. Expect count and errors in result object
+            // *** UPDATED: Assert properties of the result object ***
+            expect(result.count).toBe(1); // Should return 1 (for file A)
+            expect(result.errors).toBe(1); // Should report 1 error
+            expect(result.overrides).toBe(0);
 
             // Check final summary log indicates partial success
             expect(mockLogger.info).toHaveBeenCalledWith(
@@ -367,8 +376,9 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
             });
 
             // --- Action ---
-            // *** UPDATED: Call loadItemsForMod with all required arguments ***
-            const resultCount = await loader.loadItemsForMod(
+            // *** UPDATED: Capture the result object ***
+            /** @type {LoadItemsResult} */
+            const result = await loader.loadItemsForMod(
                 modId,
                 manifest,
                 RULE_CONTENT_KEY,
@@ -411,8 +421,11 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
                 expect.objectContaining({...dataB, id: `${modId}:${ruleNameB}`, modId: modId, _sourceFile: ruleFileB})
             );
 
-            // 5. Expect count to be 1 due to Promise.allSettled
-            expect(resultCount).toBe(1); // Should return 1 (for file B)
+            // 5. Expect count and errors in result object
+            // *** UPDATED: Assert properties of the result object ***
+            expect(result.count).toBe(1); // Should return 1 (for file B)
+            expect(result.errors).toBe(1); // Should report 1 error
+            expect(result.overrides).toBe(0);
 
             // Check final summary log indicates partial success
             expect(mockLogger.info).toHaveBeenCalledWith(

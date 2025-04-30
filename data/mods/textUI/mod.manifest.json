@@ -19,11 +19,13 @@
     "rules": [
       "set_title.rule.json",
       "display_message.rule.json",
-      "welcome_message.rule.json"
+      "welcome_message.rule.json",
+      "enable_input.rule.json"
     ],
     "events": [
       "set_title.event.json",
-      "display_message.event.json"
+      "display_message.event.json",
+      "enable_input.event.json"
     ],
     "operations": [
     ]

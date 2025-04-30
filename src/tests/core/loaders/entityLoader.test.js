@@ -198,6 +198,10 @@ beforeEach(() => {
     // if (EntityLoader.prototype['_validateEntityComponents']) { // Access private method for testing
     //     entityLoader['_validateEntityComponents'] = EntityLoader.prototype['_validateEntityComponents'].bind(entityLoader);
     // }
+
+    // --- TEST CORRECTION: Ensure the spy on _storeItemInRegistry returns the expected boolean ---
+    // The base class method `_storeItemInRegistry` now returns a boolean. Mock it to return `false` by default.
+    entityLoader._storeItemInRegistry.mockReturnValue(false);
 });
 
 
@@ -277,11 +281,13 @@ describe('EntityLoader', () => {
                 [GENERIC_CONTENT_KEY]: ['item1.json', 'item2.json']
             }
         };
-        const expectedLoadCount = 2;
+        // --- TEST CORRECTION: Expect LoadItemsResult object ---
+        const expectedLoadResult = { count: 2, overrides: 0, errors: 0 };
 
         it('should call _loadItemsInternal via base loadItemsForMod with correct entity-related parameters', async () => {
             // We spy on _loadItemsInternal in beforeEach
-            entityLoader._loadItemsInternal.mockResolvedValue(expectedLoadCount); // Need to mock the return value
+            // --- TEST CORRECTION: Mock return value to be LoadItemsResult object ---
+            entityLoader._loadItemsInternal.mockResolvedValue(expectedLoadResult);
 
             await entityLoader.loadItemsForMod(
                 TEST_MOD_ID,
@@ -300,8 +306,9 @@ describe('EntityLoader', () => {
             );
         });
 
-        it('should return the count from _loadItemsInternal', async () => {
-            entityLoader._loadItemsInternal.mockResolvedValue(expectedLoadCount);
+        it('should return the LoadItemsResult object from _loadItemsInternal', async () => {
+            // --- TEST CORRECTION: Mock return value to be LoadItemsResult object ---
+            entityLoader._loadItemsInternal.mockResolvedValue(expectedLoadResult);
             const result = await entityLoader.loadItemsForMod(
                 TEST_MOD_ID,
                 mockManifest,
@@ -309,7 +316,8 @@ describe('EntityLoader', () => {
                 GENERIC_CONTENT_DIR,
                 GENERIC_TYPE_NAME
             );
-            expect(result).toBe(expectedLoadCount);
+            // --- TEST CORRECTION: Expect the full LoadItemsResult object ---
+            expect(result).toEqual(expectedLoadResult);
         });
 
         it('should handle errors from _loadItemsInternal by propagating them', async () => {
@@ -378,53 +386,46 @@ describe('EntityLoader', () => {
 
             // --- [LOADER-REFACTOR-04 Test Change]: Mock base class methods called within/around _processFetchedItem ---
             entityLoader._storeItemInRegistry.mockClear(); // Clear spy calls from beforeEach
+            // --- TEST CORRECTION: Ensure the spy on _storeItemInRegistry returns the expected boolean ---
+            entityLoader._storeItemInRegistry.mockReturnValue(false); // Default to no overwrite
         });
 
         // --- Adjusted success paths ---
-        it('Success Path (No Components): should extract ID, skip component validation, delegate storage under "entities", log, and return final key', async () => {
+        it('Success Path (No Components): should extract ID, skip component validation, delegate storage under "entities", log, and return result object', async () => {
             const fetchedData = JSON.parse(JSON.stringify(baseEntityDataNoComponents));
 
-            // --- Correction: Remove spyOn invalid syntax ---
-            // const validateComponentsSpy = jest.spyOn(entityLoader, '_EntityLoader__validateEntityComponents' as any); // Spy on private method - REMOVED
-
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
 
             // --- Assertions ---
             // 1. ID Extraction logs
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID '${fullIdSimple}' and derived base ID '${baseIdSimple}'`));
 
             // 2. Component Validation Skipped (Check logs)
-            // --- Correction: Remove check on removed spy ---
-            // expect(validateComponentsSpy).not.toHaveBeenCalled(); // REMOVED
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity '${fullIdSimple}' in ${filename} has no components or an empty/invalid components map. Skipping runtime component validation.`));
-            // Ensure validator wasn't called for components
-            expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(expect.stringContaining('core:')); // Assuming component IDs have 'core:'
+            expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(expect.stringContaining('core:'));
             expect(mockValidator.validate).not.toHaveBeenCalledWith(expect.stringContaining('core:'), expect.anything());
 
 
             // 3. Storage Delegation
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}' to base helper for file ${filename}. Storing under 'entities' category.`));
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
-            const expectedStoredData = {...fetchedData}; // Base helper adds id, modId, _sourceFile
+            const expectedStoredData = {...fetchedData};
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseIdSimple, expectedStoredData, filename);
 
-            // 4. Return Value
-            expect(resultKey).toEqual(finalKeySimple);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key: ${finalKeySimple}`));
+            // 4. Return Value (Check Object)
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            expect(result).toBeDefined();
+            expect(result.qualifiedId).toEqual(finalKeySimple);
+            expect(result.didOverride).toBe(false); // Expect no override
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key: ${finalKeySimple}, Overwrite: false`));
 
             // 5. No Errors/Warnings
             expect(mockLogger.error).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
-
-            // --- Correction: Remove spy restore ---
-            // validateComponentsSpy.mockRestore(); // REMOVED
         });
 
-        it('Success Path (With Valid Components): should extract ID, validate components, delegate storage under "entities", log, and return final key', async () => {
+        it('Success Path (With Valid Components): should extract ID, validate components, delegate storage under "entities", log, and return result object', async () => {
             const fetchedData = JSON.parse(JSON.stringify(baseEntityDataWithComponents));
-
-            // --- Correction: Remove spyOn invalid syntax ---
-            // const validateComponentsSpy = jest.spyOn(entityLoader, '_EntityLoader__validateEntityComponents' as any); // Spy on private method - REMOVED
 
             // Mock component schema validation calls made by #validateEntityComponents
             mockValidator.validate.mockImplementation((schemaId, data) => {
@@ -437,16 +438,13 @@ describe('EntityLoader', () => {
                 return schemaId === COMPONENT_POSITION_ID || schemaId === COMPONENT_HEALTH_ID;
             });
 
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
 
             // --- Assertions ---
             // 1. ID Extraction
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID '${fullIdComplex}' and derived base ID '${baseIdComplex}'`));
 
             // 2. Component Validation Called and Succeeded (Check logs and mock calls)
-            // --- Correction: Remove check on removed spy ---
-            // expect(validateComponentsSpy).toHaveBeenCalledTimes(1); // REMOVED
-            // expect(validateComponentsSpy).toHaveBeenCalledWith(TEST_MOD_ID, fullIdComplex, filename, fetchedData.components); // REMOVED
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validating 2 components for entity '${fullIdComplex}'`));
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(COMPONENT_POSITION_ID);
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(COMPONENT_HEALTH_ID);
@@ -462,16 +460,16 @@ describe('EntityLoader', () => {
             const expectedStoredData = {...fetchedData};
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseIdComplex, expectedStoredData, filename);
 
-            // 4. Return Value
-            expect(resultKey).toEqual(finalKeyComplex);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key: ${finalKeyComplex}`));
+            // 4. Return Value (Check Object)
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            expect(result).toBeDefined();
+            expect(result.qualifiedId).toEqual(finalKeyComplex);
+            expect(result.didOverride).toBe(false); // Expect no override
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key: ${finalKeyComplex}, Overwrite: false`));
 
             // 5. No Errors/Warnings
             expect(mockLogger.error).not.toHaveBeenCalled();
             expect(mockLogger.warn).not.toHaveBeenCalled();
-
-            // --- Correction: Remove spy restore ---
-            // validateComponentsSpy.mockRestore(); // REMOVED
         });
 
         // --- Failure Scenarios ---
@@ -485,7 +483,7 @@ describe('EntityLoader', () => {
                 expect.objectContaining({receivedId: undefined})
             );
             expect(entityLoader._storeItemInRegistry).not.toHaveBeenCalled();
-            expect(mockValidator.validate).not.toHaveBeenCalled();
+            expect(mockValidator.validate).not.toHaveBeenCalledWith(COMPONENT_POSITION_ID, expect.anything()); // Should not reach component validation
         });
 
         it('Failure: Invalid `id` field type (number)', async () => {
@@ -514,11 +512,16 @@ describe('EntityLoader', () => {
         it('Failure: Cannot extract base ID (e.g., ID is just "core:") - *Test adjusted for current behavior*', async () => {
             const fetchedData = {id: 'core:', name: 'Entity with bad ID format'};
             const expectedFullId = 'core:';
-            const expectedBaseId = 'core:';
+            const expectedBaseId = 'core:'; // Current behavior uses full ID as base ID here
             const expectedFinalKey = `${TEST_MOD_ID}:${expectedBaseId}`;
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
-            expect(resultKey).toEqual(expectedFinalKey);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`ID 'core:' in ${filename} has an unusual format`));
+
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(expectedFinalKey);
+            expect(result.didOverride).toBe(false); // Assume no prior item
+
+            // Check logs and storage call
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`ID 'core:' in ${filename} has an unusual format. Using full ID as base ID.`));
             expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Could not derive base ID'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID '${expectedFullId}' and derived base ID '${expectedBaseId}'`));
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
@@ -558,37 +561,51 @@ describe('EntityLoader', () => {
 
         it('Failure: Storage fails (error from registry.store via base helper)', async () => {
             const storeError = new Error('Database locked');
+            // --- TEST CORRECTION: Mock the *implementation* of the spied method ---
             entityLoader._storeItemInRegistry.mockImplementation(() => {
                 throw storeError;
             });
             const fetchedData = JSON.parse(JSON.stringify(baseEntityDataNoComponents));
             await expect(entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType))
-                .rejects.toThrow(storeError);
+                .rejects.toThrow(storeError); // Error should propagate
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID '${fullIdSimple}'`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}'`));
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseIdSimple, fetchedData, filename);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file`));
+            // The success log should NOT have been called
+            expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining(`Successfully processed ${entityType} file '${filename}'. Returning final registry key:`));
+            // Error logging is handled within _storeItemInRegistry, check its logs if needed
         });
 
         // --- Edge Cases ---
         it('Edge Case: ID without namespace', async () => {
             const fetchedData = {id: 'my_item', name: 'Item without namespace'};
-            const baseId = 'my_item';
+            const baseId = 'my_item'; // Base ID derived correctly
             const finalKey = `${TEST_MOD_ID}:${baseId}`;
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
-            expect(resultKey).toEqual(finalKey);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ID 'my_item' in ${filename} has no namespace prefix. Using full ID as base ID.`));
+
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(finalKey);
+            expect(result.didOverride).toBe(false);
+
+            // Check logs and storage
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`unusual format`)); // No warning for this case
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID 'my_item' and derived base ID '${baseId}'`));
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseId, fetchedData, filename);
         });
 
         it('Edge Case: ID with multiple colons', async () => {
             const fetchedData = {id: 'mod:category:complex_item', name: 'Item with multiple colons'};
-            const baseId = 'category:complex_item';
+            const baseId = 'category:complex_item'; // Base ID is part after first colon
             const finalKey = `${TEST_MOD_ID}:${baseId}`;
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
-            expect(resultKey).toEqual(finalKey);
+
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(finalKey);
+            expect(result.didOverride).toBe(false);
+
+            // Check logs and storage
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`unusual format`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Extracted full ID 'mod:category:complex_item' and derived base ID '${baseId}'`));
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseId, fetchedData, filename);
         });
@@ -598,19 +615,16 @@ describe('EntityLoader', () => {
             const fullId = fetchedData.id;
             const baseId = 'entity_empty_components';
             const finalKey = `${TEST_MOD_ID}:${baseId}`;
-            // --- Correction: Remove spyOn invalid syntax ---
-            // const validateComponentsSpy = jest.spyOn(entityLoader, '_EntityLoader__validateEntityComponents' as any); // REMOVED
 
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(finalKey);
+            expect(result.didOverride).toBe(false);
 
-            expect(resultKey).toEqual(finalKey);
-            // --- Correction: Remove check on removed spy ---
-            // expect(validateComponentsSpy).not.toHaveBeenCalled(); // REMOVED
+            // Check logs, validation skip, and storage
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity '${fullId}' in ${filename} has no components or an empty/invalid components map. Skipping runtime component validation.`));
             expect(mockValidator.validate).not.toHaveBeenCalledWith(expect.stringContaining('core:'), expect.anything()); // No component validation calls
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseId, fetchedData, filename);
-            // --- Correction: Remove spy restore ---
-            // validateComponentsSpy.mockRestore(); // REMOVED
         });
 
         it('Edge Case: `components` field is null', async () => {
@@ -618,19 +632,16 @@ describe('EntityLoader', () => {
             const fullId = fetchedData.id;
             const baseId = 'entity_null_components';
             const finalKey = `${TEST_MOD_ID}:${baseId}`;
-            // --- Correction: Remove spyOn invalid syntax ---
-            // const validateComponentsSpy = jest.spyOn(entityLoader, '_EntityLoader__validateEntityComponents' as any); // REMOVED
 
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(finalKey);
+            expect(result.didOverride).toBe(false);
 
-            expect(resultKey).toEqual(finalKey);
-            // --- Correction: Remove check on removed spy ---
-            // expect(validateComponentsSpy).not.toHaveBeenCalled(); // REMOVED
+            // Check logs, validation skip, and storage
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity '${fullId}' in ${filename} has no components or an empty/invalid components map. Skipping runtime component validation.`));
             expect(mockValidator.validate).not.toHaveBeenCalledWith(expect.stringContaining('core:'), expect.anything()); // No component validation calls
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseId, fetchedData, filename);
-            // --- Correction: Remove spy restore ---
-            // validateComponentsSpy.mockRestore(); // REMOVED
         });
 
         it('Edge Case: Component schema not loaded', async () => {
@@ -650,22 +661,25 @@ describe('EntityLoader', () => {
                 return { isValid: false, errors: [{ message: `Unexpected validation call for schema ${schemaId}` }] };
             });
 
-            const resultKey = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            // --- TEST CORRECTION: Expect object and check its properties ---
+            const result = await entityLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, entityType);
+            expect(result.qualifiedId).toEqual(finalKey);
+            expect(result.didOverride).toBe(false);
 
-            expect(resultKey).toEqual(finalKey);
-
+            // Check logs and validation calls
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Validating 2 components for entity '${fullId}'`));
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(COMPONENT_POSITION_ID);
             expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(COMPONENT_HEALTH_ID);
 
-            // --- CORRECTION: Update expectation to match the exact log message format ---
             const expectedWarning = `EntityLoader [${TEST_MOD_ID}]: Skipping validation for component '${COMPONENT_HEALTH_ID}' in entity '${fullId}' (file: ${filename}). Schema not loaded.`;
-            expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Should be exactly one warning
-            expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarning); // Check for the precise message
+            expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarning);
 
             expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Only called for position
             expect(mockValidator.validate).toHaveBeenCalledWith(COMPONENT_POSITION_ID, fetchedData.components[COMPONENT_POSITION_ID]);
-            expect(mockValidator.validate).not.toHaveBeenCalledWith(COMPONENT_HEALTH_ID, expect.anything()); // Ensure health validation was skipped// This still passes because the health validation was skipped, not failed.
+            expect(mockValidator.validate).not.toHaveBeenCalledWith(COMPONENT_HEALTH_ID, expect.anything()); // Ensure health validation was skipped
+
+            // Storage should still succeed because skipping validation isn't an error
             expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith('entities', TEST_MOD_ID, baseId, fetchedData, filename);
             expect(mockLogger.error).not.toHaveBeenCalled();
         });

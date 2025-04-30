@@ -181,6 +181,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
 
     // --- Shared Test Data ---
     const modId = 'manifestErrorMod';
+    // <<< ADDED: Expected zero result object for cleaner tests >>>
+    const expectedZeroResult = { count: 0, errors: 0, overrides: 0 };
 
     // --- Setup ---
     beforeEach(() => {
@@ -216,7 +218,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         };
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,                      // modId
             manifestMissingComponents,  // modManifest
@@ -225,10 +226,11 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             'components'                // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise;
+        // <<< CORRECTION: Expect the result object >>>
+        expect(result).toEqual(expectedZeroResult);
 
         // --- Verify: Log Messages ---
         // Base class _extractValidFilenames logs debug when key is missing
@@ -263,7 +265,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         };
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,                      // modId
             manifestNullComponents,     // modManifest
@@ -272,10 +273,11 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             'components'                // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise;
+        // <<< CORRECTION: Expect the result object >>>
+        expect(result).toEqual(expectedZeroResult);
 
         // --- Verify: Log Messages ---
         // Base class _extractValidFilenames logs debug when value is null/undefined
@@ -310,7 +312,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         };
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,                      // modId
             manifestObjectComponents,   // modManifest
@@ -319,10 +320,11 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             'components'                // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise;
+        // <<< CORRECTION: Expect the result object >>>
+        expect(result).toEqual(expectedZeroResult);
 
         // --- Verify: Log Messages ---
         // Base class _extractValidFilenames logs warn when not an array
@@ -357,7 +359,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
         };
 
         // --- Action ---
-        // <<< CORRECTION: Use loadItemsForMod >>>
         const loadPromise = loader.loadItemsForMod(
             modId,                      // modId
             manifestStringComponents,   // modManifest
@@ -366,10 +367,11 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
             'components'                // typeName
         );
 
-        // --- Verify: Promise Resolves & Count ---
+        // --- Verify: Promise Resolves & Result ---
         await expect(loadPromise).resolves.not.toThrow();
-        const count = await loadPromise;
-        expect(count).toBe(0);
+        const result = await loadPromise;
+        // <<< CORRECTION: Expect the result object >>>
+        expect(result).toEqual(expectedZeroResult);
 
         // --- Verify: Log Messages ---
         // Base class _extractValidFilenames logs warn when not an array

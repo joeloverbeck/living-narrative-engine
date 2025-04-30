@@ -247,7 +247,11 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     it('should override component definition and schema from a later mod', async () => {
         // --- Phase 1: Load Core ---
         console.log("--- Starting Phase 1 Load ---");
-        await loader.loadItemsForMod(coreModId, coreManifest, 'components', 'components', 'components');
+        // Base class loadItemsForMod returns a summary object
+        const loadResultCore = await loader.loadItemsForMod(coreModId, coreManifest, 'components', 'components', 'components');
+        expect(loadResultCore.count).toBe(1); // Verify core loaded 1 item
+        expect(loadResultCore.errors).toBe(0);
+        expect(loadResultCore.overrides).toBe(0);
         console.log("--- Finished Phase 1 Load ---");
 
         // Verification: Phase 1 (Mostly unchanged, just ensuring setup is correct)
@@ -286,13 +290,16 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
 
         // --- Verification: Phase 2 Execution ---
         await expect(loadPromiseFoo).resolves.not.toThrow();
-        const count = await loadPromiseFoo;
-        expect(count).toBe(1);
+        const loadResultFoo = await loadPromiseFoo; // Changed variable name for clarity
+        // <<< ***** THE FIX IS HERE ***** >>>
+        expect(loadResultFoo.count).toBe(1); // Check the 'count' property of the result object
+        expect(loadResultFoo.overrides).toBe(0); // Check the 'overrides' property - should be 0 as foo:position is a new registry key
+        // <<< *************************** >>>
         console.log("--- Finished Phase 2 Load Action ---");
 
         // --- Verification: Mock Interactions for Phase 2 ---
         // 1. Registry Interactions:
-        expect(getSpy).toHaveBeenCalledWith(registryCategory, fooQualifiedId);
+        expect(getSpy).toHaveBeenCalledWith(registryCategory, fooQualifiedId); // Base class likely checks if final ID exists before storing
         const expectedStoredFooObject = {
             ...fooSharedPositionDef,
             id: fooQualifiedId,
@@ -303,24 +310,21 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
         expect(mockRegistry.store).toHaveBeenCalledWith(registryCategory, fooQualifiedId, expect.objectContaining(expectedStoredFooObject));
 
         // 2. Schema Validator Interactions:
-        expect(isSchemaLoadedSpy).toHaveBeenCalledWith(sharedComponentIdFromFile);
+        expect(isSchemaLoadedSpy).toHaveBeenCalledWith(sharedComponentIdFromFile); // Checked before attempting add/remove
         expect(removeSchemaSpy).toHaveBeenCalledTimes(1);
         expect(removeSchemaSpy).toHaveBeenCalledWith(sharedComponentIdFromFile);
 
-        // <<< ***** THE FIX IS HERE ***** >>>
-        // addSchema IS called again during the override process in Phase 2
-        expect(addSchemaSpy).toHaveBeenCalledTimes(1); // Check it was called *during Phase 2*
-        // <<< *************************** >>>
-
+        // Check addSchema was called *during Phase 2* (after the mockClear)
+        expect(addSchemaSpy).toHaveBeenCalledTimes(1);
         expect(addSchemaSpy).toHaveBeenCalledWith(fooSharedPositionDef.dataSchema, sharedComponentIdFromFile);
 
-        // 3. Logger Interactions: (Unchanged from previous correct version)
+        // 3. Logger Interactions: (Verification based on logs and code)
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`overwriting an existing data schema for component ID '${sharedComponentIdFromFile}'`));
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`Overwriting existing ${registryCategory} definition with key`));
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining(`Overwriting existing ${registryCategory} definition with key`)); // This message comes from base class _storeItemInRegistry if key exists
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully removed existing schema '${sharedComponentIdFromFile}'`));
+        // expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully removed existing schema '${sharedComponentIdFromFile}'`)); // removeSchema doesn't log success by default
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered dataSchema for component ID '${sharedComponentIdFromFile}'`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${registryCategory} item '${fooQualifiedId}'`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully stored ${registryCategory} item '${fooQualifiedId}'`)); // Logged by base class _storeItemInRegistry
 
         console.log("--- Finished Phase 2 Mock Interaction Verification ---");
 

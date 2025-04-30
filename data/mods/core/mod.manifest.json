@@ -8,6 +8,7 @@
   "content": {
     "components": [
       "player.component.json",
+      "actor.component.json",
       "position.component.json",
       "name.component.json"
     ],
