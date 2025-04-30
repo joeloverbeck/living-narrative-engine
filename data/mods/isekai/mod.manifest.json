@@ -9,7 +9,8 @@
     "components": [
     ],
     "characters": [
-      "hero.entity.json"
+      "hero.character.json",
+      "sidekick.character.json"
     ],
     "items": [
     ],

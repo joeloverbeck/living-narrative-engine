@@ -1,0 +1,15 @@
+{
+  "id": "isekai:sidekick",
+  "components": {
+    "core:actor": {},
+    "core:player": {},
+    "core:name": {
+      "text": "Sidekick"
+    },
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
+}

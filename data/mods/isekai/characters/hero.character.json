@@ -1,5 +1,5 @@
 {
-  "id": "core:hero",
+  "id": "isekai:hero",
   "components": {
     "core:actor": {},
     "core:player": {},
