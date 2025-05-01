@@ -18,6 +18,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // Updated Interface
 /** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
+/** @typedef {import('./interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */ // Added Interface
 
 
 // --- Define the options object structure ---
@@ -33,6 +34,7 @@
  * @property {IActionDiscoverySystem} actionDiscoverySystem - Discovers available actions for entities.
  * @property {IValidatedEventDispatcher} validatedEventDispatcher - Dispatches events, potentially with validation.
  * @property {ITurnManager} turnManager - Manages the overall turn lifecycle.
+ * @property {ITurnHandlerResolver} turnHandlerResolver - Service to resolve turn handlers for actors.
  * @property {ILogger} logger - Service for logging messages.
  */
 
@@ -55,6 +57,7 @@ class GameLoop {
     #actionDiscoverySystem; // Interface: IActionDiscoverySystem
     #validatedEventDispatcher; // Interface: IValidatedEventDispatcher
     #turnManager; // Interface: ITurnManager
+    /** @type {ITurnHandlerResolver} */ #turnHandlerResolver; // Added field
     #logger; // Interface: ILogger
 
     #isRunning = false;
@@ -76,6 +79,7 @@ class GameLoop {
             actionDiscoverySystem,
             validatedEventDispatcher,
             turnManager, // Changed from turnOrderService
+            turnHandlerResolver, // Added parameter
             logger
         } = options || {};
 
@@ -125,7 +129,12 @@ class GameLoop {
         if (!turnManager || typeof turnManager.start !== 'function' || typeof turnManager.stop !== 'function' || typeof turnManager.getCurrentActor !== 'function' || typeof turnManager.advanceTurn !== 'function') {
             throw new Error('GameLoop requires a valid options.turnManager implementing ITurnManager (start, stop, getCurrentActor, advanceTurn).');
         }
-
+        // ITurnHandlerResolver Check (NEW)
+        if (!turnHandlerResolver || typeof turnHandlerResolver.resolveHandler !== 'function') {
+            const errorMsg = 'GameLoop requires a valid options.turnHandlerResolver implementing ITurnHandlerResolver (resolveHandler).';
+            this.#logger?.error(errorMsg); // Log before throwing if logger exists
+            throw new Error(errorMsg);
+        }
 
         // --- Assign Dependencies ---
         this.#gameDataRepository = gameDataRepository;
@@ -138,6 +147,7 @@ class GameLoop {
         this.#actionDiscoverySystem = actionDiscoverySystem;
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#turnManager = turnManager; // Changed from turnOrderService
+        this.#turnHandlerResolver = turnHandlerResolver; // Added assignment
         // Logger already assigned
 
         // --- Initialize State ---
@@ -321,7 +331,7 @@ class GameLoop {
 
     /**
      * Processes the turn for the currently active actor (passed as parameter).
-     * Differentiates between player and AI turns.
+     * Differentiates between player and AI turns using the TurnHandlerResolver.
      * @private
      * @param {Entity} actor The entity whose turn it currently is.
      * @async
@@ -349,6 +359,48 @@ class GameLoop {
         const actorId = actor.id;
         this.#logger.info(`GameLoop: >>> Processing turn for Actor: ${actorId} <<<`);
 
+        // --- Resolve and Execute Turn Handler ---
+        try {
+            // Uses ITurnHandlerResolver.resolveHandler
+            const turnHandler = this.#turnHandlerResolver.resolveHandler(actor);
+            if (!turnHandler || typeof turnHandler.handleTurn !== 'function') {
+                this.#logger.error(`Failed to resolve a valid turn handler for actor ${actorId}. Actor components: ${JSON.stringify(actor.getAllComponents())}`);
+                // Consider what to do here: skip turn? stop game?
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                    text: `Internal Error: No turn logic for ${actorId}. Skipping turn.`,
+                    type: 'warning'
+                });
+                await this.#turnManager.advanceTurn(); // Skip turn
+                return;
+            }
+
+            this.#logger.debug(`GameLoop: Resolved turn handler ${turnHandler.constructor.name} for ${actorId}. Executing handleTurn...`);
+            // Uses ITurnHandler.handleTurn
+            await turnHandler.handleTurn(actor);
+            // Note: The TurnHandler itself is now responsible for advancing the turn via TurnManager when appropriate (e.g., after player input or AI action)
+
+        } catch (error) {
+            this.#logger.error(`Error during turn processing for actor ${actorId}: ${error.message}`, error);
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: `Error during ${actorId}'s turn: ${error.message}`,
+                type: 'error'
+            });
+            // Attempt to advance turn to prevent getting stuck, unless it's a player's turn (handled by handler)
+            if (!actor.hasComponent(PLAYER_COMPONENT_ID)) {
+                try {
+                    this.#logger.warn(`_processCurrentActorTurn attempting to advance turn after error for non-player ${actorId}.`);
+                    await this.#turnManager.advanceTurn();
+                } catch (e) {
+                    this.#logger.error(`Error advancing turn after error in non-player turn process: ${e.message}`);
+                    await this.stop(); // Stop if advancing also fails
+                }
+            } else {
+                this.#logger.warn(`Error occurred during player ${actorId}'s turn. Handler should manage recovery/re-prompt.`);
+                // The PlayerTurnHandler should ideally handle errors and re-prompt
+            }
+        }
+
+        /* --- OLD PLAYER/AI LOGIC REMOVED ---
         // --- Player Turn Logic ---
         if (actor.hasComponent(PLAYER_COMPONENT_ID)) {
             this.#logger.debug(`GameLoop: Actor ${actorId} is player-controlled. Preparing for input.`);
@@ -386,6 +438,7 @@ class GameLoop {
                 await this.stop();
             }
         }
+        */
     }
 
 
@@ -396,8 +449,10 @@ class GameLoop {
      * @param {Entity} actingPlayer - The player entity performing the command (should match TurnManager's current actor).
      * @param {string} command - The raw command string from the input.
      * @async
+     * @deprecated Logic moved to PlayerTurnHandler. Keeping for reference/potential reuse if needed. Should not be called directly by core loop now.
      */
     async processSubmittedCommand(actingPlayer, command) {
+        this.#logger.warn(`DEPRECATED: GameLoop.processSubmittedCommand called directly for ${actingPlayer?.id}. This logic should be in PlayerTurnHandler.`);
         if (!this.#isRunning) {
             this.#logger.debug('processSubmittedCommand called while not running.');
             return;
@@ -655,8 +710,10 @@ class GameLoop {
      * @private
      * @param {Entity} playerEntity The player entity to prompt.
      * @async
+     * @deprecated Logic moved to PlayerTurnHandler. Should not be called directly by core loop.
      */
     async _promptPlayerInput(playerEntity) {
+        this.#logger.warn(`DEPRECATED: GameLoop._promptPlayerInput called for ${playerEntity?.id}. This should be in PlayerTurnHandler.`);
         if (!this.#isRunning || !playerEntity || !playerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
             this.#logger.debug('_promptPlayerInput called inappropriately. Aborting.');
             return;
@@ -673,8 +730,10 @@ class GameLoop {
      * Enables the input handler and dispatches an event to update the UI input state.
      * Should only be called when it's a player's turn (verified via TurnManager).
      * @param {string} [message="Enter command..."] - Placeholder text for the input field.
+     * @deprecated Logic moved to PlayerTurnHandler. Should not be called directly by core loop.
      */
     async promptInput(message = 'Enter command...') { // Made async to match dispatcher
+        this.#logger.warn(`DEPRECATED: GameLoop.promptInput called. This should be in PlayerTurnHandler.`);
         this.#logger.debug(`METHOD promptInput ENTRY: Reading this.#isRunning = ${this.#isRunning}`);
 
         if (!this.#isRunning) {
@@ -784,37 +843,7 @@ class GameLoop {
     }
 
     // REMOVED: Test helper for setting internal #currentTurnEntity is obsolete
-    // /**
-    //  * @private
-    //  * @description **FOR TESTING PURPOSES ONLY.** Sets the internal current turn entity state.
-    //  * Note: Core methods now read from TurnManager. This only affects the internal state.
-    //  * @param {Entity | null} entity - The entity to set as internal current.
-    //  */
-    // _test_setInternalCurrentTurnEntity(entity) {
-    //     // Add check before assignment
-    //     if (!entity) {
-    //         this.#logger?.warn(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity to null/undefined.`);
-    //     } else if (typeof entity.id === 'undefined') {
-    //         this.#logger?.error(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity with invalid entity (missing ID).`);
-    //         // Optionally throw an error or just don't set it
-    //         // return; // Don't set if invalid
-    //     }
-    //     this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Setting internal #currentTurnEntity to ${entity?.id ?? 'null'}`);
-    //     this.#currentTurnEntity = entity;
-    //     this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Internal #currentTurnEntity is NOW ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
-    // }
-
     // REMOVED: Test helper for getting internal #currentTurnEntity is obsolete
-    // /**
-    //  * @private // Logically private, but public for test access
-    //  * @description **FOR TESTING PURPOSES ONLY.** Gets the internal current turn entity state.
-    //  * Note: Core methods now read from TurnManager. This reads only the internal state.
-    //  * @returns {Entity | null}
-    //  */
-    // _test_getInternalCurrentTurnEntity() {
-    //     this.#logger?.debug(`[_test_getInternalCurrentTurnEntity]: Reading internal #currentTurnEntity (currently ${this.#currentTurnEntity?.id ?? 'null'})`);
-    //     return this.#currentTurnEntity;
-    // }
 }
 
 export default GameLoop;
