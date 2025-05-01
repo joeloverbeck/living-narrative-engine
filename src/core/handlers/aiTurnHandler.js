@@ -41,21 +41,26 @@ class AITurnHandler {
     }
 
     /**
-     * Handles the turn for an AI-controlled actor.
-     * (Currently a stub)
+     * Handles the turn for an AI-controlled actor by selecting a placeholder action.
      * @param {Entity} actor - The AI-controlled entity taking its turn.
-     * @returns {Promise<void>}
-     * @throws {Error} Not Implemented.
+     * @returns {Promise<void>} A promise that resolves when the turn handling is complete (for the placeholder).
      */
     async handleTurn(actor) {
-        // TODO: Implement AI decision-making logic here.
+        this.#logger.info(`Starting AI turn for actor: ${actor.id}`);
+
+        // TODO: Implement AI decision-making logic here (Ticket 3.2.3+).
         // 1. Analyze the current game state relevant to the actor.
         // 2. Use actionDiscoverySystem (if available) or other means to find possible actions.
         // 3. Select an action based on AI goals/heuristics.
         // 4. Format the selected action into a command string.
         // 5. Process the command using commandProcessor.
-        this.#logger.debug(`AI Turn for actor: ${actor.id}`);
-        throw new Error(`handleTurn method not implemented for actor ${actor.id}.`);
+
+        // Placeholder logic for Ticket 3.2.2
+        const command = "wait";
+        this.#logger.debug(`AI actor ${actor.id} chose command: ${command}`);
+
+        // (Defer to 3.2.3) Do not yet call the commandProcessor.
+        // await this.#commandProcessor.processCommand(actor, command);
     }
 }
 
