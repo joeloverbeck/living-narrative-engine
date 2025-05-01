@@ -43,34 +43,12 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
-    "CombatSystem",
-    [Function],
-    {
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-        "shutdownable",
-      ],
-    },
-  ],
-  [
     "DeathSystem",
     [Function],
     {
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
-      ],
-    },
-  ],
-  [
-    "WorldPresenceSystem",
-    [Function],
-    {
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-        "shutdownable",
       ],
     },
   ],
@@ -111,6 +89,28 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "CombatSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+        "shutdownable",
+      ],
+    },
+  ],
+  [
+    "WorldPresenceSystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+        "shutdownable",
       ],
     },
   ],
@@ -182,6 +182,16 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
   ],
   [
     "IActionDiscoverySystem",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "initializableSystem",
+      ],
+    },
+  ],
+  [
+    "ITurnManager",
     [Function],
     {
       "lifecycle": "singleton",

@@ -148,6 +148,7 @@ export const tokens = Object.freeze({
     InputSetupService: 'InputSetupService',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
+    ITurnManager: 'ITurnManager',
 
     // Core Service Interfaces
     IValidatedEventDispatcher: 'IValidatedEventDispatcher', // ADDED
