@@ -8,8 +8,8 @@
 
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 
-// Import the necessary component ID constant
-import {ACTOR_COMPONENT_ID} from '../types/components.js';
+// Import the necessary component ID constants
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../types/components.js'; // Added PLAYER_COMPONENT_ID
 
 /**
  * @class TurnManager
@@ -216,23 +216,38 @@ class TurnManager {
                 return;
             }
         } else {
-            // Stub Remaining Logic: Add a placeholder else block for the !isEmpty() case (to be implemented in 2.1.3)
-            // that logs "Queue not empty, processing next turn (TODO)".
-            this.#logger.debug('Queue not empty, processing next turn (TODO - Ticket 2.1.3).');
-            // Placeholder for future logic:
-            // const nextActorId = await this.#turnOrderService.getNextEntity();
-            // this.#currentActor = this.#entityManager.getEntityInstance(nextActorId);
-            // if (this.#currentActor) {
-            //     this.#logger.info(`Starting turn for actor: ${this.#currentActor.id}`);
-            //     // Dispatch 'turn:started' or similar event
-            //     // this.#dispatcher.dispatchValidated('turn:started', { actorId: this.#currentActor.id });
-            // } else {
-            //     this.#logger.error(`Next actor ID ${nextActorId} from queue not found in EntityManager. This should not happen.`);
-            //     // Handle this potentially critical error, maybe stop?
-            //     await this.advanceTurn(); // Try to advance again? Risky.
-            // }
+            // Implement !isEmpty() Logic (Ticket 2.1.3)
+            this.#logger.debug('Queue not empty, retrieving next entity.');
+            const nextEntity = await this.#turnOrderService.getNextEntity(); // Assume async
+
+            // Handle getNextEntity() Null Return:
+            if (!nextEntity) {
+                this.#logger.error('Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.');
+                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                    text: 'Internal Error: Turn order inconsistency detected. Stopping manager.',
+                    type: 'error'
+                });
+                await this.stop(); // Stop the manager
+                return; // Exit the function
+            }
+
+            // Update State:
+            this.#currentActor = nextEntity;
+            this.#logger.info(`>>> Starting turn for Entity: ${this.#currentActor.id} <<<`);
+
+            // Identify Actor Type:
+            if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
+                this.#logger.debug(`Entity ${this.#currentActor.id} is player-controlled.`);
+                // TODO: Dispatch player turn start event (Ticket 2.1.4)
+            } else {
+                this.#logger.info(`Entity ${this.#currentActor.id} is AI-controlled.`);
+                // TODO: Dispatch AI turn start event (Ticket 2.1.4)
+            }
+
+            // Signaling for Player/AI turn start will be handled in 2.1.4
+            // Placeholder for triggering the actual turn logic (e.g., AI processing or waiting for player input)
+            // This will likely involve dispatching an event in 2.1.4
         }
-        // Removed original stub return Promise.resolve();
     }
 }
 
