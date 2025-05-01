@@ -136,9 +136,9 @@ describe('registerInitializers', () => {
         // Pre-register MOCKED core/external dependencies required by initializer factories
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.GameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IGameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
 
         // Clear call counts on the mock service functions/constructors
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());

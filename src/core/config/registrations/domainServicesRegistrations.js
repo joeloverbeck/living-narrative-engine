@@ -9,10 +9,10 @@ import {PrerequisiteEvaluationService} from "../../../services/prerequisiteEvalu
 import {DomainContextCompatibilityChecker} from "../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../services/actionValidationService.js";
 import PayloadValueResolverService from "../../../services/payloadValueResolverService.js";
-import ActionExecutor from "../../../actions/actionExecutor.js";
-import CommandParser from "../../commandParser.js";
+import ActionExecutor from "../../../actions/actionExecutor.js"; // Concrete Class Import
+import CommandParser from "../../commandParser.js";             // Concrete Class Import
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
-import GameStateManager from '../../gameStateManager.js';
+import GameStateManager from '../../gameStateManager.js';       // Concrete Class Import
 // --- ADDED TurnOrderService IMPORT ---
 import {TurnOrderService} from "../../turnOrder/turnOrderService.js"; // Adjust path if needed
 
@@ -41,7 +41,7 @@ export function registerDomainServices(container) {
     // Register other domain services using the helper or direct registration as preferred
     r.single(tokens.ConditionEvaluationService, ConditionEvaluationService, [tokens.EntityManager]);
     r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
-        [tokens.EntityManager, tokens.ValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
+        [tokens.EntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]); // Use interface token if available
     r.single(tokens.TargetResolutionService, TargetResolutionService, []);
     r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [tokens.ILogger]);
     r.single(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder,
@@ -52,13 +52,17 @@ export function registerDomainServices(container) {
     r.single(tokens.ActionValidationService, ActionValidationService,
         [tokens.EntityManager, tokens.ILogger, tokens.DomainContextCompatibilityChecker, tokens.PrerequisiteEvaluationService]);
     r.single(tokens.PayloadValueResolverService, PayloadValueResolverService, [tokens.ILogger]);
-    r.single(tokens.ActionExecutor, ActionExecutor,
-        [tokens.GameDataRepository, tokens.TargetResolutionService, tokens.ActionValidationService,
-            tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.ValidatedEventDispatcher]);
-    r.single(tokens.GameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
 
-    // --- CommandParser Registration using explicit factory function ---
-    container.register(tokens.CommandParser, c => {
+    // --- Register ActionExecutor against its Interface Token --- // MODIFIED
+    r.single(tokens.IActionExecutor, ActionExecutor,
+        [tokens.GameDataRepository, tokens.TargetResolutionService, tokens.ActionValidationService,
+            tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.IValidatedEventDispatcher]); // Use interface token if available
+
+    // --- Register GameStateManager against its Interface Token --- // MODIFIED
+    r.single(tokens.IGameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
+
+    // --- Register CommandParser against its Interface Token using explicit factory function --- // MODIFIED
+    container.register(tokens.ICommandParser, c => {
         const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository));
         return new CommandParser(gameDataRepoInstance);
     }, {lifecycle: 'singleton'});

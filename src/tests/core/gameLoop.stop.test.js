@@ -6,9 +6,9 @@ import GameLoop from '../../core/GameLoop.js';
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code)
 const mockEventBus = {
-    dispatch: jest.fn(),
+    // *** Ensure dispatch returns a promise if awaited ***
+    dispatch: jest.fn().mockResolvedValue(undefined),
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
@@ -19,24 +19,23 @@ const mockInputHandler = {
     setCommandCallback: jest.fn()
 };
 const mockGameStateManager = {
-    getPlayer: jest.fn(), // Still needed for some older tests, though start() doesn't use it
-    getCurrentLocation: jest.fn(), // Still needed for some older tests + executeAction
+    getPlayer: jest.fn(),
+    getCurrentLocation: jest.fn(),
     setPlayer: jest.fn(),
     setCurrentLocation: jest.fn()
 };
-const mockGameDataRepository = {}; // Basic mock object
-const mockEntityManager = { // Basic mock, might need more detail for turn order tests
+const mockGameDataRepository = {};
+const mockEntityManager = {
     activeEntities: new Map()
 };
 const mockCommandParser = {
     parse: jest.fn(),
 };
 const mockActionExecutor = {
-    executeAction: jest.fn(), // Key mock
+    executeAction: jest.fn(),
 };
-
 const mockActionDiscoverySystem = {
-    getValidActions: jest.fn().mockResolvedValue([]), // Return empty array as default
+    getValidActions: jest.fn().mockResolvedValue([]),
 };
 const mockLogger = {
     info: jest.fn(),
@@ -44,18 +43,15 @@ const mockLogger = {
     warn: jest.fn(),
     error: jest.fn(),
 };
-
 const mockvalidatedEventDispatcher = {
-    dispatchValidated: jest.fn(),
+    // *** Ensure dispatchValidated returns a promise if awaited ***
+    dispatchValidated: jest.fn().mockResolvedValue(undefined),
 };
-
-// ****** NEW MOCK: TurnOrderService ******
 const mockTurnOrderService = {
-    isEmpty: jest.fn().mockReturnValue(true), // Default to empty initially
+    isEmpty: jest.fn().mockReturnValue(true),
     startNewRound: jest.fn(),
-    getNextEntity: jest.fn().mockReturnValue(null), // Default to no entity
-    clearCurrentRound: jest.fn(), // Added for stop() testability
-    // Add other methods if GameLoop uses them directly
+    getNextEntity: jest.fn().mockReturnValue(null),
+    clearCurrentRound: jest.fn(),
 };
 // ****************************************
 
@@ -65,15 +61,15 @@ const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
-    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID)
+    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID) // Assuming PLAYER_COMPONENT_ID is defined/imported
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
-    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID)
+    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID) // Assuming ACTOR_COMPONENT_ID is defined/imported
 };
-const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn() /* Add if needed */};
+const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn()};
 
 // Helper to create a complete, valid options object
 const createValidOptions = () => ({
@@ -86,151 +82,139 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService, // ***** ADD THIS LINE *****
+    turnOrderService: mockTurnOrderService,
     logger: mockLogger,
 });
+
+// Define dummy component IDs if not imported elsewhere in test context
+const PLAYER_COMPONENT_ID = 'playerComponent';
+const ACTOR_COMPONENT_ID = 'actorComponent';
+
 
 // --- Test Suite ---
 
 describe('GameLoop', () => {
     let gameLoop;
     let promptInputSpy;
-    let processNextTurnSpy; // Spy for the new core loop method
+    let processNextTurnSpy;
 
-    // Reset mocks before each test to ensure isolation (Top Level)
     beforeEach(() => {
-        jest.clearAllMocks(); // Clear standard mocks BETWEEN tests
+        jest.clearAllMocks();
 
-        // Reset Game State Manager Mocks
-        mockGameStateManager.getPlayer.mockReturnValue(null); // Keep default null for constructor tests etc.
-        mockGameStateManager.getCurrentLocation.mockReturnValue(null); // Keep default null
-
-        // Reset Action Executor Mock
+        // Reset mocks (as before)
+        mockGameStateManager.getPlayer.mockReturnValue(null);
+        mockGameStateManager.getCurrentLocation.mockReturnValue(null);
         mockActionExecutor.executeAction.mockResolvedValue({
             success: true,
             messages: [{text: 'Default mock action executed'}]
-        }); // Adjusted default return
-
-        // Reset Command Parser Mock
+        });
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
-
-        // Reset Turn Order Service Mocks
-        mockTurnOrderService.isEmpty.mockReturnValue(true); // Default to empty queue
-        mockTurnOrderService.getNextEntity.mockReturnValue(null); // Default to no entity available
-
-        // Reset Entity Manager Mock (Example: Clear active entities if needed)
+        mockTurnOrderService.isEmpty.mockReturnValue(true);
+        mockTurnOrderService.getNextEntity.mockReturnValue(null);
         mockEntityManager.activeEntities = new Map();
-
-        // Reset entity mocks (ensure clean state for hasComponent etc.)
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
 
+        // *** Reset mock implementations that return promises ***
+        mockEventBus.dispatch.mockResolvedValue(undefined);
+        mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
     });
 
-    afterEach(() => {
+    afterEach(async () => { // Make afterEach async if cleanup involves async operations potentially
         if (promptInputSpy) {
-            promptInputSpy.mockRestore(); // Restore original implementation
+            promptInputSpy.mockRestore();
             promptInputSpy = null;
         }
         if (processNextTurnSpy) {
             processNextTurnSpy.mockRestore();
             processNextTurnSpy = null;
         }
-        // Ensure game loop is stopped if a test accidentally leaves it running
+        // No await needed for cleanup check, but ensure stop is called if needed
         if (gameLoop && gameLoop.isRunning) {
-            gameLoop.stop();
+            // console.log("Stopping game loop in afterEach"); // Debug log
+            await gameLoop.stop(); // Use await here just in case cleanup matters for subsequent tests
         }
+        gameLoop = null; // Help GC
     });
 
 
     // --- stop() Method Tests ---
     describe('stop', () => {
-        beforeEach(async () => { // Make async if start is async (keep async for consistency if start was ever async)
-            // Setup for a running state before each stop test
+        beforeEach(() => { // No need for async here if setup is sync
             gameLoop = new GameLoop(createValidOptions());
+            gameLoop._test_setRunning(true); // Set state AFTER creating instance
 
-            // --- CORRECTED STATE SETTING ---
-            // Use the dedicated test helper method to set the private state reliably.
-            gameLoop._test_setRunning(true);
-            // -------------------------------
-
-            // It's important to clear mocks AFTER setting up the initial state for the test,
-            // so that mocks called during setup (like logger in constructor or _test_setRunning)
-            // don't interfere with the assertions *within* the test itself.
+            // Clear mocks called during setup (like _test_setRunning logger call)
             jest.clearAllMocks();
+            // *** Re-reset mock implementations AFTER clearAllMocks ***
+            mockEventBus.dispatch.mockResolvedValue(undefined);
+            mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
         });
 
-        // --- Tests remain the same ---
-        it('When Running: should set isRunning to false', () => {
-            gameLoop.stop();
+        // --- TEST FIXES BELOW ---
+
+        it('When Running: should set isRunning to false', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
             expect(gameLoop.isRunning).toBe(false);
         });
 
-        it('When Running: should call inputHandler.disable', () => {
-            gameLoop.stop();
+        it('When Running: should call inputHandler.disable', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
         });
 
-        it('When Running: should dispatch textUI:disable_input event with message', () => { // Adjusted event name
-            gameLoop.stop();
+        it('When Running: should dispatch textUI:disable_input event with message', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
+            // This assertion is okay because it's the first call
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {
                 message: 'Game stopped.',
             });
         });
 
-        it('When Running: should dispatch textUI:display_message event with info', () => { // Adjusted event name
-            gameLoop.stop();
-            // Use expect.objectContaining for flexibility if more properties might be added later
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({
+        it('When Running: should dispatch textUI:display_message event with info', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
+
+            // *** FIX: Assert the SECOND call specifically ***
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'textUI:display_message', expect.objectContaining({
                 text: 'Game stopped.',
                 type: 'info',
             }));
         });
 
-        it('When Running: should call turnOrderService.clearCurrentRound if available', () => {
-            // This test setup within the 'it' block seems correct, ensuring the mock method exists
-            // before creating the GameLoop instance *for this specific test*.
-            // However, let's ensure the instance used is the one from beforeEach if the method is always expected.
-            // If mockTurnOrderService *always* has clearCurrentRound mocked (as it does globally),
-            // we don't need to recreate the gameLoop here.
-
-            // Remove the local recreation unless absolutely necessary:
-            // mockTurnOrderService.clearCurrentRound = jest.fn(); // Already mocked globally
-            // gameLoop = new GameLoop(createValidOptions()); // Uses the instance from beforeEach
-            // gameLoop._test_setRunning(true); // State already set in beforeEach
-
-            gameLoop.stop();
+        it('When Running: should call turnOrderService.clearCurrentRound if available', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
             expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
         });
 
-        it('When Running: should dispatch game:stopped event', () => {
-            gameLoop.stop();
+        it('When Running: should dispatch game:stopped event', async () => { // Make test async
+            await gameLoop.stop(); // Await the async call
+            // Ensure the event bus mock is checked correctly
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('game:stopped', {});
         });
 
-        it('When Already Stopped: should not perform actions', () => {
-            // Arrange: Ensure the loop is stopped first using the method under test
-            gameLoop._test_setRunning(true); // Start as running
-            gameLoop.stop();                 // Stop it
-            expect(gameLoop.isRunning).toBe(false); // Verify stopped
+        it('When Already Stopped: should not perform actions', async () => { // Make test async
+            // Arrange: Ensure the loop is stopped first
+            gameLoop._test_setRunning(true);
+            await gameLoop.stop(); // *** Await the first stop call ***
+            expect(gameLoop.isRunning).toBe(false);
 
-            // Clear mocks called by the *first* stop() call
+            // Clear mocks from the first stop()
             jest.clearAllMocks();
+            // *** Re-reset mock implementations AFTER clearAllMocks ***
+            mockEventBus.dispatch.mockResolvedValue(undefined);
+            mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
 
             // Act: Call stop again
-            gameLoop.stop();
+            await gameLoop.stop(); // *** Await the second call (idempotent) ***
 
-            // Assert: Check it remained stopped and actions were NOT performed
+            // Assert
             expect(gameLoop.isRunning).toBe(false);
-            // Check the logger message for stopping when already stopped
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Stop called, but already stopped.');
-            // Check other actions were not called *again*
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // Check generally, specific calls below are redundant if this passes
-            // expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.any(Object)); // More specific checks
-            // expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({text: 'Game stopped.'}));
+            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
             expect(mockTurnOrderService.clearCurrentRound).not.toHaveBeenCalled();
-            expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('game:stopped', {});
+            // Check eventBus.dispatch specifically wasn't called *this time*
+            expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
     });
 });

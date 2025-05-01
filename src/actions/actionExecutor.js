@@ -23,13 +23,14 @@
 import {ResolutionStatus} from '../services/targetResolutionService.js';
 // --- UPDATED ES Module import path ---
 import {ActionTargetContext} from '../models/actionTargetContext.js';
+import {IActionExecutor} from "../core/interfaces/IActionExecutor.js";
 
 /**
  * Manages and executes game actions based on definitions.
  * Relies on injected services for data access, target resolution, validation,
  * payload building, and uses ValidatedEventDispatcher for event dispatching.
  */
-class ActionExecutor {
+class ActionExecutor extends IActionExecutor {
     /** @private @type {GameDataRepository} */
     #gameDataRepository;
     /** @private @type {TargetResolutionService} */
@@ -68,6 +69,8 @@ class ActionExecutor {
                     eventBus,
                     logger
                 }) {
+        super();
+        
         if (!gameDataRepository) throw new Error("ActionExecutor: Missing required dependency 'gameDataRepository'.");
         if (!targetResolutionService) throw new Error("ActionExecutor: Missing required dependency 'targetResolutionService'.");
         if (!actionValidationService) throw new Error("ActionExecutor: Missing required dependency 'actionValidationService'.");

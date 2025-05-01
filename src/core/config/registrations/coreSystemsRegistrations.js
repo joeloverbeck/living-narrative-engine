@@ -26,7 +26,7 @@ import HealthSystem from '../../../systems/healthSystem.js';
 import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
 import LockSystem from '../../../systems/lockSystem.js';
 import PerceptionSystem from '../../../systems/perceptionSystem.js';
-import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
+import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js'; // Concrete Class Import
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -53,7 +53,7 @@ export function registerCoreSystems(container) {
     // acquire resources needing cleanup, they should get a shutdown() method and the SHUTDOWNABLE tag.
 
     registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
-        tokens.EventBus, tokens.GameStateManager, tokens.ActionExecutor, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IGameStateManager, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository // Use interface tokens
     ]);
     logger.debug(`Core Systems Registration: Registered ${tokens.GameRuleSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
 
@@ -68,7 +68,7 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${tokens.EquipmentSlotSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
 
     registrar.tagged(INITIALIZABLE).single(tokens.InventorySystem, InventorySystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.GameStateManager
+        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.IGameStateManager // Use interface token
     ]);
     logger.debug(`Core Systems Registration: Registered ${tokens.InventorySystem} tagged with ${INITIALIZABLE.join(', ')}.`);
 
@@ -153,9 +153,9 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${tokens.LockSystem} tagged with ${[...INITIALIZABLE, ...SHUTDOWNABLE].join(', ')}.`);
 
 
-    // Use singletonFactory for ActionDiscoverySystem due to function dependencies
+    // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory --- // MODIFIED
     // Remains only INITIALIZABLE unless it gets a shutdown() method
-    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ActionDiscoverySystem, (c) => new ActionDiscoverySystem({
+    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({
         gameDataRepository: c.resolve(tokens.GameDataRepository),
         entityManager: c.resolve(tokens.EntityManager),
         actionValidationService: c.resolve(tokens.ActionValidationService),
@@ -163,7 +163,7 @@ export function registerCoreSystems(container) {
         formatActionCommandFn: formatActionCommand, // Direct function reference
         getEntityIdsForScopesFn: () => new Set() // Placeholder as before - ensure this is correct for your app
     }));
-    logger.debug(`Core Systems Registration: Registered ${tokens.ActionDiscoverySystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${tokens.IActionDiscoverySystem} tagged with ${INITIALIZABLE.join(', ')}.`);
 
 
     const registrationCount = 19; // Count remains 19

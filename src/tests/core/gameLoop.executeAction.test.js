@@ -1,4 +1,4 @@
-// src/tests/core/GameLoop.test.js
+// src/tests/core/gameLoop.executeAction.test.js
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';

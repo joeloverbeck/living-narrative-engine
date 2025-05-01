@@ -11,6 +11,8 @@
 // Use the actual schema definition which includes 'commandVerb'
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
+import {ICommandParser} from "./interfaces/ICommandParser.js";
+
 /**
  * Defines the list of prepositions recognized by the parser. (No changes needed)
  * @type {ReadonlyArray<string>}
@@ -19,7 +21,7 @@ const SUPPORTED_PREPOSITIONS = Object.freeze([
     'on', 'at', 'with', 'in', 'to', '>'
 ]);
 
-class CommandParser {
+class CommandParser extends ICommandParser {
     /**
      * @private
      * @type {GameDataRepository}
@@ -31,6 +33,7 @@ class CommandParser {
      * @param {GameDataRepository} repository - The game data repository instance.
      */
     constructor(repository) {
+        super();
         if (!repository) {
             // Updated error message to reflect new dependency
             throw new Error('CommandParser requires a GameDataRepository instance.');

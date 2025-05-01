@@ -5,7 +5,7 @@
  */
 
 import DomRenderer from '../../domRenderer.js';
-import InputHandler from '../../inputHandler.js';
+import InputHandler from '../../inputHandler.js'; // Concrete Class Import
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 
@@ -44,22 +44,22 @@ export function registerUI(container, {outputDiv, inputElement, titleElement}) {
         tokens.inputElement,
         tokens.titleElement,
         tokens.EventBus,
-        tokens.ValidatedEventDispatcher, // Ensure this is registered before calling registerUI if needed immediately
+        tokens.IValidatedEventDispatcher, // Use interface token if available
         tokens.ILogger
     ]);
     logger.info('UI Registrations: Registered DomRenderer.');
 
-    // --- 2. Input Handler ---
-    // Register InputHandler as a singleton.
+    // --- 2. Input Handler --- // MODIFIED
+    // Register InputHandler against its Interface Token.
     // Note: The original registration passed `null` as the second argument explicitly.
     // We use singletonFactory to replicate this specific constructor call pattern.
     // Dependencies: inputElement, EventBus
-    registrar.singletonFactory(tokens.InputHandler, (c) => new InputHandler(
+    registrar.singletonFactory(tokens.IInputHandler, (c) => new InputHandler(
         c.resolve(tokens.inputElement),
         null, // Explicitly passing null as per original code
         c.resolve(tokens.EventBus)
     ));
-    logger.info('UI Registrations: Registered InputHandler.');
+    logger.info('UI Registrations: Registered InputHandler against IInputHandler token.');
 
     logger.info('UI Registrations: Complete.');
 }

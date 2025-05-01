@@ -43,11 +43,11 @@ const createMockContainer = () => {
                 if (token === tokens.BlockerSystem) return { /* basic mock */};
                 if (token === tokens.MovementSystem) return { /* basic mock */};
                 if (token === tokens.GameDataRepository) return { /* basic mock */};
-                if (token === tokens.GameStateManager) return { /* basic mock */};
-                if (token === tokens.ActionExecutor) return { /* basic mock */};
+                if (token === tokens.IGameStateManager) return { /* basic mock */};
+                if (token === tokens.IActionExecutor) return { /* basic mock */};
                 if (token === tokens.ConditionEvaluationService) return { /* basic mock */};
                 if (token === tokens.ItemTargetResolverService) return { /* basic mock */};
-                if (token === tokens.ValidatedEventDispatcher) return { /* basic mock */};
+                if (token === tokens.IValidatedEventDispatcher) return { /* basic mock */};
                 if (token === tokens.ActionValidationService) return { /* basic mock */};
 
                 // If it's none of the above known dependencies, it's likely an error in the test or SUT
@@ -88,7 +88,7 @@ describe('registerCoreSystems', () => {
         tokens.MovementSystem, tokens.MoveCoordinatorSystem,
         tokens.PerceptionSystem, tokens.NotificationUISystem,
         tokens.OpenableSystem, tokens.HealthSystem, tokens.StatusEffectSystem,
-        tokens.LockSystem, tokens.ActionDiscoverySystem
+        tokens.LockSystem, tokens.IActionDiscoverySystem
     ];
     const expectedCount = 19;
 

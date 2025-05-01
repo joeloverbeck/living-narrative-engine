@@ -176,15 +176,15 @@ describe('registerRuntime', () => {
 
         // Pre-register MOCKED core/external dependencies required by runtime factories
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.GameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.InputHandler, mockInputHandler, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.CommandParser, mockCommandParser, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ActionExecutor, mockActionExecutor, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IGameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IInputHandler, mockInputHandler, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ICommandParser, mockCommandParser, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IActionExecutor, mockActionExecutor, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ActionDiscoverySystem, mockActionDiscoverySystem, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IActionDiscoverySystem, mockActionDiscoverySystem, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         // <<< ADDED Register the missing dependency >>>
         mockContainer.register(tokens.ITurnOrderService, mockTurnOrderService, {lifecycle: 'singleton'});
         // Pre-register the mocked GameLoop instance needed by InputSetupService factory *IF* it were resolved standalone.

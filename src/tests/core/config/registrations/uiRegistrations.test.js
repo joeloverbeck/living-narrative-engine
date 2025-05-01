@@ -1,4 +1,4 @@
-// src/core/config/registrations/uiRegistrations.test.js
+// src/tests/core/config/registrations/uiRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -33,7 +33,7 @@ const mockLogger = {
     info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
 };
 const mockEventBus = {
-    subscribe: jest.fn(), publish: jest.fn(),
+    subscribe: jest.fn(), publish: jest.fn(), dispatch: jest.fn() // Added dispatch mock for InputHandler constructor validation
 };
 const mockvalidatedEventDispatcher = {
     dispatch: jest.fn(), dispatchValidated: jest.fn().mockResolvedValue(true), // Add mock for dispatchValidated if needed by DomRenderer mock interaction later
@@ -41,7 +41,14 @@ const mockvalidatedEventDispatcher = {
 
 // Simple mock objects are sufficient now as they won't hit real constructor validation
 const mockOutputDiv = {id: 'output'};
-const mockInputElement = {id: 'input'};
+const mockInputElement = {
+    id: 'input',
+    value: '',
+    addEventListener: jest.fn(),
+    focus: jest.fn(),
+    // Mock form property if accessed (InputHandler accesses it)
+    form: {addEventListener: jest.fn()}
+};
 const mockTitleElement = {id: 'title'};
 
 // --- Mock Custom DI Container (Keep the previous working version) ---
@@ -56,7 +63,9 @@ const createMockContainer = () => {
         resolve: jest.fn((token) => {
             const registration = registrations.get(token);
             if (!registration) {
-                throw new Error(`Mock Resolve Error: Token not registered: ${String(token)}`);
+                // Try resolving by string name if token is an object/symbol for easier debugging
+                const tokenStr = typeof token === 'symbol' ? token.toString() : String(token);
+                throw new Error(`Mock Resolve Error: Token not registered: ${tokenStr}`);
             }
             const {factoryOrValue, options} = registration;
             if (options?.lifecycle === 'singleton') {
@@ -93,12 +102,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         // Pre-register dependencies
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
-        // ***** Registering with tokens.ValidatedEventDispatcher is CORRECT *****
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         // Register DOM elements (instances provided via registerUI are wrapped in factories)
-        // We still need the base instances registered if the factory relies on resolving them first.
-        // Let's register them directly for simplicity in the mock container,
-        // although registerUI will re-register them via factories.
         mockContainer.register(tokens.outputDiv, mockOutputDiv);
         mockContainer.register(tokens.inputElement, mockInputElement);
         mockContainer.register(tokens.titleElement, mockTitleElement);
@@ -108,6 +113,13 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
         Object.values(mockEventBus).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
+        mockInputElement.addEventListener.mockClear();
+        mockInputElement.focus.mockClear();
+        if (mockInputElement.form) {
+            mockInputElement.form.addEventListener.mockClear();
+        }
+        // Ensure document mock is cleared if needed (InputHandler adds listener)
+        // For simplicity, assuming jest handles global document mocks or it's not critical here.
     });
 
     // afterEach: jest.restoreAllMocks() is good practice if using jest.spyOn,
@@ -122,7 +134,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         });
 
         // --- Assert: Check registration calls ---
-        // *** FIX HERE: Expect a FUNCTION as the second argument ***
+        // *** FIX HERE: Expect a FUNCTION as the second argument *** (This was already correct)
         expect(mockContainer.register).toHaveBeenCalledWith(
             tokens.outputDiv,
             expect.any(Function), // The Registrar.instance now provides a factory function
@@ -186,21 +198,25 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         });
 
         // Assert: Check registration call (unchanged)
-        const handlerRegArgs = mockContainer.register.mock.calls.find(call => call[0] === tokens.InputHandler);
+        const handlerRegArgs = mockContainer.register.mock.calls.find(call => call[0] === tokens.IInputHandler);
         expect(handlerRegArgs).toBeDefined();
         expect(typeof handlerRegArgs[1]).toBe('function');
         expect(handlerRegArgs[2]).toEqual(expect.objectContaining({lifecycle: 'singleton'}));
 
         // Act: Resolve twice
-        const handler1 = mockContainer.resolve(tokens.InputHandler);
-        const handler2 = mockContainer.resolve(tokens.InputHandler);
+        const handler1 = mockContainer.resolve(tokens.IInputHandler);
+        const handler2 = mockContainer.resolve(tokens.IInputHandler);
 
         // Assert: Singleton check
         expect(handler1).toBeDefined();
         expect(handler1).toBe(handler2);
         // Assert: Check that the MOCKED InputHandler constructor was called only once
         expect(InputHandler).toHaveBeenCalledTimes(1); // Check the mock constructor
-        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Registered InputHandler.');
+
+        // --- FIX IS HERE ---
+        // Assert: Check the specific logger message for InputHandler registration
+        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Registered InputHandler against IInputHandler token.');
+        // --- END FIX ---
     });
 
     it('should inject correct dependencies into DomRenderer when resolved', () => {
@@ -217,7 +233,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         // Assert: Check arguments passed to the MOCKED DomRenderer constructor
         expect(DomRenderer).toHaveBeenCalledTimes(1);
 
-        // ***** CORRECTED ASSERTION (AGAIN) *****
+        // ***** CORRECTED ASSERTION (AGAIN) ***** (This was already correct in your provided code)
         // Expect the mock to have been called with ONE argument: an object
         // containing the dependencies as properties. Match the keys from the
         // 'Received' error output, which reflects what the DI is *actually* providing.
@@ -227,7 +243,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
                 inputElement: mockInputElement,
                 titleElement: mockTitleElement,
                 eventBus: mockEventBus,
-                // ****** THE FIX IS HERE ******
+                // ****** THE FIX IS HERE ****** (This was already correct in your provided code)
                 validatedEventDispatcher: mockvalidatedEventDispatcher, // Use 'validatedEventDispatcher' key to match the RECEIVED object
                 // ******************************
                 logger: mockLogger
@@ -245,14 +261,14 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         });
 
         // Act: Resolve
-        mockContainer.resolve(tokens.InputHandler);
+        mockContainer.resolve(tokens.IInputHandler);
 
         // Assert: Check arguments passed to the MOCKED InputHandler constructor
         expect(InputHandler).toHaveBeenCalledTimes(1);
         expect(InputHandler).toHaveBeenCalledWith(
-            mockInputElement,
-            null,
-            mockEventBus
+            mockInputElement, // First arg: inputElement
+            null,             // Second arg: onCommandCallback (explicitly null in registration)
+            mockEventBus      // Third arg: eventBus
         );
     });
 });

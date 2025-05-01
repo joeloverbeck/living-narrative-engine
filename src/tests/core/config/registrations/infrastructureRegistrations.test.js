@@ -182,7 +182,7 @@ describe('registerInfrastructure', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.WorldLoader, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.GameDataRepository, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.EntityManager, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ValidatedEventDispatcher, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
     });
 
     it('resolving EntityManager does not throw', () => {

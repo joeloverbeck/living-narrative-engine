@@ -12,12 +12,14 @@
 
 /** @typedef {import('../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
 
+import {IValidatedEventDispatcher} from "../core/interfaces/IValidatedEventDispatcher.js";
+
 /**
  * A service responsible for validating event payloads against their definitions
  * (if available and loaded) and dispatching them via the EventBus.
  * Ensures that events are structurally correct before being sent, when possible.
  */
-class ValidatedEventDispatcher {
+class ValidatedEventDispatcher extends IValidatedEventDispatcher {
     /** @private @type {EventBus} */
     #eventBus;
     /** @private @type {GameDataRepository} */
@@ -36,6 +38,8 @@ class ValidatedEventDispatcher {
      * @param {ILogger} dependencies.logger - Service for logging messages.
      */
     constructor({eventBus, gameDataRepository, schemaValidator, logger}) {
+        super();
+        
         if (!eventBus) throw new Error("ValidatedEventDispatcher: Missing required dependency 'eventBus'.");
         if (!gameDataRepository) throw new Error("ValidatedEventDispatcher: Missing required dependency 'gameDataRepository'.");
         if (!schemaValidator) throw new Error("ValidatedEventDispatcher: Missing required dependency 'schemaValidator'.");

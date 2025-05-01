@@ -19,9 +19,9 @@ export function registerInitializers(container) {
         (c) => {
             const dependencies = {
                 entityManager: c.resolve(tokens.EntityManager),
-                gameStateManager: c.resolve(tokens.GameStateManager),
+                gameStateManager: c.resolve(tokens.IGameStateManager),
                 gameDataRepository: c.resolve(tokens.GameDataRepository),
-                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
                 logger: c.resolve(tokens.ILogger)
             };
             return new GameStateInitializer(dependencies);
@@ -37,9 +37,9 @@ export function registerInitializers(container) {
         (c) => {
             const dependencies = {
                 entityManager: c.resolve(tokens.EntityManager),
-                gameStateManager: c.resolve(tokens.GameStateManager),
+                gameStateManager: c.resolve(tokens.IGameStateManager),
                 gameDataRepository: c.resolve(tokens.GameDataRepository),
-                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher), // <<< ADDED Ticket 15
+                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher), // <<< ADDED Ticket 15
                 logger: c.resolve(tokens.ILogger) // <<< ADDED (assuming it needs logger too)
             };
             return new WorldInitializer(dependencies);
@@ -56,7 +56,7 @@ export function registerInitializers(container) {
             const dependencies = {
                 resolver: c, // Pass the container (AppContainer) as the resolver
                 logger: c.resolve(tokens.ILogger),
-                validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher), // <<< ADDED Ticket 15
+                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher), // <<< ADDED Ticket 15
                 initializationTag: INITIALIZABLE[0] // Pass the tag string
             };
             // AC1: Passes container (IServiceResolver), logger (ILogger), VED, and tag (string).

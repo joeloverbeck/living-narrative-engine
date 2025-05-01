@@ -154,7 +154,7 @@ describe('registerDomainServices', () => {
         // Pre-register MOCKED core/external dependencies required by domain services
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         // Register the mocked JsonLogicEvaluationService instance
@@ -167,7 +167,7 @@ describe('registerDomainServices', () => {
         mockContainer.register(tokens.PrerequisiteEvaluationService, new PrerequisiteEvaluationService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.PayloadValueResolverService, new PayloadValueResolverService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.ActionValidationService, new ActionValidationService(), {lifecycle: 'singleton'});
-        mockContainer.register(tokens.GameStateManager, new GameStateManager(), {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IGameStateManager, new GameStateManager(), {lifecycle: 'singleton'});
 
 
         // Clear call counts on the mock service functions/constructors
@@ -202,9 +202,9 @@ describe('registerDomainServices', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.DomainContextCompatibilityChecker, expect.any(Function), expect.anything());
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationService, expect.any(Function), expect.anything());
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.PayloadValueResolverService, expect.any(Function), expect.anything());
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionExecutor, expect.any(Function), expect.anything());
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.GameStateManager, expect.any(Function), expect.anything());
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.CommandParser, expect.any(Function), expect.anything());
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IActionExecutor, expect.any(Function), expect.anything());
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IGameStateManager, expect.any(Function), expect.anything());
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ICommandParser, expect.any(Function), expect.anything());
     });
 
     it('resolving ActionExecutor does not throw', () => {
@@ -214,7 +214,7 @@ describe('registerDomainServices', () => {
         // Act & Assert: Try resolving a key service that depends on others in the bundle
         let resolvedService;
         expect(() => {
-            resolvedService = mockContainer.resolve(tokens.ActionExecutor);
+            resolvedService = mockContainer.resolve(tokens.IActionExecutor);
         }).not.toThrow();
 
         // Assert: Check if something was actually resolved

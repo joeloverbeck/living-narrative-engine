@@ -50,7 +50,7 @@ export function registerInterpreters(container) {
     // --- 1. Register Operation Handlers (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.DispatchEventHandler, c => new DispatchEventHandler({
         logger: c.resolve(tokens.ILogger),
-        dispatcher: c.resolve(tokens.ValidatedEventDispatcher)
+        dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
     }));
     logger.debug('Interpreter Registrations: Registered DispatchEventHandler.');
 

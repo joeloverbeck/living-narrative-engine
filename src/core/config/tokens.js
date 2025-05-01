@@ -1,4 +1,4 @@
-// src/core/tokens.js
+// src/core/config/tokens.js
 
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -45,11 +45,16 @@
  * @property {DiToken} DomainContextCompatibilityChecker - Token for checking domain context compatibility.
  * @property {DiToken} ActionValidationService - Token for validating actions.
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
- * @property {DiToken} ValidatedEventDispatcher - Token for dispatching validated events.
- * @property {DiToken} ActionExecutor - Token for executing game actions.
- * @property {DiToken} GameStateManager - Token for managing the overall game state.
- * @property {DiToken} CommandParser - Token for parsing player commands.
- * @property {DiToken} ITurnOrderService - Token for the turn order management service. // <<< ADDED
+ *
+ * --- Core Interface Tokens ---
+ * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
+ * @property {DiToken} IActionExecutor - Token for executing game actions interface.
+ * @property {DiToken} IGameStateManager - Token for managing the overall game state interface.
+ * @property {DiToken} ICommandParser - Token for parsing player commands interface.
+ * @property {DiToken} IActionDiscoverySystem - Token for the action discovery system interface.
+ * @property {DiToken} IInputHandler - Token for handling player input interface.
+ *
+ * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
  * @property {DiToken} QuestRewardService - Token for quest reward logic.
  * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
@@ -59,8 +64,6 @@
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
  * @property {DiToken} InitializationService - Token for the main initialization orchestration service.
  * @property {DiToken} ShutdownService - Token for the main shutdown orchestration service.
- * @property {DiToken} ActionDiscoverySystem - Token for the action discovery system.
- * @property {DiToken} InputHandler - Token for handling player input.
  * @property {DiToken} GameLoop - Token for the main game loop.
  * @property {DiToken} InputSetupService - Token for setting up input handling.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
@@ -123,7 +126,7 @@ export const tokens = Object.freeze({
     GameConfigLoader: 'GameConfigLoader',
     ModManifestLoader: 'ModManifestLoader',
 
-    // Core Services & Managers
+    // Core Services & Managers (Implementations)
     GameDataRepository: 'GameDataRepository',
     EntityManager: 'EntityManager',
     DomRenderer: 'DomRenderer',
@@ -136,22 +139,24 @@ export const tokens = Object.freeze({
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
     PayloadValueResolverService: 'PayloadValueResolverService',
-    ValidatedEventDispatcher: 'ValidatedEventDispatcher',
-    ActionExecutor: 'ActionExecutor',
-    GameStateManager: 'GameStateManager',
-    CommandParser: 'CommandParser',
-    ITurnOrderService: 'ITurnOrderService',
     GameStateInitializer: 'GameStateInitializer',
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
     InitializationService: 'InitializationService',
     ShutdownService: 'ShutdownService',
-    InputHandler: 'InputHandler',
     GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
 
+    // Core Service Interfaces
+    IValidatedEventDispatcher: 'IValidatedEventDispatcher', // ADDED
+    IActionExecutor: 'IActionExecutor',             // ADDED
+    IGameStateManager: 'IGameStateManager',           // ADDED
+    ICommandParser: 'ICommandParser',             // ADDED
+    IActionDiscoverySystem: 'IActionDiscoverySystem',   // ADDED
+    IInputHandler: 'IInputHandler',             // ADDED
+    ITurnOrderService: 'ITurnOrderService',
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',
@@ -159,7 +164,7 @@ export const tokens = Object.freeze({
     ObjectiveEventListenerService: 'ObjectiveEventListenerService',
     ObjectiveStateCheckerService: 'ObjectiveStateCheckerService',
 
-    // Systems
+    // Systems (Implementations)
     GameRuleSystem: 'GameRuleSystem',
     EquipmentEffectSystem: 'EquipmentEffectSystem',
     EquipmentSlotSystem: 'EquipmentSlotSystem',
@@ -179,7 +184,6 @@ export const tokens = Object.freeze({
     HealthSystem: 'HealthSystem',
     StatusEffectSystem: 'StatusEffectSystem',
     LockSystem: 'LockSystem',
-    ActionDiscoverySystem: 'ActionDiscoverySystem',
 
     // Logic/Interpretation Layer
     OperationRegistry: 'OperationRegistry',
@@ -197,7 +201,4 @@ export const tokens = Object.freeze({
     AppendUiMessageHandler: 'AppendUiMessageHandler',
     SetVariableHandler: 'SetVariableHandler',
     QuerySystemDataHandler: 'QuerySystemDataHandler',
-
-
-    // --- Add any new keys here ---
 });

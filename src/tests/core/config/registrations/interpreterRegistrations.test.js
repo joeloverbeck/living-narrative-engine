@@ -180,7 +180,7 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
         mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'}); // For DispatchEventHandler
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'}); // For DispatchEventHandler
         // <<< ADDED: Register the missing SystemDataRegistry mock >>>
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
 

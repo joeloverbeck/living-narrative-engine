@@ -9,15 +9,15 @@ export function registerRuntime(container) {
     const log = container.resolve(tokens.ILogger);
 
     r.singletonFactory(tokens.GameLoop, c => new GameLoop({
-        gameStateManager: c.resolve(tokens.GameStateManager),
-        inputHandler: c.resolve(tokens.InputHandler),
-        commandParser: c.resolve(tokens.CommandParser),
-        actionExecutor: c.resolve(tokens.ActionExecutor),
+        gameStateManager: c.resolve(tokens.IGameStateManager),
+        inputHandler: c.resolve(tokens.IInputHandler),
+        commandParser: c.resolve(tokens.ICommandParser),
+        actionExecutor: c.resolve(tokens.IActionExecutor),
         eventBus: c.resolve(tokens.EventBus),
         entityManager: c.resolve(tokens.EntityManager),
         gameDataRepository: c.resolve(tokens.GameDataRepository),
-        actionDiscoverySystem: c.resolve(tokens.ActionDiscoverySystem),
-        validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         turnOrderService: c.resolve(tokens.ITurnOrderService),
         logger: c.resolve(tokens.ILogger)
     }));
@@ -25,7 +25,7 @@ export function registerRuntime(container) {
     r.singletonFactory(tokens.InputSetupService, c => new InputSetupService({
         container: c,
         logger: c.resolve(tokens.ILogger),
-        validatedEventDispatcher: c.resolve(tokens.ValidatedEventDispatcher),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         gameLoop: c.resolve(tokens.GameLoop)
     }));
 

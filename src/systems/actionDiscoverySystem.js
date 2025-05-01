@@ -18,13 +18,14 @@
 // Assuming these exist and provide the necessary classes/functions
 import {ActionTargetContext} from '../models/actionTargetContext.js';
 import {formatActionCommand} from '../services/actionFormatter.js';
+import {IActionDiscoverySystem} from "../core/interfaces/IActionDiscoverySystem.js";
 
 
 /**
  * System responsible for discovering all valid actions an actor can take
  * based on the current game state and loaded action definitions.
  */
-export class ActionDiscoverySystem {
+export class ActionDiscoverySystem extends IActionDiscoverySystem {
     /** @private @type {GameDataRepository} */
     #gameDataRepository;
     /** @private @type {EntityManager} */
@@ -56,6 +57,9 @@ export class ActionDiscoverySystem {
                     formatActionCommandFn,
                     getEntityIdsForScopesFn // <<< ADDED PARAMETER
                 }) {
+        super();
+
+        
         // --- Existing validation checks ---
         if (!gameDataRepository || !entityManager || !actionValidationService || !logger || !formatActionCommandFn) {
             throw new Error('ActionDiscoverySystem requires GameDataRepository, EntityManager, ActionValidationService, ILogger, and formatActionCommandFn instances.');

@@ -1,58 +1,60 @@
+// src/core/gameLoop.js
+
 // --- Type Imports ---
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./gameStateManager.js').default} GameStateManager */
-/** @typedef {import('./inputHandler.js').default} InputHandler */
-/** @typedef {import('./commandParser.js').default} CommandParser */
-/** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
-/** @typedef {import('./eventBus.js').default} EventBus */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../systems/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */
-/** @typedef {import('../core/services/consoleLogger.js').default} ILogger */
+/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Keep concrete for now if no interface used directly by GameLoop
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Keep concrete for now if no interface used directly by GameLoop
+/** @typedef {import('./interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('./interfaces/IInputHandler.js').IInputHandler} IInputHandler */
+/** @typedef {import('./interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('./interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
+/** @typedef {import('./eventBus.js').default} EventBus */ // Keep concrete type
+/** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('./interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */ // Using existing typedef
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */ // Using existing interface
 /** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
 
 
 // --- Define the options object structure ---
 /**
  * @typedef {object} GameLoopOptions
- * @property {GameDataRepository} gameDataRepository
- * @property {EntityManager} entityManager
- * @property {GameStateManager} gameStateManager
- * @property {InputHandler} inputHandler
- * @property {CommandParser} commandParser
- * @property {ActionExecutor} actionExecutor
- * @property {EventBus} eventBus
- * @property {ActionDiscoverySystem} actionDiscoverySystem
- * @property {ValidatedEventDispatcher} validatedEventDispatcher
- * @property {ITurnOrderService} turnOrderService
- * @property {ILogger} logger
+ * @property {GameDataRepository} gameDataRepository - Provides access to game definition data. (Interface TBD if direct usage increases)
+ * @property {EntityManager} entityManager - Manages entity instances and components. (Interface TBD if direct usage increases)
+ * @property {IGameStateManager} gameStateManager - Manages mutable game state like current location.
+ * @property {IInputHandler} inputHandler - Handles user command input.
+ * @property {ICommandParser} commandParser - Parses raw command strings.
+ * @property {IActionExecutor} actionExecutor - Executes parsed actions.
+ * @property {EventBus} eventBus - Core event bus for pub/sub.
+ * @property {IActionDiscoverySystem} actionDiscoverySystem - Discovers available actions for entities.
+ * @property {IValidatedEventDispatcher} validatedEventDispatcher - Dispatches events, potentially with validation.
+ * @property {ITurnOrderService} turnOrderService - Manages the sequence of entity turns.
+ * @property {ILogger} logger - Service for logging messages.
  */
 
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../types/components.js";
 
 /**
  * GameLoop orchestrates the main game flow *after* initialization.
- * It manages dependencies, processes user input via a turn-based cycle,
+ * It manages dependencies via interfaces, processes user input via a turn-based cycle,
  * delegates action execution, discovers available actions, and uses the EventBus.
  * Relies on TurnOrderService to manage whose turn it is and round progression.
  */
 class GameLoop {
-    #gameDataRepository;
-    #entityManager;
-    #gameStateManager;
-    #inputHandler;
-    #commandParser;
-    #actionExecutor;
-    #eventBus;
-    #actionDiscoverySystem;
-    #validatedEventDispatcher;
-    #turnOrderService;
-    #logger; // Only one declaration needed
+    #gameDataRepository; // Remains concrete for now
+    #entityManager; // Remains concrete for now
+    #gameStateManager; // Interface: IGameStateManager
+    #inputHandler; // Interface: IInputHandler
+    #commandParser; // Interface: ICommandParser
+    #actionExecutor; // Interface: IActionExecutor
+    #eventBus; // Remains concrete
+    #actionDiscoverySystem; // Interface: IActionDiscoverySystem
+    #validatedEventDispatcher; // Interface: IValidatedEventDispatcher
+    #turnOrderService; // Interface: ITurnOrderService
+    #logger; // Interface: ILogger
 
     #isRunning = false;
     #currentTurnEntity = null;
@@ -72,51 +74,59 @@ class GameLoop {
             actionDiscoverySystem,
             validatedEventDispatcher,
             turnOrderService,
-            logger // Get logger from options
+            logger
         } = options || {};
 
-        // --- Validate and Assign Logger FIRST (so it can be used) ---
-        if (!logger || typeof logger.info !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function') {
-            // Use a temporary console logger for the warning itself if the provided logger is unusable
-            const consoleLogger = console;
-            consoleLogger.warn('GameLoop Constructor: Invalid logger provided (missing methods). Falling back to console.');
-            this.#logger = consoleLogger; // Assign console as the fallback logger
+        // --- Validate and Assign Logger FIRST ---
+        // Logger validation (ILogger interface check - simplified)
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
+            console.warn('GameLoop Constructor: Invalid logger provided. Falling back to console.');
+            this.#logger = console;
         } else {
-            this.#logger = logger; // Assign the validated logger
+            this.#logger = logger;
         }
 
-        // --- Validate Other Dependencies (using the assigned this.#logger) ---
-        if (!gameDataRepository) throw new Error('GameLoop requires options.gameDataRepository.');
-        if (!entityManager) throw new Error('GameLoop requires options.entityManager.');
-        if (!gameStateManager) throw new Error('GameLoop requires options.gameStateManager.');
-        if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function') {
-            throw new Error('GameLoop requires a valid options.inputHandler object.');
+        // --- Validate Other Dependencies against Interfaces/Required Methods ---
+        // Keep GameDataRepository/EntityManager checks basic for now, as interfaces aren't primary focus yet
+        if (!gameDataRepository) throw new Error('GameLoop requires options.gameDataRepository.'); // TODO: Check methods if interface defined
+        if (!entityManager) throw new Error('GameLoop requires options.entityManager.'); // TODO: Check methods if interface defined
+
+        // IGameStateManager Check
+        if (!gameStateManager || typeof gameStateManager.getCurrentLocation !== 'function' || typeof gameStateManager.getPlayer !== 'function') {
+            throw new Error('GameLoop requires a valid options.gameStateManager implementing IGameStateManager (getCurrentLocation, getPlayer).');
         }
+        // IInputHandler Check
+        if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function' || typeof inputHandler.setCommandCallback !== 'function') {
+            throw new Error('GameLoop requires a valid options.inputHandler implementing IInputHandler (enable, disable, setCommandCallback).');
+        }
+        // ICommandParser Check
         if (!commandParser || typeof commandParser.parse !== 'function') {
-            throw new Error('GameLoop requires a valid options.commandParser object.');
+            throw new Error('GameLoop requires a valid options.commandParser implementing ICommandParser (parse).');
         }
+        // IActionExecutor Check
         if (!actionExecutor || typeof actionExecutor.executeAction !== 'function') {
-            throw new Error('GameLoop requires a valid options.actionExecutor object.');
+            throw new Error('GameLoop requires a valid options.actionExecutor implementing IActionExecutor (executeAction).');
         }
+        // EventBus Check (keep concrete check for now)
         if (!eventBus || typeof eventBus.dispatch !== 'function' || typeof eventBus.subscribe !== 'function') {
             throw new Error('GameLoop requires a valid options.eventBus object.');
         }
+        // IActionDiscoverySystem Check
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
-            throw new Error('GameLoop requires a valid options.actionDiscoverySystem object.');
+            throw new Error('GameLoop requires a valid options.actionDiscoverySystem implementing IActionDiscoverySystem (getValidActions).');
         }
+        // IValidatedEventDispatcher Check
         if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
-            throw new Error('GameLoop requires a valid options.validatedEventDispatcher object.');
+            throw new Error('GameLoop requires a valid options.validatedEventDispatcher implementing IValidatedEventDispatcher (dispatchValidated).');
         }
-        if (!turnOrderService) {
-            throw new Error('GameLoop requires options.turnOrderService.');
-        }
-        // Optional: More detailed check for TurnOrderService methods (can use this.#logger now)
-        if (typeof turnOrderService.isEmpty !== 'function' || typeof turnOrderService.startNewRound !== 'function' || typeof turnOrderService.getNextEntity !== 'function') {
-            this.#logger.warn('GameLoop Constructor: TurnOrderService provided, but missing expected methods (isEmpty, startNewRound, getNextEntity). Runtime errors may occur.');
+        // ITurnOrderService Check
+        if (!turnOrderService || typeof turnOrderService.isEmpty !== 'function' || typeof turnOrderService.startNewRound !== 'function' || typeof turnOrderService.getNextEntity !== 'function') {
+            // Note: Also uses clearCurrentRound in stop(), but not strictly required for core loop start/run
+            throw new Error('GameLoop requires a valid options.turnOrderService implementing ITurnOrderService (isEmpty, startNewRound, getNextEntity).');
         }
 
 
-        // --- Assign Other Dependencies ---
+        // --- Assign Dependencies ---
         this.#gameDataRepository = gameDataRepository;
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
@@ -127,16 +137,16 @@ class GameLoop {
         this.#actionDiscoverySystem = actionDiscoverySystem;
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#turnOrderService = turnOrderService;
-        // No need to assign this.#logger again here - it was assigned during validation
+        // Logger already assigned
 
         // --- Initialize State ---
         this.#isRunning = false;
         this.#currentTurnEntity = null;
 
         // --- Setup ---
-        this.#subscribeToEvents(); // Use the assigned logger
+        this.#subscribeToEvents();
 
-        this.#logger.info('GameLoop: Instance created with dependencies (including TurnOrderService). Ready to start.');
+        this.#logger.info('GameLoop: Instance created with dependencies. Ready to start.');
     }
 
     /**
@@ -178,7 +188,8 @@ class GameLoop {
 
             // Optional Feedback: Only send "Not your turn" if the game *is* expecting input from *some* player
             if (this.#currentTurnEntity && this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-                this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                // Uses IValidatedEventDispatcher.dispatchValidated
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                     text: "It's not your turn.",
                     type: 'warning'
                 });
@@ -197,9 +208,8 @@ class GameLoop {
             // If Invalid: Log, recover, and allow retry
             this.#logger.warn("GameLoop received invalid 'command:submit' event data (missing or empty command string):", eventData);
             // Rediscover actions and re-prompt the current player to allow them to try again.
-            await this._discoverActionsForEntity(this.#currentTurnEntity);
-            this.promptInput(); // Re-prompt with default message
-            return; // Exit without advancing turn
+            await this._discoverActionsForEntity(this.#currentTurnEntity); // Uses IActionDiscoverySystem
+            await this.promptInput(); // Uses IInputHandler
         }
     }
 
@@ -219,10 +229,10 @@ class GameLoop {
         // --- Set state and dispatch event ---
         this.#isRunning = true;
         this.#logger.info('GameLoop: Started.');
-        this.#eventBus.dispatch('game:started', {});
+        await this.#eventBus.dispatch('game:started', {}); // Uses EventBus
 
         // --- Kick off the turn processing loop ---
-        await this._processNextTurn(); // CHANGED HERE
+        await this._processNextTurn();
     }
 
 
@@ -241,19 +251,23 @@ class GameLoop {
         this.#logger.debug('GameLoop: #processNextTurn - Checking turn order state...');
 
         // Check if the current round's queue is empty (handles starting new rounds)
+        // Uses ITurnOrderService.isEmpty
         if (this.#turnOrderService.isEmpty()) {
             this.#logger.info('GameLoop: Turn queue is empty. Ending current round and attempting to start a new one.');
+            // Uses EntityManager.activeEntities
             const allEntities = Array.from(this.#entityManager.activeEntities.values());
             const actors = allEntities.filter(entity => entity.hasComponent(ACTOR_COMPONENT_ID));
 
             if (actors.length === 0) {
                 this.#logger.error('GameLoop: Cannot start new round - no entities with ACTOR_COMPONENT_ID found.');
-                this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                // Uses IValidatedEventDispatcher.dispatchValidated
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                     text: 'No active actors remaining. Game Over?',
                     type: 'error'
                 });
-                this.stop();
-                return;
+
+                await this.stop(); // Uses ITurnOrderService.clearCurrentRound, IInputHandler.disable, etc.
+                return; // <<< Added return after stop to prevent further execution
             }
 
             this.#logger.info(`GameLoop: Found ${actors.length} actors for the new round: [${actors.map(a => a.id).join(', ')}]`);
@@ -262,6 +276,7 @@ class GameLoop {
                 const strategy = 'round-robin'; // TODO: Make configurable
                 /** @type {TurnOrderStrategy} */
                 const castStrategy = strategy;
+                // Uses ITurnOrderService.startNewRound
                 this.#turnOrderService.startNewRound(actors, castStrategy);
                 this.#logger.info(`GameLoop: Successfully started new round using "${strategy}" strategy.`);
                 // Recursively call to process the *first* turn of the *new* round
@@ -270,26 +285,34 @@ class GameLoop {
 
             } catch (error) {
                 this.#logger.error(`GameLoop: Failed to start new round: ${error.message}`, error);
-                this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                // Uses IValidatedEventDispatcher.dispatchValidated
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                     text: `Error starting new round: ${error.message}`,
                     type: 'error'
                 });
-                this.stop();
-                return;
+
+                await this.stop();
+                return; // <<< Added return after stop
             }
         }
 
         // --- If queue is NOT empty, process the next entity's turn ---
         this.#logger.debug('GameLoop: Turn queue is not empty. Getting next entity...');
 
-        // [AC1] Gets next entity from TurnOrderService
+        // Uses ITurnOrderService.getNextEntity
         const nextEntity = this.#turnOrderService.getNextEntity();
 
         // Handle null/undefined case (e.g., queue contained only lazily removed items)
         if (!nextEntity) {
             this.#logger.error('GameLoop: #processNextTurn - TurnOrderService reported not empty, but getNextEntity() returned null. Retrying process.');
-            await this._processNextTurn(); // Retry
-            return; // Exit after initiating the retry
+            // Avoid infinite loop possibility by stopping if this happens unexpectedly
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: 'Internal Error: Turn order inconsistency detected.',
+                type: 'error'
+            });
+            await this.stop();
+            // await this._processNextTurn(); // Retry (Original - potentially risky)
+            return; // Exit after initiating the retry or stop
         }
 
         // Update #currentTurnEntity
@@ -298,45 +321,42 @@ class GameLoop {
 
         // Log turn start
         this.#logger.info(`GameLoop: >>> Starting turn for Entity: ${currentEntityId} <<<`);
-        this.#eventBus.dispatch('turn:start', {entityId: currentEntityId}); // Dispatch turn start event
+        await this.#eventBus.dispatch('turn:start', {entityId: currentEntityId}); // Dispatch turn start event
 
         // --- Player Turn Logic ---
         if (this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
             this.#logger.debug(`GameLoop: Entity ${currentEntityId} is player-controlled. Preparing for input.`);
-            // Discover actions *before* prompting
+            // Uses IActionDiscoverySystem.getValidActions
             await this._discoverActionsForEntity(this.#currentTurnEntity);
-            // Prompt for input
-            this.promptInput(`Your turn, ${currentEntityId}. Enter command...`);
-            // Pause the loop here, waiting for #handleSubmittedCommandFromEvent
-            return; // IMPORTANT: Return here to pause the loop for player input
 
+            // Uses IInputHandler.enable (indirectly via promptInput)
+            await this.promptInput(`Your turn, ${currentEntityId}. Enter command...`);
         } else {
             // --- AI/NPC Turn Logic (Placeholder Implementation as per Refined Ticket) ---
             this.#logger.info(`GameLoop: Entity ${currentEntityId} is AI controlled. Triggering AI logic (placeholder)...`);
-            // [AC3] Discover actions for AI (might be needed for decision making later)
+            // Uses IActionDiscoverySystem.getValidActions
             await this._discoverActionsForEntity(this.#currentTurnEntity);
 
-            // [AC4] Placeholder AI Action (No IAiService call)
-            // For now, simulate a 'wait' action or similar simple turn consumption.
+            // Placeholder AI Action (No IAiService call)
             this.#logger.warn(`GameLoop: AI (${currentEntityId}) taking placeholder 'wait' action.`);
-            // Optional: Simulate AI taking some time
-            // await new Promise(resolve => setTimeout(resolve, 50)); // Example delay
 
-            // [AC5] Simulate ending the AI's turn immediately after the placeholder action.
+            // Simulate ending the AI's turn immediately.
             const aiActionId = 'core:wait'; // Example placeholder action ID
-            this.#logger.debug(`GameLoop: AI (${currentEntityId}) turn finished with action: ${aiActionId}.`); // [AC2] Log end
-            this.#eventBus.dispatch('turn:end', {entityId: currentEntityId, actionTaken: aiActionId, success: true}); // Dispatch turn end event for AI
+            this.#logger.debug(`GameLoop: AI (${currentEntityId}) turn finished with action: ${aiActionId}.`);
+            await this.#eventBus.dispatch('turn:end', {
+                entityId: currentEntityId,
+                actionTaken: aiActionId,
+                success: true
+            }); // Dispatch turn end event for AI
 
-            // [AC6] AI finishes its turn, immediately process the next turn in the loop.
-            // #currentTurnEntity is implicitly handled by the next call assigning the next entity.
-            await this._processNextTurn(); // Continue the loop for the next entity
+            // AI finishes its turn, immediately process the next turn in the loop.
+            await this._processNextTurn();
         }
     }
 
     /**
      * Processes a command string submitted by the input handler or event bus *for a specific entity*.
      * Parses the command, executes the action, handles errors, and then triggers the processing of the next turn.
-     * This method now contains the core logic previously described in the ticket for `#handleSubmittedCommandFromEvent`.
      * @param {Entity} actingEntity - The entity performing the command. MUST be `this.#currentTurnEntity`.
      * @param {string} command - The raw command string from the input.
      * @async
@@ -350,21 +370,25 @@ class GameLoop {
         // Verify the call is for the current turn entity (safety check)
         if (!actingEntity || actingEntity !== this.#currentTurnEntity) {
             this.#logger.error(`processSubmittedCommand called for ${actingEntity?.id} but current turn is ${this.#currentTurnEntity?.id}. State inconsistency?`);
-            // Attempt to recover by re-prompting if it was supposed to be a player turn
+            // If it's somehow a player turn but the wrong player sent the command, re-prompt the *correct* player.
             if (this.#currentTurnEntity && this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-                await this._discoverActionsForEntity(this.#currentTurnEntity);
-                this.promptInput();
+                await this._discoverActionsForEntity(this.#currentTurnEntity); // Uses IActionDiscoverySystem
+                await this.promptInput(); // Uses IInputHandler
             }
+            // Do not proceed further with the incorrect entity's command.
             return;
         }
 
         // --- Disable input ---
+        // Uses IInputHandler.disable
         this.#inputHandler.disable();
-        this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."}); // Notify UI
+        // Uses IValidatedEventDispatcher.dispatchValidated
+        await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."});
 
         this.#logger.debug(`Processing command: "${command}" for entity ${actingEntity.id}`);
 
         // --- Parse Command ---
+        // Uses ICommandParser.parse
         const parsedCommand = this.#commandParser.parse(command);
 
         let actionExecuted = false;
@@ -377,7 +401,8 @@ class GameLoop {
                 (parsedCommand.originalInput.trim().length > 0 ? `Unknown command "${parsedCommand.originalInput}". Try 'help'.` : '');
 
             if (message) {
-                this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                // Uses IValidatedEventDispatcher.dispatchValidated
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                     text: message,
                     type: 'error'
                 });
@@ -385,14 +410,15 @@ class GameLoop {
             this.#logger.warn(`Command parsing failed for "${command}". Error: ${message || 'No action ID found.'}`);
 
             // Re-discover actions and re-prompt the player - Allow retry within turn
-            await this._discoverActionsForEntity(actingEntity);
-            this.promptInput(); // Re-enable input for retry
+            await this._discoverActionsForEntity(actingEntity); // Uses IActionDiscoverySystem
+            await this.promptInput(); // Uses IInputHandler
             // **Do not** advance turn here.
-            return; // Exit early, turn does not advance on parse error
+            return; // <<< Explicitly return to prevent advancing turn
 
         } else {
             // --- Execute Valid Command ---
             actionIdTaken = parsedCommand.actionId;
+            // Uses IActionExecutor.executeAction (indirectly via executeAction helper)
             const actionResult = await this.executeAction(actingEntity, parsedCommand);
             actionExecuted = true; // We attempted execution
             actionSuccess = actionResult?.success ?? false;
@@ -400,88 +426,95 @@ class GameLoop {
         }
 
         // --- Turn End Logic ---
-        // Regardless of action success/failure (as long as parsing was ok), the turn is consumed.
+        // Only proceed if an action was actually executed (or attempted after successful parse)
         this.#logger.info(`GameLoop: <<< Ending turn for Entity: ${actingEntity.id} (Action: ${actionIdTaken ?? 'ParseError'}) >>>`);
-        this.#eventBus.dispatch('turn:end', {
+        await this.#eventBus.dispatch('turn:end', { // Uses EventBus
             entityId: actingEntity.id,
             actionTaken: actionIdTaken,
             success: actionSuccess
-        }); // Dispatch turn end event
+        });
 
-        // Clear the current turn entity state is handled by #processNextTurn assigning the *next* entity
-        // Do NOT clear `this.#currentTurnEntity = null;` here.
-
-        // Advance the turn loop
+        // Advance the turn loop only after a successful parse and action attempt
         await this._processNextTurn();
     }
 
     /**
      * Prepares context and delegates action execution to the ActionExecutor.
+     * Handles cases where the acting entity or location is missing.
      * @private
-     * @param {Entity} actingEntity - The entity performing the action.
+     * @param {Entity | null} actingEntity - The entity performing the action. Can be null for error testing/edge cases.
      * @param {ParsedCommand} parsedCommand - The parsed command details.
      * @returns {Promise<ActionResult>} The result of the action execution.
      * @async
      */
     async executeAction(actingEntity, parsedCommand) {
-        // Ensure GameStateManager provides the location for the *acting* entity
-        // Assuming GameStateManager's getCurrentLocation doesn't need the entity ID,
-        // or if it does, it should be passed. Adjust if GameStateManager changes.
-        // Let's assume for now it provides a global 'current location' relevant to the player's viewpoint
-        // or perhaps the location of the *actingEntity* if it can resolve it.
-        // Reverting to original assumption which seems more plausible in context:
-        const currentLocation = this.#gameStateManager.getCurrentLocation(/* actingEntity.id */); // Passing ID might be needed depending on GameStateManager impl.
-
-
-        if (!actingEntity || !currentLocation) {
-            const missing = [];
-            if (!actingEntity) missing.push('acting entity');
-            // If currentLocation depends on actingEntity.id, the error message should reflect that.
-            if (!currentLocation) missing.push(`current location context`);
-            const errorMsg = `GameLoop executeAction called but state missing: ${missing.join(' and ')}.`;
+        // --- FIX START: Check actingEntity FIRST ---
+        if (!actingEntity) {
+            const errorMsg = 'GameLoop executeAction called but state missing: acting entity.';
             this.#logger.error(errorMsg);
-            this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                 text: 'Internal Error: Game state inconsistent during action execution.',
                 type: 'error'
             });
             return {success: false, messages: [{text: errorMsg, type: 'internal'}]};
         }
+        // --- FIX END: Check actingEntity FIRST ---
+
+        // Now it's safe to use actingEntity.id
+        // Uses IGameStateManager.getCurrentLocation
+        const currentLocation = this.#gameStateManager.getCurrentLocation(actingEntity.id);
+
+        // --- FIX START: Check currentLocation separately ---
+        if (!currentLocation) {
+            const errorMsg = `GameLoop executeAction called but state missing: current location context for ${actingEntity.id}.`;
+            this.#logger.error(errorMsg);
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: 'Internal Error: Game state inconsistent during action execution.',
+                type: 'error'
+            });
+            return {success: false, messages: [{text: errorMsg, type: 'internal'}]};
+        }
+        // --- FIX END: Check currentLocation separately ---
 
         /** @type {ActionContext} */
         const context = {
             actingEntity: actingEntity,
             currentLocation: currentLocation,
             parsedCommand: parsedCommand,
-            gameDataRepository: this.#gameDataRepository,
-            entityManager: this.#entityManager,
-            dispatch: this.#eventBus.dispatch.bind(this.#eventBus), // Bind dispatch to eventBus instance
-            eventBus: this.#eventBus,
-            logger: this.#logger, // Provide logger to actions
+            gameDataRepository: this.#gameDataRepository, // Passed down
+            entityManager: this.#entityManager, // Passed down
+            dispatch: this.#eventBus.dispatch.bind(this.#eventBus), // Passed down
+            eventBus: this.#eventBus, // Passed down
+            logger: this.#logger, // Passed down
         };
 
         this.#logger.debug(`Executing action: ${parsedCommand.actionId} for entity ${actingEntity.id}`);
 
         try {
+            // Uses IActionExecutor.executeAction
             const result = await this.#actionExecutor.executeAction(parsedCommand.actionId, context);
 
-            // TODO: Process result.newState if applicable (e.g., location change)
-            // Should likely be handled by events dispatched from the action handler itself.
-
             // Basic validation of the returned result structure
-            return result && typeof result.success === 'boolean'
-                ? result
-                : {
+            if (!result || typeof result.success !== 'boolean') {
+                this.#logger.error(`Action ${parsedCommand.actionId} execution returned invalid result structure:`, result);
+                return {
                     success: false,
                     messages: [{
                         text: `Action ${parsedCommand.actionId} execution returned invalid result structure.`,
                         type: 'internal'
                     }]
                 };
+            }
+            return result;
+
 
         } catch (error) {
             this.#logger.error(`Error during execution of action ${parsedCommand.actionId} for entity ${actingEntity.id}:`, error);
-            this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: `Error performing action: ${error.message}`, // Be cautious about revealing internal details.
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: `Error performing action: ${error.message}`,
                 type: 'error'
             });
             return {
@@ -506,7 +539,9 @@ class GameLoop {
         }
         if (!actingEntity) {
             this.#logger.warn('Cannot discover actions: No valid acting entity provided.');
-            this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            // Dispatch with null entityId to indicate no specific entity context
+            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
                 actions: [],
                 entityId: null
             });
@@ -518,14 +553,14 @@ class GameLoop {
 
         this.#logger.debug(`Attempting to discover actions for entity ${entityId}...`);
         try {
-            // Assuming GameStateManager needs the entity ID to find *its* location
-            const currentLocation = this.#gameStateManager.getCurrentLocation(/* Needs entity ID? */ entityId);
+            // Uses IGameStateManager.getCurrentLocation
+            const currentLocation = this.#gameStateManager.getCurrentLocation(entityId);
 
             if (!currentLocation) {
-                // If location depends on the entity, specify that in the error
                 this.#logger.error(`Cannot discover actions for ${entityId}: Current location for this entity is missing from GameStateManager.`);
                 const payload = {actions: [], entityId: entityId};
-                this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
+                // Uses IValidatedEventDispatcher.dispatchValidated
+                await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
                 this.#logger.debug(`Dispatched ${'event:update_available_actions'} for ${entityId} with 0 actions (missing location).`);
                 return;
             }
@@ -534,15 +569,16 @@ class GameLoop {
             const discoveryContext = {
                 actingEntity: actingEntity,
                 currentLocation: currentLocation,
-                entityManager: this.#entityManager,
-                gameDataRepository: this.#gameDataRepository,
-                dispatch: this.#eventBus.dispatch.bind(this.#eventBus),
-                eventBus: this.#eventBus,
-                parsedCommand: undefined, // Explicitly undefined for discovery
-                logger: this.#logger,
+                entityManager: this.#entityManager, // Passed down
+                gameDataRepository: this.#gameDataRepository, // Passed down
+                dispatch: this.#eventBus.dispatch.bind(this.#eventBus), // Passed down
+                eventBus: this.#eventBus, // Passed down
+                parsedCommand: undefined, // No parsed command during discovery phase
+                logger: this.#logger, // Passed down
             };
 
             this.#logger.debug(`Calling ActionDiscoverySystem.getValidActions for entity ${entityId}`);
+            // Uses IActionDiscoverySystem.getValidActions
             validActions = await this.#actionDiscoverySystem.getValidActions(actingEntity, discoveryContext);
             this.#logger.debug(`ActionDiscoverySystem returned ${validActions.length} valid actions for ${entityId}.`);
 
@@ -552,7 +588,8 @@ class GameLoop {
         } finally {
             // Always dispatch the result (even if empty or errored)
             const payload = {actions: validActions, entityId: entityId};
-            this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
             this.#logger.debug(`Dispatched ${'event:update_available_actions'} for entity ${entityId} with ${validActions.length} actions.`);
         }
     }
@@ -563,34 +600,28 @@ class GameLoop {
      * Should only be called when it's a player's turn.
      * @param {string} [message="Enter command..."] - Placeholder text for the input field.
      */
-    promptInput(message = 'Enter command...') {
-        // *** DIAGNOSTIC LOGGING ***
-        console.log(`METHOD promptInput ENTRY: Reading this.#isRunning = ${this.#isRunning}`);
-        // You can also add the logger call if you want to verify the logger is working
-        // this.#logger.debug(`METHOD promptInput ENTRY: Reading this.#isRunning = ${this.#isRunning}`);
+    async promptInput(message = 'Enter command...') { // Made async to match dispatcher
+        this.#logger.debug(`METHOD promptInput ENTRY: Reading this.#isRunning = ${this.#isRunning}`);
 
         if (!this.#isRunning) {
-            // This is the path currently being taken incorrectly
             this.#logger.debug('promptInput called while not running.');
-            console.log(`METHOD promptInput: Condition (!this.#isRunning) is TRUE`); // LOG PATH
             return;
         }
-
-        console.log(`METHOD promptInput: Condition (!this.#isRunning) is FALSE`); // LOG PATH
 
         // Double check it's still the correct player entity's turn before enabling input
         if (!this.#currentTurnEntity || !this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-            console.log(`METHOD promptInput: Condition (!player turn) is TRUE`); // LOG PATH
             this.#logger.debug(`promptInput called, but it's not a player's turn (Current: ${this.#currentTurnEntity?.id ?? 'None'}). Input remains disabled.`);
-            // Ensure input is disabled if called erroneously
+            // Ensure input handler is disabled if we reach here unexpectedly
+            // Uses IInputHandler.disable
             this.#inputHandler.disable();
-            this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting for others..."});
+            // Uses IValidatedEventDispatcher.dispatchValidated
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting for others..."});
             return;
         }
 
-        console.log(`METHOD promptInput: Conditions passed, enabling input...`); // LOG PATH
+        this.#logger.debug(`METHOD promptInput: Conditions passed, enabling input for ${this.#currentTurnEntity.id}...`);
 
-        // Enable the backend input handler
+        // Uses IInputHandler.enable
         this.#inputHandler.enable();
 
         // Dispatch event for the UI to enable its input field
@@ -598,14 +629,15 @@ class GameLoop {
             placeholder: message,
             entityId: this.#currentTurnEntity.id // Include entityId for UI context
         };
-        this.#validatedEventDispatcher.dispatchValidated('textUI:enable_input', payload);
+        // Uses IValidatedEventDispatcher.dispatchValidated
+        await this.#validatedEventDispatcher.dispatchValidated('textUI:enable_input', payload);
         this.#logger.debug(`Input enabled via 'textUI:enable_input' event for entity ${this.#currentTurnEntity.id}. Placeholder: "${message}"`);
     }
 
     /**
      * Stops the game loop, disables input handler, clears turn state, and dispatches events for UI updates.
      */
-    stop() {
+    async stop() { // Made async to match dispatcher
         if (!this.#isRunning) {
             this.#logger.info('GameLoop: Stop called, but already stopped.');
             return;
@@ -614,45 +646,43 @@ class GameLoop {
         const stopMessage = 'Game stopped.';
         this.#logger.info(`GameLoop: Stopping... Message: "${stopMessage}"`);
 
-        // Disable input handler and notify UI
+        // Disable Input Handler
+        // Uses IInputHandler.disable
         this.#inputHandler.disable();
         const disablePayload = {message: stopMessage};
-        this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', disablePayload);
+        // Dispatch disable event
+        // Uses IValidatedEventDispatcher.dispatchValidated
+        await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', disablePayload);
 
-        // Display stop message
+        // --- FIX 1: Display stop message ---
         const messagePayload = {text: stopMessage, type: 'info'};
-        this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', messagePayload);
+        // Uses IValidatedEventDispatcher.dispatchValidated
+        await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', messagePayload);
+        // -----------------------------------
 
         // Clear turn order state
         if (this.#turnOrderService) {
-            // Use the helper method if available (preferred)
+            // Uses ITurnOrderService.clearCurrentRound (optional method check)
             if (typeof this.#turnOrderService.clearCurrentRound === 'function') {
                 try {
+                    // Call the method - this should now be caught by the test
                     this.#turnOrderService.clearCurrentRound();
                     this.#logger.debug('GameLoop: Cleared current round state in TurnOrderService via clearCurrentRound().');
                 } catch (e) {
                     this.#logger.error('GameLoop: Error calling turnOrderService.clearCurrentRound() during stop:', e);
                 }
             } else {
-                // Fallback if clearCurrentRound isn't on the service (maybe just the interface?)
-                // This might indicate an issue elsewhere, but attempt basic cleanup.
-                this.#logger.warn('GameLoop: TurnOrderService clearCurrentRound method not found. Attempting basic queue clear if possible.');
-                if (this.#turnOrderService && typeof this.#turnOrderService.clear === 'function') { // Check for underlying queue's clear
-                    try {
-                        // This is less ideal as it might not clear strategy state etc.
-                        // this.#turnOrderService.clear(); // Might error if it's the service, not queue
-                    } catch (e) {
-                        // Ignore error here, was a fallback attempt
-                    }
-                }
+                this.#logger.warn('GameLoop: TurnOrderService clearCurrentRound method not found. Turn state might persist.');
             }
         }
 
         // Reset internal loop state
         this.#currentTurnEntity = null;
 
-        // Dispatch a general game stopped event
-        this.#eventBus.dispatch('game:stopped', {});
+        // --- FIX 2: Dispatch a general game stopped event ---
+        // Uses EventBus
+        await this.#eventBus.dispatch('game:stopped', {});
+        // --------------------------------------------------
 
         this.#logger.info('GameLoop: Stopped successfully.');
     }
@@ -671,6 +701,7 @@ class GameLoop {
      * @param {boolean} value - The desired running state.
      */
     _test_setRunning(value) {
+        // Use optional chaining for logger in case it wasn't fully initialized during early errors
         this.#logger?.debug(`[_test_setRunning]: Setting #isRunning to ${value}`);
         this.#isRunning = value;
     }
@@ -681,6 +712,7 @@ class GameLoop {
      * @param {Entity | null} entity - The entity to set as current.
      */
     _test_setCurrentTurnEntity(entity) {
+        // Use optional chaining for logger
         this.#logger?.debug(`[_test_setCurrentTurnEntity]: Setting #currentTurnEntity to ${entity?.id ?? null}`);
         this.#currentTurnEntity = entity;
     }

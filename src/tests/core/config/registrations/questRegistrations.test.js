@@ -217,7 +217,7 @@ describe('registerQuestSystems', () => {
         // Ensure ALL dependencies listed in QuestSystem's registration are mocked *and registered*
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.GameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IGameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.QuestPrerequisiteService, mockQuestPrerequisiteService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.QuestRewardService, mockQuestRewardService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ObjectiveEventListenerService, mockObjectiveEventListenerService, {lifecycle: 'singleton'});
@@ -225,7 +225,7 @@ describe('registerQuestSystems', () => {
         // Register the *corrected* GameDataRepository mock
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         // validatedEventDispatcher is needed by QuestRewardService factory, which is a dependency of QuestSystem factory
-        mockContainer.register(tokens.ValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
 
         // Call the registration function AFTER mocks are set up
         registerQuestSystems(mockContainer);
