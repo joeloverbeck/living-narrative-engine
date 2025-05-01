@@ -154,7 +154,6 @@ class GameEngine {
                     text: 'Game loop started.',
                     type: 'info'
                 });
-                this.#logger?.debug('GameEngine: Dispatched game loop started message.');
             } catch (dispatchError) {
                 // Log failure but don't halt execution
                 // --- FIXED: Update error message to reflect token usage --- <<< FIXED

@@ -221,9 +221,6 @@ describe('GameEngine start() - Success Path (Initialization Delegated)', () => {
         // Logs related to starting the loop
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting GameLoop...');
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: GameLoop started successfully.');
-        // Log related to dispatching the final message
-        // <<< NO CHANGE NEEDED HERE - This should now pass after fixing the container resolution >>>
-        expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Dispatched game loop started message.');
 
 
         // --- Ensure logs related to the *internal steps* of initialization are GONE ---
