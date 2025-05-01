@@ -2,13 +2,13 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
-import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../types/components.js'; // Added missing imports
+import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../types/components.js';
 
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code, except for TurnManager)
+// (Mocks remain the same as provided in the initial code, except for TurnManager and the new TurnHandlerResolver)
 const mockEventBus = {
     dispatch: jest.fn(),
     subscribe: jest.fn(),
@@ -21,8 +21,8 @@ const mockInputHandler = {
     setCommandCallback: jest.fn()
 };
 const mockGameStateManager = {
-    getPlayer: jest.fn(), // Still needed for some older tests, though start() doesn't use it
-    getCurrentLocation: jest.fn(), // Still needed for some older tests + executeAction
+    getPlayer: jest.fn(),
+    getCurrentLocation: jest.fn(),
     setPlayer: jest.fn(),
     setCurrentLocation: jest.fn()
 };
@@ -51,16 +51,27 @@ const mockvalidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
-// ****** CORRECTED MOCK: TurnManager ******
-// Implements ITurnManager interface expected by GameLoop constructor
+// Mock TurnManager (Implements ITurnManager interface)
 const mockTurnManager = {
     start: jest.fn(),
     stop: jest.fn(),
     getCurrentActor: jest.fn().mockReturnValue(null), // Default to no actor
     advanceTurn: jest.fn(),
-    // Add other methods if needed by specific tests, but these are the ones checked by constructor
 };
-// ****************************************
+
+// ****** NEW MOCK: TurnHandlerResolver ******
+// Implements ITurnHandlerResolver interface expected by GameLoop constructor
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn().mockImplementation((actor) => {
+        // Default mock implementation: return a basic handler object
+        // This might need to be more sophisticated if tests depend on specific handler behavior
+        // console.warn(`Mock TurnHandlerResolver used for actor: ${actor?.id}. Returning default mock handler.`); // Optional: Log usage
+        return {
+            handleTurn: jest.fn().mockResolvedValue(undefined) // Basic mock handler method
+        };
+    }),
+};
+// *******************************************
 
 
 // Mock entities for GameStateManager/TurnOrderService
@@ -69,17 +80,20 @@ const mockPlayer = {
     name: 'Tester',
     getComponent: jest.fn(),
     // Corrected hasComponent mock implementation
-    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID)
+    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID),
+    getAllComponents: jest.fn(() => [{id: PLAYER_COMPONENT_ID}]), // Added for potential logging in resolver
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
     // Corrected hasComponent mock implementation
-    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID)
+    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID),
+    getAllComponents: jest.fn(() => [{id: ACTOR_COMPONENT_ID}]), // Added for potential logging in resolver
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn() /* Add if needed */};
 
+// ****** CORRECTED HELPER: createValidOptions ******
 // Helper to create a complete, valid options object
 const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
@@ -91,9 +105,11 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnManager: mockTurnManager, // ***** CORRECTED THIS LINE *****
+    turnManager: mockTurnManager,
+    turnHandlerResolver: mockTurnHandlerResolver, // ***** ADDED THIS LINE *****
     logger: mockLogger,
 });
+// *************************************************
 
 // --- Test Suite ---
 
@@ -119,11 +135,20 @@ describe('GameLoop', () => {
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
-        // Reset Turn Manager Mocks (CORRECTED)
+        // Reset Turn Manager Mocks
         mockTurnManager.start.mockClear();
         mockTurnManager.stop.mockClear();
         mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Reset return value too
         mockTurnManager.advanceTurn.mockClear();
+
+        // ***** NEW: Reset Turn Handler Resolver Mock *****
+        mockTurnHandlerResolver.resolveHandler.mockClear();
+        // Reset implementation if needed (e.g., if a test overrides it)
+        mockTurnHandlerResolver.resolveHandler.mockImplementation((actor) => {
+            // console.warn(`Mock TurnHandlerResolver reset for actor: ${actor?.id}. Returning default mock handler.`);
+            return {handleTurn: jest.fn().mockResolvedValue(undefined)};
+        });
+        // **************************************************
 
 
         // Reset Entity Manager Mock (Example: Clear active entities if needed)
@@ -133,6 +158,10 @@ describe('GameLoop', () => {
         // Corrected implementations
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
+        // Reset getAllComponents if used/modified
+        mockPlayer.getAllComponents.mockImplementation(() => [{id: PLAYER_COMPONENT_ID}]);
+        mockNpc.getAllComponents.mockImplementation(() => [{id: ACTOR_COMPONENT_ID}]);
+
 
     });
 
@@ -183,10 +212,10 @@ describe('GameLoop', () => {
             // Set up required game state - *Important*: GameStateManager provides the location
             mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
 
-            // ***** This is where the error occurred *****
-            // Now uses the corrected createValidOptions
+            // ***** This should now pass *****
+            // Now uses the corrected createValidOptions which includes mockTurnHandlerResolver
             gameLoop = new GameLoop(createValidOptions());
-            // *****---------------------------------*****
+            // *****----------------------*****
 
 
             // Set a default return value for the mocked actionExecutor
@@ -254,7 +283,7 @@ describe('GameLoop', () => {
             assertActionContextStructure(capturedContext, parsedCmdV_DO_P_IO, mockPlayer);
         });
 
-        // Test case for safety check: Missing Acting Entity (should now pass constructor)
+        // Test case for safety check: Missing Acting Entity
         it('should log error, dispatch UI error and return failure if actingEntity is missing', async () => {
             const result = await gameLoop.executeAction(null, parsedCmdV); // Pass null entity
 
@@ -270,7 +299,7 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for safety check: Missing Location from GameStateManager (should now pass constructor)
+        // Test case for safety check: Missing Location from GameStateManager
         it('should log error, dispatch UI error and return failure if currentLocation is missing', async () => {
             mockGameStateManager.getCurrentLocation.mockReturnValue(null); // Simulate missing location
 
@@ -288,7 +317,7 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for handling ActionExecutor errors (should now pass constructor)
+        // Test case for handling ActionExecutor errors
         it('should catch errors from actionExecutor.executeAction, log, dispatch UI error, and return failure', async () => {
             const actionError = new Error('Action failed miserably');
             mockActionExecutor.executeAction.mockRejectedValue(actionError); // Make executor throw
@@ -306,7 +335,7 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for handling invalid ActionResult structure (should now pass constructor)
+        // Test case for handling invalid ActionResult structure
         it('should handle invalid result structure from actionExecutor and return failure', async () => {
             const invalidResult = {some: 'wrong', structure: true}; // Define the invalid structure
             mockActionExecutor.executeAction.mockResolvedValue(invalidResult); // Mock executor to return it
@@ -314,13 +343,11 @@ describe('GameLoop', () => {
             const result = await gameLoop.executeAction(mockPlayer, parsedCmdV);
 
             // Logger might debug/warn, but not necessarily error for bad structure vs exception
-            // --- CORRECTED ASSERTION ---
             // Expect the error message AND the invalid result object itself as the second argument
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expect.stringContaining(`Action ${parsedCmdV.actionId} execution returned invalid result structure`),
                 invalidResult // Assert the second argument passed to logger.error
             );
-            // --------------------------
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.any(Object)); // No UI error for this specific case usually
             expect(result).toEqual({
                 success: false,

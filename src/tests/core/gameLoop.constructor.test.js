@@ -2,6 +2,7 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../../types/components.js";
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
@@ -64,19 +65,27 @@ const mockTurnManager = {
 };
 // ****************************************
 
+// ****** MOCK: TurnHandlerResolver (NEW) ******
+// Added mock for the required dependency
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn(), // Must have the resolveHandler method
+};
+// ********************************************
+
 
 // Mock entities for GameStateManager/TurnManager
+// Define these constants or import them if they are used
 const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
-    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID) // Assuming PLAYER_COMPONENT_ID is defined elsewhere or imported
+    hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID)
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
-    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID) // Assuming ACTOR_COMPONENT_ID is defined elsewhere or imported
+    hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID)
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn() /* Add if needed */};
 
@@ -91,8 +100,9 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    // ***** FIX: Use turnManager key and the correctly named mock *****
-    turnManager: mockTurnManager,
+    turnManager: mockTurnManager, // Correct key used
+    // ***** FIX: Add the missing turnHandlerResolver mock *****
+    turnHandlerResolver: mockTurnHandlerResolver,
     logger: mockLogger,
 });
 
@@ -102,54 +112,64 @@ describe('GameLoop', () => {
     let gameLoop;
     let promptInputSpy;
     let processNextTurnSpy; // Spy for the new core loop method
+    let consoleWarnSpy; // Define spy here to access in afterEach if needed
 
     // Reset mocks before each test to ensure isolation (Top Level)
     beforeEach(() => {
         jest.clearAllMocks(); // Clear standard mocks BETWEEN tests
 
         // Reset Game State Manager Mocks
-        mockGameStateManager.getPlayer.mockReturnValue(null); // Keep default null for constructor tests etc.
-        mockGameStateManager.getCurrentLocation.mockReturnValue(null); // Keep default null
+        mockGameStateManager.getPlayer.mockReturnValue(null);
+        mockGameStateManager.getCurrentLocation.mockReturnValue(null);
 
         // Reset Action Executor Mock
         mockActionExecutor.executeAction.mockResolvedValue({
             success: true,
             messages: [{text: 'Default mock action executed'}]
-        }); // Adjusted default return
+        });
 
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
         // Reset Turn Manager Mocks
-        // Use the correct mock name here too
-        mockTurnManager.getCurrentActor.mockReturnValue(null); // Default to no entity available
-        mockTurnManager.start.mockClear(); // Clear call history for methods checked in constructor
+        mockTurnManager.getCurrentActor.mockReturnValue(null);
+        mockTurnManager.start.mockClear();
         mockTurnManager.stop.mockClear();
         mockTurnManager.advanceTurn.mockClear();
-        // Clear any other TurnManager mocks used in other tests if needed
         mockTurnManager.isEmpty.mockReturnValue(true);
 
-        // Reset Entity Manager Mock (Example: Clear active entities if needed)
+        // Reset Turn Handler Resolver Mock (NEW)
+        mockTurnHandlerResolver.resolveHandler.mockClear(); // Clear its call history
+        // Set a default mock implementation if needed for specific tests
+        // mockTurnHandlerResolver.resolveHandler.mockReturnValue({ handleTurn: jest.fn() });
+
+        // Reset Entity Manager Mock
         mockEntityManager.activeEntities = new Map();
 
-        // Reset entity mocks (ensure clean state for hasComponent etc.)
-        // Define these constants or import them if they are used
-        const PLAYER_COMPONENT_ID = 'player';
-        const ACTOR_COMPONENT_ID = 'actor';
+        // Reset entity mocks
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
 
+        // Spy on console.warn for logger tests
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
     });
 
     afterEach(() => {
         if (promptInputSpy) {
-            promptInputSpy.mockRestore(); // Restore original implementation
+            promptInputSpy.mockRestore();
             promptInputSpy = null;
         }
         if (processNextTurnSpy) {
             processNextTurnSpy.mockRestore();
             processNextTurnSpy = null;
         }
+        // Restore console spy
+        if (consoleWarnSpy) {
+            consoleWarnSpy.mockRestore();
+            consoleWarnSpy = null;
+        }
+
         // Ensure game loop is stopped if a test accidentally leaves it running
         if (gameLoop && gameLoop.isRunning) {
             // Need to mock stop dependencies if stop() is called here indirectly
@@ -176,7 +196,6 @@ describe('GameLoop', () => {
         it('should throw an error if options.gameStateManager is missing', () => {
             const options = createValidOptions();
             delete options.gameStateManager;
-            // Match more specific part of the error message if desired
             expect(() => new GameLoop(options)).toThrow(/options\.gameStateManager implementing IGameStateManager/);
         });
 
@@ -228,27 +247,37 @@ describe('GameLoop', () => {
             expect(() => new GameLoop(options)).toThrow(/options\.validatedEventDispatcher implementing IValidatedEventDispatcher/);
         });
 
-        // ***** FIX: Test for turnManager, delete turnManager, expect turnManager error *****
         it('should throw an error if options.turnManager is missing or invalid', () => {
             const options = createValidOptions();
-            // Delete the correct property
             delete options.turnManager;
-            // Expect the error message thrown by the constructor for turnManager
             expect(() => new GameLoop(options)).toThrow(/options\.turnManager implementing ITurnManager/);
 
-            // Also test invalid object (missing methods)
             options.turnManager = {};
             expect(() => new GameLoop(options)).toThrow(/options\.turnManager implementing ITurnManager/);
         });
 
+        // ***** NEW TEST: Test for turnHandlerResolver *****
+        it('should throw an error if options.turnHandlerResolver is missing or invalid', () => {
+            const options = createValidOptions();
+            // Delete the required property
+            delete options.turnHandlerResolver;
+            // Expect the specific error message
+            expect(() => new GameLoop(options)).toThrow(/options\.turnHandlerResolver implementing ITurnHandlerResolver/);
+
+            // Also test invalid object (missing method)
+            options.turnHandlerResolver = {};
+            expect(() => new GameLoop(options)).toThrow(/options\.turnHandlerResolver implementing ITurnHandlerResolver/);
+        });
+        // ***********************************************
+
         it('should throw an error if options object itself is missing', () => {
-            // Checks the first required dependency listed in the constructor (after logger)
             expect(() => new GameLoop(undefined)).toThrow(/options\.gameDataRepository/);
-            expect(() => new GameLoop(null)).toThrow(/options\.gameDataRepository/); // Also test null
+            expect(() => new GameLoop(null)).toThrow(/options\.gameDataRepository/);
         });
 
-        // ***** FIX: This test should now pass because createValidOptions provides turnManager *****
+        // ***** FIX: This test should now pass because createValidOptions includes turnHandlerResolver *****
         it('should successfully instantiate with valid mock dependencies', () => {
+            // Now that createValidOptions provides all dependencies, this should not throw
             expect(() => new GameLoop(createValidOptions())).not.toThrow();
         });
 
@@ -258,9 +287,9 @@ describe('GameLoop', () => {
             new GameLoop(createValidOptions());
             expect(mockEventBus.subscribe).toHaveBeenCalledWith(
                 'command:submit',
-                expect.any(Function) // Check that it subscribed with a function handler
+                expect.any(Function)
             );
-            // Add check for other subscriptions if needed, like 'turn:actor_changed'
+            // Check other subscriptions
             expect(mockEventBus.subscribe).toHaveBeenCalledWith(
                 'turn:actor_changed',
                 expect.any(Function)
@@ -282,35 +311,37 @@ describe('GameLoop', () => {
 
         // Optional: Test logger fallback
         it('should fallback to console if logger is invalid', () => {
-            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
-            }); // Suppress actual console output
+            // consoleWarnSpy is set up in beforeEach
             const options = createValidOptions();
             options.logger = {}; // Invalid logger
 
             expect(() => new GameLoop(options)).not.toThrow(/options\.logger/); // Shouldn't throw for logger
             expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid logger provided. Falling back to console.'));
+            consoleWarnSpy.mockClear(); // Clear calls before next check
 
             options.logger = null; // Test null logger
             expect(() => new GameLoop(options)).not.toThrow(/options\.logger/);
             expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid logger provided. Falling back to console.'));
 
-            consoleWarnSpy.mockRestore(); // Clean up spy
+            // No need to restore spy here, afterEach handles it
         });
 
         // Optional: Test logger usage if valid
         it('should use the provided valid logger', () => {
-            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
-            });
-            // createValidOptions provides a valid mockLogger
+            // consoleWarnSpy is set up in beforeEach
+            // createValidOptions provides a valid mockLogger by default
             const options = createValidOptions();
 
+            // Constructor call should now succeed
             expect(() => new GameLoop(options)).not.toThrow();
+
             // Ensure the fallback warning was NOT called
             expect(consoleWarnSpy).not.toHaveBeenCalled();
-            // Check if the provided logger was used for the info message
+
+            // Check if the provided logger was used for the info message during construction
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Instance created with dependencies. Ready to start.');
 
-            consoleWarnSpy.mockRestore();
+            // No need to restore spy here, afterEach handles it
         });
 
     }); // End describe('constructor')

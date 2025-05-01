@@ -1,4 +1,5 @@
 // src/tests/core/gameLoop.start.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -45,12 +46,17 @@ const mockValidatedEventDispatcher = { // Corrected variable name casing
     dispatchValidated: jest.fn().mockResolvedValue(undefined), // Make async
 };
 
-// NEW: Mock for ITurnManager interface
+// Mock for ITurnManager interface
 const mockTurnManager = {
     start: jest.fn().mockResolvedValue(undefined), // GameLoop awaits this
     stop: jest.fn().mockResolvedValue(undefined),  // GameLoop awaits this
     getCurrentActor: jest.fn().mockReturnValue(null), // Returns the entity or null
     advanceTurn: jest.fn().mockResolvedValue(undefined) // GameLoop awaits this
+};
+
+// NEW: Mock for ITurnHandlerResolver interface
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn().mockReturnValue({handleTurn: jest.fn().mockResolvedValue(undefined)}) // Mock returns a basic handler
 };
 
 
@@ -83,6 +89,7 @@ const createValidOptions = () => ({
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockValidatedEventDispatcher, // Corrected variable name
     turnManager: mockTurnManager, // Use the correct key and the new mock
+    turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED MISSING DEPENDENCY MOCK
     logger: mockLogger,
 });
 
@@ -114,6 +121,8 @@ describe('GameLoop', () => {
         mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Start with no actor
         mockTurnManager.advanceTurn.mockClear().mockResolvedValue(undefined);
 
+        // Reset Turn Handler Resolver Mock
+        mockTurnHandlerResolver.resolveHandler.mockClear().mockReturnValue({handleTurn: jest.fn().mockResolvedValue(undefined)});
 
         // Reset Entity Manager Mock
         mockEntityManager.activeEntities = new Map(); // Clear entities
@@ -151,6 +160,7 @@ describe('GameLoop', () => {
             mockGameStateManager.getPlayer.mockReturnValue(mockPlayer); // If needed for some internal logic
 
             // Create GameLoop instance WITHIN the test or a specific beforeEach for this describe
+            // *** This call will now pass because createValidOptions includes turnHandlerResolver ***
             gameLoop = new GameLoop(createValidOptions());
             expect(gameLoop.isRunning).toBe(false); // Pre-condition
 
@@ -171,6 +181,7 @@ describe('GameLoop', () => {
 
         it('should log a warning and not change state or call TurnManager.start if already running', async () => {
             // Create GameLoop instance
+            // *** This call will now pass because createValidOptions includes turnHandlerResolver ***
             gameLoop = new GameLoop(createValidOptions());
 
             // Start it once
@@ -204,6 +215,7 @@ describe('GameLoop', () => {
             mockTurnManager.start.mockRejectedValue(startError);
 
             // Create GameLoop instance
+            // *** This call will now pass because createValidOptions includes turnHandlerResolver ***
             gameLoop = new GameLoop(createValidOptions());
 
             expect(gameLoop.isRunning).toBe(false); // Pre-condition
@@ -252,6 +264,7 @@ describe('GameLoop', () => {
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // Use Interface
 /** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */ // Keep if needed elsewhere, but not directly by GameLoop
+/** @typedef {import('../core/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */ // Added Interface
 
 
 // --- Define the options object structure --- (Keep aligned with GameLoop constructor)
@@ -267,5 +280,6 @@ describe('GameLoop', () => {
  * @property {IActionDiscoverySystem} actionDiscoverySystem
  * @property {IValidatedEventDispatcher} validatedEventDispatcher
  * @property {ITurnManager} turnManager // Changed from turnOrderService
+ * @property {ITurnHandlerResolver} turnHandlerResolver // ADDED PROPERTY
  * @property {ILogger} logger
  */

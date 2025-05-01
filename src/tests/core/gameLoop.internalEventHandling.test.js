@@ -54,7 +54,11 @@ const mockTurnManager = {
     startNewRound: jest.fn(),
     clearCurrentRound: jest.fn(),
 };
-// ****************************************
+// ****** ADDED MOCK FOR TURN HANDLER RESOLVER ******
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn()
+};
+// ***************************************************
 
 
 // Mock entities
@@ -74,7 +78,7 @@ const mockNpc = {
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn()};
 
-// ****** Helper Function ******
+// ****** Helper Function (Corrected) ******
 const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
@@ -86,6 +90,7 @@ const createValidOptions = () => ({
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
     turnManager: mockTurnManager,
+    turnHandlerResolver: mockTurnHandlerResolver, // <-- Added missing mock
     logger: mockLogger,
 });
 // ****** Helper Function END ******
@@ -119,6 +124,7 @@ describe('GameLoop', () => {
         // Reset other mocks if necessary
         mockActionDiscoverySystem.getValidActions.mockResolvedValue([]);
         mockEntityManager.activeEntities = new Map();
+        mockTurnHandlerResolver.resolveHandler.mockReturnValue(null); // Default mock return for resolver if needed
     });
 
     // General cleanup after ANY test in this file
@@ -162,6 +168,7 @@ describe('GameLoop', () => {
                 mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Ensure mock returns player
 
                 // Create instance (subscribes handlers internally)
+                // NOW USES CORRECTED createValidOptions()
                 gameLoop = new GameLoop(createValidOptions());
 
                 // Create spies AFTER instance creation
@@ -186,9 +193,6 @@ describe('GameLoop', () => {
                 // NOTE: We don't need to call turnActorChangedHandler directly here for the command submission tests,
                 // as the handler under test (#handleSubmittedCommandFromEvent) directly queries mockTurnManager.getCurrentActor().
                 // We *do* rely on mockTurnManager.getCurrentActor() being set correctly above.
-
-                // ****** REMOVED OBSOLETE VERIFICATION USING INTERNAL STATE ******
-                // expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockPlayer);
 
                 // --- Clear ONLY spies and mock CALLS before tests ---
                 // DO NOT call jest.clearAllMocks() here as it resets implementations needed by the tests
@@ -316,8 +320,9 @@ describe('GameLoop', () => {
                 mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // Ensure mock returns NPC
 
                 // Create instance
+                // NOW USES CORRECTED createValidOptions()
                 const options = createValidOptions();
-                options.logger = mockLogger;
+                options.logger = mockLogger; // Can still override specific options if needed
                 gameLoop = new GameLoop(options);
 
                 // Create spies AFTER instance creation
@@ -332,13 +337,6 @@ describe('GameLoop', () => {
 
                 // --- Set State Directly for NPC tests ---
                 gameLoop._test_setRunning(true); // Use the *existing* running state helper
-
-                // ****** REMOVED OBSOLETE SETTER ******
-                // gameLoop._test_setInternalCurrentTurnEntity(mockNpc); // Use test setter
-
-                // ****** REMOVED OBSOLETE VERIFICATION USING INTERNAL STATE ******
-                // Verify state using the NEW test getter
-                // expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockNpc);
 
                 // --- Clear ONLY spies and mock CALLS before tests ---
                 processCmdSpy.mockClear();

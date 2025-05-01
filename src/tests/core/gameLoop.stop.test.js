@@ -1,7 +1,9 @@
 // src/tests/core/gameLoop.stop.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../../types/components.js";
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
@@ -63,18 +65,28 @@ const mockTurnManager = {
 };
 // ****************************************
 
+// *** ADDED: Mock for ITurnHandlerResolver ***
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn().mockReturnValue({ // Return a basic mock handler object
+        handleTurn: jest.fn().mockResolvedValue(undefined) // Mock the method it might call
+    }),
+};
+// ****************************************
+
 
 // Mock entities for GameStateManager/TurnManager
 const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
+    getAllComponents: jest.fn().mockReturnValue([]), // Add if constructor checks components
     hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID) // Assuming PLAYER_COMPONENT_ID is defined/imported
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
+    getAllComponents: jest.fn().mockReturnValue([]), // Add if constructor checks components
     hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID) // Assuming ACTOR_COMPONENT_ID is defined/imported
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn()};
@@ -90,14 +102,11 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    // *** FIX: Use correct property name and corrected mock ***
-    turnManager: mockTurnManager,
+    turnManager: mockTurnManager, // Keep this
+    // *** FIX: Add the missing dependency ***
+    turnHandlerResolver: mockTurnHandlerResolver,
     logger: mockLogger,
 });
-
-// Define dummy component IDs if not imported elsewhere in test context
-const PLAYER_COMPONENT_ID = 'playerComponent';
-const ACTOR_COMPONENT_ID = 'actorComponent';
 
 
 // --- Test Suite ---
@@ -131,6 +140,8 @@ describe('GameLoop', () => {
         mockTurnManager.start.mockResolvedValue(undefined); // Reset added mocks if needed
         mockTurnManager.stop.mockResolvedValue(undefined);
         mockTurnManager.advanceTurn.mockResolvedValue(undefined);
+        // *** Reset the new mock ***
+        mockTurnHandlerResolver.resolveHandler.mockReturnValue({handleTurn: jest.fn().mockResolvedValue(undefined)});
     });
 
     afterEach(async () => { // Make afterEach async if cleanup involves async operations potentially
@@ -142,9 +153,8 @@ describe('GameLoop', () => {
             processNextTurnSpy.mockRestore();
             processNextTurnSpy = null;
         }
-        // No await needed for cleanup check, but ensure stop is called if needed
+        // Ensure stop is called if needed
         if (gameLoop && gameLoop.isRunning) {
-            // console.log("Stopping game loop in afterEach"); // Debug log
             await gameLoop.stop(); // Use await here just in case cleanup matters for subsequent tests
         }
         gameLoop = null; // Help GC
@@ -155,10 +165,11 @@ describe('GameLoop', () => {
     describe('stop', () => {
         beforeEach(() => { // No need for async here if setup is sync
             // *** Create GameLoop instance AFTER mocks are fully configured ***
-            gameLoop = new GameLoop(createValidOptions()); // Now this should pass validation
+            // Now this should pass validation because createValidOptions includes turnHandlerResolver
+            gameLoop = new GameLoop(createValidOptions());
             gameLoop._test_setRunning(true); // Set state AFTER creating instance
 
-            // Clear mocks called during setup (like _test_setRunning logger call)
+            // Clear mocks called during setup (like constructor logger calls)
             jest.clearAllMocks();
             // *** Re-reset mock implementations AFTER clearAllMocks ***
             mockEventBus.dispatch.mockResolvedValue(undefined);
@@ -168,9 +179,11 @@ describe('GameLoop', () => {
             mockTurnManager.stop.mockResolvedValue(undefined);
             mockTurnManager.getCurrentActor.mockReturnValue(null);
             mockTurnManager.advanceTurn.mockResolvedValue(undefined);
+            // Re-reset the new mock's implementation if needed
+            mockTurnHandlerResolver.resolveHandler.mockReturnValue({handleTurn: jest.fn().mockResolvedValue(undefined)});
         });
 
-        // --- TEST FIXES BELOW ---
+        // --- TEST FIXES BELOW (These should now run as GameLoop instantiates) ---
 
         it('When Running: should set isRunning to false', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
@@ -200,7 +213,7 @@ describe('GameLoop', () => {
             }));
         });
 
-        // *** FIX: Update test name and assertion ***
+        // *** FIX: Update test name and assertion *** (Already correct in your code)
         it('When Running: should call turnManager.stop', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
             expect(mockTurnManager.stop).toHaveBeenCalledTimes(1); // Assert stop() was called
@@ -214,7 +227,7 @@ describe('GameLoop', () => {
 
         it('When Already Stopped: should not perform actions', async () => { // Make test async
             // Arrange: Ensure the loop is stopped first
-            gameLoop._test_setRunning(true);
+            // gameLoop._test_setRunning(true); // Already set in outer beforeEach
             await gameLoop.stop(); // *** Await the first stop call ***
             expect(gameLoop.isRunning).toBe(false);
 
@@ -224,16 +237,19 @@ describe('GameLoop', () => {
             mockEventBus.dispatch.mockResolvedValue(undefined);
             mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
             mockTurnManager.stop.mockResolvedValue(undefined); // Important to reset this one
+            // Reset new mock if its state matters (e.g., call count)
+            mockTurnHandlerResolver.resolveHandler.mockReturnValue({handleTurn: jest.fn().mockResolvedValue(undefined)});
+
 
             // Act: Call stop again
             await gameLoop.stop(); // *** Await the second call (idempotent) ***
 
             // Assert
-            expect(gameLoop.isRunning).toBe(false);
+            expect(gameLoop.isRunning).toBe(false); // Still false
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Stop called, but already stopped.');
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
-            // *** FIX: Assert that turnManager.stop was NOT called this time ***
+            // *** FIX: Assert that turnManager.stop was NOT called this time *** (Already correct)
             expect(mockTurnManager.stop).not.toHaveBeenCalled();
             // Check eventBus.dispatch specifically wasn't called *this time*
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();

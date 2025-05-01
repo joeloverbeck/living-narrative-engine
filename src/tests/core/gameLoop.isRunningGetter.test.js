@@ -2,11 +2,10 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../../types/components.js";
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 // Assuming component IDs are defined somewhere accessible, e.g., a constants file
-const PLAYER_COMPONENT_ID = 'player';
-const ACTOR_COMPONENT_ID = 'actor';
 
 
 // --- Mock Dependencies ---
@@ -53,16 +52,21 @@ const mockvalidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
-// ****** CORRECTED MOCK: TurnManager ******
-// Renamed from mockTurnOrderService and given ITurnManager methods
+// Mock: TurnManager (implements ITurnManager)
 const mockTurnManager = {
-    start: jest.fn().mockResolvedValue(undefined), // Added: Corresponds to ITurnManager.start
-    stop: jest.fn().mockResolvedValue(undefined),   // Added: Corresponds to ITurnManager.stop
-    getCurrentActor: jest.fn().mockReturnValue(null), // Added: Corresponds to ITurnManager.getCurrentActor
-    advanceTurn: jest.fn().mockResolvedValue(undefined),// Added: Corresponds to ITurnManager.advanceTurn
-    // Add other methods ONLY if GameLoop *directly* calls them (unlikely based on current GameLoop code)
+    start: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn().mockResolvedValue(undefined),
+    getCurrentActor: jest.fn().mockReturnValue(null),
+    advanceTurn: jest.fn().mockResolvedValue(undefined),
 };
-// ****************************************
+
+// ****** ADDED MOCK: TurnHandlerResolver (implements ITurnHandlerResolver) ******
+// This was missing, causing the constructor error.
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn(), // Needs the function checked by the constructor
+    // We don't need a specific implementation for these tests, just the function's existence.
+};
+// *******************************************************************************
 
 
 // Mock entities for GameStateManager/TurnManager
@@ -91,7 +95,8 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnManager: mockTurnManager, // ***** CORRECTED: Use 'turnManager' key and the correct mock *****
+    turnManager: mockTurnManager,
+    turnHandlerResolver: mockTurnHandlerResolver, // ***** ADDED: Provide the required dependency *****
     logger: mockLogger,
 });
 
@@ -119,12 +124,17 @@ describe('GameLoop', () => {
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
-        // ****** CORRECTED: Reset Turn Manager Mocks ******
+        // Reset Turn Manager Mocks
         mockTurnManager.start.mockClear().mockResolvedValue(undefined); // Reset call count and return value
         mockTurnManager.stop.mockClear().mockResolvedValue(undefined);
         mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Default to no actor
         mockTurnManager.advanceTurn.mockClear().mockResolvedValue(undefined);
-        // ***********************************************
+
+        // ****** ADDED: Reset Turn Handler Resolver Mock ******
+        mockTurnHandlerResolver.resolveHandler.mockClear();
+        // You might want to add a default mock implementation if tests need it:
+        // mockTurnHandlerResolver.resolveHandler.mockReturnValue({ handleTurn: jest.fn() });
+        // ****************************************************
 
         // Reset Entity Manager Mock (Example: Clear active entities if needed)
         mockEntityManager.activeEntities = new Map();
@@ -163,39 +173,29 @@ describe('GameLoop', () => {
     // --- isRunning Getter Test ---
     describe('isRunning getter', () => {
         it('should return false initially', () => {
-            // Now the constructor should pass
+            // Now the constructor should pass with the added mockTurnHandlerResolver
             gameLoop = new GameLoop(createValidOptions());
             expect(gameLoop.isRunning).toBe(false);
         });
 
         it('should return true after successful start()', async () => {
-            gameLoop = new GameLoop(createValidOptions());
+            gameLoop = new GameLoop(createValidOptions()); // Should pass constructor now
 
-            // --- CORRECTION ---
-            // Mock `_processCurrentActorTurn` instead of `_processNextTurn`
-            // We spy on this method because `start()` calls `turnManager.start()`,
-            // which in turn might trigger events (`turn:actor_changed`) that call
-            // `_processCurrentActorTurn`. We want to prevent that internal processing
-            // just to check the `isRunning` flag set directly by `start()`.
-            // --- START SPY ---
+            // Spy on internal method to prevent full turn processing, just check start() logic
             processCurrentActorTurnSpy = jest.spyOn(GameLoop.prototype, '_processCurrentActorTurn')
                 .mockResolvedValue(); // Simple mock to prevent execution
-            // --- END SPY ---
 
             // Ensure turnManager.start resolves successfully (it does by default)
-            // mockTurnManager.start.mockResolvedValue(); // Default is already resolved
-
             await gameLoop.start(); // This sets #isRunning = true, calls turnManager.start()
 
             // Now check the flag after start() completed its *own* logic
             expect(gameLoop.isRunning).toBe(true);
             // Check if turnManager.start was actually called
             expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
-            // --- END CORRECTION ---
         });
 
         it('should return false after stop() is called on a running loop', async () => { // Made async because stop() is async
-            gameLoop = new GameLoop(createValidOptions());
+            gameLoop = new GameLoop(createValidOptions()); // Should pass constructor now
 
             // Use the provided test helper to set the private state correctly
             gameLoop._test_setRunning(true); // Set #isRunning = true for the test
@@ -212,7 +212,7 @@ describe('GameLoop', () => {
         });
 
         it('should return false after stop() is called on a stopped loop', async () => { // Made async because stop() is async
-            gameLoop = new GameLoop(createValidOptions());
+            gameLoop = new GameLoop(createValidOptions()); // Should pass constructor now
             expect(gameLoop.isRunning).toBe(false); // Pre-condition
 
             await gameLoop.stop(); // Call stop on already stopped loop
