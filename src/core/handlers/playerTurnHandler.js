@@ -17,6 +17,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {import('../eventBus.js').default} EventBus */ // Added dependency
 /** @typedef {import('../interfaces/IEventBus.js').SubscriptionHandle} SubscriptionHandle */
 /** @typedef {{ entityId: string, command: string }} CommandSubmitEvent */ // Assuming event structure
+/** @typedef {*} CommandProcessingResult */ // Placeholder for the result type from ICommandProcessor
 
 /**
  * @class PlayerTurnHandler
@@ -88,7 +89,6 @@ class PlayerTurnHandler extends ITurnHandler {
         this.#logger = logger;
 
         // Validate and assign other dependencies
-        // ... (existing validations for actionDiscoverySystem, validatedEventDispatcher, commandProcessor) ...
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
             this.#logger.error('PlayerTurnHandler: Invalid or missing actionDiscoverySystem dependency.');
             throw new Error('PlayerTurnHandler: Invalid or missing actionDiscoverySystem dependency.');
@@ -132,18 +132,17 @@ class PlayerTurnHandler extends ITurnHandler {
         }
         this.#eventBus = eventBus;
 
-
         // Subscribe to command submission events (Task 1)
         this.#commandSubmitSubscriptionHandle = this.#eventBus.subscribe(
             'command:submit',
-            this.#handleSubmittedCommand.bind(this)
+            // Bind the handler to ensure `this` context is correct
+            (eventData) => this.#handleSubmittedCommand(eventData)
         );
         if (!this.#commandSubmitSubscriptionHandle) {
             this.#logger.error('PlayerTurnHandler: Failed to subscribe to command:submit event.');
             // Depending on EventBus implementation, might need more robust error handling
             throw new Error('PlayerTurnHandler: Failed to subscribe to command:submit event.');
         }
-
 
         this.#logger.debug('PlayerTurnHandler initialized successfully and subscribed to command:submit.');
     }
@@ -174,10 +173,14 @@ class PlayerTurnHandler extends ITurnHandler {
         // Create a promise that will be resolved/rejected when the turn concludes
         // The promise is now primarily resolved/rejected by the command processing logic
         // triggered by #handleSubmittedCommand -> #_processValidatedCommand
+        // Renaming internal variables for clarity (Ticket 3.1.2 refinement)
+        let turnCompletionResolve, turnCompletionReject;
         this.#turnPromise = new Promise((resolve, reject) => {
-            this.#turnPromiseResolve = resolve;
-            this.#turnPromiseReject = reject;
+            turnCompletionResolve = resolve;
+            turnCompletionReject = reject;
         });
+        this.#turnPromiseResolve = turnCompletionResolve; // Store for #_processValidatedCommand
+        this.#turnPromiseReject = turnCompletionReject; // Store for #_processValidatedCommand
 
         try {
             // Start the sequence of discovering actions and enabling input
@@ -238,79 +241,99 @@ class PlayerTurnHandler extends ITurnHandler {
         }
 
         // Task 3.5: Validation passes
-        this.#logger.info(`PlayerTurnHandler: Received valid command "${commandString}" for current actor ${this.#currentActor.id}.`);
+        this.#logger.info(`PlayerTurnHandler: Received valid command "${commandString}" for current actor ${this.#currentActor.id}. Processing...`);
 
-        // Task 3.5.1: Call the next processing step (to be implemented in Ticket 3.1.5)
-        try {
-            // This method will eventually contain the logic from Ticket 3.1.5
-            // and will be responsible for calling this.#turnPromiseResolve() or this.#turnPromiseReject()
-            // after processing is complete (potentially asynchronously).
-            // Crucially, it should call #_cleanupTurn() *before* resolving/rejecting.
-            await this.#_processValidatedCommand(this.#currentActor, commandString);
-
-            // For now, assume immediate success for placeholder purposes.
-            // IN REAL IMPLEMENTATION (Ticket 3.1.5):
-            // The CommandProcessor interaction will likely be async.
-            // The resolution/rejection should happen based on CommandProcessor's result.
-            // this.#_cleanupTurn() MUST be called before resolve/reject.
-
-            // --- Placeholder Resolution ---
-            // this.#logger.debug(`PlayerTurnHandler: Placeholder - Command processed successfully.`);
-            // this.#_cleanupTurn(); // Call cleanup BEFORE resolving
-            // if (this.#turnPromiseResolve) this.#turnPromiseResolve();
-            // --- End Placeholder ---
-
-        } catch (error) {
-            this.#logger.error(`PlayerTurnHandler: Error processing command "${commandString}" for actor ${this.#currentActor.id}: ${error.message}`, error);
-            // Ensure cleanup happens even if processing fails
-            this.#_cleanupTurn(); // Call cleanup BEFORE rejecting
-            if (this.#turnPromiseReject) {
-                this.#turnPromiseReject(error);
-            }
-            // Optionally, rethrow or handle error further
-        }
+        // Task 3.5.1 (Ticket 3.1.5): Call the command processing logic.
+        // Error handling and promise resolution/rejection now happens within #_processValidatedCommand.
+        // No need for try/catch here as #_processValidatedCommand handles its own errors and signals turn completion.
+        await this.#_processValidatedCommand(this.#currentActor, commandString);
     }
 
     /**
-     * Processes a command that has been validated to belong to the current actor.
-     * (Implementation details deferred to Ticket 3.1.5)
-     * This method is expected to interact with the CommandProcessor and eventually
-     * resolve or reject the main #turnPromise, calling #_cleanupTurn beforehand.
+     * Processes a validated command string by disabling input, calling the command processor,
+     * handling the result (success/failure), signaling turn completion, and cleaning up.
      * @private
      * @param {Entity} actor - The actor whose command is being processed.
      * @param {string} commandString - The raw command string to process.
-     * @returns {Promise<void>} A promise that resolves/rejects when command processing is complete.
+     * @returns {Promise<void>} A promise that resolves when this processing step is complete (doesn't necessarily mean the turn succeeded).
      */
     async #_processValidatedCommand(actor, commandString) {
-        this.#logger.debug(`PlayerTurnHandler: #_processValidatedCommand called for ${actor.id} with command "${commandString}". (Implementation pending Ticket 3.1.5)`);
-        // --- TODO (Ticket 3.1.5) ---
-        // 1. Parse the commandString using CommandParser.
-        // 2. Resolve targets using TargetResolutionService.
-        // 3. Validate the action using ActionValidationService.
-        // 4. Execute the action using ActionExecutor.
-        // 5. Based on success/failure:
-        //    - Call #_cleanupTurn()
-        //    - Call this.#turnPromiseResolve() or this.#turnPromiseReject()
-        // --- Placeholder ---
-        return new Promise(resolve => {
-            this.#logger.warn("PlayerTurnHandler: #_processValidatedCommand is a placeholder. Simulating successful command processing.");
-            // Simulate async work
-            setTimeout(() => {
-                try {
-                    // --- Simulate Success Path ---
-                    this.#logger.debug(`PlayerTurnHandler: Placeholder - Simulating command processed successfully.`);
-                    this.#_cleanupTurn(); // Call cleanup BEFORE resolving
-                    if (this.#turnPromiseResolve) this.#turnPromiseResolve();
-                    resolve(); // Resolve the inner promise
-                } catch (e) {
-                    // This catch might not be strictly necessary if cleanup/reject handle errors
-                    this.#logger.error(`Error during placeholder resolution: ${e.message}`);
-                    // Ensure rejection if something goes wrong here
-                    if (this.#turnPromiseReject) this.#turnPromiseReject(e);
-                }
-            }, 10); // Simulate a tiny delay
-        });
-        // --- End Placeholder ---
+        this.#logger.debug(`PlayerTurnHandler: #_processValidatedCommand started for ${actor.id} with command "${commandString}".`);
+
+        // 1. Disable Input
+        try {
+            this.#logger.debug(`PlayerTurnHandler: Dispatching textUI:disable_input for ${actor.id}.`);
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {
+                message: "Processing...", // You might customize this message
+                entityId: actor.id
+            });
+        } catch (dispatchError) {
+            // Log the dispatch error, but proceed with command processing if possible.
+            // Consider if this should reject the turn. For now, just logging.
+            this.#logger.error(`PlayerTurnHandler: Failed to dispatch textUI:disable_input for ${actor.id}: ${dispatchError.message}`, dispatchError);
+        }
+
+        // 2. Process Command (with try/catch/finally for promise resolution and cleanup)
+        try {
+            // 2a. Log Intent
+            this.#logger.info(`PlayerTurnHandler: Attempting to process command "${commandString}" for actor ${actor.id} via ICommandProcessor.`);
+
+            // 2b. (Placeholder) Call Command Processor
+            const processPromise = this.#commandProcessor.processCommand(actor, commandString);
+            this.#logger.debug(`PlayerTurnHandler: Waiting for command processor result...`);
+
+            // 2c. (Placeholder) Await Result
+            /** @type {CommandProcessingResult} */ // Placeholder type
+            const result = await processPromise;
+
+            // 2d. (Placeholder) Basic Logging based on Result
+            // Replace this with actual result checking when CommandProcessingResult structure is known
+            this.#logger.info(`PlayerTurnHandler: Command processed for actor ${actor.id}. Placeholder result: ${JSON.stringify(result)}`);
+            // Example of potential future logic:
+            // if (result && result.success) {
+            //     this.#logger.info(`PlayerTurnHandler: Command processed successfully for actor ${actor.id}.`);
+            // } else {
+            //     this.#logger.warn(`PlayerTurnHandler: Command processing failed or returned non-success for actor ${actor.id}. Result: ${JSON.stringify(result)}`);
+            //     // Optionally throw an error here if a non-success result should reject the turn
+            //     // throw new Error(result?.message || 'Command processing indicated failure.');
+            // }
+
+            // 2e. Signal Successful Turn Completion
+            this.#logger.info(`PlayerTurnHandler: Signaling successful turn completion for actor ${actor.id}.`);
+            if (this.#turnPromiseResolve) {
+                this.#turnPromiseResolve();
+            } else {
+                this.#logger.error(`PlayerTurnHandler: #turnPromiseResolve was null when trying to resolve turn for ${actor.id}. This should not happen.`);
+            }
+
+        } catch (error) {
+            // 3a. Log Error
+            this.#logger.error(`PlayerTurnHandler: Error during command processing for actor ${actor.id}, command "${commandString}": ${error.message}`, error);
+
+            // 3b. (Optional) Dispatch Error Message to UI
+            try {
+                await this.#validatedEventDispatcher.dispatchValidated('display:message', {
+                    message: `Error processing command: ${error.message}`,
+                    recipientEntityId: actor.id // Send only to the relevant player
+                    // TODO: Add message type/level if the schema supports it (e.g., 'error')
+                });
+            } catch (dispatchError) {
+                this.#logger.error(`PlayerTurnHandler: Failed to dispatch error message to UI for actor ${actor.id}: ${dispatchError.message}`, dispatchError);
+            }
+
+            // 3c. Signal Failed Turn Completion
+            this.#logger.info(`PlayerTurnHandler: Signaling failed turn completion for actor ${actor.id}.`);
+            if (this.#turnPromiseReject) {
+                this.#turnPromiseReject(error);
+            } else {
+                this.#logger.error(`PlayerTurnHandler: #turnPromiseReject was null when trying to reject turn for ${actor.id}. This should not happen.`);
+            }
+
+        } finally {
+            // 4. Call Cleanup Method
+            this.#logger.debug(`PlayerTurnHandler: Executing cleanup for turn of actor ${actor.id}.`);
+            this.#_cleanupTurn();
+        }
     }
 
 
@@ -373,10 +396,14 @@ class PlayerTurnHandler extends ITurnHandler {
         } catch (error) {
             this.#logger.error(`PlayerTurnHandler: Error during action discovery or display for ${actor.id}: ${error.message}`, error);
             // Optionally dispatch an error event or handle differently
-            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
-                actions: [], // Send empty actions on error
-                entityId: actor.id
-            });
+            try {
+                await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
+                    actions: [], // Send empty actions on error
+                    entityId: actor.id
+                });
+            } catch (dispatchError) {
+                this.#logger.error(`PlayerTurnHandler: Failed to dispatch empty actions after error for ${actor.id}: ${dispatchError.message}`, dispatchError);
+            }
             throw error; // Rethrow to ensure the sequence initiation fails
         }
     }
@@ -411,32 +438,19 @@ class PlayerTurnHandler extends ITurnHandler {
      * @private
      */
     #_cleanupTurn() {
-        const actorId = this.#currentActor?.id || 'UNKNOWN';
+        const actorId = this.#currentActor?.id || 'NO ACTOR'; // Provide default if null
         this.#logger.debug(`PlayerTurnHandler: Cleaning up turn state for actor ${actorId}.`);
 
-        // Unsubscribe from command:submit (Task 6)
-        // Note: We only unsubscribe *this specific handler's* subscription.
-        // The main subscription in the constructor remains for subsequent turns.
-        // EDIT: Rereading the ticket - "unsubscribe... when the handler is destroyed OR the turn ends".
-        // This implies the subscription might be intended to be *per turn*.
-        // Let's adjust: Subscribe in handleTurn, unsubscribe in cleanup.
-        // No, the current approach (subscribe in constructor, validate actor in handler) is more robust.
-        // The cleanup task likely meant unsubscribing from *temporary* listeners if any were added *during* the turn.
-        // Since command:submit is the core mechanism, let's keep the constructor subscription.
-        // If specific *per-turn* subscriptions were needed, they'd be handled here.
-        // Let's assume the ticket meant ensuring the *handler* cleans up its own general listeners on destruction,
-        // and manages its *state* correctly between turns.
-        // Re-interpreting Task 6: Ensure turn-specific state is reset. If the handler itself were destroyed,
-        // it would need a general `destroy()` method to unsubscribe from constructor-level listeners.
-        // Let's stick to resetting turn state here as the primary goal for end-of-turn cleanup.
-
-        this.#logger.debug(`PlayerTurnHandler: Resetting turn state for actor ${this.#currentActor?.id}.`);
+        // Reset turn-specific state
         this.#currentActor = null;
-        this.#turnPromise = null; // Let GC handle the promise itself
+        this.#turnPromise = null; // Let GC handle the promise object
         this.#turnPromiseResolve = null;
         this.#turnPromiseReject = null;
-        // Do NOT unsubscribe here if subscription is done in the constructor for the handler's lifetime.
-        // If a separate destroy() method is added later, unsubscribe there.
+
+        // Note: The 'command:submit' subscription is persistent (from constructor)
+        // and is filtered internally by #handleSubmittedCommand based on #currentActor.
+        // It should only be unsubscribed in a general teardown/destroy method.
+        this.#logger.debug(`PlayerTurnHandler: Turn state reset for actor ${actorId}.`);
     }
 
     /**
@@ -447,19 +461,23 @@ class PlayerTurnHandler extends ITurnHandler {
     destroy() {
         this.#logger.info(`PlayerTurnHandler: Destroying handler and unsubscribing from events.`);
         if (this.#commandSubmitSubscriptionHandle) {
-            this.#eventBus.unsubscribe(this.#commandSubmitSubscriptionHandle);
+            try {
+                this.#eventBus.unsubscribe(this.#commandSubmitSubscriptionHandle);
+                this.#logger.debug(`PlayerTurnHandler: Unsubscribed from command:submit.`);
+            } catch (unsubscribeError) {
+                this.#logger.error(`PlayerTurnHandler: Error unsubscribing from command:submit: ${unsubscribeError.message}`, unsubscribeError);
+            }
             this.#commandSubmitSubscriptionHandle = null;
-            this.#logger.debug(`PlayerTurnHandler: Unsubscribed from command:submit.`);
         }
         // Add cleanup for any other persistent resources or subscriptions here.
-        this.#resetTurnState(); // Ensure state is clean
+
+        // Ensure any lingering turn state is cleared, though it shouldn't exist if cleanup was called.
+        if (this.#currentActor) {
+            this.#logger.warn(`PlayerTurnHandler: Destroying handler while a turn for ${this.#currentActor.id} was potentially active. Forcing cleanup.`);
+            this.#_cleanupTurn();
+        }
     }
 
-    // TODO: Add methods to be called by the command processor (or via events) - Now handled by #_processValidatedCommand
-    // to resolve or reject the #turnPromise in Tickets 3.1.4 / 3.1.5.
-    // e.g., _onCommandProcessedSuccessfully(), _onCommandProcessingFailed()
-    // These methods should call #turnPromiseResolve() or #turnPromiseReject()
-    // and then call #_cleanupTurn(). -> This logic is now intended inside #_processValidatedCommand
 }
 
 export default PlayerTurnHandler;
