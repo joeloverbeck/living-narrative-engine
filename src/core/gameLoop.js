@@ -1,4 +1,5 @@
 // src/core/gameLoop.js
+// ****** CORRECTED FILE ******
 
 // --- Type Imports ---
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -57,7 +58,8 @@ class GameLoop {
     #logger; // Interface: ILogger
 
     #isRunning = false;
-    #currentTurnEntity = null; // Set by 'turn:actor_changed', nulled on stop, NOT read by core logic.
+
+    // #currentTurnEntity = null; // REMOVED: This field is no longer used by core logic
 
     /**
      * @param {GameLoopOptions} options - Configuration object containing all dependencies.
@@ -140,7 +142,7 @@ class GameLoop {
 
         // --- Initialize State ---
         this.#isRunning = false;
-        this.#currentTurnEntity = null; // Will be updated by TurnManager events
+        // REMOVED: No need to initialize #currentTurnEntity
 
         // --- Setup ---
         this.#subscribeToEvents();
@@ -169,7 +171,7 @@ class GameLoop {
 
     /**
      * Handles the 'turn:actor_changed' event from the TurnManager.
-     * Updates the internal (but not directly read) `currentTurnEntity` and triggers turn processing logic.
+     * Triggers turn processing logic for the new actor.
      * @private
      * @param {object} eventData - The event payload.
      * @param {Entity | null} eventData.currentActor - The entity whose turn it is now, or null if none.
@@ -182,9 +184,9 @@ class GameLoop {
 
         this.#logger.debug(`GameLoop: Received 'turn:actor_changed'. New Actor: ${newActor?.id ?? 'null'}. Previous: ${previousActor?.id ?? 'null'}`);
 
-        // Update the internal reference (for potential debugging/external tools, not core logic)
-        this.#currentTurnEntity = newActor;
-        this.#logger.debug(`GameLoop #handleTurnActorChanged: Internal #currentTurnEntity SET to ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
+        // REMOVED: Update the internal reference (for potential debugging/external tools, not core logic)
+        // this.#currentTurnEntity = newActor;
+        // this.#logger.debug(`GameLoop #handleTurnActorChanged: Internal #currentTurnEntity SET to ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
 
         if (!this.#isRunning) {
             this.#logger.debug('GameLoop received actor change event, but loop is not running.');
@@ -751,9 +753,9 @@ class GameLoop {
         await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', messagePayload);
         // -----------------------------------
 
-        // Reset internal loop state (still useful for debugging/external observation)
-        this.#logger.debug(`GameLoop stop: Setting internal #currentTurnEntity to null. Was: ${this.#currentTurnEntity?.id ?? 'null'}`); // Log before nulling
-        this.#currentTurnEntity = null;
+        // REMOVED: Reset internal loop state (still useful for debugging/external observation)
+        // this.#logger.debug(`GameLoop stop: Setting internal #currentTurnEntity to null. Was: ${this.#currentTurnEntity?.id ?? 'null'}`); // Log before nulling
+        // this.#currentTurnEntity = null;
 
         // --- FIX 2: Dispatch a general game stopped event ---
         // Uses EventBus
@@ -781,36 +783,38 @@ class GameLoop {
         this.#isRunning = value;
     }
 
-    /**
-     * @private
-     * @description **FOR TESTING PURPOSES ONLY.** Sets the internal current turn entity state.
-     * Note: Core methods now read from TurnManager. This only affects the internal state.
-     * @param {Entity | null} entity - The entity to set as internal current.
-     */
-    _test_setInternalCurrentTurnEntity(entity) {
-        // Add check before assignment
-        if (!entity) {
-            this.#logger?.warn(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity to null/undefined.`);
-        } else if (typeof entity.id === 'undefined') {
-            this.#logger?.error(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity with invalid entity (missing ID).`);
-            // Optionally throw an error or just don't set it
-            // return; // Don't set if invalid
-        }
-        this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Setting internal #currentTurnEntity to ${entity?.id ?? 'null'}`);
-        this.#currentTurnEntity = entity;
-        this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Internal #currentTurnEntity is NOW ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
-    }
+    // REMOVED: Test helper for setting internal #currentTurnEntity is obsolete
+    // /**
+    //  * @private
+    //  * @description **FOR TESTING PURPOSES ONLY.** Sets the internal current turn entity state.
+    //  * Note: Core methods now read from TurnManager. This only affects the internal state.
+    //  * @param {Entity | null} entity - The entity to set as internal current.
+    //  */
+    // _test_setInternalCurrentTurnEntity(entity) {
+    //     // Add check before assignment
+    //     if (!entity) {
+    //         this.#logger?.warn(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity to null/undefined.`);
+    //     } else if (typeof entity.id === 'undefined') {
+    //         this.#logger?.error(`[_test_setInternalCurrentTurnEntity]: Attempted to set internal #currentTurnEntity with invalid entity (missing ID).`);
+    //         // Optionally throw an error or just don't set it
+    //         // return; // Don't set if invalid
+    //     }
+    //     this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Setting internal #currentTurnEntity to ${entity?.id ?? 'null'}`);
+    //     this.#currentTurnEntity = entity;
+    //     this.#logger?.debug(`[_test_setInternalCurrentTurnEntity]: Internal #currentTurnEntity is NOW ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
+    // }
 
-    /**
-     * @private // Logically private, but public for test access
-     * @description **FOR TESTING PURPOSES ONLY.** Gets the internal current turn entity state.
-     * Note: Core methods now read from TurnManager. This reads only the internal state.
-     * @returns {Entity | null}
-     */
-    _test_getInternalCurrentTurnEntity() {
-        this.#logger?.debug(`[_test_getInternalCurrentTurnEntity]: Reading internal #currentTurnEntity (currently ${this.#currentTurnEntity?.id ?? 'null'})`);
-        return this.#currentTurnEntity;
-    }
+    // REMOVED: Test helper for getting internal #currentTurnEntity is obsolete
+    // /**
+    //  * @private // Logically private, but public for test access
+    //  * @description **FOR TESTING PURPOSES ONLY.** Gets the internal current turn entity state.
+    //  * Note: Core methods now read from TurnManager. This reads only the internal state.
+    //  * @returns {Entity | null}
+    //  */
+    // _test_getInternalCurrentTurnEntity() {
+    //     this.#logger?.debug(`[_test_getInternalCurrentTurnEntity]: Reading internal #currentTurnEntity (currently ${this.#currentTurnEntity?.id ?? 'null'})`);
+    //     return this.#currentTurnEntity;
+    // }
 }
 
 export default GameLoop;

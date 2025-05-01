@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.processSubmittedCommand.test.js
-// ****** CORRECTED FILE ******
+// ****** CORRECTED FILE (Again) ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -171,8 +171,7 @@ describe('GameLoop', () => {
             // Set internal state using helper methods IF gameLoop exists
             if (gameLoop) {
                 gameLoop._test_setRunning(true); // Set loop to running
-                // *** CORRECTION HERE ***
-                gameLoop._test_setInternalCurrentTurnEntity(mockPlayer); // Assume player's turn
+                // *** LINE 175 REMOVED ***
                 mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Make mockTurnManager consistent
             } else {
                 // Fail fast or log if gameLoop isn't set up - indicates a problem in outer beforeEach
@@ -229,8 +228,7 @@ describe('GameLoop', () => {
             // *** FIX: Check gameLoop exists before accessing methods ***
             if (gameLoop) {
                 gameLoop._test_setRunning(false);
-                // *** CORRECTION HERE ***
-                gameLoop._test_setInternalCurrentTurnEntity(null);
+                // *** LINE 233 REMOVED ***
                 mockTurnManager.getCurrentActor.mockReturnValue(null); // Reset mock
             }
         });
@@ -238,6 +236,8 @@ describe('GameLoop', () => {
         it('should do nothing if called when the loop is not running', async () => {
             if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
             gameLoop._test_setRunning(false); // Ensure loop is stopped using helper
+            // Optionally ensure mockTurnManager returns null if the code path checks it even when not running
+            // mockTurnManager.getCurrentActor.mockReturnValue(null);
             // Clear mocks called during beforeEach setup
             jest.clearAllMocks();
             if (executeActionSpy) executeActionSpy.mockClear();
@@ -261,9 +261,8 @@ describe('GameLoop', () => {
                 hasComponent: jest.fn(() => false),
                 getComponent: jest.fn()
             }; // Ensure hasComponent returns false for player
-            // *** CORRECTION HERE (although redundant due to outer beforeEach, good practice) ***
-            gameLoop._test_setInternalCurrentTurnEntity(mockPlayer); // Player's turn
-            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Align mock
+            // The beforeEach correctly sets mockTurnManager.getCurrentActor() to mockPlayer
+            // So the state is: it IS player's turn, but the command came from wrongEntity
 
             // Clear mocks for this specific test path
             if (promptInputSpy) promptInputSpy.mockClear();
@@ -279,7 +278,9 @@ describe('GameLoop', () => {
             expect(executeActionSpy).not.toHaveBeenCalled();
             expect(mockTurnManager.advanceTurn).not.toHaveBeenCalled(); // Check turn manager
 
-            // Check recovery logic: re-discover for *correct* entity and re-prompt
+            // Check recovery logic: re-discover for *correct* entity (mockPlayer) and re-prompt
+            // GameLoop's processSubmittedCommand logic now recovers by calling _promptPlayerInput(currentActor)
+            // which implicitly calls _discoverActionsForEntity(currentActor)
             expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object));
             expect(promptInputSpy).toHaveBeenCalledTimes(1); // Should have been called once during error handling
         });
@@ -371,7 +372,7 @@ describe('GameLoop', () => {
 
             it('should re-discover actions for the player', async () => {
                 await gameLoop.processSubmittedCommand(mockPlayer, badCommand);
-                // Check discovery happens *after* parse failure
+                // Check discovery happens *after* parse failure (called by _promptPlayerInput)
                 expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object));
             });
 

@@ -1,4 +1,5 @@
 // src/tests/core/gameLoop.internalEventHandling.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -157,6 +158,7 @@ describe('GameLoop', () => {
                 mockNpc.hasComponent.mockImplementation((id) => id === ACTOR_COMPONENT_ID);
                 mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
                 mockEntityManager.activeEntities = new Map([[mockPlayer.id, mockPlayer], [mockNpc.id, mockNpc]]);
+                // ****** CRITICAL: Set TurnManager state for these tests ******
                 mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Ensure mock returns player
 
                 // Create instance (subscribes handlers internally)
@@ -180,12 +182,13 @@ describe('GameLoop', () => {
                 await gameLoop.start();
                 expect(gameLoop.isRunning).toBe(true);
 
-                // Simulate the event that sets the state
-                await turnActorChangedHandler({currentActor: mockPlayer, previousActor: null});
+                // Simulate the event that sets the state (via TurnManager)
+                // NOTE: We don't need to call turnActorChangedHandler directly here for the command submission tests,
+                // as the handler under test (#handleSubmittedCommandFromEvent) directly queries mockTurnManager.getCurrentActor().
+                // We *do* rely on mockTurnManager.getCurrentActor() being set correctly above.
 
-                // Verify state using the NEW test getter
-                // ****** CORRECTED LINE ******
-                expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockPlayer);
+                // ****** REMOVED OBSOLETE VERIFICATION USING INTERNAL STATE ******
+                // expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockPlayer);
 
                 // --- Clear ONLY spies and mock CALLS before tests ---
                 // DO NOT call jest.clearAllMocks() here as it resets implementations needed by the tests
@@ -199,6 +202,8 @@ describe('GameLoop', () => {
                 mockInputHandler.disable.mockClear();
                 mockActionDiscoverySystem.getValidActions.mockClear(); // Clear calls from setup
                 mockGameStateManager.getCurrentLocation.mockClear(); // Clear calls from setup
+                // Clear TurnManager calls from setup/previous tests
+                mockTurnManager.getCurrentActor.mockClear();
             });
 
             // afterEach is handled by the outer block
@@ -210,18 +215,27 @@ describe('GameLoop', () => {
                 expect(typeof mockPlayer.hasComponent).toBe('function');
                 mockPlayer.hasComponent.mockImplementationOnce((id) => id === PLAYER_COMPONENT_ID || id === ACTOR_COMPONENT_ID); // Be explicit if needed
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
                 await commandSubmitHandler(eventData);
 
+                expect(mockTurnManager.getCurrentActor).toHaveBeenCalled(); // Verify it checked whose turn it is
                 expect(processCmdSpy).toHaveBeenCalledTimes(1);
                 expect(processCmdSpy).toHaveBeenCalledWith(mockPlayer, eventData.command);
                 expect(mockLogger.warn).not.toHaveBeenCalled();
             });
 
             it("should NOT call processSubmittedCommand when 'command:submit' is received and loop is stopped", async () => {
-                gameLoop._test_setRunning(false); // Stop the loop
+                gameLoop._test_setRunning(false); // Stop the loop using the *existing* test helper
                 const eventData = {command: 'look', entityId: mockPlayer.id};
+
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
                 await commandSubmitHandler(eventData);
+
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('loop is not running'));
+                // TurnManager shouldn't be checked if not running
+                expect(mockTurnManager.getCurrentActor).not.toHaveBeenCalled();
                 expect(processCmdSpy).not.toHaveBeenCalled();
             });
 
@@ -231,7 +245,10 @@ describe('GameLoop', () => {
                 expect(typeof mockPlayer.hasComponent).toBe('function');
                 mockPlayer.hasComponent.mockImplementationOnce((id) => id === PLAYER_COMPONENT_ID || id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // It's still player's turn
                 await commandSubmitHandler(eventData);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity otherPlayer, but it's not that player's turn (Current: ${mockPlayer.id}). Ignoring.`));
@@ -244,7 +261,10 @@ describe('GameLoop', () => {
                 expect(typeof mockPlayer.hasComponent).toBe('function');
                 mockPlayer.hasComponent.mockImplementationOnce((id) => id === PLAYER_COMPONENT_ID || id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // It's still player's turn
                 await commandSubmitHandler(eventData);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`but it's not that player's turn (Current: ${mockPlayer.id})`));
@@ -261,14 +281,20 @@ describe('GameLoop', () => {
                 expect(typeof mockPlayer.hasComponent).toBe('function');
                 mockPlayer.hasComponent.mockImplementationOnce((id) => id === PLAYER_COMPONENT_ID || id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
                 await commandSubmitHandler(invalidCommandEvent);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("invalid 'command:submit' event data"), expect.anything());
                 expect(processCmdSpy).not.toHaveBeenCalled();
-                expect(mockGameStateManager.getCurrentLocation).toHaveBeenCalled(); // Called by _promptPlayerInput
-                expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object)); // Called by _promptPlayerInput
-                expect(promptInputSpy).toHaveBeenCalledTimes(1); // Called by _promptPlayerInput
+                // _promptPlayerInput -> _discoverActionsForEntity -> getCurrentLocation
+                expect(mockGameStateManager.getCurrentLocation).toHaveBeenCalled();
+                // _promptPlayerInput -> _discoverActionsForEntity -> getValidActions
+                expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object));
+                // _promptPlayerInput -> promptInput
+                expect(promptInputSpy).toHaveBeenCalledTimes(1);
             });
             // --- End Tests Assuming Player Turn ---
         });
@@ -286,6 +312,7 @@ describe('GameLoop', () => {
                 mockNpc.hasComponent.mockImplementation((id) => id === ACTOR_COMPONENT_ID); // Ensure correct implementation
                 mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
                 mockEntityManager.activeEntities = new Map([[mockPlayer.id, mockPlayer], [mockNpc.id, mockNpc]]);
+                // ****** CRITICAL: Set TurnManager state for these tests ******
                 mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // Ensure mock returns NPC
 
                 // Create instance
@@ -304,13 +331,14 @@ describe('GameLoop', () => {
                 if (!commandSubmitHandler) throw new Error("Setup failed: commandSubmitHandler not found.");
 
                 // --- Set State Directly for NPC tests ---
-                gameLoop._test_setRunning(true);
-                // ****** CORRECTED LINE ******
-                gameLoop._test_setInternalCurrentTurnEntity(mockNpc); // Use test setter
+                gameLoop._test_setRunning(true); // Use the *existing* running state helper
 
+                // ****** REMOVED OBSOLETE SETTER ******
+                // gameLoop._test_setInternalCurrentTurnEntity(mockNpc); // Use test setter
+
+                // ****** REMOVED OBSOLETE VERIFICATION USING INTERNAL STATE ******
                 // Verify state using the NEW test getter
-                // ****** CORRECTED LINE ******
-                expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockNpc);
+                // expect(gameLoop._test_getInternalCurrentTurnEntity()).toBe(mockNpc);
 
                 // --- Clear ONLY spies and mock CALLS before tests ---
                 processCmdSpy.mockClear();
@@ -323,7 +351,7 @@ describe('GameLoop', () => {
                 mockInputHandler.disable.mockClear();
                 mockActionDiscoverySystem.getValidActions.mockClear();
                 mockGameStateManager.getCurrentLocation.mockClear();
-                // Also clear TurnManager calls from setup
+                // Also clear TurnManager calls from setup/previous tests
                 mockTurnManager.getCurrentActor.mockClear();
             });
 
@@ -336,11 +364,15 @@ describe('GameLoop', () => {
                 expect(typeof mockNpc.hasComponent).toBe('function');
                 mockNpc.hasComponent.mockImplementationOnce((id) => id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // It's NPC's turn
                 await commandSubmitHandler(eventData);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
                 expect(mockLogger.warn).toHaveBeenCalledTimes(1);
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockPlayer.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
+                // This check is key: no "Not your turn" message should be sent
                 expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({text: "It's not your turn."}));
                 expect(processCmdSpy).not.toHaveBeenCalled();
             });
@@ -351,20 +383,28 @@ describe('GameLoop', () => {
                 expect(typeof mockNpc.hasComponent).toBe('function');
                 mockNpc.hasComponent.mockImplementationOnce((id) => id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // It's NPC's turn
                 await commandSubmitHandler(eventData);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
-                // Should fail isCorrectPlayersTurn check because NPC lacks PLAYER_COMPONENT_ID
+                // Handler checks if currentActor has PLAYER_COMPONENT_ID, which NPC does not
                 expect(mockLogger.warn).toHaveBeenCalledTimes(1);
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockNpc.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
                 expect(processCmdSpy).not.toHaveBeenCalled();
-                expect(promptInputSpy).not.toHaveBeenCalled(); // No re-prompt
+                // Should not try to re-prompt an NPC
+                expect(promptInputSpy).not.toHaveBeenCalled();
             });
 
             it("should NOT process command if event is from NPC (matching current turn) but loop is stopped", async () => {
                 gameLoop._test_setRunning(false); // Stop the loop
                 const eventData = {command: 'wait', entityId: mockNpc.id};
+
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // It would be NPC's turn if running
                 await commandSubmitHandler(eventData);
+
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('loop is not running'));
                 // TurnManager shouldn't even be checked if not running
                 expect(mockTurnManager.getCurrentActor).not.toHaveBeenCalled();
@@ -377,10 +417,13 @@ describe('GameLoop', () => {
                 expect(typeof mockNpc.hasComponent).toBe('function');
                 mockNpc.hasComponent.mockImplementationOnce((id) => id === ACTOR_COMPONENT_ID);
 
+                // Reset getCurrentActor mock return value *before* the handler call
+                mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // It's NPC's turn
                 await commandSubmitHandler(eventData);
+
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
-                // Should fail isCorrectPlayersTurn check because NPC lacks PLAYER_COMPONENT_ID
+                // Handler checks if currentActor has PLAYER_COMPONENT_ID, which NPC does not
                 expect(mockLogger.warn).toHaveBeenCalledTimes(1);
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockNpc.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
                 expect(processCmdSpy).not.toHaveBeenCalled();
