@@ -1,5 +1,5 @@
 // src/tests/core/config/registrations/coreSystemsRegistrations.test.js
-// (Entire file provided as requested)
+// (Entire file provided as requested, with corrections)
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -13,7 +13,7 @@ import {registerCoreSystems} from '../../../../core/config/registrations/coreSys
 
 // --- Dependencies ---
 import {tokens} from '../../../../core/config/tokens.js';
-import {INITIALIZABLE, SHUTDOWNABLE} from "../../../../core/config/tags"; // Import SHUTDOWNABLE if needed for checks, though not used here
+import {INITIALIZABLE, SHUTDOWNABLE} from "../../../../core/config/tags.js";
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -51,12 +51,12 @@ const createMockContainer = () => {
                 if (token === tokens.IValidatedEventDispatcher) return { /* basic mock */};
                 if (token === tokens.ActionValidationService) return { /* basic mock */};
                 if (token === tokens.ITurnOrderService) return { /* basic mock */}; // Added for TurnManager factory potential needs
+                if (token === tokens.IActionDiscoverySystem) return { /* basic mock */}; // Added for PlayerTurnHandler
+                if (token === tokens.ICommandProcessor) return { /* basic mock */}; // Added for PlayerTurnHandler
 
                 // If it's none of the above known dependencies, it's likely an error in the test or SUT
-                // Consider making this more robust if factories actually get called and need more mocks.
                 console.warn(`Mock Resolve Warning: Token not explicitly registered or mocked, returning basic object: ${String(token)}`);
                 return {}; // Return empty object instead of throwing to potentially allow more tests to pass if non-critical
-                // throw new Error(`Mock Resolve Error: Token not registered or mocked: ${String(token)}`);
             }
             // Basic resolve for testing purposes if needed, won't handle factories correctly here.
             if (typeof registration.factoryOrValue === 'function' && registration.options?.lifecycle === 'singleton') {
@@ -95,14 +95,15 @@ describe('registerCoreSystems', () => {
         tokens.OpenableSystem, tokens.HealthSystem, tokens.StatusEffectSystem,
         tokens.LockSystem, tokens.IActionDiscoverySystem, tokens.ITurnManager
     ];
-    // --- MODIFIED: Corrected expected count back to 19 ---
-    const expectedCount = 19; // This is the number of systems registered *by* the function under test.
+    // --- MODIFIED: Corrected expected count to 21 (19 initializable + PlayerTurnHandler + TurnHandlerResolver) ---
+    const expectedCount = 21; // This is the *total* number of systems/services registered *by* the function under test.
 
     // List of systems expected to have the SHUTDOWNABLE tag (adjust if more are added)
     const shutdownableSystemTokens = [
         tokens.CombatSystem, tokens.WorldPresenceSystem, tokens.PerceptionSystem,
         tokens.NotificationUISystem, tokens.OpenableSystem, tokens.HealthSystem,
-        tokens.StatusEffectSystem, tokens.LockSystem
+        tokens.StatusEffectSystem, tokens.LockSystem,
+        tokens.PlayerTurnHandler // <<< ADDED PlayerTurnHandler to this list
     ];
 
     beforeEach(() => {
@@ -114,8 +115,8 @@ describe('registerCoreSystems', () => {
         mockContainer.register(tokens.ILogger, mockLogger); // No lifecycle needed for this mock setup
     });
 
-    // --- MODIFIED: Updated test description count ---
-    it(`should register ${expectedCount} systems/services with the '${INITIALIZABLE[0]}' tag`, () => { // <-- Test description updates automatically
+    // --- MODIFIED: Test description updates automatically based on expectedCount (now 21) ---
+    it(`should register ${expectedCount} systems/services, tagging 19 with '${INITIALIZABLE[0]}'`, () => { // <-- Updated description for clarity
         // Arrange
         registerCoreSystems(mockContainer);
 
@@ -124,7 +125,7 @@ describe('registerCoreSystems', () => {
             (call) => call[0] !== tokens.ILogger
         );
 
-        // Assert: Check that each whitelisted token was registered with the INITIALIZABLE tag...
+        // Assert: Check that each whitelisted INITIALIZABLE token was registered with the INITIALIZABLE tag...
         initializableSystemTokens.forEach(token => {
             expect(mockContainer.register).toHaveBeenCalledWith(
                 token,
@@ -149,7 +150,8 @@ describe('registerCoreSystems', () => {
         });
 
         // Assert: Check the *total number* of registrations performed *by registerCoreSystems*
-        expect(actualSystemRegistrationCalls.length).toBe(expectedCount); // Use filtered calls length
+        // This now includes the 19 initializable ones, plus PlayerTurnHandler and TurnHandlerResolver
+        expect(actualSystemRegistrationCalls.length).toBe(expectedCount); // Use filtered calls length (checking against 21)
 
         // Assert: Check logger calls for INITIALIZABLE systems
         initializableSystemTokens.forEach(token => {
@@ -157,11 +159,16 @@ describe('registerCoreSystems', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(token)}`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${INITIALIZABLE[0]}`));
         });
+        // Assert: Check logger call for the SHUTDOWNABLE-only system
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.PlayerTurnHandler)}`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${SHUTDOWNABLE[0]}`));
+        // Assert: Check logger call for the untagged system
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.TurnHandlerResolver)}.`)); // Note the period at the end for non-tagged items
 
-        // --- MODIFIED: Check final info log message count - should match the corrected expectedCount (19) ---
+        // --- MODIFIED: Check final info log message count - should match the corrected expectedCount (21) ---
         // The log message in the SUT uses the actual count from its counter.
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Completed registering ${expectedCount} systems and services`) // Check against 19
+            expect.stringContaining(`Completed registering ${expectedCount} systems, handlers, and services`) // Check against 21
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             expect.stringContaining(`tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`)
@@ -179,7 +186,7 @@ describe('registerCoreSystems', () => {
         const callsToSnapshot = mockContainer.register.mock.calls.filter(
             (call) => call[0] !== tokens.ILogger
         );
-        // Snapshot should already be correct from the previous update.
+        // Snapshot should update correctly after running jest with -u
         expect(callsToSnapshot).toMatchSnapshot();
     });
 });

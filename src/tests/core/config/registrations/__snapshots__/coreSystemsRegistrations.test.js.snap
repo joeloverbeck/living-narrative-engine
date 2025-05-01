@@ -200,5 +200,22 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       ],
     },
   ],
+  [
+    "PlayerTurnHandler",
+    [Function],
+    {
+      "lifecycle": "singleton",
+      "tags": [
+        "shutdownable",
+      ],
+    },
+  ],
+  [
+    "TurnHandlerResolver",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
 ]
 `;

@@ -1,8 +1,9 @@
 // src/core/config/registrations/coreSystemsRegistrations.js
-// (Entire file provided as requested)
+// (Entire file provided as requested, with corrections and additions)
 
 /**
  * @fileoverview Registers core game logic systems, particularly those needing initialization or shutdown.
+ * Also includes registration for turn-related handlers and resolvers.
  */
 
 // --- JSDoc Imports for Type Hinting ---
@@ -19,7 +20,8 @@
 /** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists
 /** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */ // Assuming type definition exists
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Assuming type definition exists
-
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */ // <<< ADDED
+/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */ // <<< ADDED
 
 // --- System Imports ---
 import GameRuleSystem from '../../../systems/gameRuleSystem.js';
@@ -42,6 +44,9 @@ import PerceptionSystem from '../../../systems/perceptionSystem.js';
 import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js'; // Concrete Class Import
 import TurnManager from '../../turnManager.js';
 
+// --- Handler & Resolver Imports ---
+import PlayerTurnHandler from '../../handlers/playerTurnHandler.js'; // <<< ADDED IMPORT
+import TurnHandlerResolver from '../../services/turnHandlerResolver.js'; // <<< ADDED IMPORT
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -50,7 +55,8 @@ import {formatActionCommand} from '../../../services/actionFormatter.js';
 import {INITIALIZABLE, SHUTDOWNABLE} from "../tags.js";
 
 /**
- * Registers core game systems tagged as initializable and/or shutdownable.
+ * Registers core game systems tagged as initializable and/or shutdownable,
+ * along with essential turn-handling services.
  * Excludes quest-related systems which are registered separately.
  *
  * @export
@@ -67,49 +73,49 @@ export function registerCoreSystems(container) {
     registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
         tokens.EventBus, tokens.IGameStateManager, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.GameRuleSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.GameRuleSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentEffectSystem, EquipmentEffectSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.EquipmentEffectSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentEffectSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentSlotSystem, EquipmentSlotSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.EquipmentSlotSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentSlotSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.InventorySystem, InventorySystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.IGameStateManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.InventorySystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.InventorySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.DeathSystem, DeathSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.DeathSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.DeathSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.ItemUsageSystem, ItemUsageSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.ConditionEvaluationService, tokens.ItemTargetResolverService, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.ItemUsageSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.ItemUsageSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.BlockerSystem, BlockerSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.BlockerSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.BlockerSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.MovementSystem, MovementSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.MovementSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.MovementSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.MoveCoordinatorSystem, MoveCoordinatorSystem, [
@@ -118,7 +124,7 @@ export function registerCoreSystems(container) {
         tokens.BlockerSystem, // Depends on another system registered here
         tokens.MovementSystem  // Depends on another system registered here
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.MoveCoordinatorSystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.MoveCoordinatorSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     // --- Systems with Shutdown() (Tagged with both INITIALIZABLE and SHUTDOWNABLE) ---
@@ -128,51 +134,50 @@ export function registerCoreSystems(container) {
     registrar.tagged(initializableAndShutdownable).single(tokens.CombatSystem, CombatSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.CombatSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.CombatSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.WorldPresenceSystem, WorldPresenceSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.WorldPresenceSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.WorldPresenceSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.PerceptionSystem, PerceptionSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.PerceptionSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.PerceptionSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.NotificationUISystem, NotificationUISystem, [
         tokens.EventBus, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.NotificationUISystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.NotificationUISystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.OpenableSystem, OpenableSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.OpenableSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.OpenableSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.HealthSystem, HealthSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.HealthSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.HealthSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.StatusEffectSystem, StatusEffectSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.StatusEffectSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.StatusEffectSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.LockSystem, LockSystem, [
         tokens.EventBus, tokens.EntityManager
     ]);
-    logger.debug(`Core Systems Registration: Registered ${tokens.LockSystem} tagged with ${tagsString}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.LockSystem)} tagged with ${tagsString}.`);
     registrationCount++;
-
 
     // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory ---
     // Tagged INITIALIZABLE. Add SHUTDOWNABLE if it gets a shutdown() method.
@@ -184,10 +189,10 @@ export function registerCoreSystems(container) {
         formatActionCommandFn: formatActionCommand, // Direct function reference
         getEntityIdsForScopesFn: () => new Set() // Placeholder - ensure this is correct
     }));
-    logger.debug(`Core Systems Registration: Registered ${tokens.IActionDiscoverySystem} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
-    // --- MODIFIED: Register TurnManager tagged as INITIALIZABLE ---
+    // --- Register TurnManager tagged as INITIALIZABLE ---
     /**
      * Registers the TurnManager as a singleton factory, tagged as initializable.
      * @type {ITurnManager}
@@ -196,12 +201,41 @@ export function registerCoreSystems(container) {
         turnOrderService: c.resolve(tokens.ITurnOrderService),
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger),
-        dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
+        dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        // <<< NOTE: TurnManager might need TurnHandlerResolver injected in a future ticket >>>
+        // turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver)
     }));
-    logger.debug(`Core Systems Registration: Registered ${tokens.ITurnManager} tagged with ${INITIALIZABLE.join(', ')}.`);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
+
+    // --- NEW: Register Turn Handlers & Resolver ---
+
+    // Register PlayerTurnHandler (Likely Singleton due to potential state/subscriptions)
+    // Tagged SHUTDOWNABLE because it has a destroy() method for unsubscribing.
+    registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) => new PlayerTurnHandler({
+        logger: c.resolve(tokens.ILogger),
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem), // Use interface token
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        commandProcessor: c.resolve(tokens.ICommandProcessor), // Use interface token (assuming it exists)
+        gameStateManager: c.resolve(tokens.IGameStateManager),
+        entityManager: c.resolve(tokens.EntityManager),
+        gameDataRepository: c.resolve(tokens.GameDataRepository),
+        eventBus: c.resolve(tokens.EventBus),
+    }));
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} tagged with ${SHUTDOWNABLE.join(', ')}.`);
+    registrationCount++; // <<< INCREMENT COUNT
+
+    // Register TurnHandlerResolver (Singleton is appropriate)
+    // No specific tags needed unless it requires init/shutdown hooks later.
+    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
+        logger: c.resolve(tokens.ILogger),
+        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the concrete handler instance
+        // Future: inject other handlers like AITurnHandler here
+    }));
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)}.`); // Note: No tags mentioned
+    registrationCount++; // <<< INCREMENT COUNT
 
 
     // Final log message using the incremented counter
-    logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
+    logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
 }
