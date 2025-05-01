@@ -171,29 +171,39 @@ describe('GameLoop', () => {
             // *** USE THE NEW TEST METHODS TO SET STATE ***
             // Default state for most tests in this block: Running and Player's Turn
             gameLoop._test_setRunning(true);
-            gameLoop._test_setCurrentTurnEntity(mockPlayer); // This sets the internal state directly
+            // ***** CORRECTED FUNCTION NAME *****
+            gameLoop._test_setInternalCurrentTurnEntity(mockPlayer); // This sets the internal state directly
+            // ***********************************
 
             // const testName = expect.getState ? expect.getState().currentTestName : 'Current Test';
             // Optional logging (keep if helpful)
-            // console.log(`TEST beforeEach (${testName}): State set via _test_ methods. isRunning=${gameLoop.isRunning}, currentEntityId=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // console.log(`TEST beforeEach (${testName}): State set via _test_ methods. isRunning=${gameLoop.isRunning}, currentEntityId=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}`);
 
         });
 
-        it('When Running and Player Turn: should call inputHandler.enable', () => {
+        it('When Running and Player Turn: should call inputHandler.enable', async () => { // Mark as async because promptInput is async
             // Arrange (done in beforeEach)
-            // console.log(`TEST (enable): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // ***** ADDED MISSING MOCK SETUP *****
+            // Set TurnManager mock to return the player, as promptInput checks it
+            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
+            // ************************************
+            // console.log(`TEST (enable): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
             // Act
-            gameLoop.promptInput();
+            await gameLoop.promptInput(); // Await the async call
             // Assert
+            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
             expect(mockInputHandler.enable).toHaveBeenCalledTimes(1);
         });
 
         it('When Running and Player Turn: should dispatch textUI:enable_input event with default placeholder and entityId', async () => { // Mark as async
             // Arrange (done in beforeEach)
-            // console.log(`TEST (dispatch default): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // Set TurnManager mock to return the player, as promptInput checks it
+            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
+            // console.log(`TEST (dispatch default): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
             // Act
             await gameLoop.promptInput(); // Await the async call
             // Assert
+            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
                 placeholder: 'Enter command...',
@@ -206,10 +216,13 @@ describe('GameLoop', () => {
         it('When Running and Player Turn: should dispatch textUI:enable_input event with provided placeholder and entityId', async () => { // Mark as async
             // Arrange (done in beforeEach)
             const customMessage = 'What now?';
-            // console.log(`TEST (dispatch custom): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // Set TurnManager mock to return the player, as promptInput checks it
+            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer);
+            // console.log(`TEST (dispatch custom): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
             // Act
             await gameLoop.promptInput(customMessage); // Await the async call
             // Assert
+            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
                 placeholder: customMessage,
@@ -222,13 +235,15 @@ describe('GameLoop', () => {
         it('When Stopped: should not call inputHandler.enable or dispatch event', async () => { // Mark as async
             // Arrange: Override the default state from beforeEach
             gameLoop._test_setRunning(false); // Set to stopped
-            gameLoop._test_setCurrentTurnEntity(null); // Clear entity
+            gameLoop._test_setInternalCurrentTurnEntity(null); // Clear internal entity (though promptInput uses TurnManager)
+            mockTurnManager.getCurrentActor.mockReturnValue(null); // Ensure TurnManager also reports no actor
 
-            // console.log(`TEST (Stopped): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // console.log(`TEST (Stopped): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
             // Act
             await gameLoop.promptInput(); // Await the async call
             // Assert
             expect(mockLogger.debug).toHaveBeenCalledWith('promptInput called while not running.');
+            expect(mockTurnManager.getCurrentActor).not.toHaveBeenCalled(); // Should exit before checking turn
             expect(mockInputHandler.enable).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.any(Object));
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
@@ -239,12 +254,14 @@ describe('GameLoop', () => {
         it('When Running BUT Not Player Turn: should log debug, disable input, and dispatch disable event', async () => { // Mark as async
             // Arrange: Override the default state from beforeEach
             gameLoop._test_setRunning(true); // Ensure running
-            gameLoop._test_setCurrentTurnEntity(mockNpc); // Set to NPC turn
+            gameLoop._test_setInternalCurrentTurnEntity(mockNpc); // Set internal entity (though promptInput uses TurnManager)
+            mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // Set TurnManager mock to return NPC
 
-            // console.log(`TEST (Not Player): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
+            // console.log(`TEST (Not Player): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getInternalCurrentTurnEntity']()?.id}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
             // Act
             await gameLoop.promptInput(); // Await the async call
             // Assert
+            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("promptInput called, but it's not a player's turn"));
             expect(mockLogger.debug).not.toHaveBeenCalledWith('promptInput called while not running.');
 

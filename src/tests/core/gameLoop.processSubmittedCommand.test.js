@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.processSubmittedCommand.test.js
-// ****** MODIFIED FILE ******
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -171,7 +171,8 @@ describe('GameLoop', () => {
             // Set internal state using helper methods IF gameLoop exists
             if (gameLoop) {
                 gameLoop._test_setRunning(true); // Set loop to running
-                gameLoop._test_setCurrentTurnEntity(mockPlayer); // Assume player's turn
+                // *** CORRECTION HERE ***
+                gameLoop._test_setInternalCurrentTurnEntity(mockPlayer); // Assume player's turn
                 mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Make mockTurnManager consistent
             } else {
                 // Fail fast or log if gameLoop isn't set up - indicates a problem in outer beforeEach
@@ -228,7 +229,8 @@ describe('GameLoop', () => {
             // *** FIX: Check gameLoop exists before accessing methods ***
             if (gameLoop) {
                 gameLoop._test_setRunning(false);
-                gameLoop._test_setCurrentTurnEntity(null);
+                // *** CORRECTION HERE ***
+                gameLoop._test_setInternalCurrentTurnEntity(null);
                 mockTurnManager.getCurrentActor.mockReturnValue(null); // Reset mock
             }
         });
@@ -259,7 +261,8 @@ describe('GameLoop', () => {
                 hasComponent: jest.fn(() => false),
                 getComponent: jest.fn()
             }; // Ensure hasComponent returns false for player
-            gameLoop._test_setCurrentTurnEntity(mockPlayer); // Player's turn
+            // *** CORRECTION HERE (although redundant due to outer beforeEach, good practice) ***
+            gameLoop._test_setInternalCurrentTurnEntity(mockPlayer); // Player's turn
             mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Align mock
 
             // Clear mocks for this specific test path
