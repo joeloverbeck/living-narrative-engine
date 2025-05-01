@@ -42,6 +42,12 @@ const mockTurnOrderService = {
     clearCurrentRound: jest.fn(),
 };
 
+// --- ADDED: Mock for the new dependency ---
+const mockTurnHandlerResolver = {
+    resolve: jest.fn(), // Needs a resolve method as checked by the constructor
+};
+// --- END ADDED ---
+
 // Mock Entity class minimally
 const mockEntity = (id, isActor) => ({
     id: id,
@@ -53,7 +59,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     let stopSpy;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.clearAllMocks(); // This should clear mocks including mockTurnHandlerResolver.resolve
 
         // Reset mock state
         mockEntityManager.activeEntities = new Map();
@@ -62,14 +68,14 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
             logger: mockLogger,
             dispatcher: mockDispatcher,
             entityManager: mockEntityManager,
-            turnOrderService: mockTurnOrderService
+            turnOrderService: mockTurnOrderService,
+            turnHandlerResolver: mockTurnHandlerResolver // <<< ADDED: Pass the mock resolver
         });
 
         // REMOVED: instance['_TurnManager_isRunning'] = true; // Let start() handle this
 
         stopSpy = jest.spyOn(instance, 'stop');
         stopSpy.mockImplementation(async () => {
-            // instance['_TurnManager_isRunning'] = false; // Avoid direct private field access if possible
             mockLogger.debug('Mocked instance.stop() called.');
             // Simulate the state change if absolutely necessary for other tests,
             // but ideally test behavior without relying on implementation details.
@@ -173,13 +179,17 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
             mockLogger.debug(`advanceTurn spy called (call #${callCount})`); // Log spy calls
             if (callCount === 1) {
                 // First call is triggered by start(), execute original logic
-                await TurnManager.prototype.advanceTurn.call(instance);
+                // Use Reflect.apply to call the original method on the instance
+                await Reflect.apply(TurnManager.prototype.advanceTurn, instance, []);
             } else if (callCount === 2) {
                 // Second call is the recursion, stop it
                 mockLogger.debug(`Mocked advanceTurn call #${callCount} to prevent infinite loop`);
+                // IMPORTANT: Since the second call is mocked *not* to execute real logic,
+                // we don't expect mockTurnHandlerResolver.resolve to be called here.
             }
             // No further calls expected/handled by this mock
         });
+
 
         // Act: Call start(), which triggers the first advanceTurn call
         await instance.start();
@@ -215,6 +225,9 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
         // Ensure stop wasn't called
         expect(stopSpy).not.toHaveBeenCalled();
+
+        // Ensure the resolver wasn't called because we mocked the recursive call
+        expect(mockTurnHandlerResolver.resolve).not.toHaveBeenCalled();
 
         // Restore spy created within this test
         advanceTurnSpy.mockRestore();
@@ -253,5 +266,8 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
             }
         );
         expect(stopSpy).toHaveBeenCalledTimes(1);
+
+        // Ensure the resolver wasn't called because the error happened before turn delegation
+        expect(mockTurnHandlerResolver.resolve).not.toHaveBeenCalled();
     });
 });

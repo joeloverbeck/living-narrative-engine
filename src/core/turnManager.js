@@ -1,22 +1,24 @@
 // src/core/turnManager.js
+// --- FILE START (Entire file content as requested) ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('./interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('./interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */ // <<< ADDED
 
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 
 // Import the necessary component ID constants
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../types/components.js'; // Added PLAYER_COMPONENT_ID
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../types/components.js';
 
 /**
  * @class TurnManager
  * @implements {ITurnManager}
  * @classdesc Manages the overall turn lifecycle within the game loop. It is responsible
  * for determining which entity acts next, initiating turns, and handling the transition
- * between turns or rounds.
+ * between turns or rounds by delegating to appropriate turn handlers.
  */
 class TurnManager {
     /** @type {ITurnOrderService} */
@@ -27,6 +29,8 @@ class TurnManager {
     #logger;
     /** @type {IValidatedEventDispatcher} */
     #dispatcher;
+    /** @type {ITurnHandlerResolver} */ // <<< ADDED
+    #turnHandlerResolver; // <<< ADDED
 
     /** @type {boolean} */
     #isRunning = false;
@@ -40,18 +44,18 @@ class TurnManager {
      * @param {EntityManager} options.entityManager - Service for managing entities.
      * @param {ILogger} options.logger - Logging service.
      * @param {IValidatedEventDispatcher} options.dispatcher - Service for dispatching validated events.
+     * @param {ITurnHandlerResolver} options.turnHandlerResolver - Service to resolve the correct turn handler. // <<< ADDED
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor(options) {
-        const {turnOrderService, entityManager, logger, dispatcher} = options || {};
+        const {turnOrderService, entityManager, logger, dispatcher, turnHandlerResolver} = options || {}; // <<< ADDED turnHandlerResolver
 
         // Validate dependencies
         if (!turnOrderService || typeof turnOrderService.clearCurrentRound !== 'function') {
             const errorMsg = 'TurnManager requires a valid ITurnOrderService instance.';
-            console.error(errorMsg); // Log before potentially throwing if logger is also invalid
+            console.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // Basic check for EntityManager - more specific checks could be added if needed
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
             const errorMsg = 'TurnManager requires a valid EntityManager instance.';
             console.error(errorMsg);
@@ -62,22 +66,32 @@ class TurnManager {
             console.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // Basic check for IValidatedEventDispatcher
         if (!dispatcher || typeof dispatcher.dispatchValidated !== 'function') {
             const errorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance.';
-            // Check if logger is valid before trying to use it
             if (logger && typeof logger.error === 'function') {
                 logger.error(errorMsg);
             } else {
-                console.error(errorMsg); // Fallback to console if logger is invalid
+                console.error(errorMsg);
             }
             throw new Error(errorMsg);
         }
+        // <<< ADDED turnHandlerResolver validation ---
+        if (!turnHandlerResolver || typeof turnHandlerResolver.resolve !== 'function') {
+            const errorMsg = 'TurnManager requires a valid ITurnHandlerResolver instance.';
+            if (logger && typeof logger.error === 'function') {
+                logger.error(errorMsg);
+            } else {
+                console.error(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+        // --- END turnHandlerResolver validation ---
 
         this.#turnOrderService = turnOrderService;
         this.#entityManager = entityManager;
         this.#logger = logger;
         this.#dispatcher = dispatcher;
+        this.#turnHandlerResolver = turnHandlerResolver; // <<< ADDED assignment
 
         this.#isRunning = false;
         this.#currentActor = null;
@@ -97,8 +111,6 @@ class TurnManager {
         }
         this.#isRunning = true;
         this.#logger.info('Turn Manager started.');
-        // Future tickets will implement the logic to find the first actor and call advanceTurn if needed.
-        // For now, let's call advanceTurn immediately to trigger the new round logic if needed.
         await this.advanceTurn();
     }
 
@@ -116,12 +128,10 @@ class TurnManager {
         this.#currentActor = null;
 
         try {
-            // No need to await if clearCurrentRound is synchronous, but added for consistency if it changes
             await this.#turnOrderService.clearCurrentRound();
             this.#logger.debug('Turn order service current round cleared.');
         } catch (error) {
             this.#logger.error('Error calling turnOrderService.clearCurrentRound() during stop:', error);
-            // Decide if this error should be re-thrown or just logged. Logging for now.
         }
 
         this.#logger.info('Turn Manager stopped.');
@@ -137,12 +147,11 @@ class TurnManager {
 
     /**
      * Advances the game state to the next entity's turn, or starts a new round if needed.
-     * This method encapsulates the core turn progression logic.
+     * Delegates turn execution to the appropriate handler (Player/AI).
      * @async
      * @returns {Promise<void>} A promise that resolves when the transition is complete.
      */
     async advanceTurn() {
-        // Add initial check: If #isRunning is false, log debug and return immediately.
         if (!this.#isRunning) {
             this.#logger.debug('TurnManager.advanceTurn() called while manager is not running. Returning.');
             return;
@@ -150,109 +159,105 @@ class TurnManager {
 
         this.#logger.debug('TurnManager.advanceTurn() called.');
 
-        const isQueueEmpty = await this.#turnOrderService.isEmpty(); // Assume isEmpty might be async
+        const isQueueEmpty = await this.#turnOrderService.isEmpty();
 
-        // Implement Empty Queue Logic: If isEmpty() returns true:
         if (isQueueEmpty) {
             this.#logger.info('Turn queue is empty. Attempting to start a new round.');
-
-            // Get all active entities: Array.from(this.#entityManager.activeEntities.values()).
             const allEntities = Array.from(this.#entityManager.activeEntities.values());
-
-            // Filter entities to find actors: entities.filter(e => e.hasComponent(ACTOR_COMPONENT_ID)).
             const actors = allEntities.filter(e => e.hasComponent(ACTOR_COMPONENT_ID));
 
-            // Handle "No Actors Found":
             if (actors.length === 0) {
-                // Log an error (this.#logger.error(...)).
                 this.#logger.error('Cannot start a new round: No active entities with an Actor component found.');
-                // Dispatch a message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: 'No active actors...', type: 'error' }).
-                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
+                await this.#dispatcher.dispatchValidated('textUI:display_message', {
                     text: 'System Error: No active actors found to start a round. Stopping.',
                     type: 'error'
                 });
-                // Call this.stop().
                 await this.stop();
-                // Return immediately after calling stop().
                 return;
             }
 
-            // Start New Round:
-            // If actors are found:
-            // Log the number of actors found and their IDs (this.#logger.info(...)).
             const actorIds = actors.map(a => a.id);
             this.#logger.info(`Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`);
+            const strategy = 'round-robin';
 
-            // Define the strategy (e.g., const strategy = 'round-robin').
-            const strategy = 'round-robin'; // Default strategy for now
-
-            // Wrap the call to startNewRound in a try...catch block.
             try {
-                // Call this.#turnOrderService.startNewRound(actors, strategy).
                 await this.#turnOrderService.startNewRound(actors, strategy);
-                // Log success (this.#logger.info(...)).
                 this.#logger.info(`Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`);
-
-                // (Self-Correction): After successfully starting the round, recursively call this.advanceTurn()
-                // to process the first turn of the new round. Return after this recursive call.
                 this.#logger.debug('New round started, recursively calling advanceTurn() to process the first turn.');
-                await this.advanceTurn(); // Process the first turn of the newly started round
-                return; // Important: return here to avoid executing the 'else' block below
+                await this.advanceTurn();
+                return;
 
             } catch (error) {
-                // Handle startNewRound Error:
-                // In the catch block:
-                // Log the error (this.#logger.error(...)).
                 this.#logger.error(`Error starting new round: ${error.message}`, error);
-                // Dispatch an error message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: \`Error starting round: ${error.message}\`, type: 'error' }).
-                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
+                await this.#dispatcher.dispatchValidated('textUI:display_message', {
                     text: `System Error: Failed to start a new round. Stopping. Details: ${error.message}`,
                     type: 'error'
                 });
-                // Call this.stop().
                 await this.stop();
-                // Return immediately after calling stop().
                 return;
             }
         } else {
-            // Implement !isEmpty() Logic (Ticket 2.1.3)
+            // --- Turn Handling Logic ---
             this.#logger.debug('Queue not empty, retrieving next entity.');
-            const nextEntity = await this.#turnOrderService.getNextEntity(); // Assume async
+            const nextEntity = await this.#turnOrderService.getNextEntity();
 
-            // Handle getNextEntity() Null Return:
             if (!nextEntity) {
                 this.#logger.error('Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.');
-                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
+                await this.#dispatcher.dispatchValidated('textUI:display_message', {
                     text: 'Internal Error: Turn order inconsistency detected. Stopping manager.',
                     type: 'error'
                 });
-                await this.stop(); // Stop the manager
-                return; // Exit the function
+                await this.stop();
+                return;
             }
 
-            // Update State:
             this.#currentActor = nextEntity;
             this.#logger.info(`>>> Starting turn for Entity: ${this.#currentActor.id} <<<`);
 
-            // Identify Actor Type and Dispatch Event (Ticket 2.1.4):
-            if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
-                this.#logger.debug(`Entity ${this.#currentActor.id} is player-controlled.`);
-                const eventName = 'player:turn_start';
-                const payload = {entityId: this.#currentActor.id};
-                await this.#dispatcher.dispatchValidated(eventName, payload);
-                this.#logger.debug(`Dispatched '${eventName}' event for player entity: ${payload.entityId}`);
-            } else {
-                this.#logger.info(`Entity ${this.#currentActor.id} is AI-controlled.`);
-                const eventName = 'ai:turn_start';
-                const payload = {entityId: this.#currentActor.id};
-                await this.#dispatcher.dispatchValidated(eventName, payload);
-                this.#logger.debug(`Dispatched '${eventName}' event for AI entity: ${payload.entityId}`);
-            }
+            // --- MODIFICATION START: Delegate to Turn Handler ---
+            const actorType = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID) ? 'player' : 'ai';
+            this.#logger.debug(`Entity ${this.#currentActor.id} identified as type: ${actorType}`);
 
-            // Placeholder for triggering the actual turn logic (e.g., AI processing or waiting for player input)
-            // This will likely involve listening for the events dispatched above.
+            try {
+                const handler = this.#turnHandlerResolver.resolve(actorType);
+                if (!handler) {
+                    // This case should ideally be prevented by TurnHandlerResolver throwing an error,
+                    // but good to have a fallback.
+                    throw new Error(`Could not resolve a turn handler for type '${actorType}'.`);
+                }
+
+                this.#logger.debug(`Calling handleTurn on ${handler.constructor.name} for entity ${this.#currentActor.id}`);
+                await handler.handleTurn(this.#currentActor); // Await the handler
+                this.#logger.debug(`handleTurn completed for ${handler.constructor.name} for entity ${this.#currentActor.id}`);
+
+                // Note: advanceTurn() will be called again by the handler (e.g., PlayerTurnHandler on action completion, AITurnHandler immediately).
+
+            } catch (error) {
+                this.#logger.error(`Error during turn handling for entity ${this.#currentActor.id} (type: ${actorType}): ${error.message}`, error);
+                // Display an error to the UI
+                await this.#dispatcher.dispatchValidated('textUI:display_message', {
+                    text: `Error during ${actorType}'s turn: ${error.message}. See console for details.`,
+                    type: 'error'
+                });
+                // Decide on recovery: Should we stop? Or try to advance to the next turn?
+                // For now, let's log the error and attempt to continue to avoid complete stoppage.
+                // If the error is critical, stopping might be necessary, but that requires more context.
+                // We might need to force the next turn if the handler didn't call advanceTurn due to the error.
+                // Consider adding logic here if needed, but for now, the GameLoop will continue.
+                // If the handler failed *before* calling advanceTurn, the game might stall.
+                // Let's assume for now that handlers will either complete or throw,
+                // and the responsibility of advancing lies with them (or the error handling here if necessary).
+                // A possible safety measure if a handler consistently fails:
+                // if (error.isFatal) { await this.stop(); }
+            }
+            // --- MODIFICATION END: Delegate to Turn Handler ---
+
+            // --- REMOVED Temporary Delegation Logic ---
+            // The if/else block dispatching 'player:turn_start' or 'ai:turn_start' is now removed.
+            // --- End Removal ---
         }
     }
 }
 
 export default TurnManager;
+// --- FILE END ---

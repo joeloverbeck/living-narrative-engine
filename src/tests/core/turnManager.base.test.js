@@ -1,4 +1,5 @@
 // src/tests/core/turnManager.base.test.js
+// --- FILE START (Entire file content as requested) ---
 
 import TurnManager from '../../core/turnManager.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
@@ -38,6 +39,13 @@ const mockDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
+// <<< ADDED: Mock for the new dependency
+const mockTurnHandlerResolver = {
+    resolve: jest.fn(), // Must have a 'resolve' function as checked by TurnManager constructor
+    // We can configure mock return values later if needed for specific tests
+};
+// --- END ADDED ---
+
 // Helper function to create basic mock entities
 const createMockEntity = (id, isActor = false, isPlayer = false) => {
     const entity = {
@@ -64,7 +72,7 @@ describe('TurnManager', () => {
 
     beforeEach(() => {
         // Reset mocks before each test
-        jest.clearAllMocks();
+        jest.clearAllMocks(); // This should clear mocks for resolve as well
 
         // Reset mock EntityManager's internal state
         mockEntityManager._setActiveEntities([]); // Clear entities
@@ -73,6 +81,8 @@ describe('TurnManager', () => {
         mockTurnOrderService.isEmpty.mockResolvedValue(true); // Default to empty queue
         mockTurnOrderService.getNextEntity.mockResolvedValue(null); // Default to no next entity
         mockDispatcher.dispatchValidated.mockResolvedValue(true); // Default successful dispatch
+        // <<< ADDED: Reset or configure mockTurnHandlerResolver if necessary
+        // mockTurnHandlerResolver.resolve.mockReturnValue(someDefaultHandler); // Example if needed
 
         // Create fresh mock entities for each test run
         mockPlayerEntity = createMockEntity('player-1', true, true);
@@ -80,11 +90,12 @@ describe('TurnManager', () => {
         mockAiEntity2 = createMockEntity('ai-2', true, false);
 
         // Instantiate TurnManager with mocks
-        turnManager = new TurnManager({
+        turnManager = new TurnManager({ // Line 83 referenced in error
             turnOrderService: mockTurnOrderService,
             entityManager: mockEntityManager,
             logger: mockLogger,
             dispatcher: mockDispatcher,
+            turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED: Provide the mock resolver
         });
     });
 
@@ -94,6 +105,7 @@ describe('TurnManager', () => {
         // Basic sanity check for the setup
         expect(TurnManager).toBeDefined();
         expect(turnManager).toBeInstanceOf(TurnManager);
+        // Check if constructor logging still occurs (it should if initialization is successful)
         expect(mockLogger.info).toHaveBeenCalledWith('TurnManager initialized successfully.');
     });
 

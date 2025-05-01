@@ -5,12 +5,18 @@ import TurnManager from '../../core/turnManager.js';
 
 // Absolute minimal mocks (ensure they satisfy constructor checks)
 const mockLogger = {debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn()};
-const mockTurnOrderService = {isEmpty: jest.fn(), clearCurrentRound: jest.fn()};
+const mockTurnOrderService = {
+    isEmpty: jest.fn(),
+    clearCurrentRound: jest.fn(),
+    startNewRound: jest.fn(), // Added as it's called in advanceTurn
+    getNextEntity: jest.fn()  // Added as it's called in advanceTurn
+};
 const mockEntityManager = {
     getEntityInstance: jest.fn(), // For constructor validation
-    activeEntities: new Map()      // <<< ADD THIS PROPERTY
+    activeEntities: new Map()      // Keep this property
 };
 const mockDispatcher = {dispatchValidated: jest.fn()}; // Need dispatchValidated for constructor
+const mockTurnHandlerResolver = {resolve: jest.fn()}; // <<< ADDED: Minimal mock for the required dependency
 
 describe('TurnManager Minimal Test', () => {
     let instance;
@@ -26,7 +32,8 @@ describe('TurnManager Minimal Test', () => {
             logger: mockLogger,
             dispatcher: mockDispatcher,
             entityManager: mockEntityManager,
-            turnOrderService: mockTurnOrderService
+            turnOrderService: mockTurnOrderService,
+            turnHandlerResolver: mockTurnHandlerResolver // <<< ADDED: Pass the mock dependency
         });
 
         // Add stopSpy setup since the 'no actors' path calls stop

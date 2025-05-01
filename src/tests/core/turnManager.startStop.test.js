@@ -1,4 +1,5 @@
 // src/tests/core/turnManager.startStop.test.js
+// --- FILE START (Entire file content as requested) ---
 
 /**
  * @fileoverview TurnManager unit tests for start/stop functionality
@@ -38,6 +39,12 @@ const mockEntityManager = {
     activeEntities: {values: jest.fn(() => [])}
 };
 
+// <<< ADDED: Mock for the new dependency >>>
+const mockTurnHandlerResolver = {
+    resolve: jest.fn(),
+    // Add any other methods if TurnManager interacts with them, but 'resolve' is the minimum needed for validation.
+};
+
 // --- Test Suite ---
 describe('TurnManager', () => {
     let instance;
@@ -47,16 +54,19 @@ describe('TurnManager', () => {
         jest.clearAllMocks();
         mockEntityManager.activeEntities.values.mockReturnValue([]);
 
-        // Create instance *after* clearing mocks for consistent log testing
+        // <<< MODIFIED: Pass the mock turnHandlerResolver >>>
         instance = new TurnManager({
             logger: mockLogger,
             turnOrderService: mockTurnOrderService,
             dispatcher: mockDispatcher,
             entityManager: mockEntityManager,
+            turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
         });
 
-        // Spy on the advanceTurn method
+        // Spy on the advanceTurn method (ensure this happens *after* instantiation)
+        // Mock implementation needed because the actual advanceTurn now uses turnHandlerResolver
         advanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockImplementation(async () => {
+            // Basic mock, doesn't need complex logic for start/stop tests
             return Promise.resolve();
         });
     });
@@ -73,11 +83,13 @@ describe('TurnManager', () => {
         test('should create an instance with dependencies and log initialization', () => {
             // Clear mocks specifically for this test's instantiation check
             jest.clearAllMocks();
+            // <<< MODIFIED: Pass the mock turnHandlerResolver >>>
             const localInstance = new TurnManager({
                 logger: mockLogger,
                 turnOrderService: mockTurnOrderService,
                 dispatcher: mockDispatcher,
                 entityManager: mockEntityManager,
+                turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
             });
             expect(localInstance).toBeInstanceOf(TurnManager);
             expect(localInstance.getCurrentActor()).toBeNull();
@@ -87,10 +99,14 @@ describe('TurnManager', () => {
             expect(mockLogger.info).toHaveBeenCalledTimes(1);
         });
 
-        // Other constructor failure tests remain the same and should pass
+        // <<< MODIFIED: Pass the mock turnHandlerResolver to these tests >>>
         test('should throw error if turnOrderService is invalid', () => {
             expect(() => new TurnManager({
-                logger: mockLogger, turnOrderService: {}, dispatcher: mockDispatcher, entityManager: mockEntityManager,
+                logger: mockLogger,
+                turnOrderService: {}, // Intentionally invalid
+                dispatcher: mockDispatcher,
+                entityManager: mockEntityManager,
+                turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
             })).toThrow('TurnManager requires a valid ITurnOrderService instance.');
         });
         test('should throw error if entityManager is invalid', () => {
@@ -98,24 +114,48 @@ describe('TurnManager', () => {
                 logger: mockLogger,
                 turnOrderService: mockTurnOrderService,
                 dispatcher: mockDispatcher,
-                entityManager: {},
+                entityManager: {}, // Intentionally invalid
+                turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
             })).toThrow('TurnManager requires a valid EntityManager instance.');
         });
         test('should throw error if logger is invalid', () => {
             expect(() => new TurnManager({
-                logger: {},
+                logger: {}, // Intentionally invalid
                 turnOrderService: mockTurnOrderService,
                 dispatcher: mockDispatcher,
                 entityManager: mockEntityManager,
+                turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
             })).toThrow('TurnManager requires a valid ILogger instance.');
         });
         test('should throw error if dispatcher is invalid', () => {
             expect(() => new TurnManager({
                 logger: mockLogger,
                 turnOrderService: mockTurnOrderService,
-                dispatcher: {},
+                dispatcher: {}, // Intentionally invalid
                 entityManager: mockEntityManager,
+                turnHandlerResolver: mockTurnHandlerResolver, // <<< ADDED HERE
             })).toThrow('TurnManager requires a valid IValidatedEventDispatcher instance.');
+        });
+        // <<< ADDED: Test specifically for turnHandlerResolver invalidity >>>
+        test('should throw error if turnHandlerResolver is invalid', () => {
+            expect(() => new TurnManager({
+                logger: mockLogger,
+                turnOrderService: mockTurnOrderService,
+                dispatcher: mockDispatcher,
+                entityManager: mockEntityManager,
+                turnHandlerResolver: {}, // Intentionally invalid
+            })).toThrow('TurnManager requires a valid ITurnHandlerResolver instance.');
+
+            expect(() => new TurnManager({
+                logger: mockLogger,
+                turnOrderService: mockTurnOrderService,
+                dispatcher: mockDispatcher,
+                entityManager: mockEntityManager,
+                turnHandlerResolver: {
+                    someOtherMethod: () => {
+                    }
+                }, // Missing 'resolve' method
+            })).toThrow('TurnManager requires a valid ITurnHandlerResolver instance.');
         });
     });
 
@@ -131,18 +171,18 @@ describe('TurnManager', () => {
 
 
     describe('start()', () => {
-        // These tests remain the same, relying on behavioral checks
+        // These tests should now work correctly as the instance is created properly
         test('successful call: should log info and call advanceTurn', async () => {
             await instance.start();
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.');
             expect(advanceTurnSpy).toHaveBeenCalledTimes(1);
 
-            // Idempotency check
+            // Idempotency check (requires clearing mocks after first start)
             mockLogger.warn.mockClear();
-            advanceTurnSpy.mockClear();
-            await instance.start();
+            advanceTurnSpy.mockClear(); // Clear spy calls
+            await instance.start(); // Call start again
             expect(mockLogger.warn).toHaveBeenCalledWith('TurnManager.start() called but manager is already running.');
-            expect(advanceTurnSpy).not.toHaveBeenCalled();
+            expect(advanceTurnSpy).not.toHaveBeenCalled(); // Should not be called again
         });
 
         test('when already running: should log warning and not call advanceTurn again', async () => {
@@ -163,19 +203,21 @@ describe('TurnManager', () => {
     describe('stop()', () => {
 
         test('successful call (when running): should reset state, clear round, and log', async () => {
+            // Setup: Start the manager
             await instance.start();
-            advanceTurnSpy.mockClear();
+            advanceTurnSpy.mockClear(); // Clear spy calls from start()
 
-            // Set a *fake* property to ensure current state isn't null before stop()
-            // Note: This does NOT set the actual private field #currentActor
-            const mockActor = new Entity('testActor');
-            instance['#currentActor'] = mockActor;
-            // REMOVED: expect(instance.getCurrentActor()).toBe(mockActor); // Cannot verify setup this way
+            // --- Artificial state setup for testing stop ---
+            // We can't directly set #currentActor easily, so we rely on the fact
+            // that #isRunning becomes true after start() and becomes false after stop().
+            // We also test the calls to logger and turnOrderService.
+            // --- End artificial state setup ---
 
             // Reset mocks that stop interacts with
             mockLogger.info.mockClear();
             mockLogger.debug.mockClear();
             mockTurnOrderService.clearCurrentRound.mockClear();
+            // Ensure clearCurrentRound resolves successfully for this test case
             mockTurnOrderService.clearCurrentRound.mockResolvedValue(undefined);
 
             // Call stop
@@ -189,17 +231,17 @@ describe('TurnManager', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
             expect(mockLogger.debug).toHaveBeenCalledWith('Turn order service current round cleared.');
 
-            // Idempotency check
+            // Idempotency check (requires clearing mocks after first stop)
             mockLogger.info.mockClear();
             mockTurnOrderService.clearCurrentRound.mockClear();
-            await instance.stop();
+            await instance.stop(); // Call stop again
             expect(mockLogger.info).toHaveBeenCalledWith('TurnManager.stop() called but manager is already stopped.');
             expect(mockTurnOrderService.clearCurrentRound).not.toHaveBeenCalled();
             expect(instance.getCurrentActor()).toBeNull(); // Still null
         });
 
-        // This test remains the same
         test('when already stopped: should log info and do nothing else', async () => {
+            // Instance starts in stopped state
             expect(instance.getCurrentActor()).toBeNull(); // Initial state check
             mockLogger.info.mockClear();
             mockTurnOrderService.clearCurrentRound.mockClear();
@@ -217,37 +259,42 @@ describe('TurnManager', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('TurnManager.stop() called but manager is already stopped.');
         });
 
-        // This test remains the same
         test('handles error during clearCurrentRound but still stops', async () => {
+            // Setup: Start the manager
             await instance.start();
-            // Set fake property
-            const mockActor = new Entity('testActorError');
-            instance['#currentActor'] = mockActor;
+            advanceTurnSpy.mockClear(); // Clear spy calls from start()
+
+            // --- Artificial state setup ---
+            // Again, rely on #isRunning state change and mock behavior.
+            // --- End artificial state setup ---
 
             const clearError = new Error('Clear failed');
-            mockTurnOrderService.clearCurrentRound.mockRejectedValueOnce(clearError);
+            mockTurnOrderService.clearCurrentRound.mockRejectedValueOnce(clearError); // Make clear fail
             mockLogger.error.mockClear();
             mockLogger.info.mockClear();
 
-            await expect(instance.stop()).resolves.toBeUndefined(); // Call stop
+            // Call stop - it should resolve even if clearCurrentRound fails
+            await expect(instance.stop()).resolves.toBeUndefined();
 
+            // Assert error logging and stop completion
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith(
                 'Error calling turnOrderService.clearCurrentRound() during stop:', clearError
             );
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
-            // Assert actual private field was reset
+            // Assert internal state was reset despite the error
             expect(instance.getCurrentActor()).toBeNull();
 
-            // Assert it's stopped by starting again
+            // Assert it's *actually* stopped by trying to start again
             mockLogger.info.mockClear();
             mockLogger.warn.mockClear();
-            advanceTurnSpy.mockClear();
+            advanceTurnSpy.mockClear(); // Clear spy again before next start
             await instance.start();
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.');
-            expect(advanceTurnSpy).toHaveBeenCalledTimes(1);
-            expect(mockLogger.warn).not.toHaveBeenCalled();
+            expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // Should call advanceTurn on successful start
+            expect(mockLogger.warn).not.toHaveBeenCalled(); // Should not warn about already running
         });
     });
 
 });
+// --- FILE END ---
