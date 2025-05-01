@@ -150,10 +150,6 @@ class TurnManager {
 
         this.#logger.debug('TurnManager.advanceTurn() called.');
 
-        // **** ADD TEMPORARY LOG ****
-        this.#logger.debug('>>> About to await isEmpty <<<');
-        console.log('>>> TEMP SOURCE LOG: About to await isEmpty <<<'); // Also log to console directly
-
         const isQueueEmpty = await this.#turnOrderService.isEmpty(); // Assume isEmpty might be async
 
         // Implement Empty Queue Logic: If isEmpty() returns true:
