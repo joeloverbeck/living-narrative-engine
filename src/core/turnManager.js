@@ -168,7 +168,7 @@ class TurnManager {
                 // Log an error (this.#logger.error(...)).
                 this.#logger.error('Cannot start a new round: No active entities with an Actor component found.');
                 // Dispatch a message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: 'No active actors...', type: 'error' }).
-                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
                     text: 'System Error: No active actors found to start a round. Stopping.',
                     type: 'error'
                 });
@@ -206,7 +206,7 @@ class TurnManager {
                 // Log the error (this.#logger.error(...)).
                 this.#logger.error(`Error starting new round: ${error.message}`, error);
                 // Dispatch an error message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: \`Error starting round: ${error.message}\`, type: 'error' }).
-                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
                     text: `System Error: Failed to start a new round. Stopping. Details: ${error.message}`,
                     type: 'error'
                 });
@@ -223,7 +223,7 @@ class TurnManager {
             // Handle getNextEntity() Null Return:
             if (!nextEntity) {
                 this.#logger.error('Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.');
-                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                await this.#dispatcher.dispatchValidated('textUI:display_message', { // Added await
                     text: 'Internal Error: Turn order inconsistency detected. Stopping manager.',
                     type: 'error'
                 });
@@ -235,18 +235,23 @@ class TurnManager {
             this.#currentActor = nextEntity;
             this.#logger.info(`>>> Starting turn for Entity: ${this.#currentActor.id} <<<`);
 
-            // Identify Actor Type:
+            // Identify Actor Type and Dispatch Event (Ticket 2.1.4):
             if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
                 this.#logger.debug(`Entity ${this.#currentActor.id} is player-controlled.`);
-                // TODO: Dispatch player turn start event (Ticket 2.1.4)
+                const eventName = 'player:turn_start';
+                const payload = {entityId: this.#currentActor.id};
+                await this.#dispatcher.dispatchValidated(eventName, payload);
+                this.#logger.debug(`Dispatched '${eventName}' event for player entity: ${payload.entityId}`);
             } else {
                 this.#logger.info(`Entity ${this.#currentActor.id} is AI-controlled.`);
-                // TODO: Dispatch AI turn start event (Ticket 2.1.4)
+                const eventName = 'ai:turn_start';
+                const payload = {entityId: this.#currentActor.id};
+                await this.#dispatcher.dispatchValidated(eventName, payload);
+                this.#logger.debug(`Dispatched '${eventName}' event for AI entity: ${payload.entityId}`);
             }
 
-            // Signaling for Player/AI turn start will be handled in 2.1.4
             // Placeholder for triggering the actual turn logic (e.g., AI processing or waiting for player input)
-            // This will likely involve dispatching an event in 2.1.4
+            // This will likely involve listening for the events dispatched above.
         }
     }
 }
