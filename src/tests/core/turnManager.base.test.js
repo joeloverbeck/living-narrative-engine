@@ -1,4 +1,4 @@
-// src/tests/core/turnManager.test.js
+// src/tests/core/turnManager.base.test.js
 
 import TurnManager from '../../core/turnManager.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
