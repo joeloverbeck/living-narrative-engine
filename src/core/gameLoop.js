@@ -344,97 +344,10 @@ class GameLoop {
         await this.#handleTurnActorChanged({currentActor: actor, previousActor: null});
     }
 
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    // METHOD processSubmittedCommand REMOVED HERE AS PER TICKET 3.1.6.6
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    /**
-     * Processes a command string submitted by the input handler or event bus *for a specific player entity*.
-     * Verifies the acting player matches the actor provided by TurnManager.
-     * Parses the command, executes the action, handles errors, and then tells TurnManager to advance the turn.
-     * @param {Entity} actingPlayer - The player entity performing the command (should match TurnManager's current actor).
-     * @param {string} command - The raw command string from the input.
-     * @async
-     * @deprecated Logic moved to PlayerTurnHandler. Keeping for reference/potential reuse if needed. Should not be called directly by core loop now.
-     */
-    async processSubmittedCommand(actingPlayer, command) {
-        this.#logger.warn(`DEPRECATED: GameLoop.processSubmittedCommand called directly for ${actingPlayer?.id}. This logic should be in PlayerTurnHandler.`);
-        if (!this.#isRunning) {
-            this.#logger.debug('processSubmittedCommand called while not running.');
-            return;
-        }
-
-        // --- Get Current Actor from Turn Manager ---
-        const currentActor = this.#turnManager.getCurrentActor(); // Fetch authoritative actor
-
-        // --- Verification ---
-        // Verify the entity passed in (actingPlayer) is indeed the current actor from the TurnManager.
-        if (!actingPlayer || actingPlayer !== currentActor || !actingPlayer.hasComponent(PLAYER_COMPONENT_ID)) {
-            this.#logger.error(`processSubmittedCommand called for ${actingPlayer?.id} but current turn is ${currentActor?.id} or not a player. State inconsistency?`);
-            // If it's somehow a player turn but the wrong player sent the command, re-prompt the *correct* player (via handler).
-            // if (currentActor && currentActor.hasComponent(PLAYER_COMPONENT_ID)) { // Use currentActor
-            //    // PlayerTurnHandler should handle re-prompting.
-            // }
-            return;
-        }
-
-        // --- Disable input (Handler should do this) ---
-        // this.#inputHandler.disable();
-        // await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."});
-
-        this.#logger.debug(`Processing command: "${command}" for player ${actingPlayer.id}`);
-
-        // --- Parse Command ---
-        // Uses ICommandParser.parse
-        const parsedCommand = this.#commandParser.parse(command);
-
-        let actionExecuted = false;
-        let actionSuccess = false;
-        let actionIdTaken = null;
-
-        if (parsedCommand.error || !parsedCommand.actionId) {
-            // --- Handle Parse Error ---
-            const message = parsedCommand.error ||
-                (parsedCommand.originalInput.trim().length > 0 ? `Unknown command "${parsedCommand.originalInput}". Try 'help'.` : '');
-
-            if (message) {
-                // Uses IValidatedEventDispatcher.dispatchValidated
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: message,
-                    type: 'error'
-                });
-            }
-            this.#logger.warn(`Command parsing failed for "${command}". Error: ${message || 'No action ID found.'}`);
-
-            // Re-prompt should be handled by PlayerTurnHandler.
-            // await this._promptPlayerInput(actingPlayer); // DEPRECATED HELPER CALL, REMOVED IN 3.1.6.4
-            return; // <<< Explicitly return to prevent advancing turn
-
-        } else {
-            // --- Execute Valid Command ---
-            actionIdTaken = parsedCommand.actionId;
-            // Uses IActionExecutor.executeAction (indirectly via executeAction helper)
-            // Pass actingPlayer (confirmed current actor)
-            const actionResult = await this.executeAction(actingPlayer, parsedCommand);
-            actionExecuted = true; // We attempted execution
-            actionSuccess = actionResult?.success ?? false;
-            this.#logger.debug(`Action ${actionIdTaken} completed for ${actingPlayer.id}. Success: ${actionSuccess}.`);
-
-            // --- Player Turn End Logic (Handler should do this) ---
-            // Only advance if an action was successfully parsed and attempted
-            this.#logger.info(`GameLoop: Player ${actingPlayer.id} completed action ${actionIdTaken}. Advancing turn...`);
-
-            // Uses ITurnManager.advanceTurn
-            try {
-                await this.#turnManager.advanceTurn(); // Signal TurnManager the player's turn is done
-            } catch (error) {
-                this.#logger.error(`GameLoop: Error occurred when advancing turn after player action for ${actingPlayer.id}: ${error.message}`, error);
-                // Potentially stop the loop if advancing fails critically
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: `Critical Error during player turn advancement: ${error.message}`,
-                    type: 'error'
-                });
-                await this.stop();
-            }
-        }
-    }
 
     /**
      * Prepares context and delegates action execution to the ActionExecutor.
