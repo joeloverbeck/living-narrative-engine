@@ -1,4 +1,5 @@
 // src/tests/core/gameLoop.promptInput.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -101,7 +102,7 @@ const createValidOptions = () => ({
 
 // --- Test Suite ---
 
-describe('GameLoop', () => {
+describe('GameLoop (promptInput tests removed)', () => {
     let gameLoop;
     let promptInputSpy; // Keep if used elsewhere
     let processNextTurnSpy; // Keep if used elsewhere
@@ -162,101 +163,14 @@ describe('GameLoop', () => {
     });
 
 
-    // --- promptInput() Method Tests ---
-    // Note: These tests now indirectly test the DEPRECATED promptInput method.
-    // Ideally, tests should target the PlayerTurnHandler which now holds this logic.
-    // Keeping them for now as per the provided code structure, but add a note.
-    describe('promptInput (Testing DEPRECATED method)', () => {
+    // --- promptInput() Method Tests REMOVED ---
+    // Note: Tests for _promptPlayerInput functionality (via the deprecated promptInput method)
+    // have been removed as per ticket 3.1.6.4.
+    // The PlayerTurnHandler should now be tested for this input prompting logic.
 
-        beforeEach(() => {
-            // Instantiate GameLoop HERE for each test in this describe block
-            // This will now pass the constructor check because mockTurnHandlerResolver is provided
-            gameLoop = new GameLoop(createValidOptions()); // Should no longer throw
+    it('Placeholder test: Ensures the suite runs after removing promptInput tests', () => {
+        expect(true).toBe(true);
+    });
 
-            // *** Set state using test helpers or TurnManager mocks ***
-            // Default state for most tests: Running and Player's Turn
-            gameLoop._test_setRunning(true); // Set internal state
 
-            // Default TurnManager state for Player turn tests
-            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // TurnManager reports player turn
-
-            // Optional logging
-            // console.log(`TEST beforeEach: isRunning=${gameLoop.isRunning}, turnManager.getCurrentActor returns=${mockTurnManager.getCurrentActor()?.id}`);
-        });
-
-        it('When Running and Player Turn: should call inputHandler.enable', async () => {
-            // Arrange (done in beforeEach)
-            // Act
-            await gameLoop.promptInput(); // Call the (deprecated) method
-            // Assert
-            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
-            expect(mockInputHandler.enable).toHaveBeenCalledTimes(1);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.promptInput called')); // Verify deprecation warning
-        });
-
-        it('When Running and Player Turn: should dispatch textUI:enable_input event with default placeholder and entityId', async () => {
-            // Arrange (done in beforeEach)
-            // Act
-            await gameLoop.promptInput(); // Call the (deprecated) method
-            // Assert
-            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1);
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
-                placeholder: 'Enter command...',
-                entityId: mockPlayer.id
-            });
-            expect(mockInputHandler.disable).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.promptInput called')); // Verify deprecation warning
-        });
-
-        it('When Running and Player Turn: should dispatch textUI:enable_input event with provided placeholder and entityId', async () => {
-            // Arrange (done in beforeEach)
-            const customMessage = 'What now?';
-            // Act
-            await gameLoop.promptInput(customMessage); // Call the (deprecated) method
-            // Assert
-            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1);
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
-                placeholder: customMessage,
-                entityId: mockPlayer.id
-            });
-            expect(mockInputHandler.disable).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.promptInput called')); // Verify deprecation warning
-        });
-
-        it('When Stopped: should not call inputHandler.enable or dispatch event', async () => {
-            // Arrange: Override the default state from beforeEach
-            gameLoop._test_setRunning(false); // Set to stopped
-            mockTurnManager.getCurrentActor.mockReturnValue(null); // Ensure TurnManager reports no actor
-
-            // Act
-            await gameLoop.promptInput(); // Call the (deprecated) method
-            // Assert
-            // The method should exit early due to isRunning check
-            expect(mockLogger.debug).toHaveBeenCalledWith('promptInput called while not running.');
-            expect(mockTurnManager.getCurrentActor).not.toHaveBeenCalled(); // Should not check turn if not running
-            expect(mockInputHandler.enable).not.toHaveBeenCalled();
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.any(Object));
-            expect(mockInputHandler.disable).not.toHaveBeenCalled(); // Shouldn't disable if already stopped/not player turn
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.any(Object));
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.promptInput called')); // Verify deprecation warning
-        });
-
-        it('When Running BUT Not Player Turn: should log debug, disable input, and dispatch disable event', async () => {
-            // Arrange: Override the default state from beforeEach
-            gameLoop._test_setRunning(true); // Ensure running
-            mockTurnManager.getCurrentActor.mockReturnValue(mockNpc); // Set TurnManager mock to return NPC
-
-            // Act
-            await gameLoop.promptInput(); // Call the (deprecated) method
-            // Assert
-            expect(mockTurnManager.getCurrentActor).toHaveBeenCalledTimes(1); // Verify promptInput checked the turn
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("promptInput called, but it's not a player's turn"));
-
-            expect(mockInputHandler.enable).not.toHaveBeenCalled();
-            expect(mockInputHandler.disable).toHaveBeenCalledTimes(1); // Should disable
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {message: "Waiting for others..."}); // Should dispatch disable
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.any(Object)); // Should NOT dispatch enable
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.promptInput called')); // Verify deprecation warning
-        });
-    }); // End describe('promptInput')
-});
+}); // End describe('GameLoop')

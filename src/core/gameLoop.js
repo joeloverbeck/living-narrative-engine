@@ -332,7 +332,7 @@ class GameLoop {
             // Re-prompt the current player to allow them to try again.
             // Pass the validated currentActor
             // This re-prompting should also be handled by PlayerTurnHandler now.
-            // await this._promptPlayerInput(currentActor); // DEPRECATED HELPER CALL
+            // await this._promptPlayerInput(currentActor); // DEPRECATED HELPER CALL, REMOVED IN 3.1.6.4
             await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
                 text: 'Invalid command input.', type: 'error'
             });
@@ -470,7 +470,7 @@ class GameLoop {
             this.#logger.warn(`Command parsing failed for "${command}". Error: ${message || 'No action ID found.'}`);
 
             // Re-prompt should be handled by PlayerTurnHandler.
-            // await this._promptPlayerInput(actingPlayer); // DEPRECATED HELPER CALL
+            // await this._promptPlayerInput(actingPlayer); // DEPRECATED HELPER CALL, REMOVED IN 3.1.6.4
             return; // <<< Explicitly return to prevent advancing turn
 
         } else {
@@ -671,25 +671,7 @@ class GameLoop {
         return validActions; // Return the discovered actions
     }
 
-    /**
-     * Helper to discover actions and prompt player input.
-     * @private
-     * @param {Entity} playerEntity The player entity to prompt.
-     * @async
-     * @deprecated Logic moved to PlayerTurnHandler. Should not be called directly by core loop.
-     */
-    async _promptPlayerInput(playerEntity) {
-        this.#logger.warn(`DEPRECATED: GameLoop._promptPlayerInput called for ${playerEntity?.id}. This should be in PlayerTurnHandler.`);
-        if (!this.#isRunning || !playerEntity || !playerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-            this.#logger.debug('_promptPlayerInput called inappropriately. Aborting.');
-            return;
-        }
-        // Discover actions first using the passed player entity
-        await this._discoverActionsForEntity(playerEntity); // Uses IActionDiscoverySystem (DEPRECATED CALL)
-
-        // Then prompt for input using the passed player entity
-        await this.promptInput(`Your turn, ${playerEntity.id}. Enter command...`); // Uses IInputHandler (DEPRECATED CALL)
-    }
+    // REMOVED: Method definition for _promptPlayerInput deleted as per ticket 3.1.6.4
 
 
     /**
