@@ -165,9 +165,7 @@ class GameLoop {
      * @private
      */
     #subscribeToEvents() {
-        // Command submission handling
-        this.#eventBus.subscribe('command:submit', this.#handleSubmittedCommandFromEvent.bind(this));
-        this.#logger.info("GameLoop: Subscribed to 'command:submit' event.");
+        // REMOVED: command:submit subscription
 
         // Turn lifecycle events from TurnManager
         this.#eventBus.subscribe('turn:actor_changed', this.#handleTurnActorChanged.bind(this));
@@ -274,71 +272,7 @@ class GameLoop {
     }
 
 
-    /**
-     * Handles commands received via the 'command:submit' event (e.g., from UI input field).
-     * Ensures the command is from the entity whose turn it currently is (fetched from TurnManager),
-     * and that the game is running. Delegates actual command processing to `processSubmittedCommand`.
-     * @private
-     * @param {object} eventData - The event payload. Expected to contain `entityId` and `command`.
-     * @param {string} eventData.entityId - The ID of the entity submitting the command.
-     * @param {string} eventData.command - The command string.
-     * @deprecated This logic should now primarily reside within PlayerTurnHandler. GameLoop only subscribes to forward the event IF the PlayerTurnHandler requests it.
-     */
-    async #handleSubmittedCommandFromEvent(eventData) {
-        this.#logger.warn('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called. Ideally, PlayerTurnHandler manages command submission during player turns.');
-
-        // --- Guard Clause (Not Running) ---
-        if (!this.#isRunning) {
-            this.#logger.warn('GameLoop received command submission via event, but loop is not running.');
-            return;
-        }
-
-        // --- Get Current Actor ---
-        const currentActor = this.#turnManager.getCurrentActor(); // Fetch authoritative actor
-
-        // --- Guard Clause (Turn Context Validation) ---
-        const receivedEntityId = eventData?.entityId ?? null; // Extract for clarity
-        const isCorrectPlayersTurn = currentActor &&
-            receivedEntityId && // Ensure eventData.entityId exists
-            currentActor.id === receivedEntityId &&
-            currentActor.hasComponent(PLAYER_COMPONENT_ID);
-
-        if (!isCorrectPlayersTurn) {
-            const currentTurnId = currentActor?.id ?? 'None'; // Use currentActor for logging
-            this.#logger.warn(`GameLoop received command event for entity ${receivedEntityId}, but it's not that player's turn (Current: ${currentTurnId}). Ignoring.`);
-
-            // Optional Feedback: Only send "Not your turn" if the game *is* expecting input from *some* player
-            if (currentActor && currentActor.hasComponent(PLAYER_COMPONENT_ID)) { // Use currentActor
-                // Uses IValidatedEventDispatcher.dispatchValidated
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: "It's not your turn.",
-                    type: 'warning'
-                });
-            }
-            return; // Exit immediately if not the correct player's turn
-        }
-
-        // --- Event Data Validation & Delegation ---
-        // At this point, currentActor is valid and it's their turn.
-        const commandString = eventData?.command;
-        if (commandString && typeof commandString === 'string' && commandString.trim().length > 0) {
-            // If Valid: Delegate processing (This is the deprecated part)
-            this.#logger.info(`GameLoop: Processing command via event: "${commandString}" from ${currentActor.id}`); // Use currentActor.id
-            // Pass the validated currentActor
-            await this.processSubmittedCommand(currentActor, commandString); // DEPRECATED CALL
-        } else {
-            // If Invalid: Log, recover, and allow retry
-            this.#logger.warn("GameLoop received invalid 'command:submit' event data (missing or empty command string):", eventData);
-            // Re-prompt the current player to allow them to try again.
-            // Pass the validated currentActor
-            // This re-prompting should also be handled by PlayerTurnHandler now.
-            // await this._promptPlayerInput(currentActor); // DEPRECATED HELPER CALL, REMOVED IN 3.1.6.4
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Invalid command input.', type: 'error'
-            });
-            // The PlayerTurnHandler should re-enable input after error.
-        }
-    }
+    // REMOVED: Method definition for #handleSubmittedCommandFromEvent
 
 
     /**

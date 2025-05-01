@@ -1,4 +1,5 @@
 // src/tests/core/gameLoop.constructor.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -281,15 +282,13 @@ describe('GameLoop', () => {
             expect(() => new GameLoop(createValidOptions())).not.toThrow();
         });
 
-        // ***** FIX: This test should now pass the constructor call *****
-        it("should subscribe to 'command:submit' on the event bus during construction", () => {
+        // ***** TICKET 3.1.6.5: Update this test *****
+        it("should subscribe to required events on the event bus during construction", () => {
             // Constructor call should succeed now
             new GameLoop(createValidOptions());
-            expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-                'command:submit',
-                expect.any(Function)
-            );
-            // Check other subscriptions
+            // REMOVED: Assertion for 'command:submit'
+            // expect(mockEventBus.subscribe).toHaveBeenCalledWith('command:submit', expect.any(Function));
+            // Check other subscriptions remain
             expect(mockEventBus.subscribe).toHaveBeenCalledWith(
                 'turn:actor_changed',
                 expect.any(Function)
@@ -298,9 +297,10 @@ describe('GameLoop', () => {
                 'turn:manager_stopped',
                 expect.any(Function)
             );
-            // Check total number of subscriptions expected
-            expect(mockEventBus.subscribe).toHaveBeenCalledTimes(3); // submit, actor_changed, manager_stopped
+            // Check updated total number of subscriptions expected
+            expect(mockEventBus.subscribe).toHaveBeenCalledTimes(2); // actor_changed, manager_stopped
         });
+        // ***********************************************
 
         // ***** FIX: This test should now pass the constructor call *****
         it('should initialize isRunning state to false', () => {
