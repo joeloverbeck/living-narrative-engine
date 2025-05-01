@@ -162,8 +162,10 @@ describe('registerCoreSystems', () => {
         // Assert: Check logger call for the SHUTDOWNABLE-only system
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.PlayerTurnHandler)}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${SHUTDOWNABLE[0]}`));
+
         // Assert: Check logger call for the untagged system
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.TurnHandlerResolver)}.`)); // Note the period at the end for non-tagged items
+        // --- CORRECTED LINE 166: Removed the trailing period from the stringContaining expectation ---
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.TurnHandlerResolver)}`));
 
         // --- MODIFIED: Check final info log message count - should match the corrected expectedCount (21) ---
         // The log message in the SUT uses the actual count from its counter.

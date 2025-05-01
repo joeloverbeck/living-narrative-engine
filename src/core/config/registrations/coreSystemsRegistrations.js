@@ -1,5 +1,5 @@
 // src/core/config/registrations/coreSystemsRegistrations.js
-// (Entire file provided as requested, with corrections and additions)
+// --- FILE START (Entire file as requested) ---
 
 /**
  * @fileoverview Registers core game logic systems, particularly those needing initialization or shutdown.
@@ -202,40 +202,44 @@ export function registerCoreSystems(container) {
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        // <<< NOTE: TurnManager might need TurnHandlerResolver injected in a future ticket >>>
-        // turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver)
+        // <<< INJECTION POINT FOR TURN HANDLER RESOLVER (Future Ticket) >>>
+        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Assuming resolver is needed here
     }));
     logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     // --- NEW: Register Turn Handlers & Resolver ---
 
-    // Register PlayerTurnHandler (Likely Singleton due to potential state/subscriptions)
-    // Tagged SHUTDOWNABLE because it has a destroy() method for unsubscribing.
-    registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) => new PlayerTurnHandler({
-        logger: c.resolve(tokens.ILogger),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem), // Use interface token
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        commandProcessor: c.resolve(tokens.ICommandProcessor), // Use interface token (assuming it exists)
-        gameStateManager: c.resolve(tokens.IGameStateManager),
-        entityManager: c.resolve(tokens.EntityManager),
-        gameDataRepository: c.resolve(tokens.GameDataRepository),
-        eventBus: c.resolve(tokens.EventBus),
-    }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} tagged with ${SHUTDOWNABLE.join(', ')}.`);
+    // Register PlayerTurnHandler (Singleton due to event subscription & destroy() method)
+    // Tagged SHUTDOWNABLE because it needs cleanup via destroy().
+    registrar.tagged(SHUTDOWNABLE).single(tokens.PlayerTurnHandler, PlayerTurnHandler, [
+        tokens.ILogger,                     // logger
+        tokens.IActionDiscoverySystem,      // actionDiscoverySystem
+        tokens.IValidatedEventDispatcher,   // validatedEventDispatcher
+        tokens.ICommandProcessor,           // commandProcessor
+        tokens.IGameStateManager,           // gameStateManager
+        tokens.EntityManager,               // entityManager
+        tokens.GameDataRepository,          // gameDataRepository
+        tokens.EventBus                     // eventBus
+    ]);
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} (Singleton) tagged with ${SHUTDOWNABLE.join(', ')}.`);
     registrationCount++; // <<< INCREMENT COUNT
 
     // Register TurnHandlerResolver (Singleton is appropriate)
     // No specific tags needed unless it requires init/shutdown hooks later.
+    // Uses singletonFactory as its constructor might not follow the single-object pattern.
     registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
         logger: c.resolve(tokens.ILogger),
-        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the concrete handler instance
+        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the registered PlayerTurnHandler
         // Future: inject other handlers like AITurnHandler here
+        // aiTurnHandler: c.resolve(tokens.AITurnHandler)
     }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)}.`); // Note: No tags mentioned
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)} (Singleton).`);
     registrationCount++; // <<< INCREMENT COUNT
 
 
     // Final log message using the incremented counter
     logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
 }
+
+// --- FILE END ---
