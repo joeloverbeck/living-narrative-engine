@@ -214,8 +214,29 @@ class GameLoop {
                 return;
             }
             this.#logger.debug(`GameLoop #handleTurnActorChanged: Processing turn for ${currentActorForTurn.id}`);
+            // --- TICKET 3.1.6.2.3 START ---
             // Start processing the turn for the new entity
-            await this._processCurrentActorTurn(currentActorForTurn);
+            // REMOVED OLD CALL: await this._processCurrentActorTurn(currentActorForTurn);
+            // ADDED RESOLVER CALL:
+            const handler = await this.#turnHandlerResolver.resolveHandler(currentActorForTurn);
+            // --- TICKET 3.1.6.2.3 END ---
+
+            // TODO: Next step is to actually *call* the resolved handler's handleTurn method.
+            // For now, we just resolve it as per the ticket requirements.
+            if (handler && typeof handler.handleTurn === 'function') {
+                this.#logger.debug(`GameLoop #handleTurnActorChanged: Resolved handler ${handler.constructor.name} for ${currentActorForTurn.id}. (Handler execution deferred)`);
+                // await handler.handleTurn(currentActorForTurn); // This call will be added/handled in a subsequent ticket/step.
+            } else {
+                this.#logger.error(`GameLoop #handleTurnActorChanged: Failed to resolve a valid turn handler for ${currentActorForTurn.id}. Skipping turn.`);
+                // Consider advancing the turn here to prevent stall
+                try {
+                    await this.#turnManager.advanceTurn();
+                } catch (e) {
+                    this.#logger.error(`Error advancing turn after failed handler resolution: ${e.message}`);
+                    await this.stop();
+                }
+            }
+
         } else {
             this.#logger.info('GameLoop: TurnManager reported no current actor (null). Waiting...');
             this.#inputHandler.disable();
