@@ -8,8 +8,12 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-
+/** @typedef {import('../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */ // Added dependency
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Added dependency
+/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */ // Added dependency
+/** @typedef {import('../../logic/defs.js').ActionContext} ActionContext */ // Added for type hinting
 /** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../models/location.js').default} Location */ // Added for type hinting
 
 /**
  * @class PlayerTurnHandler
@@ -18,14 +22,20 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
  * It orchestrates discovering actions, prompting for input, and managing the turn's lifecycle.
  */
 class PlayerTurnHandler extends ITurnHandler {
+    /** @type {ILogger} */
+    #logger;
     /** @type {IActionDiscoverySystem} */
     #actionDiscoverySystem;
     /** @type {IValidatedEventDispatcher} */
     #validatedEventDispatcher;
-    /** @type {ILogger} */
-    #logger;
     /** @type {ICommandProcessor} */
     #commandProcessor;
+    /** @type {IGameStateManager} */ // Added dependency
+    #gameStateManager;
+    /** @type {EntityManager} */ // Added dependency
+    #entityManager;
+    /** @type {GameDataRepository} */ // Added dependency
+    #gameDataRepository;
 
     /** @type {Entity | null} */
     #currentActor = null;
@@ -44,9 +54,20 @@ class PlayerTurnHandler extends ITurnHandler {
      * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem - System for discovering valid actions.
      * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - System for dispatching validated events.
      * @param {ICommandProcessor} dependencies.commandProcessor - System for processing player commands.
+     * @param {IGameStateManager} dependencies.gameStateManager - Manages the current state of the game.
+     * @param {EntityManager} dependencies.entityManager - Manages entities.
+     * @param {GameDataRepository} dependencies.gameDataRepository - Provides access to game data definitions.
      * @throws {Error} If required dependencies are missing or invalid.
      */
-    constructor({logger, actionDiscoverySystem, validatedEventDispatcher, commandProcessor}) {
+    constructor({
+                    logger,
+                    actionDiscoverySystem,
+                    validatedEventDispatcher,
+                    commandProcessor,
+                    gameStateManager, // Added
+                    entityManager, // Added
+                    gameDataRepository // Added
+                }) {
         super();
 
         // Inject and assign logger first for logging potential issues
@@ -74,6 +95,26 @@ class PlayerTurnHandler extends ITurnHandler {
             throw new Error('PlayerTurnHandler: Invalid or missing commandProcessor dependency.');
         }
         this.#commandProcessor = commandProcessor;
+
+        // Validate and assign new dependencies
+        if (!gameStateManager || typeof gameStateManager.getLocationOfEntity !== 'function') {
+            this.#logger.error('PlayerTurnHandler: Invalid or missing gameStateManager dependency.');
+            throw new Error('PlayerTurnHandler: Invalid or missing gameStateManager dependency.');
+        }
+        this.#gameStateManager = gameStateManager;
+
+        if (!entityManager || typeof entityManager.getEntity !== 'function') {
+            this.#logger.error('PlayerTurnHandler: Invalid or missing entityManager dependency.');
+            throw new Error('PlayerTurnHandler: Invalid or missing entityManager dependency.');
+        }
+        this.#entityManager = entityManager;
+
+        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') { // Check for a representative method
+            this.#logger.error('PlayerTurnHandler: Invalid or missing gameDataRepository dependency.');
+            throw new Error('PlayerTurnHandler: Invalid or missing gameDataRepository dependency.');
+        }
+        this.#gameDataRepository = gameDataRepository;
+
 
         this.#logger.debug('PlayerTurnHandler initialized successfully.');
     }
@@ -124,7 +165,6 @@ class PlayerTurnHandler extends ITurnHandler {
 
     /**
      * Initiates the sequence to discover actions and enable player input.
-     * Contains placeholder calls for now.
      * @private
      * @param {Entity} actor - The player entity.
      * @returns {Promise<void>}
@@ -132,7 +172,9 @@ class PlayerTurnHandler extends ITurnHandler {
     async #_initiatePlayerActionSequence(actor) {
         this.#logger.debug(`PlayerTurnHandler: Initiating action sequence for ${actor.id}.`);
         try {
+            // Discover and display actions first
             await this.#_discoverAndDisplayActions(actor);
+            // Then enable input
             await this.#_enablePlayerInput(actor);
             this.#logger.debug(`PlayerTurnHandler: Action sequence initiated for ${actor.id}. Waiting for command.`);
         } catch (error) {
@@ -143,31 +185,82 @@ class PlayerTurnHandler extends ITurnHandler {
     }
 
     /**
-     * (Placeholder) Discovers available actions for the actor and triggers display.
+     * Discovers available actions for the actor and dispatches an event to display them.
+     * Constructs the necessary ActionContext for discovery.
      * @private
      * @param {Entity} actor - The player entity.
      * @returns {Promise<void>}
+     * @throws {Error} If context construction or action discovery fails.
      */
     async #_discoverAndDisplayActions(actor) {
-        // TODO: Implement in Ticket 3.1.3
-        this.#logger.debug(`PlayerTurnHandler: (Placeholder) Discovering and displaying actions for ${actor.id}.`);
-        // Placeholder logic:
-        // const actions = await this.#actionDiscoverySystem.getValidActions(actor);
-        // await this.#validatedEventDispatcher.dispatchValidated('update_available_actions', { actorId: actor.id, actions });
+        this.#logger.debug(`PlayerTurnHandler: Discovering actions for ${actor.id}.`);
+        let validActions = [];
+        try {
+            // 1. Get Current Location
+            const currentLocation = await this.#gameStateManager.getLocationOfEntity(actor);
+            if (!currentLocation) {
+                throw new Error(`Could not determine current location for actor ${actor.id}`);
+            }
+
+            // 2. Construct ActionContext
+            /** @type {ActionContext} */
+            const context = {
+                actingEntity: actor,
+                currentLocation: currentLocation,
+                entityManager: this.#entityManager,
+                gameDataRepository: this.#gameDataRepository,
+                logger: this.#logger,
+                // Add other necessary context properties here if needed by ActionDiscoverySystem
+                // e.g., gameStateManager if needed for broader state checks during discovery
+                gameStateManager: this.#gameStateManager
+            };
+
+            // 3. Call Action Discovery System
+            validActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
+            this.#logger.debug(`PlayerTurnHandler: Discovered ${validActions.length} actions for ${actor.id}.`);
+
+            // 4. Dispatch Event
+            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
+                actions: validActions, // Send the discovered actions
+                entityId: actor.id      // Include the entity ID
+            });
+            this.#logger.debug(`PlayerTurnHandler: Dispatched event:update_available_actions for ${actor.id}.`);
+
+        } catch (error) {
+            this.#logger.error(`PlayerTurnHandler: Error during action discovery or display for ${actor.id}: ${error.message}`, error);
+            // Optionally dispatch an error event or handle differently
+            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
+                actions: [], // Send empty actions on error
+                entityId: actor.id
+            });
+            // Rethrow to ensure the sequence initiation fails
+            throw error;
+        }
     }
 
     /**
-     * (Placeholder) Enables the input interface for the player.
+     * Dispatches an event to enable the input interface for the player.
      * @private
      * @param {Entity} actor - The player entity.
      * @returns {Promise<void>}
+     * @throws {Error} If dispatching the event fails.
      */
     async #_enablePlayerInput(actor) {
-        // TODO: Implement in Ticket 3.1.3
-        this.#logger.debug(`PlayerTurnHandler: (Placeholder) Enabling player input for ${actor.id}.`);
-        // Placeholder logic:
-        // await this.#validatedEventDispatcher.dispatchValidated('enable_player_input', { actorId: actor.id });
+        this.#logger.debug(`PlayerTurnHandler: Enabling player input for ${actor.id}.`);
+        try {
+            const message = "Your turn. Enter command..."; // Define the prompt message
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:enable_input', {
+                placeholder: message,
+                entityId: actor.id
+            });
+            this.#logger.debug(`PlayerTurnHandler: Dispatched textUI:enable_input for ${actor.id}.`);
+        } catch (error) {
+            this.#logger.error(`PlayerTurnHandler: Failed to dispatch textUI:enable_input for ${actor.id}: ${error.message}`, error);
+            // Rethrow to ensure the sequence initiation fails
+            throw error;
+        }
     }
+
 
     /**
      * Resets the internal state related to the current turn.
