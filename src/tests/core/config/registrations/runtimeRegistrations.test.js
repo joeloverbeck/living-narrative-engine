@@ -13,7 +13,9 @@
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../../../core/setup/inputSetupService.js').default} InputSetupService */
-/** @typedef {import('../../../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< UPDATED Import to ITurnManager
+/** @typedef {import('../../../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+// <<< ADDED Import for the missing dependency type >>>
+/** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -28,42 +30,65 @@ import {tokens} from '../../../../core/config/tokens.js';
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../core/gameLoop.js');
 jest.mock('../../../../core/setup/inputSetupService.js');
+// <<< ADDED Mock for TurnManager if its constructor is complex or has side effects >>>
+// jest.mock('../../../../core/turnManager.js'); // Add this if needed, but maybe not required just to resolve the dependency
 
 // --- Import AFTER mocking ---
 import GameLoop from '../../../../core/gameLoop.js';
 import InputSetupService from '../../../../core/setup/inputSetupService.js';
+// <<< ADDED Import TurnManager AFTER mocking if you mocked it above >>>
+// import TurnManager from '../../../../core/turnManager.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-// Mock the numerous dependencies required by the GameLoop and InputSetupService factories
 const mockGameStateManager = {};
-const mockInputHandler = {enable: jest.fn(), disable: jest.fn(), setCommandCallback: jest.fn()}; // Add methods used in GameLoop/InputSetup
-const mockCommandParser = {parse: jest.fn()}; // Add methods used in GameLoop
-const mockActionExecutor = {executeAction: jest.fn()}; // Add methods used in GameLoop
-const mockEventBus = {dispatch: jest.fn(), subscribe: jest.fn()}; // Add methods used in GameLoop
-const mockEntityManager = {activeEntities: new Map()}; // Add properties/methods used in GameLoop
+const mockInputHandler = {enable: jest.fn(), disable: jest.fn(), setCommandCallback: jest.fn()};
+const mockCommandParser = {parse: jest.fn()};
+const mockActionExecutor = {executeAction: jest.fn()};
+const mockEventBus = {dispatch: jest.fn(), subscribe: jest.fn()};
+const mockEntityManager = {
+    activeEntities: new Map(),
+    // Add the method expected by the TurnManager constructor
+    getEntityInstance: jest.fn(entityId => {
+        // Optional: Provide basic mock behavior if needed later in the turn manager logic
+        // For now, just having the function exist is enough to pass the constructor check.
+        // console.log(`Mock EntityManager: getEntityInstance called for ${entityId}`);
+        return undefined; // Or return a mock entity if needed
+    }),
+    // Add any other methods TurnManager might *actually call* during its operation if necessary
+    // For example:
+    // getEntitiesWithComponents: jest.fn(() => []),
+    // addComponent: jest.fn(),
+    // removeComponent: jest.fn(),
+};
 const mockGameDataRepository = {};
-const mockActionDiscoverySystem = {getValidActions: jest.fn()}; // Add methods used in GameLoop
-const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn()}; // Add methods used in GameLoop/InputSetup
+const mockActionDiscoverySystem = {getValidActions: jest.fn()};
+const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn()};
 
-// <<< UPDATED Mock factory function name for clarity >>>
 const createMockTurnManager = () => ({
     start: jest.fn(),
     stop: jest.fn(),
     getCurrentActor: jest.fn(),
     advanceTurn: jest.fn(),
-    // Add any other methods expected by the ITurnManager interface check in GameLoop constructor
-    // isEmpty: jest.fn(),            // Example if needed from old ITurnOrderService mock
-    // startNewRound: jest.fn(),     // Example if needed
-    // getNextEntity: jest.fn(),     // Example if needed
-    // clearCurrentRound: jest.fn(), // Example if needed
+    // Add any other methods expected by consumers (like GameLoop)
 });
 
-// GameLoop itself is registered here, but InputSetupService depends on it.
-// We'll register the mocked GameLoop instance so InputSetupService factory can resolve it.
-// Note: registerRuntime will overwrite this with the actual factory later in the tests.
-// Create a mock TurnManager instance to pass to the mocked GameLoop constructor
-const mockTurnManagerForGameLoopMock = createMockTurnManager(); // <<< Use updated mock creator
+// <<< ADDED Mock for the missing dependency >>>
+const createMockTurnOrderService = () => ({
+    // Add mock methods needed by the TurnManager *constructor* or tests, if any.
+    // Often, just having the object registered is enough for DI resolution tests.
+    setStrategy: jest.fn(),
+    addEntity: jest.fn(),
+    removeEntity: jest.fn(),
+    getNext: jest.fn(),
+    isEmpty: jest.fn(() => true),
+    startNewRound: jest.fn(),
+    clearCurrentRound: jest.fn(),
+});
+
+
+// Create a mock TurnManager instance ONLY needed if GameLoop mock requires it
+const mockTurnManagerForGameLoopMock = createMockTurnManager();
 const mockGameLoopInstance = new GameLoop({ // Pass minimal mocks to satisfy constructor
     logger: mockLogger,
     inputHandler: mockInputHandler,
@@ -75,38 +100,28 @@ const mockGameLoopInstance = new GameLoop({ // Pass minimal mocks to satisfy con
     entityManager: mockEntityManager,
     gameDataRepository: mockGameDataRepository,
     gameStateManager: mockGameStateManager,
-    turnManager: mockTurnManagerForGameLoopMock // <<< UPDATED Property name to 'turnManager' and pass the specific mock
+    turnManager: mockTurnManagerForGameLoopMock
 });
 
 
-// --- Mock Custom DI Container (Copied from interpreterRegistrations.test.js) ---
-// This mock container implementation seems reasonable for testing registrations.
-// No changes needed here based on the error.
+// --- Mock Custom DI Container ---
+// (Your existing createMockContainer implementation seems fine)
 const createMockContainer = () => {
     const registrations = new Map();
+    const resolvedInstances = new Map(); // Added cache for singleton behavior verification
+
     const container = {
         _registrations: registrations,
+        _resolvedInstances: resolvedInstances, // Expose for testing if needed
+
         register: jest.fn((token, factoryOrValue, options = {}) => {
             if (!token) throw new Error('Mock Register Error: Token is required.');
-            const registration = {factoryOrValue, options, instance: undefined};
+            // Clear any cached instance if re-registering
+            resolvedInstances.delete(token);
+            const registration = {factoryOrValue, options};
             registrations.set(token, registration);
-
-            // Simplified singleton instantiation during registration (might not always be desired, but often ok for tests)
-            // if (options?.lifecycle === 'singleton') {
-            //     if (typeof factoryOrValue === 'function' && registration.instance === undefined) {
-            //         try {
-            //             const factory = factoryOrValue;
-            //             // Don't auto-resolve during registration in this mock to better isolate resolve issues
-            //             // registration.instance = factory(container);
-            //         } catch (e) {
-            //             // console.warn(`Mock container: Error executing factory during registration for ${String(token)}: ${e.message}`);
-            //             registration.instance = undefined; // Ensure it remains undefined
-            //         }
-            //     } else if (typeof factoryOrValue !== 'function') {
-            //         registration.instance = factoryOrValue;
-            //     }
-            // }
         }),
+
         resolve: jest.fn((token) => {
             const registration = registrations.get(token);
             if (!registration) {
@@ -117,48 +132,60 @@ const createMockContainer = () => {
 
             const {factoryOrValue, options} = registration;
 
+            // --- Singleton Logic ---
             if (options?.lifecycle === 'singleton') {
-                if (registration.instance !== undefined) {
-                    return registration.instance;
+                if (resolvedInstances.has(token)) {
+                    return resolvedInstances.get(token);
                 }
+
+                let instance;
                 if (typeof factoryOrValue === 'function') {
                     try {
                         // Execute factory ONLY when resolving a singleton for the first time
-                        registration.instance = factoryOrValue(container);
+                        instance = factoryOrValue(container); // Pass container to factory
                     } catch (e) {
                         // Log the error originating during factory execution
+                        // Use console.error for visibility during tests
                         console.error(`Mock container: Error executing factory during resolve for ${String(token)}: ${e.message}`);
-                        throw e; // Re-throw the original error
+                        // Include stack trace for better debugging if available
+                        if (e.stack) {
+                            console.error(e.stack);
+                        }
+                        throw e; // Re-throw the original error to fail the test
                     }
-
                 } else {
                     // If it's a value (not a factory)
-                    registration.instance = factoryOrValue;
+                    instance = factoryOrValue;
                 }
-                return registration.instance;
+                resolvedInstances.set(token, instance); // Cache the instance
+                return instance;
             }
 
-            // Handle transient or other lifecycles (execute factory every time)
+            // --- Transient or other lifecycles (execute factory every time or return value) ---
             if (typeof factoryOrValue === 'function') {
                 try {
-                    return factoryOrValue(container);
+                    // Execute factory every time for non-singletons
+                    return factoryOrValue(container); // Pass container to factory
                 } catch (e) {
                     console.error(`Mock container: Error executing transient factory during resolve for ${String(token)}: ${e.message}`);
+                    if (e.stack) {
+                        console.error(e.stack);
+                    }
                     throw e;
                 }
             }
-            // Return value directly if not a factory
+
+            // Return value directly if not a factory and not singleton (or singleton already handled)
             return factoryOrValue;
         }),
+
         resolveAll: jest.fn((tag) => { // Basic mock for resolveAll
             const resolved = [];
             registrations.forEach((reg, token) => {
-                // Check if options exist and tags is an array including the tag
                 if (reg.options && Array.isArray(reg.options.tags) && reg.options.tags.includes(tag)) {
                     try {
                         resolved.push(container.resolve(token));
                     } catch (e) {
-                        // Optionally log resolution errors during resolveAll
                         // console.warn(`Mock resolveAll: Failed to resolve token ${String(token)} with tag ${tag}: ${e.message}`);
                     }
                 }
@@ -173,14 +200,19 @@ const createMockContainer = () => {
 describe('registerRuntime', () => {
     /** @type {ReturnType<typeof createMockContainer>} */
     let mockContainer;
-    /** @type {ITurnManager} */ // <<< UPDATED Type hint to ITurnManager
-    let mockTurnManager; // <<< UPDATED Variable name
+    /** @type {ITurnManager} */
+    let mockTurnManager;
+    // <<< ADDED Variable for the new mock >>>
+    /** @type {ITurnOrderService} */
+    let mockTurnOrderService;
 
     beforeEach(() => {
         jest.clearAllMocks(); // Clear mocks defined via jest.mock
 
         mockContainer = createMockContainer();
-        mockTurnManager = createMockTurnManager(); // <<< UPDATED Use updated creator & variable name
+        mockTurnManager = createMockTurnManager();
+        // <<< ADDED Instantiate the new mock >>>
+        mockTurnOrderService = createMockTurnOrderService();
 
         // Pre-register MOCKED core/external dependencies required by runtime factories
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
@@ -193,19 +225,30 @@ describe('registerRuntime', () => {
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IActionDiscoverySystem, mockActionDiscoverySystem, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
-        // <<< CORRECTED Register the dependency using the correct token >>>
-        mockContainer.register(tokens.ITurnManager, mockTurnManager, {lifecycle: 'singleton'});
-        // Pre-register the mocked GameLoop instance needed by InputSetupService factory *IF* it were resolved standalone.
-        // registerRuntime will overwrite this registration anyway.
-        // mockContainer.register(tokens.GameLoop, mockGameLoopInstance, {lifecycle: 'singleton'}); // This might be redundant or potentially confusing, consider removing
 
+        // <<< IMPORTANT FIX: Register the MISSING mock dependency >>>
+        mockContainer.register(tokens.ITurnOrderService, mockTurnOrderService, {lifecycle: 'singleton'});
+
+        // Register the mock TurnManager. registerRuntime will register the *real* factory
+        // for ITurnManager later, which is fine. This mock might still be needed
+        // if other *pre-registered* mocks depend directly on ITurnManager resolving
+        // *before* registerRuntime is called (unlikely in this setup, but safe to keep).
+        mockContainer.register(tokens.ITurnManager, mockTurnManager, {lifecycle: 'singleton'});
+
+        // Pre-registering the mocked GameLoop instance is less useful now.
+        // The tests rely on resolving GameLoop *after* registerRuntime,
+        // which means the *actual* factory registered by registerRuntime will be used.
+        // Commenting this out as it might cause confusion.
+        // mockContainer.register(tokens.GameLoop, mockGameLoopInstance, {lifecycle: 'singleton'});
 
         // Clear call counts on the mock service functions/constructors
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
-        Object.values(mockTurnManager).forEach(fn => fn.mockClear?.()); // <<< UPDATED Clear mock calls for the correct mock
+        Object.values(mockTurnManager).forEach(fn => fn.mockClear?.());
+        // <<< ADDED Clear calls for the new mock >>>
+        Object.values(mockTurnOrderService).forEach(fn => fn.mockClear?.());
         GameLoop.mockClear();
         InputSetupService.mockClear();
-        // Clear mocks on other registered services if needed
+        // Clear mocks on other registered services
         mockInputHandler.enable.mockClear();
         mockInputHandler.disable.mockClear();
         mockInputHandler.setCommandCallback.mockClear();
@@ -219,32 +262,31 @@ describe('registerRuntime', () => {
         }).not.toThrow();
 
         // Assert: Check if main services were registered using the mock's register function
-        // Check that register was called with the correct token and a factory function.
-        // We don't need to check the exact factory function content here, just that it's a function.
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ITurnManager, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.GameLoop, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.InputSetupService, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
     });
 
     it('resolving GameLoop does not throw', () => {
         // Arrange: Register dependencies and then the runtime services
-        registerRuntime(mockContainer); // This registers the *actual* factories
+        registerRuntime(mockContainer); // Registers the *actual* factories
 
         // Act & Assert: Try resolving the key service using the mock container
         let resolvedService;
         expect(() => {
-            // This will now execute the factory registered by registerRuntime
+            // This executes GameLoop factory -> ITurnManager factory -> resolves ITurnOrderService (now mocked)
             resolvedService = mockContainer.resolve(tokens.GameLoop);
-        }).not.toThrow();
+        }).not.toThrow(); // <<< This should now pass
 
-        // Assert: Check if something was actually resolved (i.e., the factory executed)
+        // Assert: Check if resolved and basic properties
         expect(resolvedService).toBeDefined();
-        // Because GameLoop itself is mocked via jest.mock, the factory will return
-        // an instance of the *mocked* GameLoop.
+        // Because GameLoop itself is mocked via jest.mock, the factory resolves dependencies,
+        // calls the constructor, and jest returns the mocked instance.
         expect(resolvedService).toBeInstanceOf(GameLoop);
 
         // Assert: Check that the MOCK GameLoop constructor was called via the factory
-        expect(GameLoop).toHaveBeenCalledTimes(1); // Should be called once when resolved
-        // Check if the factory correctly resolved dependencies and passed them
+        expect(GameLoop).toHaveBeenCalledTimes(1);
+        // Check dependencies passed to GameLoop constructor
         expect(GameLoop).toHaveBeenCalledWith(expect.objectContaining({
             gameStateManager: mockGameStateManager,
             inputHandler: mockInputHandler,
@@ -255,9 +297,29 @@ describe('registerRuntime', () => {
             gameDataRepository: mockGameDataRepository,
             actionDiscoverySystem: mockActionDiscoverySystem,
             validatedEventDispatcher: mockvalidatedEventDispatcher,
-            turnManager: mockTurnManager, // <<< Check if the CORRECT mock was passed
+            // It resolves ITurnManager, which executes its factory, which resolves the *mock* ITurnOrderService
+            // The ITurnManager factory then returns a TurnManager instance (or its mock if jest.mocked)
+            // which is then passed here. We expect *an* object here.
+            // If TurnManager itself is NOT jest.mocked, this will be a real TurnManager instance.
+            // If TurnManager IS jest.mocked, this will be the mocked TurnManager instance.
+            // Since we didn't explicitly mock TurnManager module, let's expect any object for now.
+            turnManager: expect.anything(), // More specific check below
             logger: mockLogger
         }));
+
+        // Optional: Verify the type of the resolved turnManager if TurnManager class is available
+        const resolvedTurnManager = GameLoop.mock.calls[0][0].turnManager;
+        expect(resolvedTurnManager).toBeDefined();
+        // If you added `jest.mock('../../../../core/turnManager.js');`
+        // expect(resolvedTurnManager).toBeInstanceOf(TurnManager); // Check it's the mocked instance
+        // If you did NOT mock TurnManager module, you might check for expected methods
+        expect(resolvedTurnManager.start).toBeDefined();
+        expect(resolvedTurnManager.getCurrentActor).toBeDefined();
+
+        // Optional: Check if the ITurnOrderService mock was resolved *during* ITurnManager factory execution
+        // This relies on the mockContainer's resolve mock tracking calls
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnOrderService);
+
     });
 
     it('resolving InputSetupService does not throw', () => {
@@ -267,10 +329,9 @@ describe('registerRuntime', () => {
         // Act & Assert
         let resolvedService;
         expect(() => {
-            // Resolving InputSetupService will trigger resolution of its GameLoop dependency,
-            // which in turn executes the GameLoop factory (which should now succeed)
+            // Resolving InputSetupService -> GameLoop factory -> ITurnManager factory -> resolves ITurnOrderService (mocked)
             resolvedService = mockContainer.resolve(tokens.InputSetupService);
-        }).not.toThrow();
+        }).not.toThrow(); // <<< This should now pass
 
         // Assert: Check if resolved and constructor called
         expect(resolvedService).toBeDefined();
@@ -278,17 +339,17 @@ describe('registerRuntime', () => {
         expect(InputSetupService).toHaveBeenCalledTimes(1);
 
         // Assert: Check dependencies passed to InputSetupService constructor
-        // Note: GameLoop resolved *within* this factory will be the mocked GameLoop instance
-        // because the GameLoop token resolves to the result of its own factory execution (which uses the jest.mocked constructor)
         expect(InputSetupService).toHaveBeenCalledWith(expect.objectContaining({
-            container: mockContainer, // The factory passes the container itself
+            container: mockContainer,
             logger: mockLogger,
             validatedEventDispatcher: mockvalidatedEventDispatcher,
+            // GameLoop is resolved internally, which itself resolves ITurnManager -> ITurnOrderService
             gameLoop: expect.any(GameLoop) // Check that *an instance* of the (mocked) GameLoop was passed
         }));
 
-        // Optional: Verify the GameLoop dependency was resolved exactly once during this test
-        // (once for InputSetupService's dependency resolution)
-        expect(GameLoop).toHaveBeenCalledTimes(1); // Reset in beforeEach ensures this count is per-test
+        // Optional: Verify GameLoop dependency was resolved exactly once during this test
+        expect(GameLoop).toHaveBeenCalledTimes(1);
+        // Optional: Verify ITurnOrderService was resolved during the nested dependency resolution
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnOrderService);
     });
 });

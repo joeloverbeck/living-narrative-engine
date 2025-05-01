@@ -3,11 +3,12 @@
 // --- Type Imports ---
 /** @typedef {import('../../config/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path from original
-/** @typedef {import('../../gameLoop.js').default} GameLoop */
+/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+// REMOVED: GameLoop import no longer needed
+// /** @typedef {import('../../gameLoop.js').default} GameLoop */
+/** @typedef {import('../../interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
 
 // --- Interface Definition (JSDoc) ---
-
 /**
  * Conceptual interface for the Shutdown Service.
  * Defines the contract for orchestrating the orderly shutdown of the game engine.
@@ -15,20 +16,21 @@
  */
 /**
  * Runs the complete asynchronous sequence required to shut down the game engine.
- * This typically includes stopping the game loop, cleaning up resources,
+ * This typically includes stopping turn processing via TurnManager, cleaning up resources,
  * calling shutdown methods on relevant systems, and potentially disposing container singletons.
  * @function
  * @name IShutdownService#runShutdownSequence
- * @returns {Promise<void>} A promise that resolves when the shutdown sequence is complete. It should generally not reject unless a critical, unrecoverable error occurs during shutdown.
+ * @returns {Promise<void>} A promise that resolves when the shutdown sequence is complete.
  */
 
 // --- Class Definition ---
 
 import {SHUTDOWNABLE} from "../../config/tags.js";
+import {tokens} from "../../config/tokens.js"; // <<< ADDED for resolving TurnManager
 
 /**
  * Service responsible for orchestrating the orderly shutdown of the game engine and its components.
- * It coordinates stopping the game loop, cleaning up systems, and releasing resources.
+ * It coordinates stopping turn processing, cleaning up systems, and releasing resources.
  * @implements {IShutdownService} // Conceptually implements the defined interface
  */
 class ShutdownService {
@@ -38,8 +40,9 @@ class ShutdownService {
     #logger;
     /** @private @type {ValidatedEventDispatcher} */
     #validatedEventDispatcher;
-    /** @private @type {GameLoop | null} */
-    #gameLoop = null;
+    // REMOVED: GameLoop dependency
+    // /** @private @type {GameLoop | null} */
+    // #gameLoop = null;
 
     /**
      * Creates a new ShutdownService instance.
@@ -47,21 +50,25 @@ class ShutdownService {
      * @param {AppContainer} dependencies.container - The application's dependency container.
      * @param {ILogger} dependencies.logger - The logging service.
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
-     * @param {GameLoop} dependencies.gameLoop - The main game loop instance. IMPORTANT: This might not be running or even fully initialized when the service is created, handle potentially null/stopped state in runSequence.
-     * @throws {Error} If any required dependency (container, logger, validatedEventDispatcher, gameLoop instance itself) is missing or invalid.
+     * // REMOVED: gameLoop from dependencies
+     * // @param {GameLoop} dependencies.gameLoop - The main game loop instance.
+     * @throws {Error} If any required dependency (container, logger, validatedEventDispatcher) is missing or invalid.
      */
-    constructor({ container, logger, validatedEventDispatcher, gameLoop }) {
+    constructor({container, logger, validatedEventDispatcher}) { // REMOVED: gameLoop from destructuring
         // --- Dependency Validation ---
         if (!container) {
             const errorMsg = 'ShutdownService: Missing required dependency \'container\'.';
-            console.error(errorMsg); // Fallback log
+            console.error(errorMsg);
             throw new Error(errorMsg);
         }
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') {
             const errorMsg = 'ShutdownService: Missing or invalid required dependency \'logger\'.';
-            console.error(errorMsg); // Fallback log
-            if (container) { // Attempt to use logger from container if available
-                try { container.resolve('ILogger')?.error(errorMsg); } catch (e) { /* Ignore */ }
+            console.error(errorMsg);
+            if (container) {
+                try {
+                    container.resolve('ILogger')?.error(errorMsg);
+                } catch (e) { /* Ignore */
+                }
             }
             throw new Error(errorMsg);
         }
@@ -70,80 +77,77 @@ class ShutdownService {
             logger.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // Check for gameLoop object and necessary properties/methods
-        if (!gameLoop || typeof gameLoop !== 'object' || typeof gameLoop.isRunning !== 'boolean' || typeof gameLoop.stop !== 'function') {
-            const errorMsg = 'ShutdownService: Missing or invalid required dependency \'gameLoop\'. Expected a GameLoop instance with isRunning and stop().';
-            // Use logger if available, otherwise console.error
-            if (logger && logger.error) {
-                logger.error(errorMsg);
-            } else {
-                console.error(errorMsg);
-            }
-            throw new Error(errorMsg);
-        }
-
+        // REMOVED: Validation for gameLoop
 
         // --- Store Dependencies ---
         this.#container = container;
         this.#logger = logger;
         this.#validatedEventDispatcher = validatedEventDispatcher;
-        this.#gameLoop = gameLoop; // Store the provided GameLoop instance
+        // REMOVED: Assignment of #gameLoop
 
         this.#logger.info('ShutdownService: Instance created successfully with dependencies.');
     }
 
     /**
-     * Runs the core part of the shutdown sequence: stopping the game loop,
-     * shutting down tagged systems, and basic logging. Dispatches shutdown events.
+     * Runs the core part of the shutdown sequence: stopping turn processing via TurnManager,
+     * shutting down tagged systems, disposing singletons, and logging. Dispatches shutdown events.
      * @returns {Promise<void>} A promise that resolves when this part of the sequence is complete.
      */
     async runShutdownSequence() {
         this.#logger.info('ShutdownService: runShutdownSequence called. Starting shutdown sequence...');
 
-        // Dispatch 'started' event (using await/try-catch)
-        const startPayload = {}; // Context might be added later if needed
+        const startPayload = {};
         try {
-            await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:started', startPayload, { allowSchemaNotFound: true });
+            await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:started', startPayload, {allowSchemaNotFound: true});
             this.#logger.debug("Dispatched 'shutdown:shutdown_service:started' event.");
         } catch (e) {
             this.#logger.error("Failed to dispatch 'shutdown:shutdown_service:started' event", e);
         }
 
-
-        // Dispatch UI message (using await/try-catch)
         try {
             await this.#validatedEventDispatcher.dispatchValidated('ui:show_message', {
                 text: 'System shutting down...',
                 type: 'info'
-            }, { allowSchemaNotFound: true });
+            }, {allowSchemaNotFound: true});
             this.#logger.debug('ShutdownService: Dispatched ui:show_message event.');
         } catch (eventError) {
             this.#logger.error('ShutdownService: Failed to dispatch shutdown start UI event.', eventError);
         }
 
+        let turnManager = null; // Define here for access in catch/finally
         try {
-            // 1. Stop the Game Loop
-            if (this.#gameLoop.isRunning) {
-                this.#logger.info('ShutdownService: Stopping GameLoop...');
-                // The actual stop() might throw, which is caught by the outer try-catch
-                this.#gameLoop.stop();
-                this.#logger.info('ShutdownService: GameLoop stop() method called.');
-            } else {
-                this.#logger.info('ShutdownService: GameLoop instance found but already stopped or not running.');
+            // 1. Stop Turn Processing via TurnManager (Ticket 2.2 Task 4)
+            this.#logger.info('ShutdownService: Resolving and stopping TurnManager...');
+            try {
+                turnManager = /** @type {ITurnManager} */ (
+                    this.#container.resolve(tokens.ITurnManager)
+                );
+                await turnManager.stop();
+                this.#logger.info('ShutdownService: TurnManager stop() method called successfully.');
+            } catch (tmError) {
+                // Log error but continue shutdown
+                this.#logger.error('ShutdownService: Error resolving or stopping TurnManager. Continuing shutdown...', tmError);
+                // Optionally dispatch a specific failure event for TurnManager stop
             }
+            // REMOVED: GameLoop stopping logic
+            // if (this.#gameLoop.isRunning) {
+            //     this.#logger.info('ShutdownService: Stopping GameLoop...');
+            //     this.#gameLoop.stop();
+            //     this.#logger.info('ShutdownService: GameLoop stop() method called.');
+            // } else {
+            //     this.#logger.info('ShutdownService: GameLoop instance found but already stopped or not running.');
+            // }
 
             // 2. Shutdown Tagged Systems
             this.#logger.info("ShutdownService: Attempting to shut down systems tagged as SHUTDOWNABLE...");
             let shutdownableSystems = [];
             let resolveErrorOccurred = false;
             try {
-                // Use the correct tag imported
-                shutdownableSystems = this.#container.resolveByTag(SHUTDOWNABLE[0]); // Assuming SHUTDOWNABLE is ['shutdownable']
+                shutdownableSystems = this.#container.resolveByTag(SHUTDOWNABLE[0]);
                 this.#logger.info(`ShutdownService: Found ${shutdownableSystems.length} systems tagged as SHUTDOWNABLE.`);
             } catch (resolveError) {
                 resolveErrorOccurred = true;
                 this.#logger.error("ShutdownService: CRITICAL ERROR resolving SHUTDOWNABLE systems. Cannot proceed with tagged system shutdown.", resolveError);
-                // Don't re-throw here, allow singleton disposal etc.
             }
 
             if (!resolveErrorOccurred) {
@@ -152,13 +156,11 @@ class ShutdownService {
                     if (system && typeof system.shutdown === 'function') {
                         this.#logger.debug(`ShutdownService: Attempting to call shutdown() on system: ${systemName}...`);
                         try {
-                            // Assuming system.shutdown() is synchronous. If it CAN be async, add await.
-                            // For now, assume sync based on tests.
+                            // Assume sync for now
                             system.shutdown();
                             this.#logger.info(`ShutdownService: Successfully called shutdown() on system: ${systemName}.`);
                         } catch (shutdownError) {
                             this.#logger.error(`ShutdownService: Error during shutdown() call for system: ${systemName}. Continuing...`, shutdownError);
-                            // Continue with the next system
                         }
                     } else {
                         this.#logger.warn(`ShutdownService: System tagged SHUTDOWNABLE (${systemName}) does not have a valid shutdown() method.`);
@@ -176,7 +178,6 @@ class ShutdownService {
                     this.#logger.info('ShutdownService: Container singletons disposed successfully.');
                 } catch (disposeError) {
                     this.#logger.error('ShutdownService: Error occurred during container.disposeSingletons().', disposeError);
-                    // Don't re-throw, shutdown should proceed as much as possible
                 }
             } else {
                 this.#logger.warn('ShutdownService: Container does not have a disposeSingletons method or container is unavailable. Skipping singleton disposal.');
@@ -184,33 +185,24 @@ class ShutdownService {
 
             // --- Final Success ---
             this.#logger.info('ShutdownService: Shutdown sequence finished.');
-
-            // Dispatch 'completed' event (using await/try-catch)
-            const completedPayload = {}; // Context might be added later if needed
+            const completedPayload = {};
             try {
-                await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:completed', completedPayload, { allowSchemaNotFound: true });
+                await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:completed', completedPayload, {allowSchemaNotFound: true});
                 this.#logger.debug("Dispatched 'shutdown:shutdown_service:completed' event.");
-            } catch(e) {
+            } catch (e) {
                 this.#logger.error("Failed to dispatch 'shutdown:shutdown_service:completed' event", e);
             }
 
-        } catch (error) { // Catch critical errors from gameLoop.stop() or potentially others *before* singleton disposal
-            this.#logger.error('ShutdownService: CRITICAL ERROR during main shutdown sequence:', error);
-
-            // Dispatch 'failed' event (using await/try-catch within the catch block)
-            const failedPayload = { error: error?.message || 'Unknown error', stack: error?.stack };
+        } catch (error) { // Catch critical errors *before* singleton disposal (though TurnManager stop is now handled gracefully)
+            this.#logger.error('ShutdownService: CRITICAL ERROR during main shutdown sequence (excluding singleton disposal):', error);
+            const failedPayload = {error: error?.message || 'Unknown error', stack: error?.stack};
             try {
-                await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:failed', failedPayload, { allowSchemaNotFound: true });
+                await this.#validatedEventDispatcher.dispatchValidated('shutdown:shutdown_service:failed', failedPayload, {allowSchemaNotFound: true});
                 this.#logger.debug("Dispatched 'shutdown:shutdown_service:failed' event.", failedPayload);
             } catch (e) {
-                // Log the error that occurred trying to dispatch the failure event
                 this.#logger.error("Failed to dispatch 'shutdown:shutdown_service:failed' event", e);
             }
-
-            // Decide if the error should be re-thrown or just logged.
-            // Generally, shutdown should try to complete as much as possible.
-            // Re-throwing here would prevent any potential cleanup outside this service.
-            // throw error; // Optionally re-throw if the error is absolutely fatal and needs upstream handling
+            // Optionally re-throw if needed, but usually shutdown should continue
         }
     }
 }

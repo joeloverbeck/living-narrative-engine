@@ -55,6 +55,7 @@
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  *
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
+ * @property {DiToken} ITurnManager - Token for the turn management service interface. // <<< ADDED
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
  * @property {DiToken} QuestRewardService - Token for quest reward logic.
  * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
@@ -148,16 +149,16 @@ export const tokens = Object.freeze({
     InputSetupService: 'InputSetupService',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
-    ITurnManager: 'ITurnManager',
 
     // Core Service Interfaces
-    IValidatedEventDispatcher: 'IValidatedEventDispatcher', // ADDED
-    IActionExecutor: 'IActionExecutor',             // ADDED
-    IGameStateManager: 'IGameStateManager',           // ADDED
-    ICommandParser: 'ICommandParser',             // ADDED
-    IActionDiscoverySystem: 'IActionDiscoverySystem',   // ADDED
-    IInputHandler: 'IInputHandler',             // ADDED
+    IValidatedEventDispatcher: 'IValidatedEventDispatcher',
+    IActionExecutor: 'IActionExecutor',
+    IGameStateManager: 'IGameStateManager',
+    ICommandParser: 'ICommandParser',
+    IActionDiscoverySystem: 'IActionDiscoverySystem',
+    IInputHandler: 'IInputHandler',
     ITurnOrderService: 'ITurnOrderService',
+    ITurnManager: 'ITurnManager', // <<< ADDED
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',

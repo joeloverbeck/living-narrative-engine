@@ -2,11 +2,20 @@
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameLoop from "../../gameLoop.js";
+import TurnManager from "../../turnManager.js"; // <<< ADDED
 import InputSetupService from "../../setup/inputSetupService.js";
 
 export function registerRuntime(container) {
     const r = new Registrar(container);
     const log = container.resolve(tokens.ILogger);
+
+    // Register TurnManager as Singleton (Ticket 2.2 Task 1)
+    r.singletonFactory(tokens.ITurnManager, c => new TurnManager({
+        turnOrderService: c.resolve(tokens.ITurnOrderService),
+        entityManager: c.resolve(tokens.EntityManager),
+        logger: c.resolve(tokens.ILogger),
+        dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
+    }));
 
     r.singletonFactory(tokens.GameLoop, c => new GameLoop({
         gameStateManager: c.resolve(tokens.IGameStateManager),
@@ -18,7 +27,7 @@ export function registerRuntime(container) {
         gameDataRepository: c.resolve(tokens.GameDataRepository),
         actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        turnManager: c.resolve(tokens.ITurnManager), // Changed from turnOrderService
+        turnManager: c.resolve(tokens.ITurnManager), // Already depends on ITurnManager
         logger: c.resolve(tokens.ILogger)
     }));
 
@@ -26,7 +35,9 @@ export function registerRuntime(container) {
         container: c,
         logger: c.resolve(tokens.ILogger),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        gameLoop: c.resolve(tokens.GameLoop) // GameLoop depends on TurnManager, but InputSetup needs GameLoop
+        // GameLoop potentially needed here if InputSetup interacts directly with GameLoop state,
+        // but primary command flow goes through EventBus -> GameLoop -> TurnManager
+        gameLoop: c.resolve(tokens.GameLoop)
     }));
 
     log.info('Runtime Registration: complete.');
