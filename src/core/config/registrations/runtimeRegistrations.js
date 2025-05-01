@@ -2,7 +2,6 @@
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameLoop from "../../gameLoop.js";
-import TurnManager from "../../turnManager.js"; // <<< ADDED
 import InputSetupService from "../../setup/inputSetupService.js";
 
 // --- Import Interfaces for Type Hinting --- // <<< Added import block
@@ -30,15 +29,6 @@ export function registerRuntime(container) {
     const r = new Registrar(container);
     /** @type {ILogger} */
     const log = container.resolve(tokens.ILogger); // Use explicit type
-
-    // Register TurnManager as Singleton (Ticket 2.2 Task 1)
-    r.singletonFactory(tokens.ITurnManager, c => new TurnManager({
-        turnOrderService: c.resolve(tokens.ITurnOrderService),
-        entityManager: c.resolve(tokens.EntityManager),
-        logger: c.resolve(tokens.ILogger),
-        dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
-    }));
-    log.info(`Runtime Registration: Registered ${tokens.ITurnManager} (Singleton).`);
 
     // Register GameLoop as Singleton
     r.singletonFactory(tokens.GameLoop, c => {
