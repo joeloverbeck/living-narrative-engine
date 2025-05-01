@@ -213,34 +213,42 @@ class GameLoop {
             // --- TICKET 3.1.6.2.3: Resolve Handler ---
             const handler = await this.#turnHandlerResolver.resolveHandler(currentActorForTurn);
 
+            // --- TICKET 3.1.6.2.4/3.1.6.2.5 (IF BLOCK): Handle Valid Handler ---
             if (handler && typeof handler.handleTurn === 'function') {
                 this.#logger.debug(`GameLoop #handleTurnActorChanged: Resolved handler ${handler.constructor.name} for ${currentActorForTurn.id}. Executing...`);
-                // --- TICKET 3.1.6.2.4/3.1.6.2.5 START: Execute Handler with Error Handling ---
                 try {
                     await handler.handleTurn(currentActorForTurn);
                     // Handler is responsible for advancing turn if successful (e.g., after AI action or player input)
                 } catch (handlerError) {
                     // --- TICKET 3.1.6.2.5: Handle Error from handler.handleTurn ---
-                    // Log Handler Error
                     this.#logger.error(`Error during delegated turn handling for ${currentActorForTurn.id} by ${handler.constructor.name}: ${handlerError.message}`, handlerError);
-
-                    // Nested try...catch for advanceTurn
                     try {
-                        // Call advanceTurn
                         this.#logger.warn(`Attempting to advance turn after handler error for ${currentActorForTurn.id}...`);
                         await this.#turnManager.advanceTurn();
                     } catch (advanceError) {
-                        // Handle advanceTurn Error
-                        // Log the advancement error
                         this.#logger.error(`Failed to advance turn after handler error for ${currentActorForTurn.id}: ${advanceError.message}`, advanceError);
-                        // Consider stopping the loop
                         // Critical failure if turn cannot advance, as the game state is likely stuck.
                         await this.stop();
                     }
                 }
-                // --- TICKET 3.1.6.2.4/3.1.6.2.5 END ---
+                // --- START: TICKET 3.1.6.2.6: Implement Null Handler Logic ---
+            } else if (handler === null) {
+                // Log Warning
+                this.#logger.warn(`No specific turn handler resolved for actor ${currentActorForTurn.id}. Advancing turn directly.`);
+                // Add try...catch for advanceTurn
+                try {
+                    // Call advanceTurn
+                    await this.#turnManager.advanceTurn();
+                } catch (advanceError) {
+                    // Handle advanceTurn Error
+                    // Log the advancement error
+                    this.#logger.error(`Failed to advance turn directly (null handler) for ${currentActorForTurn.id}: ${advanceError.message}`, advanceError);
+                    // Consider stopping the loop
+                    await this.stop(); // Critical failure if turn cannot advance.
+                }
+                // --- END: TICKET 3.1.6.2.6 ---
             } else {
-                // Handle case where no valid handler was resolved
+                // Handle case where no valid handler was resolved (but handler wasn't explicitly null)
                 this.#logger.error(`GameLoop #handleTurnActorChanged: Failed to resolve a valid turn handler for ${currentActorForTurn.id}. Skipping turn.`);
                 // Attempt to advance turn to prevent stall
                 try {
