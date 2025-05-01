@@ -173,7 +173,7 @@ describe('GameLoop', () => {
 
                 // Create spies AFTER instance creation
                 processCmdSpy = jest.spyOn(gameLoop, 'processSubmittedCommand').mockResolvedValue();
-                promptInputSpy = jest.spyOn(gameLoop, 'promptInput');
+                promptInputSpy = jest.spyOn(gameLoop, 'promptInput'); // Deprecated method
 
                 // Find the *bound* handlers subscribed by the instance
                 const subscribeCalls = mockEventBus.subscribe.mock.calls;
@@ -226,7 +226,10 @@ describe('GameLoop', () => {
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled(); // Verify it checked whose turn it is
                 expect(processCmdSpy).toHaveBeenCalledTimes(1);
                 expect(processCmdSpy).toHaveBeenCalledWith(mockPlayer, eventData.command);
-                expect(mockLogger.warn).not.toHaveBeenCalled();
+                // ****** CORRECTION: Expect the deprecation warning ******
+                expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
+                // ******************************************************
             });
 
             it("should NOT call processSubmittedCommand when 'command:submit' is received and loop is stopped", async () => {
@@ -255,7 +258,11 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
+                // ****** CORRECTION: Expect DEPRECATED + 'not turn' warnings ******
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity otherPlayer, but it's not that player's turn (Current: ${mockPlayer.id}). Ignoring.`));
+                // ************************************************************
                 expect(processCmdSpy).not.toHaveBeenCalled();
             });
 
@@ -271,7 +278,11 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
+                // ****** CORRECTION: Expect DEPRECATED + 'not turn' warnings ******
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`but it's not that player's turn (Current: ${mockPlayer.id})`));
+                // ************************************************************
                 expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
                     text: "It's not your turn.",
                     type: 'warning'
@@ -279,7 +290,9 @@ describe('GameLoop', () => {
                 expect(processCmdSpy).not.toHaveBeenCalled();
             });
 
-            it("should re-discover actions and call promptInput if event has invalid/missing command string while running and player turn", async () => {
+            // ****** CORRECTION: Renamed and assertions updated ******
+            it("should log warning and display message if event has invalid/missing command string while running and player turn", async () => {
+                // *******************************************************
                 const invalidCommandEvent = {command: undefined, entityId: mockPlayer.id}; // Correct entity, invalid data
                 // Ensure current entity's hasComponent mock is active before calling handler
                 expect(typeof mockPlayer.hasComponent).toBe('function');
@@ -291,14 +304,24 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
+                // ****** CORRECTION: Expect DEPRECATED + 'invalid data' warnings ******
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("invalid 'command:submit' event data"), expect.anything());
+                // ********************************************************************
                 expect(processCmdSpy).not.toHaveBeenCalled();
+                // ****** CORRECTION: Ensure it does NOT try to re-prompt ******
                 // _promptPlayerInput -> _discoverActionsForEntity -> getCurrentLocation
-                expect(mockGameStateManager.getCurrentLocation).toHaveBeenCalled();
+                expect(mockGameStateManager.getCurrentLocation).not.toHaveBeenCalled();
                 // _promptPlayerInput -> _discoverActionsForEntity -> getValidActions
-                expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object));
+                expect(mockActionDiscoverySystem.getValidActions).not.toHaveBeenCalled();
                 // _promptPlayerInput -> promptInput
-                expect(promptInputSpy).toHaveBeenCalledTimes(1);
+                expect(promptInputSpy).not.toHaveBeenCalled();
+                // Expect the 'Invalid command' message instead
+                expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
+                    text: 'Invalid command input.', type: 'error'
+                });
+                // **********************************************************
             });
             // --- End Tests Assuming Player Turn ---
         });
@@ -327,7 +350,7 @@ describe('GameLoop', () => {
 
                 // Create spies AFTER instance creation
                 processCmdSpy = jest.spyOn(gameLoop, 'processSubmittedCommand').mockResolvedValue();
-                promptInputSpy = jest.spyOn(gameLoop, 'promptInput');
+                promptInputSpy = jest.spyOn(gameLoop, 'promptInput'); // Deprecated method
 
                 // Find the command submit handler
                 const subscribeCalls = mockEventBus.subscribe.mock.calls;
@@ -368,8 +391,11 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
-                expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+                // ****** CORRECTION: Expect DEPRECATED + 'not turn' warnings ******
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockPlayer.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
+                // ************************************************************
                 // This check is key: no "Not your turn" message should be sent
                 expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.objectContaining({text: "It's not your turn."}));
                 expect(processCmdSpy).not.toHaveBeenCalled();
@@ -387,9 +413,12 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
-                // Handler checks if currentActor has PLAYER_COMPONENT_ID, which NPC does not
-                expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+                // ****** CORRECTION: Expect DEPRECATED + 'not turn' warnings ******
+                // Handler checks if currentActor has PLAYER_COMPONENT_ID (false), so isCorrectPlayersTurn is false
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockNpc.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
+                // ************************************************************
                 expect(processCmdSpy).not.toHaveBeenCalled();
                 // Should not try to re-prompt an NPC
                 expect(promptInputSpy).not.toHaveBeenCalled();
@@ -421,9 +450,12 @@ describe('GameLoop', () => {
 
                 // TurnManager is the source of truth now for the current actor check inside the handler
                 expect(mockTurnManager.getCurrentActor).toHaveBeenCalled();
-                // Handler checks if currentActor has PLAYER_COMPONENT_ID, which NPC does not
-                expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+                // ****** CORRECTION: Expect DEPRECATED + 'not turn' warnings ******
+                // Handler checks if currentActor has PLAYER_COMPONENT_ID (false), so isCorrectPlayersTurn is false
+                expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+                expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called.'));
                 expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`received command event for entity ${mockNpc.id}, but it's not that player's turn (Current: ${mockNpc.id}). Ignoring.`));
+                // ************************************************************
                 expect(processCmdSpy).not.toHaveBeenCalled();
             });
             // --- End Tests Assuming NPC Turn ---

@@ -194,10 +194,6 @@ class GameLoop {
 
         this.#logger.debug(`GameLoop: Received 'turn:actor_changed'. New Actor: ${newActor?.id ?? 'null'}. Previous: ${previousActor?.id ?? 'null'}`);
 
-        // REMOVED: Update the internal reference (for potential debugging/external tools, not core logic)
-        // this.#currentTurnEntity = newActor;
-        // this.#logger.debug(`GameLoop #handleTurnActorChanged: Internal #currentTurnEntity SET to ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
-
         if (!this.#isRunning) {
             this.#logger.debug('GameLoop received actor change event, but loop is not running.');
             return;
@@ -210,34 +206,56 @@ class GameLoop {
             // Add check before processing
             if (typeof currentActorForTurn.hasComponent !== 'function') {
                 this.#logger.error(`GameLoop #handleTurnActorChanged: Invalid entity reported by TurnManager (ID: ${currentActorForTurn?.id}). Cannot process turn.`);
-                // Potentially stop or advance?
+                // Potentially stop or advance? This might be a critical error. Consider stopping.
+                await this.stop();
                 return;
             }
             this.#logger.debug(`GameLoop #handleTurnActorChanged: Processing turn for ${currentActorForTurn.id}`);
-            // --- TICKET 3.1.6.2.3 START ---
-            // Start processing the turn for the new entity
-            // REMOVED OLD CALL: await this._processCurrentActorTurn(currentActorForTurn);
-            // ADDED RESOLVER CALL:
-            const handler = await this.#turnHandlerResolver.resolveHandler(currentActorForTurn);
-            // --- TICKET 3.1.6.2.3 END ---
 
-            // TODO: Next step is to actually *call* the resolved handler's handleTurn method.
-            // For now, we just resolve it as per the ticket requirements.
+            // --- TICKET 3.1.6.2.3: Resolve Handler ---
+            const handler = await this.#turnHandlerResolver.resolveHandler(currentActorForTurn);
+
             if (handler && typeof handler.handleTurn === 'function') {
-                this.#logger.debug(`GameLoop #handleTurnActorChanged: Resolved handler ${handler.constructor.name} for ${currentActorForTurn.id}. (Handler execution deferred)`);
-                // await handler.handleTurn(currentActorForTurn); // This call will be added/handled in a subsequent ticket/step.
+                this.#logger.debug(`GameLoop #handleTurnActorChanged: Resolved handler ${handler.constructor.name} for ${currentActorForTurn.id}. Executing...`);
+                // --- TICKET 3.1.6.2.4/3.1.6.2.5 START: Execute Handler with Error Handling ---
+                try {
+                    await handler.handleTurn(currentActorForTurn);
+                    // Handler is responsible for advancing turn if successful (e.g., after AI action or player input)
+                } catch (handlerError) {
+                    // --- TICKET 3.1.6.2.5: Handle Error from handler.handleTurn ---
+                    // Log Handler Error
+                    this.#logger.error(`Error during delegated turn handling for ${currentActorForTurn.id} by ${handler.constructor.name}: ${handlerError.message}`, handlerError);
+
+                    // Nested try...catch for advanceTurn
+                    try {
+                        // Call advanceTurn
+                        this.#logger.warn(`Attempting to advance turn after handler error for ${currentActorForTurn.id}...`);
+                        await this.#turnManager.advanceTurn();
+                    } catch (advanceError) {
+                        // Handle advanceTurn Error
+                        // Log the advancement error
+                        this.#logger.error(`Failed to advance turn after handler error for ${currentActorForTurn.id}: ${advanceError.message}`, advanceError);
+                        // Consider stopping the loop
+                        // Critical failure if turn cannot advance, as the game state is likely stuck.
+                        await this.stop();
+                    }
+                }
+                // --- TICKET 3.1.6.2.4/3.1.6.2.5 END ---
             } else {
+                // Handle case where no valid handler was resolved
                 this.#logger.error(`GameLoop #handleTurnActorChanged: Failed to resolve a valid turn handler for ${currentActorForTurn.id}. Skipping turn.`);
-                // Consider advancing the turn here to prevent stall
+                // Attempt to advance turn to prevent stall
                 try {
                     await this.#turnManager.advanceTurn();
-                } catch (e) {
-                    this.#logger.error(`Error advancing turn after failed handler resolution: ${e.message}`);
+                } catch (skipError) {
+                    this.#logger.error(`Error advancing turn after failed handler resolution for ${currentActorForTurn.id}: ${skipError.message}`);
+                    // Critical failure if turn cannot advance even after skipping a failed resolution.
                     await this.stop();
                 }
             }
 
         } else {
+            // Handle case where TurnManager reports no current actor
             this.#logger.info('GameLoop: TurnManager reported no current actor (null). Waiting...');
             this.#inputHandler.disable();
             await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting..."});
@@ -264,8 +282,11 @@ class GameLoop {
      * @param {object} eventData - The event payload. Expected to contain `entityId` and `command`.
      * @param {string} eventData.entityId - The ID of the entity submitting the command.
      * @param {string} eventData.command - The command string.
+     * @deprecated This logic should now primarily reside within PlayerTurnHandler. GameLoop only subscribes to forward the event IF the PlayerTurnHandler requests it.
      */
     async #handleSubmittedCommandFromEvent(eventData) {
+        this.#logger.warn('DEPRECATED: GameLoop.#handleSubmittedCommandFromEvent called. Ideally, PlayerTurnHandler manages command submission during player turns.');
+
         // --- Guard Clause (Not Running) ---
         if (!this.#isRunning) {
             this.#logger.warn('GameLoop received command submission via event, but loop is not running.');
@@ -277,7 +298,6 @@ class GameLoop {
 
         // --- Guard Clause (Turn Context Validation) ---
         const receivedEntityId = eventData?.entityId ?? null; // Extract for clarity
-        // Use the fetched currentActor for validation
         const isCorrectPlayersTurn = currentActor &&
             receivedEntityId && // Ensure eventData.entityId exists
             currentActor.id === receivedEntityId &&
@@ -302,17 +322,21 @@ class GameLoop {
         // At this point, currentActor is valid and it's their turn.
         const commandString = eventData?.command;
         if (commandString && typeof commandString === 'string' && commandString.trim().length > 0) {
-            // If Valid: Delegate processing
-            this.#logger.info(`GameLoop: Received command via event: "${commandString}" from ${currentActor.id}`); // Use currentActor.id
-            // Delegate the core logic (parsing, execution, turn advancement via TurnManager)
+            // If Valid: Delegate processing (This is the deprecated part)
+            this.#logger.info(`GameLoop: Processing command via event: "${commandString}" from ${currentActor.id}`); // Use currentActor.id
             // Pass the validated currentActor
-            await this.processSubmittedCommand(currentActor, commandString);
+            await this.processSubmittedCommand(currentActor, commandString); // DEPRECATED CALL
         } else {
             // If Invalid: Log, recover, and allow retry
             this.#logger.warn("GameLoop received invalid 'command:submit' event data (missing or empty command string):", eventData);
             // Re-prompt the current player to allow them to try again.
             // Pass the validated currentActor
-            await this._promptPlayerInput(currentActor); // Use helper
+            // This re-prompting should also be handled by PlayerTurnHandler now.
+            // await this._promptPlayerInput(currentActor); // DEPRECATED HELPER CALL
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: 'Invalid command input.', type: 'error'
+            });
+            // The PlayerTurnHandler should re-enable input after error.
         }
     }
 
@@ -356,12 +380,17 @@ class GameLoop {
      * @private
      * @param {Entity} actor The entity whose turn it currently is.
      * @async
+     * @deprecated This method is superseded by the logic within `#handleTurnActorChanged` which now directly uses the TurnHandlerResolver and TurnHandlers. Kept for potential reference.
      */
     async _processCurrentActorTurn(actor) {
+        this.#logger.warn(`DEPRECATED: GameLoop._processCurrentActorTurn called directly for ${actor?.id}. Logic moved to #handleTurnActorChanged.`);
+        // The core logic from this method has been integrated into #handleTurnActorChanged
+        // using the TurnHandlerResolver and associated handlers (like PlayerTurnHandler).
+        // This method should no longer be the primary entry point for turn processing.
+
         // Add extra check for actor validity at the START
         if (!actor || typeof actor.hasComponent !== 'function' || typeof actor.id === 'undefined') {
             this.#logger.error(`_processCurrentActorTurn called with invalid actor: ${actor?.id ?? 'undefined/null'}. Aborting turn process.`);
-            // Try advancing turn to prevent getting stuck
             try {
                 this.#logger.warn(`_processCurrentActorTurn attempting to advance turn due to invalid actor.`);
                 await this.#turnManager.advanceTurn();
@@ -377,89 +406,8 @@ class GameLoop {
             return;
         }
 
-        const actorId = actor.id;
-        this.#logger.info(`GameLoop: >>> Processing turn for Actor: ${actorId} <<<`);
-
-        // --- Resolve and Execute Turn Handler ---
-        try {
-            // Uses ITurnHandlerResolver.resolveHandler
-            const turnHandler = this.#turnHandlerResolver.resolveHandler(actor);
-            if (!turnHandler || typeof turnHandler.handleTurn !== 'function') {
-                this.#logger.error(`Failed to resolve a valid turn handler for actor ${actorId}. Actor components: ${JSON.stringify(actor.getAllComponents())}`);
-                // Consider what to do here: skip turn? stop game?
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: `Internal Error: No turn logic for ${actorId}. Skipping turn.`,
-                    type: 'warning'
-                });
-                await this.#turnManager.advanceTurn(); // Skip turn
-                return;
-            }
-
-            this.#logger.debug(`GameLoop: Resolved turn handler ${turnHandler.constructor.name} for ${actorId}. Executing handleTurn...`);
-            // Uses ITurnHandler.handleTurn
-            await turnHandler.handleTurn(actor);
-            // Note: The TurnHandler itself is now responsible for advancing the turn via TurnManager when appropriate (e.g., after player input or AI action)
-
-        } catch (error) {
-            this.#logger.error(`Error during turn processing for actor ${actorId}: ${error.message}`, error);
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: `Error during ${actorId}'s turn: ${error.message}`,
-                type: 'error'
-            });
-            // Attempt to advance turn to prevent getting stuck, unless it's a player's turn (handled by handler)
-            if (!actor.hasComponent(PLAYER_COMPONENT_ID)) {
-                try {
-                    this.#logger.warn(`_processCurrentActorTurn attempting to advance turn after error for non-player ${actorId}.`);
-                    await this.#turnManager.advanceTurn();
-                } catch (e) {
-                    this.#logger.error(`Error advancing turn after error in non-player turn process: ${e.message}`);
-                    await this.stop(); // Stop if advancing also fails
-                }
-            } else {
-                this.#logger.warn(`Error occurred during player ${actorId}'s turn. Handler should manage recovery/re-prompt.`);
-                // The PlayerTurnHandler should ideally handle errors and re-prompt
-            }
-        }
-
-        /* --- OLD PLAYER/AI LOGIC REMOVED ---
-        // --- Player Turn Logic ---
-        if (actor.hasComponent(PLAYER_COMPONENT_ID)) {
-            this.#logger.debug(`GameLoop: Actor ${actorId} is player-controlled. Preparing for input.`);
-            // Discover actions and prompt input using the passed actor
-            await this._promptPlayerInput(actor);
-
-        } else {
-            // --- AI/NPC Turn Logic ---
-            this.#logger.info(`GameLoop: Actor ${actorId} is AI controlled. Triggering AI logic (placeholder)...`);
-            // Uses IActionDiscoverySystem.getValidActions (even for AI, might inform decisions)
-            // Pass the current actor to discovery
-            const availableActions = await this._discoverActionsForEntity(actor);
-
-            // Placeholder AI Action (No IAiService call yet)
-            // TODO: Replace with actual AI service call that chooses an action
-            this.#logger.warn(`GameLoop: AI (${actorId}) taking placeholder 'wait' action.`);
-            const aiActionId = 'core:wait';
-            const aiParsedCommand = {actionId: aiActionId, originalInput: '(AI wait)', targets: [], prepositions: {}}; // Simulate parse
-
-            // Execute the placeholder action using the passed actor
-            const actionResult = await this.executeAction(actor, aiParsedCommand);
-
-            // AI finishes its turn, tell TurnManager to advance.
-            this.#logger.debug(`GameLoop: AI (${actorId}) turn finished with action: ${aiActionId}. Success: ${actionResult.success}. Advancing turn...`);
-            // Uses ITurnManager.advanceTurn
-            try {
-                await this.#turnManager.advanceTurn(); // Signal TurnManager the AI turn is done
-            } catch (error) {
-                this.#logger.error(`GameLoop: Error occurred when advancing turn after AI action for ${actorId}: ${error.message}`, error);
-                // Potentially stop the loop if advancing fails critically
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: `Critical Error during AI turn advancement: ${error.message}`,
-                    type: 'error'
-                });
-                await this.stop();
-            }
-        }
-        */
+        // Call the new handler logic as a fallback (though direct calls should be avoided)
+        await this.#handleTurnActorChanged({currentActor: actor, previousActor: null});
     }
 
 
@@ -486,19 +434,16 @@ class GameLoop {
         // Verify the entity passed in (actingPlayer) is indeed the current actor from the TurnManager.
         if (!actingPlayer || actingPlayer !== currentActor || !actingPlayer.hasComponent(PLAYER_COMPONENT_ID)) {
             this.#logger.error(`processSubmittedCommand called for ${actingPlayer?.id} but current turn is ${currentActor?.id} or not a player. State inconsistency?`);
-            // If it's somehow a player turn but the wrong player sent the command, re-prompt the *correct* player.
-            if (currentActor && currentActor.hasComponent(PLAYER_COMPONENT_ID)) { // Use currentActor
-                await this._promptPlayerInput(currentActor); // Pass currentActor
-            }
-            // Do not proceed further with the incorrect entity's command.
+            // If it's somehow a player turn but the wrong player sent the command, re-prompt the *correct* player (via handler).
+            // if (currentActor && currentActor.hasComponent(PLAYER_COMPONENT_ID)) { // Use currentActor
+            //    // PlayerTurnHandler should handle re-prompting.
+            // }
             return;
         }
 
-        // --- Disable input ---
-        // Uses IInputHandler.disable
-        this.#inputHandler.disable();
-        // Uses IValidatedEventDispatcher.dispatchValidated
-        await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."});
+        // --- Disable input (Handler should do this) ---
+        // this.#inputHandler.disable();
+        // await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."});
 
         this.#logger.debug(`Processing command: "${command}" for player ${actingPlayer.id}`);
 
@@ -524,10 +469,8 @@ class GameLoop {
             }
             this.#logger.warn(`Command parsing failed for "${command}". Error: ${message || 'No action ID found.'}`);
 
-            // Re-discover actions and re-prompt the player - Allow retry within turn
-            // Pass actingPlayer (which we've confirmed is the current actor)
-            await this._promptPlayerInput(actingPlayer); // Use helper
-            // **Do not** advance turn here.
+            // Re-prompt should be handled by PlayerTurnHandler.
+            // await this._promptPlayerInput(actingPlayer); // DEPRECATED HELPER CALL
             return; // <<< Explicitly return to prevent advancing turn
 
         } else {
@@ -540,7 +483,7 @@ class GameLoop {
             actionSuccess = actionResult?.success ?? false;
             this.#logger.debug(`Action ${actionIdTaken} completed for ${actingPlayer.id}. Success: ${actionSuccess}.`);
 
-            // --- Player Turn End Logic ---
+            // --- Player Turn End Logic (Handler should do this) ---
             // Only advance if an action was successfully parsed and attempted
             this.#logger.info(`GameLoop: Player ${actingPlayer.id} completed action ${actionIdTaken}. Advancing turn...`);
 
@@ -667,8 +610,10 @@ class GameLoop {
      * @param {Entity} actingEntity - The entity whose actions are being discovered.
      * @returns {Promise<Array<ActionDefinition>>} A promise resolving to the array of valid actions.
      * @async
+     * @deprecated This should be invoked by the PlayerTurnHandler, not directly by GameLoop.
      */
     async _discoverActionsForEntity(actingEntity) {
+        this.#logger.warn(`DEPRECATED: GameLoop._discoverActionsForEntity called for ${actingEntity?.id}. Should be handled by PlayerTurnHandler.`);
         if (!this.#isRunning) {
             this.#logger.debug('_discoverActionsForEntity called while not running.');
             return [];
@@ -740,10 +685,10 @@ class GameLoop {
             return;
         }
         // Discover actions first using the passed player entity
-        await this._discoverActionsForEntity(playerEntity); // Uses IActionDiscoverySystem
+        await this._discoverActionsForEntity(playerEntity); // Uses IActionDiscoverySystem (DEPRECATED CALL)
 
         // Then prompt for input using the passed player entity
-        await this.promptInput(`Your turn, ${playerEntity.id}. Enter command...`); // Uses IInputHandler
+        await this.promptInput(`Your turn, ${playerEntity.id}. Enter command...`); // Uses IInputHandler (DEPRECATED CALL)
     }
 
 
