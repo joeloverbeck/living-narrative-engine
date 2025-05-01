@@ -51,8 +51,8 @@ const createMockContainer = () => {
                 if (token === tokens.IValidatedEventDispatcher) return { /* basic mock */};
                 if (token === tokens.ActionValidationService) return { /* basic mock */};
                 if (token === tokens.ITurnOrderService) return { /* basic mock */}; // Added for TurnManager factory potential needs
-                if (token === tokens.IActionDiscoverySystem) return { /* basic mock */}; // Added for PlayerTurnHandler
-                if (token === tokens.ICommandProcessor) return { /* basic mock */}; // Added for PlayerTurnHandler
+                if (token === tokens.IActionDiscoverySystem) return { /* basic mock */}; // Added for PlayerTurnHandler/AITurnHandler
+                if (token === tokens.ICommandProcessor) return { /* basic mock */}; // Added for PlayerTurnHandler/AITurnHandler
 
                 // If it's none of the above known dependencies, it's likely an error in the test or SUT
                 console.warn(`Mock Resolve Warning: Token not explicitly registered or mocked, returning basic object: ${String(token)}`);
@@ -84,7 +84,7 @@ describe('registerCoreSystems', () => {
     /** @type {ReturnType<typeof createMockContainer>} */
     let mockContainer;
 
-    // Whitelist of system tokens expected to be registered and tagged
+    // Whitelist of system tokens expected to be registered and tagged INITIALIZABLE
     // Includes all systems registered with INITIALIZABLE tag in coreSystemsRegistrations.js
     const initializableSystemTokens = [
         tokens.GameRuleSystem, tokens.EquipmentEffectSystem, tokens.EquipmentSlotSystem,
@@ -94,17 +94,19 @@ describe('registerCoreSystems', () => {
         tokens.PerceptionSystem, tokens.NotificationUISystem,
         tokens.OpenableSystem, tokens.HealthSystem, tokens.StatusEffectSystem,
         tokens.LockSystem, tokens.IActionDiscoverySystem, tokens.ITurnManager
-    ];
-    // --- MODIFIED: Corrected expected count to 21 (19 initializable + PlayerTurnHandler + TurnHandlerResolver) ---
-    const expectedCount = 21; // This is the *total* number of systems/services registered *by* the function under test.
+    ]; // Count = 19
 
-    // List of systems expected to have the SHUTDOWNABLE tag (adjust if more are added)
+    // --- CORRECTED: Updated expected count to 22 (19 initializable + PlayerTurnHandler (shutdownable) + AITurnHandler (untagged) + TurnHandlerResolver (untagged)) ---
+    const expectedCount = 22; // Total number of registrations made *by* the function under test.
+
+    // List of systems expected to have the SHUTDOWNABLE tag
+    // --- CORRECTED: Removed AITurnHandler as it's not tagged shutdownable in the SUT ---
     const shutdownableSystemTokens = [
         tokens.CombatSystem, tokens.WorldPresenceSystem, tokens.PerceptionSystem,
         tokens.NotificationUISystem, tokens.OpenableSystem, tokens.HealthSystem,
         tokens.StatusEffectSystem, tokens.LockSystem,
-        tokens.PlayerTurnHandler // <<< ADDED PlayerTurnHandler to this list
-    ];
+        tokens.PlayerTurnHandler // AITurnHandler removed
+    ]; // Count = 9
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -115,8 +117,8 @@ describe('registerCoreSystems', () => {
         mockContainer.register(tokens.ILogger, mockLogger); // No lifecycle needed for this mock setup
     });
 
-    // --- MODIFIED: Test description updates automatically based on expectedCount (now 21) ---
-    it(`should register ${expectedCount} systems/services, tagging 19 with '${INITIALIZABLE[0]}'`, () => { // <-- Updated description for clarity
+    // --- CORRECTED: Test description updated to reflect expected count of 22 ---
+    it(`should register ${expectedCount} systems/services, tagging 19 with '${INITIALIZABLE[0]}'`, () => {
         // Arrange
         registerCoreSystems(mockContainer);
 
@@ -143,34 +145,36 @@ describe('registerCoreSystems', () => {
                 token,
                 expect.any(Function),
                 expect.objectContaining({
-                    lifecycle: 'singleton',
+                    lifecycle: 'singleton', // PlayerTurnHandler is singleton, others are too
                     tags: expect.arrayContaining(SHUTDOWNABLE) // Must include the shutdownable tag
                 })
             );
         });
 
         // Assert: Check the *total number* of registrations performed *by registerCoreSystems*
-        // This now includes the 19 initializable ones, plus PlayerTurnHandler and TurnHandlerResolver
-        expect(actualSystemRegistrationCalls.length).toBe(expectedCount); // Use filtered calls length (checking against 21)
+        // This now includes 19 initializable, 1 shutdownable-only, and 2 untagged.
+        // --- CORRECTED: Check against the updated expectedCount (22) ---
+        expect(actualSystemRegistrationCalls.length).toBe(expectedCount);
 
         // Assert: Check logger calls for INITIALIZABLE systems
         initializableSystemTokens.forEach(token => {
             // Allow for logs that mention both tags if applicable
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(token)}`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${INITIALIZABLE[0]}`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${INITIALIZABLE[0]}`)); // Checks at least the initializable tag log
         });
         // Assert: Check logger call for the SHUTDOWNABLE-only system
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.PlayerTurnHandler)}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`tagged with ${SHUTDOWNABLE[0]}`));
 
-        // Assert: Check logger call for the untagged system
-        // --- CORRECTED LINE 166: Removed the trailing period from the stringContaining expectation ---
+        // Assert: Check logger calls for the untagged systems
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.TurnHandlerResolver)}`));
+        // --- ADDED: Check log call for the untagged AITurnHandler ---
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Registered ${String(tokens.AITurnHandler)}`));
 
-        // --- MODIFIED: Check final info log message count - should match the corrected expectedCount (21) ---
+        // --- CORRECTED: Check final info log message count - should match the corrected expectedCount (22) ---
         // The log message in the SUT uses the actual count from its counter.
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Completed registering ${expectedCount} systems, handlers, and services`) // Check against 21
+            expect.stringContaining(`Completed registering ${expectedCount} systems, handlers, and services`) // Check against 22
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
             expect.stringContaining(`tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`)
@@ -188,7 +192,10 @@ describe('registerCoreSystems', () => {
         const callsToSnapshot = mockContainer.register.mock.calls.filter(
             (call) => call[0] !== tokens.ILogger
         );
-        // Snapshot should update correctly after running jest with -u
+        // --- ACTION REQUIRED: Snapshot needs update ---
+        // Run `npx jest src/tests/core/config/registrations/coreSystemsRegistrations.test.js -u`
+        // or your equivalent command (e.g., `npm run test -- src/tests/core/config/registrations/coreSystemsRegistrations.test.js -u`)
+        // to update the snapshot after these test code changes.
         expect(callsToSnapshot).toMatchSnapshot();
     });
 });

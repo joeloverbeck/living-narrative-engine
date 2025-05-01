@@ -1,4 +1,5 @@
 // src/core/config/tokens.js
+// --- FILE START (Entire file content as requested) ---
 
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -45,6 +46,10 @@
  * @property {DiToken} DomainContextCompatibilityChecker - Token for checking domain context compatibility.
  * @property {DiToken} ActionValidationService - Token for validating actions.
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
+ * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
+ * @property {DiToken} TurnHandlerResolver - Token for the service that resolves the correct turn handler.
+ * @property {DiToken} PlayerTurnHandler - Token for the player-specific turn handler implementation.
+ * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation. // <<< ADDED
  *
  * --- Core Interface Tokens ---
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
@@ -55,7 +60,7 @@
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  *
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
- * @property {DiToken} ITurnManager - Token for the turn management service interface. // <<< ADDED
+ * @property {DiToken} ITurnManager - Token for the turn management service interface.
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
  * @property {DiToken} QuestRewardService - Token for quest reward logic.
  * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
@@ -152,6 +157,7 @@ export const tokens = Object.freeze({
     ICommandProcessor: 'ICommandProcessor',
     TurnHandlerResolver: 'TurnHandlerResolver',
     PlayerTurnHandler: 'PlayerTurnHandler',
+    AITurnHandler: 'AITurnHandler', // <<< ADDED
 
     // Core Service Interfaces
     IValidatedEventDispatcher: 'IValidatedEventDispatcher',
@@ -161,7 +167,7 @@ export const tokens = Object.freeze({
     IActionDiscoverySystem: 'IActionDiscoverySystem',
     IInputHandler: 'IInputHandler',
     ITurnOrderService: 'ITurnOrderService',
-    ITurnManager: 'ITurnManager', // <<< ADDED
+    ITurnManager: 'ITurnManager',
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',

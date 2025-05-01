@@ -211,6 +211,13 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
+    "AITurnHandler",
+    [Function],
+    {
+      "lifecycle": "singleton",
+    },
+  ],
+  [
     "TurnHandlerResolver",
     [Function],
     {

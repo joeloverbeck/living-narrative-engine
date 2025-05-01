@@ -1,5 +1,5 @@
 // src/core/config/registrations/coreSystemsRegistrations.js
-// --- FILE START (Entire file as requested) ---
+// --- FILE START (Entire file content as requested) ---
 
 /**
  * @fileoverview Registers core game logic systems, particularly those needing initialization or shutdown.
@@ -20,8 +20,8 @@
 /** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists
 /** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */ // Assuming type definition exists
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Assuming type definition exists
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */ // <<< ADDED
-/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */ // <<< ADDED
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 
 // --- System Imports ---
 import GameRuleSystem from '../../../systems/gameRuleSystem.js';
@@ -45,8 +45,9 @@ import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turnManager.js';
 
 // --- Handler & Resolver Imports ---
-import PlayerTurnHandler from '../../handlers/playerTurnHandler.js'; // <<< ADDED IMPORT
-import TurnHandlerResolver from '../../services/turnHandlerResolver.js'; // <<< ADDED IMPORT
+import PlayerTurnHandler from '../../handlers/playerTurnHandler.js';
+import AITurnHandler from '../../handlers/aiTurnHandler.js'; // <<< ADDED IMPORT
+import TurnHandlerResolver from '../../services/turnHandlerResolver.js';
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -202,8 +203,7 @@ export function registerCoreSystems(container) {
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        // <<< INJECTION POINT FOR TURN HANDLER RESOLVER (Future Ticket) >>>
-        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Assuming resolver is needed here
+        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Resolver is injected here
     }));
     logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
@@ -223,6 +223,18 @@ export function registerCoreSystems(container) {
         tokens.EventBus                     // eventBus
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} (Singleton) tagged with ${SHUTDOWNABLE.join(', ')}.`);
+    registrationCount++;
+
+    // --- MODIFICATION START ---
+    // Register AITurnHandler (Singleton appropriate, constructor takes object)
+    // Not tagged SHUTDOWNABLE as it currently has no destroy() method.
+    // Use singletonFactory to handle the object constructor parameter.
+    registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
+        logger: c.resolve(tokens.ILogger),
+        commandProcessor: c.resolve(tokens.ICommandProcessor),
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem) // Inject discovery system
+    }));
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.AITurnHandler)} (Singleton).`);
     registrationCount++; // <<< INCREMENT COUNT
 
     // Register TurnHandlerResolver (Singleton is appropriate)
@@ -231,15 +243,13 @@ export function registerCoreSystems(container) {
     registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
         logger: c.resolve(tokens.ILogger),
         playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the registered PlayerTurnHandler
-        // Future: inject other handlers like AITurnHandler here
-        // aiTurnHandler: c.resolve(tokens.AITurnHandler)
+        aiTurnHandler: c.resolve(tokens.AITurnHandler)          // <<< INJECTED AI HANDLER
     }));
     logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)} (Singleton).`);
-    registrationCount++; // <<< INCREMENT COUNT
+    registrationCount++;
+    // --- MODIFICATION END ---
 
 
     // Final log message using the incremented counter
     logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
 }
-
-// --- FILE END ---
