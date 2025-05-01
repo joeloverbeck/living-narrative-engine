@@ -8,6 +8,9 @@
 
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 
+// Import the necessary component ID constant
+import {ACTOR_COMPONENT_ID} from '../types/components.js';
+
 /**
  * @class TurnManager
  * @implements {ITurnManager}
@@ -62,7 +65,12 @@ class TurnManager {
         // Basic check for IValidatedEventDispatcher
         if (!dispatcher || typeof dispatcher.dispatchValidated !== 'function') {
             const errorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance.';
-            this.#logger.error(errorMsg); // Use logger now that we know it's potentially valid
+            // Check if logger is valid before trying to use it
+            if (logger && typeof logger.error === 'function') {
+                logger.error(errorMsg);
+            } else {
+                console.error(errorMsg); // Fallback to console if logger is invalid
+            }
             throw new Error(errorMsg);
         }
 
@@ -90,7 +98,8 @@ class TurnManager {
         this.#isRunning = true;
         this.#logger.info('Turn Manager started.');
         // Future tickets will implement the logic to find the first actor and call advanceTurn if needed.
-        // await this.advanceTurn(); // Deferred
+        // For now, let's call advanceTurn immediately to trigger the new round logic if needed.
+        await this.advanceTurn();
     }
 
     /**
@@ -127,21 +136,103 @@ class TurnManager {
     }
 
     /**
-     * Advances the game state to the next entity's turn.
-     * (Stub for now - Full implementation in later tickets).
+     * Advances the game state to the next entity's turn, or starts a new round if needed.
+     * This method encapsulates the core turn progression logic.
      * @async
      * @returns {Promise<void>} A promise that resolves when the transition is complete.
      */
     async advanceTurn() {
-        // Stub implementation - Logic to determine next actor and update state will be added later.
-        this.#logger.debug('TurnManager.advanceTurn() called (stub).');
-        // Placeholder for future logic:
-        // if (!this.#isRunning) return;
-        // find next actor from #turnOrderService
-        // set #currentActor
-        // dispatch 'turn:started' event?
-        // etc.
-        return Promise.resolve();
+        // Add initial check: If #isRunning is false, log debug and return immediately.
+        if (!this.#isRunning) {
+            this.#logger.debug('TurnManager.advanceTurn() called while manager is not running. Returning.');
+            return;
+        }
+
+        this.#logger.debug('TurnManager.advanceTurn() called.');
+
+        // Call this.#turnOrderService.isEmpty().
+        const isQueueEmpty = await this.#turnOrderService.isEmpty(); // Assume isEmpty might be async
+
+        // Implement Empty Queue Logic: If isEmpty() returns true:
+        if (isQueueEmpty) {
+            this.#logger.info('Turn queue is empty. Attempting to start a new round.');
+
+            // Get all active entities: Array.from(this.#entityManager.activeEntities.values()).
+            const allEntities = Array.from(this.#entityManager.activeEntities.values());
+
+            // Filter entities to find actors: entities.filter(e => e.hasComponent(ACTOR_COMPONENT_ID)).
+            const actors = allEntities.filter(e => e.hasComponent(ACTOR_COMPONENT_ID));
+
+            // Handle "No Actors Found":
+            if (actors.length === 0) {
+                // Log an error (this.#logger.error(...)).
+                this.#logger.error('Cannot start a new round: No active entities with an Actor component found.');
+                // Dispatch a message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: 'No active actors...', type: 'error' }).
+                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                    text: 'System Error: No active actors found to start a round. Stopping.',
+                    type: 'error'
+                });
+                // Call this.stop().
+                await this.stop();
+                // Return immediately after calling stop().
+                return;
+            }
+
+            // Start New Round:
+            // If actors are found:
+            // Log the number of actors found and their IDs (this.#logger.info(...)).
+            const actorIds = actors.map(a => a.id);
+            this.#logger.info(`Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`);
+
+            // Define the strategy (e.g., const strategy = 'round-robin').
+            const strategy = 'round-robin'; // Default strategy for now
+
+            // Wrap the call to startNewRound in a try...catch block.
+            try {
+                // Call this.#turnOrderService.startNewRound(actors, strategy).
+                await this.#turnOrderService.startNewRound(actors, strategy);
+                // Log success (this.#logger.info(...)).
+                this.#logger.info(`Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`);
+
+                // (Self-Correction): After successfully starting the round, recursively call this.advanceTurn()
+                // to process the first turn of the new round. Return after this recursive call.
+                this.#logger.debug('New round started, recursively calling advanceTurn() to process the first turn.');
+                await this.advanceTurn(); // Process the first turn of the newly started round
+                return; // Important: return here to avoid executing the 'else' block below
+
+            } catch (error) {
+                // Handle startNewRound Error:
+                // In the catch block:
+                // Log the error (this.#logger.error(...)).
+                this.#logger.error(`Error starting new round: ${error.message}`, error);
+                // Dispatch an error message via this.#dispatcher.dispatchValidated('textUI:display_message', { text: \`Error starting round: ${error.message}\`, type: 'error' }).
+                this.#dispatcher.dispatchValidated('textUI:display_message', {
+                    text: `System Error: Failed to start a new round. Stopping. Details: ${error.message}`,
+                    type: 'error'
+                });
+                // Call this.stop().
+                await this.stop();
+                // Return immediately after calling stop().
+                return;
+            }
+        } else {
+            // Stub Remaining Logic: Add a placeholder else block for the !isEmpty() case (to be implemented in 2.1.3)
+            // that logs "Queue not empty, processing next turn (TODO)".
+            this.#logger.debug('Queue not empty, processing next turn (TODO - Ticket 2.1.3).');
+            // Placeholder for future logic:
+            // const nextActorId = await this.#turnOrderService.getNextEntity();
+            // this.#currentActor = this.#entityManager.getEntityInstance(nextActorId);
+            // if (this.#currentActor) {
+            //     this.#logger.info(`Starting turn for actor: ${this.#currentActor.id}`);
+            //     // Dispatch 'turn:started' or similar event
+            //     // this.#dispatcher.dispatchValidated('turn:started', { actorId: this.#currentActor.id });
+            // } else {
+            //     this.#logger.error(`Next actor ID ${nextActorId} from queue not found in EntityManager. This should not happen.`);
+            //     // Handle this potentially critical error, maybe stop?
+            //     await this.advanceTurn(); // Try to advance again? Risky.
+            // }
+        }
+        // Removed original stub return Promise.resolve();
     }
 }
 
