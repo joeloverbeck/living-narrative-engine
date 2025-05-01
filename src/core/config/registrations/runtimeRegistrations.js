@@ -1,4 +1,5 @@
 // src/core/config/registrations/runtimeRegistrations.js
+// ****** MODIFIED FILE ******
 import {tokens} from '../tokens.js';
 import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
 import GameLoop from "../../gameLoop.js";
@@ -8,8 +9,8 @@ import InputSetupService from "../../setup/inputSetupService.js";
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../appContainer.js').default} AppContainer */
 /** @typedef {import('../../../interfaces/coreServices.js').IGameStateManager} IGameStateManager */
-/** @typedef {import('../../../interfaces/coreServices.js').IInputHandler} IInputHandler */
-/** @typedef {import('../../../interfaces/coreServices.js').ICommandParser} ICommandParser */
+// REMOVED: /** @typedef {import('../../../interfaces/coreServices.js').IInputHandler} IInputHandler */
+// REMOVED: /** @typedef {import('../../../interfaces/coreServices.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../../interfaces/coreServices.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../eventBus.js').default} EventBus */ // Assuming EventBus is concrete
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */ // Assuming EntityManager is concrete
@@ -36,10 +37,10 @@ export function registerRuntime(container) {
         // Resolve dependencies
         /** @type {IGameStateManager} */
         const gameStateManager = c.resolve(tokens.IGameStateManager);
-        /** @type {IInputHandler} */
-        const inputHandler = c.resolve(tokens.IInputHandler);
-        /** @type {ICommandParser} */
-        const commandParser = c.resolve(tokens.ICommandParser);
+        // REMOVED: /** @type {IInputHandler} */
+        // REMOVED: const inputHandler = c.resolve(tokens.IInputHandler);
+        // REMOVED: /** @type {ICommandParser} */
+        // REMOVED: const commandParser = c.resolve(tokens.ICommandParser);
         /** @type {IActionExecutor} */
         const actionExecutor = c.resolve(tokens.IActionExecutor);
         /** @type {EventBus} */
@@ -61,8 +62,8 @@ export function registerRuntime(container) {
 
         // Basic validation (optional but good practice)
         if (!gameStateManager) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.IGameStateManager}`);
-        if (!inputHandler) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.IInputHandler}`);
-        if (!commandParser) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.ICommandParser}`);
+        // REMOVED: if (!inputHandler) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.IInputHandler}`);
+        // REMOVED: if (!commandParser) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.ICommandParser}`);
         if (!actionExecutor) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.IActionExecutor}`);
         if (!eventBus) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.EventBus}`);
         if (!entityManager) throw new Error(`GameLoop Factory: Failed to resolve dependency: ${tokens.EntityManager}`);
@@ -78,8 +79,8 @@ export function registerRuntime(container) {
         // Create GameLoop instance with injected dependencies
         const gameLoopInstance = new GameLoop({
             gameStateManager,
-            inputHandler,
-            commandParser,
+            // REMOVED: inputHandler,
+            // REMOVED: commandParser,
             actionExecutor,
             eventBus,
             entityManager,

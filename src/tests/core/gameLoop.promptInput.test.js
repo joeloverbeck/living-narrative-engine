@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.promptInput.test.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -13,12 +13,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(),
     getCurrentLocation: jest.fn(),
@@ -29,9 +30,10 @@ const mockGameDataRepository = {}; // Basic mock object
 const mockEntityManager = {
     activeEntities: new Map()
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(),
 };
@@ -89,8 +91,8 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
@@ -121,8 +123,8 @@ describe('GameLoop (promptInput tests removed)', () => {
             messages: [{text: 'Default mock action executed'}]
         });
 
-        // Reset Command Parser Mock
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (No longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
         // Reset Turn Manager Mocks
         mockTurnManager.start.mockClear();
@@ -169,6 +171,8 @@ describe('GameLoop (promptInput tests removed)', () => {
     // The PlayerTurnHandler should now be tested for this input prompting logic.
 
     it('Placeholder test: Ensures the suite runs after removing promptInput tests', () => {
+        // Create instance to ensure constructor passes with updated options
+        expect(() => new GameLoop(createValidOptions())).not.toThrow();
         expect(true).toBe(true);
     });
 

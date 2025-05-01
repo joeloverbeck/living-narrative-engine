@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.stop.test.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -14,12 +14,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(),
     getCurrentLocation: jest.fn(),
@@ -30,9 +31,10 @@ const mockGameDataRepository = {};
 const mockEntityManager = {
     activeEntities: new Map()
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(),
 };
@@ -96,14 +98,13 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
     turnManager: mockTurnManager, // Keep this
-    // *** FIX: Add the missing dependency ***
     turnHandlerResolver: mockTurnHandlerResolver,
     logger: mockLogger,
 });
@@ -126,7 +127,8 @@ describe('GameLoop', () => {
             success: true,
             messages: [{text: 'Default mock action executed'}]
         });
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (no longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
         // Reset TurnManager mocks as needed
         mockTurnManager.getCurrentActor.mockReturnValue(null);
         mockTurnManager.isEmpty.mockReturnValue(true); // Example reset
@@ -190,14 +192,10 @@ describe('GameLoop', () => {
             expect(gameLoop.isRunning).toBe(false);
         });
 
-        it('When Running: should call inputHandler.disable', async () => { // Make test async
-            await gameLoop.stop(); // Await the async call
-            expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
-        });
-
         it('When Running: should dispatch textUI:disable_input event with message', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
             // This assertion is okay because it's the first call to dispatchValidated in stop()
+            // Verify the disable input event is dispatched
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {
                 message: 'Game stopped.',
             });
@@ -247,11 +245,9 @@ describe('GameLoop', () => {
             // Assert
             expect(gameLoop.isRunning).toBe(false); // Still false
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Stop called, but already stopped.');
-            expect(mockInputHandler.disable).not.toHaveBeenCalled();
+            // Ensure actions specific to stopping a *running* loop were not called
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
-            // *** FIX: Assert that turnManager.stop was NOT called this time *** (Already correct)
             expect(mockTurnManager.stop).not.toHaveBeenCalled();
-            // Check eventBus.dispatch specifically wasn't called *this time*
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
     });

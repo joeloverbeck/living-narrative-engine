@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.start.test.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -11,12 +11,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(),
     getCurrentLocation: jest.fn(),
@@ -27,9 +28,10 @@ const mockGameDataRepository = {};
 const mockEntityManager = {
     activeEntities: new Map() // Initialized empty, will be populated in tests
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(),
 };
@@ -82,8 +84,8 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
@@ -112,8 +114,8 @@ describe('GameLoop', () => {
             messages: [{text: 'Default mock action executed'}]
         });
 
-        // Reset Command Parser Mock
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (No longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
         // Reset Turn Manager Mocks (Defaults for ITurnManager)
         mockTurnManager.start.mockClear().mockResolvedValue(undefined);
@@ -235,7 +237,8 @@ describe('GameLoop', () => {
             });
 
             // Check that stop() was called implicitly (by checking mocks called within stop)
-            expect(mockInputHandler.disable).toHaveBeenCalled();
+            // expect(mockInputHandler.disable).toHaveBeenCalled(); // Input handler no longer directly called
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', expect.any(Object)); // Check for disable event
             expect(mockTurnManager.stop).toHaveBeenCalled(); // GameLoop's stop calls TurnManager's stop
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('game:stopped', {}); // Stop should dispatch this
         });
@@ -254,8 +257,8 @@ describe('GameLoop', () => {
 /** @typedef {import('../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */ // Use Interface
-/** @typedef {import('../core/interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface
-/** @typedef {import('../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */ // Use Interface
+// REMOVED: /** @typedef {import('../core/interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface
+// REMOVED: /** @typedef {import('../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */ // Use Interface
 /** @typedef {import('../core/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */ // Use Interface
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Use Interface
@@ -273,8 +276,8 @@ describe('GameLoop', () => {
  * @property {GameDataRepository} gameDataRepository
  * @property {EntityManager} entityManager
  * @property {IGameStateManager} gameStateManager
- * @property {IInputHandler} inputHandler
- * @property {ICommandParser} commandParser
+ * // REMOVED: @property {IInputHandler} inputHandler
+ * // REMOVED: @property {ICommandParser} commandParser
  * @property {IActionExecutor} actionExecutor
  * @property {EventBus} eventBus
  * @property {IActionDiscoverySystem} actionDiscoverySystem

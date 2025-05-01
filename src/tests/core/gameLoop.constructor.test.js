@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.constructor.test.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -14,12 +14,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(), // Still needed for some older tests, though start() doesn't use it
     getCurrentLocation: jest.fn(), // Still needed for some older tests + executeAction
@@ -30,9 +31,10 @@ const mockGameDataRepository = {}; // Basic mock object
 const mockEntityManager = { // Basic mock, might need more detail for turn order tests
     activeEntities: new Map()
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(), // Key mock
 };
@@ -95,14 +97,13 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
     turnManager: mockTurnManager, // Correct key used
-    // ***** FIX: Add the missing turnHandlerResolver mock *****
     turnHandlerResolver: mockTurnHandlerResolver,
     logger: mockLogger,
 });
@@ -129,8 +130,8 @@ describe('GameLoop', () => {
             messages: [{text: 'Default mock action executed'}]
         });
 
-        // Reset Command Parser Mock
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (no longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
         // Reset Turn Manager Mocks
         mockTurnManager.getCurrentActor.mockReturnValue(null);
@@ -200,21 +201,22 @@ describe('GameLoop', () => {
             expect(() => new GameLoop(options)).toThrow(/options\.gameStateManager implementing IGameStateManager/);
         });
 
-        it('should throw an error if options.inputHandler is missing or invalid', () => {
-            const options = createValidOptions();
-            delete options.inputHandler;
-            expect(() => new GameLoop(options)).toThrow(/options\.inputHandler implementing IInputHandler/);
-            options.inputHandler = {}; // Missing methods
-            expect(() => new GameLoop(options)).toThrow(/options\.inputHandler implementing IInputHandler/);
-        });
-
-        it('should throw an error if options.commandParser is missing or invalid', () => {
-            const options = createValidOptions();
-            delete options.commandParser;
-            expect(() => new GameLoop(options)).toThrow(/options\.commandParser implementing ICommandParser/);
-            options.commandParser = {}; // Missing 'parse'
-            expect(() => new GameLoop(options)).toThrow(/options\.commandParser implementing ICommandParser/);
-        });
+        // REMOVED: Tests for inputHandler and commandParser missing/invalid
+        // it('should throw an error if options.inputHandler is missing or invalid', () => {
+        //     const options = createValidOptions();
+        //     delete options.inputHandler;
+        //     expect(() => new GameLoop(options)).toThrow(/options\.inputHandler implementing IInputHandler/);
+        //     options.inputHandler = {}; // Missing methods
+        //     expect(() => new GameLoop(options)).toThrow(/options\.inputHandler implementing IInputHandler/);
+        // });
+        //
+        // it('should throw an error if options.commandParser is missing or invalid', () => {
+        //     const options = createValidOptions();
+        //     delete options.commandParser;
+        //     expect(() => new GameLoop(options)).toThrow(/options\.commandParser implementing ICommandParser/);
+        //     options.commandParser = {}; // Missing 'parse'
+        //     expect(() => new GameLoop(options)).toThrow(/options\.commandParser implementing ICommandParser/);
+        // });
 
         it('should throw an error if options.actionExecutor is missing or invalid', () => {
             const options = createValidOptions();

@@ -1,5 +1,5 @@
 // src/tests/core/gameLoop.internalEventHandling.test.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 // Removed tests for #handleSubmittedCommandFromEvent as per Ticket 3.1.6.5
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
@@ -12,12 +12,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(),
     getCurrentLocation: jest.fn(),
@@ -28,9 +29,10 @@ const mockGameDataRepository = {};
 const mockEntityManager = {
     activeEntities: new Map()
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(),
 };
@@ -84,8 +86,8 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
@@ -112,7 +114,8 @@ describe('GameLoop', () => {
         mockGameStateManager.getPlayer.mockReturnValue(null);
         mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
         mockActionExecutor.executeAction.mockResolvedValue({success: true, messages: []});
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (No longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
         // Reset TurnManager mocks (can use mockClear, but resetting return values is safer)
         mockTurnManager.start.mockResolvedValue();
         mockTurnManager.stop.mockResolvedValue();

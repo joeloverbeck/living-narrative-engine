@@ -1,4 +1,4 @@
-// ****** REVISED CORRECTED FILE V4 ******
+// ****** REVISED CORRECTED FILE V5 ******
 // src/tests/core/config/registrations/runtimeRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
@@ -55,8 +55,8 @@ import PlayerTurnHandler from '../../../../core/handlers/playerTurnHandler.js';
 // Simple object mocks for dependencies NOT registered by coreSystems/runtime
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
 const mockGameStateManager = {getCurrentLocation: jest.fn(), getPlayer: jest.fn()};
-const mockInputHandler = {enable: jest.fn(), disable: jest.fn(), setCommandCallback: jest.fn()};
-const mockCommandParser = {parse: jest.fn()};
+const mockInputHandler = {enable: jest.fn(), disable: jest.fn(), setCommandCallback: jest.fn()}; // Keep this mock for other tests/setup
+const mockCommandParser = {parse: jest.fn()}; // Keep this mock for other tests/setup
 const mockActionExecutor = {executeAction: jest.fn()};
 const mockEventBus = {dispatch: jest.fn(), subscribe: jest.fn()};
 const mockEntityManager = {
@@ -249,6 +249,9 @@ describe('registerRuntime', () => {
         mockCommandProcessorValue = {processCommand: jest.fn()};
 
         // Pre-register ALL MOCKED dependencies required by factories
+        // NOTE: We still need to register IInputHandler and ICommandParser because
+        // other tests or potentially the InputSetupService might still resolve them.
+        // The GameLoop factory just doesn't use them anymore.
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IGameStateManager, mockGameStateManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IInputHandler, mockInputHandler, {lifecycle: 'singleton'});
@@ -273,6 +276,7 @@ describe('registerRuntime', () => {
         Object.values(mockLogger).forEach(fn => fn?.mockClear?.());
         Object.values(mockGameStateManager).forEach(fn => fn?.mockClear?.());
         Object.values(mockInputHandler).forEach(fn => fn?.mockClear?.());
+        Object.values(mockCommandParser).forEach(fn => fn?.mockClear?.()); // Clear command parser mock too
         // ... clear other mocks ...
         Object.values(mockTurnHandlerResolverObject).forEach(fn => fn?.mockClear?.());
         Object.values(mockCommandProcessorValue).forEach(fn => fn?.mockClear?.());
@@ -334,8 +338,10 @@ describe('registerRuntime', () => {
 
         // Assert Standard Dependencies (mocks from beforeEach)
         expect(constructorArgs.gameStateManager).toBe(mockGameStateManager);
-        expect(constructorArgs.inputHandler).toBe(mockInputHandler);
-        // ... other standard deps ...
+        // --- REMOVED THIS ASSERTION ---
+        // expect(constructorArgs.inputHandler).toBe(mockInputHandler);
+        // --- END REMOVAL ---
+        expect(constructorArgs.actionExecutor).toBe(mockActionExecutor); // Check another one that should still exist
         expect(constructorArgs.validatedEventDispatcher).toBe(mockValidatedEventDispatcher);
         expect(constructorArgs.logger).toBe(mockLogger);
 
@@ -361,14 +367,35 @@ describe('registerRuntime', () => {
 
         // Verify resolves occurred during factory execution
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IGameStateManager);
-        // ... other resolve checks ...
+        // Check a dependency that IS still resolved by GameLoop factory
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IActionExecutor);
+        // Check dependencies resolved by the GameLoop factory (which resolves others)
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IActionDiscoverySystem);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.TurnHandlerResolver);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager); // Factory runs, returns TurnManager mock instance
+        // Check dependencies resolved by *other* factories triggered by GameLoop resolution
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnOrderService); // Resolved by ITurnManager factory
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.PlayerTurnHandler); // Resolved by THR factory
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ActionValidationService); // Resolved by ADS factory
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ICommandProcessor); // Resolved by PlayerTurnHandler factory
+
+        // --- Verify IInputHandler and ICommandParser were NOT resolved by the GameLoop factory ---
+        const resolveCalls = mockContainer.resolve.mock.calls;
+        const gameLoopFactoryResolves = resolveCalls.filter(call => {
+            // This is a bit tricky - we assume the GameLoop resolve triggers others.
+            // A more robust way might involve tracking context, but this is a reasonable heuristic.
+            // We essentially check if the resolve happened AFTER GameLoop resolve started
+            // and BEFORE GameLoop resolve finished (which is hard to pin down exactly).
+            // Let's just check if it was *ever* resolved during this test.
+            // We *expect* IInputHandler to be resolved ONLY by InputSetupService, not GameLoop factory.
+            return true; // Check all calls for now
+        });
+
+        // These SHOULD NOT have been resolved *as direct dependencies* of the GameLoop factory function itself.
+        // They *might* be resolved by InputSetupService if that gets triggered.
+        // Let's check if the constructor args object *contains* the keys.
+        expect(constructorArgs).not.toHaveProperty('inputHandler');
+        expect(constructorArgs).not.toHaveProperty('commandParser');
     });
 
     it('resolving InputSetupService does not throw', () => {
@@ -393,7 +420,7 @@ describe('registerRuntime', () => {
             gameLoop: expect.any(GameLoop) // Resolved GameLoop mock instance
         }));
 
-        // Assert GameLoop factory execution
+        // Assert GameLoop factory execution (called via InputSetupService resolution)
         expect(GameLoop).toHaveBeenCalledTimes(1);
         // Assert TurnManager factory execution (called via GameLoop resolution)
         expect(TurnManager).toHaveBeenCalledTimes(1);
@@ -405,5 +432,10 @@ describe('registerRuntime', () => {
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IActionDiscoverySystem);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ActionValidationService);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.PlayerTurnHandler);
+        // InputSetupService *does* resolve IInputHandler internally in its configure method,
+        // but that method isn't called directly here, only the constructor is tested.
+        // Let's check if InputSetupService's *own* factory resolved IInputHandler
+        expect(mockContainer.resolve).not.toHaveBeenCalledWith(tokens.IInputHandler); // Factory doesn't resolve it directly
+        expect(mockContainer.resolve).not.toHaveBeenCalledWith(tokens.ICommandParser); // Factory doesn't resolve it directly
     });
 });

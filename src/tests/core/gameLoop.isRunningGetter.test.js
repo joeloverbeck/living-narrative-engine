@@ -1,4 +1,5 @@
 // src/tests/core/gameLoop.isRunningGetter.test.js
+// ****** MODIFIED FILE ******
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
@@ -15,12 +16,13 @@ const mockEventBus = {
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
-const mockInputHandler = {
-    enable: jest.fn(),
-    disable: jest.fn(),
-    clear: jest.fn(),
-    setCommandCallback: jest.fn()
-};
+// REMOVED: mockInputHandler
+// const mockInputHandler = {
+//     enable: jest.fn(),
+//     disable: jest.fn(),
+//     clear: jest.fn(),
+//     setCommandCallback: jest.fn()
+// };
 const mockGameStateManager = {
     getPlayer: jest.fn(), // Still needed for some older tests, though start() doesn't use it
     getCurrentLocation: jest.fn(), // Still needed for some older tests + executeAction
@@ -31,9 +33,10 @@ const mockGameDataRepository = {}; // Basic mock object
 const mockEntityManager = { // Basic mock, might need more detail for turn order tests
     activeEntities: new Map()
 };
-const mockCommandParser = {
-    parse: jest.fn(),
-};
+// REMOVED: mockCommandParser
+// const mockCommandParser = {
+//     parse: jest.fn(),
+// };
 const mockActionExecutor = {
     executeAction: jest.fn(), // Key mock
 };
@@ -89,8 +92,8 @@ const createValidOptions = () => ({
     gameDataRepository: mockGameDataRepository,
     entityManager: mockEntityManager,
     gameStateManager: mockGameStateManager,
-    inputHandler: mockInputHandler,
-    commandParser: mockCommandParser,
+    // REMOVED: inputHandler: mockInputHandler,
+    // REMOVED: commandParser: mockCommandParser,
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
@@ -121,8 +124,8 @@ describe('GameLoop', () => {
             messages: [{text: 'Default mock action executed'}]
         }); // Adjusted default return
 
-        // Reset Command Parser Mock
-        mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
+        // Reset Command Parser Mock (No longer needed)
+        // mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
         // Reset Turn Manager Mocks
         mockTurnManager.start.mockClear().mockResolvedValue(undefined); // Reset call count and return value
@@ -207,8 +210,8 @@ describe('GameLoop', () => {
             expect(gameLoop.isRunning).toBe(false);
             // Check if turnManager.stop was called
             expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
-            // Check if inputHandler.disable was called
-            expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
+            // Check if inputHandler.disable was called (it's now done via event)
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', expect.any(Object));
         });
 
         it('should return false after stop() is called on a stopped loop', async () => { // Made async because stop() is async
@@ -220,8 +223,7 @@ describe('GameLoop', () => {
             expect(gameLoop.isRunning).toBe(false);
             // stop() should return early if already stopped, so mocks below shouldn't be called
             expect(mockTurnManager.stop).not.toHaveBeenCalled();
-            expect(mockInputHandler.disable).not.toHaveBeenCalled();
-            // Event dispatches in stop() should also not happen
+            // Check if inputHandler.disable was called (it's now done via event)
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.anything());
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.anything());
             expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('game:stopped', expect.anything());

@@ -1,5 +1,5 @@
 // src/core/gameLoop.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 // --- Type Imports ---
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -8,8 +8,8 @@
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Keep concrete for now if no interface used directly by GameLoop
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Keep concrete for now if no interface used directly by GameLoop
 /** @typedef {import('./interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
-/** @typedef {import('./interfaces/IInputHandler.js').IInputHandler} IInputHandler */
-/** @typedef {import('./interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+// REMOVED: /** @typedef {import('./interfaces/IInputHandler.js').IInputHandler} IInputHandler */
+// REMOVED: /** @typedef {import('./interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('./interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('./eventBus.js').default} EventBus */ // Keep concrete type
 /** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
@@ -27,8 +27,8 @@
  * @property {GameDataRepository} gameDataRepository - Provides access to game definition data. (Interface TBD if direct usage increases)
  * @property {EntityManager} entityManager - Manages entity instances and components. (Interface TBD if direct usage increases)
  * @property {IGameStateManager} gameStateManager - Manages mutable game state like current location.
- * @property {IInputHandler} inputHandler - Handles user command input.
- * @property {ICommandParser} commandParser - Parses raw command strings.
+ * // REMOVED: @property {IInputHandler} inputHandler - Handles user command input.
+ * // REMOVED: @property {ICommandParser} commandParser - Parses raw command strings.
  * @property {IActionExecutor} actionExecutor - Executes parsed actions.
  * @property {EventBus} eventBus - Core event bus for pub/sub.
  * @property {IActionDiscoverySystem} actionDiscoverySystem - Discovers available actions for entities.
@@ -50,8 +50,8 @@ class GameLoop {
     #gameDataRepository; // Remains concrete for now
     #entityManager; // Remains concrete for now
     #gameStateManager; // Interface: IGameStateManager
-    #inputHandler; // Interface: IInputHandler
-    #commandParser; // Interface: ICommandParser
+    // REMOVED: #inputHandler; // Interface: IInputHandler
+    // REMOVED: #commandParser; // Interface: ICommandParser
     #actionExecutor; // Interface: IActionExecutor
     #eventBus; // Remains concrete
     #actionDiscoverySystem; // Interface: IActionDiscoverySystem
@@ -72,8 +72,8 @@ class GameLoop {
             gameDataRepository,
             entityManager,
             gameStateManager,
-            inputHandler,
-            commandParser,
+            // REMOVED: inputHandler,
+            // REMOVED: commandParser,
             actionExecutor,
             eventBus,
             actionDiscoverySystem,
@@ -101,14 +101,14 @@ class GameLoop {
         if (!gameStateManager || typeof gameStateManager.getCurrentLocation !== 'function' || typeof gameStateManager.getPlayer !== 'function') {
             throw new Error('GameLoop requires a valid options.gameStateManager implementing IGameStateManager (getCurrentLocation, getPlayer).');
         }
-        // IInputHandler Check
-        if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function' || typeof inputHandler.setCommandCallback !== 'function') {
-            throw new Error('GameLoop requires a valid options.inputHandler implementing IInputHandler (enable, disable, setCommandCallback).');
-        }
-        // ICommandParser Check
-        if (!commandParser || typeof commandParser.parse !== 'function') {
-            throw new Error('GameLoop requires a valid options.commandParser implementing ICommandParser (parse).');
-        }
+        // REMOVED: IInputHandler Check
+        // if (!inputHandler || typeof inputHandler.enable !== 'function' || typeof inputHandler.disable !== 'function' || typeof inputHandler.setCommandCallback !== 'function') {
+        //     throw new Error('GameLoop requires a valid options.inputHandler implementing IInputHandler (enable, disable, setCommandCallback).');
+        // }
+        // REMOVED: ICommandParser Check
+        // if (!commandParser || typeof commandParser.parse !== 'function') {
+        //     throw new Error('GameLoop requires a valid options.commandParser implementing ICommandParser (parse).');
+        // }
         // IActionExecutor Check
         if (!actionExecutor || typeof actionExecutor.executeAction !== 'function') {
             throw new Error('GameLoop requires a valid options.actionExecutor implementing IActionExecutor (executeAction).');
@@ -140,8 +140,8 @@ class GameLoop {
         this.#gameDataRepository = gameDataRepository;
         this.#entityManager = entityManager;
         this.#gameStateManager = gameStateManager;
-        this.#inputHandler = inputHandler;
-        this.#commandParser = commandParser;
+        // REMOVED: this.#inputHandler = inputHandler;
+        // REMOVED: this.#commandParser = commandParser;
         this.#actionExecutor = actionExecutor;
         this.#eventBus = eventBus;
         this.#actionDiscoverySystem = actionDiscoverySystem;
@@ -255,7 +255,8 @@ class GameLoop {
         } else {
             // Handle case where TurnManager reports no current actor
             this.#logger.info('GameLoop: TurnManager reported no current actor (null). Waiting...');
-            this.#inputHandler.disable();
+            // NOTE: InputHandler is no longer directly accessible here. UI events are now managed by TurnHandlers.
+            // this.#inputHandler.disable(); // REMOVED
             await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting..."});
         }
     }
@@ -542,10 +543,8 @@ class GameLoop {
         // Verify it's still the correct player entity's turn before enabling input
         if (!currentActor || !currentActor.hasComponent(PLAYER_COMPONENT_ID)) { // Use currentActor
             this.#logger.debug(`promptInput called, but it's not a player's turn (Current: ${currentActor?.id ?? 'None'}). Input remains disabled.`); // Use currentActor
-            // Ensure input handler is disabled if we reach here unexpectedly
-            // Uses IInputHandler.disable
-            this.#inputHandler.disable();
-            // Uses IValidatedEventDispatcher.dispatchValidated
+            // NOTE: Cannot directly disable InputHandler anymore. Dispatch UI event instead.
+            // this.#inputHandler.disable(); // REMOVED
             await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting for others..."});
             return;
         }
@@ -554,8 +553,8 @@ class GameLoop {
         const currentActorId = currentActor.id;
         this.#logger.debug(`METHOD promptInput: Conditions passed, enabling input for ${currentActorId}...`); // Use currentActorId
 
-        // Uses IInputHandler.enable
-        this.#inputHandler.enable();
+        // NOTE: Cannot directly enable InputHandler anymore. Dispatch UI event instead.
+        // this.#inputHandler.enable(); // REMOVED
 
         // Dispatch event for the UI to enable its input field
         const payload = {
@@ -593,9 +592,9 @@ class GameLoop {
             // Continue stopping GameLoop even if TurnManager fails to stop gracefully
         }
 
-        // --- Disable Input Handler ---
-        // Uses IInputHandler.disable
-        this.#inputHandler.disable();
+        // --- Disable Input Handler (via event) ---
+        // NOTE: Cannot directly disable InputHandler anymore. Dispatch UI event instead.
+        // this.#inputHandler.disable(); // REMOVED
         const disablePayload = {message: stopMessage};
         // Dispatch disable event
         // Uses IValidatedEventDispatcher.dispatchValidated
