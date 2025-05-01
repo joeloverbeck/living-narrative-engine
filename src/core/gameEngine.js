@@ -10,6 +10,9 @@
 /** @typedef {import('./initializers/services/initializationService.js').InitializationResult} InitializationResult */ // <<< ADDED for delegation
 /** @typedef {import('./shutdown/services/shutdownService.js').default} ShutdownService */ // <<< ADDED for delegation
 
+// --- Import Tokens --- <<< ADDED
+import {tokens} from './config/tokens.js';
+
 
 /**
  * Encapsulates the core game engine, managing state, coordinating initialization
@@ -37,7 +40,7 @@ class GameEngine {
      * @param {object} options
      * @param {AppContainer} options.container - The application's dependency container.
      */
-    constructor({ container }) {
+    constructor({container}) {
         if (!container) {
             // Cannot use logger here as it's not resolved yet
             console.error('GameEngine requires a valid AppContainer instance.');
@@ -48,7 +51,7 @@ class GameEngine {
         // --- Resolve logger early ---
         try {
             // Use a temporary variable in case resolution fails before assignment
-            const loggerInstance = this.#container.resolve('ILogger');
+            const loggerInstance = this.#container.resolve(tokens.ILogger); // Use token
             this.#logger = loggerInstance;
         } catch (error) {
             console.warn('GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console for logging.', error);
@@ -105,7 +108,7 @@ class GameEngine {
         try {
             // --- Resolve and Run Initialization Service ---
             const initializationService = /** @type {InitializationService} */ (
-                this.#container.resolve('InitializationService')
+                this.#container.resolve(tokens.InitializationService) // Use token
             );
             this.#logger?.debug('GameEngine: InitializationService resolved.');
             initResult = await initializationService.runInitializationSequence(worldName);
@@ -143,8 +146,9 @@ class GameEngine {
 
             // --- Dispatch Post-Start Message (Optional) ---
             try {
+                // --- FIXED: Use the correct token for resolution --- <<< FIXED
                 const dispatcher = /** @type {ValidatedEventDispatcher} */ (
-                    this.#container.resolve('ValidatedEventDispatcher')
+                    this.#container.resolve(tokens.IValidatedEventDispatcher)
                 );
                 await dispatcher.dispatchValidated('textUI:display_message', {
                     text: 'Game loop started.',
@@ -153,7 +157,8 @@ class GameEngine {
                 this.#logger?.debug('GameEngine: Dispatched game loop started message.');
             } catch (dispatchError) {
                 // Log failure but don't halt execution
-                this.#logger?.error('GameEngine: Failed to resolve or use ValidatedEventDispatcher to send post-start message.', dispatchError);
+                // --- FIXED: Update error message to reflect token usage --- <<< FIXED
+                this.#logger?.error(`GameEngine: Failed to resolve or use ${tokens.IValidatedEventDispatcher} to send post-start message.`, dispatchError);
             }
 
         } else {
@@ -193,7 +198,7 @@ class GameEngine {
             // Resolve ShutdownService (Task 2)
             this.#logger?.debug('GameEngine: Resolving ShutdownService...');
             const shutdownService = /** @type {ShutdownService} */ (
-                this.#container.resolve('ShutdownService')
+                this.#container.resolve(tokens.ShutdownService) // Use token
             );
             this.#logger?.info('GameEngine: Executing shutdown sequence via ShutdownService...');
 

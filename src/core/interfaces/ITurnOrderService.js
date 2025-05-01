@@ -105,6 +105,16 @@ export class ITurnOrderService {
         throw new Error('ITurnOrderService.getCurrentOrder method not implemented.');
     }
 
+    /**
+     * Clears the current turn order queue and resets any round-specific state.
+     * Typically called when a round ends or is explicitly stopped.
+     * @function clearCurrentRound
+     * @returns {void}
+     */
+    clearCurrentRound() {
+        throw new Error('ITurnOrderService.clearCurrentRound method not implemented.');
+    }
+
     // As per ticket instructions, setStrategy is omitted for now, assuming it's only set via startNewRound.
     // /**
     //  * (Optional) Sets the turn order strategy for subsequent rounds or potentially mid-round if supported.

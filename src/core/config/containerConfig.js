@@ -18,7 +18,6 @@ import {registerLoaders} from './registrations/loadersRegistrations.js';
 import {registerInfrastructure} from './registrations/infrastructureRegistrations.js';
 import {registerUI} from './registrations/uiRegistrations.js';
 import {registerDomainServices} from './registrations/domainServicesRegistrations.js';
-import {registerQuestSystems} from './registrations/questRegistrations.js';
 import {registerCoreSystems} from './registrations/coreSystemsRegistrations.js';
 import {registerInterpreters} from './registrations/interpreterRegistrations.js';
 import {registerInitializers} from './registrations/initializerRegistrations.js';
@@ -65,7 +64,6 @@ export function configureContainer(
     registerDomainServices(container);
 
     // --- Feature / gameplay bundles -----------------------------------------
-    registerQuestSystems(container);
     registerCoreSystems(container);
 
     // --- Logic interpretation layer -----------------------------------------

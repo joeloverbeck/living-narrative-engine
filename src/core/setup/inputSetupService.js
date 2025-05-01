@@ -5,7 +5,10 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 /** @typedef {import('../gameLoop.js').default} GameLoop */
-/** @typedef {import('../inputHandler.js').default} InputHandler */
+/** @typedef {import('../interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface type
+
+// --- Token Import --- ADDED
+import { tokens } from '../config/tokens.js'; // ADDED
 
 /**
  * @class InputSetupService
@@ -64,7 +67,9 @@ class InputSetupService {
     // --- End Ticket 16 ---
 
     try {
-      const inputHandler = /** @type {InputHandler} */ (this.#container.resolve('InputHandler'));
+      // --- MODIFIED: Resolve using the correct token ---
+      const inputHandler = /** @type {IInputHandler} */ (this.#container.resolve(tokens.IInputHandler));
+      // --- END MODIFICATION ---
 
       const processInputCommand = async (command) => {
         // Echo command via VED
