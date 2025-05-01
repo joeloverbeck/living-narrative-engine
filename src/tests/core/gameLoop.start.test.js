@@ -5,9 +5,8 @@ import GameLoop from '../../core/GameLoop.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../../types/components.js"; // Import component IDs
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code)
 const mockEventBus = {
-    dispatch: jest.fn(),
+    dispatch: jest.fn().mockResolvedValue(undefined), // Make async if needed
     subscribe: jest.fn(),
     unsubscribe: jest.fn()
 };
@@ -42,22 +41,24 @@ const mockLogger = {
     warn: jest.fn(),
     error: jest.fn(),
 };
-const mockvalidatedEventDispatcher = {
-    dispatchValidated: jest.fn(),
+const mockValidatedEventDispatcher = { // Corrected variable name casing
+    dispatchValidated: jest.fn().mockResolvedValue(undefined), // Make async
 };
-const mockTurnOrderService = {
-    isEmpty: jest.fn().mockReturnValue(true), // Default: empty
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn().mockReturnValue(null), // Default: null
-    clearCurrentRound: jest.fn(),
+
+// NEW: Mock for ITurnManager interface
+const mockTurnManager = {
+    start: jest.fn().mockResolvedValue(undefined), // GameLoop awaits this
+    stop: jest.fn().mockResolvedValue(undefined),  // GameLoop awaits this
+    getCurrentActor: jest.fn().mockReturnValue(null), // Returns the entity or null
+    advanceTurn: jest.fn().mockResolvedValue(undefined) // GameLoop awaits this
 };
+
 
 // Mock entities
 const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
-    // *** IMPORTANT: Mock hasComponent to handle both PLAYER and ACTOR checks ***
     hasComponent: jest.fn((componentId) => {
         return componentId === PLAYER_COMPONENT_ID || componentId === ACTOR_COMPONENT_ID;
     })
@@ -80,8 +81,8 @@ const createValidOptions = () => ({
     actionExecutor: mockActionExecutor,
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
-    validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService,
+    validatedEventDispatcher: mockValidatedEventDispatcher, // Corrected variable name
+    turnManager: mockTurnManager, // Use the correct key and the new mock
     logger: mockLogger,
 });
 
@@ -95,8 +96,8 @@ describe('GameLoop', () => {
         jest.clearAllMocks();
 
         // Reset Game State Manager Mocks
-        mockGameStateManager.getPlayer.mockReturnValue(null);
-        mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
+        mockGameStateManager.getPlayer.mockReturnValue(null); // Default to no player initially
+        mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation); // Default location
 
         // Reset Action Executor Mock
         mockActionExecutor.executeAction.mockResolvedValue({
@@ -107,28 +108,32 @@ describe('GameLoop', () => {
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
-        // Reset Turn Order Service Mocks (Defaults)
-        // Ensure isEmpty mock implementation is reset correctly *before* potentially setting it statefully
-        mockTurnOrderService.isEmpty.mockReset().mockReturnValue(true);
-        mockTurnOrderService.getNextEntity.mockReset().mockReturnValue(null);
-        mockTurnOrderService.startNewRound.mockReset(); // Also reset startNewRound calls
-        mockTurnOrderService.clearCurrentRound.mockReset();
+        // Reset Turn Manager Mocks (Defaults for ITurnManager)
+        mockTurnManager.start.mockClear().mockResolvedValue(undefined);
+        mockTurnManager.stop.mockClear().mockResolvedValue(undefined);
+        mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Start with no actor
+        mockTurnManager.advanceTurn.mockClear().mockResolvedValue(undefined);
 
 
         // Reset Entity Manager Mock
         mockEntityManager.activeEntities = new Map(); // Clear entities
 
-        // Reset entity mocks (Ensure hasComponent is reset if modified in specific tests)
+        // Reset entity mocks
         mockPlayer.hasComponent.mockImplementation((componentId) => {
             return componentId === PLAYER_COMPONENT_ID || componentId === ACTOR_COMPONENT_ID;
         });
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
+
+        // Reset Event Dispatcher Mocks
+        mockValidatedEventDispatcher.dispatchValidated.mockClear();
+        mockEventBus.dispatch.mockClear(); // Also clear the regular event bus
+
     });
 
-    afterEach(() => {
+    afterEach(async () => { // Make afterEach async if stop() is async
         // Ensure game loop is stopped if a test accidentally leaves it running
         if (gameLoop && gameLoop.isRunning) {
-            gameLoop.stop(); // Call stop to clean up
+            await gameLoop.stop(); // Call async stop to clean up
         }
         gameLoop = null; // Help GC
     });
@@ -136,29 +141,17 @@ describe('GameLoop', () => {
 
     // --- start() Method Tests ---
     describe('start', () => {
-        beforeEach(() => {
-            // *** Setup mocks specifically for start() tests to prevent immediate stop() ***
+        // No specific beforeEach needed here anymore, as GameLoop creation is the SUT
+        // The top-level beforeEach handles general mock setup.
 
-            // 1. Ensure an actor exists in the EntityManager
+        it('Success Case: should set isRunning to true, log info, dispatch game:started, and start TurnManager', async () => {
+            // Setup necessary preconditions if any (e.g., player entity)
+            // Although start doesn't directly use entities, TurnManager might implicitly need them later.
             mockEntityManager.activeEntities.set(mockPlayer.id, mockPlayer);
+            mockGameStateManager.getPlayer.mockReturnValue(mockPlayer); // If needed for some internal logic
 
-            // 2. Configure TurnOrderService behavior for the first turn cycle:
-            //    - isEmpty() returns true initially (triggers startNewRound)
-            //    - isEmpty() returns false subsequently (indicates round started)
-            //    - getNextEntity() returns the player after the round starts
-            mockTurnOrderService.isEmpty.mockReturnValueOnce(true).mockReturnValue(false);
-            mockTurnOrderService.getNextEntity.mockReturnValue(mockPlayer);
-
-            // 3. Ensure GameStateManager can provide a location for the player
-            mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
-
-
-            // Create GameLoop instance AFTER setting up mocks for this specific describe block
+            // Create GameLoop instance WITHIN the test or a specific beforeEach for this describe
             gameLoop = new GameLoop(createValidOptions());
-
-        });
-
-        it('Success Case: should set isRunning to true, log info, and dispatch game:started', async () => {
             expect(gameLoop.isRunning).toBe(false); // Pre-condition
 
             await gameLoop.start(); // Call start
@@ -168,37 +161,27 @@ describe('GameLoop', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Started.');
             expect(mockEventBus.dispatch).toHaveBeenCalledWith('game:started', {});
 
-            // Indirect assertion: _processNextTurn should have run, found the player,
-            // and called promptInput (via textUI:enable_input event)
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'textUI:enable_input',
-                expect.objectContaining({entityId: mockPlayer.id})
-            );
-            // Check if TurnOrderService methods were called as expected
-            // --- REMOVED INCORRECT ASSERTION --- expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-            expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
-                [mockPlayer], // Should have found the player actor
-                'round-robin' // The default strategy in GameLoop
-            );
-            // Check the CORRECT total number of calls for isEmpty
-            expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(2); // Initial check + check after recursive call
-            expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1); // Called after startNewRound
+            // Assert that the TurnManager was started
+            expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
 
+            // Assertion removed: Checking for 'textUI:enable_input' here is testing implementation detail
+            // of the turn manager event flow, not the start() method directly.
+            // expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(...)
         });
 
-        it('should log a warning and not change state if already running', async () => {
-            // Start it once (setup in beforeEach handles the mocks for this)
+        it('should log a warning and not change state or call TurnManager.start if already running', async () => {
+            // Create GameLoop instance
+            gameLoop = new GameLoop(createValidOptions());
+
+            // Start it once
             await gameLoop.start();
             expect(gameLoop.isRunning).toBe(true);
 
             // --- Reset mocks called by the FIRST start ---
-            // Clear calls, but DO NOT reset the mock implementation set in the describe's beforeEach
+            mockLogger.info.mockClear(); // Clear info logs from first start
             mockLogger.warn.mockClear();
             mockEventBus.dispatch.mockClear();
-            mockTurnOrderService.startNewRound.mockClear();
-            mockTurnOrderService.getNextEntity.mockClear();
-            mockTurnOrderService.isEmpty.mockClear(); // Clear calls to isEmpty as well
-            mockvalidatedEventDispatcher.dispatchValidated.mockClear();
+            mockTurnManager.start.mockClear(); // Clear the start call from the first run
 
             // --- Call start again ---
             await gameLoop.start();
@@ -206,54 +189,83 @@ describe('GameLoop', () => {
             // Assertions for the SECOND call
             expect(gameLoop.isRunning).toBe(true); // Should still be true
             expect(mockLogger.warn).toHaveBeenCalledWith('GameLoop: start() called but loop is already running.');
-            expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only called once
+            expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only called once for the second attempt
 
             // Ensure game state wasn't significantly altered by the second call
             expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('game:started', {});
-            expect(mockTurnOrderService.isEmpty).not.toHaveBeenCalled(); // Should not be called again
-            expect(mockTurnOrderService.startNewRound).not.toHaveBeenCalled();
-            expect(mockTurnOrderService.getNextEntity).not.toHaveBeenCalled();
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.anything());
-
+            expect(mockTurnManager.start).not.toHaveBeenCalled(); // Crucial: TurnManager.start should not be called again
+            // expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.anything()); // This wasn't called anyway
 
         });
+
+        it('should log error, dispatch message, and stop if TurnManager.start() fails', async () => {
+            // Arrange: Setup TurnManager.start to reject
+            const startError = new Error("TurnManager failed to initialize");
+            mockTurnManager.start.mockRejectedValue(startError);
+
+            // Create GameLoop instance
+            gameLoop = new GameLoop(createValidOptions());
+
+            expect(gameLoop.isRunning).toBe(false); // Pre-condition
+
+            // Act: Call start, expecting it to handle the error
+            await gameLoop.start();
+
+            // Assert: Check that the loop attempted to start but then stopped
+            expect(gameLoop.isRunning).toBe(false); // Should be false after failure and subsequent stop()
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `GameLoop: Failed to start TurnManager: ${startError.message}`,
+                startError // Check if the error object itself was logged
+            );
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:display_message', {
+                text: `Critical Error: Could not start turn management. ${startError.message}`,
+                type: 'error'
+            });
+
+            // Check that stop() was called implicitly (by checking mocks called within stop)
+            expect(mockInputHandler.disable).toHaveBeenCalled();
+            expect(mockTurnManager.stop).toHaveBeenCalled(); // GameLoop's stop calls TurnManager's stop
+            expect(mockEventBus.dispatch).toHaveBeenCalledWith('game:stopped', {}); // Stop should dispatch this
+        });
+
+
     });
 
     // --- Other describe blocks for stop(), processSubmittedCommand(), etc. would go here ---
 
 }); // End describe('GameLoop')
 
-// --- Type Imports ---
+// --- Type Imports --- (Keep these updated)
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../actions/actionTypes.js').ActionResult} ActionResult */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 /** @typedef {import('../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
-/** @typedef {import('../core/inputHandler.js').default} InputHandler */
-/** @typedef {import('../core/commandParser.js').default} CommandParser */
-/** @typedef {import('../../actions/actionExecutor.js').default} ActionExecutor */
+/** @typedef {import('../core/interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */ // Use Interface
+/** @typedef {import('../core/interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface
+/** @typedef {import('../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */ // Use Interface
+/** @typedef {import('../core/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */ // Use Interface
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../systems/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */
-/** @typedef {import('../core/services/consoleLogger.js').default} ILogger */
+/** @typedef {import('../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Use Interface
+/** @typedef {import('../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */ // Use Interface
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
-/** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
+/** @typedef {import('../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // Use Interface
+/** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */ // Keep if needed elsewhere, but not directly by GameLoop
 
 
-// --- Define the options object structure ---
+// --- Define the options object structure --- (Keep aligned with GameLoop constructor)
 /**
  * @typedef {object} GameLoopOptions
  * @property {GameDataRepository} gameDataRepository
  * @property {EntityManager} entityManager
- * @property {GameStateManager} gameStateManager
- * @property {InputHandler} inputHandler
- * @property {CommandParser} commandParser
- * @property {ActionExecutor} actionExecutor
+ * @property {IGameStateManager} gameStateManager
+ * @property {IInputHandler} inputHandler
+ * @property {ICommandParser} commandParser
+ * @property {IActionExecutor} actionExecutor
  * @property {EventBus} eventBus
- * @property {ActionDiscoverySystem} actionDiscoverySystem
- * @property {ValidatedEventDispatcher} validatedEventDispatcher
- * @property {ITurnOrderService} turnOrderService
+ * @property {IActionDiscoverySystem} actionDiscoverySystem
+ * @property {IValidatedEventDispatcher} validatedEventDispatcher
+ * @property {ITurnManager} turnManager // Changed from turnOrderService
  * @property {ILogger} logger
  */

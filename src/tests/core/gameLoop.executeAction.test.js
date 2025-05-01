@@ -2,11 +2,13 @@
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import GameLoop from '../../core/GameLoop.js';
+import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../types/components.js'; // Added missing imports
+
 // Assume ActionExecutor is imported if needed for type checks, though not strictly required for mocking
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code)
+// (Mocks remain the same as provided in the initial code, except for TurnManager)
 const mockEventBus = {
     dispatch: jest.fn(),
     subscribe: jest.fn(),
@@ -49,13 +51,14 @@ const mockvalidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
-// ****** NEW MOCK: TurnOrderService ******
-const mockTurnOrderService = {
-    isEmpty: jest.fn().mockReturnValue(true), // Default to empty initially
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn().mockReturnValue(null), // Default to no entity
-    clearCurrentRound: jest.fn(), // Added for stop() testability
-    // Add other methods if GameLoop uses them directly
+// ****** CORRECTED MOCK: TurnManager ******
+// Implements ITurnManager interface expected by GameLoop constructor
+const mockTurnManager = {
+    start: jest.fn(),
+    stop: jest.fn(),
+    getCurrentActor: jest.fn().mockReturnValue(null), // Default to no actor
+    advanceTurn: jest.fn(),
+    // Add other methods if needed by specific tests, but these are the ones checked by constructor
 };
 // ****************************************
 
@@ -65,12 +68,14 @@ const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
+    // Corrected hasComponent mock implementation
     hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID)
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
+    // Corrected hasComponent mock implementation
     hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID)
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn() /* Add if needed */};
@@ -86,7 +91,7 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService, // ***** ADD THIS LINE *****
+    turnManager: mockTurnManager, // ***** CORRECTED THIS LINE *****
     logger: mockLogger,
 });
 
@@ -108,20 +113,24 @@ describe('GameLoop', () => {
         // Reset Action Executor Mock
         mockActionExecutor.executeAction.mockResolvedValue({
             success: true,
-            messages: [{text: 'Default mock action executed'}]
+            messages: [{text: 'Default mock action executed', type: 'info'}] // Ensure type is present
         }); // Adjusted default return
 
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
-        // Reset Turn Order Service Mocks
-        mockTurnOrderService.isEmpty.mockReturnValue(true); // Default to empty queue
-        mockTurnOrderService.getNextEntity.mockReturnValue(null); // Default to no entity available
+        // Reset Turn Manager Mocks (CORRECTED)
+        mockTurnManager.start.mockClear();
+        mockTurnManager.stop.mockClear();
+        mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Reset return value too
+        mockTurnManager.advanceTurn.mockClear();
+
 
         // Reset Entity Manager Mock (Example: Clear active entities if needed)
         mockEntityManager.activeEntities = new Map();
 
         // Reset entity mocks (ensure clean state for hasComponent etc.)
+        // Corrected implementations
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
 
@@ -138,13 +147,15 @@ describe('GameLoop', () => {
         }
         // Ensure game loop is stopped if a test accidentally leaves it running
         if (gameLoop && gameLoop.isRunning) {
-            gameLoop.stop();
+            // Use async stop if it's async now
+            gameLoop.stop(); // Assuming stop is synchronous for this example, adjust if async
         }
+        gameLoop = null; // Clear gameLoop instance
     });
 
 
     // --- executeAction Tests (Ticket 4.3.3) ---
-    // These seem correct based on the provided GameLoop executeAction implementation
+    // These should now pass the constructor check
     describe('executeAction', () => {
 
         // Define representative ParsedCommand objects
@@ -167,12 +178,16 @@ describe('GameLoop', () => {
 
         // Setup specifically for executeAction tests
         beforeEach(() => {
-            jest.clearAllMocks();
+            // Note: Top-level beforeEach already clears mocks
 
             // Set up required game state - *Important*: GameStateManager provides the location
             mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
 
+            // ***** This is where the error occurred *****
+            // Now uses the corrected createValidOptions
             gameLoop = new GameLoop(createValidOptions());
+            // *****---------------------------------*****
+
 
             // Set a default return value for the mocked actionExecutor
             mockActionExecutor.executeAction.mockResolvedValue({
@@ -183,6 +198,7 @@ describe('GameLoop', () => {
 
         // Helper function to run common assertions on the captured context
         const assertActionContextStructure = (context, inputParsedCommand, expectedActingEntity) => {
+            expect(context).toBeDefined(); // Basic check first
             expect(context.actingEntity).toBe(expectedActingEntity); // Check the correct entity was passed
             expect(context.currentLocation).toBe(mockLocation); // Location from GameStateManager
             expect(context.parsedCommand).toBe(inputParsedCommand); // Strict equality (===) check
@@ -238,7 +254,7 @@ describe('GameLoop', () => {
             assertActionContextStructure(capturedContext, parsedCmdV_DO_P_IO, mockPlayer);
         });
 
-        // Test case for safety check: Missing Acting Entity (though less likely if called internally)
+        // Test case for safety check: Missing Acting Entity (should now pass constructor)
         it('should log error, dispatch UI error and return failure if actingEntity is missing', async () => {
             const result = await gameLoop.executeAction(null, parsedCmdV); // Pass null entity
 
@@ -254,7 +270,7 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for safety check: Missing Location from GameStateManager
+        // Test case for safety check: Missing Location from GameStateManager (should now pass constructor)
         it('should log error, dispatch UI error and return failure if currentLocation is missing', async () => {
             mockGameStateManager.getCurrentLocation.mockReturnValue(null); // Simulate missing location
 
@@ -272,7 +288,7 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for handling ActionExecutor errors
+        // Test case for handling ActionExecutor errors (should now pass constructor)
         it('should catch errors from actionExecutor.executeAction, log, dispatch UI error, and return failure', async () => {
             const actionError = new Error('Action failed miserably');
             mockActionExecutor.executeAction.mockRejectedValue(actionError); // Make executor throw
@@ -290,15 +306,22 @@ describe('GameLoop', () => {
             });
         });
 
-        // Test case for handling invalid ActionResult structure
+        // Test case for handling invalid ActionResult structure (should now pass constructor)
         it('should handle invalid result structure from actionExecutor and return failure', async () => {
-            mockActionExecutor.executeAction.mockResolvedValue({some: 'wrong', structure: true}); // Invalid result
+            const invalidResult = {some: 'wrong', structure: true}; // Define the invalid structure
+            mockActionExecutor.executeAction.mockResolvedValue(invalidResult); // Mock executor to return it
 
             const result = await gameLoop.executeAction(mockPlayer, parsedCmdV);
 
-            // Should not log an error here, but return a structured failure
-            expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('invalid result structure')); // Logger might debug, not error
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.any(Object)); // No UI error for this case
+            // Logger might debug/warn, but not necessarily error for bad structure vs exception
+            // --- CORRECTED ASSERTION ---
+            // Expect the error message AND the invalid result object itself as the second argument
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Action ${parsedCmdV.actionId} execution returned invalid result structure`),
+                invalidResult // Assert the second argument passed to logger.error
+            );
+            // --------------------------
+            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:display_message', expect.any(Object)); // No UI error for this specific case usually
             expect(result).toEqual({
                 success: false,
                 messages: [{

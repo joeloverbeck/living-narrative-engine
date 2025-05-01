@@ -6,7 +6,6 @@ import GameLoop from '../../core/GameLoop.js';
 import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../types/components.js'; // Import component IDs
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code)
 const mockEventBus = {
     dispatch: jest.fn(),
     subscribe: jest.fn(),
@@ -34,7 +33,6 @@ const mockCommandParser = {
 const mockActionExecutor = {
     executeAction: jest.fn(),
 };
-
 const mockActionDiscoverySystem = {
     getValidActions: jest.fn().mockResolvedValue([]),
 };
@@ -44,17 +42,27 @@ const mockLogger = {
     warn: jest.fn(),
     error: jest.fn(),
 };
-
 const mockvalidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
-const mockTurnOrderService = {
-    isEmpty: jest.fn().mockReturnValue(true),
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn().mockReturnValue(null),
-    clearCurrentRound: jest.fn(),
+// *** FIX: Define a mock TurnManager implementing the ITurnManager interface ***
+const mockTurnManager = {
+    start: jest.fn(),
+    stop: jest.fn(),
+    getCurrentActor: jest.fn().mockReturnValue(null), // Default to null
+    advanceTurn: jest.fn(),
+    // Add other methods if the GameLoop interacts with more TurnManager features
 };
+
+// Remove or comment out if unused elsewhere in this file
+// const mockTurnOrderService = {
+//     isEmpty: jest.fn().mockReturnValue(true),
+//     startNewRound: jest.fn(),
+//     getNextEntity: jest.fn().mockReturnValue(null),
+//     clearCurrentRound: jest.fn(),
+// };
+
 
 // Mock entities
 const mockPlayer = {
@@ -83,8 +91,10 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService,
+    // *** FIX: Provide the mockTurnManager under the correct key ***
+    turnManager: mockTurnManager,
     logger: mockLogger,
+    // turnOrderService: mockTurnOrderService, // Removed/Commented out
 });
 
 // --- Test Suite ---
@@ -92,8 +102,9 @@ const createValidOptions = () => ({
 describe('GameLoop', () => {
     let gameLoop;
     let promptInputSpy;
-    let processNextTurnSpy;
+    let processNextTurnSpy; // Keep using this name if spying on internal method
 
+    // *** NOTE: Outer beforeEach now uses the corrected createValidOptions ***
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -105,13 +116,18 @@ describe('GameLoop', () => {
             messages: [{text: 'Default mock action executed'}]
         });
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
-        mockTurnOrderService.isEmpty.mockReturnValue(true);
-        mockTurnOrderService.getNextEntity.mockReturnValue(null);
+        // Reset the new mockTurnManager methods
+        mockTurnManager.start.mockClear();
+        mockTurnManager.stop.mockClear();
+        mockTurnManager.getCurrentActor.mockClear().mockReturnValue(null); // Reset mock and default return value
+        mockTurnManager.advanceTurn.mockClear();
+
+        // Reset other mocks as before
         mockEntityManager.activeEntities = new Map();
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
 
-        // Instantiate GameLoop *after* clearing mocks if constructor uses them
+        // *** This instantiation should now succeed ***
         gameLoop = new GameLoop(createValidOptions());
 
         // Spies are setup in the describe block below
@@ -123,14 +139,21 @@ describe('GameLoop', () => {
             promptInputSpy.mockRestore();
             promptInputSpy = null;
         }
+        // *** FIX: Ensure processNextTurnSpy is checked before restoring ***
         if (processNextTurnSpy) {
             processNextTurnSpy.mockRestore();
             processNextTurnSpy = null;
         }
         // Ensure game loop is stopped
-        if (gameLoop && gameLoop.isRunning) {
+        // *** FIX: Check if gameLoop was successfully created before calling stop ***
+        if (gameLoop && typeof gameLoop.stop === 'function') {
             // Use the public stop method, avoid direct state manipulation if possible
-            gameLoop.stop();
+            // Need to ensure stop is async if it truly is, but for test teardown sync might be okay
+            // or wrap in async/await if necessary. Assuming sync for now based on typical teardown.
+            if (gameLoop.isRunning) {
+                // GameLoop.stop might be async, handle appropriately if needed
+                gameLoop.stop();
+            }
         }
         // Clear mocks again to be absolutely sure between top-level tests
         jest.clearAllMocks();
@@ -142,84 +165,116 @@ describe('GameLoop', () => {
         let executeActionSpy; // Use GameLoop's internal executeAction
 
         beforeEach(() => {
-            // Instantiate GameLoop here IF it needs fresh instance per sub-describe test
-            // If gameLoop from outer scope is fine, remove this line:
-            // gameLoop = new GameLoop(createValidOptions());
+            // *** gameLoop instance should exist from outer beforeEach ***
+            // If not, the outer beforeEach failed, and tests here won't run correctly.
 
-            // *** FIX 1: Use test helper methods to set internal state ***
-            gameLoop._test_setRunning(true); // Set loop to running
-            gameLoop._test_setCurrentTurnEntity(mockPlayer); // Assume player's turn for most tests
+            // Set internal state using helper methods IF gameLoop exists
+            if (gameLoop) {
+                gameLoop._test_setRunning(true); // Set loop to running
+                gameLoop._test_setCurrentTurnEntity(mockPlayer); // Assume player's turn
+                mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Make mockTurnManager consistent
+            } else {
+                // Fail fast or log if gameLoop isn't set up - indicates a problem in outer beforeEach
+                throw new Error("GameLoop instance was not created in the outer beforeEach. Cannot run processSubmittedCommand tests.");
+            }
+
 
             // Mock/Spy on internal methods for this specific instance
             // Spy on the actual executeAction method of the instance
-            executeActionSpy = jest.spyOn(gameLoop, 'executeAction').mockResolvedValue({success: true, messages: []});
+            // *** FIX: Check gameLoop exists before spying ***
+            executeActionSpy = gameLoop ? jest.spyOn(gameLoop, 'executeAction').mockResolvedValue({
+                success: true,
+                messages: []
+            }) : null;
 
-            // *** FIX 2: Correct the spy target name and handle potential failure ***
+            // Spy on _processCurrentActorTurn (or equivalent logic trigger) if needed for specific tests,
+            // but _processNextTurn might be too internal. Spying on turnManager.advanceTurn might be better.
+            // For now, keep the original plan but add checks.
             try {
-                // Target the actual protected method name '_processNextTurn'
-                processNextTurnSpy = jest.spyOn(gameLoop, '_processNextTurn').mockResolvedValue();
+                // Target the actual protected method name '_processNextTurn' if it exists and is needed
+                // processNextTurnSpy = gameLoop ? jest.spyOn(gameLoop, '_processNextTurn').mockResolvedValue() : null;
+                // Commenting out: Spying on private/protected methods can be brittle.
+                // Focus on observable behavior (like turnManager.advanceTurn being called).
+                processNextTurnSpy = null; // Indicate it's not being used for now
             } catch (e) {
-                console.warn("Could not spy on GameLoop._processNextTurn. Test assertions relying on it may fail.", e);
+                console.warn("Could not spy on GameLoop._processNextTurn (potentially removed or refactored). Test assertions relying on it may fail.", e);
                 processNextTurnSpy = null; // Ensure it's null if spy fails
             }
 
             // Spy on promptInput AFTER gameLoop instance exists
-            promptInputSpy = jest.spyOn(gameLoop, 'promptInput');
+            promptInputSpy = gameLoop ? jest.spyOn(gameLoop, 'promptInput').mockResolvedValue() : null; // Make mock async if promptInput is async
 
             // Mock GameStateManager to return a location needed by executeAction context
             mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
 
             // Clear mocks that might have been called during setup *within this describe*
-            // Note: Mocks used by the constructor were likely called already in outer beforeEach
-            jest.clearAllMocks();
+            jest.clearAllMocks(); // Clear basic mocks first
+            // Clear spies carefully
             if (executeActionSpy) executeActionSpy.mockClear();
             if (processNextTurnSpy) processNextTurnSpy.mockClear();
             if (promptInputSpy) promptInputSpy.mockClear();
             mockGameStateManager.getCurrentLocation.mockClear(); // Clear this specific mock too
+            mockTurnManager.getCurrentActor.mockClear().mockReturnValue(mockPlayer); // Ensure turn manager mock is reset but consistent for tests here
+            mockTurnManager.advanceTurn.mockClear(); // Clear the advanceTurn mock
         });
 
         afterEach(() => {
             // Restore spies created in this block
             if (executeActionSpy) executeActionSpy.mockRestore();
-            if (promptInputSpy) promptInputSpy.mockRestore(); // Already handled in outer afterEach, but safe to keep if needed
-            if (processNextTurnSpy) processNextTurnSpy.mockRestore(); // Already handled in outer afterEach
-            // Reset internal state if needed, though outer afterEach should handle stop()
-            gameLoop._test_setRunning(false);
-            gameLoop._test_setCurrentTurnEntity(null);
+            if (promptInputSpy) promptInputSpy.mockRestore();
+            if (processNextTurnSpy) processNextTurnSpy.mockRestore();
+
+            // Reset internal state if needed, using helper methods IF gameLoop exists
+            // *** FIX: Check gameLoop exists before accessing methods ***
+            if (gameLoop) {
+                gameLoop._test_setRunning(false);
+                gameLoop._test_setCurrentTurnEntity(null);
+                mockTurnManager.getCurrentActor.mockReturnValue(null); // Reset mock
+            }
         });
 
         it('should do nothing if called when the loop is not running', async () => {
+            if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
             gameLoop._test_setRunning(false); // Ensure loop is stopped using helper
             // Clear mocks called during beforeEach setup
             jest.clearAllMocks();
             if (executeActionSpy) executeActionSpy.mockClear();
-            if (processNextTurnSpy) processNextTurnSpy.mockClear();
+            // Clear turn manager mocks
+            mockTurnManager.advanceTurn.mockClear();
 
             await gameLoop.processSubmittedCommand(mockPlayer, 'look');
 
             expect(mockCommandParser.parse).not.toHaveBeenCalled();
             expect(executeActionSpy).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
-            if (processNextTurnSpy) expect(processNextTurnSpy).not.toHaveBeenCalled();
+            expect(mockTurnManager.advanceTurn).not.toHaveBeenCalled(); // Check turn manager instead of private method
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
         });
 
         it('should log error and return if called for an entity that is not the current turn entity', async () => {
-            const wrongEntity = {id: 'imposter', name: 'Wrong Guy', hasComponent: jest.fn(), getComponent: jest.fn()};
+            if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
+            const wrongEntity = {
+                id: 'imposter',
+                name: 'Wrong Guy',
+                hasComponent: jest.fn(() => false),
+                getComponent: jest.fn()
+            }; // Ensure hasComponent returns false for player
             gameLoop._test_setCurrentTurnEntity(mockPlayer); // Player's turn
+            mockTurnManager.getCurrentActor.mockReturnValue(mockPlayer); // Align mock
 
-            // *** FIX 3: Create spy BEFORE the call you want to check ***
-            // promptInputSpy = jest.spyOn(gameLoop, 'promptInput'); // Already created in beforeEach, just clear it
-            promptInputSpy.mockClear();
-            mockActionDiscoverySystem.getValidActions.mockClear(); // Clear discovery mock too
-            mockLogger.error.mockClear(); // Clear logger error mock
+            // Clear mocks for this specific test path
+            if (promptInputSpy) promptInputSpy.mockClear();
+            mockActionDiscoverySystem.getValidActions.mockClear();
+            mockLogger.error.mockClear();
+            mockTurnManager.advanceTurn.mockClear();
+            mockCommandParser.parse.mockClear(); // Clear parse mock as well
 
             await gameLoop.processSubmittedCommand(wrongEntity, 'look'); // Called for wrong entity
 
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('State inconsistency'));
             expect(mockCommandParser.parse).not.toHaveBeenCalled();
             expect(executeActionSpy).not.toHaveBeenCalled();
-            if (processNextTurnSpy) expect(processNextTurnSpy).not.toHaveBeenCalled();
+            expect(mockTurnManager.advanceTurn).not.toHaveBeenCalled(); // Check turn manager
 
             // Check recovery logic: re-discover for *correct* entity and re-prompt
             expect(mockActionDiscoverySystem.getValidActions).toHaveBeenCalledWith(mockPlayer, expect.any(Object));
@@ -227,25 +282,45 @@ describe('GameLoop', () => {
         });
 
         it('should disable input and dispatch disable event upon receiving command', async () => {
+            if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
             // Ensure parse succeeds for this test path
             mockCommandParser.parse.mockReturnValue({actionId: 'action:wait', originalInput: 'wait', error: null});
             // Mock executeAction needed after parsing
-            executeActionSpy.mockResolvedValue({success: true});
+            if (executeActionSpy) executeActionSpy.mockResolvedValue({success: true});
+
+            // Clear specific mocks before the call
+            mockInputHandler.disable.mockClear();
+            mockvalidatedEventDispatcher.dispatchValidated.mockClear();
+
 
             await gameLoop.processSubmittedCommand(mockPlayer, 'wait');
 
+            // Get calls *after* the execution
+            const disableInputCall = mockInputHandler.disable.mock.invocationCallOrder[0];
+            const dispatchDisableCall = mockvalidatedEventDispatcher.dispatchValidated.mock.calls.find(call => call[0] === 'textUI:disable_input');
+            const dispatchDisableCallOrder = mockvalidatedEventDispatcher.dispatchValidated.mock.invocationCallOrder[
+                mockvalidatedEventDispatcher.dispatchValidated.mock.calls.indexOf(dispatchDisableCall)
+                ];
+            const parseCallOrder = mockCommandParser.parse.mock.invocationCallOrder[0];
+
             // Expect disable *before* parsing
             expect(mockInputHandler.disable).toHaveBeenCalledTimes(1);
+            expect(disableInputCall).toBeLessThan(parseCallOrder);
+
             // Expect disable event dispatch *before* parsing
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {message: "Processing..."});
+            expect(dispatchDisableCall).toBeTruthy();
+            expect(dispatchDisableCall[1]).toEqual({message: "Processing..."});
+            expect(dispatchDisableCallOrder).toBeLessThan(parseCallOrder);
         });
 
+
         it('should call commandParser.parse with the command string', async () => {
+            if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
             const command = 'examine the widget';
             // Ensure parse succeeds
             mockCommandParser.parse.mockReturnValue({actionId: 'action:examine', originalInput: command, error: null});
             // Mock executeAction needed after parsing
-            executeActionSpy.mockResolvedValue({success: true});
+            if (executeActionSpy) executeActionSpy.mockResolvedValue({success: true});
 
 
             await gameLoop.processSubmittedCommand(mockPlayer, command);
@@ -259,14 +334,17 @@ describe('GameLoop', () => {
             const badCommand = 'frobozz';
 
             beforeEach(() => {
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 // Setup parse to fail
                 mockCommandParser.parse.mockReturnValue({actionId: null, error: parseError, originalInput: badCommand});
                 // Clear mocks specifically for this context
                 jest.clearAllMocks();
+                mockTurnManager.getCurrentActor.mockClear().mockReturnValue(mockPlayer); // Keep turn manager consistent
+                mockTurnManager.advanceTurn.mockClear(); // Clear advanceTurn
                 if (executeActionSpy) executeActionSpy.mockClear();
-                if (processNextTurnSpy) processNextTurnSpy.mockClear();
-                if (promptInputSpy) promptInputSpy.mockClear(); // Clear promptInput spy
-                mockActionDiscoverySystem.getValidActions.mockClear(); // Clear discovery mock
+                // processNextTurnSpy is not used
+                if (promptInputSpy) promptInputSpy.mockClear();
+                mockActionDiscoverySystem.getValidActions.mockClear();
             });
 
             it('should display parse error message', async () => {
@@ -301,18 +379,17 @@ describe('GameLoop', () => {
             });
 
             it('should NOT dispatch turn:end event', async () => {
+                // The turn:end event is dispatched by the TurnManager or GameLoop *after* a successful turn advance signal,
+                // which doesn't happen on parse fail. We check if advanceTurn was called.
                 await gameLoop.processSubmittedCommand(mockPlayer, badCommand);
+                expect(mockTurnManager.advanceTurn).not.toHaveBeenCalled();
+                // Also check eventBus directly if GameLoop dispatches it separately (it doesn't seem to based on code)
                 expect(mockEventBus.dispatch).not.toHaveBeenCalledWith('turn:end', expect.any(Object));
             });
 
-            it('should NOT call _processNextTurn', async () => {
+            it('should NOT call turnManager.advanceTurn', async () => {
                 await gameLoop.processSubmittedCommand(mockPlayer, badCommand);
-                if (processNextTurnSpy) {
-                    expect(processNextTurnSpy).not.toHaveBeenCalled();
-                } else {
-                    // If spy failed, we can't assert this, but the other tests should cover the logic
-                    console.warn("Test cannot confirm _processNextTurn was NOT called due to spy limitations.");
-                }
+                expect(mockTurnManager.advanceTurn).not.toHaveBeenCalled();
             });
         });
 
@@ -321,82 +398,86 @@ describe('GameLoop', () => {
                 actionId: 'action:look',
                 directObjectPhrase: null,
                 originalInput: 'look',
-                error: null
+                error: null,
+                targets: [], // Added for completeness if needed by executeAction context potentially
+                prepositions: {}, // Added for completeness
             };
             const command = 'look';
 
             beforeEach(() => {
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 // Setup parse to succeed
                 mockCommandParser.parse.mockReturnValue(parsedCommand);
                 // Default executeAction to succeed (can be overridden)
-                executeActionSpy.mockResolvedValue({success: true, messages: [{text: 'Looked around.'}]});
+                if (executeActionSpy) executeActionSpy.mockResolvedValue({
+                    success: true,
+                    messages: [{text: 'Looked around.'}]
+                });
 
                 // Clear mocks specifically for this context
                 jest.clearAllMocks(); // Clear all standard mocks
+                mockTurnManager.getCurrentActor.mockClear().mockReturnValue(mockPlayer); // Keep consistent
+                mockTurnManager.advanceTurn.mockClear(); // Clear advanceTurn
                 if (executeActionSpy) executeActionSpy.mockClear(); // Clear spy specifically
-                if (processNextTurnSpy) processNextTurnSpy.mockClear(); // Clear spy specifically
+                // processNextTurnSpy not used
                 if (promptInputSpy) promptInputSpy.mockClear(); // Clear spy specifically
                 mockEventBus.dispatch.mockClear(); // Clear event bus mock
                 mockGameStateManager.getCurrentLocation.mockReturnValue(mockLocation); // Ensure location is set for executeAction context
-
             });
 
             it('should call executeAction with the acting entity and parsed command', async () => {
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 await gameLoop.processSubmittedCommand(mockPlayer, command);
                 expect(executeActionSpy).toHaveBeenCalledTimes(1);
                 // Ensure executeAction context is properly formed (basic check)
+                // The GameLoop's executeAction method internally creates the full context
+                // So we check the arguments passed TO the spy on gameLoop.executeAction
                 expect(executeActionSpy).toHaveBeenCalledWith(
                     mockPlayer,
                     parsedCommand
-                    // The context object is created internally, so we check the args passed *to* executeAction spy
+                    // We don't need to check the internal context object here, just that the method was called correctly
                 );
             });
 
-            it('should log the end of the turn', async () => {
+
+            it('should log the end of the turn (implicitly via advancing turn)', async () => {
+                // The logging seems to happen *before* advancing the turn in the provided GameLoop code
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 await gameLoop.processSubmittedCommand(mockPlayer, command);
-                // Logger call happens *after* executeAction completes
-                expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`<<< Ending turn for Entity: ${mockPlayer.id}`));
+                // Check for the log message related to advancing turn
+                expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Player ${mockPlayer.id} completed action ${parsedCommand.actionId}. Advancing turn...`));
             });
 
-            it('should dispatch turn:end event with entityId, actionId, and success status', async () => {
-                // --- Test Success Case ---
-                executeActionSpy.mockResolvedValue({success: true}); // Force success
-                mockEventBus.dispatch.mockClear(); // Clear before call
+            it('should dispatch turn:end event (via TurnManager interaction)', async () => {
+                // The GameLoop code doesn't directly dispatch 'turn:end'. It calls turnManager.advanceTurn().
+                // We assume the TurnManager (or something subscribed to its events) dispatches 'turn:end'.
+                // Let's test that advanceTurn is called, which *should* lead to turn:end eventually.
 
+                // Mocking the result of executeAction for success/failure isn't directly relevant
+                // to whether advanceTurn is called *after* executeAction finishes, unless executeAction throws unexpectedly.
+
+                // --- Test Call Path ---
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 await gameLoop.processSubmittedCommand(mockPlayer, command);
+                expect(mockTurnManager.advanceTurn).toHaveBeenCalledTimes(1);
 
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith('turn:end', {
-                    entityId: mockPlayer.id,
-                    actionTaken: parsedCommand.actionId,
-                    success: true
-                });
-
-                // --- Test Failure Case ---
-                executeActionSpy.mockResolvedValue({success: false}); // Force failure
-                mockEventBus.dispatch.mockClear(); // Clear before call
-
-                await gameLoop.processSubmittedCommand(mockPlayer, command);
-
-                expect(mockEventBus.dispatch).toHaveBeenCalledWith('turn:end', {
-                    entityId: mockPlayer.id,
-                    actionTaken: parsedCommand.actionId,
-                    success: false
-                });
+                // If you NEED to test the turn:end event payload specifically, you'd need to either:
+                // 1. Mock the TurnManager to dispatch the event when advanceTurn is called.
+                // 2. Have a more integrated test that includes the TurnManager's real event dispatching.
+                // For a unit test of GameLoop, verifying advanceTurn is called is usually sufficient.
             });
 
-            it('should call _processNextTurn to advance the game loop', async () => {
+
+            it('should call turnManager.advanceTurn to advance the game loop', async () => {
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
                 await gameLoop.processSubmittedCommand(mockPlayer, command);
-                if (processNextTurnSpy) {
-                    // Check _processNextTurn is called *after* successful execution path
-                    expect(processNextTurnSpy).toHaveBeenCalledTimes(1);
-                } else {
-                    // Log if spy failed, test might be inconclusive for this specific check
-                    console.warn("Test cannot confirm _processNextTurn was called due to spy limitations.");
-                }
+                // Check turnManager.advanceTurn is called *after* successful execution path
+                expect(mockTurnManager.advanceTurn).toHaveBeenCalledTimes(1);
             });
 
             it('should NOT call promptInput', async () => {
-                // Prompting happens later via _processNextTurn if the *next* entity is a player
+                if (!gameLoop) throw new Error("Test setup failed: gameLoop missing");
+                // Prompting happens later via _handleTurnActorChanged -> _processCurrentActorTurn if the *next* entity is a player
                 await gameLoop.processSubmittedCommand(mockPlayer, command);
                 expect(promptInputSpy).not.toHaveBeenCalled();
             });

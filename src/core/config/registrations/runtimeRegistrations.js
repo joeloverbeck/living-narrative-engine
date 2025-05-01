@@ -18,7 +18,7 @@ export function registerRuntime(container) {
         gameDataRepository: c.resolve(tokens.GameDataRepository),
         actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        turnOrderService: c.resolve(tokens.ITurnOrderService),
+        turnManager: c.resolve(tokens.ITurnManager), // Changed from turnOrderService
         logger: c.resolve(tokens.ILogger)
     }));
 
@@ -26,7 +26,7 @@ export function registerRuntime(container) {
         container: c,
         logger: c.resolve(tokens.ILogger),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        gameLoop: c.resolve(tokens.GameLoop)
+        gameLoop: c.resolve(tokens.GameLoop) // GameLoop depends on TurnManager, but InputSetup needs GameLoop
     }));
 
     log.info('Runtime Registration: complete.');

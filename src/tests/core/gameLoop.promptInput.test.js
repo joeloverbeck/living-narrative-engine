@@ -7,7 +7,6 @@ import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../../types/components.js
 // import ActionExecutor from '../../actions/actionExecutor.js';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same as provided in the initial code)
 const mockEventBus = {
     dispatch: jest.fn(),
     subscribe: jest.fn(),
@@ -20,24 +19,23 @@ const mockInputHandler = {
     setCommandCallback: jest.fn()
 };
 const mockGameStateManager = {
-    getPlayer: jest.fn(), // Still needed for some older tests, though start() doesn't use it
-    getCurrentLocation: jest.fn(), // Still needed for some older tests + executeAction
+    getPlayer: jest.fn(),
+    getCurrentLocation: jest.fn(),
     setPlayer: jest.fn(),
     setCurrentLocation: jest.fn()
 };
 const mockGameDataRepository = {}; // Basic mock object
-const mockEntityManager = { // Basic mock, might need more detail for turn order tests
+const mockEntityManager = {
     activeEntities: new Map()
 };
 const mockCommandParser = {
     parse: jest.fn(),
 };
 const mockActionExecutor = {
-    executeAction: jest.fn(), // Key mock
+    executeAction: jest.fn(),
 };
-
 const mockActionDiscoverySystem = {
-    getValidActions: jest.fn().mockResolvedValue([]), // Return empty array as default
+    getValidActions: jest.fn().mockResolvedValue([]),
 };
 const mockLogger = {
     info: jest.fn(),
@@ -45,33 +43,41 @@ const mockLogger = {
     warn: jest.fn(),
     error: jest.fn(),
 };
-
 const mockvalidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
 };
 
-// ****** NEW MOCK: TurnOrderService ******
-const mockTurnOrderService = {
-    isEmpty: jest.fn().mockReturnValue(true), // Default to empty initially
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn().mockReturnValue(null), // Default to no entity
-    clearCurrentRound: jest.fn(), // Added for stop() testability
-    // Add other methods if GameLoop uses them directly
+// ****** CORRECTED MOCK: TurnManager ******
+// Renamed from mockTurnOrderService and added required methods
+const mockTurnManager = {
+    // ITurnManager methods required by GameLoop constructor
+    start: jest.fn(),
+    stop: jest.fn(),
+    getCurrentActor: jest.fn().mockReturnValue(null), // Default to null initially
+    advanceTurn: jest.fn(),
+
+    // Keep potentially needed methods from original mock if used elsewhere (or remove if unused)
+    // isEmpty: jest.fn().mockReturnValue(true),
+    // startNewRound: jest.fn(),
+    // getNextEntity: jest.fn().mockReturnValue(null), // Replaced by getCurrentActor for GameLoop needs
+    // clearCurrentRound: jest.fn(),
 };
-// ****************************************
+// *******************************************
 
 
-// Mock entities for GameStateManager/TurnOrderService
+// Mock entities for GameStateManager/TurnManager
 const mockPlayer = {
     id: 'player1',
     name: 'Tester',
     getComponent: jest.fn(),
+    // Ensure hasComponent is correctly mocked here or in beforeEach
     hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID)
 };
 const mockNpc = {
     id: 'npc1',
     name: 'Goblin',
     getComponent: jest.fn(),
+    // Ensure hasComponent is correctly mocked here or in beforeEach
     hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID)
 };
 const mockLocation = {id: 'room:test', name: 'Test Chamber', getComponent: jest.fn() /* Add if needed */};
@@ -87,7 +93,7 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService,
+    turnManager: mockTurnManager, // Use the corrected mock
     logger: mockLogger,
 });
 
@@ -95,8 +101,8 @@ const createValidOptions = () => ({
 
 describe('GameLoop', () => {
     let gameLoop;
-    let promptInputSpy;
-    let processNextTurnSpy; // Spy for the new core loop method
+    let promptInputSpy; // Assuming this might be used in other tests, keep if needed
+    let processNextTurnSpy; // Assuming this might be used in other tests, keep if needed
 
     // Reset mocks before each test to ensure isolation (Top Level)
     beforeEach(() => {
@@ -115,18 +121,19 @@ describe('GameLoop', () => {
         // Reset Command Parser Mock
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
 
-        // Reset Turn Order Service Mocks
-        mockTurnOrderService.isEmpty.mockReturnValue(true);
-        mockTurnOrderService.getNextEntity.mockReturnValue(null);
+        // Reset Turn Manager Mocks (Focus on methods checked/used)
+        mockTurnManager.start.mockClear(); // Clear call history
+        mockTurnManager.stop.mockClear();
+        mockTurnManager.getCurrentActor.mockClear();
+        mockTurnManager.getCurrentActor.mockReturnValue(null); // Reset to default null
+        mockTurnManager.advanceTurn.mockClear();
 
         // Reset Entity Manager Mock
         mockEntityManager.activeEntities = new Map();
 
         // Reset entity mocks (ensure clean state for hasComponent etc.)
-        // This setup ensures the mocks are fresh for each test in the OUTER describe
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
-
     });
 
     afterEach(() => {
@@ -140,8 +147,9 @@ describe('GameLoop', () => {
         }
         // Ensure game loop is stopped if a test accidentally leaves it running
         if (gameLoop && gameLoop.isRunning) {
-            gameLoop.stop();
+            gameLoop.stop(); // Assuming stop is synchronous or add await if needed
         }
+        gameLoop = null; // Help GC
     });
 
 
@@ -151,99 +159,97 @@ describe('GameLoop', () => {
 
         // Updated beforeEach for promptInput tests
         beforeEach(() => {
-            jest.clearAllMocks(); // Keep clearing mocks specific to this describe block
+            // Mocks should be cleared by the top-level beforeEach already
+            // Reset entity mocks specifically for this context if needed (already done above)
             mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
             mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
 
-            // Instantiate GameLoop here for each test in this describe block
+            // Instantiate GameLoop HERE for each test in this describe block
+            // This will now pass the constructor check because mockTurnManager has the required methods
             gameLoop = new GameLoop(createValidOptions());
 
             // *** USE THE NEW TEST METHODS TO SET STATE ***
             // Default state for most tests in this block: Running and Player's Turn
             gameLoop._test_setRunning(true);
-            gameLoop._test_setCurrentTurnEntity(mockPlayer);
+            gameLoop._test_setCurrentTurnEntity(mockPlayer); // This sets the internal state directly
 
-            const testName = expect.getState ? expect.getState().currentTestName : 'Current Test';
-            // Optional: Add logging to confirm state *after* setting via test methods
-            console.log(`TEST beforeEach (${testName}): State set via _test_ methods. isRunning=${gameLoop.isRunning}, currentEntityId=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Use internal access for logging only if needed, getter is primary check
+            // const testName = expect.getState ? expect.getState().currentTestName : 'Current Test';
+            // Optional logging (keep if helpful)
+            // console.log(`TEST beforeEach (${testName}): State set via _test_ methods. isRunning=${gameLoop.isRunning}, currentEntityId=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
 
         });
 
-        // No changes needed for the first three 'it' blocks (they use the default state from beforeEach)
         it('When Running and Player Turn: should call inputHandler.enable', () => {
             // Arrange (done in beforeEach)
-            console.log(`TEST (enable): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Log state at test start
+            // console.log(`TEST (enable): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
             // Act
             gameLoop.promptInput();
             // Assert
             expect(mockInputHandler.enable).toHaveBeenCalledTimes(1);
         });
 
-        it('When Running and Player Turn: should dispatch textUI:enable_input event with default placeholder and entityId', () => {
+        it('When Running and Player Turn: should dispatch textUI:enable_input event with default placeholder and entityId', async () => { // Mark as async
             // Arrange (done in beforeEach)
-            console.log(`TEST (dispatch default): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Log state at test start
+            // console.log(`TEST (dispatch default): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
             // Act
-            gameLoop.promptInput();
+            await gameLoop.promptInput(); // Await the async call
             // Assert
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
                 placeholder: 'Enter command...',
                 entityId: mockPlayer.id
             });
-            // Keep negative assertions
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
         });
 
 
-        it('When Running and Player Turn: should dispatch textUI:enable_input event with provided placeholder and entityId', () => {
+        it('When Running and Player Turn: should dispatch textUI:enable_input event with provided placeholder and entityId', async () => { // Mark as async
             // Arrange (done in beforeEach)
             const customMessage = 'What now?';
-            console.log(`TEST (dispatch custom): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Log state at test start
+            // console.log(`TEST (dispatch custom): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
             // Act
-            gameLoop.promptInput(customMessage);
+            await gameLoop.promptInput(customMessage); // Await the async call
             // Assert
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:enable_input', {
                 placeholder: customMessage,
                 entityId: mockPlayer.id
             });
-            // Keep negative assertions
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
         });
 
         // Test requiring STOPPED state
-        it('When Stopped: should not call inputHandler.enable or dispatch event', () => {
+        it('When Stopped: should not call inputHandler.enable or dispatch event', async () => { // Mark as async
             // Arrange: Override the default state from beforeEach
             gameLoop._test_setRunning(false); // Set to stopped
-            gameLoop._test_setCurrentTurnEntity(null); // Clear entity just in case
+            gameLoop._test_setCurrentTurnEntity(null); // Clear entity
 
-            console.log(`TEST (Stopped): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Log state at test start
+            // console.log(`TEST (Stopped): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
             // Act
-            gameLoop.promptInput();
+            await gameLoop.promptInput(); // Await the async call
             // Assert
-            expect(mockLogger.debug).toHaveBeenCalledWith('promptInput called while not running.'); // This log should now ONLY happen here
+            expect(mockLogger.debug).toHaveBeenCalledWith('promptInput called while not running.');
             expect(mockInputHandler.enable).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.any(Object));
-            expect(mockInputHandler.disable).not.toHaveBeenCalled(); // Important: Still shouldn't disable if called when stopped
+            expect(mockInputHandler.disable).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.any(Object));
         });
 
         // Test requiring NOT PLAYER TURN state
-        it('When Running BUT Not Player Turn: should log debug, disable input, and dispatch disable event', () => {
+        it('When Running BUT Not Player Turn: should log debug, disable input, and dispatch disable event', async () => { // Mark as async
             // Arrange: Override the default state from beforeEach
             gameLoop._test_setRunning(true); // Ensure running
             gameLoop._test_setCurrentTurnEntity(mockNpc); // Set to NPC turn
 
-            console.log(`TEST (Not Player): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_GameLoop__currentTurnEntity']?.id}`); // Log state at test start
+            // console.log(`TEST (Not Player): Entering test. isRunning=${gameLoop.isRunning}, entity=${gameLoop['_test_getCurrentTurnEntity']()?.id}`);
             // Act
-            gameLoop.promptInput();
+            await gameLoop.promptInput(); // Await the async call
             // Assert
-            // Verify the *correct* debug log now
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("promptInput called, but it's not a player's turn"));
-            expect(mockLogger.debug).not.toHaveBeenCalledWith('promptInput called while not running.'); // Verify the other log *didn't* happen
+            expect(mockLogger.debug).not.toHaveBeenCalledWith('promptInput called while not running.');
 
-            expect(mockInputHandler.enable).not.toHaveBeenCalled(); // Should NOT enable
-            expect(mockInputHandler.disable).toHaveBeenCalledTimes(1); // SHOULD disable
+            expect(mockInputHandler.enable).not.toHaveBeenCalled();
+            expect(mockInputHandler.disable).toHaveBeenCalledTimes(1); // Should disable
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {message: "Waiting for others..."}); // Should dispatch disable
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:enable_input', expect.any(Object)); // Should NOT dispatch enable
         });

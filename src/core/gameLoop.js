@@ -15,7 +15,7 @@
 /** @typedef {import('./interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */ // Using existing typedef
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */ // Using existing interface
+/** @typedef {import('../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // Updated Interface
 /** @typedef {import('../core/interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
 
 
@@ -31,7 +31,7 @@
  * @property {EventBus} eventBus - Core event bus for pub/sub.
  * @property {IActionDiscoverySystem} actionDiscoverySystem - Discovers available actions for entities.
  * @property {IValidatedEventDispatcher} validatedEventDispatcher - Dispatches events, potentially with validation.
- * @property {ITurnOrderService} turnOrderService - Manages the sequence of entity turns.
+ * @property {ITurnManager} turnManager - Manages the overall turn lifecycle.
  * @property {ILogger} logger - Service for logging messages.
  */
 
@@ -41,7 +41,7 @@ import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from "../types/components.js";
  * GameLoop orchestrates the main game flow *after* initialization.
  * It manages dependencies via interfaces, processes user input via a turn-based cycle,
  * delegates action execution, discovers available actions, and uses the EventBus.
- * Relies on TurnOrderService to manage whose turn it is and round progression.
+ * Relies on TurnManager to manage whose turn it is and round progression.
  */
 class GameLoop {
     #gameDataRepository; // Remains concrete for now
@@ -53,11 +53,11 @@ class GameLoop {
     #eventBus; // Remains concrete
     #actionDiscoverySystem; // Interface: IActionDiscoverySystem
     #validatedEventDispatcher; // Interface: IValidatedEventDispatcher
-    #turnOrderService; // Interface: ITurnOrderService
+    #turnManager; // Interface: ITurnManager
     #logger; // Interface: ILogger
 
     #isRunning = false;
-    #currentTurnEntity = null;
+    #currentTurnEntity = null; // Managed internally, reflects TurnManager state
 
     /**
      * @param {GameLoopOptions} options - Configuration object containing all dependencies.
@@ -73,7 +73,7 @@ class GameLoop {
             eventBus,
             actionDiscoverySystem,
             validatedEventDispatcher,
-            turnOrderService,
+            turnManager, // Changed from turnOrderService
             logger
         } = options || {};
 
@@ -119,10 +119,9 @@ class GameLoop {
         if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
             throw new Error('GameLoop requires a valid options.validatedEventDispatcher implementing IValidatedEventDispatcher (dispatchValidated).');
         }
-        // ITurnOrderService Check
-        if (!turnOrderService || typeof turnOrderService.isEmpty !== 'function' || typeof turnOrderService.startNewRound !== 'function' || typeof turnOrderService.getNextEntity !== 'function') {
-            // Note: Also uses clearCurrentRound in stop(), but not strictly required for core loop start/run
-            throw new Error('GameLoop requires a valid options.turnOrderService implementing ITurnOrderService (isEmpty, startNewRound, getNextEntity).');
+        // ITurnManager Check (NEW)
+        if (!turnManager || typeof turnManager.start !== 'function' || typeof turnManager.stop !== 'function' || typeof turnManager.getCurrentActor !== 'function' || typeof turnManager.advanceTurn !== 'function') {
+            throw new Error('GameLoop requires a valid options.turnManager implementing ITurnManager (start, stop, getCurrentActor, advanceTurn).');
         }
 
 
@@ -136,12 +135,12 @@ class GameLoop {
         this.#eventBus = eventBus;
         this.#actionDiscoverySystem = actionDiscoverySystem;
         this.#validatedEventDispatcher = validatedEventDispatcher;
-        this.#turnOrderService = turnOrderService;
+        this.#turnManager = turnManager; // Changed from turnOrderService
         // Logger already assigned
 
         // --- Initialize State ---
         this.#isRunning = false;
-        this.#currentTurnEntity = null;
+        this.#currentTurnEntity = null; // Will be updated by TurnManager events
 
         // --- Setup ---
         this.#subscribeToEvents();
@@ -154,10 +153,72 @@ class GameLoop {
      * @private
      */
     #subscribeToEvents() {
+        // Command submission handling
         this.#eventBus.subscribe('command:submit', this.#handleSubmittedCommandFromEvent.bind(this));
         this.#logger.info("GameLoop: Subscribed to 'command:submit' event.");
-        // TODO: Add subscriptions for entity death/removal to update turn order?
+
+        // Turn lifecycle events from TurnManager
+        this.#eventBus.subscribe('turn:actor_changed', this.#handleTurnActorChanged.bind(this));
+        this.#logger.info("GameLoop: Subscribed to 'turn:actor_changed' event.");
+        this.#eventBus.subscribe('turn:manager_stopped', this.#handleTurnManagerStopped.bind(this));
+        this.#logger.info("GameLoop: Subscribed to 'turn:manager_stopped' event.");
+
+        // Consider subscribing to entity lifecycle events (e.g., death) if they need to interact with TurnManager directly.
+        // this.#eventBus.subscribe('entity:died', this.#handleEntityDied.bind(this));
     }
+
+    /**
+     * Handles the 'turn:actor_changed' event from the TurnManager.
+     * Updates the internal `currentTurnEntity` and triggers turn processing logic.
+     * @private
+     * @param {object} eventData - The event payload.
+     * @param {Entity | null} eventData.currentActor - The entity whose turn it is now, or null if none.
+     * @param {Entity | null} eventData.previousActor - The entity whose turn just ended, or null if none.
+     */
+    async #handleTurnActorChanged(eventData) {
+        // Add check for eventData validity
+        const newActor = eventData?.currentActor ?? null;
+        const previousActor = eventData?.previousActor ?? null;
+
+        this.#logger.debug(`GameLoop: Received 'turn:actor_changed'. New Actor: ${newActor?.id ?? 'null'}. Previous: ${previousActor?.id ?? 'null'}`);
+
+        // Update the internal reference
+        this.#currentTurnEntity = newActor;
+        this.#logger.debug(`GameLoop #handleTurnActorChanged: #currentTurnEntity SET to ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
+
+        if (!this.#isRunning) {
+            this.#logger.debug('GameLoop received actor change event, but loop is not running.');
+            return;
+        }
+
+        if (this.#currentTurnEntity) {
+            // Add check before processing
+            if (typeof this.#currentTurnEntity.hasComponent !== 'function') {
+                this.#logger.error(`GameLoop #handleTurnActorChanged: Invalid entity assigned (ID: ${this.#currentTurnEntity?.id}). Cannot process turn.`);
+                // Potentially stop or advance?
+                return;
+            }
+            this.#logger.debug(`GameLoop #handleTurnActorChanged: Processing turn for ${this.#currentTurnEntity.id}`);
+            // Start processing the turn for the new entity
+            await this._processCurrentActorTurn(this.#currentTurnEntity);
+        } else {
+            this.#logger.info('GameLoop: TurnManager reported no current actor (null). Waiting...');
+            this.#inputHandler.disable();
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Waiting..."});
+        }
+    }
+
+    /**
+     * Handles the 'turn:manager_stopped' event from the TurnManager.
+     * Ensures the GameLoop also stops cleanly.
+     * @private
+     * @param {object} eventData - The event payload (content TBD based on TurnManager).
+     */
+    async #handleTurnManagerStopped(eventData) {
+        this.#logger.info("GameLoop: Received 'turn:manager_stopped' event. Initiating GameLoop stop.");
+        await this.stop(); // Ensure GameLoop stops its state/input handling too.
+    }
+
 
     /**
      * Handles commands received via the 'command:submit' event (e.g., from UI input field).
@@ -176,12 +237,12 @@ class GameLoop {
         }
 
         // --- Guard Clause (Turn Context Validation) ---
-        const isPlayerTurn = this.#currentTurnEntity &&
+        const isCorrectPlayersTurn = this.#currentTurnEntity &&
             eventData && // Ensure eventData exists before accessing entityId
             this.#currentTurnEntity.id === eventData.entityId &&
-            this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID);
+            this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID); // Ensure it's specifically a player
 
-        if (!isPlayerTurn) {
+        if (!isCorrectPlayersTurn) {
             const currentTurnId = this.#currentTurnEntity?.id ?? 'None';
             const receivedEntityId = eventData?.entityId ?? 'Unknown';
             this.#logger.warn(`GameLoop received command event for entity ${receivedEntityId}, but it's not that player's turn (Current: ${currentTurnId}). Ignoring.`);
@@ -202,22 +263,20 @@ class GameLoop {
         if (commandString && typeof commandString === 'string' && commandString.trim().length > 0) {
             // If Valid: Delegate processing
             this.#logger.info(`GameLoop: Received command via event: "${commandString}" from ${this.#currentTurnEntity.id}`);
-            // Delegate the core logic (parsing, execution, turn advancement)
+            // Delegate the core logic (parsing, execution, turn advancement via TurnManager)
             await this.processSubmittedCommand(this.#currentTurnEntity, commandString);
         } else {
             // If Invalid: Log, recover, and allow retry
             this.#logger.warn("GameLoop received invalid 'command:submit' event data (missing or empty command string):", eventData);
-            // Rediscover actions and re-prompt the current player to allow them to try again.
-            await this._discoverActionsForEntity(this.#currentTurnEntity); // Uses IActionDiscoverySystem
-            await this.promptInput(); // Uses IInputHandler
+            // Re-prompt the current player to allow them to try again.
+            await this._promptPlayerInput(this.#currentTurnEntity); // Uses helper
         }
     }
 
 
     /**
-     * Starts the main game loop. Sets the running state and initiates the turn processing.
+     * Starts the main game loop. Sets the running state and tells TurnManager to start.
      * Assumes GameInitializer/Engine has already run successfully and dependencies are valid.
-     * The actual first round is initiated by #processNextTurn when it detects the empty queue.
      * @async
      */
     async start() {
@@ -231,149 +290,111 @@ class GameLoop {
         this.#logger.info('GameLoop: Started.');
         await this.#eventBus.dispatch('game:started', {}); // Uses EventBus
 
-        // --- Kick off the turn processing loop ---
-        await this._processNextTurn();
+        // --- Start the Turn Manager ---
+        this.#logger.info('GameLoop: Starting TurnManager...');
+        try {
+            // Uses ITurnManager.start
+            await this.#turnManager.start(); // TurnManager will emit 'turn:actor_changed' to kick things off
+            this.#logger.info('GameLoop: TurnManager started successfully.');
+        } catch (error) {
+            this.#logger.error(`GameLoop: Failed to start TurnManager: ${error.message}`, error);
+            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                text: `Critical Error: Could not start turn management. ${error.message}`,
+                type: 'error'
+            });
+            await this.stop(); // Stop the GameLoop if TurnManager fails to start
+        }
     }
 
 
     /**
-     * Core method to process the next turn or start a new round.
-     * Handles finding actors and starting the round if the queue is empty.
+     * Processes the turn for the currently active actor.
+     * Differentiates between player and AI turns.
      * @private
+     * @param {Entity} actor The entity whose turn it currently is.
      * @async
      */
-    async _processNextTurn() {
-        if (!this.#isRunning) {
-            this.#logger.debug('#processNextTurn called while not running. Exiting.');
+    async _processCurrentActorTurn(actor) {
+        // Add extra check for actor validity at the START
+        if (!actor || typeof actor.hasComponent !== 'function' || typeof actor.id === 'undefined') {
+            this.#logger.error(`_processCurrentActorTurn called with invalid actor: ${actor?.id ?? 'undefined/null'}. Aborting turn process.`);
+            // Try advancing turn to prevent getting stuck
+            try {
+                this.#logger.warn(`_processCurrentActorTurn attempting to advance turn due to invalid actor.`);
+                await this.#turnManager.advanceTurn();
+            } catch (e) {
+                this.#logger.error(`Error advancing turn after detecting invalid actor in _processCurrentActorTurn: ${e.message}`);
+                await this.stop(); // Stop if advancing also fails
+            }
             return;
         }
 
-        this.#logger.debug('GameLoop: #processNextTurn - Checking turn order state...');
-
-        // Check if the current round's queue is empty (handles starting new rounds)
-        // Uses ITurnOrderService.isEmpty
-        if (this.#turnOrderService.isEmpty()) {
-            this.#logger.info('GameLoop: Turn queue is empty. Ending current round and attempting to start a new one.');
-            // Uses EntityManager.activeEntities
-            const allEntities = Array.from(this.#entityManager.activeEntities.values());
-            const actors = allEntities.filter(entity => entity.hasComponent(ACTOR_COMPONENT_ID));
-
-            if (actors.length === 0) {
-                this.#logger.error('GameLoop: Cannot start new round - no entities with ACTOR_COMPONENT_ID found.');
-                // Uses IValidatedEventDispatcher.dispatchValidated
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: 'No active actors remaining. Game Over?',
-                    type: 'error'
-                });
-
-                await this.stop(); // Uses ITurnOrderService.clearCurrentRound, IInputHandler.disable, etc.
-                return; // <<< Added return after stop to prevent further execution
-            }
-
-            this.#logger.info(`GameLoop: Found ${actors.length} actors for the new round: [${actors.map(a => a.id).join(', ')}]`);
-
-            try {
-                const strategy = 'round-robin'; // TODO: Make configurable
-                /** @type {TurnOrderStrategy} */
-                const castStrategy = strategy;
-                // Uses ITurnOrderService.startNewRound
-                this.#turnOrderService.startNewRound(actors, castStrategy);
-                this.#logger.info(`GameLoop: Successfully started new round using "${strategy}" strategy.`);
-                // Recursively call to process the *first* turn of the *new* round
-                await this._processNextTurn();
-                return; // Exit after starting the new round processing
-
-            } catch (error) {
-                this.#logger.error(`GameLoop: Failed to start new round: ${error.message}`, error);
-                // Uses IValidatedEventDispatcher.dispatchValidated
-                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                    text: `Error starting new round: ${error.message}`,
-                    type: 'error'
-                });
-
-                await this.stop();
-                return; // <<< Added return after stop
-            }
+        if (!this.#isRunning) {
+            this.#logger.debug(`_processCurrentActorTurn called for ${actor.id} while not running.`);
+            return;
         }
 
-        // --- If queue is NOT empty, process the next entity's turn ---
-        this.#logger.debug('GameLoop: Turn queue is not empty. Getting next entity...');
-
-        // Uses ITurnOrderService.getNextEntity
-        const nextEntity = this.#turnOrderService.getNextEntity();
-
-        // Handle null/undefined case (e.g., queue contained only lazily removed items)
-        if (!nextEntity) {
-            this.#logger.error('GameLoop: #processNextTurn - TurnOrderService reported not empty, but getNextEntity() returned null. Retrying process.');
-            // Avoid infinite loop possibility by stopping if this happens unexpectedly
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-                text: 'Internal Error: Turn order inconsistency detected.',
-                type: 'error'
-            });
-            await this.stop();
-            // await this._processNextTurn(); // Retry (Original - potentially risky)
-            return; // Exit after initiating the retry or stop
-        }
-
-        // Update #currentTurnEntity
-        this.#currentTurnEntity = nextEntity;
-        const currentEntityId = this.#currentTurnEntity.id;
-
-        // Log turn start
-        this.#logger.info(`GameLoop: >>> Starting turn for Entity: ${currentEntityId} <<<`);
-        await this.#eventBus.dispatch('turn:start', {entityId: currentEntityId}); // Dispatch turn start event
+        const actorId = actor.id;
+        this.#logger.info(`GameLoop: >>> Processing turn for Actor: ${actorId} <<<`);
 
         // --- Player Turn Logic ---
-        if (this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-            this.#logger.debug(`GameLoop: Entity ${currentEntityId} is player-controlled. Preparing for input.`);
-            // Uses IActionDiscoverySystem.getValidActions
-            await this._discoverActionsForEntity(this.#currentTurnEntity);
+        if (actor.hasComponent(PLAYER_COMPONENT_ID)) {
+            this.#logger.debug(`GameLoop: Actor ${actorId} is player-controlled. Preparing for input.`);
+            // Discover actions and prompt input
+            await this._promptPlayerInput(actor);
 
-            // Uses IInputHandler.enable (indirectly via promptInput)
-            await this.promptInput(`Your turn, ${currentEntityId}. Enter command...`);
         } else {
-            // --- AI/NPC Turn Logic (Placeholder Implementation as per Refined Ticket) ---
-            this.#logger.info(`GameLoop: Entity ${currentEntityId} is AI controlled. Triggering AI logic (placeholder)...`);
-            // Uses IActionDiscoverySystem.getValidActions
-            await this._discoverActionsForEntity(this.#currentTurnEntity);
+            // --- AI/NPC Turn Logic ---
+            this.#logger.info(`GameLoop: Actor ${actorId} is AI controlled. Triggering AI logic (placeholder)...`);
+            // Uses IActionDiscoverySystem.getValidActions (even for AI, might inform decisions)
+            const availableActions = await this._discoverActionsForEntity(actor);
 
-            // Placeholder AI Action (No IAiService call)
-            this.#logger.warn(`GameLoop: AI (${currentEntityId}) taking placeholder 'wait' action.`);
+            // Placeholder AI Action (No IAiService call yet)
+            // TODO: Replace with actual AI service call that chooses an action
+            this.#logger.warn(`GameLoop: AI (${actorId}) taking placeholder 'wait' action.`);
+            const aiActionId = 'core:wait';
+            const aiParsedCommand = {actionId: aiActionId, originalInput: '(AI wait)', targets: [], prepositions: {}}; // Simulate parse
 
-            // Simulate ending the AI's turn immediately.
-            const aiActionId = 'core:wait'; // Example placeholder action ID
-            this.#logger.debug(`GameLoop: AI (${currentEntityId}) turn finished with action: ${aiActionId}.`);
-            await this.#eventBus.dispatch('turn:end', {
-                entityId: currentEntityId,
-                actionTaken: aiActionId,
-                success: true
-            }); // Dispatch turn end event for AI
+            // Execute the placeholder action
+            const actionResult = await this.executeAction(actor, aiParsedCommand);
 
-            // AI finishes its turn, immediately process the next turn in the loop.
-            await this._processNextTurn();
+            // AI finishes its turn, tell TurnManager to advance.
+            this.#logger.debug(`GameLoop: AI (${actorId}) turn finished with action: ${aiActionId}. Success: ${actionResult.success}. Advancing turn...`);
+            // Uses ITurnManager.advanceTurn
+            try {
+                await this.#turnManager.advanceTurn(); // Signal TurnManager the AI turn is done
+            } catch (error) {
+                this.#logger.error(`GameLoop: Error occurred when advancing turn after AI action for ${actorId}: ${error.message}`, error);
+                // Potentially stop the loop if advancing fails critically
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                    text: `Critical Error during AI turn advancement: ${error.message}`,
+                    type: 'error'
+                });
+                await this.stop();
+            }
         }
     }
 
+
     /**
-     * Processes a command string submitted by the input handler or event bus *for a specific entity*.
-     * Parses the command, executes the action, handles errors, and then triggers the processing of the next turn.
-     * @param {Entity} actingEntity - The entity performing the command. MUST be `this.#currentTurnEntity`.
+     * Processes a command string submitted by the input handler or event bus *for a specific player entity*.
+     * Parses the command, executes the action, handles errors, and then tells TurnManager to advance the turn.
+     * @param {Entity} actingPlayer - The player entity performing the command. MUST be `this.#currentTurnEntity`.
      * @param {string} command - The raw command string from the input.
      * @async
      */
-    async processSubmittedCommand(actingEntity, command) {
+    async processSubmittedCommand(actingPlayer, command) {
         if (!this.#isRunning) {
             this.#logger.debug('processSubmittedCommand called while not running.');
             return;
         }
 
-        // Verify the call is for the current turn entity (safety check)
-        if (!actingEntity || actingEntity !== this.#currentTurnEntity) {
-            this.#logger.error(`processSubmittedCommand called for ${actingEntity?.id} but current turn is ${this.#currentTurnEntity?.id}. State inconsistency?`);
+        // Verify the call is for the current turn entity (safety check, especially for player)
+        if (!actingPlayer || actingPlayer !== this.#currentTurnEntity || !actingPlayer.hasComponent(PLAYER_COMPONENT_ID)) {
+            this.#logger.error(`processSubmittedCommand called for ${actingPlayer?.id} but current turn is ${this.#currentTurnEntity?.id} or not a player. State inconsistency?`);
             // If it's somehow a player turn but the wrong player sent the command, re-prompt the *correct* player.
             if (this.#currentTurnEntity && this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
-                await this._discoverActionsForEntity(this.#currentTurnEntity); // Uses IActionDiscoverySystem
-                await this.promptInput(); // Uses IInputHandler
+                await this._promptPlayerInput(this.#currentTurnEntity); // Use helper
             }
             // Do not proceed further with the incorrect entity's command.
             return;
@@ -385,7 +406,7 @@ class GameLoop {
         // Uses IValidatedEventDispatcher.dispatchValidated
         await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {message: "Processing..."});
 
-        this.#logger.debug(`Processing command: "${command}" for entity ${actingEntity.id}`);
+        this.#logger.debug(`Processing command: "${command}" for player ${actingPlayer.id}`);
 
         // --- Parse Command ---
         // Uses ICommandParser.parse
@@ -410,8 +431,7 @@ class GameLoop {
             this.#logger.warn(`Command parsing failed for "${command}". Error: ${message || 'No action ID found.'}`);
 
             // Re-discover actions and re-prompt the player - Allow retry within turn
-            await this._discoverActionsForEntity(actingEntity); // Uses IActionDiscoverySystem
-            await this.promptInput(); // Uses IInputHandler
+            await this._promptPlayerInput(actingPlayer); // Use helper
             // **Do not** advance turn here.
             return; // <<< Explicitly return to prevent advancing turn
 
@@ -419,23 +439,28 @@ class GameLoop {
             // --- Execute Valid Command ---
             actionIdTaken = parsedCommand.actionId;
             // Uses IActionExecutor.executeAction (indirectly via executeAction helper)
-            const actionResult = await this.executeAction(actingEntity, parsedCommand);
+            const actionResult = await this.executeAction(actingPlayer, parsedCommand);
             actionExecuted = true; // We attempted execution
             actionSuccess = actionResult?.success ?? false;
-            this.#logger.debug(`Action ${actionIdTaken} completed for ${actingEntity.id}. Success: ${actionSuccess}.`);
+            this.#logger.debug(`Action ${actionIdTaken} completed for ${actingPlayer.id}. Success: ${actionSuccess}.`);
+
+            // --- Player Turn End Logic ---
+            // Only advance if an action was successfully parsed and attempted
+            this.#logger.info(`GameLoop: Player ${actingPlayer.id} completed action ${actionIdTaken}. Advancing turn...`);
+
+            // Uses ITurnManager.advanceTurn
+            try {
+                await this.#turnManager.advanceTurn(); // Signal TurnManager the player's turn is done
+            } catch (error) {
+                this.#logger.error(`GameLoop: Error occurred when advancing turn after player action for ${actingPlayer.id}: ${error.message}`, error);
+                // Potentially stop the loop if advancing fails critically
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+                    text: `Critical Error during player turn advancement: ${error.message}`,
+                    type: 'error'
+                });
+                await this.stop();
+            }
         }
-
-        // --- Turn End Logic ---
-        // Only proceed if an action was actually executed (or attempted after successful parse)
-        this.#logger.info(`GameLoop: <<< Ending turn for Entity: ${actingEntity.id} (Action: ${actionIdTaken ?? 'ParseError'}) >>>`);
-        await this.#eventBus.dispatch('turn:end', { // Uses EventBus
-            entityId: actingEntity.id,
-            actionTaken: actionIdTaken,
-            success: actionSuccess
-        });
-
-        // Advance the turn loop only after a successful parse and action attempt
-        await this._processNextTurn();
     }
 
     /**
@@ -507,6 +532,12 @@ class GameLoop {
                     }]
                 };
             }
+            // Dispatch action result event *before* returning
+            await this.#eventBus.dispatch('action:executed', {
+                actionId: parsedCommand.actionId,
+                entityId: actingEntity.id,
+                result: result // Include the full ActionResult
+            });
             return result;
 
 
@@ -517,25 +548,33 @@ class GameLoop {
                 text: `Error performing action: ${error.message}`,
                 type: 'error'
             });
-            return {
+            const errorResult = {
                 success: false,
                 messages: [{text: `Exception during action execution: ${error.message}`, type: 'internal'}]
             };
+            // Dispatch failure event
+            await this.#eventBus.dispatch('action:executed', {
+                actionId: parsedCommand.actionId,
+                entityId: actingEntity.id,
+                result: errorResult
+            });
+            return errorResult;
         }
     }
 
 
     /**
      * Discovers available actions for a specific entity based on the current state
-     * via ActionDiscoverySystem and dispatches the result via the EventBus.
+     * via ActionDiscoverySystem, dispatches the result via the EventBus, and returns the actions.
      * @private
      * @param {Entity} actingEntity - The entity whose actions are being discovered.
+     * @returns {Promise<Array<ActionDefinition>>} A promise resolving to the array of valid actions.
      * @async
      */
     async _discoverActionsForEntity(actingEntity) {
         if (!this.#isRunning) {
             this.#logger.debug('_discoverActionsForEntity called while not running.');
-            return;
+            return [];
         }
         if (!actingEntity) {
             this.#logger.warn('Cannot discover actions: No valid acting entity provided.');
@@ -545,7 +584,7 @@ class GameLoop {
                 actions: [],
                 entityId: null
             });
-            return;
+            return [];
         }
 
         const entityId = actingEntity.id;
@@ -558,30 +597,25 @@ class GameLoop {
 
             if (!currentLocation) {
                 this.#logger.error(`Cannot discover actions for ${entityId}: Current location for this entity is missing from GameStateManager.`);
-                const payload = {actions: [], entityId: entityId};
-                // Uses IValidatedEventDispatcher.dispatchValidated
-                await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
-                this.#logger.debug(`Dispatched ${'event:update_available_actions'} for ${entityId} with 0 actions (missing location).`);
-                return;
+                validActions = []; // Ensure empty on error
+            } else {
+                /** @type {ActionContext} */
+                const discoveryContext = {
+                    actingEntity: actingEntity,
+                    currentLocation: currentLocation,
+                    entityManager: this.#entityManager, // Passed down
+                    gameDataRepository: this.#gameDataRepository, // Passed down
+                    dispatch: this.#eventBus.dispatch.bind(this.#eventBus), // Passed down
+                    eventBus: this.#eventBus, // Passed down
+                    parsedCommand: undefined, // No parsed command during discovery phase
+                    logger: this.#logger, // Passed down
+                };
+
+                this.#logger.debug(`Calling ActionDiscoverySystem.getValidActions for entity ${entityId}`);
+                // Uses IActionDiscoverySystem.getValidActions
+                validActions = await this.#actionDiscoverySystem.getValidActions(actingEntity, discoveryContext);
+                this.#logger.debug(`ActionDiscoverySystem returned ${validActions.length} valid actions for ${entityId}.`);
             }
-
-            /** @type {ActionContext} */
-            const discoveryContext = {
-                actingEntity: actingEntity,
-                currentLocation: currentLocation,
-                entityManager: this.#entityManager, // Passed down
-                gameDataRepository: this.#gameDataRepository, // Passed down
-                dispatch: this.#eventBus.dispatch.bind(this.#eventBus), // Passed down
-                eventBus: this.#eventBus, // Passed down
-                parsedCommand: undefined, // No parsed command during discovery phase
-                logger: this.#logger, // Passed down
-            };
-
-            this.#logger.debug(`Calling ActionDiscoverySystem.getValidActions for entity ${entityId}`);
-            // Uses IActionDiscoverySystem.getValidActions
-            validActions = await this.#actionDiscoverySystem.getValidActions(actingEntity, discoveryContext);
-            this.#logger.debug(`ActionDiscoverySystem returned ${validActions.length} valid actions for ${entityId}.`);
-
         } catch (error) {
             this.#logger.error(`Error during action discovery for entity ${entityId}:`, error);
             validActions = []; // Ensure empty array on error
@@ -592,6 +626,25 @@ class GameLoop {
             await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', payload);
             this.#logger.debug(`Dispatched ${'event:update_available_actions'} for entity ${entityId} with ${validActions.length} actions.`);
         }
+        return validActions; // Return the discovered actions
+    }
+
+    /**
+     * Helper to discover actions and prompt player input.
+     * @private
+     * @param {Entity} playerEntity The player entity to prompt.
+     * @async
+     */
+    async _promptPlayerInput(playerEntity) {
+        if (!this.#isRunning || !playerEntity || !playerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
+            this.#logger.debug('_promptPlayerInput called inappropriately. Aborting.');
+            return;
+        }
+        // Discover actions first
+        await this._discoverActionsForEntity(playerEntity); // Uses IActionDiscoverySystem
+
+        // Then prompt for input
+        await this.promptInput(`Your turn, ${playerEntity.id}. Enter command...`); // Uses IInputHandler
     }
 
 
@@ -608,7 +661,7 @@ class GameLoop {
             return;
         }
 
-        // Double check it's still the correct player entity's turn before enabling input
+        // Verify it's still the correct player entity's turn before enabling input
         if (!this.#currentTurnEntity || !this.#currentTurnEntity.hasComponent(PLAYER_COMPONENT_ID)) {
             this.#logger.debug(`promptInput called, but it's not a player's turn (Current: ${this.#currentTurnEntity?.id ?? 'None'}). Input remains disabled.`);
             // Ensure input handler is disabled if we reach here unexpectedly
@@ -635,18 +688,32 @@ class GameLoop {
     }
 
     /**
-     * Stops the game loop, disables input handler, clears turn state, and dispatches events for UI updates.
+     * Stops the game loop, tells TurnManager to stop, disables input handler,
+     * resets internal state, and dispatches events for UI updates.
+     * @async
      */
-    async stop() { // Made async to match dispatcher
+    async stop() {
         if (!this.#isRunning) {
             this.#logger.info('GameLoop: Stop called, but already stopped.');
             return;
         }
-        this.#isRunning = false;
+        this.#isRunning = false; // Set internal flag immediately
         const stopMessage = 'Game stopped.';
         this.#logger.info(`GameLoop: Stopping... Message: "${stopMessage}"`);
 
-        // Disable Input Handler
+        // --- Tell TurnManager to stop ---
+        // It should handle its internal state cleanup and potentially emit 'turn:manager_stopped'
+        try {
+            // Uses ITurnManager.stop
+            this.#logger.debug('GameLoop: Calling turnManager.stop().');
+            await this.#turnManager.stop();
+            this.#logger.debug('GameLoop: turnManager.stop() completed.');
+        } catch (error) {
+            this.#logger.error(`GameLoop: Error calling turnManager.stop(): ${error.message}`, error);
+            // Continue stopping GameLoop even if TurnManager fails to stop gracefully
+        }
+
+        // --- Disable Input Handler ---
         // Uses IInputHandler.disable
         this.#inputHandler.disable();
         const disablePayload = {message: stopMessage};
@@ -660,23 +727,8 @@ class GameLoop {
         await this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', messagePayload);
         // -----------------------------------
 
-        // Clear turn order state
-        if (this.#turnOrderService) {
-            // Uses ITurnOrderService.clearCurrentRound (optional method check)
-            if (typeof this.#turnOrderService.clearCurrentRound === 'function') {
-                try {
-                    // Call the method - this should now be caught by the test
-                    this.#turnOrderService.clearCurrentRound();
-                    this.#logger.debug('GameLoop: Cleared current round state in TurnOrderService via clearCurrentRound().');
-                } catch (e) {
-                    this.#logger.error('GameLoop: Error calling turnOrderService.clearCurrentRound() during stop:', e);
-                }
-            } else {
-                this.#logger.warn('GameLoop: TurnOrderService clearCurrentRound method not found. Turn state might persist.');
-            }
-        }
-
         // Reset internal loop state
+        this.#logger.debug(`GameLoop stop: Setting #currentTurnEntity to null. Was: ${this.#currentTurnEntity?.id ?? 'null'}`); // Log before nulling
         this.#currentTurnEntity = null;
 
         // --- FIX 2: Dispatch a general game stopped event ---
@@ -701,7 +753,6 @@ class GameLoop {
      * @param {boolean} value - The desired running state.
      */
     _test_setRunning(value) {
-        // Use optional chaining for logger in case it wasn't fully initialized during early errors
         this.#logger?.debug(`[_test_setRunning]: Setting #isRunning to ${value}`);
         this.#isRunning = value;
     }
@@ -712,9 +763,27 @@ class GameLoop {
      * @param {Entity | null} entity - The entity to set as current.
      */
     _test_setCurrentTurnEntity(entity) {
-        // Use optional chaining for logger
-        this.#logger?.debug(`[_test_setCurrentTurnEntity]: Setting #currentTurnEntity to ${entity?.id ?? null}`);
+        // Add check before assignment
+        if (!entity) {
+            this.#logger?.warn(`[_test_setCurrentTurnEntity]: Attempted to set #currentTurnEntity to null/undefined.`);
+        } else if (typeof entity.id === 'undefined') {
+            this.#logger?.error(`[_test_setCurrentTurnEntity]: Attempted to set #currentTurnEntity with invalid entity (missing ID).`);
+            // Optionally throw an error or just don't set it
+            // return; // Don't set if invalid
+        }
+        this.#logger?.debug(`[_test_setCurrentTurnEntity]: Setting #currentTurnEntity to ${entity?.id ?? 'null'}`);
         this.#currentTurnEntity = entity;
+        this.#logger?.debug(`[_test_setCurrentTurnEntity]: #currentTurnEntity is NOW ${this.#currentTurnEntity?.id ?? 'null'}`); // Log after setting
+    }
+
+    /**
+     * @private // Logically private, but public for test access
+     * @description **FOR TESTING PURPOSES ONLY.** Gets the internal current turn entity.
+     * @returns {Entity | null}
+     */
+    _test_getCurrentTurnEntity() {
+        this.#logger?.debug(`[_test_getCurrentTurnEntity]: Reading #currentTurnEntity (currently ${this.#currentTurnEntity?.id ?? 'null'})`);
+        return this.#currentTurnEntity;
     }
 }
 

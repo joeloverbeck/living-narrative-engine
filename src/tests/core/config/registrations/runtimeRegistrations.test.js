@@ -13,7 +13,7 @@
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../../../core/setup/inputSetupService.js').default} InputSetupService */
-/** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */ // <<< ADDED Import
+/** @typedef {import('../../../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< UPDATED Import to ITurnManager
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -45,17 +45,25 @@ const mockEntityManager = {activeEntities: new Map()}; // Add properties/methods
 const mockGameDataRepository = {};
 const mockActionDiscoverySystem = {getValidActions: jest.fn()}; // Add methods used in GameLoop
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn()}; // Add methods used in GameLoop/InputSetup
-// <<< ADDED Mock for ITurnOrderService >>>
-const createMockTurnOrderService = () => ({
-    isEmpty: jest.fn(),
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn(),
-    clearCurrentRound: jest.fn(), // Add any other methods used by GameLoop
+
+// <<< UPDATED Mock factory function name for clarity >>>
+const createMockTurnManager = () => ({
+    start: jest.fn(),
+    stop: jest.fn(),
+    getCurrentActor: jest.fn(),
+    advanceTurn: jest.fn(),
+    // Add any other methods expected by the ITurnManager interface check in GameLoop constructor
+    // isEmpty: jest.fn(),            // Example if needed from old ITurnOrderService mock
+    // startNewRound: jest.fn(),     // Example if needed
+    // getNextEntity: jest.fn(),     // Example if needed
+    // clearCurrentRound: jest.fn(), // Example if needed
 });
 
 // GameLoop itself is registered here, but InputSetupService depends on it.
 // We'll register the mocked GameLoop instance so InputSetupService factory can resolve it.
 // Note: registerRuntime will overwrite this with the actual factory later in the tests.
+// Create a mock TurnManager instance to pass to the mocked GameLoop constructor
+const mockTurnManagerForGameLoopMock = createMockTurnManager(); // <<< Use updated mock creator
 const mockGameLoopInstance = new GameLoop({ // Pass minimal mocks to satisfy constructor
     logger: mockLogger,
     inputHandler: mockInputHandler,
@@ -67,7 +75,7 @@ const mockGameLoopInstance = new GameLoop({ // Pass minimal mocks to satisfy con
     entityManager: mockEntityManager,
     gameDataRepository: mockGameDataRepository,
     gameStateManager: mockGameStateManager,
-    turnOrderService: createMockTurnOrderService() // Provide the mock service here too
+    turnManager: mockTurnManagerForGameLoopMock // <<< UPDATED Property name to 'turnManager' and pass the specific mock
 });
 
 
@@ -165,14 +173,14 @@ const createMockContainer = () => {
 describe('registerRuntime', () => {
     /** @type {ReturnType<typeof createMockContainer>} */
     let mockContainer;
-    /** @type {ITurnOrderService} */ // <<< ADDED Type hint
-    let mockTurnOrderService; // <<< ADDED Variable
+    /** @type {ITurnManager} */ // <<< UPDATED Type hint to ITurnManager
+    let mockTurnManager; // <<< UPDATED Variable name
 
     beforeEach(() => {
         jest.clearAllMocks(); // Clear mocks defined via jest.mock
 
         mockContainer = createMockContainer();
-        mockTurnOrderService = createMockTurnOrderService(); // <<< ADDED Create mock instance
+        mockTurnManager = createMockTurnManager(); // <<< UPDATED Use updated creator & variable name
 
         // Pre-register MOCKED core/external dependencies required by runtime factories
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
@@ -185,8 +193,8 @@ describe('registerRuntime', () => {
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IActionDiscoverySystem, mockActionDiscoverySystem, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
-        // <<< ADDED Register the missing dependency >>>
-        mockContainer.register(tokens.ITurnOrderService, mockTurnOrderService, {lifecycle: 'singleton'});
+        // <<< CORRECTED Register the dependency using the correct token >>>
+        mockContainer.register(tokens.ITurnManager, mockTurnManager, {lifecycle: 'singleton'});
         // Pre-register the mocked GameLoop instance needed by InputSetupService factory *IF* it were resolved standalone.
         // registerRuntime will overwrite this registration anyway.
         // mockContainer.register(tokens.GameLoop, mockGameLoopInstance, {lifecycle: 'singleton'}); // This might be redundant or potentially confusing, consider removing
@@ -194,7 +202,7 @@ describe('registerRuntime', () => {
 
         // Clear call counts on the mock service functions/constructors
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
-        Object.values(mockTurnOrderService).forEach(fn => fn.mockClear?.()); // <<< ADDED Clear mock calls
+        Object.values(mockTurnManager).forEach(fn => fn.mockClear?.()); // <<< UPDATED Clear mock calls for the correct mock
         GameLoop.mockClear();
         InputSetupService.mockClear();
         // Clear mocks on other registered services if needed
@@ -247,7 +255,7 @@ describe('registerRuntime', () => {
             gameDataRepository: mockGameDataRepository,
             actionDiscoverySystem: mockActionDiscoverySystem,
             validatedEventDispatcher: mockvalidatedEventDispatcher,
-            turnOrderService: mockTurnOrderService, // <<< Check if the mock was passed
+            turnManager: mockTurnManager, // <<< Check if the CORRECT mock was passed
             logger: mockLogger
         }));
     });

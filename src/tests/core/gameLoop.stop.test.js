@@ -47,16 +47,24 @@ const mockvalidatedEventDispatcher = {
     // *** Ensure dispatchValidated returns a promise if awaited ***
     dispatchValidated: jest.fn().mockResolvedValue(undefined),
 };
-const mockTurnOrderService = {
+// *** FIX: Rename and add required methods for ITurnManager interface ***
+const mockTurnManager = {
+    // Required ITurnManager methods
+    start: jest.fn().mockResolvedValue(undefined), // Added method
+    stop: jest.fn().mockResolvedValue(undefined),  // Added method
+    getCurrentActor: jest.fn().mockReturnValue(null), // Added method
+    advanceTurn: jest.fn().mockResolvedValue(undefined), // Added method
+
+    // Existing methods from previous mock (can keep if needed elsewhere, or remove)
     isEmpty: jest.fn().mockReturnValue(true),
     startNewRound: jest.fn(),
     getNextEntity: jest.fn().mockReturnValue(null),
-    clearCurrentRound: jest.fn(),
+    clearCurrentRound: jest.fn(), // Keep if other tests use it, otherwise optional
 };
 // ****************************************
 
 
-// Mock entities for GameStateManager/TurnOrderService
+// Mock entities for GameStateManager/TurnManager
 const mockPlayer = {
     id: 'player1',
     name: 'Tester',
@@ -82,7 +90,8 @@ const createValidOptions = () => ({
     eventBus: mockEventBus,
     actionDiscoverySystem: mockActionDiscoverySystem,
     validatedEventDispatcher: mockvalidatedEventDispatcher,
-    turnOrderService: mockTurnOrderService,
+    // *** FIX: Use correct property name and corrected mock ***
+    turnManager: mockTurnManager,
     logger: mockLogger,
 });
 
@@ -109,8 +118,9 @@ describe('GameLoop', () => {
             messages: [{text: 'Default mock action executed'}]
         });
         mockCommandParser.parse.mockReturnValue({actionId: null, error: 'Default mock parse', originalInput: ''});
-        mockTurnOrderService.isEmpty.mockReturnValue(true);
-        mockTurnOrderService.getNextEntity.mockReturnValue(null);
+        // Reset TurnManager mocks as needed
+        mockTurnManager.getCurrentActor.mockReturnValue(null);
+        mockTurnManager.isEmpty.mockReturnValue(true); // Example reset
         mockEntityManager.activeEntities = new Map();
         mockPlayer.hasComponent.mockImplementation((componentId) => componentId === PLAYER_COMPONENT_ID);
         mockNpc.hasComponent.mockImplementation((componentId) => componentId === ACTOR_COMPONENT_ID);
@@ -118,6 +128,9 @@ describe('GameLoop', () => {
         // *** Reset mock implementations that return promises ***
         mockEventBus.dispatch.mockResolvedValue(undefined);
         mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
+        mockTurnManager.start.mockResolvedValue(undefined); // Reset added mocks if needed
+        mockTurnManager.stop.mockResolvedValue(undefined);
+        mockTurnManager.advanceTurn.mockResolvedValue(undefined);
     });
 
     afterEach(async () => { // Make afterEach async if cleanup involves async operations potentially
@@ -141,7 +154,8 @@ describe('GameLoop', () => {
     // --- stop() Method Tests ---
     describe('stop', () => {
         beforeEach(() => { // No need for async here if setup is sync
-            gameLoop = new GameLoop(createValidOptions());
+            // *** Create GameLoop instance AFTER mocks are fully configured ***
+            gameLoop = new GameLoop(createValidOptions()); // Now this should pass validation
             gameLoop._test_setRunning(true); // Set state AFTER creating instance
 
             // Clear mocks called during setup (like _test_setRunning logger call)
@@ -149,6 +163,11 @@ describe('GameLoop', () => {
             // *** Re-reset mock implementations AFTER clearAllMocks ***
             mockEventBus.dispatch.mockResolvedValue(undefined);
             mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
+            // Re-reset TurnManager mocks if they might have been called during setup/previous tests
+            mockTurnManager.start.mockResolvedValue(undefined);
+            mockTurnManager.stop.mockResolvedValue(undefined);
+            mockTurnManager.getCurrentActor.mockReturnValue(null);
+            mockTurnManager.advanceTurn.mockResolvedValue(undefined);
         });
 
         // --- TEST FIXES BELOW ---
@@ -165,7 +184,7 @@ describe('GameLoop', () => {
 
         it('When Running: should dispatch textUI:disable_input event with message', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
-            // This assertion is okay because it's the first call
+            // This assertion is okay because it's the first call to dispatchValidated in stop()
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('textUI:disable_input', {
                 message: 'Game stopped.',
             });
@@ -174,16 +193,17 @@ describe('GameLoop', () => {
         it('When Running: should dispatch textUI:display_message event with info', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
 
-            // *** FIX: Assert the SECOND call specifically ***
+            // Assert the SECOND call specifically
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'textUI:display_message', expect.objectContaining({
                 text: 'Game stopped.',
                 type: 'info',
             }));
         });
 
-        it('When Running: should call turnOrderService.clearCurrentRound if available', async () => { // Make test async
+        // *** FIX: Update test name and assertion ***
+        it('When Running: should call turnManager.stop', async () => { // Make test async
             await gameLoop.stop(); // Await the async call
-            expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
+            expect(mockTurnManager.stop).toHaveBeenCalledTimes(1); // Assert stop() was called
         });
 
         it('When Running: should dispatch game:stopped event', async () => { // Make test async
@@ -203,6 +223,7 @@ describe('GameLoop', () => {
             // *** Re-reset mock implementations AFTER clearAllMocks ***
             mockEventBus.dispatch.mockResolvedValue(undefined);
             mockvalidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
+            mockTurnManager.stop.mockResolvedValue(undefined); // Important to reset this one
 
             // Act: Call stop again
             await gameLoop.stop(); // *** Await the second call (idempotent) ***
@@ -212,7 +233,8 @@ describe('GameLoop', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('GameLoop: Stop called, but already stopped.');
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
             expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
-            expect(mockTurnOrderService.clearCurrentRound).not.toHaveBeenCalled();
+            // *** FIX: Assert that turnManager.stop was NOT called this time ***
+            expect(mockTurnManager.stop).not.toHaveBeenCalled();
             // Check eventBus.dispatch specifically wasn't called *this time*
             expect(mockEventBus.dispatch).not.toHaveBeenCalled();
         });
