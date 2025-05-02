@@ -266,7 +266,7 @@ describe('registerRuntime', () => {
 
         // --- Pre-register MOCKS for services registered OUTSIDE runtimeRegistrations ---
         // Use the Jest-mocked versions directly where available
-        mockContainer.register(tokens.IGameStateManager, GameStateManagerMock, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IWorldContext, GameStateManagerMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ICommandParser, CommandParserMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IActionExecutor, ActionExecutorMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ICommandProcessor, CommandProcessorMock, {lifecycle: 'singleton'});

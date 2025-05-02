@@ -167,7 +167,7 @@ describe('registerDomainServices', () => {
         mockContainer.register(tokens.PrerequisiteEvaluationService, new PrerequisiteEvaluationService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.PayloadValueResolverService, new PayloadValueResolverService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.ActionValidationService, new ActionValidationService(), {lifecycle: 'singleton'});
-        mockContainer.register(tokens.IGameStateManager, new WorldContext(), {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IWorldContext, new WorldContext(), {lifecycle: 'singleton'});
 
 
         // Clear call counts on the mock service functions/constructors
@@ -203,7 +203,7 @@ describe('registerDomainServices', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationService, expect.any(Function), expect.anything());
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.PayloadValueResolverService, expect.any(Function), expect.anything());
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.IActionExecutor, expect.any(Function), expect.anything());
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IGameStateManager, expect.any(Function), expect.anything());
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IWorldContext, expect.any(Function), expect.anything());
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ICommandParser, expect.any(Function), expect.anything());
     });
 

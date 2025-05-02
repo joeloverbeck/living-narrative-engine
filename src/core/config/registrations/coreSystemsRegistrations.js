@@ -76,7 +76,7 @@ export function registerCoreSystems(container) {
     // --- Systems (Tagged as Initializable only) ---
     // (Registrations for GameRuleSystem, EquipmentEffectSystem, etc. go here as before)
     registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
-        tokens.EventBus, tokens.IGameStateManager, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IWorldContext, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.GameRuleSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
@@ -94,7 +94,7 @@ export function registerCoreSystems(container) {
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.InventorySystem, InventorySystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.IGameStateManager
+        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.IWorldContext
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.InventorySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
@@ -210,7 +210,7 @@ export function registerCoreSystems(container) {
         tokens.IActionDiscoverySystem,      // actionDiscoverySystem
         tokens.IValidatedEventDispatcher,   // validatedEventDispatcher
         tokens.ICommandProcessor,           // commandProcessor
-        tokens.IGameStateManager,           // gameStateManager
+        tokens.IWorldContext,           // gameStateManager
         tokens.EntityManager,               // entityManager
         tokens.GameDataRepository,          // gameDataRepository
     ]);

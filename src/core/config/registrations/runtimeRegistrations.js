@@ -9,7 +9,7 @@ import InputSetupService from "../../setup/inputSetupService.js";
 // --- Import Interfaces for Type Hinting ---
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../appContainer.js').default} AppContainer */
-/** @typedef {import('../../../interfaces/coreServices.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../../../interfaces/coreServices.js').IWorldContext} IGameStateManager */
 // REMOVED: IInputHandler (Not directly used by GameLoop or other registrations here)
 // REMOVED: ICommandParser (Delegated to CommandProcessor)
 // REMOVED: IActionExecutor (Delegated to CommandProcessor via TurnHandlers) // <<< REMOVED

@@ -54,7 +54,7 @@
  * --- Core Interface Tokens ---
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
  * @property {DiToken} IActionExecutor - Token for executing game actions interface.
- * @property {DiToken} IGameStateManager - Token for managing the overall game state interface.
+ * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
  * @property {DiToken} ICommandParser - Token for parsing player commands interface.
  * @property {DiToken} IActionDiscoverySystem - Token for the action discovery system interface.
  * @property {DiToken} IInputHandler - Token for handling player input interface.
@@ -161,7 +161,7 @@ export const tokens = Object.freeze({
     // Core Service Interfaces
     IValidatedEventDispatcher: 'IValidatedEventDispatcher',
     IActionExecutor: 'IActionExecutor',
-    IGameStateManager: 'IGameStateManager',
+    IWorldContext: 'IWorldContext',
     ICommandParser: 'ICommandParser',
     IActionDiscoverySystem: 'IActionDiscoverySystem',
     IInputHandler: 'IInputHandler',

@@ -1,0 +1,10 @@
+{
+  "id": "core:current_actor",
+  "description": "Marker component identifying the entity whose turn it currently is in a turn-based system. Only one entity should have this component at any given time.",
+  "dataSchema": {
+    "type": "object",
+    "description": "This is a marker component and holds no specific data. Its presence indicates the entity is the active participant.",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

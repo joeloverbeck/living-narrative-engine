@@ -67,8 +67,8 @@ export function registerDomainServices(container) {
     log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`); // <<< Added Log
 
     // --- Register GameStateManager against its Interface Token ---
-    r.single(tokens.IGameStateManager, WorldContext, []); // Assuming GameStateManager has no dependencies in constructor
-    log.debug(`Domain-services Registration: Registered ${tokens.IGameStateManager}.`); // <<< Added Log
+    r.single(tokens.IWorldContext, WorldContext, []); // Assuming GameStateManager has no dependencies in constructor
+    log.debug(`Domain-services Registration: Registered ${tokens.IWorldContext}.`); // <<< Added Log
 
     // --- Register CommandParser against its Interface Token using explicit factory function ---
     container.register(tokens.ICommandParser, c => {
@@ -86,7 +86,7 @@ export function registerDomainServices(container) {
             actionExecutor: /** @type {IActionExecutor} */ (c.resolve(tokens.IActionExecutor)),
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
             validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-            gameStateManager: /** @type {IGameStateManager} */ (c.resolve(tokens.IGameStateManager)),
+            gameStateManager: /** @type {IGameStateManager} */ (c.resolve(tokens.IWorldContext)),
             entityManager: /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
             gameDataRepository: /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
         };

@@ -44,7 +44,7 @@ const createMockContainer = () => {
                 if (token === tokens.BlockerSystem) return { /* basic mock */};
                 if (token === tokens.MovementSystem) return { /* basic mock */};
                 if (token === tokens.GameDataRepository) return { /* basic mock */};
-                if (token === tokens.IGameStateManager) return { /* basic mock */};
+                if (token === tokens.IWorldContext) return { /* basic mock */};
                 if (token === tokens.IActionExecutor) return { /* basic mock */};
                 if (token === tokens.ConditionEvaluationService) return { /* basic mock */};
                 if (token === tokens.ItemTargetResolverService) return { /* basic mock */};

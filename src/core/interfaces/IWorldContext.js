@@ -1,31 +1,46 @@
+// src/core/interfaces/IWorldContext.js
+// --- FILE START ---
+
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 /**
  * @interface IWorldContext
- * @description Defines the contract for accessing core, mutable game state information,
- * such as the player entity and their current location. Acts as a central point of access
- * for dynamic world state needed by various systems.
+ * @description Defines the contract for accessing core game state information,
+ * particularly regarding the currently active actor(s) and their context.
+ * This interface provides a viewpoint into the dynamic state of the world.
  */
 export class IWorldContext {
     /**
-     * Retrieves the entity representing the player's current location in the game world.
-     * @function getCurrentLocation
-     * @param {string} [entityId] - Optional: The ID of the entity whose location is needed.
-     * Implementations may vary; some might return a global "player viewpoint" location
-     * if no ID is provided, while others might require the ID.
-     * @returns {Entity | null} The entity instance representing the current location,
-     * or null if the location cannot be determined or is not set.
+     * Retrieves the primary entity currently acting or being focused on (e.g., the player character).
+     * @function getCurrentActor
+     * @returns {Entity | null} The current actor entity instance, or null if none is active or defined.
      */
-    getCurrentLocation(entityId) {
-        throw new Error('IGameStateManager.getCurrentLocation method not implemented.');
+    getCurrentActor() {
+        throw new Error('IWorldContext.getCurrentActor method not implemented.');
     }
 
     /**
-     * Retrieves the entity instance representing the primary player character.
-     * @function getPlayer
-     * @returns {Entity | null} The player entity instance, or null if not set or not applicable.
+     * Retrieves the entity representing the current location relevant to the active context or actor.
+     * @function getCurrentLocation
+     * @returns {Entity | null} The entity instance representing the current location,
+     * or null if the location cannot be determined or is not set.
      */
-    getPlayer() {
-        throw new Error('IGameStateManager.getPlayer method not implemented.');
+    getCurrentLocation() {
+        throw new Error('IWorldContext.getCurrentLocation method not implemented.');
     }
+
+    /**
+     * Retrieves the location entity containing a specific entity instance.
+     * @function getLocationOfEntity
+     * @param {string} entityId - The unique ID of the entity whose location is requested.
+     * @returns {Entity | null} The location entity instance where the specified entity resides,
+     * or null if the entity is not found or has no defined location.
+     */
+    getLocationOfEntity(entityId) {
+        throw new Error('IWorldContext.getLocationOfEntity method not implemented.');
+    }
+
+    // Note: assertSingleCurrentActor? is not included as per ticket conditions (#3 dependency).
 }
+
+// --- FILE END ---

@@ -19,7 +19,7 @@ export function registerInitializers(container) {
         (c) => {
             const dependencies = {
                 entityManager: c.resolve(tokens.EntityManager),
-                gameStateManager: c.resolve(tokens.IGameStateManager),
+                gameStateManager: c.resolve(tokens.IWorldContext),
                 gameDataRepository: c.resolve(tokens.GameDataRepository),
                 validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
                 logger: c.resolve(tokens.ILogger)
@@ -37,7 +37,7 @@ export function registerInitializers(container) {
         (c) => {
             const dependencies = {
                 entityManager: c.resolve(tokens.EntityManager),
-                gameStateManager: c.resolve(tokens.IGameStateManager),
+                gameStateManager: c.resolve(tokens.IWorldContext),
                 gameDataRepository: c.resolve(tokens.GameDataRepository),
                 validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher), // <<< ADDED Ticket 15
                 logger: c.resolve(tokens.ILogger) // <<< ADDED (assuming it needs logger too)
