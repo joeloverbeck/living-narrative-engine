@@ -7,6 +7,8 @@
 import TurnManager from '../../core/turnManager'; // Adjust path as needed
 // Removed unused Entity import: import Entity from '../../entities/entity';
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js'; // Import component IDs
+
 
 // --- Mock Dependencies ---
 const mockLogger = {
@@ -47,6 +49,17 @@ const mockTurnHandlerResolver = {
     resolveHandler: jest.fn(), // <<< CORRECTED METHOD NAME
 };
 
+// Helper to create mock entities
+const createMockEntity = (id, isActor = true, isPlayer = false) => ({
+    id: id,
+    hasComponent: jest.fn((componentId) => {
+        if (componentId === ACTOR_COMPONENT_ID) return isActor;
+        if (componentId === PLAYER_COMPONENT_ID) return isPlayer;
+        return false;
+    }),
+});
+
+
 // --- Test Suite ---
 describe('TurnManager', () => {
     let instance;
@@ -57,7 +70,7 @@ describe('TurnManager', () => {
         // Ensure activeEntities is a fresh Map for each test
         mockEntityManager.activeEntities = new Map();
         // Reset mock states
-        mockTurnOrderService.clearCurrentRound.mockReset();
+        mockTurnOrderService.clearCurrentRound.mockReset().mockResolvedValue(undefined); // Default success
         mockTurnHandlerResolver.resolveHandler.mockReset(); // Reset the correct mock method
         // Default implementation for the mock - adjust if needed per test group
         mockTurnHandlerResolver.resolveHandler.mockResolvedValue(null);
@@ -136,7 +149,8 @@ describe('TurnManager', () => {
             })).toThrow('TurnManager requires a valid EntityManager instance.');
         });
         test('should throw error if logger is invalid', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
             expect(() => new TurnManager({
                 logger: {}, // Invalid
                 turnOrderService: mockTurnOrderService,
@@ -174,7 +188,7 @@ describe('TurnManager', () => {
                 turnOrderService: mockTurnOrderService,
                 dispatcher: mockDispatcher,
                 entityManager: mockEntityManager,
-                turnHandlerResolver: { resolveHandler: "not a function" }, // Invalid: wrong type
+                turnHandlerResolver: {resolveHandler: "not a function"}, // Invalid: wrong type
             })).toThrow(expectedErrorMsgRegex);
         });
     });
@@ -226,6 +240,7 @@ describe('TurnManager', () => {
             // Assert: #currentActor becomes null (verified via getter)
             expect(instance.getCurrentActor()).toBeNull();
             // Assert #isRunning becomes false (verified indirectly by next test or re-start)
+            // We can check #isRunning directly if the test framework allows access, otherwise infer
             expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
             expect(mockLogger.debug).toHaveBeenCalledWith('Turn order service current round cleared.');
@@ -269,6 +284,53 @@ describe('TurnManager', () => {
             mockLogger.info.mockClear(); // Clear before re-start
             await instance.start();
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Should succeed
+        });
+
+        // --- NEW TEST CASE: Stop called mid-turn ---
+        test('stop() called during advanceTurn processing sets state correctly', async () => {
+            // Arrange
+            advanceTurnSpy.mockRestore(); // Use the real advanceTurn for this test
+
+            const actor = createMockEntity('actor-mid-stop', true, false);
+            let handleTurnPromiseResolve;
+            const handleTurnPromise = new Promise(resolve => {
+                handleTurnPromiseResolve = resolve;
+            });
+            const mockHandler = {handleTurn: jest.fn().mockReturnValue(handleTurnPromise)};
+
+            mockTurnOrderService.isEmpty.mockResolvedValue(false);
+            mockTurnOrderService.getNextEntity.mockResolvedValue(actor);
+            mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockHandler);
+            mockTurnOrderService.clearCurrentRound.mockResolvedValue(); // For stop() call
+
+            // Act: Start the manager and trigger advanceTurn, but don't wait for the handler
+            await instance.start(); // Sets #isRunning = true, calls advanceTurn
+
+            // Give advanceTurn a chance to run up to calling the handler
+            await jest.advanceTimersByTimeAsync(10); // Use fake timers if needed, or small real delay
+
+            // Verify advanceTurn has started processing the actor
+            expect(instance.getCurrentActor()).toBe(actor);
+            expect(mockHandler.handleTurn).toHaveBeenCalledWith(actor);
+
+            // Now, call stop() *while* handleTurn is theoretically "processing"
+            await instance.stop();
+
+            // Assert: Check state immediately after stop() completes
+            expect(instance.getCurrentActor()).toBeNull();
+            expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
+            expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
+
+            // Assert that #isRunning is now false by trying to start again
+            mockLogger.warn.mockClear();
+            advanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockResolvedValue(); // Re-spy
+            await instance.start();
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('already running'));
+            expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Should start successfully
+            expect(advanceTurnSpy).toHaveBeenCalled(); // advanceTurn should be called on re-start
+
+            // Clean up the lingering promise if necessary (optional)
+            handleTurnPromiseResolve();
         });
     });
 
