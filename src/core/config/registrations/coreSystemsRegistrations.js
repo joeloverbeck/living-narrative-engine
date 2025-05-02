@@ -14,7 +14,7 @@
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */ // Assuming EventBus type definition exists
-/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Corrected typedef name
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../interfaces/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Assuming type definition exists
 /** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists
@@ -210,7 +210,7 @@ export function registerCoreSystems(container) {
         tokens.IActionDiscoverySystem,      // actionDiscoverySystem
         tokens.IValidatedEventDispatcher,   // validatedEventDispatcher
         tokens.ICommandProcessor,           // commandProcessor
-        tokens.IWorldContext,           // gameStateManager
+        tokens.IWorldContext,               // worldContext (was gameStateManager)
         tokens.EntityManager,               // entityManager
         tokens.GameDataRepository,          // gameDataRepository
     ]);
@@ -220,12 +220,15 @@ export function registerCoreSystems(container) {
     // Register AITurnHandler (Singleton appropriate, constructor takes object)
     // Not tagged SHUTDOWNABLE as it currently has no destroy() method.
     // Use singletonFactory to handle the object constructor parameter.
+    // --- MODIFICATION START (FIX: Add worldContext dependency) ---
     registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
         logger: c.resolve(tokens.ILogger),
         commandProcessor: c.resolve(tokens.ICommandProcessor),
         actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem), // Inject discovery system
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher)
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        worldContext: c.resolve(tokens.IWorldContext) // <<< THIS WAS MISSING
     }));
+    // --- MODIFICATION END ---
     logger.debug(`Core Systems Registration: Registered ${String(tokens.AITurnHandler)} (Singleton).`);
     registrationCount++;
 
@@ -260,4 +263,5 @@ export function registerCoreSystems(container) {
     // Final log message using the incremented counter
     logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
 }
+
 // --- FILE END ---
