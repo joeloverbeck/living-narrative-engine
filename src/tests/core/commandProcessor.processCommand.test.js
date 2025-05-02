@@ -30,12 +30,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -52,10 +52,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext instead of gameStateManager ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -82,10 +81,10 @@ describe('CommandProcessor', () => {
         beforeEach(() => {
             // Reset mocks specifically used within processCommand
             mocks.commandParser.parse.mockClear();
-            // ****** START FIX: Reset worldContext mock ******
-            mocks.worldContext.getCurrentLocation.mockClear();
+            // ****** START #7 Change: Reset new worldContext mock method ******
+            mocks.worldContext.getLocationOfEntity.mockClear();
+            // ****** END #7 Change ******
             mocks.worldContext.getPlayer.mockClear();
-            // ****** END FIX ******
             mocks.actionExecutor.executeAction.mockClear();
             mocks.logger.info.mockClear();
             mocks.logger.debug.mockClear();
@@ -97,9 +96,9 @@ describe('CommandProcessor', () => {
             mockActor = {id: 'player1', name: 'Tester'}; // Simple object with id is enough
             mockLocation = {id: 'room1', name: 'Test Room'}; // Simple object with id
 
-            // ****** START FIX: Use worldContext for mock setup ******
-            mocks.worldContext.getCurrentLocation.mockReturnValue(mockLocation);
-            // ****** END FIX ******
+            // ****** START #7 Change: Mock new location lookup method ******
+            mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
+            // ****** END #7 Change ******
             // Mock VED to return success for simplicity in success path
             mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
         });
@@ -141,16 +140,15 @@ describe('CommandProcessor', () => {
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Attempting to parse command: "${command}"`);
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Parsing complete. Result: ${JSON.stringify(parsedCommand)}`);
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Parsing successful for command "${command}", action ID: ${parsedCommand.actionId}. Proceeding to build context...`);
-            // ****** START FIX: Check worldContext mock call ******
-            // CORRECTED ASSERTION: Check that getCurrentLocation was called once, without arguments.
-            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledTimes(1);
-            // ****** END FIX ******
+            // ****** START #7 Change: Check new worldContext mock call ******
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
+            // ****** END #7 Change ******
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Successfully fetched current location ${mockLocation.id} for actor ${mockActor.id}.`);
             expect(mocks.logger.debug).toHaveBeenCalledWith(expect.stringContaining(`CommandProcessor: ActionContext built successfully`)); // Check substring
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Attempting to execute action ${parsedCommand.actionId} for actor ${mockActor.id}.`);
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledTimes(1);
 
-            // ****** START FIX: Check context passed to executeAction ******
             // Assert executeAction was called with the correct actionId and a valid context object
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledWith(
                 parsedCommand.actionId,
@@ -162,11 +160,9 @@ describe('CommandProcessor', () => {
                     entityManager: mocks.entityManager,
                     dispatch: expect.any(Function),
                     logger: mocks.logger,
-                    // gameStateManager: mocks.gameStateManager, // Removed check
-                    worldContext: mocks.worldContext // Added check
+                    worldContext: mocks.worldContext // Check worldContext is passed
                 })
             );
-            // ****** END FIX ******
 
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Action executor returned result for action ${parsedCommand.actionId}: ${JSON.stringify(actionResult)}`);
             expect(mocks.logger.info).toHaveBeenCalledWith(expect.stringContaining(`CommandProcessor: Action ${parsedCommand.actionId} processed for actor ${mockActor.id}. CommandResult: { success: true, turnEnded: true }`));
@@ -229,9 +225,9 @@ describe('CommandProcessor', () => {
                 error: parsingError // User-facing error from parser
             });
             // Ensure action execution was not attempted
-            // ****** START FIX: Check worldContext mock call ******
-            expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
-            // ****** END FIX ******
+            // ****** START #7 Change: Check new mock method was not called ******
+            expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
         });
 
@@ -350,13 +346,13 @@ describe('CommandProcessor', () => {
         });
 
 
-        // ****** START FIX: Rename test and update mocks ******
-        it('should return failure if worldContext.getCurrentLocation fails', async () => {
+        // ****** START #7 Change: Rename test and update mocks/logic ******
+        it('should return failure if worldContext.getLocationOfEntity fails', async () => {
             const parsedCommand = {actionId: 'core:move', originalInput: command, error: null};
             const locationError = new Error("Database offline");
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
             // Mock the worldContext method to throw
-            mocks.worldContext.getCurrentLocation.mockImplementation(() => {
+            mocks.worldContext.getLocationOfEntity.mockImplementation(() => {
                 throw locationError;
             });
             mocks.validatedEventDispatcher.dispatchValidated.mockClear(); // Clear VED mock
@@ -364,58 +360,58 @@ describe('CommandProcessor', () => {
             const result = await commandProcessor.processCommand(mockActor, command);
 
             const userFacingError = 'Internal error: Could not determine your current location.';
-            const internalErrorMsg = `Failed to get current location for actor ${mockActor.id}: ${locationError.message}`;
+            const internalErrorMsg = `Failed to get current location for actor ${mockActor.id} using getLocationOfEntity: ${locationError.message}`; // Updated message
 
             expect(result).toEqual({
                 success: false,
                 turnEnded: false,
                 error: userFacingError,
-                internalError: expect.stringContaining(internalErrorMsg),
+                internalError: internalErrorMsg, // Use updated message
                 actionResult: undefined,
             });
             expect(mocks.logger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Error fetching current location for actor ${mockActor.id}`),
+                expect.stringContaining(`Error fetching current location for actor ${mockActor.id} using getLocationOfEntity`), // Updated log
                 locationError
             );
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:system_error_occurred', {
                 message: userFacingError,
                 type: 'error',
-                details: expect.stringContaining(internalErrorMsg) // Check details contain the internal message
+                details: internalErrorMsg // Check updated details
             });
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
         });
 
-        it('should return failure if worldContext.getCurrentLocation returns null', async () => {
+        it('should return failure if worldContext.getLocationOfEntity returns null', async () => {
             const parsedCommand = {actionId: 'core:move', originalInput: command, error: null};
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
             // Mock the worldContext method to return null
-            mocks.worldContext.getCurrentLocation.mockReturnValue(null); // Location not found
+            mocks.worldContext.getLocationOfEntity.mockReturnValue(null); // Location not found
             mocks.validatedEventDispatcher.dispatchValidated.mockClear(); // Clear VED mock
 
             const result = await commandProcessor.processCommand(mockActor, command);
 
             const userFacingError = 'Internal error: Your current location is unknown.';
-            const internalErrorMsg = `getCurrentLocation returned null for actor ${mockActor.id}.`;
+            const internalErrorMsg = `getLocationOfEntity returned null for actor ${mockActor.id}.`; // Updated message
 
             expect(result).toEqual({
                 success: false,
                 turnEnded: false,
                 error: userFacingError,
-                internalError: internalErrorMsg,
+                internalError: internalErrorMsg, // Use updated message
                 actionResult: undefined,
             });
-            // Updated log message to reference WorldContext
+            // Updated log message to reference WorldContext and the new method
             expect(mocks.logger.error).toHaveBeenCalledWith(
-                `CommandProcessor: Could not find current location entity for actor ${mockActor.id}. WorldContext returned null.`
+                `CommandProcessor: Could not find current location entity for actor ${mockActor.id}. WorldContext.getLocationOfEntity returned null.`
             );
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:system_error_occurred', {
                 message: userFacingError,
                 type: 'error',
-                details: internalErrorMsg
+                details: internalErrorMsg // Use updated message
             });
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
         });
-        // ****** END FIX ******
+        // ****** END #7 Change ******
 
     }); // End describe('processCommand')
 

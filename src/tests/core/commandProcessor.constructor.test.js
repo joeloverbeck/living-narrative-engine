@@ -30,12 +30,13 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
-    getPlayer: jest.fn(), // Still defining a complete mock for createValidMocks
+    // getCurrentLocation: jest.fn(), // Removed old method
+    getLocationOfEntity: jest.fn(), // Added new method
+    getPlayer: jest.fn(), // Keep other potentially relevant methods
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -52,9 +53,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext ******
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Use the full mock here
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()}, // Ensure new method is mocked
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -126,23 +127,21 @@ describe('CommandProcessor', () => {
             });
         });
 
-        // ****** START FIX: Update test for worldContext ******
-        it('should throw an error if worldContext is null or missing required methods', () => {
-            // CORRECTED: Only test cases the constructor actually validates
+        // ****** START #7 Change: Update test for worldContext validation ******
+        it('should throw an error if worldContext is null or missing getLocationOfEntity method', () => {
+            // Test cases the constructor actually validates
             const invalidOptions = [
                 {worldContext: null}, // Constructor checks for null
-                {worldContext: {}},   // Constructor checks for missing getCurrentLocation
-                {worldContext: {getPlayer: jest.fn() /* missing getCurrentLocation */}} // Also covers missing getCurrentLocation
-                // REMOVED: { worldContext: { getCurrentLocation: jest.fn() /* missing getPlayer */ } }
-                //          because the constructor doesn't validate getPlayer presence.
+                {worldContext: {}},   // Constructor checks for missing getLocationOfEntity
+                {worldContext: {getPlayer: jest.fn() /* missing getLocationOfEntity */}} // Also covers missing method
             ];
             invalidOptions.forEach(opts => {
                 const options = {...createValidMocks(), ...opts}; // Base mocks are valid
                 // Use the specific error message for worldContext validation failure
-                expect(() => new CommandProcessor(options)).toThrow(/IWorldContext instance \(with getCurrentLocation method\)/);
+                expect(() => new CommandProcessor(options)).toThrow(/IWorldContext instance \(with getLocationOfEntity method\)/);
             });
         });
-        // ****** END FIX ******
+        // ****** END #7 Change ******
 
         it('should throw an error if entityManager is null or missing required methods', () => {
             const invalidOptions = [

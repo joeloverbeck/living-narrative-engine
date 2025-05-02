@@ -30,12 +30,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -52,10 +52,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -89,9 +88,9 @@ describe('CommandProcessor', () => {
             mockActor = {id: 'player1', name: 'Tester'}; // Simple object with string id is enough
             mockLocation = {id: 'room1', name: 'Test Room'}; // Simple object with id
 
-            // ****** START FIX: Use worldContext for mock setup ******
-            mocks.worldContext.getCurrentLocation.mockReturnValue(mockLocation);
-            // ****** END FIX ******
+            // ****** START #7 Change: Mock new location lookup method ******
+            mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
+            // ****** END #7 Change ******
             // Mock VED dispatch to resolve successfully by default
             mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
         });
@@ -105,9 +104,9 @@ describe('CommandProcessor', () => {
                 // Clear mocks specifically involved in this test path before each iteration
                 mocks.logger.error.mockClear();
                 mocks.commandParser.parse.mockClear();
-                // ****** START FIX: Clear worldContext mock ******
-                mocks.worldContext.getCurrentLocation.mockClear();
-                // ****** END FIX ******
+                // ****** START #7 Change: Clear new mock method ******
+                mocks.worldContext.getLocationOfEntity.mockClear();
+                // ****** END #7 Change ******
                 mocks.actionExecutor.executeAction.mockClear();
                 mocks.validatedEventDispatcher.dispatchValidated.mockClear();
 
@@ -129,9 +128,9 @@ describe('CommandProcessor', () => {
 
                 // Assert: Check that further processing steps were NOT taken
                 expect(mocks.commandParser.parse).not.toHaveBeenCalled();
-                // ****** START FIX: Check worldContext mock ******
-                expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
-                // ****** END FIX ******
+                // ****** START #7 Change: Check new mock method was not called ******
+                expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+                // ****** END #7 Change ******
                 expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
                 expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // No events dispatched for this internal error
             }
@@ -146,9 +145,9 @@ describe('CommandProcessor', () => {
                 // Clear mocks specifically involved in this test path before each iteration
                 mocks.logger.warn.mockClear();
                 mocks.commandParser.parse.mockClear();
-                // ****** START FIX: Clear worldContext mock ******
-                mocks.worldContext.getCurrentLocation.mockClear();
-                // ****** END FIX ******
+                // ****** START #7 Change: Clear new mock method ******
+                mocks.worldContext.getLocationOfEntity.mockClear();
+                // ****** END #7 Change ******
                 mocks.actionExecutor.executeAction.mockClear();
                 mocks.validatedEventDispatcher.dispatchValidated.mockClear();
                 mocks.logger.error.mockClear(); // Also clear error log
@@ -168,9 +167,9 @@ describe('CommandProcessor', () => {
 
                 // Ensure no further processing happened
                 expect(mocks.commandParser.parse).not.toHaveBeenCalled();
-                // ****** START FIX: Check worldContext mock ******
-                expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
-                // ****** END FIX ******
+                // ****** START #7 Change: Check new mock method was not called ******
+                expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+                // ****** END #7 Change ******
                 expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
                 expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // No events dispatched
                 expect(mocks.logger.error).not.toHaveBeenCalled(); // Ensure no errors logged for these cases

@@ -99,10 +99,12 @@ class CommandProcessor {
             this.#logger.error('CommandProcessor Constructor: Invalid or missing validatedEventDispatcher.');
             throw new Error('CommandProcessor requires a valid IValidatedEventDispatcher instance (with dispatchValidated method).');
         }
-        if (!worldContext || typeof worldContext.getCurrentLocation !== 'function') {
+        // ****** START #7 Change: Validate getLocationOfEntity ******
+        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
             this.#logger.error('CommandProcessor Constructor: Invalid or missing worldContext.');
-            throw new Error('CommandProcessor requires a valid IWorldContext instance (with getCurrentLocation method).');
+            throw new Error('CommandProcessor requires a valid IWorldContext instance (with getLocationOfEntity method).');
         }
+        // ****** END #7 Change ******
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function' || typeof entityManager.addComponent !== 'function') {
             // Add checks for other methods if they become essential during construction or core processing
             this.#logger.error('CommandProcessor Constructor: Invalid or missing entityManager.');
@@ -199,10 +201,14 @@ class CommandProcessor {
             // --- 3. Build Action Context ---
             let currentLocation = null;
             try {
-                currentLocation = this.#worldContext.getCurrentLocation();
+                // ****** START #7 Change: Use getLocationOfEntity ******
+                currentLocation = this.#worldContext.getLocationOfEntity(actorId);
+                // ****** END #7 Change ******
                 if (!currentLocation) {
-                    const internalMsg = `getCurrentLocation returned null for actor ${actorId}.`;
-                    this.#logger.error(`CommandProcessor: Could not find current location entity for actor ${actorId}. WorldContext returned null.`);
+                    // ****** START #7 Change: Update error message ******
+                    const internalMsg = `getLocationOfEntity returned null for actor ${actorId}.`;
+                    this.#logger.error(`CommandProcessor: Could not find current location entity for actor ${actorId}. WorldContext.getLocationOfEntity returned null.`);
+                    // ****** END #7 Change ******
                     const userMsg = 'Internal error: Your current location is unknown.';
                     await this.#dispatchSystemError(userMsg, internalMsg);
                     return {
@@ -215,8 +221,10 @@ class CommandProcessor {
                 }
                 this.#logger.debug(`CommandProcessor: Successfully fetched current location ${currentLocation.id} for actor ${actorId}.`);
             } catch (locationError) {
-                const internalMsg = `Failed to get current location for actor ${actorId}: ${locationError.message}`;
-                this.#logger.error(`CommandProcessor: Error fetching current location for actor ${actorId}. Error: ${locationError.message}`, locationError);
+                // ****** START #7 Change: Update error message ******
+                const internalMsg = `Failed to get current location for actor ${actorId} using getLocationOfEntity: ${locationError.message}`;
+                this.#logger.error(`CommandProcessor: Error fetching current location for actor ${actorId} using getLocationOfEntity. Error: ${locationError.message}`, locationError);
+                // ****** END #7 Change ******
                 const userMsg = 'Internal error: Could not determine your current location.';
                 await this.#dispatchSystemError(userMsg, internalMsg, locationError);
                 return {

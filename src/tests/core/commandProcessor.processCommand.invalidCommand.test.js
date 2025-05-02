@@ -28,10 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -48,7 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Corrected
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -98,7 +102,9 @@ describe('CommandProcessor', () => {
                 // Need to use the mocks object attached to the commandProcessor instance
                 mocks.logger.warn.mockClear();
                 mocks.commandParser.parse.mockClear();
-                mocks.worldContext.getCurrentLocation.mockClear(); // Corrected
+                // ****** START #7 Change: Clear new mock method ******
+                mocks.worldContext.getLocationOfEntity.mockClear();
+                // ****** END #7 Change ******
                 mocks.actionExecutor.executeAction.mockClear();
                 mocks.validatedEventDispatcher.dispatchValidated.mockClear();
                 mocks.logger.info.mockClear();
@@ -114,15 +120,15 @@ describe('CommandProcessor', () => {
 
                 // Assert: Check logger.warn call for the pre-parser failure
                 expect(mocks.logger.warn).toHaveBeenCalledTimes(1);
-                // ****** START FIX: Add period to expected string ******
                 expect(mocks.logger.warn).toHaveBeenCalledWith(
-                    `CommandProcessor.processCommand: Empty or invalid command string provided by actor ${mockActor.id}.` // Added period
+                    `CommandProcessor.processCommand: Empty or invalid command string provided by actor ${mockActor.id}.`
                 );
-                // ****** END FIX ******
 
                 // Assert: Check that further processing steps were NOT taken because validation failed early
                 expect(mocks.commandParser.parse).not.toHaveBeenCalled();
-                expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled(); // Corrected
+                // ****** START #7 Change: Check new mock method was not called ******
+                expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+                // ****** END #7 Change ******
                 expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
                 expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
 

@@ -28,12 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -50,10 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -78,8 +77,10 @@ describe('CommandProcessor', () => {
         mocks.actionExecutor.executeAction.mockClear();
         Object.values(mocks.logger).forEach(fn => fn.mockClear());
         mocks.validatedEventDispatcher.dispatchValidated.mockClear();
-        mocks.worldContext.getCurrentLocation.mockClear(); // Corrected
-        mocks.worldContext.getPlayer.mockClear();          // Corrected
+        // ****** START #7 Change: Clear new mock method ******
+        mocks.worldContext.getLocationOfEntity.mockClear();
+        // ****** END #7 Change ******
+        mocks.worldContext.getPlayer.mockClear();
         mocks.entityManager.getEntityInstance.mockClear();
         mocks.entityManager.addComponent.mockClear();
         mocks.gameDataRepository.getActionDefinition.mockClear();
@@ -153,9 +154,9 @@ describe('CommandProcessor', () => {
 
             // Assert: Check that further processing steps were NOT taken
             // (These happen after parsing, which threw the exception)
-            // ****** START FIX: Check worldContext mock ******
-            expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
-            // ****** END FIX ******
+            // ****** START #7 Change: Check new mock method was not called ******
+            expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
 
             // Assert: Check that logger.warn was not called for this type of failure

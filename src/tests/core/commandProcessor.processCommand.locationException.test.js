@@ -28,12 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -50,10 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -76,7 +75,7 @@ describe('CommandProcessor', () => {
         jest.clearAllMocks(); // Clear all mocks to ensure clean state for this test
         // Re-mock essential defaults if cleared
         mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-        // Note: getCurrentLocation will be mocked specifically within the test case
+        // Note: getLocationOfEntity will be mocked specifically within the test case
     });
 
 
@@ -86,7 +85,8 @@ describe('CommandProcessor', () => {
         // Removed inner beforeEach as clearAllMocks is done in outer beforeEach
 
         // --- Sub-Ticket 4.1.13.6 Test Case ---
-        it('should handle location lookup failure when getCurrentLocation throws an exception', async () => {
+        // ****** START #7 Change: Update test description and logic ******
+        it('should handle location lookup failure when getLocationOfEntity throws an exception', async () => {
             // Arrange: Define test data and configure mocks
             const commandInput = 'move north';
             const parsedCommand = {
@@ -104,26 +104,23 @@ describe('CommandProcessor', () => {
             // Configure parser to return the valid parsed command
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
 
-            // ****** START FIX: Configure worldContext mock to throw ******
             // Configure worldContext to throw an exception during location lookup
-            mocks.worldContext.getCurrentLocation.mockImplementation(() => {
+            mocks.worldContext.getLocationOfEntity.mockImplementation(() => {
                 throw locationError;
             });
-            // ****** END FIX ******
 
             // Act: Call the method under test
             const result = await commandProcessor.processCommand(mockActor, commandInput);
 
-            // Define expected messages
+            // Define expected messages (updated for new method name)
             const userFacingError = 'Internal error: Could not determine your current location.';
-            const internalErrorMsg = `Failed to get current location for actor ${mockActor.id}: ${locationError.message}`;
+            const internalErrorMsg = `Failed to get current location for actor ${mockActor.id} using getLocationOfEntity: ${locationError.message}`;
 
             // Assert: Check the returned CommandResult precisely
             expect(result).toEqual({
                 success: false,
                 turnEnded: false,
                 error: userFacingError,
-                // Check internalError contains the expected message prefix and the error message
                 internalError: internalErrorMsg, // Check exact string now
                 actionResult: undefined
             });
@@ -132,7 +129,7 @@ describe('CommandProcessor', () => {
             expect(mocks.logger.error).toHaveBeenCalledTimes(2);
             // Check the first call (from the catch block in processCommand)
             expect(mocks.logger.error).toHaveBeenNthCalledWith(1,
-                `CommandProcessor: Error fetching current location for actor ${mockActor.id}. Error: ${locationError.message}`, // Check exact string
+                `CommandProcessor: Error fetching current location for actor ${mockActor.id} using getLocationOfEntity. Error: ${locationError.message}`, // Check exact string
                 locationError // Ensure the actual Error object is passed
             );
             // Check the second call (from #dispatchSystemError helper)
@@ -155,10 +152,10 @@ describe('CommandProcessor', () => {
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            // ****** START FIX: Check worldContext mock call ******
-            // CORRECTED ASSERTION: Check that getCurrentLocation was called once, without arguments.
-            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledTimes(1);
-            // ****** END FIX ******
+            // Check worldContext mock call
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
+            // ****** END #7 Change ******
 
             // Assert: Check that logger.warn was not called
             expect(mocks.logger.warn).not.toHaveBeenCalled();

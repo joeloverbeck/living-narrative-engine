@@ -28,12 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename to mockWorldContext ******
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -50,10 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Provide worldContext ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -80,7 +79,9 @@ describe('CommandProcessor', () => {
         mocks.actionExecutor.executeAction.mockClear();
         Object.values(mocks.logger).forEach(fn => fn.mockClear()); // logger methods are functions
         mocks.validatedEventDispatcher.dispatchValidated.mockClear();
-        mocks.worldContext.getCurrentLocation.mockClear(); // Clear worldContext mock
+        // ****** START #7 Change: Clear new mock method ******
+        mocks.worldContext.getLocationOfEntity.mockClear(); // Clear worldContext mock
+        // ****** END #7 Change ******
         mocks.worldContext.getPlayer.mockClear();
         mocks.entityManager.getEntityInstance.mockClear();
         mocks.entityManager.addComponent.mockClear();
@@ -96,10 +97,10 @@ describe('CommandProcessor', () => {
             // Setup mocks specific to this describe block if needed, AFTER outer beforeEach clear
             // Mock VED dispatch to resolve successfully by default
             mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-            // ****** START FIX: Use worldContext for mock setup ******
+            // ****** START #7 Change: Mock new location lookup method ******
             // Mock location lookup to succeed by default for these tests
-            mocks.worldContext.getCurrentLocation.mockReturnValue(mockLocation);
-            // ****** END FIX ******
+            mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
+            // ****** END #7 Change ******
         });
 
         // --- Sub-Ticket 4.1.13.8 Test Case ---
@@ -165,14 +166,13 @@ describe('CommandProcessor', () => {
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            // ****** START FIX: Check worldContext mock call ******
-            // CORRECTED ASSERTION: Check that getCurrentLocation was called, but without specific arguments.
-            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledTimes(1);
-            // ****** END FIX ******
+            // ****** START #7 Change: Check new worldContext mock call ******
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
+            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledTimes(1);
 
-            // ****** START FIX: Check context passed to executeAction ******
-            // Check executeAction arguments
+            // Assert: Check context passed to executeAction
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledWith(
                 parsedCommand.actionId,
                 expect.objectContaining({ // Check the context object structure
@@ -181,13 +181,11 @@ describe('CommandProcessor', () => {
                     parsedCommand: parsedCommand,
                     dispatch: expect.any(Function),
                     logger: mocks.logger,
-                    // gameStateManager: mocks.gameStateManager, // Removed check
-                    worldContext: mocks.worldContext, // Added check
+                    worldContext: mocks.worldContext, // Check worldContext is passed
                     entityManager: mocks.entityManager,
                     gameDataRepository: mocks.gameDataRepository
                 })
             );
-            // ****** END FIX ******
 
             // Assert: Check that logger.warn was not called
             expect(mocks.logger.warn).not.toHaveBeenCalled();

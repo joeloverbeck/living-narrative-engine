@@ -28,13 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-// ****** START FIX: Rename mockGameStateManager to mockWorldContext ******
-// This is the actual dependency needed by CommandProcessor constructor
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
-// ****** END FIX ******
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -51,10 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START FIX: Return worldContext instead of gameStateManager ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
-    // ****** END FIX ******
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -83,7 +81,9 @@ describe('CommandProcessor', () => {
         mocks.commandParser.parse.mockClear();
         mocks.actionExecutor.executeAction.mockClear();
         mocks.validatedEventDispatcher.dispatchValidated.mockClear();
-        mocks.worldContext.getCurrentLocation.mockClear(); // Clear the worldContext mock
+        // ****** START #7 Change: Clear new mock method ******
+        mocks.worldContext.getLocationOfEntity.mockClear(); // Clear the worldContext mock
+        // ****** END #7 Change ******
         mocks.worldContext.getPlayer.mockClear();
     });
 
@@ -95,10 +95,10 @@ describe('CommandProcessor', () => {
             // Configure mocks specific to this describe block if needed
             // Mock VED dispatch to resolve successfully by default
             mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-            // ****** START FIX: Use worldContext for location lookup mock ******
+            // ****** START #7 Change: Mock new location lookup method ******
             // Mock location lookup to succeed by default for these tests
-            mocks.worldContext.getCurrentLocation.mockReturnValue(mockLocation);
-            // ****** END FIX ******
+            mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
+            // ****** END #7 Change ******
         });
 
         // --- Sub-Ticket 4.1.13.7 Test Case ---
@@ -153,21 +153,27 @@ describe('CommandProcessor', () => {
             // Assert: Check that logger.error related to exceptions was NOT called
             expect(mocks.logger.error).not.toHaveBeenCalled();
 
-            // Assert: Check that VED was NOT called *by CommandProcessor* to dispatch an error message for this failure type
-            expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
-                'textUI:display_message', // Assuming this is a UI event not dispatched by core CP
-                expect.objectContaining({type: 'error'}) // Ensure no 'error' type messages were dispatched by CP
+            // Assert: Check that VED *was* called for the core:action_failed event
+            expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+                'core:action_failed',
+                expect.objectContaining({
+                    actorId: mockActor.id,
+                    actionId: parsedCommand.actionId,
+                    error: 'Target dodged!', // Correct error message
+                    isExecutionError: false, // Logical failure
+                    actionResult: actionResult // Include full result
+                })
             );
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            // ****** START FIX: Check worldContext mock call ******
-            // CORRECTED ASSERTION: Check that getCurrentLocation was called once, without arguments.
-            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledTimes(1);
-            // ****** END FIX ******
+            // ****** START #7 Change: Check new worldContext mock call ******
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
+            expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
+            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledTimes(1);
 
-            // ****** START FIX: Check context passed to executeAction ******
+            // Assert: Check context passed to executeAction
             // Check executeAction arguments, ensuring context includes worldContext
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledWith(
                 parsedCommand.actionId,
@@ -179,11 +185,9 @@ describe('CommandProcessor', () => {
                     entityManager: mocks.entityManager,
                     dispatch: expect.any(Function),
                     logger: mocks.logger,
-                    // gameStateManager: mocks.gameStateManager, // Removed check
-                    worldContext: mocks.worldContext, // Added check
+                    worldContext: mocks.worldContext, // Check worldContext is passed
                 })
             );
-            // ****** END FIX ******
 
             // Assert: Check that logger.warn was not called (based on code changes)
             expect(mocks.logger.warn).not.toHaveBeenCalled();

@@ -28,10 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
+// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getCurrentLocation: jest.fn(),
+    getLocationOfEntity: jest.fn(), // New method
     getPlayer: jest.fn(),
 };
+// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -48,7 +50,9 @@ const createValidMocks = () => ({
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Corrected
+    // ****** START #7 Change: Update mock return in helper ******
+    worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
+    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -112,16 +116,13 @@ describe('CommandProcessor', () => {
 
             // Assert: Check logger.warn call
             expect(mocks.logger.warn).toHaveBeenCalledTimes(1);
-            // ****** START FIX: Use commandInput.trim() in log check ******
             // The code logs the *trimmed* command string in this message
             const expectedLogString = `CommandProcessor: Parsing failed for command "${commandInput.trim()}" by actor ${mockActor.id}. Error: ${parsingError}`;
             expect(mocks.logger.warn).toHaveBeenCalledWith(expectedLogString);
-            // ****** END FIX ******
 
 
             // Assert: Check validatedEventDispatcher.dispatchValidated call
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            // ****** START FIX: Use commandInput.trim() in event payload check ******
             // The code dispatches the *trimmed* command string in the event
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'core:command_parse_failed', // Event name
@@ -131,10 +132,11 @@ describe('CommandProcessor', () => {
                     error: parsingError          // User-facing error from parser
                 }
             );
-            // ****** END FIX ******
 
             // Assert: Check that further processing steps were NOT taken
-            expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled(); // Corrected
+            // ****** START #7 Change: Check new mock method was not called ******
+            expect(mocks.worldContext.getLocationOfEntity).not.toHaveBeenCalled();
+            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
 
             // Assert: Check that logger.error was not called for this type of failure
