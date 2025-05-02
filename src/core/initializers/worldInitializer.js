@@ -19,7 +19,7 @@ class WorldInitializer {
     /** @type {EntityManager} */
     #entityManager;
     /** @type {IWorldContext} */
-    #worldContext;
+    #worldContext; // Still injected, might be used elsewhere or later
     /** @type {GameDataRepository} */
     #repository;
     /** @type {ValidatedEventDispatcher} */
@@ -40,13 +40,13 @@ class WorldInitializer {
     constructor({entityManager, worldContext, gameDataRepository, validatedEventDispatcher, logger}) {
         // Simplified validation for brevity, assume checks pass
         if (!entityManager) throw new Error('WorldInitializer requires an EntityManager.');
-        if (!worldContext) throw new Error('WorldInitializer requires a WorldContext.');
+        if (!worldContext) throw new Error('WorldInitializer requires a WorldContext.'); // Keep dependency injection
         if (!gameDataRepository) throw new Error('WorldInitializer requires a GameDataRepository.');
         if (!validatedEventDispatcher) throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
         if (!logger) throw new Error('WorldInitializer requires an ILogger.');
 
         this.#entityManager = entityManager;
-        this.#worldContext = worldContext;
+        this.#worldContext = worldContext; // Assign injected dependency
         this.#repository = gameDataRepository;
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#logger = logger;
@@ -65,18 +65,6 @@ class WorldInitializer {
         this.#logger.info('WorldInitializer: Instantiating initial world entities...');
         let initialEntityCount = 0;
         let blockerEntityCount = 0;
-        const player = this.#worldContext.getPlayer();
-        const startLocation = this.#worldContext.getCurrentLocation();
-
-        if (!player || !startLocation) {
-            const errorMsg = 'WorldInitializer prerequisite failed: Player or starting location not initialized.';
-            this.#logger.error(`WorldInitializer: CRITICAL - ${errorMsg}`);
-            // Dispatch failure event before throwing
-            const failedPayload = {error: errorMsg};
-            this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:failed', failedPayload, {allowSchemaNotFound: true})
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_initializer:failed' (prerequisite) event", e));
-            throw new Error(errorMsg);
-        }
 
         // --- Ticket 16: Dispatch 'started' event ---
         // Replace existing worldinit:started
@@ -98,11 +86,15 @@ class WorldInitializer {
                     continue;
                 }
                 const entityDefId = entityDef.id;
-                if (entityDefId === player.id || entityDefId === startLocation.id) continue;
+                // REMOVED: Check against player/startLocation IDs as WorldInitializer now handles all entities.
+                // if (entityDefId === player.id || entityDefId === startLocation.id) continue;
 
                 // Determine instantiation logic (simplified)
+                // TODO: Refine this logic - should we instantiate *everything* here?
+                // Currently instantiates entities with Position, Connections, or PassageDetails.
+                // This might change based on broader initialization strategy.
                 let shouldInstantiate = false;
-                let reason = 'Default (not player/location)'; // Adjust logic as needed
+                let reason = 'Default Instantiation Logic'; // Adjust logic as needed
                 if (entityDef.components?.Position || entityDef.components?.Connections || entityDef.components?.PassageDetails) {
                     shouldInstantiate = true;
                     reason = entityDef.components.Position ? 'Has Position' :
