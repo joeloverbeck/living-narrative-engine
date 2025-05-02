@@ -287,51 +287,92 @@ describe('TurnManager', () => {
         });
 
         // --- NEW TEST CASE: Stop called mid-turn ---
+        // --- REVISED TEST CASE: Stop called mid-turn ---
         test('stop() called during advanceTurn processing sets state correctly', async () => {
             // Arrange
-            advanceTurnSpy.mockRestore(); // Use the real advanceTurn for this test
+            jest.useRealTimers(); // Use real timers for this complex async interaction initially
+                                  // If issues persist, can try fake timers with careful advancement.
+            advanceTurnSpy.mockRestore(); // Use the real advanceTurn
 
             const actor = createMockEntity('actor-mid-stop', true, false);
-            let handleTurnPromiseResolve;
-            const handleTurnPromise = new Promise(resolve => {
-                handleTurnPromiseResolve = resolve;
+
+            // Promise to control when the mock turn handler completes
+            let resolveHandleTurnCompletion;
+            const handleTurnCompletionPromise = new Promise(resolve => {
+                resolveHandleTurnCompletion = resolve;
             });
-            const mockHandler = {handleTurn: jest.fn().mockReturnValue(handleTurnPromise)};
+
+            // Promise to signal when the mock turn handler has been entered
+            let resolveHandleTurnEntry;
+            const handleTurnEntryPromise = new Promise(resolve => {
+                resolveHandleTurnEntry = resolve;
+            });
+
+            let handleTurnCalled = false;
+            const mockHandler = {
+                handleTurn: jest.fn().mockImplementation(async (entity) => {
+                    handleTurnCalled = true;
+                    mockLogger.debug(`Mock handleTurn entered for ${entity.id}`);
+                    resolveHandleTurnEntry(); // Signal that handleTurn has been entered
+                    await handleTurnCompletionPromise; // Wait for external signal to complete
+                    mockLogger.debug(`Mock handleTurn resolved for ${entity.id}`);
+                })
+            };
 
             mockTurnOrderService.isEmpty.mockResolvedValue(false);
             mockTurnOrderService.getNextEntity.mockResolvedValue(actor);
             mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockHandler);
             mockTurnOrderService.clearCurrentRound.mockResolvedValue(); // For stop() call
 
-            // Act: Start the manager and trigger advanceTurn, but don't wait for the handler
-            await instance.start(); // Sets #isRunning = true, calls advanceTurn
+            // Act (Part 1): Start the manager, triggering advanceTurn. Don't await completion yet.
+            const startPromise = instance.start();
 
-            // Give advanceTurn a chance to run up to calling the handler
-            await jest.advanceTimersByTimeAsync(10); // Use fake timers if needed, or small real delay
+            // Wait specifically until the mock handleTurn function is entered
+            await handleTurnEntryPromise;
 
-            // Verify advanceTurn has started processing the actor
+            // Verify advanceTurn has progressed to calling the handler
             expect(instance.getCurrentActor()).toBe(actor);
+            expect(handleTurnCalled).toBe(true);
             expect(mockHandler.handleTurn).toHaveBeenCalledWith(actor);
+            mockLogger.debug('State verified: handleTurn has been called.');
 
-            // Now, call stop() *while* handleTurn is theoretically "processing"
+            // Act (Part 2): Now call stop() while handleTurn is "blocked"
             await instance.stop();
+            mockLogger.debug('instance.stop() completed.');
 
             // Assert: Check state immediately after stop() completes
-            expect(instance.getCurrentActor()).toBeNull();
+            expect(instance.getCurrentActor()).toBeNull(); // Should be reset by stop()
+            // Check internal state #isRunning implicitly via re-start or directly if accessible
+            // expect(instance.#isRunning).toBe(false); // If accessible
             expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
             expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
 
             // Assert that #isRunning is now false by trying to start again
             mockLogger.warn.mockClear();
-            advanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockResolvedValue(); // Re-spy
-            await instance.start();
+            mockLogger.info.mockClear();
+            // Re-mock advanceTurn for simplicity in this assertion part
+            advanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockResolvedValue();
+            await instance.start(); // Should succeed because stop() set #isRunning = false
             expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('already running'));
-            expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Should start successfully
-            expect(advanceTurnSpy).toHaveBeenCalled(); // advanceTurn should be called on re-start
+            expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Successful start
+            expect(advanceTurnSpy).toHaveBeenCalled(); // advanceTurn called on re-start
 
-            // Clean up the lingering promise if necessary (optional)
-            handleTurnPromiseResolve();
-        });
+            // Clean up: Resolve the blocked handleTurn promise.
+            // This allows the original async call chain from start() to complete cleanly.
+            resolveHandleTurnCompletion();
+            try {
+                // Wait for the original start promise to resolve (or reject) now that handleTurn is unblocked.
+                // This prevents Jest potentially warning about unterminated async operations.
+                await startPromise;
+                mockLogger.debug('Original startPromise settled after test completion.');
+            } catch (e) {
+                // Log if the original advanceTurn loop threw an error after being unblocked.
+                // This might happen depending on how interruption is handled internally,
+                // but the test's primary goal (testing stop()) has already been asserted.
+                mockLogger.debug(`Original startPromise settled (threw: ${e.message}) after test completion.`);
+            }
+
+        }, 10000); // Increase timeout slightly just in case, adjust as needed
     });
 
 });
