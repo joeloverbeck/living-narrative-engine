@@ -26,7 +26,8 @@ import CommandProcessor from "../../commandProcessor.js"; // <<< NEW
 /** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
+/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IWorldContext */
+
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 
 
@@ -66,9 +67,12 @@ export function registerDomainServices(container) {
             tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.IValidatedEventDispatcher]); // Use interface token if available
     log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`); // <<< Added Log
 
-    // --- Register GameStateManager against its Interface Token ---
-    r.single(tokens.IWorldContext, WorldContext, []); // Assuming GameStateManager has no dependencies in constructor
-    log.debug(`Domain-services Registration: Registered ${tokens.IWorldContext}.`); // <<< Added Log
+    // --- Register IWorldContext ---
+    r.singletonFactory(tokens.IWorldContext, c => new WorldContext(
+        /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)), // Resolve EntityManager
+        /** @type {ILogger} */ (c.resolve(tokens.ILogger))             // Resolve ILogger
+    ));
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IWorldContext)}.`);
 
     // --- Register CommandParser against its Interface Token using explicit factory function ---
     container.register(tokens.ICommandParser, c => {
@@ -86,7 +90,7 @@ export function registerDomainServices(container) {
             actionExecutor: /** @type {IActionExecutor} */ (c.resolve(tokens.IActionExecutor)),
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
             validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-            gameStateManager: /** @type {IGameStateManager} */ (c.resolve(tokens.IWorldContext)),
+            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)), // <<< Use correct token & name
             entityManager: /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
             gameDataRepository: /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
         };

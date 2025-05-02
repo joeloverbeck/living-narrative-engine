@@ -1,7 +1,7 @@
 // src/systems/gameRuleSystem.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/worldContext.js').default} GameStateManager */
+/** @typedef {import('../core/worldContext.js').default} IWorldContext */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
@@ -14,7 +14,7 @@
  */
 class GameRuleSystem {
   #eventBus;
-  #gameStateManager;
+  #worldContext;
   #actionExecutor;
   #entityManager;
   /**
@@ -26,21 +26,21 @@ class GameRuleSystem {
      * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
      * @param {object} options Container for dependencies.
      * @param {EventBus} options.eventBus
-     * @param {GameStateManager} options.gameStateManager
+     * @param {IWorldContext} options.worldContext
      * @param {ActionExecutor} options.actionExecutor
      * @param {EntityManager} options.entityManager
      * @param {GameDataRepository} options.gameDataRepository - The game data repository.
      */
-  constructor({eventBus, gameStateManager, actionExecutor, entityManager, gameDataRepository}) { // <-- UPDATED Parameter key
+  constructor({eventBus, worldContext, actionExecutor, entityManager, gameDataRepository}) { // <-- UPDATED Parameter key
     if (!eventBus) throw new Error('GameRuleSystem requires options.eventBus.');
-    if (!gameStateManager) throw new Error('GameRuleSystem requires options.gameStateManager.');
+    if (!worldContext) throw new Error('GameRuleSystem requires options.gameStateManager.');
     if (!actionExecutor) throw new Error('GameRuleSystem requires options.actionExecutor.');
     if (!entityManager) throw new Error('GameRuleSystem requires options.entityManager.');
     // Updated error message to reflect new dependency
     if (!gameDataRepository) throw new Error('GameRuleSystem requires options.gameDataRepository.');
 
     this.#eventBus = eventBus;
-    this.#gameStateManager = gameStateManager;
+    this.#worldContext = worldContext;
     this.#actionExecutor = actionExecutor;
     this.#entityManager = entityManager;
     this.#repository = gameDataRepository; // <-- UPDATED Assignment
@@ -134,7 +134,7 @@ class GameRuleSystem {
      */
   async #handlePlayerMovedLook(eventData) {
     const {entityId, newLocationId} = eventData;
-    const player = this.#gameStateManager.getPlayer();
+    const player = this.#worldContext.getPlayer();
 
     // Only act if the moved entity is the player
     if (!player || entityId !== player.id) {
@@ -156,7 +156,7 @@ class GameRuleSystem {
     }
 
     // Update GameStateManager's current location *before* looking
-    this.#gameStateManager.setCurrentLocation(newLocationEntity);
+    this.#worldContext.setCurrentLocation(newLocationEntity);
     console.log(`GameRuleSystem: Updated GameStateManager's current location to ${newLocationId}.`);
 
     // Trigger Automatic 'Look'

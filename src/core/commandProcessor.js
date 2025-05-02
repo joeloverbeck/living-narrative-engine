@@ -8,7 +8,7 @@
 /** @typedef {import('./interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('./interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
+/** @typedef {import('./interfaces/./IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */
@@ -39,7 +39,7 @@
  * @property {IActionExecutor} actionExecutor
  * @property {ILogger} logger
  * @property {IValidatedEventDispatcher} validatedEventDispatcher
- * @property {IGameStateManager} gameStateManager
+ * @property {IWorldContext} worldContext
  * @property {EntityManager} entityManager
  * @property {GameDataRepository} gameDataRepository
  */
@@ -57,7 +57,7 @@ class CommandProcessor {
     /** @type {IActionExecutor} */ #actionExecutor;
     /** @type {ILogger} */ #logger;
     /** @type {IValidatedEventDispatcher} */ #validatedEventDispatcher;
-    /** @type {IGameStateManager} */ #gameStateManager;
+    /** @type {IWorldContext} */ #worldContext;
     /** @type {EntityManager} */ #entityManager;
     /** @type {GameDataRepository} */ #gameDataRepository;
 
@@ -71,7 +71,7 @@ class CommandProcessor {
             actionExecutor,
             logger,
             validatedEventDispatcher,
-            gameStateManager,
+            worldContext,
             entityManager,
             gameDataRepository
         } = options || {};
@@ -99,9 +99,9 @@ class CommandProcessor {
             this.#logger.error('CommandProcessor Constructor: Invalid or missing validatedEventDispatcher.');
             throw new Error('CommandProcessor requires a valid IValidatedEventDispatcher instance (with dispatchValidated method).');
         }
-        if (!gameStateManager || typeof gameStateManager.getCurrentLocation !== 'function' || typeof gameStateManager.getPlayer !== 'function') {
-            this.#logger.error('CommandProcessor Constructor: Invalid or missing gameStateManager.');
-            throw new Error('CommandProcessor requires a valid IGameStateManager instance (with getCurrentLocation, getPlayer methods).');
+        if (!worldContext || typeof worldContext.getCurrentLocation !== 'function' || typeof worldContext.getPlayer !== 'function') {
+            this.#logger.error('CommandProcessor Constructor: Invalid or missing worldContext.');
+            throw new Error('CommandProcessor requires a valid IWorldContext instance (with getCurrentLocation, getPlayer methods).');
         }
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function' || typeof entityManager.addComponent !== 'function') {
             // Add checks for other methods if they become essential during construction or core processing
@@ -118,7 +118,7 @@ class CommandProcessor {
         this.#commandParser = commandParser;
         this.#actionExecutor = actionExecutor;
         this.#validatedEventDispatcher = validatedEventDispatcher;
-        this.#gameStateManager = gameStateManager;
+        this.#worldContext = worldContext;
         this.#entityManager = entityManager;
         this.#gameDataRepository = gameDataRepository;
 
@@ -204,10 +204,10 @@ class CommandProcessor {
             // --- 3. Build Action Context ---
             let currentLocation = null;
             try {
-                currentLocation = this.#gameStateManager.getCurrentLocation(actorId);
+                currentLocation = this.#worldContext.getCurrentLocation(actorId);
                 if (!currentLocation) {
                     const internalMsg = `getCurrentLocation returned null for actor ${actorId}.`;
-                    this.#logger.error(`CommandProcessor: Could not find current location entity for actor ${actorId}. GameStateManager returned null.`);
+                    this.#logger.error(`CommandProcessor: Could not find current location entity for actor ${actorId}. WorldContext returned null.`);
                     const userMsg = 'Internal error: Your current location is unknown.';
                     await this.#dispatchSystemError(userMsg, internalMsg);
                     return { success: false, turnEnded: false, error: userMsg, internalError: internalMsg, actionResult: undefined };
@@ -231,7 +231,7 @@ class CommandProcessor {
                 entityManager: this.#entityManager,
                 dispatch: this.#validatedEventDispatcher.dispatchValidated.bind(this.#validatedEventDispatcher),
                 logger: this.#logger,
-                gameStateManager: this.#gameStateManager
+                worldContext: this.#worldContext
             };
             this.#logger.debug(`CommandProcessor: ActionContext built successfully for actor ${actorId}: ${JSON.stringify({ actingEntityId: actor.id, currentLocationId: currentLocation.id, actionId: parsedCommand.actionId })}`);
 

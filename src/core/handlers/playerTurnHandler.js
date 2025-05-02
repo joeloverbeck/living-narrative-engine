@@ -9,7 +9,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
+/** @typedef {import('../interfaces/./IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */ // Adjusted path
@@ -37,8 +37,8 @@ class PlayerTurnHandler extends ITurnHandler {
     #validatedEventDispatcher;
     /** @type {ICommandProcessor} */
     #commandProcessor;
-    /** @type {IGameStateManager} */
-    #gameStateManager;
+    /** @type {IWorldContext} */
+    #worldContext;
     /** @type {EntityManager} */
     #entityManager;
     /** @type {GameDataRepository} */
@@ -67,7 +67,7 @@ class PlayerTurnHandler extends ITurnHandler {
      * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem
      * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher
      * @param {ICommandProcessor} dependencies.commandProcessor
-     * @param {IGameStateManager} dependencies.gameStateManager
+     * @param {IWorldContext} dependencies.worldContext
      * @param {EntityManager} dependencies.entityManager
      * @param {GameDataRepository} dependencies.gameDataRepository
      * @throws {Error} If required dependencies are missing or invalid.
@@ -77,7 +77,7 @@ class PlayerTurnHandler extends ITurnHandler {
                     actionDiscoverySystem,
                     validatedEventDispatcher,
                     commandProcessor,
-                    gameStateManager,
+                    worldContext,
                     entityManager,
                     gameDataRepository,
                 }) {
@@ -109,11 +109,11 @@ class PlayerTurnHandler extends ITurnHandler {
         }
         this.#commandProcessor = commandProcessor;
 
-        if (!gameStateManager || typeof gameStateManager.getLocationOfEntity !== 'function' || typeof gameStateManager.getCurrentLocation !== 'function') {
-            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing gameStateManager (requires relevant methods like getLocationOfEntity).');
-            throw new Error('PlayerTurnHandler: Invalid or missing gameStateManager.');
+        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function' || typeof worldContext.getCurrentLocation !== 'function') {
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing worldContext (requires relevant methods like getLocationOfEntity).');
+            throw new Error('PlayerTurnHandler: Invalid or missing worldContext.');
         }
-        this.#gameStateManager = gameStateManager;
+        this.#worldContext = worldContext;
 
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
             this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing entityManager (requires getEntityInstance method).');
@@ -310,7 +310,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
         try {
             // Discover Actions
-            const currentLocation = await this.#gameStateManager.getLocationOfEntity(actor);
+            const currentLocation = await this.#worldContext.getLocationOfEntity(actor);
             if (!currentLocation) {
                 throw new Error(`Could not determine current location for actor ${actorId}`);
             }
@@ -322,7 +322,7 @@ class PlayerTurnHandler extends ITurnHandler {
                 entityManager: this.#entityManager,
                 gameDataRepository: this.#gameDataRepository,
                 logger: this.#logger, // Pass logger for potential use in discovery logic
-                gameStateManager: this.#gameStateManager,
+                worldContext: this.#worldContext,
                 // dispatch: Not typically needed for discovery, handled by CommandProcessor/ActionExecutor
             };
 
@@ -370,7 +370,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
         // --- SEMANTIC EVENT DISPATCH: core:turn_ended ---
         try {
-            await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', { entityId: actorId });
+            await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorId});
             this.#logger.debug(`Dispatched core:turn_ended for ${actorId}.`);
         } catch (dispatchError) {
             this.#logger.error(`PlayerTurnHandler: Failed to dispatch core:turn_ended for ${actorId}: ${dispatchError.message}`, dispatchError);
