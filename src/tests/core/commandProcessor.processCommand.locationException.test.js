@@ -156,7 +156,8 @@ describe('CommandProcessor', () => {
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
             // ****** START FIX: Check worldContext mock call ******
-            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledWith(mockActor.id);
+            // CORRECTED ASSERTION: Check that getCurrentLocation was called once, without arguments.
+            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledTimes(1);
             // ****** END FIX ******
 
             // Assert: Check that logger.warn was not called

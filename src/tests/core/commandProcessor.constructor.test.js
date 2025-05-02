@@ -33,7 +33,7 @@ const mockValidatedEventDispatcher = {
 // ****** START FIX: Rename to mockWorldContext ******
 const mockWorldContext = {
     getCurrentLocation: jest.fn(),
-    getPlayer: jest.fn(),
+    getPlayer: jest.fn(), // Still defining a complete mock for createValidMocks
 };
 // ****** END FIX ******
 
@@ -53,8 +53,7 @@ const createValidMocks = () => ({
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
     // ****** START FIX: Provide worldContext ******
-    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
-    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Use the full mock here
     // ****** END FIX ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
@@ -129,16 +128,18 @@ describe('CommandProcessor', () => {
 
         // ****** START FIX: Update test for worldContext ******
         it('should throw an error if worldContext is null or missing required methods', () => {
+            // CORRECTED: Only test cases the constructor actually validates
             const invalidOptions = [
-                {worldContext: null},
-                {worldContext: {}},
-                {worldContext: {getCurrentLocation: jest.fn() /* missing getPlayer */}},
-                {worldContext: {getPlayer: jest.fn() /* missing getCurrentLocation */}},
+                {worldContext: null}, // Constructor checks for null
+                {worldContext: {}},   // Constructor checks for missing getCurrentLocation
+                {worldContext: {getPlayer: jest.fn() /* missing getCurrentLocation */}} // Also covers missing getCurrentLocation
+                // REMOVED: { worldContext: { getCurrentLocation: jest.fn() /* missing getPlayer */ } }
+                //          because the constructor doesn't validate getPlayer presence.
             ];
             invalidOptions.forEach(opts => {
                 const options = {...createValidMocks(), ...opts}; // Base mocks are valid
-                // Use the specific error message for worldContext
-                expect(() => new CommandProcessor(options)).toThrow(/IWorldContext instance/);
+                // Use the specific error message for worldContext validation failure
+                expect(() => new CommandProcessor(options)).toThrow(/IWorldContext instance \(with getCurrentLocation method\)/);
             });
         });
         // ****** END FIX ******

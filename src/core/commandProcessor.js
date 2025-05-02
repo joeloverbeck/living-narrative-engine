@@ -99,9 +99,9 @@ class CommandProcessor {
             this.#logger.error('CommandProcessor Constructor: Invalid or missing validatedEventDispatcher.');
             throw new Error('CommandProcessor requires a valid IValidatedEventDispatcher instance (with dispatchValidated method).');
         }
-        if (!worldContext || typeof worldContext.getCurrentLocation !== 'function' || typeof worldContext.getPlayer !== 'function') {
+        if (!worldContext || typeof worldContext.getCurrentLocation !== 'function') {
             this.#logger.error('CommandProcessor Constructor: Invalid or missing worldContext.');
-            throw new Error('CommandProcessor requires a valid IWorldContext instance (with getCurrentLocation, getPlayer methods).');
+            throw new Error('CommandProcessor requires a valid IWorldContext instance (with getCurrentLocation method).');
         }
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function' || typeof entityManager.addComponent !== 'function') {
             // Add checks for other methods if they become essential during construction or core processing
@@ -156,11 +156,9 @@ class CommandProcessor {
             this.#logger.warn(`CommandProcessor.processCommand: Empty or invalid command string provided by actor ${actorId}.`);
             // No event for empty command, let handler decide. Return neutral failure.
             return {
-                success: false,
-                turnEnded: false, // Empty command doesn't end the turn
+                success: false, turnEnded: false, // Empty command doesn't end the turn
                 error: undefined, // No specific user error message here
-                internalError: undefined,
-                actionResult: undefined
+                internalError: undefined, actionResult: undefined
             };
         }
 
@@ -184,14 +182,11 @@ class CommandProcessor {
 
                 // --- DISPATCH EVENT: core:command_parse_failed ---
                 await this.#dispatchWithErrorHandling('core:command_parse_failed', {
-                    actorId: actorId,
-                    commandString: commandString,
-                    error: parsingError // User-facing error from parser
+                    actorId: actorId, commandString: commandString, error: parsingError // User-facing error from parser
                 }, 'core:command_parse_failed');
 
                 return {
-                    success: false,
-                    turnEnded: false, // Parsing errors don't end the turn
+                    success: false, turnEnded: false, // Parsing errors don't end the turn
                     error: parsingError, // User-facing error
                     internalError: `Parsing Error: ${parsingError}`, // Internal detail
                     actionResult: undefined
@@ -204,13 +199,19 @@ class CommandProcessor {
             // --- 3. Build Action Context ---
             let currentLocation = null;
             try {
-                currentLocation = this.#worldContext.getCurrentLocation(actorId);
+                currentLocation = this.#worldContext.getCurrentLocation();
                 if (!currentLocation) {
                     const internalMsg = `getCurrentLocation returned null for actor ${actorId}.`;
                     this.#logger.error(`CommandProcessor: Could not find current location entity for actor ${actorId}. WorldContext returned null.`);
                     const userMsg = 'Internal error: Your current location is unknown.';
                     await this.#dispatchSystemError(userMsg, internalMsg);
-                    return { success: false, turnEnded: false, error: userMsg, internalError: internalMsg, actionResult: undefined };
+                    return {
+                        success: false,
+                        turnEnded: false,
+                        error: userMsg,
+                        internalError: internalMsg,
+                        actionResult: undefined
+                    };
                 }
                 this.#logger.debug(`CommandProcessor: Successfully fetched current location ${currentLocation.id} for actor ${actorId}.`);
             } catch (locationError) {
@@ -218,7 +219,13 @@ class CommandProcessor {
                 this.#logger.error(`CommandProcessor: Error fetching current location for actor ${actorId}. Error: ${locationError.message}`, locationError);
                 const userMsg = 'Internal error: Could not determine your current location.';
                 await this.#dispatchSystemError(userMsg, internalMsg, locationError);
-                return { success: false, turnEnded: false, error: userMsg, internalError: internalMsg, actionResult: undefined };
+                return {
+                    success: false,
+                    turnEnded: false,
+                    error: userMsg,
+                    internalError: internalMsg,
+                    actionResult: undefined
+                };
             }
 
 
@@ -233,7 +240,9 @@ class CommandProcessor {
                 logger: this.#logger,
                 worldContext: this.#worldContext
             };
-            this.#logger.debug(`CommandProcessor: ActionContext built successfully for actor ${actorId}: ${JSON.stringify({ actingEntityId: actor.id, currentLocationId: currentLocation.id, actionId: parsedCommand.actionId })}`);
+            this.#logger.debug(`CommandProcessor: ActionContext built successfully for actor ${actorId}: ${JSON.stringify({
+                actingEntityId: actor.id, currentLocationId: currentLocation.id, actionId: parsedCommand.actionId
+            })}`);
 
             // --- 4. Execute Action ---
             try {
@@ -252,7 +261,13 @@ class CommandProcessor {
                         isExecutionError: true,
                         details: internalMsg
                     }, 'core:action_failed');
-                    return { success: false, turnEnded: false, error: userMsg, internalError: internalMsg, actionResult: undefined };
+                    return {
+                        success: false,
+                        turnEnded: false,
+                        error: userMsg,
+                        internalError: internalMsg,
+                        actionResult: undefined
+                    };
                 }
 
                 this.#logger.debug(`CommandProcessor: Action executor returned result for action ${actionId}: ${JSON.stringify(actionResult)}`);
@@ -260,15 +275,18 @@ class CommandProcessor {
                 // --- 5. Process ActionResult & Dispatch Events ---
                 if (actionResult.success) {
                     await this.#dispatchWithErrorHandling('core:action_executed', {
-                        actorId: actorId,
-                        actionId: actionId,
-                        commandString: commandString,
-                        result: actionResult
+                        actorId: actorId, actionId: actionId, commandString: commandString, result: actionResult
                     }, 'core:action_executed');
 
                     const turnEnded = actionResult.endsTurn ?? true;
                     this.#logger.info(`CommandProcessor: Action ${actionId} processed for actor ${actorId}. CommandResult: { success: true, turnEnded: ${turnEnded} }`);
-                    return { success: true, turnEnded: turnEnded, error: null, internalError: null, actionResult: actionResult };
+                    return {
+                        success: true,
+                        turnEnded: turnEnded,
+                        error: null,
+                        internalError: null,
+                        actionResult: actionResult
+                    };
 
                 } else { // actionResult.success is false (Logical failure reported by the action)
                     const failureMsg = actionResult.messages?.find(m => m.type === 'error')?.text || actionResult.messages?.[0]?.text || `Action '${actionId}' failed.`;
@@ -277,10 +295,7 @@ class CommandProcessor {
                     // this.#logger.warn(`CommandProcessor: Action ${actionId} failed logically for actor ${actorId}. Reason: ${failureMsg}`);
 
                     await this.#dispatchWithErrorHandling('core:action_failed', {
-                        actorId: actorId,
-                        actionId: actionId,
-                        commandString: commandString,
-                        error: failureMsg, // User-facing error derived from ActionResult messages
+                        actorId: actorId, actionId: actionId, commandString: commandString, error: failureMsg, // User-facing error derived from ActionResult messages
                         isExecutionError: false, // Logical failure reported by action
                         actionResult: actionResult // Include full result for listeners
                     }, 'core:action_failed');
@@ -361,9 +376,7 @@ class CommandProcessor {
      */
     async #dispatchSystemError(userMessage, internalDetails, originalError = null) {
         const payload = {
-            message: userMessage,
-            type: 'error',
-            details: internalDetails
+            message: userMessage, type: 'error', details: internalDetails
         };
         if (originalError) {
             this.#logger.error(`System Error Context: ${internalDetails}`, originalError);
