@@ -1,7 +1,7 @@
 // src/tests/core/initializers/services/initializationService.test.js
 
 import InitializationService from '../../../../core/initializers/services/initializationService.js';
-import { afterEach, beforeEach, describe, expect, it, jest, test } from "@jest/globals"; // Added afterEach
+import {afterEach, beforeEach, describe, expect, it, jest, test} from "@jest/globals"; // Added afterEach
 
 // --- Mocks ---
 let mockContainer;
@@ -61,8 +61,6 @@ describe('InitializationService', () => {
                         return mockWorldLoader;
                     case 'SystemInitializer':
                         return mockSystemInitializer;
-                    case 'GameStateInitializer':
-                        return mockGameStateInitializer;
                     case 'WorldInitializer':
                         return mockWorldInitializer;
                     case 'InputSetupService':
@@ -105,7 +103,8 @@ describe('InitializationService', () => {
         });
 
         it('should throw an error if container is missing', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            }); // Suppress console.error
             expect(() => new InitializationService({
                 logger: mockLogger,
                 validatedEventDispatcher: mockValidatedEventDispatcher
@@ -115,7 +114,8 @@ describe('InitializationService', () => {
         });
 
         it('should throw an error if logger is missing', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
             expect(() => new InitializationService({
                 container: mockContainer,
                 validatedEventDispatcher: mockValidatedEventDispatcher
@@ -125,8 +125,9 @@ describe('InitializationService', () => {
         });
 
         it('should throw an error if logger is invalid (missing methods)', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-            const invalidLogger = { info: jest.fn() }; // Missing error/debug
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
+            const invalidLogger = {info: jest.fn()}; // Missing error/debug
             expect(() => new InitializationService({
                 container: mockContainer,
                 logger: invalidLogger,
@@ -146,7 +147,7 @@ describe('InitializationService', () => {
         });
 
         it('should throw an error if validatedEventDispatcher is invalid (missing dispatchValidated)', () => {
-            const invalidDispatcher = { dispatch: jest.fn() };
+            const invalidDispatcher = {dispatch: jest.fn()};
             expect(() => new InitializationService({
                 container: mockContainer,
                 logger: mockLogger,
@@ -203,10 +204,10 @@ describe('InitializationService', () => {
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(
                 1, // First call
                 'initialization:initialization_service:started',
-                { worldName: MOCK_WORLD_NAME },
-                { allowSchemaNotFound: true }
+                {worldName: MOCK_WORLD_NAME},
+                {allowSchemaNotFound: true}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:started' event.", { worldName: MOCK_WORLD_NAME });
+            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:started' event.", {worldName: MOCK_WORLD_NAME});
 
 
             // 3. Verify Orchestration (Resolves and Service Calls in Order)
@@ -215,7 +216,6 @@ describe('InitializationService', () => {
             expect(resolveOrder).toEqual([
                 'WorldLoader',
                 'SystemInitializer',
-                'GameStateInitializer',
                 'WorldInitializer',
                 'InputSetupService'
                 // 'GameLoop' // No longer resolved here
@@ -233,11 +233,11 @@ describe('InitializationService', () => {
                 2, // Second call
                 'initialization:initialization_service:completed',
                 // --- CORRECTION: Removed gameLoopInstanceId from payload ---
-                { worldName: MOCK_WORLD_NAME /*, gameLoopInstanceId: MOCK_GAMELOOP_ID */ },
-                { allowSchemaNotFound: true }
+                {worldName: MOCK_WORLD_NAME /*, gameLoopInstanceId: MOCK_GAMELOOP_ID */},
+                {allowSchemaNotFound: true}
             );
             // --- CORRECTION: Updated expected debug log payload ---
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:completed' event.", { worldName: MOCK_WORLD_NAME });
+            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:completed' event.", {worldName: MOCK_WORLD_NAME});
 
 
             // 5. Verify Success Result
@@ -272,8 +272,8 @@ describe('InitializationService', () => {
             // 2. 'started' event was dispatched (should always happen if input is valid)
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'initialization:initialization_service:started',
-                { worldName: MOCK_WORLD_NAME },
-                { allowSchemaNotFound: true }
+                {worldName: MOCK_WORLD_NAME},
+                {allowSchemaNotFound: true}
             );
 
             // 3. 'failed' event was dispatched with correct message and *some* stack
@@ -284,9 +284,9 @@ describe('InitializationService', () => {
                     error: expectedError.message, // Check the message matches
                     stack: expect.any(String)    // Stack exists, but don't match exactly
                 },
-                { allowSchemaNotFound: true }
+                {allowSchemaNotFound: true}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:failed' event.", expect.objectContaining({ error: expectedError.message }));
+            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:failed' event.", expect.objectContaining({error: expectedError.message}));
 
             // 4. UI events dispatched with correct structure and message
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
@@ -299,7 +299,7 @@ describe('InitializationService', () => {
             );
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'ui:disable_input',
-                { message: 'Fatal error during initialization. Cannot continue.' }
+                {message: 'Fatal error during initialization. Cannot continue.'}
             );
             expect(mockLogger.info).toHaveBeenCalledWith('InitializationService: Dispatched ui:show_fatal_error and ui:disable_input events.');
 
@@ -351,17 +351,6 @@ describe('InitializationService', () => {
             expect(mockGameStateInitializer.setupInitialState).not.toHaveBeenCalled();
         });
 
-        it('should handle failure when GameStateInitializer resolve fails', async () => {
-            const error = new Error('Failed to resolve GameStateInitializer');
-            await testFailure(() => mockContainer.resolve.mockImplementation((token) => {
-                if (token === 'GameStateInitializer') throw error;
-                return originalContainerResolve(token);
-            }), error);
-            expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
-            expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-            expect(mockGameStateInitializer.setupInitialState).not.toHaveBeenCalled();
-        });
-
         it('should handle failure when gameStateInitializer.setupInitialState returns false', async () => {
             const expectedError = new Error('Initial game state setup failed via GameStateInitializer.');
             await testFailure(() => mockGameStateInitializer.setupInitialState.mockResolvedValue(false), expectedError);
@@ -394,7 +383,9 @@ describe('InitializationService', () => {
 
         it('should handle failure when worldInitializer.initializeWorldEntities throws', async () => {
             const error = new Error('World entity init critical failure');
-            await testFailure(() => mockWorldInitializer.initializeWorldEntities.mockImplementation(() => { throw error; }), error);
+            await testFailure(() => mockWorldInitializer.initializeWorldEntities.mockImplementation(() => {
+                throw error;
+            }), error);
             expect(mockInputSetupService.configureInputHandler).not.toHaveBeenCalled();
         });
 
@@ -414,7 +405,9 @@ describe('InitializationService', () => {
 
         it('should handle failure when inputSetupService.configureInputHandler throws', async () => {
             const error = new Error('Input setup failed');
-            await testFailure(() => mockInputSetupService.configureInputHandler.mockImplementation(() => { throw error; }), error);
+            await testFailure(() => mockInputSetupService.configureInputHandler.mockImplementation(() => {
+                throw error;
+            }), error);
             // Check that GameLoop wasn't attempted (even though the step is removed, good sanity check)
             const resolveCalls = mockContainer.resolve.mock.calls.map(call => call[0]);
             expect(resolveCalls).not.toContain('GameLoop');

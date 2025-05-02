@@ -143,7 +143,6 @@ describe('GameEngine start() - Success Path (Initialization Delegated)', () => {
 
         // --- Check against unexpected resolutions ---
         expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('WorldLoader');
-        expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('GameStateInitializer');
         expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('WorldInitializer');
         expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('SystemInitializer');
         expect(mockAppContainer.resolve).not.toHaveBeenCalledWith('InputSetupService');

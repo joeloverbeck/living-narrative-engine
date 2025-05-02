@@ -145,7 +145,6 @@ export const tokens = Object.freeze({
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
     PayloadValueResolverService: 'PayloadValueResolverService',
-    GameStateInitializer: 'GameStateInitializer',
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
     InitializationService: 'InitializationService',

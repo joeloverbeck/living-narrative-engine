@@ -21,12 +21,10 @@ import {INITIALIZABLE} from "../../../../core/config/tags.js";
 import {tokens} from '../../../../core/config/tokens.js';
 
 // --- MOCK the Modules (Classes being registered) ---
-jest.mock('../../../../core/initializers/gameStateInitializer.js');
 jest.mock('../../../../core/initializers/worldInitializer.js');
 jest.mock('../../../../core/initializers/systemInitializer.js');
 
 // --- Import AFTER mocking ---
-import GameStateInitializer from '../../../../core/initializers/gameStateInitializer.js';
 import WorldInitializer from '../../../../core/initializers/worldInitializer.js';
 import SystemInitializer from '../../../../core/initializers/systemInitializer.js';
 
@@ -160,23 +158,6 @@ describe('registerInitializers', () => {
             expect.any(Function),
             expect.anything() // Not tagged explicitly in the test check
         );
-    });
-
-    it('resolving GameStateInitializer does not throw', () => {
-        // Arrange: Register dependencies and then the initializers
-        registerInitializers(mockContainer);
-
-        // Act & Assert: Try resolving a key service
-        let resolvedService;
-        expect(() => {
-            resolvedService = mockContainer.resolve(tokens.GameStateInitializer);
-        }).not.toThrow();
-
-        // Assert: Check if something was actually resolved
-        expect(resolvedService).toBeDefined();
-
-        // Assert: Check that the MOCK GameStateInitializer constructor was called
-        expect(GameStateInitializer).toHaveBeenCalled();
     });
 
     it('resolving WorldInitializer does not throw', () => {

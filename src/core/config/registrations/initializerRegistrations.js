@@ -1,7 +1,6 @@
 // src/core/config/registrations/initializerRegistrations.js
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
-import GameStateInitializer from '../../initializers/gameStateInitializer.js';
 import WorldInitializer from '../../initializers/worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';
 // Import the necessary tag constant (Task 2: Verified, already present)
@@ -11,24 +10,6 @@ import {INITIALIZABLE} from "../tags.js";
 export function registerInitializers(container) {
     const r = new Registrar(container);
     const log = container.resolve(tokens.ILogger); // For logging within this function
-
-    // --- GameStateInitializer ---
-    // Already correctly registered with a dependency object constructor
-    r.singletonFactory(
-        tokens.GameStateInitializer,
-        (c) => {
-            const dependencies = {
-                entityManager: c.resolve(tokens.EntityManager),
-                worldContext: c.resolve(tokens.IWorldContext),
-                gameDataRepository: c.resolve(tokens.GameDataRepository),
-                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-                logger: c.resolve(tokens.ILogger)
-            };
-            return new GameStateInitializer(dependencies);
-        }
-    );
-    log.debug(`Initializer Registration: Registered ${tokens.GameStateInitializer}.`);
-
 
     // --- WorldInitializer (Ticket 15) ---
     // Updated to use factory for object dependency constructor

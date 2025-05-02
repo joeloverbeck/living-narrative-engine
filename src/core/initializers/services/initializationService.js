@@ -62,7 +62,7 @@ class InitializationService {
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
      * @throws {Error} If any required dependency is missing or invalid.
      */
-    constructor({ container, logger, validatedEventDispatcher }) {
+    constructor({container, logger, validatedEventDispatcher}) {
         // --- Dependency Validation ---
         if (!container) {
             const errorMsg = 'InitializationService: Missing required dependency \'container\'.';
@@ -75,7 +75,8 @@ class InitializationService {
             if (container) {
                 try {
                     container.resolve('ILogger')?.error(errorMsg);
-                } catch (e) { /* Ignore resolve error */ }
+                } catch (e) { /* Ignore resolve error */
+                }
             }
             throw new Error(errorMsg);
         }
@@ -107,12 +108,12 @@ class InitializationService {
         if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
             const error = new Error('InitializationService requires a valid non-empty worldName.');
             this.#logger.error(error.message);
-            return { success: false, error: error };
+            return {success: false, error: error};
         }
 
         // --- Ticket 16: Dispatch 'started' event ---
-        const startPayload = { worldName };
-        this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:started', startPayload, { allowSchemaNotFound: true })
+        const startPayload = {worldName};
+        this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:started', startPayload, {allowSchemaNotFound: true})
             .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:started' event.", startPayload))
             .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:started' event", e));
         // --- End Ticket 16 ---
@@ -133,16 +134,6 @@ class InitializationService {
             this.#logger.info('SystemInitializer resolved. Initializing tagged systems...');
             await systemInitializer.initializeAll();
             this.#logger.info('InitializationService: Tagged system initialization complete.');
-
-            // --- 3. Setup Initial Game State ---
-            this.#logger.debug('Resolving GameStateInitializer...');
-            const gameStateInitializer = /** @type {GameStateInitializer} */ (this.#container.resolve('GameStateInitializer'));
-            this.#logger.info('GameStateInitializer resolved. Setting up initial game state...');
-            const setupSuccess = await gameStateInitializer.setupInitialState();
-            if (!setupSuccess) {
-                throw new Error('Initial game state setup failed via GameStateInitializer.');
-            }
-            this.#logger.info('InitializationService: Initial game state setup completed.');
 
             // --- 4. Instantiate Initial World Entities & Build Spatial Index ---
             this.#logger.debug('Resolving WorldInitializer...');
@@ -173,8 +164,8 @@ class InitializationService {
 
             // --- Ticket 16: Dispatch 'completed' event ---
             // Payload no longer includes gameLoopInstanceId
-            const completedPayload = { worldName }; // <<< MODIFIED PAYLOAD
-            this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:completed', completedPayload, { allowSchemaNotFound: true })
+            const completedPayload = {worldName}; // <<< MODIFIED PAYLOAD
+            this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:completed', completedPayload, {allowSchemaNotFound: true})
                 .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:completed' event.", completedPayload))
                 .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:completed' event", e));
             // --- End Ticket 16 ---
@@ -188,8 +179,8 @@ class InitializationService {
             this.#logger.error(`InitializationService: CRITICAL ERROR during initialization sequence for world '${worldName}':`, error);
 
             // --- Ticket 16: Dispatch 'failed' event ---
-            const failedPayload = { worldName, error: error?.message || 'Unknown error', stack: error?.stack };
-            this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:failed', failedPayload, { allowSchemaNotFound: true })
+            const failedPayload = {worldName, error: error?.message || 'Unknown error', stack: error?.stack};
+            this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:failed', failedPayload, {allowSchemaNotFound: true})
                 .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:failed' event.", failedPayload))
                 .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:failed' event", e));
             // --- End Ticket 16 ---
