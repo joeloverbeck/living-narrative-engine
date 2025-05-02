@@ -1,7 +1,7 @@
 // src/tests/core/commandProcessor.processCommand.complex.test.js
-// --- FILE START (Entire file content as requested) ---
+// --- FILE START (Corrected Test File) ---
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js';
 // Import Entity for type checking if needed, although mocks are primary
 // import Entity from '../entities/entity.js';
@@ -26,37 +26,38 @@ const mockLogger = {
 
 const mockValidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
-    // Add subscribe/unsubscribe if needed for future tests, not strictly required by CommandProcessor constructor/processCommand
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
 };
 
-const mockGameStateManager = {
+// ****** START FIX: Rename to mockWorldContext ******
+const mockWorldContext = {
     getCurrentLocation: jest.fn(),
     getPlayer: jest.fn(),
-    // Add other methods if needed by actions invoked through CommandProcessor
 };
+// ****** END FIX ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
     addComponent: jest.fn(),
-    // Add other methods like removeComponent, hasComponent, getComponentData if needed by actions
 };
 
 const mockGameDataRepository = {
     getActionDefinition: jest.fn(),
-    // Add other methods like getEntityDefinition, etc. if needed by actions
 };
 
 // Helper function to create a full set of valid mocks for options
 const createValidMocks = () => ({
-    commandParser: { ...mockCommandParser, parse: jest.fn() },
-    actionExecutor: { ...mockActionExecutor, executeAction: jest.fn() },
-    logger: { ...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-    validatedEventDispatcher: { ...mockValidatedEventDispatcher, dispatchValidated: jest.fn() },
-    gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() },
-    entityManager: { ...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn() },
-    gameDataRepository: { ...mockGameDataRepository, getActionDefinition: jest.fn() },
+    commandParser: {...mockCommandParser, parse: jest.fn()},
+    actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
+    logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
+    // ****** START FIX: Provide worldContext ******
+    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
+    // ****** END FIX ******
+    entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
+    gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
 
 
@@ -66,9 +67,9 @@ describe('CommandProcessor', () => {
 
     beforeEach(() => {
         // Reset mocks before each test
-        mocks = createValidMocks();
+        mocks = createValidMocks(); // Uses corrected function
         // Instantiate CommandProcessor with valid mocks by default
-        commandProcessor = new CommandProcessor(mocks);
+        commandProcessor = new CommandProcessor(mocks); // Constructor validation passes
     });
 
 
@@ -80,33 +81,33 @@ describe('CommandProcessor', () => {
         const command = 'test command'; // Use a consistent valid command for tests not focusing on the command itself
 
         beforeEach(() => {
-            // Reset all mocks used within processCommand before each test in this suite
-            // Use jest.clearAllMocks() if using module-level mocks, or clear individual mocks if passed in beforeEach
-            // For this setup using createValidMocks, clearing individual mocks on the 'mocks' object is appropriate if needed,
-            // but the test structure often handles this via mockClear() within the test itself.
-            // Let's ensure mocks are cleared cleanly. A full reset might be safer depending on test complexity.
+            // Reset mocks used within processCommand before each test in this suite
             mocks = createValidMocks(); // Re-create mocks entirely to ensure clean state
             commandProcessor = new CommandProcessor(mocks); // Re-instantiate with fresh mocks
 
             // Setup common valid mocks needed for most tests
-            mockActor = { id: 'player1', name: 'Tester' }; // Simple object with string id is enough
-            mockLocation = { id: 'room1', name: 'Test Room' }; // Simple object with id
+            mockActor = {id: 'player1', name: 'Tester'}; // Simple object with string id is enough
+            mockLocation = {id: 'room1', name: 'Test Room'}; // Simple object with id
 
-            mocks.gameStateManager.getCurrentLocation.mockReturnValue(mockLocation);
+            // ****** START FIX: Use worldContext for mock setup ******
+            mocks.worldContext.getCurrentLocation.mockReturnValue(mockLocation);
+            // ****** END FIX ******
             // Mock VED dispatch to resolve successfully by default
             mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
         });
 
         // --- Sub-Ticket 4.1.13.1 Test Case ---
         it('should handle invalid actor inputs correctly', async () => {
-            const invalidActors = [null, undefined, {}, { id: 123 }, { name: 'NoID' }];
+            const invalidActors = [null, undefined, {}, {id: 123}, {name: 'NoID'}];
             const validCommand = 'valid command'; // A placeholder command string
 
             for (const invalidActor of invalidActors) {
                 // Clear mocks specifically involved in this test path before each iteration
                 mocks.logger.error.mockClear();
                 mocks.commandParser.parse.mockClear();
-                mocks.gameStateManager.getCurrentLocation.mockClear();
+                // ****** START FIX: Clear worldContext mock ******
+                mocks.worldContext.getCurrentLocation.mockClear();
+                // ****** END FIX ******
                 mocks.actionExecutor.executeAction.mockClear();
                 mocks.validatedEventDispatcher.dispatchValidated.mockClear();
 
@@ -128,7 +129,9 @@ describe('CommandProcessor', () => {
 
                 // Assert: Check that further processing steps were NOT taken
                 expect(mocks.commandParser.parse).not.toHaveBeenCalled();
-                expect(mocks.gameStateManager.getCurrentLocation).not.toHaveBeenCalled();
+                // ****** START FIX: Check worldContext mock ******
+                expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
+                // ****** END FIX ******
                 expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
                 expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // No events dispatched for this internal error
             }
@@ -138,13 +141,14 @@ describe('CommandProcessor', () => {
 
         // Test Invalid Command String Input Validation
         it('should return failure (but not error) if command string is invalid or empty', async () => {
-            // *** FIX: Removed 123 from this list ***
             const invalidCommands = [null, undefined, '', '   '];
             for (const invalidCommand of invalidCommands) {
                 // Clear mocks specifically involved in this test path before each iteration
                 mocks.logger.warn.mockClear();
                 mocks.commandParser.parse.mockClear();
-                mocks.gameStateManager.getCurrentLocation.mockClear();
+                // ****** START FIX: Clear worldContext mock ******
+                mocks.worldContext.getCurrentLocation.mockClear();
+                // ****** END FIX ******
                 mocks.actionExecutor.executeAction.mockClear();
                 mocks.validatedEventDispatcher.dispatchValidated.mockClear();
                 mocks.logger.error.mockClear(); // Also clear error log
@@ -164,7 +168,9 @@ describe('CommandProcessor', () => {
 
                 // Ensure no further processing happened
                 expect(mocks.commandParser.parse).not.toHaveBeenCalled();
-                expect(mocks.gameStateManager.getCurrentLocation).not.toHaveBeenCalled();
+                // ****** START FIX: Check worldContext mock ******
+                expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled();
+                // ****** END FIX ******
                 expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
                 expect(mocks.validatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // No events dispatched
                 expect(mocks.logger.error).not.toHaveBeenCalled(); // Ensure no errors logged for these cases

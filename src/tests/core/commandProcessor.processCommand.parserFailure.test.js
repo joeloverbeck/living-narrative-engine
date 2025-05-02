@@ -1,7 +1,7 @@
 // src/tests/core/commandProcessor.processCommand.parserFailure.test.js
-// --- FILE START (Entire file content as requested) ---
+// --- FILE START (Corrected Test File) ---
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js';
 
 // --- Mock Dependencies ---
@@ -28,7 +28,7 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-const mockGameStateManager = {
+const mockWorldContext = {
     getCurrentLocation: jest.fn(),
     getPlayer: jest.fn(),
 };
@@ -44,13 +44,13 @@ const mockGameDataRepository = {
 
 // Helper function to create a full set of valid mocks for options
 const createValidMocks = () => ({
-    commandParser: { ...mockCommandParser, parse: jest.fn() },
-    actionExecutor: { ...mockActionExecutor, executeAction: jest.fn() },
-    logger: { ...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-    validatedEventDispatcher: { ...mockValidatedEventDispatcher, dispatchValidated: jest.fn() },
-    gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() },
-    entityManager: { ...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn() },
-    gameDataRepository: { ...mockGameDataRepository, getActionDefinition: jest.fn() },
+    commandParser: {...mockCommandParser, parse: jest.fn()},
+    actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
+    logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Corrected
+    entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
+    gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
 
 
@@ -61,28 +61,24 @@ describe('CommandProcessor', () => {
 
     beforeEach(() => {
         // Reset mocks before each test
-        mocks = createValidMocks();
+        mocks = createValidMocks(); // Uses corrected function
         // Instantiate CommandProcessor with valid mocks by default
-        commandProcessor = new CommandProcessor(mocks);
+        commandProcessor = new CommandProcessor(mocks); // Constructor validation should pass
         // Define a standard valid actor for these tests
-        mockActor = { id: 'player1', name: 'ParserFailTester' };
+        mockActor = {id: 'player1', name: 'ParserFailTester'};
+
+        // Clear mocks *after* instantiation for clean test state
+        jest.clearAllMocks();
+        // Re-apply any default mock behavior if needed after clearAllMocks
+        mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true); // Example
+
     });
 
 
     // --- processCommand Tests for Parser Failure ---
     describe('processCommand', () => {
 
-        beforeEach(() => {
-            // Clear all mocks before each test in this specific suite
-            mocks = createValidMocks(); // Re-create mocks entirely to ensure clean state
-            commandProcessor = new CommandProcessor(mocks); // Re-instantiate with fresh mocks
-
-
-            // Mock VED dispatch to resolve successfully by default for these tests
-            mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-            // Setup default actor mock accessible in this scope if needed (already done in outer scope)
-            mockActor = { id: 'player1', name: 'ParserFailTester' }; // Ensure actor is defined if outer scope isn't used/reset differently
-        });
+        // No inner beforeEach needed as outer handles setup and clearing
 
         // --- Sub-Ticket 4.1.13.3 Test Case ---
         it('should handle parsing failures reported by the parser', async () => {
@@ -93,7 +89,6 @@ describe('CommandProcessor', () => {
                 error: parsingError,
                 originalInput: commandInput, // Parser might include original input
                 actionId: null,
-                // Include other potential null/undefined properties for completeness
                 verb: null,
                 directObjectPhrase: null,
                 preposition: null,
@@ -103,7 +98,6 @@ describe('CommandProcessor', () => {
             mocks.commandParser.parse.mockReturnValue(parsedCommandWithError);
 
             // Act: Call the method under test
-            // Use the actor defined in the beforeEach scope
             const result = await commandProcessor.processCommand(mockActor, commandInput);
 
 
@@ -118,29 +112,29 @@ describe('CommandProcessor', () => {
 
             // Assert: Check logger.warn call
             expect(mocks.logger.warn).toHaveBeenCalledTimes(1);
-            // *** FIX 1: Use commandInput.trim() in the expected string ***
+            // ****** START FIX: Use commandInput.trim() in log check ******
+            // The code logs the *trimmed* command string in this message
             const expectedLogString = `CommandProcessor: Parsing failed for command "${commandInput.trim()}" by actor ${mockActor.id}. Error: ${parsingError}`;
             expect(mocks.logger.warn).toHaveBeenCalledWith(expectedLogString);
-            // The line below using stringContaining is also valid if preferred:
-            // expect(mocks.logger.warn).toHaveBeenCalledWith(
-            //     expect.stringContaining(`CommandProcessor: Parsing failed for command "${commandInput.trim()}" by actor ${mockActor.id}. Error: ${parsingError}`)
-            // );
+            // ****** END FIX ******
 
 
             // Assert: Check validatedEventDispatcher.dispatchValidated call
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            // *** FIX 2: Expect 'core:command_parse_failed' event ***
+            // ****** START FIX: Use commandInput.trim() in event payload check ******
+            // The code dispatches the *trimmed* command string in the event
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'core:command_parse_failed', // Event name
                 {                            // Payload
                     actorId: mockActor.id,
-                    commandString: commandInput.trim(), // The trimmed command string is used internally
+                    commandString: commandInput.trim(), // Use trimmed commandInput
                     error: parsingError          // User-facing error from parser
                 }
             );
+            // ****** END FIX ******
 
             // Assert: Check that further processing steps were NOT taken
-            expect(mocks.gameStateManager.getCurrentLocation).not.toHaveBeenCalled();
+            expect(mocks.worldContext.getCurrentLocation).not.toHaveBeenCalled(); // Corrected
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
 
             // Assert: Check that logger.error was not called for this type of failure

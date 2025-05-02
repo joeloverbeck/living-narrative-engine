@@ -1,6 +1,7 @@
 // src/tests/core/commandProcessor.processCommand.locationNull.test.js
+// --- FILE START (Corrected Test File) ---
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js';
 
 // --- Mock Dependencies ---
@@ -27,10 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-const mockGameStateManager = {
+// ****** START FIX: Rename to mockWorldContext ******
+const mockWorldContext = {
     getCurrentLocation: jest.fn(),
     getPlayer: jest.fn(),
 };
+// ****** END FIX ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -43,13 +46,16 @@ const mockGameDataRepository = {
 
 // Helper function to create a full set of valid mocks for options
 const createValidMocks = () => ({
-    commandParser: { ...mockCommandParser, parse: jest.fn() },
-    actionExecutor: { ...mockActionExecutor, executeAction: jest.fn() },
-    logger: { ...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-    validatedEventDispatcher: { ...mockValidatedEventDispatcher, dispatchValidated: jest.fn() },
-    gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() },
-    entityManager: { ...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn() },
-    gameDataRepository: { ...mockGameDataRepository, getActionDefinition: jest.fn() },
+    commandParser: {...mockCommandParser, parse: jest.fn()},
+    actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
+    logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
+    // ****** START FIX: Provide worldContext ******
+    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
+    // ****** END FIX ******
+    entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
+    gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
 
 
@@ -60,32 +66,34 @@ describe('CommandProcessor', () => {
 
     beforeEach(() => {
         // Reset mocks before each test
-        mocks = createValidMocks();
+        mocks = createValidMocks(); // Uses corrected function
         // Instantiate CommandProcessor with valid mocks by default
-        commandProcessor = new CommandProcessor(mocks);
+        commandProcessor = new CommandProcessor(mocks); // Constructor validation should pass
         // Define a standard valid actor for these tests
-        mockActor = { id: 'player1', name: 'LocationTester' };
+        mockActor = {id: 'player1', name: 'LocationTester'};
+
+        // Clear mocks *after* instantiation for clean test state
+        // Clear individual mocks for clarity
+        mocks.commandParser.parse.mockClear();
+        mocks.actionExecutor.executeAction.mockClear();
+        Object.values(mocks.logger).forEach(fn => fn.mockClear());
+        mocks.validatedEventDispatcher.dispatchValidated.mockClear();
+        mocks.worldContext.getCurrentLocation.mockClear(); // Corrected
+        mocks.worldContext.getPlayer.mockClear();          // Corrected
+        mocks.entityManager.getEntityInstance.mockClear();
+        mocks.entityManager.addComponent.mockClear();
+        mocks.gameDataRepository.getActionDefinition.mockClear();
+
+        // Re-apply any necessary default mock behavior AFTER clearing
+        mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
+
     });
 
 
     // --- processCommand Tests for Location Lookup Failure (Null) ---
     describe('processCommand', () => {
 
-        beforeEach(() => {
-            // Clear all mocks before each test in this specific suite
-            // Note: jest.clearAllMocks() resets call counts etc. between tests
-            Object.values(mocks.commandParser).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.actionExecutor).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.logger).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.validatedEventDispatcher).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.gameStateManager).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.entityManager).forEach(mockFn => mockFn.mockClear());
-            Object.values(mocks.gameDataRepository).forEach(mockFn => mockFn.mockClear());
-
-
-            // Mock VED dispatch to resolve successfully by default
-            mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-        });
+        // No inner beforeEach needed as outer one handles setup and clearing
 
         // --- Sub-Ticket 4.1.13.5 Test Case ---
         it('should handle location lookup failure when getCurrentLocation returns null', async () => {
@@ -108,8 +116,10 @@ describe('CommandProcessor', () => {
             // Configure parser to return the valid parsed command
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
 
-            // Configure gameStateManager to return null for location lookup
-            mocks.gameStateManager.getCurrentLocation.mockReturnValue(null);
+            // ****** START FIX: Configure worldContext mock ******
+            // Configure worldContext to return null for location lookup
+            mocks.worldContext.getCurrentLocation.mockReturnValue(null);
+            // ****** END FIX ******
 
             // Act: Call the method under test
             const result = await commandProcessor.processCommand(mockActor, commandInput);
@@ -119,25 +129,22 @@ describe('CommandProcessor', () => {
                 success: false,
                 turnEnded: false,
                 error: userError,
-                internalError: internalErrorDetails,
+                internalError: internalErrorDetails, // Exact match
                 actionResult: undefined
             });
 
             // Assert: Check logger.error call
             expect(mocks.logger.error).toHaveBeenCalledTimes(2);
 
-            // Check the first call (specific error message)
-            // Use .toHaveBeenNthCalledWith(callIndex, ...args) for more precise checks
+            // Check the first call (specific error message - updated to reflect code)
             expect(mocks.logger.error).toHaveBeenNthCalledWith(1,
-                `CommandProcessor: Could not find current location entity for actor ${mockActor.id}. GameStateManager returned null.`
+                `CommandProcessor: Could not find current location entity for actor ${mockActor.id}. WorldContext returned null.` // Corrected message
             );
             // Check the second call (from #dispatchSystemError)
-            // --- CORRECTED ASSERTION: Expect only ONE argument ---
             expect(mocks.logger.error).toHaveBeenNthCalledWith(2,
-                expect.stringContaining(systemErrorContext) // Check the context string
-                // REMOVED: , null
+                systemErrorContext // Check exact context string
+                // No second argument (null) when originalError isn't passed to dispatchSystemError
             );
-            // --- END CORRECTION ---
 
             // Assert: Check that action execution was NOT attempted
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
@@ -149,14 +156,16 @@ describe('CommandProcessor', () => {
                 {                             // Expect the correct payload structure
                     message: userError,       // User-facing message
                     type: 'error',
-                    details: expect.stringContaining(internalErrorDetails) // Internal details
+                    details: internalErrorDetails // Internal details should match
                 }
             );
 
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            expect(mocks.gameStateManager.getCurrentLocation).toHaveBeenCalledWith(mockActor.id);
+            // ****** START FIX: Check worldContext mock call ******
+            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledWith(mockActor.id);
+            // ****** END FIX ******
 
             // Assert: Check that logger.warn was not called
             expect(mocks.logger.warn).not.toHaveBeenCalled();
@@ -166,3 +175,4 @@ describe('CommandProcessor', () => {
     }); // End describe('processCommand')
 
 }); // End describe('CommandProcessor')
+// --- FILE END ---

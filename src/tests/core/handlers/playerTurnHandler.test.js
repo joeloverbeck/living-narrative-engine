@@ -1,4 +1,5 @@
 // src/tests/core/handlers/playerTurnHandler.test.js
+// --- FILE START (Corrected Test File) ---
 
 /* eslint-env jest */
 
@@ -16,11 +17,9 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const makeDeps = () => {
     const logger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
 
-    // ****** START FIX: Return objects with 'id' property ******
     const actionDiscoverySystem = {
-        getValidActions: jest.fn().mockResolvedValue([{ id: 'look' }, { id: 'move' }]), // Return objects with id
+        getValidActions: jest.fn().mockResolvedValue([{id: 'look'}, {id: 'move'}]), // Return objects with id
     };
-    // ****** END FIX ******
 
     let savedVedListener = null;
     const validatedEventDispatcher = {
@@ -31,6 +30,7 @@ const makeDeps = () => {
             }
         }),
         unsubscribe: jest.fn(),
+        // Helper to retrieve the listener instance stored by the mock subscribe
         getSavedCommandSubmitListener: () => savedVedListener,
     };
 
@@ -38,14 +38,19 @@ const makeDeps = () => {
         processCommand: jest.fn().mockResolvedValue({success: true, turnEnded: true}),
     };
 
-    const gameStateManager = {
+    // ****** START FIX: Rename gameStateManager to worldContext ******
+    // This is the dependency the constructor actually requires
+    const worldContext = {
         getLocationOfEntity: jest.fn().mockResolvedValue({id: 'loc-1'}),
-        getCurrentLocation: jest.fn().mockResolvedValue({ id: 'current-loc-for-player' })
+        // Changed to mockReturnValue as getCurrentLocation might be expected sync in some contexts
+        // The constructor check only verifies typeof function, but aligning mock helps elsewhere
+        getCurrentLocation: jest.fn().mockReturnValue({id: 'current-loc-for-player'})
     };
+    // ****** END FIX ******
 
-    const entityManager = { getEntityInstance: jest.fn() };
+    const entityManager = {getEntityInstance: jest.fn().mockReturnValue(new Entity('default-entity'))}; // Provide a default mock entity return
 
-    const gameDataRepository = {getActionDefinition: jest.fn()};
+    const gameDataRepository = {getActionDefinition: jest.fn().mockReturnValue({id: 'action-def-look'})}; // Provide default mock return
 
     // NOTE: eventBus mock is unused by PlayerTurnHandler for command:submit
     const eventBus = {
@@ -58,7 +63,8 @@ const makeDeps = () => {
         actionDiscoverySystem,
         validatedEventDispatcher,
         commandProcessor,
-        gameStateManager,
+        // gameStateManager, // Removed
+        worldContext, // Added
         entityManager,
         gameDataRepository,
         eventBus,
@@ -75,77 +81,113 @@ describe('PlayerTurnHandler', () => {
 
     beforeEach(() => {
         deps = makeDeps();
+        // Create handler FIRST to ensure constructor validation passes with correct deps
         handler = new PlayerTurnHandler(deps);
         actor = makeActor();
-        // Clear mocks AFTER handler creation to avoid clearing constructor-related mocks if needed
-        jest.clearAllMocks();
-        // Re-mock subscribe after clearAllMocks because the constructor calls it
-        deps.validatedEventDispatcher.subscribe = jest.fn((evt, listener) => {
-            if (evt === 'command:submit') {
-                deps.validatedEventDispatcher.getSavedCommandSubmitListener = () => listener; // Re-establish getter
-            }
-        });
-        // Call subscribe again manually to simulate constructor behavior after clearAllMocks
-        // NOTE: The actual listener function reference from the handler is lost here,
-        // but we can retrieve it via the mock getter set above. This is a common pattern
-        // when needing to clear mocks called during construction.
-        handler = new PlayerTurnHandler(deps); // Re-create handler to re-subscribe
-        actor = makeActor(); // Re-create actor
+
+        // Clear mocks AFTER handler creation if needed (be careful with constructor calls)
+        // jest.clearAllMocks(); // Let's avoid clearing for now to simplify listener management
+
+        // Reset specific mocks that accumulate calls across tests if necessary
+        deps.validatedEventDispatcher.dispatchValidated.mockClear();
+        deps.commandProcessor.processCommand.mockClear();
+        deps.actionDiscoverySystem.getValidActions.mockClear();
+        deps.worldContext.getLocationOfEntity.mockClear();
+        deps.worldContext.getCurrentLocation.mockClear();
+        deps.logger.warn.mockClear(); // Clear warnings for cleaner tests
+        deps.logger.error.mockClear(); // Clear errors
+
+        // Re-establish default mock implementations if they were complex and cleared above
+        deps.commandProcessor.processCommand.mockResolvedValue({success: true, turnEnded: true});
+        deps.actionDiscoverySystem.getValidActions.mockResolvedValue([{id: 'look'}, {id: 'move'}]);
+        deps.worldContext.getLocationOfEntity.mockResolvedValue({id: 'loc-1'});
+        deps.worldContext.getCurrentLocation.mockReturnValue({id: 'current-loc-for-player'});
+
+        // Find the listener attached by the handler during construction
+        // The mock subscribe in makeDeps saves the listener.
+        const initialListener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
+        // Re-attach it to the getter in case something cleared the VED mock itself
+        deps.validatedEventDispatcher.getSavedCommandSubmitListener = () => initialListener;
+
     });
 
     /* ───────────────────────── constructor ──────────────────────────────── */
     it('stores deps & subscribes to command:submit via VED', () => {
-        // Construction happens in beforeEach, re-create here for clarity if needed or rely on beforeEach
-        // handler = new PlayerTurnHandler(deps); // If not relying solely on beforeEach
-        expect(deps.validatedEventDispatcher.subscribe).toHaveBeenCalledWith(
+        // Arrange: create fresh deps and handler
+        const freshDeps = makeDeps();
+        const freshHandler = new PlayerTurnHandler(freshDeps);
+
+        // Assert: Check if subscribe was called during construction
+        expect(freshDeps.validatedEventDispatcher.subscribe).toHaveBeenCalledWith(
             'command:submit',
             expect.any(Function),
         );
-        expect(deps.validatedEventDispatcher.getSavedCommandSubmitListener()).toEqual(expect.any(Function));
-        expect(deps.eventBus.subscribe).not.toHaveBeenCalled();
+        // Check if the listener was saved correctly by the mock
+        expect(freshDeps.validatedEventDispatcher.getSavedCommandSubmitListener()).toEqual(expect.any(Function));
+        // Ensure old eventBus is not used
+        expect(freshDeps.eventBus.subscribe).not.toHaveBeenCalled();
+
+        freshHandler.destroy(); // Clean up
     });
 
+    // --- Constructor Dependency Validation Tests ---
     it('throws if logger is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.logger;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.logger;
         expect(() => new PlayerTurnHandler({...minimalDeps, logger: null}))
-            .toThrow(/logger/i);
+            .toThrow(/logger dependency/i); // Match error message more specifically
     });
 
     it('throws if actionDiscoverySystem is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.actionDiscoverySystem;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.actionDiscoverySystem;
         expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/actionDiscoverySystem/i);
     });
     it('throws if validatedEventDispatcher is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.validatedEventDispatcher;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.validatedEventDispatcher;
         expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/validatedEventDispatcher/i);
     });
     it('throws if commandProcessor is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.commandProcessor;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.commandProcessor;
         expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/commandProcessor/i);
     });
-    it('throws if gameStateManager is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.gameStateManager;
-        expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/gameStateManager/i);
+
+    // ****** START FIX: Test for worldContext, remove gameStateManager ******
+    it('throws if worldContext is missing', () => {
+        const minimalDeps = makeDeps();
+        delete minimalDeps.worldContext;
+        expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/worldContext/i);
     });
+    // it('throws if gameStateManager is missing', () => { // Removed });
+    // ****** END FIX ******
+
     it('throws if entityManager is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.entityManager;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.entityManager;
         expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/entityManager/i);
     });
     it('throws if gameDataRepository is missing', () => {
-        const minimalDeps = makeDeps(); delete minimalDeps.gameDataRepository;
+        const minimalDeps = makeDeps();
+        delete minimalDeps.gameDataRepository;
         expect(() => new PlayerTurnHandler(minimalDeps)).toThrow(/gameDataRepository/i);
     });
+    // --- End Constructor Dependency Validation Tests ---
 
 
     /* ───────────────────────── turn-initiation ──────────────────────────── */
-    // ****** START FIX: Test updated for core event ******
     it('discovers actions & dispatches core:player_turn_prompt when a turn starts', async () => {
         const turnPromise = handler.handleTurn(actor);
         await flush(); // Allow async operations within handleTurn/initiate sequence
 
-        // Check action discovery
-        expect(deps.gameStateManager.getLocationOfEntity).toHaveBeenCalledWith(actor);
-        const expectedLocation = await deps.gameStateManager.getLocationOfEntity(); // Get mock value
+        // Check location retrieval
+        expect(deps.worldContext.getLocationOfEntity).toHaveBeenCalledWith(actor);
+        // const expectedLocation = await deps.worldContext.getLocationOfEntity(); // Use mock return value directly
+        const expectedLocation = {id: 'loc-1'}; // From makeDeps mock
+
+        // ****** START FIX: Check context passed to getValidActions ******
+        // Check action discovery with the correct context properties
         expect(deps.actionDiscoverySystem.getValidActions).toHaveBeenCalledWith(
             actor,
             expect.objectContaining({
@@ -153,10 +195,12 @@ describe('PlayerTurnHandler', () => {
                 currentLocation: expectedLocation,
                 entityManager: deps.entityManager,
                 gameDataRepository: deps.gameDataRepository,
-                gameStateManager: deps.gameStateManager,
+                worldContext: deps.worldContext, // Expect worldContext here
+                // gameStateManager: deps.gameStateManager, // NOT gameStateManager
                 logger: deps.logger
             })
         );
+        // ****** END FIX ******
 
         // Check dispatch for the CORE prompt event
         expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
@@ -179,27 +223,25 @@ describe('PlayerTurnHandler', () => {
 
         // Turn promise should not resolve here yet
         let resolved = false;
-        turnPromise.then(() => { resolved = true; });
+        turnPromise.then(() => {
+            resolved = true;
+        });
         await new Promise(r => setTimeout(r, 5)); // Wait briefly
         expect(resolved).toBe(false);
     });
-    // ****** END FIX ******
 
     /* ───────────────────────── happy path ───────────────────────────────── */
-    // ****** START FIX: Test updated for core event ******
     it('processes a submitted command, resolves turn promise, dispatches core:turn_ended', async () => {
         deps.commandProcessor.processCommand.mockResolvedValue({success: true, turnEnded: true});
 
         const turnPromise = handler.handleTurn(actor);
         await flush(); // Allow initiation (dispatches first prompt)
 
-        // Clear mocks *after* initiation if only testing command processing calls
-        // jest.clearAllMocks(); // Use carefully if constructor/initiation mocks are needed later
-
-        // Simulate command submission
+        // Simulate command submission using the retrieved listener
         const listener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
         expect(listener).toEqual(expect.any(Function));
-        await listener({ command: 'look' }); // Trigger the command
+        await listener({payload: {command: 'look'}}); // Trigger the command - ensure payload structure matches handler
+        // The listener expects { payload: { command: '...' } } or just { command: '...' }
 
         // Wait for the handler's turn promise to resolve
         await expect(turnPromise).resolves.toBeUndefined();
@@ -218,12 +260,10 @@ describe('PlayerTurnHandler', () => {
             expect.anything()
         );
     });
-    // ****** END FIX ******
 
     /* ───────────────── command doesn't end turn ─────────────────────────── */
-    // ****** START FIX: Test updated for core event ******
     it('re-dispatches core:player_turn_prompt if command succeeds but does not end turn', async () => {
-        deps.commandProcessor.processCommand.mockResolvedValue({success: true, turnEnded: false});
+        deps.commandProcessor.processCommand.mockResolvedValue({success: true, turnEnded: false}); // Command continues turn
 
         const turnPromise = handler.handleTurn(actor);
         await flush(); // Allow initiation (dispatches first prompt)
@@ -231,24 +271,26 @@ describe('PlayerTurnHandler', () => {
         // Check initial prompt dispatch
         expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'core:player_turn_prompt',
-            expect.objectContaining({ entityId: actor.id, availableActions: ['look', 'move'] })
+            expect.objectContaining({entityId: actor.id, availableActions: ['look', 'move']})
         );
-        const initialDispatchCount = deps.validatedEventDispatcher.dispatchValidated.mock.calls.length;
+        // Use mock.calls.length on the specific mock instance
+        const initialDispatchCallCount = deps.validatedEventDispatcher.dispatchValidated.mock.calls.length;
+
 
         // Simulate command submission
         const listener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
-        await listener({ command: 'examine self' }); // Trigger the command
+        await listener({payload: {command: 'examine self'}}); // Trigger the command
         await flush(); // Allow command processing microtasks and potential re-prompt
 
         // Check command processor call
         expect(deps.commandProcessor.processCommand).toHaveBeenCalledWith(actor, 'examine self');
 
         // Check VED dispatch for the CORE prompt event AGAIN
-        expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(initialDispatchCount + 1); // Prompted again
+        expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(initialDispatchCallCount + 1); // Prompted again
         expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(
-            initialDispatchCount + 1, // The call after the initial prompt
+            initialDispatchCallCount + 1, // The call after the initial prompt
             'core:player_turn_prompt',
-            expect.objectContaining({ entityId: actor.id, availableActions: ['look', 'move'] }) // Assuming actions rediscovery returns the same
+            expect.objectContaining({entityId: actor.id, availableActions: ['look', 'move']}) // Assuming actions rediscovery returns the same
         );
 
         // Ensure UI events are NOT dispatched
@@ -261,42 +303,35 @@ describe('PlayerTurnHandler', () => {
 
         // IMPORTANT: The turn promise should NOT have resolved yet
         let resolved = false;
-        turnPromise.then(() => { resolved = true; });
+        turnPromise.then(() => {
+            resolved = true;
+        });
         await new Promise(r => setTimeout(r, 10)); // Wait a short moment
         expect(resolved).toBe(false);
     });
-    // ****** END FIX ******
 
     /* ───────────────────────── no active turn ──────────────────────────── */
     it('ignores command if received when not its turn', async () => {
         // DO NOT call handler.handleTurn(actor)
 
-        // Simulate command submission via VED listener
+        // Simulate command submission via VED listener attached during setup
         const listener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
-        // Need to get the listener from a handler instance, even if turn not started
-        const tempHandlerForListener = new PlayerTurnHandler(deps);
-        const actualListener = deps.validatedEventDispatcher.getSavedCommandSubmitListener(); // Get listener attached by tempHandler
-
-        expect(actualListener).toEqual(expect.any(Function));
-        await actualListener({ command: 'attack' });
+        expect(listener).toEqual(expect.any(Function)); // Ensure listener exists
+        await listener({payload: {command: 'attack'}});
         await flush();
 
         // Verify processor was not called and a warning was logged
         expect(deps.commandProcessor.processCommand).not.toHaveBeenCalled();
-        // Logger might be called by the tempHandler, focus on processCommand absence
-        // Or check the specific warning message if the logger mock isn't cleared/reused ambiguously
         expect(deps.logger.warn).toHaveBeenCalledWith(
             expect.stringMatching(/no player turn is active/i),
         );
-        tempHandlerForListener.destroy(); // Clean up temp handler
     });
 
 
     /* ───────────────────────── failure path ─────────────────────────────── */
-    // ****** START FIX: Test updated for core events ******
     it('rejects the turn promise, dispatches core events on processCommand error', async () => {
         const boom = new Error('boom');
-        deps.commandProcessor.processCommand.mockRejectedValue(boom);
+        deps.commandProcessor.processCommand.mockRejectedValue(boom); // Simulate failure
 
         const turnPromise = handler.handleTurn(actor);
         await flush(); // Allow initiation (dispatches first prompt)
@@ -306,7 +341,7 @@ describe('PlayerTurnHandler', () => {
         // Simulate command submission
         const listener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
         expect(listener).toEqual(expect.any(Function));
-        await listener({ command: 'explode' }); // Trigger the command that will fail
+        await listener({payload: {command: 'explode'}}); // Trigger the command that will fail
 
         await rejectionCheck; // Wait for the promise to actually reject
 
@@ -338,10 +373,9 @@ describe('PlayerTurnHandler', () => {
         // Check VED dispatch for the CORE turn ended event (should still happen on error)
         expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'core:turn_ended',
-            expect.objectContaining({ entityId: actor.id })
+            expect.objectContaining({entityId: actor.id})
         );
     });
-    // ****** END FIX ******
 
     /* ───────────────────────── cleanup ──────────────────────────────────── */
     it('unsubscribes & resets state on destroy()', () => {
@@ -374,20 +408,19 @@ describe('PlayerTurnHandler', () => {
         await rejectionCheck;
 
         // Verify unsubscribe happened
-        // Note: getSavedCommandSubmitListener might return null if destroy clears it AFTER unsubscribing
-        // It's safer to check that unsubscribe was called with *some* function.
         expect(deps.validatedEventDispatcher.unsubscribe).toHaveBeenCalledWith(
             'command:submit',
-            expect.any(Function) // The specific listener ref might be cleared by destroy
+            expect.any(Function) // Check a function was passed, specific ref might be tricky
         );
 
         // Check VED dispatch for the CORE turn ended event (should happen on destroy mid-turn)
         expect(deps.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'core:turn_ended',
-            expect.objectContaining({ entityId: actor.id })
+            expect.objectContaining({entityId: actor.id})
         );
 
         // Internal state check (optional, requires exposing state or more side effects)
-        // e.g., expect(handler.getCurrentActor()).toBeNull(); // If method existed
+        // e.g., expect(handler.#currentActor).toBeNull(); // If we could access private field
     });
 });
+// --- FILE END ---

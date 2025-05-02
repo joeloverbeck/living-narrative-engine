@@ -1,7 +1,7 @@
 // src/tests/core/commandProcessor.processCommand.locationException.test.js
-// --- FILE START (Entire file content as requested) ---
+// --- FILE START (Corrected Test File) ---
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js';
 
 // --- Mock Dependencies ---
@@ -28,10 +28,12 @@ const mockValidatedEventDispatcher = {
     unsubscribe: jest.fn(),
 };
 
-const mockGameStateManager = {
+// ****** START FIX: Rename to mockWorldContext ******
+const mockWorldContext = {
     getCurrentLocation: jest.fn(),
     getPlayer: jest.fn(),
 };
+// ****** END FIX ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -44,13 +46,16 @@ const mockGameDataRepository = {
 
 // Helper function to create a full set of valid mocks for options
 const createValidMocks = () => ({
-    commandParser: { ...mockCommandParser, parse: jest.fn() },
-    actionExecutor: { ...mockActionExecutor, executeAction: jest.fn() },
-    logger: { ...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-    validatedEventDispatcher: { ...mockValidatedEventDispatcher, dispatchValidated: jest.fn() },
-    gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() },
-    entityManager: { ...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn() },
-    gameDataRepository: { ...mockGameDataRepository, getActionDefinition: jest.fn() },
+    commandParser: {...mockCommandParser, parse: jest.fn()},
+    actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
+    logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
+    // ****** START FIX: Provide worldContext ******
+    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
+    // ****** END FIX ******
+    entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
+    gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
 
 
@@ -61,24 +66,24 @@ describe('CommandProcessor', () => {
 
     beforeEach(() => {
         // Reset mocks before each test
-        mocks = createValidMocks();
+        mocks = createValidMocks(); // Uses the corrected function
         // Instantiate CommandProcessor with valid mocks by default
-        commandProcessor = new CommandProcessor(mocks);
+        commandProcessor = new CommandProcessor(mocks); // Should pass constructor validation
         // Define a standard valid actor for these tests
-        mockActor = { id: 'player1', name: 'LocationExceptionTester' };
+        mockActor = {id: 'player1', name: 'LocationExceptionTester'};
+
+        // Clear specific mocks after instantiation if necessary
+        jest.clearAllMocks(); // Clear all mocks to ensure clean state for this test
+        // Re-mock essential defaults if cleared
+        mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
+        // Note: getCurrentLocation will be mocked specifically within the test case
     });
 
 
     // --- processCommand Tests for Location Lookup Exception ---
     describe('processCommand', () => {
 
-        beforeEach(() => {
-            // Clear all mocks before each test in this specific suite
-            jest.clearAllMocks();
-
-            // Mock VED dispatch to resolve successfully by default
-            mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-        });
+        // Removed inner beforeEach as clearAllMocks is done in outer beforeEach
 
         // --- Sub-Ticket 4.1.13.6 Test Case ---
         it('should handle location lookup failure when getCurrentLocation throws an exception', async () => {
@@ -99,10 +104,12 @@ describe('CommandProcessor', () => {
             // Configure parser to return the valid parsed command
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
 
-            // Configure gameStateManager to throw an exception during location lookup
-            mocks.gameStateManager.getCurrentLocation.mockImplementation(() => {
+            // ****** START FIX: Configure worldContext mock to throw ******
+            // Configure worldContext to throw an exception during location lookup
+            mocks.worldContext.getCurrentLocation.mockImplementation(() => {
                 throw locationError;
             });
+            // ****** END FIX ******
 
             // Act: Call the method under test
             const result = await commandProcessor.processCommand(mockActor, commandInput);
@@ -117,24 +124,20 @@ describe('CommandProcessor', () => {
                 turnEnded: false,
                 error: userFacingError,
                 // Check internalError contains the expected message prefix and the error message
-                internalError: expect.stringContaining(internalErrorMsg),
+                internalError: internalErrorMsg, // Check exact string now
                 actionResult: undefined
             });
-            // Optionally assert the internalError also contains the stack if relevant
-            // expect(result.internalError).toContain(locationError.stack); // Uncomment if stack is included and needed
-
 
             // Assert: Check logger.error calls
-            // *** FIX 1: Expect 2 calls ***
             expect(mocks.logger.error).toHaveBeenCalledTimes(2);
-            // Check the first call (from the catch block)
+            // Check the first call (from the catch block in processCommand)
             expect(mocks.logger.error).toHaveBeenNthCalledWith(1,
-                expect.stringContaining(`CommandProcessor: Error fetching current location for actor ${mockActor.id}. Error: ${locationError.message}`),
+                `CommandProcessor: Error fetching current location for actor ${mockActor.id}. Error: ${locationError.message}`, // Check exact string
                 locationError // Ensure the actual Error object is passed
             );
-            // *** FIX 2: Add check for the second call (from #dispatchSystemError) ***
+            // Check the second call (from #dispatchSystemError helper)
             expect(mocks.logger.error).toHaveBeenNthCalledWith(2,
-                expect.stringContaining(`System Error Context: ${internalErrorMsg}`),
+                `System Error Context: ${internalErrorMsg}`, // Check exact string
                 locationError // Ensure the actual Error object is passed
             );
 
@@ -143,18 +146,18 @@ describe('CommandProcessor', () => {
             expect(mocks.actionExecutor.executeAction).not.toHaveBeenCalled();
 
             // Assert: Check that VED *was* called for the system error event
-            // *** FIX 3: Expect 1 call ***
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            // *** FIX 4: Add check for the event payload ***
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:system_error_occurred', {
                 message: userFacingError,
                 type: 'error',
-                details: expect.stringContaining(internalErrorMsg) // Check that internal details are included
+                details: internalErrorMsg // Check that internal details match
             });
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            expect(mocks.gameStateManager.getCurrentLocation).toHaveBeenCalledWith(mockActor.id);
+            // ****** START FIX: Check worldContext mock call ******
+            expect(mocks.worldContext.getCurrentLocation).toHaveBeenCalledWith(mockActor.id);
+            // ****** END FIX ******
 
             // Assert: Check that logger.warn was not called
             expect(mocks.logger.warn).not.toHaveBeenCalled();

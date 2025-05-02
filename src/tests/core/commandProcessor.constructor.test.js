@@ -1,6 +1,7 @@
 // src/tests/core/commandProcessor.constructor.test.js
+// --- FILE START (Corrected Test File) ---
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js';
 // Import Entity for type checking if needed, although mocks are primary
 // import Entity from '../entities/entity.js';
@@ -25,152 +26,165 @@ const mockLogger = {
 
 const mockValidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
-    // Add subscribe/unsubscribe if needed for future tests, not strictly required by CommandProcessor constructor/processCommand
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
 };
 
-const mockGameStateManager = {
+// ****** START FIX: Rename to mockWorldContext ******
+const mockWorldContext = {
     getCurrentLocation: jest.fn(),
     getPlayer: jest.fn(),
-    // Add other methods if needed by actions invoked through CommandProcessor
 };
+// ****** END FIX ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
     addComponent: jest.fn(),
-    // Add other methods like removeComponent, hasComponent, getComponentData if needed by actions
 };
 
 const mockGameDataRepository = {
     getActionDefinition: jest.fn(),
-    // Add other methods like getEntityDefinition, etc. if needed by actions
 };
 
 // Helper function to create a full set of valid mocks for options
 const createValidMocks = () => ({
-    commandParser: { ...mockCommandParser, parse: jest.fn() },
-    actionExecutor: { ...mockActionExecutor, executeAction: jest.fn() },
-    logger: { ...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-    validatedEventDispatcher: { ...mockValidatedEventDispatcher, dispatchValidated: jest.fn() },
-    gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() },
-    entityManager: { ...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn() },
-    gameDataRepository: { ...mockGameDataRepository, getActionDefinition: jest.fn() },
+    commandParser: {...mockCommandParser, parse: jest.fn()},
+    actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
+    logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
+    // ****** START FIX: Provide worldContext ******
+    // gameStateManager: { ...mockGameStateManager, getCurrentLocation: jest.fn(), getPlayer: jest.fn() }, // Removed
+    worldContext: {...mockWorldContext, getCurrentLocation: jest.fn(), getPlayer: jest.fn()}, // Added
+    // ****** END FIX ******
+    entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
+    gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
 
 
 describe('CommandProcessor', () => {
-    let commandProcessor;
-    let mocks;
-
-    beforeEach(() => {
-        // Reset mocks before each test
-        mocks = createValidMocks();
-        // Instantiate CommandProcessor with valid mocks by default
-        commandProcessor = new CommandProcessor(mocks);
-    });
+    // No need for commandProcessor instance here as we are testing the constructor itself
 
     // --- Constructor Tests ---
     describe('constructor', () => {
+        // Test logger first, as it's needed for other error logs
         it('should throw an error if logger is null or missing methods', () => {
             const invalidOptions = [
                 null,
                 undefined,
                 {},
-                { logger: {} },
-                { logger: { info: jest.fn(), error: jest.fn(), debug: jest.fn() /* missing warn */ } },
+                {logger: {}},
+                {logger: {info: jest.fn(), error: jest.fn(), debug: jest.fn() /* missing warn */}},
             ];
             invalidOptions.forEach(opts => {
-                // Ensure logger is explicitly invalid in cases where opts is an object
-                const options = opts && typeof opts === 'object' ? { ...createValidMocks(), ...opts } : createValidMocks();
-                if (!opts || !opts.logger) options.logger = opts?.logger ?? null; // Ensure logger is invalid
+                // Create a base set of *potentially* valid mocks, but ensure logger is invalid
+                const baseMocks = createValidMocks(); // Get a set with the correct structure otherwise
+                let options;
+                if (opts === null || opts === undefined) {
+                    // Handle cases where the entire options object might be invalid
+                    options = {...baseMocks, logger: null}; // Need to explicitly set logger to null/invalid
+                } else {
+                    options = {...baseMocks, ...opts}; // Merge, opts might override logger
+                }
+                // If opts didn't provide a logger, ensure it's null for the test
+                if (!opts || !opts.logger) options.logger = null;
 
                 expect(() => new CommandProcessor(options)).toThrow(/ILogger instance/);
             });
         });
 
-        // Test other dependencies based on the logger being valid first
+        // Test other dependencies - these assume a valid logger is passed
         it('should throw an error if commandParser is null or missing parse method', () => {
             const invalidOptions = [
-                { commandParser: null },
-                { commandParser: {} },
-                { commandParser: { someOtherMethod: jest.fn() } },
+                {commandParser: null},
+                {commandParser: {}},
+                {commandParser: {someOtherMethod: jest.fn()}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
+                const options = {...createValidMocks(), ...opts}; // Base mocks are valid
                 expect(() => new CommandProcessor(options)).toThrow(/ICommandParser instance/);
             });
         });
 
         it('should throw an error if actionExecutor is null or missing executeAction method', () => {
             const invalidOptions = [
-                { actionExecutor: null },
-                { actionExecutor: {} },
+                {actionExecutor: null},
+                {actionExecutor: {}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
+                const options = {...createValidMocks(), ...opts};
                 expect(() => new CommandProcessor(options)).toThrow(/IActionExecutor instance/);
             });
         });
 
         it('should throw an error if validatedEventDispatcher is null or missing dispatchValidated method', () => {
             const invalidOptions = [
-                { validatedEventDispatcher: null },
-                { validatedEventDispatcher: {} },
+                {validatedEventDispatcher: null},
+                {validatedEventDispatcher: {}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
+                const options = {...createValidMocks(), ...opts};
                 expect(() => new CommandProcessor(options)).toThrow(/IValidatedEventDispatcher instance/);
             });
         });
 
-        it('should throw an error if gameStateManager is null or missing required methods', () => {
+        // ****** START FIX: Update test for worldContext ******
+        it('should throw an error if worldContext is null or missing required methods', () => {
             const invalidOptions = [
-                { gameStateManager: null },
-                { gameStateManager: {} },
-                { gameStateManager: { getCurrentLocation: jest.fn() /* missing getPlayer */ } },
-                { gameStateManager: { getPlayer: jest.fn() /* missing getCurrentLocation */ } },
+                {worldContext: null},
+                {worldContext: {}},
+                {worldContext: {getCurrentLocation: jest.fn() /* missing getPlayer */}},
+                {worldContext: {getPlayer: jest.fn() /* missing getCurrentLocation */}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
-                expect(() => new CommandProcessor(options)).toThrow(/IGameStateManager instance/);
+                const options = {...createValidMocks(), ...opts}; // Base mocks are valid
+                // Use the specific error message for worldContext
+                expect(() => new CommandProcessor(options)).toThrow(/IWorldContext instance/);
             });
         });
+        // ****** END FIX ******
 
         it('should throw an error if entityManager is null or missing required methods', () => {
             const invalidOptions = [
-                { entityManager: null },
-                { entityManager: {} },
-                { entityManager: { getEntityInstance: jest.fn() /* missing addComponent */ } },
-                { entityManager: { addComponent: jest.fn() /* missing getEntityInstance */ } },
+                {entityManager: null},
+                {entityManager: {}},
+                // Check for specific methods mentioned in the error message
+                {entityManager: {getEntityInstance: jest.fn() /* missing addComponent */}},
+                {entityManager: {addComponent: jest.fn() /* missing getEntityInstance */}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
-                // Note: The error message mentions 'relevant methods', adjust if exact methods are critical
+                const options = {...createValidMocks(), ...opts};
                 expect(() => new CommandProcessor(options)).toThrow(/EntityManager instance/);
             });
         });
 
         it('should throw an error if gameDataRepository is null or missing getActionDefinition method', () => {
             const invalidOptions = [
-                { gameDataRepository: null },
-                { gameDataRepository: {} },
+                {gameDataRepository: null},
+                {gameDataRepository: {}},
+                // Add specific missing method if needed, constructor checks getActionDefinition
+                {gameDataRepository: {someOtherMethod: jest.fn()}},
             ];
             invalidOptions.forEach(opts => {
-                const options = { ...createValidMocks(), ...opts };
-                // Note: The error message mentions 'getActionDefinition, etc.', adjust if needed
+                const options = {...createValidMocks(), ...opts};
                 expect(() => new CommandProcessor(options)).toThrow(/GameDataRepository instance/);
             });
         });
 
         it('should successfully instantiate with all valid dependencies', () => {
-            expect(() => new CommandProcessor(createValidMocks())).not.toThrow();
-            // Check if logger.info was called during successful construction
+            // Arrange: Create a valid set of mocks using the corrected helper
             const validMocks = createValidMocks();
-            new CommandProcessor(validMocks);
-            expect(validMocks.logger.info).toHaveBeenCalledWith("CommandProcessor: Instance created and dependencies validated.");
+
+            // Act & Assert: Expect no error during instantiation
+            expect(() => new CommandProcessor(validMocks)).not.toThrow();
+
+            // Assert: Check if logger.info was called during successful construction
+            // Need a fresh instance as the mock might be shared if not careful
+            const freshValidMocks = createValidMocks();
+            new CommandProcessor(freshValidMocks); // Instantiate again
+            expect(freshValidMocks.logger.info).toHaveBeenCalledWith("CommandProcessor: Instance created and dependencies validated.");
         });
     });
 
 
 }); // End describe('CommandProcessor')
+// --- FILE END ---

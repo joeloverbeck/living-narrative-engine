@@ -28,28 +28,22 @@ const mockCommandProcessor = {
     processCommand: jest.fn(),
 };
 
-const mockGameStateManager = {
+// Correct Mock for WorldContext (previously methods were misplaced on mockGameStateManager)
+const mockWorldContext = {
     getLocationOfEntity: jest.fn(),
-    getCurrentLocation: jest.fn(), // Ensure all methods checked in constructor are present
+    getCurrentLocation: jest.fn(),
 };
 
+// Mock for EntityManager (Correct method name is getEntityInstance)
 const mockEntityManager = {
-    // The CORRECT method name needed by the fixed constructor
     getEntityInstance: jest.fn(),
-    // Include the OLD wrong name to ensure tests fail if reverted
+    // Include the OLD wrong name only for testing purposes if needed, but primarily focus on the correct one
     getEntity: jest.fn(),
 };
 
 const mockGameDataRepository = {
     getActionDefinition: jest.fn(),
 };
-
-// *** ADDED: Mock for the missing worldContext dependency ***
-const mockWorldContext = {
-    getLocationOfEntity: jest.fn(),
-    getCurrentLocation: jest.fn(), // Ensure all methods checked in constructor are present
-};
-
 
 // --- Test Suite for Constructor Dependency Validation ---
 describe('PlayerTurnHandler Constructor Dependency Validation', () => {
@@ -60,10 +54,10 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
         actionDiscoverySystem: mockActionDiscoverySystem,
         validatedEventDispatcher: mockValidatedEventDispatcher,
         commandProcessor: mockCommandProcessor,
-        gameStateManager: mockGameStateManager,
-        entityManager: mockEntityManager, // This mock has getEntityInstance()
+        worldContext: mockWorldContext, // Correctly provide worldContext
+        entityManager: mockEntityManager,
         gameDataRepository: mockGameDataRepository,
-        worldContext: mockWorldContext, // *** ADDED: Provide the worldContext mock ***
+        // gameStateManager is NOT a direct dependency of the constructor
     });
 
     // Reset mocks before each test
@@ -75,12 +69,11 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
         mockValidatedEventDispatcher.dispatchValidated.mockResolvedValue(undefined);
         mockCommandProcessor.processCommand.mockResolvedValue({success: true, turnEnded: true});
         mockActionDiscoverySystem.getValidActions.mockResolvedValue([]);
-        mockGameStateManager.getLocationOfEntity.mockResolvedValue({id: 'location-gsm-1'}); // Example valid return
-        mockGameStateManager.getCurrentLocation.mockReturnValue({id: 'location-gsm-1'});
-        mockEntityManager.getEntityInstance.mockReturnValue({id: 'entity-1'}); // Example valid return
-        // *** ADDED: Reset worldContext mock methods ***
-        mockWorldContext.getLocationOfEntity.mockResolvedValue({id: 'location-wc-1'}); // Example valid return
-        mockWorldContext.getCurrentLocation.mockReturnValue({id: 'location-wc-1'});
+        // Setup mocks for worldContext methods (moved from mockGameStateManager)
+        mockWorldContext.getLocationOfEntity.mockResolvedValue({id: 'location-1'});
+        mockWorldContext.getCurrentLocation.mockReturnValue({id: 'location-1'});
+        mockEntityManager.getEntityInstance.mockReturnValue({id: 'entity-1'});
+        mockGameDataRepository.getActionDefinition.mockReturnValue({id: 'action-def-1'}); // Example valid return
     });
 
     it('should instantiate successfully with all valid dependencies', () => {
@@ -122,7 +115,10 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
 
     it('should throw if validatedEventDispatcher is missing or invalid', () => {
         const invalidDeps = {...getValidDependencies(), validatedEventDispatcher: null};
-        const invalidDeps2 = {...getValidDependencies(), validatedEventDispatcher: {dispatchValidated: jest.fn()}}; // Missing subscribe/unsubscribe
+        const invalidDeps2 = {
+            ...getValidDependencies(),
+            validatedEventDispatcher: {dispatchValidated: jest.fn(), subscribe: jest.fn()}
+        }; // Missing unsubscribe
 
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing validatedEventDispatcher.');
@@ -140,18 +136,22 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing commandProcessor.');
     });
 
-    it('should throw if gameStateManager is missing or invalid (missing methods)', () => {
-        const invalidDeps = {...getValidDependencies(), gameStateManager: null};
-        const invalidDeps2 = {...getValidDependencies(), gameStateManager: {getCurrentLocation: jest.fn()}}; // Missing getLocationOfEntity
-        const invalidDeps3 = {...getValidDependencies(), gameStateManager: {getLocationOfEntity: jest.fn()}}; // Missing getCurrentLocation
+    // Add test for worldContext (this was the root cause of failures)
+    it('should throw if worldContext is missing or invalid', () => {
+        const invalidDeps = {...getValidDependencies(), worldContext: null};
+        const invalidDeps2 = {...getValidDependencies(), worldContext: {getCurrentLocation: jest.fn()}}; // Missing getLocationOfEntity
+        const invalidDeps3 = {...getValidDependencies(), worldContext: {getLocationOfEntity: jest.fn()}}; // Missing getCurrentLocation
 
         expect(() => new PlayerTurnHandler(invalidDeps))
-            .toThrow('PlayerTurnHandler: Invalid or missing gameStateManager.');
+            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
         expect(() => new PlayerTurnHandler(invalidDeps2))
-            .toThrow('PlayerTurnHandler: Invalid or missing gameStateManager.');
+            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
         expect(() => new PlayerTurnHandler(invalidDeps3))
-            .toThrow('PlayerTurnHandler: Invalid or missing gameStateManager.');
+            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
     });
+
+    // Removed test for gameStateManager as it's not a direct constructor dependency.
+    // it('should throw if gameStateManager is missing or invalid (missing methods)', () => { ... });
 
     // --- Tests Specifically for EntityManager Validation ---
 
@@ -163,12 +163,7 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
     });
 
     it('should throw if entityManager is invalid (missing getEntityInstance method)', () => {
-        // Provide an object that lacks the required 'getEntityInstance' method
-        const invalidEntityManager = {
-            // No getEntityInstance method
-            someOtherMethod: jest.fn(),
-            getEntity: jest.fn(), // Include the old wrong name
-        };
+        const invalidEntityManager = {someOtherMethod: jest.fn(), getEntity: jest.fn()}; // Missing getEntityInstance
         const invalidDeps = {...getValidDependencies(), entityManager: invalidEntityManager};
 
         expect(() => new PlayerTurnHandler(invalidDeps))
@@ -176,7 +171,6 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
     });
 
     it('should NOT throw if entityManager provides getEntityInstance (even if it also has getEntity)', () => {
-        // Provide a mock that correctly has 'getEntityInstance'
         const validEntityManagerWithExtra = {
             getEntityInstance: jest.fn().mockReturnValue({id: 'entity-1'}),
             getEntity: jest.fn(), // Has the old method too, but shouldn't matter
@@ -197,22 +191,6 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing gameDataRepository.');
     });
-
-    // --- Test specifically for WorldContext Validation ---
-    it('should throw if worldContext is missing or invalid (missing methods)', () => {
-        const invalidDeps = {...getValidDependencies(), worldContext: null};
-        const invalidDeps2 = {...getValidDependencies(), worldContext: {getCurrentLocation: jest.fn()}}; // Missing getLocationOfEntity
-        const invalidDeps3 = {...getValidDependencies(), worldContext: {getLocationOfEntity: jest.fn()}}; // Missing getCurrentLocation
-
-        expect(() => new PlayerTurnHandler(invalidDeps))
-            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
-        expect(() => new PlayerTurnHandler(invalidDeps2))
-            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
-        expect(() => new PlayerTurnHandler(invalidDeps3))
-            .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
-    });
-    // --- End WorldContext Test ---
-
 
     it('should throw if VED subscription fails during construction', () => {
         // Arrange: Make the subscribe method throw an error
