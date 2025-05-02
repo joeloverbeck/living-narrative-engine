@@ -8,6 +8,9 @@
 /** @typedef {import('../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */ // Corrected path
 /** @typedef {import('../interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */ // Corrected path
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added import
+// --- MODIFICATION START (Task 2 - Import IWorldContext) ---
+/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+// --- MODIFICATION END (Task 2 - Import IWorldContext) ---
 /** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */ // Corrected path
 
 /**
@@ -22,6 +25,10 @@ class AITurnHandler {
     /** @type {ICommandProcessor} */ #commandProcessor;
     /** @type {IValidatedEventDispatcher} */ #validatedEventDispatcher;
     /** @type {IActionDiscoverySystem | undefined} */ #actionDiscoverySystem; // Optional
+    // --- MODIFICATION START (Task 2 - Add worldContext) ---
+    /** @type {IWorldContext} */ #worldContext;
+
+    // --- MODIFICATION END (Task 2 - Add worldContext) ---
 
     /**
      * Creates an instance of AITurnHandler.
@@ -30,9 +37,14 @@ class AITurnHandler {
      * @param {ICommandProcessor} options.commandProcessor - The command processor instance.
      * @param {IValidatedEventDispatcher} options.validatedEventDispatcher - The event dispatcher.
      * @param {IActionDiscoverySystem} [options.actionDiscoverySystem] - (Optional) The action discovery system.
-     * @throws {Error} If essential dependencies (logger, commandProcessor, validatedEventDispatcher) are missing or invalid.
+     // --- MODIFICATION START (Task 2 - Add worldContext to constructor param) ---
+     * @param {IWorldContext} options.worldContext - The world context instance.
+     // --- MODIFICATION END (Task 2 - Add worldContext to constructor param) ---
+     * @throws {Error} If essential dependencies (logger, commandProcessor, validatedEventDispatcher, worldContext) are missing or invalid.
      */
-    constructor({logger, commandProcessor, validatedEventDispatcher, actionDiscoverySystem}) {
+    // --- MODIFICATION START (Task 2 - Destructure worldContext) ---
+    constructor({logger, commandProcessor, validatedEventDispatcher, worldContext, actionDiscoverySystem}) {
+        // --- MODIFICATION END (Task 2 - Destructure worldContext) ---
         // Validate Logger first
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
             console.error('AITurnHandler Constructor: Invalid or missing logger provided.');
@@ -49,6 +61,12 @@ class AITurnHandler {
             this.#logger.error('AITurnHandler Constructor: Invalid or missing validatedEventDispatcher.');
             throw new Error('AITurnHandler requires a valid validatedEventDispatcher instance.');
         }
+        // --- MODIFICATION START (Task 2 - Validate worldContext) ---
+        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
+            this.#logger.error('AITurnHandler Constructor: Invalid or missing worldContext (requires getLocationOfEntity).');
+            throw new Error('AITurnHandler requires a valid worldContext instance.');
+        }
+        // --- MODIFICATION END (Task 2 - Validate worldContext) ---
 
         // Validate optional dependency
         if (actionDiscoverySystem && typeof actionDiscoverySystem.getValidActions !== 'function') {
@@ -60,6 +78,9 @@ class AITurnHandler {
 
         this.#commandProcessor = commandProcessor;
         this.#validatedEventDispatcher = validatedEventDispatcher;
+        // --- MODIFICATION START (Task 2 - Assign worldContext) ---
+        this.#worldContext = worldContext;
+        // --- MODIFICATION END (Task 2 - Assign worldContext) ---
 
         this.#logger.info('AITurnHandler initialized.');
     }
@@ -83,7 +104,7 @@ class AITurnHandler {
 
         // --- SEMANTIC EVENT DISPATCH: core:ai_turn_processing_started ---
         try {
-            await this.#validatedEventDispatcher.dispatchValidated('core:ai_turn_processing_started', { entityId: actorId });
+            await this.#validatedEventDispatcher.dispatchValidated('core:ai_turn_processing_started', {entityId: actorId});
             this.#logger.debug(`Dispatched core:ai_turn_processing_started for ${actorId}.`);
         } catch (dispatchError) {
             this.#logger.error(`AITurnHandler: Failed to dispatch core:ai_turn_processing_started for ${actorId}: ${dispatchError.message}`, dispatchError);
@@ -99,7 +120,7 @@ class AITurnHandler {
             // --- 1. AI Decision Making (Placeholder/Future Work) ---
             // TODO: Implement sophisticated AI decision-making using ActionDiscoverySystem, AI components etc.
             // For now, the AI simply decides to "wait".
-            // determinedCommandString = await this.#determineAIAction(actor);
+            determinedCommandString = await this.#determineAIAction(actor); // Pass full actor
             this.#logger.debug(`AI actor ${actorId} determined command: "${determinedCommandString}"`);
 
             // --- 2. Delegate command processing ---
@@ -146,7 +167,7 @@ class AITurnHandler {
 
             // --- SEMANTIC EVENT DISPATCH: core:turn_ended ---
             try {
-                await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', { entityId: actorId });
+                await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorId});
                 this.#logger.debug(`Dispatched core:turn_ended for ${actorId}.`);
             } catch (dispatchError) {
                 this.#logger.error(`AITurnHandler: Failed to dispatch core:turn_ended for ${actorId}: ${dispatchError.message}`, dispatchError);
@@ -168,16 +189,32 @@ class AITurnHandler {
         // Example using ActionDiscoverySystem if available
         if (this.#actionDiscoverySystem) {
             try {
+                // --- MODIFICATION START (Task 2 - Use worldContext) ---
                 // Simplified context building for discovery
-                const currentLocation = await /* get location logic */ actor.getCurrentLocation(); // Assume method exists
-                const context = { actingEntity: actor, currentLocation /* other needed context */ };
-                const validActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
-                if (validActions.length > 0) {
-                    // TODO: Implement actual decision logic (e.g., pick highest priority, random)
-                    const chosenAction = validActions.find(a => a.id === 'core:wait') || validActions[0]; // Prefer wait or take first
-                    this.#logger.debug(`AI ${actor.id} discovered actions, choosing: ${chosenAction.id}`);
-                    // TODO: Construct command string based on chosen action and potential targets/params
-                    return chosenAction.id; // Return simple action ID for now
+                // Use worldContext to get location by ID
+                const currentLocation = await this.#worldContext.getLocationOfEntity(actor.id);
+                // --- MODIFICATION END (Task 2 - Use worldContext) ---
+
+                if (!currentLocation) {
+                    this.#logger.warn(`AI ${actor.id} could not determine current location via worldContext. Falling back.`);
+                    // Fall through to default action if location is unknown
+                } else {
+                    // Build context only if location was found
+                    const context = {
+                        actingEntity: actor,
+                        currentLocation,
+                        worldContext: this.#worldContext
+                        // TODO: Add other needed context properties like entityManager, gameDataRepository if ActionDiscoverySystem requires them
+                    };
+                    const validActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
+
+                    if (validActions.length > 0) {
+                        // TODO: Implement actual decision logic (e.g., pick highest priority, random)
+                        const chosenAction = validActions.find(a => a.id === 'core:wait') || validActions[0]; // Prefer wait or take first
+                        this.#logger.debug(`AI ${actor.id} discovered actions, choosing: ${chosenAction.id}`);
+                        // TODO: Construct command string based on chosen action and potential targets/params
+                        return chosenAction.id; // Return simple action ID for now
+                    }
                 }
             } catch (err) {
                 this.#logger.error(`AI ${actor.id} failed during action discovery: ${err.message}`, err);

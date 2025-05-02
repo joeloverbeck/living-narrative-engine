@@ -310,7 +310,11 @@ class PlayerTurnHandler extends ITurnHandler {
 
         try {
             // Discover Actions
-            const currentLocation = await this.#worldContext.getLocationOfEntity(actor);
+            // --- MODIFICATION START (Task 1) ---
+            // Call getLocationOfEntity with actor.id instead of the full actor object
+            const currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
+            // --- MODIFICATION END (Task 1) ---
+
             if (!currentLocation) {
                 throw new Error(`Could not determine current location for actor ${actorId}`);
             }
