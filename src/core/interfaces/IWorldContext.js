@@ -1,12 +1,12 @@
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 /**
- * @interface IGameStateManager
+ * @interface IWorldContext
  * @description Defines the contract for accessing core, mutable game state information,
  * such as the player entity and their current location. Acts as a central point of access
  * for dynamic world state needed by various systems.
  */
-export class IGameStateManager {
+export class IWorldContext {
     /**
      * Retrieves the entity representing the player's current location in the game world.
      * @function getCurrentLocation

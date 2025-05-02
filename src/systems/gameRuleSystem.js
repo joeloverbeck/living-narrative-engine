@@ -1,7 +1,7 @@
 // src/systems/gameRuleSystem.js
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */

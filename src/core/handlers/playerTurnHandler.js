@@ -9,7 +9,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */ // Adjusted path

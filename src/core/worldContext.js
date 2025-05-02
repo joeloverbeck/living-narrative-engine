@@ -3,18 +3,18 @@
 
 /** @typedef {import('./entities/entity.js').default} Entity */
 
-import {IGameStateManager} from "./interfaces/IGameStateManager.js"; // Ensure interface is imported
+import {IWorldContext} from "./interfaces/IWorldContext.js"; // Ensure interface is imported
 
 /**
  * Manages the core, mutable game world state.
  * Acts as the single source of truth for dynamic elements like the
  * player's current state and location.
  *
- * @class GameStateManager
- * @extends IGameStateManager
- * @implements {IGameStateManager}
+ * @class WorldContext
+ * @extends IWorldContext
+ * @implements {IWorldContext}
  */
-class GameStateManager extends IGameStateManager {
+class WorldContext extends IWorldContext {
     /** @type {Entity | null} */
     #playerEntity; // Using private fields for encapsulation
 
@@ -94,9 +94,10 @@ class GameStateManager extends IGameStateManager {
         // console.debug(`GameStateManager: getLocationOfEntity called for ${entity?.id}. Returning global location: ${this.#currentLocation?.id}`);
         return this.#currentLocation;
     }
+
     // ****** END FIX ******
 
 }
 
-export default GameStateManager;
+export default WorldContext;
 // --- FILE END ---

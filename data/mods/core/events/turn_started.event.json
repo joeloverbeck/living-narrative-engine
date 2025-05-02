@@ -8,7 +8,7 @@
     "type": "object",
     "properties": {
       "entityId": {
-        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique ID of the entity whose turn is starting."
       },
       "entityType": {

@@ -1,7 +1,7 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../../../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../../../../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../../../../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../../core/initializers/gameStateInitializer.js').default} GameStateInitializer */

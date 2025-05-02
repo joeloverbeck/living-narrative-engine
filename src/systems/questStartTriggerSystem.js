@@ -2,7 +2,7 @@
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../components/questLogComponent.js').QuestLogComponent} QuestLogComponent */
 
 // Assuming component keys match class names for getComponent lookup

@@ -12,7 +12,7 @@ import PayloadValueResolverService from "../../../services/payloadValueResolverS
 import ActionExecutor from "../../../actions/actionExecutor.js"; // Concrete Class Import
 import CommandParser from "../../commandParser.js";             // Concrete Class Import
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
-import GameStateManager from '../../gameStateManager.js';       // Concrete Class Import
+import WorldContext from '../../worldContext.js';       // Concrete Class Import
 // --- ADDED TurnOrderService IMPORT ---
 import {TurnOrderService} from "../../turnOrder/turnOrderService.js"; // Adjust path if needed
 // --- ADDED CommandProcessor IMPORT --- // <<< NEW
@@ -26,7 +26,7 @@ import CommandProcessor from "../../commandProcessor.js"; // <<< NEW
 /** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 
 
@@ -67,7 +67,7 @@ export function registerDomainServices(container) {
     log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`); // <<< Added Log
 
     // --- Register GameStateManager against its Interface Token ---
-    r.single(tokens.IGameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
+    r.single(tokens.IGameStateManager, WorldContext, []); // Assuming GameStateManager has no dependencies in constructor
     log.debug(`Domain-services Registration: Registered ${tokens.IGameStateManager}.`); // <<< Added Log
 
     // --- Register CommandParser against its Interface Token using explicit factory function ---

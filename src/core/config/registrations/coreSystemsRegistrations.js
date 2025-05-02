@@ -14,7 +14,7 @@
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */ // Assuming EventBus type definition exists
-/** @typedef {import('../../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../interfaces/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Assuming type definition exists
 /** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists

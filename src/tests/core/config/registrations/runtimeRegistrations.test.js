@@ -3,7 +3,7 @@
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../../../../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../../../../core/interfaces/input.js').IInputHandler} IInputHandler */
 /** @typedef {import('../../../../core/commandParser.js').default} CommandParser */
 /** @typedef {import('../../../../actions/actionExecutor.js').default} ActionExecutor */
@@ -41,7 +41,7 @@ import {tokens} from '../../../../core/config/tokens.js';
 import CommandProcessor from '../../../../core/commandProcessor.js';
 import ActionExecutor from '../../../../actions/actionExecutor.js';
 import CommandParser from '../../../../core/commandParser.js';
-import GameStateManager from '../../../../core/gameStateManager.js';
+import WorldContext from '../../../../core/worldContext.js';
 import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js'; // Original for type info if needed
 
 
@@ -54,7 +54,7 @@ jest.mock('../../../../core/handlers/playerTurnHandler.js');
 jest.mock('../../../../core/commandProcessor.js');
 jest.mock('../../../../actions/actionExecutor.js');
 jest.mock('../../../../core/commandParser.js');
-jest.mock('../../../../core/gameStateManager.js');
+jest.mock('../../../../core/worldContext.js');
 jest.mock('../../../../core/turnOrder/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
 jest.mock('../../../../systems/actionDiscoverySystem.js'); // Mocking ActionDiscoverySystem
@@ -70,7 +70,7 @@ import PlayerTurnHandler from '../../../../core/handlers/playerTurnHandler.js';
 import CommandProcessorMock from '../../../../core/commandProcessor.js';
 import ActionExecutorMock from '../../../../actions/actionExecutor.js';
 import CommandParserMock from '../../../../core/commandParser.js';
-import GameStateManagerMock from '../../../../core/gameStateManager.js';
+import GameStateManagerMock from '../../../../core/worldContext.js';
 import { TurnOrderService as TurnOrderServiceMock } from '../../../../core/turnOrder/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
 import { ActionDiscoverySystem as ActionDiscoverySystemMock } from '../../../../systems/actionDiscoverySystem.js';

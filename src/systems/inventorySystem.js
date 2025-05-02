@@ -12,7 +12,7 @@ import {
 /** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../entities/entity.js').default} Entity */ // Keep for getPlayer return type hint
 
 /**

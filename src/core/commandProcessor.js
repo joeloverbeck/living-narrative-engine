@@ -8,7 +8,7 @@
 /** @typedef {import('./interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('./interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('./interfaces/./IWorldContext.js').IWorldContext} IGameStateManager */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../actions/actionTypes.js').ActionResult} ActionResult */

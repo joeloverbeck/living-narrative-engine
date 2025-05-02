@@ -16,7 +16,7 @@
         "description": "The ID of the action that was executed (e.g., 'core:move', 'combat:attack')."
       },
       "result": {
-        "$ref": "../../../schemas/action-result.schema.json",
+        "$ref": "http://example.com/schemas/defs/action-result.schema.json",
         "description": "The result object returned by the action's execution logic. Conforms to the ActionResult definition, containing success status and potentially messages useful for UI feedback or logging."
       }
     },

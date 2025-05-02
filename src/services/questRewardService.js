@@ -2,7 +2,7 @@
 
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/gameStateManager.js').default} GameStateManager */
+/** @typedef {import('../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../types/questTypes.js').QuestDefinition} QuestDefinition */
 /** @typedef {import('../types/questTypes.js').RewardSummary} RewardSummary */

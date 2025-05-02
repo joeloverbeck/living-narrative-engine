@@ -33,7 +33,7 @@ jest.mock("../../../../services/payloadValueResolverService.js");
 jest.mock("../../../../actions/actionExecutor.js");
 jest.mock("../../../../core/commandParser.js");
 jest.mock('../../../../logic/jsonLogicEvaluationService.js'); // Mocking this as well, though often infrastructural
-jest.mock('../../../../core/gameStateManager.js'); // Also needed
+jest.mock('../../../../core/worldContext.js'); // Also needed
 
 // --- Import AFTER mocking ---
 import ConditionEvaluationService from '../../../../services/conditionEvaluationService.js';
@@ -47,7 +47,7 @@ import PayloadValueResolverService from "../../../../services/payloadValueResolv
 import ActionExecutor from "../../../../actions/actionExecutor.js";
 import CommandParser from "../../../../core/commandParser.js";
 import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationService.js';
-import GameStateManager from '../../../../core/gameStateManager.js';
+import WorldContext from '../../../../core/worldContext.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
@@ -167,7 +167,7 @@ describe('registerDomainServices', () => {
         mockContainer.register(tokens.PrerequisiteEvaluationService, new PrerequisiteEvaluationService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.PayloadValueResolverService, new PayloadValueResolverService(), {lifecycle: 'singleton'});
         mockContainer.register(tokens.ActionValidationService, new ActionValidationService(), {lifecycle: 'singleton'});
-        mockContainer.register(tokens.IGameStateManager, new GameStateManager(), {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IGameStateManager, new WorldContext(), {lifecycle: 'singleton'});
 
 
         // Clear call counts on the mock service functions/constructors
@@ -183,7 +183,7 @@ describe('registerDomainServices', () => {
         ActionExecutor.mockClear();
         CommandParser.mockClear();
         JsonLogicEvaluationService.mockClear(); // Clear constructor mock too
-        GameStateManager.mockClear();
+        WorldContext.mockClear();
     });
 
     it('should register domain services without throwing errors', () => {

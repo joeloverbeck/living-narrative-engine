@@ -8,14 +8,14 @@
     "type": "object",
     "properties": {
       "entityId": {
-        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique ID of the AI entity whose turn processing has ended."
       },
       "actionResult": {
         "description": "The result returned by the CommandProcessor after attempting the AI's action, or null if processing failed before an action result was obtained.",
         "oneOf": [
           {
-            "$ref": "../../../schemas/action-result.schema.json"
+            "$ref": "http://example.com/schemas/defs/action-result.schema.json"
           },
           {
             "type": "null"
