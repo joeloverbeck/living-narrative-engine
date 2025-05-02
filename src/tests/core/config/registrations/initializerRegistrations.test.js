@@ -149,18 +149,21 @@ describe('registerInitializers', () => {
         // Assert: Check if main services were registered via the container's register method.
         // The Registrar helper calls container.register internally.
         // We check the arguments received by the mock container.register.
-        // The key is that the actual registerInitializers function doesn't *explicitly*
-        // pass the options object when using the Registrar helper's methods.
+
+        // ----- VVVVVV START OF CORRECTION VVVVVV -----
         expect(mockContainer.register).toHaveBeenCalledWith(
             tokens.WorldInitializer,
-            expect.any(Function) // It's registered via a factory provided to the Registrar
-            // NO third argument assertion here, as it's handled internally by Registrar
+            expect.any(Function), // It's registered via a factory provided to the Registrar
+            // Assert the third argument (options) IS passed by the Registrar helper
+            expect.objectContaining({lifecycle: 'singletonFactory'})
         );
         expect(mockContainer.register).toHaveBeenCalledWith(
             tokens.SystemInitializer,
-            expect.any(Function) // It's registered via a factory provided to the Registrar
-            // NO third argument assertion here, as it's handled internally by Registrar
+            expect.any(Function), // It's registered via a factory provided to the Registrar
+            // Assert the third argument (options) IS passed by the Registrar helper
+            expect.objectContaining({lifecycle: 'singletonFactory'})
         );
+        // ----- ^^^^^^ END OF CORRECTION ^^^^^^ -----
     });
 
     it('resolving WorldInitializer does not throw and calls constructor', () => {

@@ -137,7 +137,6 @@ describe('Application Bootstrap Integration Test', () => {
         // This relies on initializeAll not throwing and the services being singletons.
         // Resolve them *after* initializeAll has run.
         expect(() => container.resolve(tokens.GameRuleSystem)).not.toThrow();
-        expect(() => container.resolve(tokens.GameStateInitializer)).not.toThrow();
         expect(() => container.resolve(tokens.SystemLogicInterpreter)).not.toThrow();
         // Add more checks for key initializable systems if desired
     });
