@@ -1,5 +1,4 @@
-// src/core/worldInitializer.js
-
+// src/core/initializers/worldInitializer.js
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
@@ -58,14 +57,14 @@ class WorldInitializer {
      * Instantiates initial world entities from all definitions and builds the spatial index.
      * Dispatches 'initialization:world_initializer:started/completed/failed' events.
      * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
-     * @returns {boolean} True if successful, false on critical error (now throws).
-     * @throws {Error} If a critical error occurs during initialization.
+     * @returns {Promise<boolean>} Resolves with true if successful.
+     * @throws {Error} If a critical error occurs during initialization (after logging and dispatching failure event).
      */
-    initializeWorldEntities() {
+    async initializeWorldEntities() { // <-- Make async
         this.#logger.info('WorldInitializer: Instantiating initial world entities...');
         let totalInstantiatedCount = 0; // Single counter for all entities
 
-        // --- Ticket 16: Dispatch 'started' event ---
+        // --- Ticket 16: Dispatch 'started' event (fire-and-forget is okay here) ---
         const startPayload = {};
         this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:started', startPayload, {allowSchemaNotFound: true})
             .then(() => this.#logger.debug("Dispatched 'initialization:world_initializer:started' event."))
@@ -86,10 +85,7 @@ class WorldInitializer {
                 }
                 const entityDefId = entityDef.id;
 
-                // Removed Player/Location skip logic
-                // Removed selective instantiation logic (shouldInstantiate)
-
-                // Check if entity already exists (e.g., instantiated by an earlier process)
+                // Check if entity already exists
                 if (this.#entityManager.activeEntities.has(entityDefId)) {
                     this.#logger.warn(`Entity definition ${entityDefId} requested but entity already exists. Skipping.`);
                     continue;
@@ -100,27 +96,25 @@ class WorldInitializer {
 
                 if (instance) {
                     this.#logger.info(`Instantiated entity: ${instance.id} from definition: ${entityDefId}`);
-                    totalInstantiatedCount++; // Increment the single counter
+                    totalInstantiatedCount++;
 
-                    // Dispatch finer-grained event with updated reason
+                    // Dispatch finer-grained event (fire-and-forget okay for individual entities)
                     this.#validatedEventDispatcher.dispatchValidated(
                         'worldinit:entity_instantiated',
                         {entityId: instance.id, definitionId: entityDefId, reason: 'Initial World Load'},
                         {allowSchemaNotFound: true}
                     ).catch(e => this.#logger.error(`Failed dispatching entity_instantiated event for ${instance.id}`, e));
 
-                    // Removed Blocker instantiation logic
                 } else {
                     this.#logger.warn(`Failed to instantiate entity from definition: ${entityDefId}.`);
-                    // Optional: Dispatch entity failure event with updated reason
+                    // Dispatch entity failure event (fire-and-forget okay)
                     this.#validatedEventDispatcher.dispatchValidated('worldinit:entity_instantiation_failed', {
                         definitionId: entityDefId,
-                        reason: 'Initial World Load' // Updated reason
+                        reason: 'Initial World Load'
                     }, {allowSchemaNotFound: true}).catch(e => this.#logger.error("Failed dispatching entity_instantiation_failed event", e));
                 }
             } // End loop
 
-            // Updated final log message
             this.#logger.info(`Instantiated ${totalInstantiatedCount} total entities.`);
 
             // Build Spatial Index
@@ -129,11 +123,16 @@ class WorldInitializer {
             this.#logger.info('Initial spatial index build completed.');
 
             // --- Ticket 16: Dispatch 'completed' event ---
-            // Updated payload for completed event
-            const completedPayload = {totalInstantiatedCount}; // Use the new counter
-            this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:completed', completedPayload, {allowSchemaNotFound: true})
-                .then(() => this.#logger.debug("Dispatched 'initialization:world_initializer:completed' event.", completedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_initializer:completed' event", e));
+            const completedPayload = {totalInstantiatedCount};
+            // Await the final dispatch AND logging before returning success
+            await this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:completed', completedPayload, {allowSchemaNotFound: true})
+                .then(() => {
+                    this.#logger.debug("Dispatched 'initialization:world_initializer:completed' event.", completedPayload);
+                })
+                .catch(e => {
+                    // Log the error but allow the function to return true unless this dispatch failure is critical
+                    this.#logger.error("Failed to dispatch 'initialization:world_initializer:completed' event", e);
+                });
             // --- End Ticket 16 ---
 
             return true; // Indicate success
@@ -143,12 +142,13 @@ class WorldInitializer {
 
             // --- Ticket 16: Dispatch 'failed' event ---
             const failedPayload = {error: error?.message || 'Unknown error', stack: error?.stack};
-            this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:failed', failedPayload, {allowSchemaNotFound: true})
+            // Await the failure dispatch/logging before re-throwing
+            await this.#validatedEventDispatcher.dispatchValidated('initialization:world_initializer:failed', failedPayload, {allowSchemaNotFound: true})
                 .then(() => this.#logger.debug("Dispatched 'initialization:world_initializer:failed' event.", failedPayload))
                 .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_initializer:failed' event", e));
             // --- End Ticket 16 ---
 
-            throw error; // Re-throw after logging/dispatching to halt initialization sequence
+            throw error; // Re-throw critical error after logging/dispatching
         }
     }
 }

@@ -49,7 +49,7 @@
  * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
  * @property {DiToken} TurnHandlerResolver - Token for the service that resolves the correct turn handler.
  * @property {DiToken} PlayerTurnHandler - Token for the player-specific turn handler implementation.
- * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation. // <<< ADDED
+ * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  *
  * --- Core Interface Tokens ---
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
@@ -65,7 +65,7 @@
  * @property {DiToken} QuestRewardService - Token for quest reward logic.
  * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
  * @property {DiToken} ObjectiveStateCheckerService - Token for checking objective states.
- * @property {DiToken} GameStateInitializer - Token for initializing the game state.
+ * // REMOVED: GameStateInitializer JSDoc property
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
  * @property {DiToken} InitializationService - Token for the main initialization orchestration service.
@@ -145,6 +145,7 @@ export const tokens = Object.freeze({
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
     PayloadValueResolverService: 'PayloadValueResolverService',
+    // REMOVED: GameStateInitializer: 'GameStateInitializer',
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
     InitializationService: 'InitializationService',
@@ -155,7 +156,7 @@ export const tokens = Object.freeze({
     ICommandProcessor: 'ICommandProcessor',
     TurnHandlerResolver: 'TurnHandlerResolver',
     PlayerTurnHandler: 'PlayerTurnHandler',
-    AITurnHandler: 'AITurnHandler', // <<< ADDED
+    AITurnHandler: 'AITurnHandler',
 
     // Core Service Interfaces
     IValidatedEventDispatcher: 'IValidatedEventDispatcher',
