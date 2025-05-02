@@ -1,0 +1,14 @@
+{
+  "id": "isekai:counter_lady",
+  "components": {
+    "core:actor": {},
+    "core:name": {
+      "text": "Counter Lady"
+    },
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
+}
