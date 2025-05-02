@@ -1,7 +1,7 @@
 // src/core/config/registrations/runtimeRegistrations.js
 // ****** MODIFIED FILE ******
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 // REMOVED: GameLoop import (no longer directly instantiated here)
 // import GameLoop from "../../gameLoop.js";
 import InputSetupService from "../../setup/inputSetupService.js";

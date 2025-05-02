@@ -12,7 +12,7 @@
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 // --- MODIFIED: Import SHUTDOWNABLE tag ---
 import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 

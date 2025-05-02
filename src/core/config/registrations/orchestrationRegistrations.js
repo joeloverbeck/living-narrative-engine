@@ -15,7 +15,7 @@ import ShutdownService from '../../shutdown/services/shutdownService.js';       
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js'; // Adjusted path
+import {Registrar} from '../registrarHelpers.js'; // Adjusted path
 
 /**
  * Registers the InitializationService and ShutdownService.

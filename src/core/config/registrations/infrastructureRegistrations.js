@@ -6,7 +6,7 @@ import {GameDataRepository} from '../../services/gameDataRepository.js';
 import EntityManager from '../../../entities/entityManager.js';
 import ValidatedEventDispatcher from '../../../services/validatedEventDispatcher.js'; // Concrete Class Import
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 import {SystemServiceRegistry} from "../../services/systemServiceRegistry.js";
 import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
 

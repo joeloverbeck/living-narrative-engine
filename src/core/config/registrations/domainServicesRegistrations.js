@@ -1,6 +1,6 @@
 // src/core/config/registrations/domainServicesRegistrations.js
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
 import {ItemTargetResolverService} from "../../../services/itemTargetResolver.js";
 import TargetResolutionService from "../../../services/targetResolutionService.js";

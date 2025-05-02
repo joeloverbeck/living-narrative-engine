@@ -54,7 +54,7 @@ import TurnHandlerResolver from '../../services/turnHandlerResolver.js';
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 import {formatActionCommand} from '../../../services/actionFormatter.js';
 import {INITIALIZABLE, SHUTDOWNABLE} from "../tags.js";
 

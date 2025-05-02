@@ -2,7 +2,7 @@
 
 // --- Import DI tokens & helpers ---
 import {tokens} from './tokens.js'; // Corrected path assuming tokens.js is in the same directory
-import {Registrar} from '../dependencyInjection/registrarHelpers.js'; // Corrected path assuming registrarHelpers.js is one level up
+import {Registrar} from './registrarHelpers.js'; // Corrected path assuming registrarHelpers.js is one level up
 
 // --- Import Logger ---
 import ConsoleLogger from '../services/consoleLogger.js'; // Corrected path assuming consoleLogger is in ../services/

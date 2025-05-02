@@ -1,6 +1,6 @@
 // src/core/config/registrations/initializerRegistrations.js
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 import GameStateInitializer from '../../initializers/gameStateInitializer.js';
 import WorldInitializer from '../../initializers/worldInitializer.js';
 import SystemInitializer from '../../initializers/systemInitializer.js';

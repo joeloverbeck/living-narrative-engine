@@ -48,7 +48,7 @@ import EntityLoader from '../../loaders/entityLoader.js';
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 
 /**
  * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)

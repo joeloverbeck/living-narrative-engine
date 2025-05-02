@@ -7,7 +7,7 @@
 import DomRenderer from '../../domRenderer.js';
 import InputHandler from '../../inputHandler.js'; // Concrete Class Import
 import {tokens} from '../tokens.js';
-import {Registrar} from '../../dependencyInjection/registrarHelpers.js';
+import {Registrar} from '../registrarHelpers.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../domRenderer.js').default} DomRenderer */
