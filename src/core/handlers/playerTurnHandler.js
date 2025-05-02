@@ -47,7 +47,7 @@ class PlayerTurnHandler extends ITurnHandler {
     /** @type {Entity | null} */
     #currentActor = null;
     /** @type {Promise<void> | null} */
-    #turnPromise = null;
+    #turnPromise = null; // Internal reference, managed by the handler
     /** @type {((value: void | PromiseLike<void>) => void) | null} */
     #turnPromiseResolve = null;
     /** @type {((reason?: any) => void) | null} */
@@ -85,7 +85,8 @@ class PlayerTurnHandler extends ITurnHandler {
 
         // Inject and assign logger first
         if (!logger || typeof logger.error !== 'function') {
-            console.error('PlayerTurnHandler Constructor: Invalid or missing logger dependency.');
+            // Avoid console.error in constructor for testability if logger is the dep being tested
+            // Rely on the thrown Error.
             throw new Error('PlayerTurnHandler: Invalid or missing logger dependency.');
         }
         this.#logger = logger;
@@ -151,44 +152,45 @@ class PlayerTurnHandler extends ITurnHandler {
         const actorId = actor?.id || 'UNKNOWN';
         this.#logger.info(`PlayerTurnHandler: Starting turn handling for actor ${actorId}.`);
 
-        if (!actor || !actor.id) { // Check actor.id as well
+        // --- Initial validation checks ---
+        if (!actor || !actor.id) {
             this.#logger.error('PlayerTurnHandler: Attempted to handle turn for an invalid actor.');
             throw new Error('PlayerTurnHandler: Actor must be a valid entity.');
         }
-
         if (this.#currentActor) {
             const errorMsg = `PlayerTurnHandler: Attempted to start a new turn for ${actor.id} while turn for ${this.#currentActor.id} is already in progress.`;
             this.#logger.error(errorMsg);
-            throw new Error(errorMsg); // Prevent concurrent turns
+            throw new Error(errorMsg);
         }
+        // --- End initial validation ---
 
-        this.#currentActor = actor;
+        this.#currentActor = actor; // Set current actor
 
-        // Create the promise that TurnManager will await
-        this.#turnPromise = new Promise((resolve, reject) => {
+        // --- Create the promise for the caller ---
+        const promiseForCaller = new Promise((resolve, reject) => {
             this.#turnPromiseResolve = resolve;
             this.#turnPromiseReject = reject;
         });
+        this.#turnPromise = promiseForCaller; // Assign internal reference
+        // --- End promise creation ---
 
         try {
-            // Discover actions and prompt the player for input.
-            // This does NOT resolve the promise; resolution happens in _processValidatedCommand.
+            // Attempt to discover actions and dispatch the initial prompt
             await this.#_promptPlayerForAction(actor);
             this.#logger.debug(`PlayerTurnHandler: Initial prompt dispatched for ${actor.id}. Waiting for command input.`);
-            // Return the promise for TurnManager to await
-            return this.#turnPromise;
         } catch (initError) {
+            // If #_promptPlayerForAction threw an error
             this.#logger.error(`PlayerTurnHandler: Error during turn initiation/prompt for ${actor.id}: ${initError.message}`, initError);
-            // If initiation fails, reject the promise immediately and clean up.
-            if (this.#turnPromiseReject) {
-                this.#turnPromiseReject(initError);
-            } else {
-                this.#logger.error(`PlayerTurnHandler: Turn promise rejector not available during initiation error for ${actor.id}!`);
-            }
-            await this.#_handleTurnEnd(actor.id, initError); // Dispatch turn_ended and cleanup on error
-            // Do not re-throw; rejection handles the error flow to TurnManager
+            // Ensure the turn ends and the promise is rejected.
+            await this.#_handleTurnEnd(actor.id, initError, true);
+            // Do not re-throw initError here. The rejection of promiseForCaller is sufficient.
         }
+
+        // --- Return the promise ---
+        return promiseForCaller;
+        // --- End return ---
     }
+
 
     /**
      * Handles the 'command:submit' event received via VED.
@@ -203,27 +205,43 @@ class PlayerTurnHandler extends ITurnHandler {
 
         this.#logger.debug(`PlayerTurnHandler: Received command:submit event. Payload: ${JSON.stringify(payload)}`);
 
-        if (!this.#currentActor) {
+        // --- Check if a turn is active FOR THIS HANDLER INSTANCE ---
+        const currentActorAtStart = this.#currentActor; // Capture current actor state
+        if (!currentActorAtStart) {
             this.#logger.warn(`PlayerTurnHandler: Received command:submit but no player turn is active. Ignoring.`);
-            return; // No active turn, do nothing.
+            return;
         }
+        const actorId = currentActorAtStart.id;
+
+        // Ensure turn promise functions are still set
+        if (!this.#turnPromiseResolve || !this.#turnPromiseReject) {
+            this.#logger.error(`PlayerTurnHandler: Command submitted for ${actorId}, but turn promise functions are missing. Turn might be ending or destroyed.`);
+            return;
+        }
+        // --- End checks ---
 
         if (!commandString) {
-            this.#logger.warn(`PlayerTurnHandler: Received command:submit with empty command string. Re-prompting actor ${this.#currentActor.id}.`);
-            // Re-prompt the player if they send an empty command.
+            this.#logger.warn(`PlayerTurnHandler: Received command:submit with empty command string. Re-prompting actor ${actorId}.`);
             try {
-                await this.#_promptPlayerForAction(this.#currentActor);
+                // Ensure the actor hasn't changed mid-check
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this.#_promptPlayerForAction(this.#currentActor);
+                } else {
+                    this.#logger.warn(`PlayerTurnHandler: Actor changed before re-prompting for empty command for ${actorId}. Aborting.`);
+                }
             } catch (promptError) {
-                this.#logger.error(`PlayerTurnHandler: Failed to re-prompt player ${this.#currentActor.id} after empty command: ${promptError.message}`, promptError);
-                // If re-prompting fails critically, end the turn with an error
-                await this.#_handleTurnEnd(this.#currentActor.id, promptError, true); // Signal turn end on critical prompt error
+                this.#logger.error(`PlayerTurnHandler: Failed to re-prompt player ${actorId} after empty command: ${promptError.message}`, promptError);
+                // Check state before ending turn
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this.#_handleTurnEnd(actorId, promptError, true);
+                }
             }
             return; // Don't process empty commands
         }
 
-        // Process the validated command string.
-        this.#logger.info(`PlayerTurnHandler: Handling command "${commandString}" for current actor ${this.#currentActor.id}.`);
-        await this.#_processValidatedCommand(this.#currentActor, commandString);
+        // Process the validated command string, passing the actor object we know was current at the start
+        this.#logger.info(`PlayerTurnHandler: Handling command "${commandString}" for current actor ${actorId}.`);
+        await this.#_processValidatedCommand(currentActorAtStart, commandString);
     }
 
     /**
@@ -232,67 +250,81 @@ class PlayerTurnHandler extends ITurnHandler {
      * or if the player should be prompted again. Dispatches 'core:turn_ended' or
      * 'core:system_error_occurred' on critical failures.
      * @private
-     * @param {Entity} actor - The actor performing the command.
+     * @param {Entity} actor - The actor performing the command (captured at start of submit handling).
      * @param {string} commandString - The validated, non-empty command string.
      * @returns {Promise<void>}
      */
     async #_processValidatedCommand(actor, commandString) {
         const actorId = actor.id;
 
+        // Check if the turn for this actor is still the active one for this handler.
+        if (!this.#currentActor || this.#currentActor.id !== actorId) {
+            this.#logger.warn(`PlayerTurnHandler: #_processValidatedCommand called for ${actorId}, but current actor is ${this.#currentActor?.id || 'null'}. Aborting processing.`);
+            return;
+        }
+        // Double check promise functions haven't been cleared yet.
         if (!this.#turnPromiseResolve || !this.#turnPromiseReject) {
-            this.#logger.error(`PlayerTurnHandler: #_processValidatedCommand called for ${actorId} but turn promise functions are not set! Cleaning up.`);
-            await this.#_handleTurnEnd(actorId, new Error("Internal state error: turn promise lost.")); // Dispatch turn_ended & cleanup
-            return; // Avoid further processing
+            this.#logger.error(`PlayerTurnHandler: #_processValidatedCommand called for ${actorId} but turn promise functions are not set! Turn might have already ended.`);
+            return;
         }
 
         this.#logger.debug(`PlayerTurnHandler: Processing validated command "${commandString}" for ${actorId}.`);
-        // REMOVED: Dispatch 'textUI:disable_input'
 
         try {
             this.#logger.info(`PlayerTurnHandler: Delegating command "${commandString}" for ${actorId} to ICommandProcessor...`);
-            /** @type {CommandResult} */
             const result = await this.#commandProcessor.processCommand(actor, commandString);
+
+            // --- Re-check state AFTER await ---
+            if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                this.#logger.warn(`PlayerTurnHandler: Turn state changed during command processing for ${actorId}. Aborting further action.`);
+                return;
+            }
+            // --- End Re-check ---
 
             this.#logger.info(
                 `PlayerTurnHandler: CommandProcessor result for ${actorId} command "${commandString}": ` +
                 `Success=${result.success}, TurnEnded=${result.turnEnded}, ActionResult=${!!result.actionResult}.`
             );
 
-            // --- Handle CommandResult ---
+
             if (result.turnEnded) {
-                // SUCCESS/FAILURE + TURN ENDS: Signal turn end and clean up state.
-                // CommandProcessor already dispatched action_executed/action_failed/command_parse_failed.
                 this.#logger.info(`PlayerTurnHandler: Command resulted in turn end for ${actorId}.`);
-                await this.#_handleTurnEnd(actorId); // Dispatch turn_ended, resolve promise, cleanup
+                await this.#_handleTurnEnd(actorId, null); // Pass null for rejectionReason on success
 
             } else {
-                // SUCCESS/FAILURE + TURN CONTINUES: Re-prompt the player.
-                // CommandProcessor already dispatched relevant failure events if applicable (e.g., parse failed).
                 this.#logger.info(`PlayerTurnHandler: Command did NOT end turn for ${actorId}. Re-prompting.`);
+                // Re-check state before re-prompting
+                if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                    this.#logger.warn(`PlayerTurnHandler: Turn state changed before re-prompt for ${actorId}. Aborting prompt.`);
+                    return;
+                }
                 await this.#_promptPlayerForAction(actor); // Ask for next command
             }
 
-        } catch (criticalError) {
-            // --- Handle Critical Processing Errors ---
+        } catch (error) {
             this.#logger.error(
-                `PlayerTurnHandler: CRITICAL error during command processing delegation for ${actorId} command "${commandString}": ${criticalError.message}`,
-                criticalError
+                `PlayerTurnHandler: Error during command processing or re-prompt for ${actorId} command "${commandString}": ${error.message}`,
+                error
             );
 
-            // Dispatch system error event (best effort)
-            try {
-                await this.#validatedEventDispatcher.dispatchValidated('core:system_error_occurred', {
-                    message: `An internal error occurred while processing command for ${actorId}.`,
-                    type: 'error',
-                    details: criticalError.message
-                });
-            } catch (dispatchErr) {
-                this.#logger.error(`PlayerTurnHandler: Failed to dispatch critical error message via VED for ${actorId}: ${dispatchErr.message}`, dispatchErr);
-            }
+            // Check if we are still handling the turn for this actor before attempting cleanup/rejection
+            if (this.#currentActor && this.#currentActor.id === actorId) {
+                try {
+                    await this.#validatedEventDispatcher.dispatchValidated('core:system_error_occurred', {
+                        message: `An internal error occurred while processing command or re-prompting for ${actorId}.`,
+                        type: 'error',
+                        details: error.message
+                    });
+                } catch (dispatchErr) {
+                    this.#logger.error(`PlayerTurnHandler: Failed to dispatch critical error message via VED for ${actorId}: ${dispatchErr.message}`, dispatchErr);
+                }
 
-            // Signal failed turn end, reject the promise, and clean up.
-            this.#logger.info(`PlayerTurnHandler: Signalling FAILED turn end for ${actorId} due to critical error.`);
-            await this.#_handleTurnEnd(actorId, criticalError, true); // Dispatch turn_ended, reject promise, cleanup
+                this.#logger.info(`PlayerTurnHandler: Signalling FAILED turn end for ${actorId} due to error.`);
+                // Ensure the promise is rejected
+                await this.#_handleTurnEnd(actorId, error, true);
+            } else {
+                this.#logger.warn(`PlayerTurnHandler: Error caught for ${actorId}, but turn state seems invalid. Cannot reliably signal turn end.`);
+            }
         }
     }
 
@@ -304,124 +336,207 @@ class PlayerTurnHandler extends ITurnHandler {
      * @throws {Error} If action discovery or dispatching the prompt event fails critically.
      */
     async #_promptPlayerForAction(actor) {
+        // Check if the turn for this actor is still active
+        if (!this.#currentActor || actor.id !== this.#currentActor.id) {
+            this.#logger.warn(`PlayerTurnHandler: #_promptPlayerForAction called for actor ${actor?.id}, but current actor is ${this.#currentActor?.id}. Aborting prompt.`);
+            return; // Don't throw, just exit if state is inconsistent
+        }
+        // Check if promise functions are still available
+        if (!this.#turnPromiseResolve || !this.#turnPromiseReject) {
+            this.#logger.error(`PlayerTurnHandler: #_promptPlayerForAction called for ${actor.id} but turn promise functions are not set! Turn might have ended.`);
+            return;
+        }
+
         const actorId = actor.id;
         this.#logger.debug(`PlayerTurnHandler: Preparing prompt for ${actorId}. Discovering actions...`);
         let availableActions = [];
 
         try {
-            // Discover Actions
-            // --- MODIFICATION START (Task 1) ---
-            // Call getLocationOfEntity with actor.id instead of the full actor object
             const currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
-            // --- MODIFICATION END (Task 1) ---
 
-            if (!currentLocation) {
-                throw new Error(`Could not determine current location for actor ${actorId}`);
+            // --- Re-check state AFTER await ---
+            if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                this.#logger.warn(`PlayerTurnHandler: Turn state changed during location check for ${actorId}. Aborting prompt.`);
+                return;
             }
+            // --- End Re-check ---
 
-            /** @type {ActionContext} */
             const context = {
                 actingEntity: actor,
                 currentLocation: currentLocation,
                 entityManager: this.#entityManager,
                 gameDataRepository: this.#gameDataRepository,
-                logger: this.#logger, // Pass logger for potential use in discovery logic
+                logger: this.#logger,
                 worldContext: this.#worldContext,
-                // dispatch: Not typically needed for discovery, handled by CommandProcessor/ActionExecutor
             };
 
-            // Assuming getValidActions returns ActionDefinitionMinimal[] or similar
             availableActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
             this.#logger.debug(`PlayerTurnHandler: Discovered ${availableActions.length} actions for ${actorId}.`);
 
-            // --- SEMANTIC EVENT DISPATCH: core:player_turn_prompt ---
+            // --- Re-check state BEFORE dispatch ---
+            if (!this.#currentActor || actor.id !== this.#currentActor.id || !this.#turnPromiseResolve) {
+                this.#logger.warn(`PlayerTurnHandler: Turn state changed just before dispatching prompt for ${actorId}. Aborting dispatch.`);
+                return;
+            }
+            // --- End Re-check ---
+
             await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
                 entityId: actorId,
-                availableActions: availableActions.map(a => a.id) // Send only action IDs based on schema
-                // Consider sending more action details if schema allows and UI needs it
+                availableActions: availableActions.map(a => a.id)
             });
             this.#logger.debug(`PlayerTurnHandler: Dispatched core:player_turn_prompt for ${actorId}.`);
-            // --- END SEMANTIC EVENT DISPATCH ---
 
         } catch (error) {
             this.#logger.error(`PlayerTurnHandler: Error during action discovery or prompting for ${actorId}: ${error.message}`, error);
-            // Attempt to dispatch prompt with empty actions on error (best effort)
-            try {
-                await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
-                    entityId: actorId,
-                    availableActions: []
-                });
-                this.#logger.warn(`Dispatched core:player_turn_prompt with empty actions due to error for ${actorId}.`);
-            } catch (dispatchError) {
-                this.#logger.error(`PlayerTurnHandler: Failed to dispatch empty prompt after error for ${actorId}: ${dispatchError.message}`, dispatchError);
+
+            // Check if the turn is still active for this actor before dispatching error prompt
+            if (this.#currentActor && this.#currentActor.id === actorId) {
+                try {
+                    // Re-check state again right before dispatching error prompt
+                    if (!this.#currentActor || actor.id !== this.#currentActor.id || !this.#turnPromiseResolve) {
+                        this.#logger.warn(`PlayerTurnHandler: Turn state changed just before dispatching ERROR prompt for ${actorId}. Aborting dispatch.`);
+                    } else {
+                        await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
+                            entityId: actorId,
+                            availableActions: [], // Send empty actions on error
+                            error: error.message // Optionally include error info
+                        });
+                        this.#logger.warn(`Dispatched core:player_turn_prompt with empty actions due to error for ${actorId}.`);
+                    }
+                } catch (dispatchError) {
+                    this.#logger.error(`PlayerTurnHandler: Failed to dispatch empty/error prompt after error for ${actorId}: ${dispatchError.message}`, dispatchError);
+                }
             }
-            // Re-throw the original error to be handled by the caller (handleTurn or _processValidatedCommand)
+            // Re-throw the original error so it propagates to handleTurn's catch block
             throw error;
         }
     }
 
     /**
      * Centralized method to handle the end of a player's turn.
-     * Dispatches 'core:turn_ended', resolves or rejects the turn promise, and cleans up state.
+     * Order: Check State -> Dispatch Event -> Settle Promise -> Cleanup State.
+     * Ensures cleanup happens only once per turn instance.
      * @private
      * @param {string} actorId - The ID of the actor whose turn is ending.
-     * @param {any} [rejectionReason] - If provided, the turn promise is rejected with this reason. Otherwise, it's resolved.
-     * @param {boolean} [isError=false] - Flag indicating if the turn ended due to an error.
+     * @param {any} [rejectionReason=null] - If provided, the turn promise is rejected with this reason. Otherwise, it's resolved.
+     * @param {boolean} [isError=false] - Deprecated flag, use rejectionReason check.
      * @returns {Promise<void>}
      */
-    async #_handleTurnEnd(actorId, rejectionReason = null, isError = false) {
-        this.#logger.info(`PlayerTurnHandler: Ending turn for actor ${actorId}${isError ? ' due to error' : ''}.`);
+    async #_handleTurnEnd(actorId, rejectionReason = null) { // Removed unused isError param
+        // --- Check State ---
+        // Check if the turn is *currently* active for the given actorId for *this* handler instance.
+        if (!this.#currentActor || this.#currentActor.id !== actorId) {
+            this.#logger.warn(`PlayerTurnHandler: #_handleTurnEnd called for ${actorId}, but current actor is ${this.#currentActor?.id || 'null'}. Turn may have already ended or belongs to another handler.`);
+            return; // Exit if not the active turn for this handler
+        }
+        // --- End Check State ---
 
-        // --- SEMANTIC EVENT DISPATCH: core:turn_ended ---
+        const endingType = rejectionReason ? 'error' : 'normal';
+        this.#logger.info(`PlayerTurnHandler: Ending turn for actor ${actorId} (${endingType}).`);
+
+        // Keep copies of the promise handlers *before* cleanup nullifies them
+        const resolve = this.#turnPromiseResolve;
+        const reject = this.#turnPromiseReject;
+
+        // --- Dispatch Event --- (Do this before settling or cleanup)
         try {
             await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorId});
             this.#logger.debug(`Dispatched core:turn_ended for ${actorId}.`);
         } catch (dispatchError) {
             this.#logger.error(`PlayerTurnHandler: Failed to dispatch core:turn_ended for ${actorId}: ${dispatchError.message}`, dispatchError);
-            // Log error but continue cleanup
+            // Continue regardless of dispatch error
         }
-        // --- END SEMANTIC EVENT DISPATCH ---
+        // --- End Dispatch Event ---
 
-        // Resolve or Reject the promise
-        if (rejectionReason && this.#turnPromiseReject) {
-            this.#logger.warn(`PlayerTurnHandler: Rejecting turn promise for ${actorId}. Reason: ${rejectionReason?.message || rejectionReason}`);
-            this.#turnPromiseReject(rejectionReason);
-        } else if (this.#turnPromiseResolve) {
-            this.#logger.debug(`PlayerTurnHandler: Resolving turn promise for ${actorId}.`);
-            this.#turnPromiseResolve();
+        // --- Settle Promise --- (Use saved handlers)
+        if (rejectionReason) {
+            if (reject) {
+                this.#logger.warn(`PlayerTurnHandler: Rejecting turn promise for ${actorId}. Reason: ${rejectionReason?.message || rejectionReason}`);
+                reject(rejectionReason); // Use the saved reject function
+            } else {
+                // This should ideally not happen if the entry check passed, indicates potential race condition or logic error elsewhere
+                this.#logger.error(`PlayerTurnHandler: Cannot reject turn promise for ${actorId} - reject handler missing despite active turn check passing!`);
+            }
         } else {
-            this.#logger.error(`PlayerTurnHandler: Cannot resolve/reject turn promise for ${actorId} - handlers missing!`);
+            if (resolve) {
+                this.#logger.debug(`PlayerTurnHandler: Resolving turn promise for ${actorId}.`);
+                resolve(); // Use the saved resolve function
+            } else {
+                // This should ideally not happen if the entry check passed
+                this.#logger.error(`PlayerTurnHandler: Cannot resolve turn promise for ${actorId} - resolve handler missing despite active turn check passing!`);
+            }
         }
+        // --- End Settle Promise ---
 
-        // Cleanup internal state
+        // --- Cleanup State --- (Do this LAST for this specific turn instance)
         this.#_cleanupTurnState(actorId);
+        // --- End Cleanup State ---
     }
 
 
     /**
-     * Resets the internal state associated with the current turn.
-     * Called by #_handleTurnEnd.
+     * Resets the internal state associated *only* with the specified active turn.
+     * Should only clear state if the actorId matches the #currentActor.
      * @private
-     * @param {string} actorId - ID for logging purposes.
+     * @param {string} actorId - ID of the actor whose state should be cleared.
      */
     #_cleanupTurnState(actorId) {
-        this.#logger.debug(`PlayerTurnHandler: Cleaning up turn state for actor ${actorId}.`);
-        this.#currentActor = null;
-        this.#turnPromise = null;
-        this.#turnPromiseResolve = null;
-        this.#turnPromiseReject = null;
-        this.#logger.debug(`PlayerTurnHandler: Turn state reset for actor ${actorId}.`);
+        // Only cleanup if the actorId matches the currently active actor for this handler instance
+        if (this.#currentActor && this.#currentActor.id === actorId) {
+            this.#logger.debug(`PlayerTurnHandler: Cleaning up turn state for actor ${actorId}.`);
+            this.#currentActor = null;
+            this.#turnPromise = null; // Nullify the internal reference
+            this.#turnPromiseResolve = null;
+            this.#turnPromiseReject = null;
+            this.#logger.debug(`PlayerTurnHandler: Turn state reset for actor ${actorId}.`);
+        } else {
+            // If called for a different actor or when no actor is current, log it but do nothing.
+            this.#logger.warn(`PlayerTurnHandler: #_cleanupTurnState called for ${actorId}, but current actor is ${this.#currentActor?.id || 'null'}. No cleanup performed by this call.`);
+        }
     }
 
     /**
      * Gracefully shuts down the handler, unsubscribing from VED listeners.
+     * If a turn is active, it rejects the turn promise and cleans up state.
      * @public
      */
     destroy() {
         const handlerId = this.constructor.name;
         this.#logger.info(`${handlerId}: Destroying handler and unsubscribing...`);
+        let turnRejected = false;
+        let actorIdForEvent = null; // Store actor ID if turn was active
 
-        // Unsubscribe via VED
+        // --- Handle Active Turn ---
+        if (this.#currentActor) {
+            actorIdForEvent = this.#currentActor.id;
+            this.#logger.warn(`${handlerId}: Destroying handler while turn for ${actorIdForEvent} was active. Forcing cleanup and rejection.`);
+            const destructionError = new Error(`${handlerId} destroyed during turn.`);
+
+            // Keep copy of reject handler
+            const reject = this.#turnPromiseReject;
+
+            // Perform state cleanup *immediately* in destroy, BEFORE rejecting
+            this.#_cleanupTurnState(actorIdForEvent);
+
+            // Reject the promise *after* cleanup using the saved handler
+            if (reject) {
+                reject(destructionError);
+                turnRejected = true;
+            } else {
+                this.#logger.error(`${handlerId}: Cannot reject turn promise during destroy for ${actorIdForEvent} - handler missing or cleared!`);
+            }
+
+            // Dispatch turn_ended *after* rejection and cleanup, if we had an active turn ID
+            if (actorIdForEvent) {
+                this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorIdForEvent})
+                    .catch(dispatchError => {
+                        this.#logger.error(`${handlerId}: Failed to dispatch core:turn_ended during forced destroy cleanup for ${actorIdForEvent}: ${dispatchError.message}`, dispatchError);
+                    });
+            }
+        }
+        // --- End Handle Active Turn ---
+
+        // --- Unsubscribe ---
         if (this.#commandSubmitListener) {
             try {
                 this.#validatedEventDispatcher.unsubscribe('command:submit', this.#commandSubmitListener);
@@ -431,18 +546,17 @@ class PlayerTurnHandler extends ITurnHandler {
             }
             this.#commandSubmitListener = null;
         }
+        // --- End Unsubscribe ---
 
-        // Handle case where destroy is called mid-turn
-        if (this.#currentActor) {
-            const actorId = this.#currentActor.id;
-            this.#logger.warn(`${handlerId}: Destroying handler while turn for ${actorId} was active. Forcing cleanup and rejection.`);
-            // Use the centralized end turn handler to ensure event dispatch and proper cleanup
-            this.#_handleTurnEnd(actorId, new Error(`${handlerId} destroyed during turn.`), true).catch(err => {
-                this.#logger.error(`${handlerId}: Error during forced turn end on destroy: ${err.message}`, err);
-            });
-        } else {
-            this.#logger.info(`${handlerId}: Destruction complete.`);
-        }
+        // --- Final Cleanup ---
+        // Ensure all internal state is nullified, even if no turn was active
+        this.#currentActor = null;
+        this.#turnPromise = null;
+        this.#turnPromiseResolve = null;
+        this.#turnPromiseReject = null;
+        // --- End Final Cleanup ---
+
+        this.#logger.info(`${handlerId}: Destruction ${turnRejected ? `completed (active turn for ${actorIdForEvent} rejected)` : 'completed'}.`);
     }
 }
 
