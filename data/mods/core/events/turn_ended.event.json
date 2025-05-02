@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:turn_ended",
+  "description": "Fired when an entity's turn ends.",
+  "payloadSchema": {
+    "title": "Core: Turn Ended Event Payload",
+    "description": "Defines the payload structure for the 'core:turn_ended' event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique ID of the entity whose turn is ending."
+      }
+    },
+    "required": [
+      "entityId"
+    ],
+    "additionalProperties": false
+  }
+}

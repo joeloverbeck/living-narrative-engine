@@ -126,7 +126,6 @@ exports[`registerLoaders (with Mock DI Container) should match snapshot for regi
       "warn": [MockFunction],
     },
     {
-      "isInstance": true,
       "lifecycle": "singleton",
     },
   ],
@@ -134,91 +133,91 @@ exports[`registerLoaders (with Mock DI Container) should match snapshot for regi
     "IConfiguration",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "IPathResolver",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "ISchemaValidator",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "IDataRegistry",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "IDataFetcher",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "SchemaLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "RuleLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "ComponentDefinitionLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "GameConfigLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "ModManifestLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "ActionLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "EventLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "EntityLoader",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
 ]

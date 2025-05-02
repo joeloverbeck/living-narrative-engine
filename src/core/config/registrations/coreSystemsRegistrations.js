@@ -22,6 +22,9 @@
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Assuming type definition exists
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../handlers/playerTurnHandler.js').default} PlayerTurnHandler */ // Added for resolver dependency
+/** @typedef {import('../../handlers/aiTurnHandler.js').default} AITurnHandler */ // Added for resolver dependency
+/** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */ // Added for TurnManager dependency
 
 // --- System Imports ---
 import GameRuleSystem from '../../../systems/gameRuleSystem.js';
@@ -46,7 +49,7 @@ import TurnManager from '../../turnManager.js';
 
 // --- Handler & Resolver Imports ---
 import PlayerTurnHandler from '../../handlers/playerTurnHandler.js';
-import AITurnHandler from '../../handlers/aiTurnHandler.js'; // <<< ADDED IMPORT
+import AITurnHandler from '../../handlers/aiTurnHandler.js';
 import TurnHandlerResolver from '../../services/turnHandlerResolver.js';
 
 // --- DI & Helper Imports ---
@@ -71,6 +74,7 @@ export function registerCoreSystems(container) {
     let registrationCount = 0; // Initialize counter
 
     // --- Systems (Tagged as Initializable only) ---
+    // (Registrations for GameRuleSystem, EquipmentEffectSystem, etc. go here as before)
     registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
         tokens.EventBus, tokens.IGameStateManager, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
     ]);
@@ -128,7 +132,9 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${String(tokens.MoveCoordinatorSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
+
     // --- Systems with Shutdown() (Tagged with both INITIALIZABLE and SHUTDOWNABLE) ---
+    // (Registrations for CombatSystem, WorldPresenceSystem, etc. go here as before)
     const initializableAndShutdownable = [...INITIALIZABLE, ...SHUTDOWNABLE];
     const tagsString = initializableAndShutdownable.join(', '); // For logging
 
@@ -180,6 +186,7 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${String(tokens.LockSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
+
     // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory ---
     // Tagged INITIALIZABLE. Add SHUTDOWNABLE if it gets a shutdown() method.
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({
@@ -193,22 +200,8 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
-    // --- Register TurnManager tagged as INITIALIZABLE ---
-    /**
-     * Registers the TurnManager as a singleton factory, tagged as initializable.
-     * @type {ITurnManager}
-     */
-    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
-        turnOrderService: c.resolve(tokens.ITurnOrderService),
-        entityManager: c.resolve(tokens.EntityManager),
-        logger: c.resolve(tokens.ILogger),
-        dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Resolver is injected here
-    }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
 
-    // --- NEW: Register Turn Handlers & Resolver ---
+    // --- *** MOVED: Register Turn Handlers & Resolver FIRST *** ---
 
     // Register PlayerTurnHandler (Singleton due to event subscription & destroy() method)
     // Tagged SHUTDOWNABLE because it needs cleanup via destroy().
@@ -220,22 +213,21 @@ export function registerCoreSystems(container) {
         tokens.IGameStateManager,           // gameStateManager
         tokens.EntityManager,               // entityManager
         tokens.GameDataRepository,          // gameDataRepository
-        tokens.EventBus                     // eventBus
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} (Singleton) tagged with ${SHUTDOWNABLE.join(', ')}.`);
     registrationCount++;
 
-    // --- MODIFICATION START ---
     // Register AITurnHandler (Singleton appropriate, constructor takes object)
     // Not tagged SHUTDOWNABLE as it currently has no destroy() method.
     // Use singletonFactory to handle the object constructor parameter.
     registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
         logger: c.resolve(tokens.ILogger),
         commandProcessor: c.resolve(tokens.ICommandProcessor),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem) // Inject discovery system
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem), // Inject discovery system
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher)
     }));
     logger.debug(`Core Systems Registration: Registered ${String(tokens.AITurnHandler)} (Singleton).`);
-    registrationCount++; // <<< INCREMENT COUNT
+    registrationCount++;
 
     // Register TurnHandlerResolver (Singleton is appropriate)
     // No specific tags needed unless it requires init/shutdown hooks later.
@@ -243,13 +235,29 @@ export function registerCoreSystems(container) {
     registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
         logger: c.resolve(tokens.ILogger),
         playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the registered PlayerTurnHandler
-        aiTurnHandler: c.resolve(tokens.AITurnHandler)          // <<< INJECTED AI HANDLER
+        aiTurnHandler: c.resolve(tokens.AITurnHandler)          // Resolve the registered AITurnHandler
     }));
     logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)} (Singleton).`);
     registrationCount++;
-    // --- MODIFICATION END ---
 
+
+    // --- Register TurnManager AFTER its dependencies ---
+    // Tagged as INITIALIZABLE
+    /**
+     * Registers the TurnManager as a singleton factory, tagged as initializable.
+     * @type {ITurnManager}
+     */
+    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
+        turnOrderService: c.resolve(tokens.ITurnOrderService),
+        entityManager: c.resolve(tokens.EntityManager),
+        logger: c.resolve(tokens.ILogger),
+        dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Resolver is injected here (NOW RESOLVABLE)
+    }));
+    logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
+    registrationCount++;
 
     // Final log message using the incremented counter
     logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, and services, tagging relevant ones with '${INITIALIZABLE[0]}' and '${SHUTDOWNABLE[0]}'.`);
 }
+// --- FILE END ---

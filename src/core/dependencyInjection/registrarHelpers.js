@@ -1,4 +1,5 @@
 // src/core/dependencyInjection/registrarHelpers.js
+// ****** CORRECTED FILE ******
 
 /**
  * @fileoverview Helper functions and classes to simplify DI container registration.
@@ -10,7 +11,7 @@
 // --- Using your container's types ---
 /** @typedef {import('../config/appContainer.js').FactoryFunction} FactoryFunction */
 // Assuming RegistrationOptions might include 'tags' based on your comment
-/** @typedef {{ lifecycle?: 'singleton' | 'transient', tags?: string[] }} RegistrationOptions */
+/** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[] }} RegistrationOptions */ // Added singletonFactory lifecycle
 
 /** @typedef {(...args: any[]) => any} ConstructorAny */
 /** @template T @typedef {new (...args: any[]) => T} Constructor<T> */
@@ -49,7 +50,6 @@ const _createFactoryForObjectInjection = (Ctor, deps = []) => {
             if (typeof token === 'string') {
                 propName = token; // Start with the original token name (e.g., "ILogger", "GameStateManager")
 
-                // ****** START CHANGE ******
                 // Apply naming convention:
                 // 1. If it starts with 'I' followed by an uppercase letter (like "ILogger"), remove 'I'.
                 // 2. Then, lowercase the first letter of the result.
@@ -60,7 +60,6 @@ const _createFactoryForObjectInjection = (Ctor, deps = []) => {
                 // Lowercase the first letter of the (potentially modified) string
                 // e.g., "Logger" -> "logger", "GameStateManager" -> "gameStateManager"
                 propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-                // ****** END CHANGE ******
 
             } else if (typeof token === 'symbol') {
                 // Existing logic for symbols seems to match the desired convention already
@@ -142,9 +141,8 @@ export class Registrar {
      */
     register(token, factoryOrValue, options = {}) {
         let factoryFn = factoryOrValue;
-        // Ensure we always register a factory function
+        // Ensure we always register a factory function for consistency internally, even for values
         if (typeof factoryOrValue !== 'function') {
-            // console.warn(`Registrar.register called directly with non-function for token "${String(token)}". Wrapping it.`);
             const value = factoryOrValue;
             factoryFn = () => value; // Wrap the value in a factory
         }
@@ -153,7 +151,6 @@ export class Registrar {
         if (this.#tags) {
             // Combine existing tags (if any) with the pending tags
             registrationOptions.tags = [...(registrationOptions.tags || []), ...this.#tags];
-            // console.debug(`Registering token "${String(token)}" with tags: [${registrationOptions.tags.join(', ')}]`);
         }
 
         // Perform the actual registration on the container
@@ -185,11 +182,12 @@ export class Registrar {
      * @returns {this} The Registrar instance for chaining.
      */
     single(token, Ctor, deps = []) {
-        // *** Use the internal helper to create the correct factory ***
-        // (No change needed here as the helper itself is fixed)
         const factory = _createFactoryForObjectInjection(Ctor, deps);
-        // Use singletonFactory to handle lifecycle and apply pending tags
-        this.singletonFactory(token, factory);
+        // *** CORRECTED DELEGATION ***
+        // Delegate to the base register method with the correct lifecycle for this pattern.
+        // The factory created by _createFactoryForObjectInjection doesn't need the container arg itself,
+        // but the container needs to call it once to create the singleton.
+        this.register(token, factory, { lifecycle: 'singleton' });
         return this;
     }
 
@@ -202,15 +200,15 @@ export class Registrar {
      * @returns {this} The Registrar instance for chaining.
      */
     instance(token, instance) {
-        const factoryFn = () => instance;
-        // Use the base register method, applying pending tags and setting lifecycle
+        const factoryFn = () => instance; // Factory just returns the existing instance
         this.register(token, factoryFn, { lifecycle: 'singleton' });
         return this;
     }
 
     /**
      * Registers a factory function as a singleton.
-     * Use this when instantiation logic is more complex than just `new Ctor(depsMap)`.
+     * Use this when instantiation logic is more complex than just `new Ctor(depsMap)`,
+     * especially when the factory needs the container itself.
      *
      * @template T
      * @param {DiToken} token - The key to register the dependency under.
@@ -221,8 +219,10 @@ export class Registrar {
         if (typeof factoryFn !== 'function') {
             throw new Error(`Registrar.singletonFactory requires a function for token "${String(token)}", but received type ${typeof factoryFn}`);
         }
-        // Use the base register method, applying pending tags and setting lifecycle
-        this.register(token, factoryFn, { lifecycle: 'singleton' });
+        // Use the base register method, applying pending tags and setting the CORRECT lifecycle
+        // ----- VVVVVV THE FIX IS HERE VVVVVV -----
+        this.register(token, factoryFn, { lifecycle: 'singletonFactory' });
+        // ----- ^^^^^^ THE FIX IS HERE ^^^^^^ -----
         return this;
     }
 
@@ -239,7 +239,6 @@ export class Registrar {
      */
     transient(token, Ctor, deps = []) {
         const factory = _createFactoryForObjectInjection(Ctor, deps);
-        // Use the base register method, applying pending tags and setting lifecycle
         this.register(token, factory, { lifecycle: 'transient' });
         return this;
     }
@@ -257,7 +256,6 @@ export class Registrar {
         if (typeof factoryFn !== 'function') {
             throw new Error(`Registrar.transientFactory requires a function for token "${String(token)}", but received type ${typeof factoryFn}`);
         }
-        // Use the base register method, applying pending tags and setting lifecycle
         this.register(token, factoryFn, { lifecycle: 'transient' });
         return this;
     }

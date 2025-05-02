@@ -1,5 +1,5 @@
 // src/core/handlers/playerTurnHandler.js
-// --- FILE START (Showing relevant class context and changes) ---
+// --- FILE START (Entire file content as requested) ---
 
 // --- Interface Imports ---
 import {ITurnHandler} from '../interfaces/ITurnHandler.js';
@@ -9,22 +9,24 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */ // Added dependency
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Added dependency
-/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */ // Added dependency
-/** @typedef {import('../../logic/defs.js').ActionContext} ActionContext */ // Added for type hinting
+/** @typedef {import('../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */
+/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */ // Adjusted path
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../eventBus.js').default} EventBus */ // Added dependency
-/** @typedef {{ entityId: string, command: string }} CommandSubmitEvent */ // Assuming event structure
-/** @typedef {*} CommandProcessingResult */ // Placeholder for the result type from ICommandProcessor
-/** @typedef {(eventData: CommandSubmitEvent) => Promise<void>} CommandSubmitListener */ // Type for the listener function
+/** @typedef {{ command: string }} CommandSubmitEventData */ // Received event
+/** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */ // Result from CommandProcessor
+/** @typedef {{type: string, payload: CommandSubmitEventData}} CommandSubmitEvent */ // EventBus structure
+/** @typedef {(event: CommandSubmitEvent | CommandSubmitEventData) => Promise<void>} CommandSubmitListener */
+/** @typedef {import('../../actions/actionTypes.js').ActionDefinitionMinimal} ActionDefinitionMinimal */ // For available actions list
 
 /**
  * @class PlayerTurnHandler
+ * @extends ITurnHandler
  * @implements {ITurnHandler}
- * @description Handles the turn logic specifically for player-controlled entities.
- * It orchestrates discovering actions, prompting for input, receiving commands via events,
- * and managing the turn's lifecycle.
+ * @description Handles the turn logic for player-controlled entities. Waits for 'command:submit' events,
+ * processes commands via CommandProcessor, and dispatches semantic events like 'core:player_turn_prompt'
+ * and 'core:turn_ended'. Does NOT dispatch UI-specific events.
  */
 class PlayerTurnHandler extends ITurnHandler {
     /** @type {ILogger} */
@@ -41,41 +43,33 @@ class PlayerTurnHandler extends ITurnHandler {
     #entityManager;
     /** @type {GameDataRepository} */
     #gameDataRepository;
-    /** @type {EventBus} */ // Added dependency
-    #eventBus;
 
     /** @type {Entity | null} */
     #currentActor = null;
     /** @type {Promise<void> | null} */
     #turnPromise = null;
-    /** @type {(value: void | PromiseLike<void>) => void | null} */
+    /** @type {((value: void | PromiseLike<void>) => void) | null} */
     #turnPromiseResolve = null;
-    /** @type {(reason?: any) => void | null} */
+    /** @type {((reason?: any) => void) | null} */
     #turnPromiseReject = null;
 
-    // --- MODIFICATION START ---
     /**
      * Stores the reference to the bound event listener function for 'command:submit'.
-     * Used for unsubscribing. Null if not subscribed.
      * @private
      * @type {CommandSubmitListener | null}
      */
     #commandSubmitListener = null;
 
-    // --- MODIFICATION END ---
-
-
     /**
      * Creates an instance of PlayerTurnHandler.
      * @param {object} dependencies - The dependencies required by the handler.
-     * @param {ILogger} dependencies.logger - The logging service.
-     * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem - System for discovering valid actions.
-     * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - System for dispatching validated events.
-     * @param {ICommandProcessor} dependencies.commandProcessor - System for processing player commands.
-     * @param {IGameStateManager} dependencies.gameStateManager - Manages the current state of the game.
-     * @param {EntityManager} dependencies.entityManager - Manages entities.
-     * @param {GameDataRepository} dependencies.gameDataRepository - Provides access to game data definitions.
-     * @param {EventBus} dependencies.eventBus - The core event bus for subscribing to non-validated events like commands.
+     * @param {ILogger} dependencies.logger
+     * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem
+     * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher
+     * @param {ICommandProcessor} dependencies.commandProcessor
+     * @param {IGameStateManager} dependencies.gameStateManager
+     * @param {EntityManager} dependencies.entityManager
+     * @param {GameDataRepository} dependencies.gameDataRepository
      * @throws {Error} If required dependencies are missing or invalid.
      */
     constructor({
@@ -86,402 +80,366 @@ class PlayerTurnHandler extends ITurnHandler {
                     gameStateManager,
                     entityManager,
                     gameDataRepository,
-                    eventBus // Added
                 }) {
         super();
 
-        // Inject and assign logger first for logging potential issues
+        // Inject and assign logger first
         if (!logger || typeof logger.error !== 'function') {
-            // Cannot log if logger itself is invalid, throw immediately
+            console.error('PlayerTurnHandler Constructor: Invalid or missing logger dependency.');
             throw new Error('PlayerTurnHandler: Invalid or missing logger dependency.');
         }
         this.#logger = logger;
 
         // Validate and assign other dependencies
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing actionDiscoverySystem dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing actionDiscoverySystem dependency.');
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing actionDiscoverySystem.');
+            throw new Error('PlayerTurnHandler: Invalid or missing actionDiscoverySystem.');
         }
         this.#actionDiscoverySystem = actionDiscoverySystem;
 
-        if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing validatedEventDispatcher dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing validatedEventDispatcher dependency.');
+        if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function' || typeof validatedEventDispatcher.subscribe !== 'function' || typeof validatedEventDispatcher.unsubscribe !== 'function') {
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing validatedEventDispatcher (requires dispatchValidated, subscribe, unsubscribe).');
+            throw new Error('PlayerTurnHandler: Invalid or missing validatedEventDispatcher.');
         }
         this.#validatedEventDispatcher = validatedEventDispatcher;
 
         if (!commandProcessor || typeof commandProcessor.processCommand !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing commandProcessor dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing commandProcessor dependency.');
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing commandProcessor.');
+            throw new Error('PlayerTurnHandler: Invalid or missing commandProcessor.');
         }
         this.#commandProcessor = commandProcessor;
 
-        if (!gameStateManager || typeof gameStateManager.getLocationOfEntity !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing gameStateManager dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing gameStateManager dependency.');
+        if (!gameStateManager || typeof gameStateManager.getLocationOfEntity !== 'function' || typeof gameStateManager.getCurrentLocation !== 'function') {
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing gameStateManager (requires relevant methods like getLocationOfEntity).');
+            throw new Error('PlayerTurnHandler: Invalid or missing gameStateManager.');
         }
         this.#gameStateManager = gameStateManager;
 
-        if (!entityManager || typeof entityManager.getEntity !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing entityManager dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing entityManager dependency.');
+        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing entityManager (requires getEntityInstance method).');
+            throw new Error('PlayerTurnHandler: Invalid or missing entityManager.');
         }
         this.#entityManager = entityManager;
 
-        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') { // Check for a representative method
-            this.#logger.error('PlayerTurnHandler: Invalid or missing gameDataRepository dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing gameDataRepository dependency.');
+        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') {
+            this.#logger.error('PlayerTurnHandler Constructor: Invalid or missing gameDataRepository.');
+            throw new Error('PlayerTurnHandler: Invalid or missing gameDataRepository.');
         }
         this.#gameDataRepository = gameDataRepository;
 
-        // Validate and assign EventBus
-        if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.unsubscribe !== 'function') {
-            this.#logger.error('PlayerTurnHandler: Invalid or missing eventBus dependency.');
-            throw new Error('PlayerTurnHandler: Invalid or missing eventBus dependency.');
-        }
-        this.#eventBus = eventBus;
-
-        // --- MODIFICATION START ---
-        // Subscribe to command submission events (Task 1)
-
-        // 1. Create the listener function (bound to 'this' context) and store it
+        // Subscribe to command submission events using VED
         this.#commandSubmitListener = (eventData) => this.#handleSubmittedCommand(eventData);
 
-        // 2. Subscribe using the stored listener reference
-        this.#eventBus.subscribe(
-            'command:submit',
-            this.#commandSubmitListener
-        );
-
-        // 3. Log success (Removed the check for the return value, as it's void)
-        this.#logger.debug('PlayerTurnHandler initialized successfully and subscribed to command:submit.');
-        // --- MODIFICATION END ---
-
+        try {
+            this.#validatedEventDispatcher.subscribe('command:submit', this.#commandSubmitListener);
+            this.#logger.debug('PlayerTurnHandler initialized successfully and subscribed to command:submit via VED.');
+        } catch (subError) {
+            this.#logger.error(`PlayerTurnHandler: Failed to subscribe to command:submit via VED: ${subError.message}`, subError);
+            throw new Error(`PlayerTurnHandler: Failed to subscribe to VED event 'command:submit'.`);
+        }
     }
 
     /**
-     * Handles the turn for a player-controlled actor. It initiates the action discovery
-     * and input sequence, then waits for the turn to complete via command processing.
-     * @param {Entity} actor - The player entity whose turn it is.
-     * @returns {Promise<void>} A promise that resolves when the player's turn is complete
-     * (after a valid command is processed) or rejects on error during initiation or processing.
-     * @throws {Error} If actor is invalid or if called while a turn is already in progress.
+     * Initiates the turn handling sequence for a player actor.
+     * Sets up a promise that resolves only when a turn-ending command is successfully processed.
+     * Dispatches 'core:player_turn_prompt'.
+     * @param {Entity} actor - The player entity taking its turn.
+     * @returns {Promise<void>} A promise that resolves when the player's turn is fully completed, or rejects on critical error.
+     * @throws {Error} If the actor is invalid or if a turn is already in progress for another actor.
      */
     async handleTurn(actor) {
-        this.#logger.info(`PlayerTurnHandler: Starting turn handling for actor ${actor?.id || 'UNKNOWN'}.`);
+        const actorId = actor?.id || 'UNKNOWN';
+        this.#logger.info(`PlayerTurnHandler: Starting turn handling for actor ${actorId}.`);
 
-        if (!actor || !actor.id) {
+        if (!actor || !actor.id) { // Check actor.id as well
             this.#logger.error('PlayerTurnHandler: Attempted to handle turn for an invalid actor.');
             throw new Error('PlayerTurnHandler: Actor must be a valid entity.');
         }
 
         if (this.#currentActor) {
-            this.#logger.error(`PlayerTurnHandler: Attempted to start a new turn for ${actor.id} while turn for ${this.#currentActor.id} is already in progress.`);
-            throw new Error('PlayerTurnHandler: Cannot handle a new turn while another is active.');
+            const errorMsg = `PlayerTurnHandler: Attempted to start a new turn for ${actor.id} while turn for ${this.#currentActor.id} is already in progress.`;
+            this.#logger.error(errorMsg);
+            throw new Error(errorMsg); // Prevent concurrent turns
         }
 
         this.#currentActor = actor;
 
-        // Create a promise that will be resolved/rejected when the turn concludes
-        let turnCompletionResolve, turnCompletionReject;
+        // Create the promise that TurnManager will await
         this.#turnPromise = new Promise((resolve, reject) => {
-            turnCompletionResolve = resolve;
-            turnCompletionReject = reject;
+            this.#turnPromiseResolve = resolve;
+            this.#turnPromiseReject = reject;
         });
-        this.#turnPromiseResolve = turnCompletionResolve;
-        this.#turnPromiseReject = turnCompletionReject;
 
         try {
-            // Start the sequence of discovering actions and enabling input
-            // We await this because if it fails, the turn fails immediately.
-            await this.#_initiatePlayerActionSequence(actor);
-
-            // If initiation succeeds, return the promise that waits for command processing
+            // Discover actions and prompt the player for input.
+            // This does NOT resolve the promise; resolution happens in _processValidatedCommand.
+            await this.#_promptPlayerForAction(actor);
+            this.#logger.debug(`PlayerTurnHandler: Initial prompt dispatched for ${actor.id}. Waiting for command input.`);
+            // Return the promise for TurnManager to await
             return this.#turnPromise;
-
-        } catch (error) {
-            // If the initiation sequence itself fails, reject the main turn promise AND re-throw
-            this.#logger.error(`PlayerTurnHandler: Error during action sequence initiation for ${actor.id}: ${error.message}`, error);
+        } catch (initError) {
+            this.#logger.error(`PlayerTurnHandler: Error during turn initiation/prompt for ${actor.id}: ${initError.message}`, initError);
+            // If initiation fails, reject the promise immediately and clean up.
             if (this.#turnPromiseReject) {
-                // Ensure the internal promise is rejected if it hasn't been implicitly
-                // rejected by the error propagating from an async function.
-                // This might be redundant if the error came from an async function within
-                // the sequence, but it's safer to ensure rejection state.
-                this.#turnPromiseReject(error);
+                this.#turnPromiseReject(initError);
+            } else {
+                this.#logger.error(`PlayerTurnHandler: Turn promise rejector not available during initiation error for ${actor.id}!`);
             }
-            this.#_cleanupTurn(); // Ensure state is cleaned up on initiation error
-            throw error; // Re-throw the error so the promise returned by handleTurn rejects.
+            await this.#_handleTurnEnd(actor.id, initError); // Dispatch turn_ended and cleanup on error
+            // Do not re-throw; rejection handles the error flow to TurnManager
         }
     }
 
-
     /**
-     * Handles submitted commands received via the EventBus.
-     * Validates the command source and triggers processing if valid.
+     * Handles the 'command:submit' event received via VED.
+     * Validates the command and delegates to processing if a turn is active.
      * @private
-     * @param {CommandSubmitEvent} eventData - The event data containing entityId and command.
+     * @param {CommandSubmitEvent | CommandSubmitEventData} eventData - The event data.
      * @returns {Promise<void>}
      */
     async #handleSubmittedCommand(eventData) {
-        this.#logger.debug(`PlayerTurnHandler: Received command:submit event: ${JSON.stringify(eventData)}`);
+        const payload = /** @type {CommandSubmitEventData} */ (eventData?.payload ?? eventData);
+        const commandString = payload?.command?.trim(); // Trim received command
 
-        // Task 3.1: Check if currently processing a turn
+        this.#logger.debug(`PlayerTurnHandler: Received command:submit event. Payload: ${JSON.stringify(payload)}`);
+
         if (!this.#currentActor) {
-            this.#logger.warn(`PlayerTurnHandler: Received command:submit but no turn is active. Ignoring.`);
-            return;
+            this.#logger.warn(`PlayerTurnHandler: Received command:submit but no player turn is active. Ignoring.`);
+            return; // No active turn, do nothing.
         }
 
-        // Task 3.2: Extract entityId and command
-        const {entityId, command: commandString} = eventData || {};
-
-        // Task 3.3: Validate entityId
-        if (!entityId || entityId !== this.#currentActor.id) {
-            // Task 3.4: Log warning and potentially dispatch "Not your turn"
-            this.#logger.warn(`PlayerTurnHandler: Received command for wrong actor. Expected: ${this.#currentActor.id}, Received: ${entityId || 'MISSING'}. Ignoring command: "${commandString}"`);
-            return; // Ignore the command
+        if (!commandString) {
+            this.#logger.warn(`PlayerTurnHandler: Received command:submit with empty command string. Re-prompting actor ${this.#currentActor.id}.`);
+            // Re-prompt the player if they send an empty command.
+            try {
+                await this.#_promptPlayerForAction(this.#currentActor);
+            } catch (promptError) {
+                this.#logger.error(`PlayerTurnHandler: Failed to re-prompt player ${this.#currentActor.id} after empty command: ${promptError.message}`, promptError);
+                // If re-prompting fails critically, end the turn with an error
+                await this.#_handleTurnEnd(this.#currentActor.id, promptError, true); // Signal turn end on critical prompt error
+            }
+            return; // Don't process empty commands
         }
 
-        // Task 3.5: Validation passes
-        this.#logger.info(`PlayerTurnHandler: Received valid command "${commandString}" for current actor ${this.#currentActor.id}. Processing...`);
-
-        // Task 3.5.1 (Ticket 3.1.5): Call the command processing logic.
+        // Process the validated command string.
+        this.#logger.info(`PlayerTurnHandler: Handling command "${commandString}" for current actor ${this.#currentActor.id}.`);
         await this.#_processValidatedCommand(this.#currentActor, commandString);
     }
 
-
     /**
-     * Processes a validated command string by disabling input, calling the command
-     * processor, then resolving / rejecting the turn-promise **before** state is
-     * wiped in cleanup.
+     * Processes a non-empty command string submitted by the player actor.
+     * Calls CommandProcessor and handles the result to determine if the turn ends
+     * or if the player should be prompted again. Dispatches 'core:turn_ended' or
+     * 'core:system_error_occurred' on critical failures.
      * @private
-     * @param {Entity} actor         – the actor whose command is being processed
-     * @param {string} commandString – the raw command string
+     * @param {Entity} actor - The actor performing the command.
+     * @param {string} commandString - The validated, non-empty command string.
      * @returns {Promise<void>}
      */
     async #_processValidatedCommand(actor, commandString) {
-        this.#logger.debug(
-            `PlayerTurnHandler: #_processValidatedCommand started for ${actor.id} ` +
-            `with command "${commandString}".`
-        );
+        const actorId = actor.id;
 
-        /* ─────────── 1. Disable input (best-effort) ─────────── */
-        try {
-            await this.#validatedEventDispatcher.dispatchValidated(
-                'textUI:disable_input',
-                {message: 'Processing…', entityId: actor.id}
-            );
-        } catch (dispatchErr) {
-            this.#logger.error(
-                `PlayerTurnHandler: Failed to dispatch textUI:disable_input for ` +
-                `${actor.id}: ${dispatchErr.message}`, dispatchErr
-            );
-            // continue anyway – inability to update UI shouldn’t block gameplay
+        if (!this.#turnPromiseResolve || !this.#turnPromiseReject) {
+            this.#logger.error(`PlayerTurnHandler: #_processValidatedCommand called for ${actorId} but turn promise functions are not set! Cleaning up.`);
+            await this.#_handleTurnEnd(actorId, new Error("Internal state error: turn promise lost.")); // Dispatch turn_ended & cleanup
+            return; // Avoid further processing
         }
 
-        /* ─────────── 2. Run the command ─────────── */
-        let caughtError = null;
+        this.#logger.debug(`PlayerTurnHandler: Processing validated command "${commandString}" for ${actorId}.`);
+        // REMOVED: Dispatch 'textUI:disable_input'
+
         try {
-            this.#logger.info(
-                `PlayerTurnHandler: Processing command "${commandString}" for ` +
-                `${actor.id} via ICommandProcessor…`
-            );
-
-            const result = await this.#commandProcessor.processCommand(
-                actor,
-                commandString
-            );
+            this.#logger.info(`PlayerTurnHandler: Delegating command "${commandString}" for ${actorId} to ICommandProcessor...`);
+            /** @type {CommandResult} */
+            const result = await this.#commandProcessor.processCommand(actor, commandString);
 
             this.#logger.info(
-                `PlayerTurnHandler: Command processed for ${actor.id}. ` +
-                `Result stub → ${JSON.stringify(result)}`
-            );
-        } catch (err) {
-            caughtError = err;
-            this.#logger.error(
-                `PlayerTurnHandler: Error while processing command "${commandString}" ` +
-                `for ${actor.id}: ${err.message}`, err
+                `PlayerTurnHandler: CommandProcessor result for ${actorId} command "${commandString}": ` +
+                `Success=${result.success}, TurnEnded=${result.turnEnded}, ActionResult=${!!result.actionResult}.`
             );
 
-            /* ─ optional UX feedback (best-effort) ─ */
-            try {
-                await this.#validatedEventDispatcher.dispatchValidated(
-                    'display:message',
-                    {
-                        message: `Error processing command: ${err.message}`,
-                        recipientEntityId: actor.id
-                    }
-                );
-            } catch (dispatchErr) {
-                this.#logger.error(
-                    `PlayerTurnHandler: Failed to dispatch error message to UI ` +
-                    `for ${actor.id}: ${dispatchErr.message}`, dispatchErr
-                );
-            }
-        } finally {
-            /* ─────────── 3. Resolve / reject turn-promise BEFORE cleanup ─────────── */
-            if (caughtError) {
-                this.#logger.info(
-                    `PlayerTurnHandler: Signalling FAILED turn for ${actor.id}.`
-                );
-                this.#turnPromiseReject?.(caughtError);
+            // --- Handle CommandResult ---
+            if (result.turnEnded) {
+                // SUCCESS/FAILURE + TURN ENDS: Signal turn end and clean up state.
+                // CommandProcessor already dispatched action_executed/action_failed/command_parse_failed.
+                this.#logger.info(`PlayerTurnHandler: Command resulted in turn end for ${actorId}.`);
+                await this.#_handleTurnEnd(actorId); // Dispatch turn_ended, resolve promise, cleanup
+
             } else {
-                this.#logger.info(
-                    `PlayerTurnHandler: Signalling SUCCESSFUL turn for ${actor.id}.`
-                );
-                this.#turnPromiseResolve?.();           // resolves with undefined
+                // SUCCESS/FAILURE + TURN CONTINUES: Re-prompt the player.
+                // CommandProcessor already dispatched relevant failure events if applicable (e.g., parse failed).
+                this.#logger.info(`PlayerTurnHandler: Command did NOT end turn for ${actorId}. Re-prompting.`);
+                await this.#_promptPlayerForAction(actor); // Ask for next command
             }
 
-            /* ─────────── 4. Always clean internal state ─────────── */
-            this.#_cleanupTurn();
+        } catch (criticalError) {
+            // --- Handle Critical Processing Errors ---
+            this.#logger.error(
+                `PlayerTurnHandler: CRITICAL error during command processing delegation for ${actorId} command "${commandString}": ${criticalError.message}`,
+                criticalError
+            );
+
+            // Dispatch system error event (best effort)
+            try {
+                await this.#validatedEventDispatcher.dispatchValidated('core:system_error_occurred', {
+                    message: `An internal error occurred while processing command for ${actorId}.`,
+                    type: 'error',
+                    details: criticalError.message
+                });
+            } catch (dispatchErr) {
+                this.#logger.error(`PlayerTurnHandler: Failed to dispatch critical error message via VED for ${actorId}: ${dispatchErr.message}`, dispatchErr);
+            }
+
+            // Signal failed turn end, reject the promise, and clean up.
+            this.#logger.info(`PlayerTurnHandler: Signalling FAILED turn end for ${actorId} due to critical error.`);
+            await this.#_handleTurnEnd(actorId, criticalError, true); // Dispatch turn_ended, reject promise, cleanup
         }
     }
 
-
     /**
-     * Initiates the sequence to discover actions and enable player input.
+     * Discovers available actions and dispatches the 'core:player_turn_prompt' event.
      * @private
-     * @param {Entity} actor - The player entity.
+     * @param {Entity} actor - The player actor.
      * @returns {Promise<void>}
-     * @throws {Error} Rethrows errors from internal steps if they occur.
+     * @throws {Error} If action discovery or dispatching the prompt event fails critically.
      */
-    async #_initiatePlayerActionSequence(actor) {
-        this.#logger.debug(`PlayerTurnHandler: Initiating action sequence for ${actor.id}.`);
-        // try/catch removed from here; let errors propagate up to handleTurn
-        // Discover and display actions first
-        await this.#_discoverAndDisplayActions(actor);
-        // Then enable input
-        await this.#_enablePlayerInput(actor);
-        this.#logger.debug(`PlayerTurnHandler: Action sequence initiated for ${actor.id}. Waiting for command.`);
-    }
+    async #_promptPlayerForAction(actor) {
+        const actorId = actor.id;
+        this.#logger.debug(`PlayerTurnHandler: Preparing prompt for ${actorId}. Discovering actions...`);
+        let availableActions = [];
 
-    /**
-     * Discovers available actions for the actor and dispatches an event to display them.
-     * Constructs the necessary ActionContext for discovery.
-     * @private
-     * @param {Entity} actor - The player entity.
-     * @returns {Promise<void>}
-     * @throws {Error} If context construction, action discovery, or dispatch fails.
-     */
-    async #_discoverAndDisplayActions(actor) {
-        this.#logger.debug(`PlayerTurnHandler: Discovering actions for ${actor.id}.`);
-        let validActions = [];
         try {
-            // 1. Get Current Location
+            // Discover Actions
             const currentLocation = await this.#gameStateManager.getLocationOfEntity(actor);
             if (!currentLocation) {
-                throw new Error(`Could not determine current location for actor ${actor.id}`);
+                throw new Error(`Could not determine current location for actor ${actorId}`);
             }
 
-            // 2. Construct ActionContext
             /** @type {ActionContext} */
             const context = {
                 actingEntity: actor,
                 currentLocation: currentLocation,
                 entityManager: this.#entityManager,
                 gameDataRepository: this.#gameDataRepository,
-                logger: this.#logger,
-                gameStateManager: this.#gameStateManager
+                logger: this.#logger, // Pass logger for potential use in discovery logic
+                gameStateManager: this.#gameStateManager,
+                // dispatch: Not typically needed for discovery, handled by CommandProcessor/ActionExecutor
             };
 
-            // 3. Call Action Discovery System
-            validActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
-            this.#logger.debug(`PlayerTurnHandler: Discovered ${validActions.length} actions for ${actor.id}.`);
+            // Assuming getValidActions returns ActionDefinitionMinimal[] or similar
+            availableActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
+            this.#logger.debug(`PlayerTurnHandler: Discovered ${availableActions.length} actions for ${actorId}.`);
 
-            // 4. Dispatch Event
-            await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
-                actions: validActions,
-                entityId: actor.id
+            // --- SEMANTIC EVENT DISPATCH: core:player_turn_prompt ---
+            await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
+                entityId: actorId,
+                availableActions: availableActions.map(a => a.id) // Send only action IDs based on schema
+                // Consider sending more action details if schema allows and UI needs it
             });
-            this.#logger.debug(`PlayerTurnHandler: Dispatched event:update_available_actions for ${actor.id}.`);
+            this.#logger.debug(`PlayerTurnHandler: Dispatched core:player_turn_prompt for ${actorId}.`);
+            // --- END SEMANTIC EVENT DISPATCH ---
 
         } catch (error) {
-            this.#logger.error(`PlayerTurnHandler: Error during action discovery or display for ${actor.id}: ${error.message}`, error);
-            // Optionally dispatch an error event or handle differently
+            this.#logger.error(`PlayerTurnHandler: Error during action discovery or prompting for ${actorId}: ${error.message}`, error);
+            // Attempt to dispatch prompt with empty actions on error (best effort)
             try {
-                // Attempt to clear actions on UI even if discovery failed
-                await this.#validatedEventDispatcher.dispatchValidated('event:update_available_actions', {
-                    actions: [], // Send empty actions on error
-                    entityId: actor.id
+                await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
+                    entityId: actorId,
+                    availableActions: []
                 });
+                this.#logger.warn(`Dispatched core:player_turn_prompt with empty actions due to error for ${actorId}.`);
             } catch (dispatchError) {
-                this.#logger.error(`PlayerTurnHandler: Failed to dispatch empty actions after error for ${actor.id}: ${dispatchError.message}`, dispatchError);
+                this.#logger.error(`PlayerTurnHandler: Failed to dispatch empty prompt after error for ${actorId}: ${dispatchError.message}`, dispatchError);
             }
-            throw error; // Rethrow to ensure the sequence initiation fails and propagates up
+            // Re-throw the original error to be handled by the caller (handleTurn or _processValidatedCommand)
+            throw error;
         }
     }
 
     /**
-     * Dispatches an event to enable the input interface for the player.
+     * Centralized method to handle the end of a player's turn.
+     * Dispatches 'core:turn_ended', resolves or rejects the turn promise, and cleans up state.
      * @private
-     * @param {Entity} actor - The player entity.
+     * @param {string} actorId - The ID of the actor whose turn is ending.
+     * @param {any} [rejectionReason] - If provided, the turn promise is rejected with this reason. Otherwise, it's resolved.
+     * @param {boolean} [isError=false] - Flag indicating if the turn ended due to an error.
      * @returns {Promise<void>}
-     * @throws {Error} If dispatching the event fails.
      */
-    async #_enablePlayerInput(actor) {
-        this.#logger.debug(`PlayerTurnHandler: Enabling player input for ${actor.id}.`);
+    async #_handleTurnEnd(actorId, rejectionReason = null, isError = false) {
+        this.#logger.info(`PlayerTurnHandler: Ending turn for actor ${actorId}${isError ? ' due to error' : ''}.`);
+
+        // --- SEMANTIC EVENT DISPATCH: core:turn_ended ---
         try {
-            const message = "Your turn. Enter command..."; // Define the prompt message
-            await this.#validatedEventDispatcher.dispatchValidated('textUI:enable_input', {
-                placeholder: message,
-                entityId: actor.id
-            });
-            this.#logger.debug(`PlayerTurnHandler: Dispatched textUI:enable_input for ${actor.id}.`);
-        } catch (error) {
-            this.#logger.error(`PlayerTurnHandler: Failed to dispatch textUI:enable_input for ${actor.id}: ${error.message}`, error);
-            throw error; // Rethrow to ensure the sequence initiation fails and propagates up
+            await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', { entityId: actorId });
+            this.#logger.debug(`Dispatched core:turn_ended for ${actorId}.`);
+        } catch (dispatchError) {
+            this.#logger.error(`PlayerTurnHandler: Failed to dispatch core:turn_ended for ${actorId}: ${dispatchError.message}`, dispatchError);
+            // Log error but continue cleanup
         }
+        // --- END SEMANTIC EVENT DISPATCH ---
+
+        // Resolve or Reject the promise
+        if (rejectionReason && this.#turnPromiseReject) {
+            this.#logger.warn(`PlayerTurnHandler: Rejecting turn promise for ${actorId}. Reason: ${rejectionReason?.message || rejectionReason}`);
+            this.#turnPromiseReject(rejectionReason);
+        } else if (this.#turnPromiseResolve) {
+            this.#logger.debug(`PlayerTurnHandler: Resolving turn promise for ${actorId}.`);
+            this.#turnPromiseResolve();
+        } else {
+            this.#logger.error(`PlayerTurnHandler: Cannot resolve/reject turn promise for ${actorId} - handlers missing!`);
+        }
+
+        // Cleanup internal state
+        this.#_cleanupTurnState(actorId);
     }
 
 
     /**
-     * Cleans up resources and resets state associated with the current turn.
+     * Resets the internal state associated with the current turn.
+     * Called by #_handleTurnEnd.
      * @private
+     * @param {string} actorId - ID for logging purposes.
      */
-    #_cleanupTurn() {
-        const actorId = this.#currentActor?.id || 'NO ACTOR'; // Provide default if null
+    #_cleanupTurnState(actorId) {
         this.#logger.debug(`PlayerTurnHandler: Cleaning up turn state for actor ${actorId}.`);
-
-        // Reset turn-specific state
         this.#currentActor = null;
-        this.#turnPromise = null; // Let GC handle the promise object
+        this.#turnPromise = null;
         this.#turnPromiseResolve = null;
         this.#turnPromiseReject = null;
-
-        // Note: The 'command:submit' subscription is persistent
         this.#logger.debug(`PlayerTurnHandler: Turn state reset for actor ${actorId}.`);
     }
 
     /**
-     * Gracefully shuts down the handler, unsubscribing from persistent listeners.
+     * Gracefully shuts down the handler, unsubscribing from VED listeners.
      * @public
      */
     destroy() {
-        this.#logger.info(`PlayerTurnHandler: Destroying handler and unsubscribing from events.`);
+        const handlerId = this.constructor.name;
+        this.#logger.info(`${handlerId}: Destroying handler and unsubscribing...`);
 
-        // --- MODIFICATION START ---
-        // Unsubscribe using the stored listener reference
+        // Unsubscribe via VED
         if (this.#commandSubmitListener) {
             try {
-                this.#eventBus.unsubscribe('command:submit', this.#commandSubmitListener);
-                this.#logger.debug(`PlayerTurnHandler: Unsubscribed from command:submit.`);
+                this.#validatedEventDispatcher.unsubscribe('command:submit', this.#commandSubmitListener);
+                this.#logger.debug(`${handlerId}: Unsubscribed from command:submit via VED.`);
             } catch (unsubscribeError) {
-                this.#logger.error(`PlayerTurnHandler: Error unsubscribing from command:submit: ${unsubscribeError.message}`, unsubscribeError);
+                this.#logger.error(`${handlerId}: Error unsubscribing from command:submit via VED: ${unsubscribeError.message}`, unsubscribeError);
             }
-            // Clear the stored reference
             this.#commandSubmitListener = null;
         }
-        // --- MODIFICATION END ---
 
+        // Handle case where destroy is called mid-turn
         if (this.#currentActor) {
-            this.#logger.warn(`PlayerTurnHandler: Destroying handler while a turn for ${this.#currentActor.id} was potentially active. Forcing cleanup.`);
-            // Ensure promise rejection if the turn was abruptly ended by destruction
-            if (this.#turnPromiseReject) {
-                this.#turnPromiseReject(new Error(`PlayerTurnHandler destroyed during turn for actor ${this.#currentActor.id}`));
-            }
-            this.#_cleanupTurn(); // Cleans up actor, promise refs etc.
+            const actorId = this.#currentActor.id;
+            this.#logger.warn(`${handlerId}: Destroying handler while turn for ${actorId} was active. Forcing cleanup and rejection.`);
+            // Use the centralized end turn handler to ensure event dispatch and proper cleanup
+            this.#_handleTurnEnd(actorId, new Error(`${handlerId} destroyed during turn.`), true).catch(err => {
+                this.#logger.error(`${handlerId}: Error during forced turn end on destroy: ${err.message}`, err);
+            });
+        } else {
+            this.#logger.info(`${handlerId}: Destruction complete.`);
         }
     }
-
 }
 
 export default PlayerTurnHandler;

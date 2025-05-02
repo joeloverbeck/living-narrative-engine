@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:player_turn_prompt",
+  "description": "Fired when the game needs input from a player entity for their turn.",
+  "payloadSchema": {
+    "title": "Core: Player Turn Prompt Event Payload",
+    "description": "Defines the payload structure for the 'core:player_turn_prompt' event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique ID of the player entity being prompted for input."
+      },
+      "availableActions": {
+        "type": "array",
+        "description": "An array of action definitions representing the actions currently available to the player.",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      }
+    },
+    "required": [
+      "entityId",
+      "availableActions"
+    ],
+    "additionalProperties": false
+  }
+}

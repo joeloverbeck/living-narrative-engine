@@ -23,7 +23,10 @@
     "rules": [
     ],
     "events": [
-      "engine_initialized.event.json"
+      "engine_initialized.event.json", "turn_started.event.json", "player_turn_prompt.event.json",
+      "ai_turn_processing_started.event.json", "ai_turn_processing_ended.event.json",
+      "turn_ended.event.json", "command_parse_failed.event.json", "action_executed.event.json",
+      "action_failed.event.json", "system_error_occurred.event.json"
     ],
     "operations": [
     ]

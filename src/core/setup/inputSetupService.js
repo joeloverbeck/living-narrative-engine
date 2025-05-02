@@ -3,16 +3,17 @@
 // --- Type Imports ---
 /** @typedef {import('../config/appContainer.js').default} AppContainer */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
-/** @typedef {import('../gameLoop.js').default} GameLoop */
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+// GameLoop import removed
 /** @typedef {import('../interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface type
 
-// --- Token Import --- ADDED
-import { tokens } from '../config/tokens.js'; // ADDED
+// --- Token Import ---
+import { tokens } from '../config/tokens.js';
 
 /**
  * @class InputSetupService
- * @description Configures the InputHandler, linking it to the GameLoop and event system.
+ * @description Configures the InputHandler, linking user command input to the
+ * event system via 'command:submit' events.
  */
 class InputSetupService {
   /** @private @type {AppContainer} */
@@ -21,8 +22,7 @@ class InputSetupService {
   #logger;
   /** @private @type {ValidatedEventDispatcher} */
   #validatedEventDispatcher;
-  /** @private @type {GameLoop} */
-  #gameLoop;
+  // #gameLoop field removed
 
   /**
    * Creates an instance of InputSetupService.
@@ -30,20 +30,20 @@ class InputSetupService {
    * @param {AppContainer} options.container
    * @param {ILogger} options.logger
    * @param {ValidatedEventDispatcher} options.validatedEventDispatcher
-   * @param {GameLoop} options.gameLoop
+   * // gameLoop option removed
    * @throws {Error} If dependencies are missing.
    */
-  constructor({ container, logger, validatedEventDispatcher, gameLoop }) {
+  constructor({ container, logger, validatedEventDispatcher }) { // gameLoop removed
     // Simplified validation for brevity, assume checks pass
     if (!container) throw new Error("InputSetupService: Missing 'container'.");
     if (!logger) throw new Error("InputSetupService: Missing 'logger'.");
     if (!validatedEventDispatcher) throw new Error("InputSetupService: Missing 'validatedEventDispatcher'.");
-    if (!gameLoop) throw new Error("InputSetupService: Missing 'gameLoop'.");
+    // gameLoop validation removed
 
     this.#container = container;
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
-    this.#gameLoop = gameLoop;
+    // #gameLoop assignment removed
 
     this.#logger.info('InputSetupService: Instance created.');
   }
@@ -51,7 +51,8 @@ class InputSetupService {
   /**
    * @public
    * @description Configures the application's InputHandler by resolving it
-   * and setting its command processing callback.
+   * and setting its command processing callback. The callback now dispatches
+   * a 'command:submit' event instead of directly interacting with GameLoop.
    * Dispatches 'initialization:input_setup_service:started/completed/failed' events.
    * @returns {void}
    * @throws {Error} If the InputHandler cannot be resolved or configured.
@@ -67,31 +68,31 @@ class InputSetupService {
     // --- End Ticket 16 ---
 
     try {
-      // --- MODIFIED: Resolve using the correct token ---
+      // --- Resolve Input Handler ---
       const inputHandler = /** @type {IInputHandler} */ (this.#container.resolve(tokens.IInputHandler));
-      // --- END MODIFICATION ---
 
+      // --- Define the Command Processing Callback ---
       const processInputCommand = async (command) => {
-        // Echo command via VED
+        // Echo command back to UI via VED (remains useful)
         this.#validatedEventDispatcher.dispatchValidated('ui:command_echo', { command })
-            .catch(e => this.#logger.error("Failed dispatching ui:command_echo", e)); // Log dispatch errors
+            .catch(e => this.#logger.error("Failed dispatching ui:command_echo", e));
 
-        // Process if game loop running
-        if (this.#gameLoop && this.#gameLoop.isRunning) {
-          // Don't await processSubmittedCommand as it handles its own flow
-          this.#gameLoop.processSubmittedCommand(command);
-        } else {
-          this.#logger.warn('Input received, but GameLoop is not ready/running.');
-          // Disable input via VED
-          this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', { message: 'Game not running.' })
-              .catch(e => this.#logger.error("Failed dispatching ui:disable_input", e)); // Log dispatch errors
-        }
+        // --- REFACTORED LOGIC ---
+        // Instead of checking GameLoop and calling its method,
+        // simply dispatch the command submission event.
+        // The PlayerTurnHandler (or other interested systems) will
+        // subscribe to this event and decide whether to act on it based
+        // on the current game state (e.g., is it the player's turn?).
+        this.#logger.debug(`InputSetupService: Dispatching command:submit for command "${command}"`);
+        this.#validatedEventDispatcher.dispatchValidated('command:submit', { command })
+            .catch(e => this.#logger.error(`Failed dispatching command:submit for command "${command}"`, e)); // Log dispatch errors specifically for command:submit
+        // --- END REFACTORED LOGIC ---
       };
 
-      // Set the callback
+      // Set the callback on the InputHandler instance
       inputHandler.setCommandCallback(processInputCommand);
 
-      this.#logger.info('InputSetupService: InputHandler resolved and command callback configured.');
+      this.#logger.info('InputSetupService: InputHandler resolved and command callback configured to dispatch command:submit events.');
 
       // --- Ticket 16: Dispatch 'completed' event ---
       const completedPayload = {};

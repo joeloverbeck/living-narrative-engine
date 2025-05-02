@@ -1,0 +1,33 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:system_error_occurred",
+  "description": "Fired when a general system-level error or notable warning occurs that isn't tied to a specific action failure.",
+  "payloadSchema": {
+    "title": "Core: System Error Occurred Event Payload",
+    "description": "Defines the payload structure for the 'core:system_error_occurred' event, used for reporting general system-level errors or warnings.",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "Required. A user-facing message describing the error or warning."
+      },
+      "type": {
+        "type": "string",
+        "description": "Required. The severity level of the message.",
+        "enum": [
+          "error",
+          "warning"
+        ]
+      },
+      "details": {
+        "type": "string",
+        "description": "Optional. Additional technical details about the error, suitable for logging or debugging, but potentially not for direct user display."
+      }
+    },
+    "required": [
+      "message",
+      "type"
+    ],
+    "additionalProperties": false
+  }
+}

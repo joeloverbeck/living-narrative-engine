@@ -1,8 +1,12 @@
+// src/core/interfaces/IValidatedEventDispatcher.js
+
+/** @typedef {import('../eventBus.js').EventListener} EventListener */ // Added for type hinting
+
 /**
  * @interface IValidatedEventDispatcher
- * @description Defines the contract for dispatching game events, potentially after
- * validating their payload against a schema definition. Acts as a layer over the
- * base EventBus.
+ * @description Defines the contract for dispatching, subscribing, and unsubscribing
+ * to game events. Implementations typically validate dispatched events against
+ * schemas and delegate all operations to an underlying EventBus.
  */
 export class IValidatedEventDispatcher {
     /**
@@ -19,6 +23,30 @@ export class IValidatedEventDispatcher {
      */
     async dispatchValidated(eventName, payload, options) {
         throw new Error('IValidatedEventDispatcher.dispatchValidated method not implemented.');
+    }
+
+    /**
+     * Subscribes a listener function to a specific event name.
+     * Implementations should delegate this call to the underlying EventBus.
+     * @function subscribe
+     * @param {string} eventName - The name of the event to subscribe to.
+     * @param {EventListener} listener - The function to call when the event is dispatched.
+     * @returns {void}
+     */
+    subscribe(eventName, listener) {
+        throw new Error('IValidatedEventDispatcher.subscribe method not implemented.');
+    }
+
+    /**
+     * Unsubscribes a listener function from a specific event name.
+     * Implementations should delegate this call to the underlying EventBus.
+     * @function unsubscribe
+     * @param {string} eventName - The name of the event to unsubscribe from.
+     * @param {EventListener} listener - The listener function to remove.
+     * @returns {void}
+     */
+    unsubscribe(eventName, listener) {
+        throw new Error('IValidatedEventDispatcher.unsubscribe method not implemented.');
     }
 }
 

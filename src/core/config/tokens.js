@@ -150,7 +150,6 @@ export const tokens = Object.freeze({
     SystemInitializer: 'SystemInitializer',
     InitializationService: 'InitializationService',
     ShutdownService: 'ShutdownService',
-    GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',

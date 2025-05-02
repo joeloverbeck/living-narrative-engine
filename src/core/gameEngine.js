@@ -2,7 +2,7 @@
 
 // --- Type Imports ---
 /** @typedef {import('./config/appContainer.js').default} AppContainer */
-/** @typedef {import('./gameLoop.js').default} GameLoop */ // Still needed for return type check potentially
+// GameLoop import removed as it's no longer directly referenced or returned
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED for start/stop
 // --- Refactoring: Import new services ---
@@ -24,8 +24,6 @@ class GameEngine {
     /** @private @type {AppContainer} */
     #container;
     // REMOVED: #gameLoop is no longer directly managed or started by GameEngine
-    // /** @private @type {GameLoop | null} */
-    // #gameLoop = null;
     /** @private @type {boolean} */
     #isInitialized = false;
     /** @private @type {ILogger | null} */
@@ -64,23 +62,25 @@ class GameEngine {
         return this.#isInitialized;
     }
 
-    /**
-     * Gets the current GameLoop instance, or null if not initialized or stopped.
-     * Primarily intended for testing or internal checks where direct access might be needed.
-     * @returns {GameLoop | null} The current game loop instance or null.
-     * @internal // Mark as internal if it's mainly for testing/advanced use
-     * @deprecated Direct access to GameLoop is discouraged. Interact via events/TurnManager.
-     */
-    get gameLoop() {
-        // GameLoop is no longer stored directly in GameEngine after initialization.
-        // If needed for tests, resolve it transiently.
-        try {
-            return this.#container.resolve(tokens.GameLoop);
-        } catch (e) {
-            this.#logger?.warn('GameEngine.gameLoop getter: Failed to resolve GameLoop. Engine might not be initialized or GameLoop registration is missing.', e);
-            return null;
-        }
-    }
+    // --- DELETED get gameLoop() method ---
+    // /**
+    //  * Gets the current GameLoop instance, or null if not initialized or stopped.
+    //  * Primarily intended for testing or internal checks where direct access might be needed.
+    //  * @returns {GameLoop | null} The current game loop instance or null.
+    //  * @internal // Mark as internal if it's mainly for testing/advanced use
+    //  * @deprecated Direct access to GameLoop is discouraged. Interact via events/TurnManager.
+    //  */
+    // get gameLoop() {
+    //     // GameLoop is no longer stored directly in GameEngine after initialization.
+    //     // If needed for tests, resolve it transiently.
+    //     try {
+    //         return this.#container.resolve(tokens.GameLoop);
+    //     } catch (e) {
+    //         this.#logger?.warn('GameEngine.gameLoop getter: Failed to resolve GameLoop. Engine might not be initialized or GameLoop registration is missing.', e);
+    //         return null;
+    //     }
+    // }
+    // --- End Deletion ---
 
     /**
      * Initializes the game using InitializationService and then starts the turn processing via TurnManager.
@@ -106,7 +106,7 @@ class GameEngine {
         this.#logger?.info(`GameEngine: Starting initialization sequence for world: ${worldName}...`);
 
         let initResult;
-        let turnManager = null; // <<< ADDED: Define here for access in finally/catch
+        let turnManager = null; // <<< Defined here for access in finally/catch
         try {
             // --- Resolve and Run Initialization Service ---
             const initializationService = /** @type {InitializationService} */ (
@@ -128,7 +128,7 @@ class GameEngine {
             // --- Handle Successful Initialization ---
             this.#logger?.info('GameEngine: Initialization sequence reported success.');
             this.#isInitialized = true;
-            // REMOVED: Storing gameLoop locally - #gameLoop = initResult.gameLoop;
+            // REMOVED: Storing gameLoop locally
 
             // Resolve and Start TurnManager (Ticket 2.2 Task 3)
             this.#logger?.info('GameEngine: Resolving TurnManager...');
@@ -138,7 +138,7 @@ class GameEngine {
             this.#logger?.info('GameEngine: Starting TurnManager...');
             await turnManager.start(); // Start turns via TurnManager
             this.#logger?.info('GameEngine: TurnManager started successfully.');
-            // REMOVED: Direct call to gameLoop.start() - await this.gameLoop.start();
+            // REMOVED: Direct call to gameLoop.start()
 
             // --- Dispatch Post-Start Message (Optional) ---
             try {

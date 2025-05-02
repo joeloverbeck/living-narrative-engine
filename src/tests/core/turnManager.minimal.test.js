@@ -1,4 +1,5 @@
 // src/tests/core/turnManager.minimal.test.js
+// --- FILE START (Entire file content as requested) ---
 
 import {beforeEach, describe, expect, jest, test, afterEach} from '@jest/globals'; // Added afterEach
 import TurnManager from '../../core/turnManager.js';
@@ -16,7 +17,9 @@ const mockEntityManager = {
     activeEntities: new Map()      // Keep this property
 };
 const mockDispatcher = {dispatchValidated: jest.fn()}; // Need dispatchValidated for constructor
-const mockTurnHandlerResolver = {resolve: jest.fn()}; // <<< ADDED: Minimal mock for the required dependency
+// Changed 'resolve' to 'resolveHandler' to match the TurnManager constructor's expectation
+const mockTurnHandlerResolver = {resolveHandler: jest.fn()};
+
 
 describe('TurnManager Minimal Test', () => {
     let instance;
@@ -33,7 +36,7 @@ describe('TurnManager Minimal Test', () => {
             dispatcher: mockDispatcher,
             entityManager: mockEntityManager,
             turnOrderService: mockTurnOrderService,
-            turnHandlerResolver: mockTurnHandlerResolver // <<< ADDED: Pass the mock dependency
+            turnHandlerResolver: mockTurnHandlerResolver // Pass the correctly named mock dependency
         });
 
         // Add stopSpy setup since the 'no actors' path calls stop
@@ -64,16 +67,26 @@ describe('TurnManager Minimal Test', () => {
         expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // From start()
         expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() called.'); // From advanceTurn()
 
-        // THE KEY ASSERTION: Should pass now
+        // Check isEmpty was called
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
 
         // Assertions for the "No Actors Found" path that follows:
         expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Attempting to start a new round.');
         // Check that activeEntities was accessed (implicitly successful if no TypeError)
         expect(mockLogger.error).toHaveBeenCalledWith('Cannot start a new round: No active entities with an Actor component found.');
+
+        // --- FIX START ---
+        // Update the expectation to match the actual event dispatched by TurnManager
         expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'textUI:display_message', {text: expect.stringContaining('No active actors'), type: 'error'}
+            'core:system_error_occurred', // Correct event name
+            {
+                message: 'System Error: No active actors found to start a round. Stopping game.', // Correct message
+                type: 'error',                                                                    // Correct type
+                details: 'Cannot start a new round: No active entities with an Actor component found.' // Correct details
+            }
         );
+        // --- FIX END ---
+
         // Check stop was called
         expect(stopSpy).toHaveBeenCalledTimes(1);
 
@@ -103,3 +116,4 @@ describe('TurnManager Minimal Test', () => {
         expect(stopSpy).not.toHaveBeenCalled(); // stop should not be called here
     });
 });
+// --- FILE END ---

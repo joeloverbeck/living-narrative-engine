@@ -4,7 +4,8 @@
 /** @typedef {import('../../config/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../gameLoop.js').default} GameLoop */
+// GameLoop import removed as it's no longer resolved or returned here
+// /** @typedef {import('../../gameLoop.js').default} GameLoop */
 /** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../gameStateInitializer.js').default} GameStateInitializer */
@@ -17,7 +18,7 @@
  * Represents the outcome of the game initialization sequence.
  * @typedef {object} InitializationResult
  * @property {boolean} success - Indicates whether the initialization sequence completed successfully.
- * @property {GameLoop} [gameLoop] - The instantiated and ready-to-start game loop instance, only present if success is true.
+ * // @property {GameLoop} [gameLoop] - ... <<< REMOVED
  * @property {Error} [error] - An error object containing details if initialization failed (success is false).
  */
 
@@ -42,6 +43,7 @@
  * Service responsible for orchestrating the entire game initialization sequence.
  * It coordinates various sub-services and steps to load data, set up the game state,
  * and prepare the engine for starting the game loop. Handles error reporting via events.
+ * NOTE: This service no longer resolves or returns the GameLoop instance.
  * @implements {IInitializationService} // Conceptually implements the defined interface
  */
 class InitializationService {
@@ -93,9 +95,9 @@ class InitializationService {
 
     /**
      * Runs the complete asynchronous sequence required to initialize the game for a specific world.
-     * This orchestrates loading, system initialization, state setup, entity creation, input configuration,
-     * and finally resolves the GameLoop instance. Catches errors, logs them, dispatches UI error events,
-     * and returns a detailed result object.
+     * This orchestrates loading, system initialization, state setup, entity creation, and input configuration.
+     * It NO LONGER resolves the GameLoop instance. Catches errors, logs them, dispatches UI error events,
+     * and returns a simple success/failure result object.
      * @param {string} worldName - The identifier of the world to initialize.
      * @returns {Promise<InitializationResult>} A promise resolving with the result of the initialization attempt.
      */
@@ -115,7 +117,7 @@ class InitializationService {
             .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:started' event", e));
         // --- End Ticket 16 ---
 
-        let gameLoop = null; // Define gameLoop here to access in completed event payload
+        // 'gameLoop' variable removed, no longer needed here.
 
         try {
             // --- 1. Load World Data ---
@@ -161,25 +163,26 @@ class InitializationService {
             inputSetupService.configureInputHandler(); // This should now throw on critical error
             this.#logger.info('InitializationService: Input handler configured.');
 
-            // --- 6. Resolve Game Loop ---
-            this.#logger.debug('Resolving GameLoop...');
-            gameLoop = /** @type {GameLoop} */ (this.#container.resolve('GameLoop')); // Assign to outer scope variable
-            this.#logger.info('InitializationService: GameLoop resolved.');
+            // --- 6. Resolve Game Loop (REMOVED) ---
+            // this.#logger.debug('Resolving GameLoop...'); // <<< REMOVED
+            // gameLoop = /** @type {GameLoop} */ (this.#container.resolve('GameLoop')); // <<< REMOVED
+            // this.#logger.info('InitializationService: GameLoop resolved.'); // <<< REMOVED
 
             // --- Success ---
-            this.#logger.info(`InitializationService: Initialization sequence for world '${worldName}' completed successfully.`);
+            this.#logger.info(`InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`);
 
             // --- Ticket 16: Dispatch 'completed' event ---
-            const completedPayload = { worldName, gameLoopInstanceId: gameLoop?.id ?? null }; // Use resolved gameLoop
+            // Payload no longer includes gameLoopInstanceId
+            const completedPayload = { worldName }; // <<< MODIFIED PAYLOAD
             this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:completed', completedPayload, { allowSchemaNotFound: true })
                 .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:completed' event.", completedPayload))
                 .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:completed' event", e));
             // --- End Ticket 16 ---
 
+            // Return simplified success object, without gameLoop
             return {
-                success: true,
-                gameLoop: gameLoop
-            };
+                success: true
+            }; // <<< MODIFIED RETURN
 
         } catch (error) {
             this.#logger.error(`InitializationService: CRITICAL ERROR during initialization sequence for world '${worldName}':`, error);

@@ -15,12 +15,19 @@ import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationServic
 import GameStateManager from '../../gameStateManager.js';       // Concrete Class Import
 // --- ADDED TurnOrderService IMPORT ---
 import {TurnOrderService} from "../../turnOrder/turnOrderService.js"; // Adjust path if needed
+// --- ADDED CommandProcessor IMPORT --- // <<< NEW
+import CommandProcessor from "../../commandProcessor.js"; // <<< NEW
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-
 /** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+// --- ADDED Type Imports for CommandProcessor Dependencies --- // <<< NEW
+/** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/IGameStateManager.js').IGameStateManager} IGameStateManager */
+/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 
 
 /**
@@ -53,19 +60,40 @@ export function registerDomainServices(container) {
         [tokens.EntityManager, tokens.ILogger, tokens.DomainContextCompatibilityChecker, tokens.PrerequisiteEvaluationService]);
     r.single(tokens.PayloadValueResolverService, PayloadValueResolverService, [tokens.ILogger]);
 
-    // --- Register ActionExecutor against its Interface Token --- // MODIFIED
+    // --- Register ActionExecutor against its Interface Token ---
     r.single(tokens.IActionExecutor, ActionExecutor,
         [tokens.GameDataRepository, tokens.TargetResolutionService, tokens.ActionValidationService,
             tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.IValidatedEventDispatcher]); // Use interface token if available
+    log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`); // <<< Added Log
 
-    // --- Register GameStateManager against its Interface Token --- // MODIFIED
+    // --- Register GameStateManager against its Interface Token ---
     r.single(tokens.IGameStateManager, GameStateManager, []); // Assuming GameStateManager has no dependencies in constructor
+    log.debug(`Domain-services Registration: Registered ${tokens.IGameStateManager}.`); // <<< Added Log
 
-    // --- Register CommandParser against its Interface Token using explicit factory function --- // MODIFIED
+    // --- Register CommandParser against its Interface Token using explicit factory function ---
     container.register(tokens.ICommandParser, c => {
         const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository));
         return new CommandParser(gameDataRepoInstance);
     }, {lifecycle: 'singleton'});
+    log.debug(`Domain-services Registration: Registered ${tokens.ICommandParser}.`); // <<< Added Log
+
+    // --- Register CommandProcessor against its Interface Token using explicit factory function --- // <<< NEW
+    r.singletonFactory(tokens.ICommandProcessor, (c) => {
+        log.debug(`Domain-services Registration: Factory creating ${tokens.ICommandProcessor}...`);
+        // Resolve all dependencies for CommandProcessor's options object
+        const commandProcessorDeps = {
+            commandParser: /** @type {ICommandParser} */ (c.resolve(tokens.ICommandParser)),
+            actionExecutor: /** @type {IActionExecutor} */ (c.resolve(tokens.IActionExecutor)),
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
+            gameStateManager: /** @type {IGameStateManager} */ (c.resolve(tokens.IGameStateManager)),
+            entityManager: /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
+            gameDataRepository: /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
+        };
+        log.debug(`Domain-services Registration: Dependencies for ${tokens.ICommandProcessor} resolved.`);
+        return new CommandProcessor(commandProcessorDeps);
+    });
+    log.debug(`Domain-services Registration: Registered ${tokens.ICommandProcessor} factory.`); // <<< Added Log
 
     // --- ADDED TurnOrderService REGISTRATION ---
     // Register TurnOrderService as a singleton using a factory function

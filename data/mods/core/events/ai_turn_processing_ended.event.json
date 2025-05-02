@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:ai_turn_processing_ended",
+  "description": "Fired after the game finishes processing an AI entity's turn, including any action taken.",
+  "payloadSchema": {
+    "title": "Core: AI Turn Processing Ended Event Payload",
+    "description": "Defines the payload structure for the 'core:ai_turn_processing_ended' event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique ID of the AI entity whose turn processing has ended."
+      },
+      "actionResult": {
+        "description": "The result returned by the CommandProcessor after attempting the AI's action, or null if processing failed before an action result was obtained.",
+        "oneOf": [
+          {
+            "$ref": "../../../schemas/action-result.schema.json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "entityId"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,13 +1,18 @@
-// gameStateManager.js
+// src/core/gameStateManager.js
+// --- FILE START (Entire corrected file content) ---
 
 /** @typedef {import('./entities/entity.js').default} Entity */
 
-import {IGameStateManager} from "./interfaces/IGameStateManager.js";
+import {IGameStateManager} from "./interfaces/IGameStateManager.js"; // Ensure interface is imported
 
 /**
  * Manages the core, mutable game world state.
  * Acts as the single source of truth for dynamic elements like the
  * player's current state and location.
+ *
+ * @class GameStateManager
+ * @extends IGameStateManager
+ * @implements {IGameStateManager}
  */
 class GameStateManager extends IGameStateManager {
     /** @type {Entity | null} */
@@ -20,8 +25,8 @@ class GameStateManager extends IGameStateManager {
      * Initializes the game state manager with default null state.
      */
     constructor() {
-        super();
-    
+        super(); // Call super constructor if IGameStateManager has one
+
         this.#playerEntity = null;
         this.#currentLocation = null;
         console.log('GameStateManager: Initialized.');
@@ -72,6 +77,26 @@ class GameStateManager extends IGameStateManager {
         this.#currentLocation = locationEntity;
         console.log(`GameStateManager: Current location set to ${locationEntity ? locationEntity.id : 'null'}`);
     }
+
+    // ****** START FIX ******
+    /**
+     * Retrieves the location of a given entity.
+     * NOTE: In this simple manager, it returns the global current location,
+     * regardless of the entity provided. It fulfills the interface requirement
+     * for PlayerTurnHandler.
+     * @param {Entity} entity - The entity whose location is requested (currently ignored in this simple implementation).
+     * @returns {Entity | null} The current location entity or null if not set.
+     * @todo Enhance this if multiple actors/locations need independent tracking based on the entity.
+     */
+    getLocationOfEntity(entity) {
+        // Basic implementation: return the globally tracked location.
+        // Add logging or checks if needed (e.g., ensure entity === this.#playerEntity).
+        // console.debug(`GameStateManager: getLocationOfEntity called for ${entity?.id}. Returning global location: ${this.#currentLocation?.id}`);
+        return this.#currentLocation;
+    }
+    // ****** END FIX ******
+
 }
 
 export default GameStateManager;
+// --- FILE END ---

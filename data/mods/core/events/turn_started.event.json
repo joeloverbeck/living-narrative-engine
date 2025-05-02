@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:turn_started",
+  "description": "Fired when an entity's turn begins.",
+  "payloadSchema": {
+    "title": "Core: Turn Started Event Payload",
+    "description": "Defines the payload structure for the 'core:turn_started' event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "../../../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique ID of the entity whose turn is starting."
+      },
+      "entityType": {
+        "type": "string",
+        "description": "Indicates whether the entity starting the turn is a player or an AI.",
+        "enum": [
+          "player",
+          "ai"
+        ]
+      }
+    },
+    "required": [
+      "entityId",
+      "entityType"
+    ],
+    "additionalProperties": false
+  }
+}

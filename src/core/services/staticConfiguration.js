@@ -68,6 +68,7 @@ class StaticConfiguration {
         return [
             'common.schema.json',
             'action-definition.schema.json',
+            'action-result.schema.json',
             'component-definition.schema.json',
             'entity.schema.json',
             'event-definition.schema.json',

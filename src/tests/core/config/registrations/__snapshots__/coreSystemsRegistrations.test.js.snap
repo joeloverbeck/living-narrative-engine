@@ -184,17 +184,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "IActionDiscoverySystem",
     [Function],
     {
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-      ],
-    },
-  ],
-  [
-    "ITurnManager",
-    [Function],
-    {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
       "tags": [
         "initializableSystem",
       ],
@@ -214,14 +204,24 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "AITurnHandler",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
     },
   ],
   [
     "TurnHandlerResolver",
     [Function],
     {
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
+    },
+  ],
+  [
+    "ITurnManager",
+    [Function],
+    {
+      "lifecycle": "singletonFactory",
+      "tags": [
+        "initializableSystem",
+      ],
     },
   ],
 ]
