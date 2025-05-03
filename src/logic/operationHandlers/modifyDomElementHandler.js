@@ -54,7 +54,8 @@ class ModifyDomElementHandler {
      */
     execute(params, executionContext) {
         const logger = executionContext?.logger ?? this.#logger; // Prefer context logger
-        logger.debug('MODIFY_DOM_ELEMENT: Handler executing with params:', JSON.stringify(params)); // Log received params
+        // --- MODIFIED LINE: Pass params object directly ---
+        logger.debug('MODIFY_DOM_ELEMENT: Handler executing with params:', params); // Log received params object
 
         if (!params || typeof params.selector !== 'string' || !params.selector.trim() ||
             typeof params.property !== 'string' || !params.property.trim() ||
