@@ -1,14 +1,19 @@
-// src/core/appContainer.js
+// src/core/config/appContainer.js
 // ****** CORRECTED FILE ******
 
 /**
- * @typedef {'singleton' | 'transient' | 'singletonFactory'} Lifecycle // Added 'singletonFactory' here for documentation clarity
+ * @typedef {'singleton' | 'transient' | 'singletonFactory'} Lifecycle
+ */
+
+/**
+ * @typedef {import('../interfaces/common.js').DiToken} DiToken // Assuming DiToken might be defined centrally
  */
 
 /**
  * @typedef {object} RegistrationOptions
  * @property {Lifecycle} [lifecycle='singleton'] - How the instance should be managed.
- * @property {string[]} [dependencies=[]] - Optional: Explicit dependencies (keys) for documentation or future validation. Not strictly enforced by resolve().
+ * @property {DiToken[]} [dependencies] - Dependencies (keys) for class constructor injection. Added by Registrar.single/transient.
+ * @property {string[]} [tags=[]] - Optional tags for resolving multiple services.
  */
 
 /**
@@ -17,6 +22,8 @@
  * @returns {any} The created service instance.
  */
 
+/** @typedef {new (...args: any[]) => any} ClassConstructor */
+
 /**
  * A lightweight Dependency Injection (DI) container.
  * Manages instantiation and lifecycle of registered services/systems.
@@ -24,103 +31,174 @@
  * @implements {import('../interfaces/container.js').IServiceResolver}
  */
 class AppContainer {
-    /** @type {Map<string, { factory: FactoryFunction, options: RegistrationOptions & { tags?: string[] } }>} */
+    /** @type {Map<string, { registration: FactoryFunction | ClassConstructor | any, options: RegistrationOptions }>} */
     #registrations = new Map();
     /** @type {Map<string, any>} */
     #instances = new Map(); // Stores singleton instances
 
     /**
      * Registers a service/system with the container.
-     * @param {string} key - A unique identifier for the service.
-     * @param {FactoryFunction} factory - A function that creates an instance of the service. It receives the container itself to resolve dependencies.
-     * @param {RegistrationOptions & { tags?: string[] }} [options={ lifecycle: 'singleton' }] - Registration options (e.g., lifecycle, tags).
+     * @param {DiToken} key - A unique identifier for the service.
+     * @param {FactoryFunction | ClassConstructor | any} factoryOrValueOrClass - The factory, class constructor, or value to register.
+     * @param {RegistrationOptions} [options={ lifecycle: 'singleton' }] - Registration options.
      */
-    register(key, factory, options = {lifecycle: 'singleton'}) {
-        if (this.#registrations.has(key)) {
-            console.warn(`AppContainer: Service key "${key}" is already registered. Overwriting.`);
+    register(key, factoryOrValueOrClass, options = {lifecycle: 'singleton'}) {
+        const registrationKey = String(key);
+        if (this.#registrations.has(registrationKey)) {
+            console.warn(`AppContainer: Service key "${registrationKey}" is already registered. Overwriting.`);
         }
-        // Ensure tags are an array if provided, log correctly
-        const lifecycle = options.lifecycle || 'singleton';
-        const tagsInfo = Array.isArray(options.tags) && options.tags.length > 0 ? ` Tags: [${options.tags.join(', ')}]` : '';
-        console.log(`AppContainer: Registering "${key}" (Lifecycle: ${lifecycle})${tagsInfo}`);
-        this.#registrations.set(key, {factory, options});
+        // Establish defaults carefully, ensuring dependencies isn't added unless intended
+        const defaultOptions = {
+            lifecycle: 'singleton',
+            // dependencies: [], // DO NOT default dependencies here, check for presence later
+            tags: [],
+        };
+        const effectiveOptions = {...defaultOptions, ...options}; // Merge provided options over defaults
+
+        const lifecycle = effectiveOptions.lifecycle;
+        const tagsInfo = Array.isArray(effectiveOptions.tags) && effectiveOptions.tags.length > 0 ? ` Tags: [${effectiveOptions.tags.join(', ')}]` : '';
+        // Only log deps info if the key actually exists in the effective options
+        const depsInfo = effectiveOptions.hasOwnProperty('dependencies') && Array.isArray(effectiveOptions.dependencies) && effectiveOptions.dependencies.length > 0 ? ` Deps: [${effectiveOptions.dependencies.join(', ')}]` : '';
+        console.log(`AppContainer: Registering "${registrationKey}" (Lifecycle: ${lifecycle})${depsInfo}${tagsInfo}`);
+
+        this.#registrations.set(registrationKey, {
+            registration: factoryOrValueOrClass,
+            options: effectiveOptions
+        });
+
+        if (this.#instances.has(registrationKey) && (lifecycle === 'singleton' || lifecycle === 'singletonFactory')) {
+            this.#instances.delete(registrationKey);
+            console.debug(`AppContainer: Cleared cached instance for overwritten singleton "${registrationKey}".`);
+        }
     }
 
     /**
      * Resolves (retrieves or creates) an instance of a registered service.
      * @template T
-     * @param {string} key - The unique identifier of the service to resolve.
+     * @param {DiToken} key - The unique identifier of the service to resolve.
      * @returns {T} The resolved service instance.
      * @throws {Error} If the key is not registered or creation fails.
      */
     resolve(key) {
-        const registration = this.#registrations.get(key);
+        const registrationKey = String(key);
+        const registration = this.#registrations.get(registrationKey);
         if (!registration) {
-            throw new Error(`AppContainer: No service registered for key "${key}".`);
+            const knownKeys = Array.from(this.#registrations.keys()).join(', ');
+            throw new Error(`AppContainer: No service registered for key "${registrationKey}". Known keys: [${knownKeys}]`);
         }
 
-        const {factory, options} = registration;
-        const lifecycle = options.lifecycle || 'singleton'; // Default to singleton
+        const {registration: factoryOrValueOrClass, options} = registration;
+        const lifecycle = options.lifecycle || 'singleton';
 
-        // --- VVVVVV MODIFIED SECTION VVVVVV ---
-        // Treat 'singleton' and 'singletonFactory' the same way: create once, cache.
         if (lifecycle === 'singleton' || lifecycle === 'singletonFactory') {
-            if (!this.#instances.has(key)) {
-                // Log slightly differently just for debugging clarity if needed
-                const instanceType = lifecycle === 'singletonFactory' ? 'singleton (from factory)' : 'singleton';
-                console.debug(`AppContainer: Creating ${instanceType} instance for "${key}"...`);
-                try {
-                    // Pass container to factory when creating instance
-                    const instance = factory(this);
-                    this.#instances.set(key, instance);
-                    console.debug(`AppContainer: ${instanceType} instance for "${key}" created.`);
-                } catch (error) {
-                    console.error(`AppContainer: Error creating ${instanceType} instance for "${key}":`, error);
-                    // Ensure the original error's context isn't lost
-                    throw new Error(`Failed to create instance for "${key}" (lifecycle: ${lifecycle}): ${error.message}`, {cause: error});
-                }
+            if (this.#instances.has(registrationKey)) {
+                return this.#instances.get(registrationKey);
             }
-            return this.#instances.get(key);
-        } else if (lifecycle === 'transient') {
-            // --- ^^^^^^ MODIFIED SECTION ^^^^^^ ---
-            console.debug(`AppContainer: Creating transient instance for "${key}"...`);
+            console.debug(`AppContainer: Creating singleton instance for "${registrationKey}"...`);
             try {
-                // Pass container to factory when creating instance
-                const instance = factory(this);
-                console.debug(`AppContainer: Transient instance for "${key}" created.`);
+                const instance = this._createInstance(registrationKey, factoryOrValueOrClass, options);
+                this.#instances.set(registrationKey, instance);
+                console.debug(`AppContainer: Singleton instance for "${registrationKey}" created.`);
                 return instance;
             } catch (error) {
-                console.error(`AppContainer: Error creating transient instance for "${key}":`, error);
-                // Ensure the original error's context isn't lost
-                throw new Error(`Failed to create instance for "${key}" (lifecycle: ${lifecycle}): ${error.message}`, {cause: error});
+                console.error(`AppContainer: Error creating singleton instance for "${registrationKey}":`, error);
+                throw new Error(`Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`, {cause: error});
+            }
+        } else if (lifecycle === 'transient') {
+            console.debug(`AppContainer: Creating transient instance for "${registrationKey}"...`);
+            try {
+                const instance = this._createInstance(registrationKey, factoryOrValueOrClass, options);
+                console.debug(`AppContainer: Transient instance for "${registrationKey}" created.`);
+                return instance;
+            } catch (error) {
+                console.error(`AppContainer: Error creating transient instance for "${registrationKey}":`, error);
+                throw new Error(`Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`, {cause: error});
             }
         } else {
-            // This should now only catch genuinely unknown lifecycle strings
-            throw new Error(`AppContainer: Unknown lifecycle "${lifecycle}" for key "${key}".`);
+            throw new Error(`AppContainer: Unknown lifecycle "${lifecycle}" for key "${registrationKey}".`);
         }
     }
 
     /**
+     * Internal helper to create an instance based on registration info.
+     * @private
+     * @param {string} key - The registration key (for logging).
+     * @param {FactoryFunction | ClassConstructor | any} factoryOrValueOrClass - The registered item.
+     * @param {RegistrationOptions} options - The registration options.
+     * @returns {any} The created instance.
+     */
+    _createInstance(key, factoryOrValueOrClass, options) {
+        // --- VVVVVV MODIFIED LOGIC VVVVVV ---
+        // Determine registration type:
+        // It's a class registration if it's a function AND the 'dependencies' key exists in options
+        // (Registrar.single/transient always add this key, even if empty array).
+        const isClassRegistration = typeof factoryOrValueOrClass === 'function'
+            && options?.hasOwnProperty('dependencies'); // Check for key presence
+
+        const isFactoryFunction = typeof factoryOrValueOrClass === 'function' && !isClassRegistration;
+        // --- ^^^^^^ MODIFIED LOGIC ^^^^^^ ---
+
+        if (isClassRegistration) {
+            // --- Handle Class constructor (from .single/.transient) ---
+            /** @type {ClassConstructor} */
+            const ClassConstructor = factoryOrValueOrClass;
+            // Ensure deps is an array, even if options.dependencies was null/undefined (though shouldn't happen with Registrar)
+            const deps = Array.isArray(options.dependencies) ? options.dependencies : [];
+            const dependenciesMap = {};
+            const targetClassName = ClassConstructor.name || '[AnonymousClass]';
+
+            // Only resolve dependencies if there are any
+            if (deps.length > 0) {
+                console.debug(`AppContainer: Resolving ${deps.length} dependencies for class "${targetClassName}" (key: "${key}")...`);
+                deps.forEach((depToken) => {
+                    let propName = String(depToken);
+                    if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) propName = propName.substring(1);
+                    propName = propName.charAt(0).toLowerCase() + propName.slice(1);
+                    try {
+                        dependenciesMap[propName] = this.resolve(depToken);
+                    } catch (e) {
+                        console.error(`[AppContainer._createInstance for ${key}] FAILED dependency resolution: Cannot resolve "${String(depToken)}" (for prop "${propName}") needed by "${targetClassName}".`, e);
+                        throw new Error(`Failed to resolve dependency "${String(depToken)}" needed by "${targetClassName}" (registered as "${key}"): ${e.message}`, {cause: e});
+                    }
+                });
+            } else {
+                console.debug(`AppContainer: Instantiating class "${targetClassName}" (key: "${key}") with no dependencies.`);
+            }
+
+            // Use 'new', passing an empty map if no dependencies
+            return new ClassConstructor(dependenciesMap);
+
+        } else if (isFactoryFunction) {
+            // --- Handle Factory function ---
+            console.debug(`AppContainer: Executing factory function for key "${key}".`);
+            return factoryOrValueOrClass(this); // Execute factory
+
+        } else {
+            // --- Handle Instance/Value registration ---
+            console.debug(`AppContainer: Returning pre-registered instance/value for key "${key}".`);
+            return factoryOrValueOrClass; // Return value
+        }
+    }
+
+
+    /**
      * Resolves all registered services that have the specified tag.
-     * Assumes synchronous factory functions based on the current resolve() implementation.
-     * This method aligns with the IServiceResolver interface.
      * @template T
-     * @param {string} tag - The tag to search for. Cannot be null or empty per IServiceResolver contract.
-     * @returns {Array<T>} An array of resolved service instances associated with the tag. Returns an empty array `[]` if no matching services are found.
+     * @param {string} tag - The tag to search for.
+     * @returns {Array<T>} An array of resolved service instances associated with the tag.
      */
     resolveByTag(tag) {
         const resolvedInstances = [];
         console.debug(`AppContainer: Resolving instances by tag "${tag}"...`);
 
         for (const [key, registration] of this.#registrations.entries()) {
-            if (registration.options && Array.isArray(registration.options.tags) && registration.options.tags.includes(tag)) {
+            if (registration.options?.tags?.includes(tag)) {
                 console.debug(`AppContainer: Found tag "${tag}" on registration "${key}". Resolving...`);
                 try {
-                    const instance = this.resolve(key); // Handles singleton/transient/singletonFactory correctly now
+                    const instance = this.resolve(key);
                     resolvedInstances.push(instance);
                 } catch (error) {
                     console.error(`AppContainer: Error resolving tagged instance "${key}" for tag "${tag}":`, error);
-                    // Continue trying to resolve others
                 }
             }
         }
@@ -129,18 +207,13 @@ class AppContainer {
         return resolvedInstances;
     }
 
-
-    /**
-     * Clears all registered singleton instances. Useful for testing or full resets.
-     */
+    /** Clears singleton instances */
     disposeSingletons() {
         console.log('AppContainer: Disposing singleton instances...');
         this.#instances.clear();
     }
 
-    /**
-     * Clears all registrations and instances. Use with caution.
-     */
+    /** Clears all registrations and instances */
     reset() {
         console.log('AppContainer: Resetting container (registrations and instances)...');
         this.#registrations.clear();

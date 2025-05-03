@@ -1,4 +1,5 @@
 // src/domUI/index.js
+
 // Export interfaces and base classes
 export * from './IDocumentContext.js';
 export * from './rendererBase.js'; // Ensure RendererBase export is correct
@@ -13,5 +14,5 @@ export * from './locationRenderer.js';
 export * from './inventoryPanel.js';
 export * from './actionButtonsRenderer.js';
 
-// *** ADD: Export the new facade ***
+// *** ADDED: Export the new facade ***
 export {DomUiFacade} from './DomUiFacade.js'; // Use named export

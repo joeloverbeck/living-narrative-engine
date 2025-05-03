@@ -6,6 +6,13 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "GameRuleSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "IWorldContext",
+        "IActionExecutor",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -16,6 +23,11 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "EquipmentEffectSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -26,6 +38,11 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "EquipmentSlotSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -36,6 +53,12 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "InventorySystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+        "IWorldContext",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -46,6 +69,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "DeathSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -56,6 +83,13 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "ItemUsageSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "ConditionEvaluationService",
+        "ItemTargetResolverService",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -66,6 +100,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "BlockerSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -76,6 +114,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "MovementSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -86,6 +128,12 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "MoveCoordinatorSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "BlockerSystem",
+        "MovementSystem",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -96,6 +144,11 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "CombatSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -107,6 +160,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "WorldPresenceSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -118,6 +175,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "PerceptionSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -129,6 +190,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "NotificationUISystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -140,6 +205,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "OpenableSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -151,6 +220,11 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "HealthSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -162,6 +236,11 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "StatusEffectSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -173,6 +252,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "LockSystem",
     [Function],
     {
+      "dependencies": [
+        "EventBus",
+        "EntityManager",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "initializableSystem",
@@ -194,6 +277,15 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "PlayerTurnHandler",
     [Function],
     {
+      "dependencies": [
+        "ILogger",
+        "IActionDiscoverySystem",
+        "IValidatedEventDispatcher",
+        "ICommandProcessor",
+        "IWorldContext",
+        "EntityManager",
+        "GameDataRepository",
+      ],
       "lifecycle": "singleton",
       "tags": [
         "shutdownable",

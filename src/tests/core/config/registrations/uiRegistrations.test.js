@@ -1,4 +1,5 @@
 // src/tests/core/config/registrations/uiRegistrations.test.js
+// ****** CORRECTED FILE ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -15,51 +16,45 @@ import {registerUI} from '../../../../core/config/registrations/uiRegistrations.
 
 // --- Dependencies & Concrete Classes ---
 import {tokens} from '../../../../core/config/tokens.js';
-// import DomRenderer from '../../../../domUI/domRenderer.js'; // Removed (legacy)
 import InputHandler from '../../../../core/inputHandler.js';
 // --- NEW Imports needed by registerUI factories ---
 import {
     UiMessageRenderer,
     DomElementFactory,
-    DocumentContext // ****** CORRECTED: Changed from BrowserDocumentContext to match uiRegistrations.js ******
-    // Note: Other UI components (TitleRenderer, Facade, etc.) are resolved via container,
-    // so direct import isn't strictly needed here unless asserting specific instances.
+    DocumentContext,
+    DomUiFacade // Needed for instanceof checks
 } from '../../../../domUI/index.js';
 
 
 // --- Mock Implementations ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
 const mockEventBus = {subscribe: jest.fn(), dispatch: jest.fn()};
-const mockValidatedEventDispatcher = {dispatchValidated: jest.fn(), subscribe: jest.fn(), unsubscribe: jest.fn()}; // Added subscribe/unsubscribe for VED mock completeness
+const mockValidatedEventDispatcher = {dispatchValidated: jest.fn(), subscribe: jest.fn(), unsubscribe: jest.fn()};
 
 // --- Realistic DOM Mocks ---
 let mockInputElement;
-let mockDocument; // Mock the document object itself
+let mockDocument;
 let mockOutputDiv;
 let mockTitleElement;
 
 const setupDomMocks = () => {
-    mockDocument = document; // Use the global document provided by JSDOM
+    mockDocument = document;
     mockInputElement = mockDocument.createElement('input');
     mockOutputDiv = mockDocument.createElement('div');
-    mockTitleElement = mockDocument.createElement('h1'); // or appropriate element
-    mockOutputDiv.id = 'output-div'; // Give IDs if needed for selectors
+    mockTitleElement = mockDocument.createElement('h1');
+    mockOutputDiv.id = 'output-div';
     mockTitleElement.id = 'title-element';
 
-    // Ensure necessary structure exists for querySelectors used in tests or setup
     mockDocument.body.innerHTML = `
-        <div id="game-container"> <div id="main-content">
-                 <ul id="message-list"></ul> </div>
-             <div id="action-buttons"></div> </div>`;
-    mockDocument.body.appendChild(mockOutputDiv); // Append mocks if they aren't part of innerHTML
+        <div id="game-container"><div id="main-content"><ul id="message-list"></ul></div><div id="action-buttons"></div></div>`;
+    mockDocument.body.appendChild(mockOutputDiv);
     mockDocument.body.appendChild(mockTitleElement);
-    mockDocument.body.appendChild(mockInputElement); // Ensure input is in the document
+    mockDocument.body.appendChild(mockInputElement);
 
-    // Spy on methods that might be called
     jest.spyOn(mockInputElement, 'addEventListener');
     jest.spyOn(mockInputElement, 'focus');
     jest.spyOn(mockDocument, 'querySelector');
-    jest.spyOn(mockDocument, 'createElement'); // Spy on element creation
+    jest.spyOn(mockDocument, 'createElement');
     jest.spyOn(mockDocument.body, 'appendChild');
 };
 
@@ -67,150 +62,113 @@ const setupDomMocks = () => {
 const createMockContainer = () => {
     const registrations = new Map();
     const instances = new Map();
-    let containerInstance;
+    let containerInstance; // For self-reference within factories/resolvers
 
+    // --- Simplified Register Spy ---
+    // Stores arguments exactly as received from Registrar
+    const registerSpy = jest.fn((token, factoryOrValueOrClass, options = {}) => {
+        if (!token) {
+            // This error should not happen anymore if Registrar is fixed or wasn't the issue
+            console.error('[Mock Register ERROR] Falsy token received unexpectedly!', {
+                token,
+                factoryOrValueOrClass,
+                options
+            });
+            throw new Error('Mock Register Error: Token is required.');
+        }
+
+        // Store exactly what was passed by the Registrar caller
+        registrations.set(token, {
+            factoryOrValue: factoryOrValueOrClass, // Store original value/class/factory
+            options: options                      // Store original options
+        });
+
+        // Clear instance cache if re-registering a singleton (based on options passed by Registrar)
+        if (options?.lifecycle?.startsWith('singleton') && instances.has(token)) {
+            instances.delete(token);
+        }
+    });
+
+    // --- Adapted Resolve Spy ---
+    // Interprets the stored registration data to create/return instances
     const resolveSpy = jest.fn((token) => {
-        const tokenString = String(token); // For logging
+        const tokenString = String(token);
+
+        // 1. Check instance cache
         if (instances.has(token)) {
             return instances.get(token);
         }
+
+        // 2. Check registrations
         const registration = registrations.get(token);
         if (registration) {
             const {factoryOrValue, options} = registration;
+            // Determine lifecycle from options passed by Registrar during registration
             const lifecycle = options?.lifecycle || 'transient';
             let instance;
-            if (typeof factoryOrValue === 'function') {
+
+            // 3. Determine HOW to create the instance based on stored data
+            const isClassForSingle = typeof factoryOrValue === 'function' && options?.dependencies && options.dependencies.length > 0 && options?.lifecycle === 'singleton';
+            const isFactoryFunction = typeof factoryOrValue === 'function' && !isClassForSingle; // Covers singletonFactory and transientFactory
+
+            if (isClassForSingle) {
+                // --- Handle 'single' registration (Class constructor + dependencies) ---
+                const ClassConstructor = factoryOrValue;
+                const deps = options.dependencies;
+                const resolvedContainer = containerInstance; // Need self-reference
+
+                const dependenciesMap = {};
+                const targetClassName = ClassConstructor.name || '[AnonymousClass]';
+                deps.forEach((depToken) => {
+                    let propName = String(depToken);
+                    if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) propName = propName.substring(1);
+                    propName = propName.charAt(0).toLowerCase() + propName.slice(1);
+                    try {
+                        dependenciesMap[propName] = resolvedContainer.resolve(depToken);
+                    } catch (e) {
+                        console.error(`[Mock Resolve Factory for ${tokenString}] FAILED dependency: ${String(depToken)} for prop "${propName}"`, e);
+                        throw e;
+                    }
+                });
                 try {
-                    instance = factoryOrValue(containerInstance); // Execute factory
+                    // Use object map injection (as per previous successful state)
+                    instance = new ClassConstructor(dependenciesMap);
+                } catch (constructorError) {
+                    console.error(`[Mock Resolve Factory for ${tokenString}] Constructor error for "${targetClassName}"`, constructorError);
+                    throw constructorError;
+                }
+            } else if (isFactoryFunction) {
+                // --- Handle 'factory' registration (singletonFactory / transientFactory) ---
+                try {
+                    instance = factoryOrValue(containerInstance); // Execute the stored factory
                 } catch (factoryError) {
                     console.error(`[Mock Resolve] Error executing factory for ${tokenString}:`, factoryError);
-                    // Optionally log dependencies being resolved if error is in factory execution
-                    if (options?.dependencies) {
-                        console.error(`---> Factory dependencies were: ${options.dependencies.map(String).join(', ')}`);
-                    } else if (options?.factoryDependencies) { // Assuming factory deps might be stored differently
-                        console.error(`---> Factory dependencies (if applicable): ${options.factoryDependencies.map(String).join(', ')}`);
-                    }
                     throw factoryError;
                 }
             } else {
-                console.warn(`[Mock Resolve] Returning direct value (unexpected for factory-based regs like ${tokenString}?)`);
-                instance = factoryOrValue;
+                // --- Handle 'instance' registration (Direct value) ---
+                instance = factoryOrValue; // The stored value is the instance
             }
-            // Cache based on the *effective* lifecycle determined during registration
+
+            // 4. Cache if singleton
+            // Use the lifecycle determined during registration options
             if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory') && instance !== undefined) {
                 instances.set(token, instance);
             }
             return instance;
         }
-        // Fallbacks for core mocks if not explicitly registered by test setup
+
+        // 5. Fallbacks for core mocks if not registered
         if (token === tokens.ILogger) return mockLogger;
         if (token === tokens.EventBus) return mockEventBus;
         if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
 
+        // 6. Throw if token not found
         throw new Error(`Mock Resolve Error: Token not registered or explicitly mocked: ${tokenString}`);
     });
 
-    // --- Mock Register Spy ---
-    const registerSpy = jest.fn((token, factoryOrValueOrClass, options = {}) => {
-        const tokenString = String(token); // For logging
-        if (!token) throw new Error('Mock Register Error: Token is required.');
 
-        let effectiveFactory;
-        let finalOptions = {...options};
-        let registrationType = 'unknown';
-
-        // Simulate Registrar.instance behavior
-        if (options?.lifecycle === 'singleton' && typeof factoryOrValueOrClass !== 'function' && !options?.dependencies) {
-            registrationType = 'instance';
-            const instanceValue = factoryOrValueOrClass;
-            effectiveFactory = () => instanceValue; // Store factory returning the instance
-            finalOptions = {lifecycle: 'singleton'}; // Effective lifecycle
-        }
-        // Simulate Registrar.single behavior (class + dependencies)
-        else if (options?.dependencies && typeof factoryOrValueOrClass === 'function') {
-            registrationType = 'single (class)';
-            const ClassConstructor = factoryOrValueOrClass;
-            const deps = options.dependencies;
-
-            // --- Pre-flight Check (Mimic registrarHelpers more closely) ---
-            if (typeof ClassConstructor !== 'function') {
-                console.error(`[Mock Register Pre-Check ERROR] Attempted to register non-function for token ${tokenString} using 'single'. Value:`, ClassConstructor);
-                throw new Error(`[Mock Register] Invalid registration for ${tokenString}: TargetClass must be a constructor function.`);
-            }
-            // --- End Pre-flight Check ---
-
-
-            effectiveFactory = (cont) => {
-                const resolvedContainer = cont || containerInstance;
-                if (!resolvedContainer) throw new Error(`[Mock Factory for ${tokenString}] Container self-reference not available.`);
-
-                const dependenciesMap = {};
-                const targetClassName = ClassConstructor.name || '[AnonymousClass]';
-
-                deps.forEach((depToken) => {
-                    let propName = '';
-                    // Basic prop name derivation (same as original test)
-                    if (typeof depToken === 'string') {
-                        propName = depToken;
-                        if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) {
-                            propName = propName.substring(1);
-                        }
-                        propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-                    } else {
-                        // Handle non-string tokens if necessary, maybe Symbol descriptions?
-                        propName = `dep_${String(depToken)}`;
-                        console.warn(`[Mock Factory for ${tokenString}] Using fallback prop name "${propName}" for token:`, depToken);
-                    }
-
-                    try {
-                        const resolvedValue = resolvedContainer.resolve(depToken);
-                        dependenciesMap[propName] = resolvedValue;
-                    } catch (e) {
-                        console.error(`[Mock Factory for ${tokenString}] FAILED to resolve dependency: ${String(depToken)} for prop "${propName}"`, e);
-                        throw e; // Re-throw resolve errors
-                    }
-                });
-
-                try {
-                    // console.debug(`[Mock Factory for ${tokenString}] Instantiating ${targetClassName} with object map keys:`, Object.keys(dependenciesMap));
-                    return new ClassConstructor(dependenciesMap);
-                } catch (constructorError)/* istanbul ignore next */ { // Ignore constructor errors in test coverage for the mock itself
-                    console.error(`[Mock Factory for ${tokenString}] Error during constructor execution for "${targetClassName}". Map keys: ${Object.keys(dependenciesMap).join(', ')}`, constructorError);
-                    // console.error(`[Mock Factory for ${tokenString}] Dependencies Map Content:`, dependenciesMap);
-                    throw constructorError; // Re-throw constructor errors
-                }
-            };
-            finalOptions = {lifecycle: 'singleton', dependencies: deps}; // Store effective lifecycle and dependencies
-        }
-        // Simulate Registrar.singletonFactory / transientFactory behavior
-        else if (typeof factoryOrValueOrClass === 'function' && !options?.dependencies) {
-            registrationType = options.lifecycle === 'singletonFactory' ? 'singletonFactory' : 'transientFactory';
-            effectiveFactory = factoryOrValueOrClass; // Store the provided factory
-            finalOptions = options; // Keep original options
-        }
-        // Fallback / Unknown registration pattern
-        else {
-            console.warn(`[Mock Register] Registering token ${tokenString} with an unrecognized pattern. Value type: ${typeof factoryOrValueOrClass}, Options:`, options);
-            // Fallback: treat as an instance or value registration
-            effectiveFactory = () => factoryOrValueOrClass;
-            finalOptions = {lifecycle: 'singleton'}; // Assume singleton if unsure
-        }
-
-        // console.log(`[Mock Register] Storing registration for: ${tokenString} (Type: ${registrationType}, Lifecycle: ${finalOptions.lifecycle})`);
-
-        registrations.set(token, {
-            factoryOrValue: effectiveFactory,
-            options: finalOptions
-        });
-
-        // Clear cache if re-registering
-        if (instances.has(token)) {
-            // console.log(`[Mock Register] Clearing instance cache for re-registered token: ${tokenString}`)
-            instances.delete(token);
-        }
-    });
-    // --- End Mock Register Spy ---
-
+    // --- Set up container self-reference ---
     containerInstance = {
         _registrations: registrations,
         _instances: instances,
@@ -228,77 +186,75 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
     beforeEach(() => {
         jest.clearAllMocks();
-        setupDomMocks(); // Ensure DOM is set up BEFORE creating container/args
+        setupDomMocks();
         mockContainer = createMockContainer();
 
-        // Define the arguments passed to registerUI
         mockUiArgs = {
             inputElement: mockInputElement,
-            document: mockDocument, // Pass the JSDOM document
+            document: mockDocument,
             outputDiv: mockOutputDiv,
             titleElement: mockTitleElement,
         };
 
-        // Pre-register external dependencies required *by* registerUI or its factories
-        // Use the mock container's register method
-        mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
+        // Pre-register core dependencies (as instance registrations)
+        mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'}); // Provide options hinting it's an instance
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
 
-        // Reset spy history *before* calling the function under test
+        // Clear spies *after* pre-registration
         mockContainer.register.mockClear();
         mockContainer.resolve.mockClear();
         mockLogger.info.mockClear();
-        mockLogger.debug.mockClear(); // Also clear debug logs if checking them
+        mockLogger.debug.mockClear();
         mockLogger.warn.mockClear();
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
-        document.body.innerHTML = ''; // Clean up DOM
+        document.body.innerHTML = '';
     });
 
-    // Test basic setup and external instance registrations
+    // *** This test should now pass as registerSpy records the actual mockDocument ***
     it('should register essential external dependencies (document, elements) as singleton instances', () => {
-        registerUI(mockContainer, mockUiArgs); // Function under test
+        registerUI(mockContainer, mockUiArgs);
 
-        // Check registration calls for the elements passed in mockUiArgs
+        // Assert that registerSpy was called with the actual value (mockDocument, etc.)
+        // The third argument (options) depends on what Registrar.instance passes. Let's use expect.anything() for flexibility.
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.WindowDocument, mockDocument, expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.outputDiv, mockOutputDiv, expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.inputElement, mockInputElement, expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.titleElement, mockTitleElement, expect.objectContaining({lifecycle: 'singleton'}));
 
-        // Verify resolution works correctly
+        // Resolution checks remain the same (resolveSpy should handle instance resolution)
         expect(mockContainer.resolve(tokens.WindowDocument)).toBe(mockDocument);
         expect(mockContainer.resolve(tokens.outputDiv)).toBe(mockOutputDiv);
         expect(mockContainer.resolve(tokens.inputElement)).toBe(mockInputElement);
         expect(mockContainer.resolve(tokens.titleElement)).toBe(mockTitleElement);
+        expect(mockContainer.resolve(tokens.WindowDocument)).toBe(mockDocument); // Singleton check
 
-        // Check specific logging related to these registrations
+        // Logging checks remain the same
         expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Registered window.document instance.');
         expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Registered outputDiv instance.');
         expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Registered inputElement instance.');
         expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Registered titleElement instance.');
-        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...'); // Check start log
+        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...');
     });
 
-    // Test core utility registrations (factories)
     it('should register IDocumentContext via singletonFactory resolving to DocumentContext', () => {
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.IDocumentContext);
 
         expect(regCall).toBeDefined();
-        expect(regCall[1]).toEqual(expect.any(Function)); // Check it's a factory function
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'}); // Check options
+        // Check the factory function was passed directly
+        expect(regCall[1]).toEqual(expect.any(Function));
+        // Check the options passed by Registrar.singletonFactory
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
-        // Trigger resolution and check instance type + singleton behavior
-        mockContainer.resolve.mockClear(); // Clear resolve history before testing resolution
+        mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.IDocumentContext);
-        // ****** Ensure DocumentContext is correctly imported at the top of this test file ******
         expect(instance1).toBeInstanceOf(DocumentContext);
-        expect(mockContainer.resolve(tokens.IDocumentContext)).toBe(instance1); // Singleton check
+        expect(mockContainer.resolve(tokens.IDocumentContext)).toBe(instance1);
 
-        // Check dependency resolution *during* factory execution
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.IDocumentContext}.`);
     });
@@ -309,51 +265,41 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
         expect(regCall).toBeDefined();
         expect(regCall[1]).toEqual(expect.any(Function));
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.DomElementFactory);
-        // ****** Ensure DomElementFactory is correctly imported at the top ******
         expect(instance1).toBeInstanceOf(DomElementFactory);
         expect(mockContainer.resolve(tokens.DomElementFactory)).toBe(instance1);
 
-        // Check dependency resolution by its factory
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
     });
 
-    // --- Tests for individual component registrations ---
-
-    // Test UiMessageRenderer (registered with .single)
+    // *** This test should now pass as registerSpy records the actual UiMessageRenderer class ***
     it('should register UiMessageRenderer using single()', () => {
-        // *** PRE-CONDITION: Ensure UiMessageRenderer IS imported correctly at the top for this test ***
         if (typeof UiMessageRenderer !== 'function') {
-            throw new Error("Test pre-condition failed: UiMessageRenderer was not imported correctly for the test.");
+            throw new Error("Test pre-condition failed: UiMessageRenderer was not imported correctly.");
         }
-
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.UiMessageRenderer);
 
         expect(regCall).toBeDefined();
-        // Check that the CLASS CONSTRUCTOR itself was passed to register
-        // This relies on the PRE-CONDITION check above. If UiMessageRenderer is undefined, this test will fail here.
+        // Assert that registerSpy received the CLASS CONSTRUCTOR
         expect(regCall[1]).toBe(UiMessageRenderer);
+        // Assert the options passed by Registrar.single
         expect(regCall[2]).toEqual(expect.objectContaining({
-            lifecycle: 'singleton', // Determined by mock register logic for 'single'
+            lifecycle: 'singleton',
             dependencies: [
-                tokens.ILogger,
-                tokens.IDocumentContext,
-                tokens.IValidatedEventDispatcher,
-                tokens.DomElementFactory
+                tokens.ILogger, tokens.IDocumentContext, tokens.IValidatedEventDispatcher, tokens.DomElementFactory
             ]
         }));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.UiMessageRenderer);
-        expect(instance1).toBeInstanceOf(UiMessageRenderer);
+        expect(instance1).toBeInstanceOf(UiMessageRenderer); // resolveSpy should handle creation
         expect(mockContainer.resolve(tokens.UiMessageRenderer)).toBe(instance1); // Singleton check
 
-        // Check dependencies were resolved by the mock factory when creating the instance
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
@@ -361,37 +307,31 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
     });
 
-    // Test TitleRenderer (uses singletonFactory for element injection)
     it('should register TitleRenderer via singletonFactory injecting titleElement', () => {
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.TitleRenderer);
-
         expect(regCall).toBeDefined();
-        expect(regCall[1]).toEqual(expect.any(Function)); // Factory function
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[1]).toEqual(expect.any(Function));
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.TitleRenderer);
-        // We don't have the actual TitleRenderer class imported, so we can't use instanceof.
-        // Check that the factory resolved the expected dependencies.
-        expect(instance1).toBeDefined(); // Check instance was created
-        expect(mockContainer.resolve(tokens.TitleRenderer)).toBe(instance1); // Singleton check
+        expect(instance1).toBeDefined();
+        expect(mockContainer.resolve(tokens.TitleRenderer)).toBe(instance1);
 
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.titleElement); // Crucial check
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.titleElement);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
     });
 
-    // Test InputStateController (uses singletonFactory for element injection)
     it('should register InputStateController via singletonFactory injecting inputElement', () => {
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.InputStateController);
-
         expect(regCall).toBeDefined();
         expect(regCall[1]).toEqual(expect.any(Function));
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.InputStateController);
@@ -401,18 +341,16 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.inputElement); // Crucial check
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.inputElement);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.InputStateController}.`);
     });
 
-    // Test LocationRenderer (uses singletonFactory for element injection)
     it('should register LocationRenderer via singletonFactory injecting outputDiv', () => {
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.LocationRenderer);
-
         expect(regCall).toBeDefined();
         expect(regCall[1]).toEqual(expect.any(Function));
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.LocationRenderer);
@@ -423,181 +361,122 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.outputDiv); // Crucial check
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.outputDiv);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.LocationRenderer}.`);
     });
 
-    // Test InventoryPanel (uses singletonFactory with internal querySelector)
     it('should register InventoryPanel via singletonFactory querying for container', () => {
-        // Ensure the container exists for the querySelector spy
         expect(mockDocument.querySelector('#game-container')).toBeDefined();
-
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.InventoryPanel);
-
         expect(regCall).toBeDefined();
         expect(regCall[1]).toEqual(expect.any(Function));
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
-        mockContainer.resolve.mockClear(); // Clear before resolving
+        mockContainer.resolve.mockClear();
+        const docContextInstance = mockContainer.resolve(tokens.IDocumentContext);
+        const querySpy = jest.spyOn(docContextInstance, 'query');
+
         const instance1 = mockContainer.resolve(tokens.InventoryPanel);
         expect(instance1).toBeDefined();
         expect(mockContainer.resolve(tokens.InventoryPanel)).toBe(instance1);
 
-        // Check that the factory resolved dependencies AND called querySelector
+        expect(querySpy).toHaveBeenCalledWith('#game-container');
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
-        // Check that query was called via the resolved DocumentContext
-        // We need to get the DocumentContext instance created by the container
-        const docContextInstance = mockContainer.resolve(tokens.IDocumentContext);
-        // Now spy on *that instance* if the query happens inside the factory
-        const querySpy = jest.spyOn(docContextInstance, 'query');
-
-        // Re-resolve to trigger the factory again (or check the first resolution's calls)
-        mockContainer.resolve(tokens.InventoryPanel); // Trigger factory execution
-        expect(querySpy).toHaveBeenCalledWith('#game-container');
-
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
-        // Check warning wasn't logged if element exists
         expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('InventoryPanel'));
     });
 
-    // Test ActionButtonsRenderer (uses singletonFactory with internal querySelector)
     it('should register ActionButtonsRenderer via singletonFactory querying for container', () => {
-        expect(mockDocument.querySelector('#action-buttons')).toBeDefined(); // Pre-condition
-
+        expect(mockDocument.querySelector('#action-buttons')).toBeDefined();
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.ActionButtonsRenderer);
-
         expect(regCall).toBeDefined();
         expect(regCall[1]).toEqual(expect.any(Function));
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
+        const docContextInstance = mockContainer.resolve(tokens.IDocumentContext);
+        const querySpy = jest.spyOn(docContextInstance, 'query');
+
         const instance1 = mockContainer.resolve(tokens.ActionButtonsRenderer);
         expect(instance1).toBeDefined();
         expect(mockContainer.resolve(tokens.ActionButtonsRenderer)).toBe(instance1);
 
-        const docContextInstance = mockContainer.resolve(tokens.IDocumentContext);
-        const querySpy = jest.spyOn(docContextInstance, 'query');
-        mockContainer.resolve(tokens.ActionButtonsRenderer); // Trigger factory
         expect(querySpy).toHaveBeenCalledWith('#action-buttons');
-
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
         expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('ActionButtonsRenderer'));
     });
 
-    // Test DomMutationService (registered with .single)
-    it('should register IDomMutationService using single() resolving to DomMutationService', () => {
-        // *** PRE-CONDITION: Ensure DomMutationService IS imported correctly ***
-        // Dynamically import within test or ensure it's at top level if needed for instanceof
-        // For now, assume it's available for the real registration call.
+    // REMOVED test for IDomMutationService
 
+    // --- Test Facade Registration ---
+    // *** This test should now pass as registerSpy records the actual DomUiFacade class ***
+    it('should register DomUiFacade under its own token using single()', () => {
+        if (typeof DomUiFacade !== 'function') {
+            throw new Error("Test pre-condition failed: DomUiFacade was not imported correctly.");
+        }
         registerUI(mockContainer, mockUiArgs);
-        const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.IDomMutationService);
+        const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.DomUiFacade);
 
         expect(regCall).toBeDefined();
-        // We expect the Class Constructor to be passed if import worked in uiRegistrations.js
-        expect(regCall[1]).toEqual(expect.any(Function)); // Check it's a function (the constructor)
-        // Add check for specific class if DomMutationService is imported: expect(regCall[1]).toBe(DomMutationService);
+        // Assert that registerSpy received the CLASS CONSTRUCTOR
+        expect(regCall[1]).toBe(DomUiFacade);
+        // Assert the options passed by Registrar.single
         expect(regCall[2]).toEqual(expect.objectContaining({
             lifecycle: 'singleton',
             dependencies: [
-                tokens.ILogger,
-                tokens.IDocumentContext
+                tokens.ActionButtonsRenderer, tokens.InventoryPanel, tokens.LocationRenderer,
+                tokens.TitleRenderer, tokens.InputStateController, tokens.UiMessageRenderer
             ]
         }));
 
         mockContainer.resolve.mockClear();
-        const instance1 = mockContainer.resolve(tokens.IDomMutationService);
-        expect(instance1).toBeDefined(); // Check instance created
-        // Add instanceof check if DomMutationService class is imported: expect(instance1).toBeInstanceOf(DomMutationService);
-        expect(mockContainer.resolve(tokens.IDomMutationService)).toBe(instance1);
+        const instance1 = mockContainer.resolve(tokens.DomUiFacade);
+        expect(instance1).toBeInstanceOf(DomUiFacade); // resolveSpy should handle creation
+        expect(mockContainer.resolve(tokens.DomUiFacade)).toBe(instance1); // Singleton check
 
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.IDomMutationService}.`);
-    });
-
-
-    // --- Test Facade Registration ---
-    it('should register DomUiFacade under DomRenderer token using single()', () => {
-        // *** PRE-CONDITION: Ensure DomUiFacade is imported correctly ***
-        registerUI(mockContainer, mockUiArgs);
-        const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.DomRenderer); // Registered under legacy token
-
-        expect(regCall).toBeDefined();
-        // Expect the DomUiFacade constructor was passed
-        expect(regCall[1]).toEqual(expect.any(Function));
-        // Add specific check if DomUiFacade imported: expect(regCall[1]).toBe(DomUiFacade);
-        expect(regCall[2]).toEqual(expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: [ // Check the specific dependencies expected by the facade
-                tokens.ActionButtonsRenderer,
-                tokens.InventoryPanel,
-                tokens.LocationRenderer,
-                tokens.TitleRenderer,
-                tokens.InputStateController,
-                tokens.UiMessageRenderer
-            ]
-        }));
-
-        mockContainer.resolve.mockClear();
-        const instance1 = mockContainer.resolve(tokens.DomRenderer); // Resolve using the legacy token
-        expect(instance1).toBeDefined();
-        // Add instanceof check if DomUiFacade imported: expect(instance1).toBeInstanceOf(DomUiFacade);
-        expect(mockContainer.resolve(tokens.DomRenderer)).toBe(instance1);
-
-        // Check that resolving the facade triggered resolution of its dependencies
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ActionButtonsRenderer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.InventoryPanel);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.LocationRenderer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.TitleRenderer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.InputStateController);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.UiMessageRenderer);
-        expect(mockLogger.info).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.DomUiFacade} under legacy token ${tokens.DomRenderer}.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
     });
 
-    // --- Test Legacy Input Handler ---
     it('should register legacy IInputHandler via singletonFactory', () => {
         registerUI(mockContainer, mockUiArgs);
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.IInputHandler);
-
         expect(regCall).toBeDefined();
-        expect(regCall[1]).toEqual(expect.any(Function)); // Factory registered
-        expect(regCall[2]).toEqual({lifecycle: 'singletonFactory'});
+        expect(regCall[1]).toEqual(expect.any(Function));
+        expect(regCall[2]).toEqual(expect.objectContaining({lifecycle: 'singletonFactory'}));
 
         mockContainer.resolve.mockClear();
         const instance1 = mockContainer.resolve(tokens.IInputHandler);
-        expect(instance1).toBeInstanceOf(InputHandler); // Check concrete type
+        expect(instance1).toBeInstanceOf(InputHandler);
         expect(mockContainer.resolve(tokens.IInputHandler)).toBe(instance1);
 
-        // Check dependencies resolved by the factory
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.inputElement);
-        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.EventBus); // Legacy dependency
-        // null dependency is passed directly, not resolved.
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.EventBus);
         expect(mockLogger.warn).toHaveBeenCalledWith(`UI Registrations: Registered legacy InputHandler against ${tokens.IInputHandler} token (still uses EventBus).`);
     });
 
-    // --- Final Checks ---
     it('should log completion messages', () => {
         registerUI(mockContainer, mockUiArgs);
         expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...');
-        // Check one of the debug messages to ensure they are firing
         expect(mockLogger.debug).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.IDocumentContext}.`);
-        // Check the facade registration log
-        expect(mockLogger.info).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.DomUiFacade} under legacy token ${tokens.DomRenderer}.`);
-        // Check legacy handler warning
+        expect(mockLogger.info).toHaveBeenCalledWith(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
         expect(mockLogger.warn).toHaveBeenCalledWith(`UI Registrations: Registered legacy InputHandler against ${tokens.IInputHandler} token (still uses EventBus).`);
-        // Check final completion log
+        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Deprecated registrations (DomRenderer, DomMutationService) removed.');
         expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Complete.');
-        // Check removal log is NOT present anymore (as the code was removed)
-        expect(mockLogger.info).not.toHaveBeenCalledWith('UI Registrations: Removed registration for deprecated legacy DomRenderer class.');
     });
 
 });

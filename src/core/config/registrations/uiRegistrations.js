@@ -1,4 +1,5 @@
 // src/core/config/registrations/uiRegistrations.js
+// ****** CORRECTED FILE ******
 
 /**
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
@@ -26,6 +27,7 @@ import {
 
 // --- OLD Imports ---
 // REMOVED: import DomRenderer from '../../../domUI/domRenderer.js';
+// REMOVED: import DomMutationService
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
@@ -33,15 +35,14 @@ import {
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../eventBus.js').default} EventBus */ // Still needed for legacy InputHandler
 /** @typedef {import('../../interfaces/IInputHandler.js').IInputHandler} IInputHandler */
-/** @typedef {import('../../../domUI/IDocumentContext').IDocumentContext} IDocumentContext */
 
-/** @typedef {import('../../../domUI/IDomMutationService').IDomMutationService} IDomMutationService */
+/** @typedef {import('../../../domUI/IDocumentContext').IDocumentContext} IDocumentContext */
 
 
 /**
  * Registers UI-specific dependencies after the DomRenderer refactor.
  * - Registers individual renderers/controllers.
- * - Registers the DomUiFacade under the *old* DomRenderer token for compatibility.
+ * - Registers the DomUiFacade under its own token.
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -52,6 +53,9 @@ import {
  * @param {Document} uiElements.document - The global document object.
  */
 export function registerUI(container, {outputDiv, inputElement, titleElement, document: doc}) {
+    // *** NOTE: If errors persist, the bug is likely within the Registrar class ***
+    // *** (src/core/config/registrarHelpers.js), specifically how its methods  ***
+    // *** (.instance, .single, .singletonFactory) call container.register().   ***
     const registrar = new Registrar(container);
     /** @type {ILogger} */
     const logger = container.resolve(tokens.ILogger);
@@ -81,7 +85,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // --- 2. Register Individual Renderers / Controllers / Services ---
 
     // UiMessageRenderer (Handles messages/echoes)
-    // Uses single() because its dependencies are standard services resolvable by token.
     registrar.single(tokens.UiMessageRenderer, UiMessageRenderer, [
         tokens.ILogger,
         tokens.IDocumentContext,
@@ -91,7 +94,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
 
     // TitleRenderer (Manages H1 title)
-    // Uses singletonFactory to inject the specific titleElement instance.
     registrar.singletonFactory(tokens.TitleRenderer, c => new TitleRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -101,7 +103,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
 
     // InputStateController (Manages input enabled/disabled state)
-    // Uses singletonFactory to inject the specific inputElement instance.
     registrar.singletonFactory(tokens.InputStateController, c => new InputStateController({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -111,7 +112,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
     // LocationRenderer (Renders location details)
-    // Uses singletonFactory to inject the specific outputDiv as its container.
     registrar.singletonFactory(tokens.LocationRenderer, c => new LocationRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -122,7 +122,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer}.`);
 
     // InventoryPanel (Manages inventory UI)
-    // Uses singletonFactory to query for its container (#game-container) within the factory.
     registrar.singletonFactory(tokens.InventoryPanel, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         // Attempt to find the conventional container, log if not found
@@ -141,7 +140,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
 
     // ActionButtonsRenderer (Renders action buttons)
-    // Uses singletonFactory to query for its container (#action-buttons) within the factory.
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         // Attempt to find the conventional container, log if not found
@@ -160,18 +158,17 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
     // --- 3. Register Facade ---
-    // Register DomUiFacade under the OLD DomRenderer token for backward compatibility.
-    // Uses single() as dependencies are the tokens of the already registered renderers.
-    registrar.single(tokens.DomRenderer, DomUiFacade, [
+    // *** CHANGED: Register DomUiFacade under its OWN token ***
+    registrar.single(tokens.DomUiFacade, DomUiFacade, [
         tokens.ActionButtonsRenderer,
         tokens.InventoryPanel,
         tokens.LocationRenderer,
         tokens.TitleRenderer,
         tokens.InputStateController,
         tokens.UiMessageRenderer
-        // Note: IDomMutationService is not directly exposed by the facade currently.
     ]);
-    logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under legacy token ${tokens.DomRenderer}.`);
+    // *** CHANGED: Update log message ***
+    logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 
     // --- 4. Legacy Input Handler (Keep temporarily) ---
     // Still uses EventBus and direct element access. Needs refactoring separately.
@@ -182,10 +179,10 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     ));
     logger.warn(`UI Registrations: Registered legacy InputHandler against ${tokens.IInputHandler} token (still uses EventBus).`);
 
-
-    // --- 5. Remove Old DomRenderer Registration ---
-    // The block registering the old DomRenderer class is now deleted.
-    logger.info('UI Registrations: Removed registration for deprecated legacy DomRenderer class.');
+    // --- 5. Removed Registrations ---
+    // REMOVED: DomMutationService registration block
+    // REMOVED: Old DomRenderer registration block
+    logger.info('UI Registrations: Deprecated registrations (DomRenderer, DomMutationService) removed.');
 
 
     logger.info('UI Registrations: Complete.');
