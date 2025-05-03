@@ -39,6 +39,8 @@
 
 // --- Class Definition ---
 
+import {tokens} from "semver";
+
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
  * It coordinates various sub-services and steps to load data, set up the game state,
@@ -154,10 +156,16 @@ class InitializationService {
             inputSetupService.configureInputHandler(); // This should now throw on critical error
             this.#logger.info('InitializationService: Input handler configured.');
 
-            // --- 6. Resolve Game Loop (REMOVED) ---
-            // this.#logger.debug('Resolving GameLoop...'); // <<< REMOVED
-            // gameLoop = /** @type {GameLoop} */ (this.#container.resolve('GameLoop')); // <<< REMOVED
-            // this.#logger.info('InitializationService: GameLoop resolved.'); // <<< REMOVED
+            this.#logger.debug('Resolving DomUiFacade to instantiate UI components...');
+            try {
+                this.#container.resolve(tokens.DomUiFacade); // Resolve the facade
+                this.#logger.info('InitializationService: DomUiFacade resolved, UI components instantiated.');
+            } catch (uiResolveError) {
+                // If resolving the UI fails, it's serious but maybe not fatal for headless operation?
+                // Log it clearly but maybe don't throw, depending on requirements.
+                this.#logger.error('InitializationService: Failed to resolve DomUiFacade. UI might not function correctly.', uiResolveError);
+                // Optionally: throw uiResolveError; // if UI is absolutely essential
+            }
 
             // --- Success ---
             this.#logger.info(`InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`);

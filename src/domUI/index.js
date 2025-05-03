@@ -8,11 +8,11 @@ export * from './rendererBase.js'; // Ensure RendererBase export is correct
 export {default as DocumentContext} from './documentContext.js';
 export {default as DomElementFactory} from './domElementFactory.js';
 export * from './uiMessageRenderer.js';
-export * from './TitleRenderer.js';
-export * from './InputStateController.js';
+export * from './titleRenderer.js';
+export * from './inputStateController.js';
 export * from './locationRenderer.js';
 export * from './inventoryPanel.js';
 export * from './actionButtonsRenderer.js';
 
 // *** ADDED: Export the new facade ***
-export {DomUiFacade} from './DomUiFacade.js'; // Use named export
+export {DomUiFacade} from './domUiFacade.js'; // Use named export

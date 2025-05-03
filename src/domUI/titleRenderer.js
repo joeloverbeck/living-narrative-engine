@@ -1,4 +1,4 @@
-// src/dom-ui/TitleRenderer.js
+// src/dom-ui/titleRenderer.js
 import {RendererBase} from './rendererBase.js';
 
 /**
