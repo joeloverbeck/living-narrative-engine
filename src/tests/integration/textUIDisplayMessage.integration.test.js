@@ -13,7 +13,7 @@ import OperationRegistry from '../../logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 // --- NEW: Import the AppendUiMessageHandler & DomRenderer ---
 import AppendUiMessageHandler from '../../logic/operationHandlers/appendUiMessageHandler.js';
-import DomRenderer from '../../core/domRenderer.js'; // Import DomRenderer
+import DomRenderer from '../../domUI/domRenderer.js'; // Import DomRenderer
 
 // --- Type Imports (Optional, for clarity) ---
 /** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */

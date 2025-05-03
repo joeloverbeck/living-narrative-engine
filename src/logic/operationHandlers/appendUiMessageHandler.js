@@ -6,7 +6,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
-/** @typedef {import('../../core/domRenderer.js').default} DomRenderer */ // Now required
+/** @typedef {import('../../domUI/domRenderer.js').default} DomRenderer */ // Now required
 
 /**
  * Parameters for the APPEND_UI_MESSAGE operation.

@@ -11,7 +11,7 @@ import OperationRegistry from '../../logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 // --- NEW: Import ModifyDomElementHandler & DomRenderer ---
 import ModifyDomElementHandler from '../../logic/operationHandlers/modifyDomElementHandler.js';
-import DomRenderer from '../../core/domRenderer.js'; // Make sure this path is correct
+import DomRenderer from '../../domUI/domRenderer.js'; // Make sure this path is correct
 
 // --- Type Imports (Optional, for clarity) ---
 /** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */

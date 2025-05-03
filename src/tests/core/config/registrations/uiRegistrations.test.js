@@ -16,7 +16,7 @@ import {registerUI} from '../../../../core/config/registrations/uiRegistrations.
 
 // --- Dependencies & Concrete Classes ---
 import {tokens} from '../../../../core/config/tokens.js';
-import DomRenderer from '../../../../core/domRenderer.js';
+import DomRenderer from '../../../../domUI/domRenderer.js';
 import InputHandler from '../../../../core/inputHandler.js';
 
 // --- Mock Implementations ---

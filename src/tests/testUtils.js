@@ -2,7 +2,7 @@
 
 import {PrerequisiteEvaluationService} from '../services/prerequisiteEvaluationService.js';
 import {jest} from '@jest/globals';
-import DomRenderer from '../core/domRenderer.js'; // Import DomRenderer
+import DomRenderer from '../domUI/domRenderer.js'; // Import DomRenderer
 
 // --- Mock PrerequisiteEvaluationService ---
 jest.mock('../services/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test

@@ -9,7 +9,7 @@ const mockDomRenderer = {
 };
 
 // Mock the entire module
-jest.mock('../../../core/domRenderer.js', () => {
+jest.mock('../../../domUI/domRenderer.js', () => {
     // Return a constructor function that returns our specific mock instance
     return jest.fn().mockImplementation(() => mockDomRenderer);
 });

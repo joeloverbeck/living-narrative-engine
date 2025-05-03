@@ -4,13 +4,13 @@
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
  */
 
-import DomRenderer from '../../domRenderer.js';
+import DomRenderer from '../../../domUI/domRenderer.js';
 import InputHandler from '../../inputHandler.js'; // Concrete Class Import
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
-/** @typedef {import('../../domRenderer.js').default} DomRenderer */
+/** @typedef {import('../../../domUI/domRenderer.js').default} DomRenderer */
 
 /** @typedef {import('../../inputHandler.js').default} InputHandler */
 

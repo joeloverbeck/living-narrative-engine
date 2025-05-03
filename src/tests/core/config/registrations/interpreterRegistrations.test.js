@@ -10,7 +10,7 @@
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../../../core/domRenderer.js').default} DomRenderer */ // Added for DomRenderer type hinting
+/** @typedef {import('../../../../domUI/domRenderer.js').default} DomRenderer */ // Added for DomRenderer type hinting
 /** @typedef {any} AppContainer */ // Using 'any' as the custom container type isn't defined
 
 // --- Jest Imports ---

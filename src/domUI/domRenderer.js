@@ -1,4 +1,4 @@
-// src/core/domRenderer.js
+// src/domUI/domRenderer.js
 // --- FIX for TC3: Added 'success' to validTypes ---
 // --- FIX for TC2 (Current Issue): Changed 'warn' to 'warning' ---
 
@@ -7,29 +7,10 @@
 import {setPropertyByPath} from '../utils/domUtils.js';
 
 // --- Import Interfaces ---
-/** @typedef {import('./eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
-/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-
-// --- Import Specific Event Payload Types (if available/defined) ---
-/** @typedef {import('../../types/events.js').InitializationStartedPayload} InitializationStartedPayload */
-/** @typedef {import('../../types/events.js').InitializationCompletedPayload} InitializationCompletedPayload */
-/** @typedef {import('../../types/events.js').InitializationFailedPayload} InitializationFailedPayload */
-/** @typedef {import('../../types/events.js').InitializationStepStartedPayload} InitializationStepStartedPayload */
-/** @typedef {import('../../types/events.js').InitializationStepCompletedPayload} InitializationStepCompletedPayload */
-/** @typedef {import('../../types/events.js').InitializationStepFailedPayload} InitializationStepFailedPayload */
-/** @typedef {import('../../types/events.js').LocationDisplayPayload} LocationDisplayPayload */
-/** @typedef {import('../../types/events.js').InventoryRenderPayload} InventoryRenderPayload */
-/** @typedef {import('../../types/events.js').ItemUIData} ItemUIData */
-/** @typedef {import('../../types/events.js').UIUpdateActionsPayload} UIUpdateActionsPayload */
-/** @typedef {import('../../types/events.js').UIShowMessagePayload} UIShowMessagePayload */ // Added
-/** @typedef {import('../../types/events.js').UIShowFatalErrorPayload} UIShowFatalErrorPayload */ // Added
-/** @typedef {import('../../types/events.js').UISetTitlePayload} UISetTitlePayload */ // Added
-/** @typedef {import('../../types/events.js').EventEnableInputPayload} EventEnableInputPayload */ // Added
-/** @typedef {import('../../types/events.js').EventDisableInputPayload} EventDisableInputPayload */ // Added
-/** @typedef {import('../../types/events.js').EventCommandEchoPayload} EventCommandEchoPayload */ // Added
-
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.

@@ -11,7 +11,7 @@ import OperationRegistry from '../../logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 // --- NEW: Import ModifyDomElementHandler & DomRenderer ---
 import ModifyDomElementHandler from '../../logic/operationHandlers/modifyDomElementHandler.js';
-import DomRenderer from '../../core/domRenderer.js';
+import DomRenderer from '../../domUI/domRenderer.js';
 import PayloadValueResolverService from '../../services/payloadValueResolverService.js'; // Import needed for OperationInterpreter dependency
 
 // --- Type Imports (Optional, for clarity) ---
