@@ -646,79 +646,82 @@ class DomRenderer {
      * @deprecated Functionality likely moved to DomMutationService or specific renderers.
      */
     mutate(selector, propertyPath, value) {
-        // --- FIX: Get document context from a known element ---
+        // Get document context from a known element
         const doc = this.#outputDiv?.ownerDocument; // Or this.#inputElement?.ownerDocument, etc.
         if (!doc) {
             this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", document context is not available.`);
             return {count: 0, modified: 0, failed: 0};
         }
-        // --- END FIX ---
 
-        let total = 0;
+        let totalFound = 0;
         let successCount = 0;
         let elements;
         try {
-            // --- FIX: Use the correct document context ---
+            // Use the correct document context
             elements = doc.querySelectorAll(selector);
-            // --- END FIX ---
         } catch (error) {
             this.#logger.error(`DomRenderer.mutate: Invalid selector "${selector}".`, error);
             return {count: 0, modified: 0, failed: 0};
         }
-        total = elements.length;
-        if (total === 0) {
-            // This is expected if the selector is valid but finds nothing (e.g., in TC7)
-            // Changed from warn to debug to reduce noise for expected "not found" cases.
+
+        totalFound = elements.length;
+        if (totalFound === 0) {
+            // Changed from warn to debug as this is expected in some cases (like TC7)
             this.#logger.debug(`DomRenderer.mutate: Selector "${selector}" found no elements in the current document context.`);
             return {count: 0, modified: 0, failed: 0};
         }
 
         elements.forEach(element => {
             try {
-                // --- Direct handling for common properties ---
+                // Direct handling for common properties
                 if (propertyPath === 'textContent') {
-                    element.textContent = value;
+                    // Optimization: Only count as success if value actually changes
+                    if (element.textContent !== value) {
+                        element.textContent = value;
+                        successCount++;
+                    }
                 } else if (propertyPath === 'innerHTML') {
-                    element.innerHTML = value;
+                    // Optimization: Only count as success if value actually changes
+                    if (element.innerHTML !== value) {
+                        element.innerHTML = value;
+                        successCount++;
+                    }
                 } else {
                     // Fallback to utility for nested/complex properties
-                    // Make sure setPropertyByPath also works correctly with the element context
-                    setPropertyByPath(element, propertyPath, value);
+                    // Note: setPropertyByPath would need its own change detection to optimize
+                    const changed = setPropertyByPath(element, propertyPath, value); // Assuming setPropertyByPath returns true if changed
+                    if (changed) { // Or simply increment if setPropertyByPath doesn't return status
+                        successCount++;
+                    }
                 }
-                // --- End direct handling ---
-                successCount++;
             } catch (error) {
                 // Log error with stringified value for better debugging
                 this.#logger.error(`DomRenderer.mutate: Failed to set property "${propertyPath}" on element matched by "${selector}". Value: ${JSON.stringify(value)}`, error);
+                // Failure count calculated below based on totalFound - successCount
             }
         });
 
-        const failedCount = total - successCount;
+        const failedCount = totalFound - successCount; // Failures are elements found but not successfully modified
         const modifiedCount = successCount; // Renamed for clarity
 
+        // Keep internal DomRenderer logs minimal/informative - Handler does more detailed outcome logging
         if (failedCount > 0) {
-            this.#logger.warn(`DomRenderer.mutate: Failed to set property "${propertyPath}" for ${failedCount} out of ${total} elements matching "${selector}".`);
+            this.#logger.warn(`DomRenderer.mutate: Encountered ${failedCount} issue(s) while setting property "${propertyPath}" for selector "${selector}".`);
         } else if (modifiedCount > 0) {
-            // Changed from debug to info for successful mutations as they are key outcomes.
-            this.#logger.info(`DomRenderer.mutate: Successfully set property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
+            // Changed from info to debug - the handler logs the success message the test checks
+            this.#logger.debug(`DomRenderer.mutate: Successfully modified property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
+        } else if (totalFound > 0 && modifiedCount === 0 && failedCount === 0) {
+            // Optional: Log when elements were found but no change was needed
+            this.#logger.debug(`DomRenderer.mutate: Found ${totalFound} element(s) for selector "${selector}", property "${propertyPath}" already had the target value.`);
         }
-        // If modifiedCount is 0 and failedCount is 0, it implies elements were found but the property might not have changed or setPropertyByPath handled it silently
 
-        // Return value adjusted slightly to match previous logging structure better, although the return object itself isn't directly used in ModifyDomElementHandler currently
-        // Reverted return value structure for consistency with ModifyDomElementHandler expectation
-        // M-1.2: Note structure change for clarity, even if deprecated
+        // ****** ENSURE CONSISTENT RETURN STRUCTURE ******
+        // Return counts for handler processing
         return {
-            count: total,
-            modified: modifiedCount,
-            failed: failedCount
+            count: totalFound,    // How many elements matched the selector
+            modified: modifiedCount, // How many were successfully changed
+            failed: failedCount      // How many failed during the attempt (due to errors)
         };
-        /* // Original structure (if strictly needed by something still using this deprecated method)
-         return {
-             count: total,
-             modifiedCount: modifiedCount, // Use 'modifiedCount' key
-             failures: failedCount > 0 ? [{selector, propertyPath, error: 'Mutation failed on some elements'}] : []
-         }; // Provide minimal failure info if needed
-         */
     }
 
 

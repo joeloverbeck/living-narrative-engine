@@ -70,30 +70,42 @@ class ModifyDomElementHandler {
 
         // Delegate modification to DomRenderer
         try {
+            // Call mutate and get the result object
             const res = this.#domRenderer.mutate(trimmedSelector, trimmedProperty, value);
 
-            // ****** CORRECTION: Use res.failures and res.modifiedCount ******
-            const failureCount = res.failures ? res.failures.length : 0; // Safely get failure count
-            const modifiedCount = res.modifiedCount ?? 0; // Safely get modified count
+            // ****** CORRECTION: Use res.modified and res.failed from DomRenderer ******
+            const modifiedCount = res.modified ?? 0; // Safely get modified count
+            const failureCount = res.failed ?? 0;   // Safely get failed count
+            const totalFound = res.count ?? 0; // Safely get total found count
+
+            // Log details about the mutation attempt
+            logger.debug(`MODIFY_DOM_ELEMENT: Mutation attempt result for selector "${trimmedSelector}": Found ${totalFound}, Modified ${modifiedCount}, Failed ${failureCount}.`);
 
             if (failureCount > 0) {
-                // Log error if there were failures
+                // Log error if there were specific failures during modification
                 logger.error(
-                    `MODIFY_DOM_ELEMENT: Failed to modify property "${trimmedProperty}" on ${failureCount} element(s) matching selector "${trimmedSelector}".`,
-                    res.failures // Log the failure details array
+                    `MODIFY_DOM_ELEMENT: Failed to modify property "${trimmedProperty}" on ${failureCount} out of ${totalFound} element(s) matching selector "${trimmedSelector}".`,
+                    // Optional: Include specific failure details if mutate provided them
                 );
             }
 
-            // Log success only if elements were actually modified AND there were no failures reported above
-            // (Or adjust logic if partial success + failure logging is desired differently)
+            // Log the SUCCESS message *expected by the test* if elements were successfully modified.
             if (modifiedCount > 0) {
                 logger.debug(
                     `MODIFY_DOM_ELEMENT: Modified property "${trimmedProperty}" on ${modifiedCount} element(s) matching selector "${trimmedSelector}" with value:`,
                     value
                 );
-            } else if (failureCount === 0) { // Only warn if no elements found AND no failures occurred
-                logger.warn(`MODIFY_DOM_ELEMENT: No elements found or modified for selector "${trimmedSelector}".`);
             }
+                // Log a warning if elements were found but *none* were modified AND no failures occurred (e.g., property already had the value).
+            // Also log a warning if NO elements were found at all.
+            else if (totalFound === 0) {
+                // This is the specific warning for TC7 where the element is missing.
+                logger.warn(`MODIFY_DOM_ELEMENT: No elements found or modified for selector "${trimmedSelector}".`);
+            } else if (totalFound > 0 && modifiedCount === 0 && failureCount === 0) {
+                // Optional: Log if elements were found but none modified (e.g., value already set)
+                logger.debug(`MODIFY_DOM_ELEMENT: Found ${totalFound} element(s) for selector "${trimmedSelector}", but none required modification for property "${trimmedProperty}".`);
+            }
+
 
         } catch (error) {
             logger.error(`MODIFY_DOM_ELEMENT: Error during DOM mutation via DomRenderer for selector "${trimmedSelector}":`, error);
