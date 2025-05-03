@@ -123,7 +123,7 @@ export const tokens = Object.freeze({
     WindowDocument: 'WindowDocument',
     IDocumentContext: 'IDocumentContext',
     DomElementFactory: 'DomElementFactory',
-    UIMessageRenderer: 'UIMessageRenderer',
+    UiMessageRenderer: 'UiMessageRenderer',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',

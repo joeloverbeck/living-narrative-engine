@@ -10,7 +10,7 @@ import {Registrar} from '../registrarHelpers.js';
 import InputHandler from '../../inputHandler.js'; // Concrete Class Import
 
 // --- NEW DOM UI Imports ---
-import {UiMessageRenderer} from '../../../domUI/uiMessageRenderer.js';
+import {UiMessageRenderer} from '../../../domUI/index.js';
 import DomElementFactory from '../../../domUI/domElementFactory.js';
 import BrowserDocumentContext from '../../../domUI/documentContext.js'; // Assuming Browser implementation
 
