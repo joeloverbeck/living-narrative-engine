@@ -3,6 +3,7 @@
 // --- FIX for TC2 (Current Issue): Changed 'warn' to 'warning' ---
 // --- T-2.2: Removed title handling logic ---
 // --- I-3.2: Removed input handling logic (setInputState, #handleDisableInput) ---
+// --- L-4.2: Removed location handling logic (renderLocation, #handleDisplayLocation) ---
 
 // --- Import Utilities ---
 // Assuming setPropertyByPath exists and is needed for other cases.
@@ -24,21 +25,20 @@ import {setPropertyByPath} from '../utils/domUtils.js';
  * Input state control has been moved to `InputStateController`.
  * Title control has been moved to `TitleRenderer`.
  * Message rendering has been moved to `UiMessageRenderer`.
+ * Location rendering has been moved to `LocationRenderer`.
  *
  * @deprecated This class is being refactored into smaller, focused components. Functionality is being moved. See `dom-ui/` directory.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
     #outputDiv;
-    // I-3.2: #inputElement is no longer directly used by methods in this class after refactor.
+    // I-3.2 / L-4.2: #inputElement / #outputDiv might still be needed by remaining methods or base classes
     /** @type {HTMLInputElement} */
     #inputElement;
     /** @type {EventBus} */
     #eventBus;
-    // --- EVENT-MIGR-018: Inject ValidatedEventDispatcher ---
     /** @type {ValidatedEventDispatcher} */
     #validatedEventDispatcher;
-    // --- EVENT-MIGR-018: Inject ILogger ---
     /** @type {ILogger} */
     #logger;
 
@@ -50,14 +50,14 @@ class DomRenderer {
     /** @type {boolean} */
     #isInventoryVisible = false;
 
-    // --- Action Buttons Elements (FEAT-UI-ACTIONS-03) ---
-    /** @type {HTMLElement | null} */ // AC1: Container Reference Property
+    // --- Action Buttons Elements ---
+    /** @type {HTMLElement | null} */
     #actionButtonsContainer = null;
 
     /**
      * Creates an instance of DomRenderer.
      * @param {object} dependencies - The required dependencies.
-     * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed.
+     * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed (might be used by remaining methods).
      * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands (used by InputStateController now).
      * @param {EventBus} dependencies.eventBus - The application's event bus instance.
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
@@ -77,18 +77,17 @@ class DomRenderer {
             throw new Error('DomRenderer requires a valid EventBus instance.');
         }
         if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
-            throw new Error('DomRenderer requires a valid ValidatedEventDispatcher instance.'); // AC5
+            throw new Error('DomRenderer requires a valid ValidatedEventDispatcher instance.');
         }
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
-            throw new Error('DomRenderer requires a valid ILogger instance.'); // AC5
+            throw new Error('DomRenderer requires a valid ILogger instance.');
         }
 
-        this.#outputDiv = outputDiv;
+        this.#outputDiv = outputDiv; // Still stored, might be needed by clearOutput or mutate
         this.#inputElement = inputElement; // Still stored, though direct usage removed (I-3.2)
-        // #titleElement assignment removed (T-2.2)
         this.#eventBus = eventBus;
-        this.#validatedEventDispatcher = validatedEventDispatcher; // AC5
-        this.#logger = logger; // AC5
+        this.#validatedEventDispatcher = validatedEventDispatcher;
+        this.#logger = logger;
 
         // --- Initialize Inventory UI ---
         const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -109,11 +108,11 @@ class DomRenderer {
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        // T-2.2 / I-3.2: Adjusted log message
-        this.#logger.info('DomRenderer initialized (title & input handling moved).');
+        // T-2.2 / I-3.2 / L-4.2: Adjusted log message
+        this.#logger.info('DomRenderer initialized (title, input, & location handling moved).');
     }
 
-    #createInventoryPanel(doc) { // Pass document context
+    #createInventoryPanel(doc) {
         if (!doc) {
             this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" context is not available.');
             return;
@@ -150,26 +149,26 @@ class DomRenderer {
         // --- Standard UI Events ---
         // M-1.2: Removed subscription for event:command_echo
         // I-3.2: Removed subscription for event:disable_input
-        // this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // REMOVED
         // M-1.2: Removed subscription for ui:show_message
         // M-1.2: Removed subscription for ui:show_fatal_error
         // T-2.2: Removed subscription for ui:set_title
 
         // --- Game Specific UI Events ---
-        this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
+        // L-4.2: REMOVED subscription for event:display_location
+        // this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this)); // <<-- REMOVED
 
         // --- Inventory UI Events ---
         this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
         this.#eventBus.subscribe('event:toggle_inventory', () => this.toggleInventory());
         // Note: 'ui:request_inventory_render' is dispatched internally by toggleInventory
 
-        // --- Action Buttons Events (FEAT-UI-ACTIONS-03) ---
+        // --- Action Buttons Events ---
         this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
 
         // T-2.2: Removed subscriptions for Initialization Events
 
-        // T-2.2 / I-3.2: Adjusted log message
-        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init/input events).');
+        // T-2.2 / I-3.2 / L-4.2: Adjusted log message
+        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init/input/location events).');
     }
 
     // --- Private Event Handlers ---
@@ -177,14 +176,6 @@ class DomRenderer {
     // M-1.2: Removed #handleCommandEcho method body
 
     // I-3.2: Removed #handleDisableInput method
-    // /**
-    //  * Handles disabling the input field. (Ticket 18: Standardized Event)
-    //  * @private
-    //  * @param {object} data - Expected { type: string, payload: EventDisableInputPayload }
-    //  * @deprecated Moved to InputStateController
-    //  */
-    // #handleDisableInput(data) { ... } // REMOVED
-
 
     /**
      * @private
@@ -210,27 +201,13 @@ class DomRenderer {
         this.#updateInventoryUI(payload.items, doc); // Pass doc
     }
 
-    /**
-     * @private
-     * @param {object} data - Expected { type: string, payload: LocationDisplayPayload }
-     */
-    #handleDisplayLocation(data) {
-        const locationData = data?.payload;
-        if (locationData &&
-            typeof locationData.name === 'string' &&
-            typeof locationData.description === 'string' &&
-            Array.isArray(locationData.exits) &&
-            (!locationData.items || Array.isArray(locationData.items)) &&
-            (!locationData.entities || Array.isArray(locationData.entities))
-        ) {
-            this.renderLocation(locationData);
-        } else {
-            this.#logger.warn("DomRenderer received '" + data?.type + "' event with invalid or incomplete payload:", data);
-            // M-1.2: NOTE: This uses renderMessage which is being removed.
-            // Now handled by UiMessageRenderer
-            this.#logger.error('Error: Could not display location details due to invalid data format received. Payload:', data);
-        }
-    }
+    // L-4.2: REMOVED #handleDisplayLocation method
+    // /**
+    //  * @private
+    //  * @param {object} data - Expected { type: string, payload: LocationDisplayPayload }
+    //  * @deprecated Moved to LocationRenderer
+    //  */
+    // #handleDisplayLocation(data) { ... } // <<-- REMOVED
 
     // M-1.2: Removed #handleShowMessage method body
 
@@ -307,57 +284,23 @@ class DomRenderer {
 
     // M-1.2: Removed renderMessage method body
 
-    /**
-     * @param {LocationDisplayPayload} locationData
-     * @deprecated Functionality moved to LocationRenderer.
-     * */
-    renderLocation(locationData) {
-        let outputHtml = '';
-        outputHtml += `<h2 class="location__name">${locationData.name || 'Unnamed Location'}</h2>`;
-        outputHtml += `<p class="location__description">${locationData.description || 'You see nothing remarkable.'}</p>`;
-        if (locationData.items && locationData.items.length > 0) {
-            const itemNames = locationData.items.map(item => item.name || 'unnamed item').join(', ');
-            outputHtml += `<p class="location__items">Items here: ${itemNames}</p>`;
-        }
-        if (locationData.entities && locationData.entities.length > 0) {
-            const entityNames = locationData.entities.map(entity => entity.name || 'unnamed entity').join(', ');
-            outputHtml += `<p class="location__entities">Others here: ${entityNames}</p>`;
-        }
-        if (locationData.exits && locationData.exits.length > 0) {
-            const exitDescriptions = locationData.exits.map(exit => exit.description || 'an exit').join('<br>  ');
-            outputHtml += `<p class="location__exits">Exits:<br>  ${exitDescriptions}</p>`;
-        } else {
-            outputHtml += '<p class="location__exits">Exits: None</p>';
-        }
-        // M-1.2: NOTE: This originally used renderMessage, which is now gone.
-        // We should probably trigger a VED event for UiMessageRenderer instead.
-        // For now, just log it.
-        this.#logger.info(`[Refactor Placeholder] Location Rendered: ${locationData.name}`);
-        this.#logger.debug(`Location HTML (would be sent to UiMessageRenderer): ${outputHtml}`);
-        // Example VED dispatch (assuming schema exists):
-        // this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
-        //     message: outputHtml,
-        //     type: 'location', // Or a more specific type
-        //     allowHtml: true
-        // });
-    }
+    // L-4.2: REMOVED renderLocation method
+    // /**
+    //  * @param {LocationDisplayPayload} locationData
+    //  * @deprecated Functionality moved to LocationRenderer.
+    //  * */
+    // renderLocation(locationData) { ... } // <<-- REMOVED
 
-    /** @deprecated Functionality likely moved to specific renderers or facade. */
+    /** @deprecated Functionality likely moved to specific renderers or facade. May still be useful for clearing general output area if needed. */
     clearOutput() {
         if (this.#outputDiv) {
-            this.#outputDiv.innerHTML = '';
+            this.#outputDiv.innerHTML = ''; // Or more robust clearing
         } else {
             this.#logger.warn("DomRenderer: Cannot clear output, #outputDiv is null.");
         }
     }
 
     // I-3.2: Removed setInputState method
-    // /**
-    //  * @param {boolean} enabled
-    //  * @param {string} placeholderText
-    //  * @deprecated Functionality moved to InputStateController.
-    //  */
-    // setInputState(enabled, placeholderText) { ... } // REMOVED
 
     /**
      * @param {boolean} [forceState]
@@ -375,6 +318,7 @@ class DomRenderer {
                 this.#logger.error("DomRenderer: Cannot request inventory render, document context unavailable.");
                 return;
             }
+            // Request update *before* showing to avoid flicker with old data
             this.#eventBus.dispatch('ui:request_inventory_render', {}); // Request happens first
             this.#inventoryPanel.classList.remove('hidden'); // Then show panel
             this.#isInventoryVisible = true;
@@ -430,9 +374,9 @@ class DomRenderer {
                 const dropButton = doc.createElement('button'); // Use correct document
                 dropButton.textContent = 'Drop';
                 dropButton.classList.add('inventory-item-drop-button');
-                dropButton.dataset.itemName = itemName;
+                dropButton.dataset.itemName = itemName; // Store name for command
                 dropButton.addEventListener('click', async (event) => {
-                    event.stopPropagation();
+                    event.stopPropagation(); // Prevent li click handler
                     const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
                     const parentLi = clickedButton.closest('li');
                     if (!parentLi) {
@@ -440,22 +384,27 @@ class DomRenderer {
                         return;
                     }
                     const itemIdToDrop = parentLi.dataset.itemId;
-                    const itemNameToDrop = clickedButton.dataset.itemName;
+                    const itemNameToDrop = clickedButton.dataset.itemName; // Retrieve name
                     if (!itemIdToDrop || !itemNameToDrop) {
-                        this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.');
+                        this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.', {
+                            itemId: itemIdToDrop,
+                            itemName: itemNameToDrop
+                        });
                         return;
                     }
-                    const commandString = `drop ${itemNameToDrop}`;
+                    const commandString = `drop ${itemNameToDrop}`; // Use name in command
                     this.#logger.debug(`DomRenderer: Inventory Drop button for "${itemNameToDrop}" clicked. Attempting validated dispatch...`);
                     const dispatched = await this.#validatedEventDispatcher.dispatchValidated('command:submit', {command: commandString});
                     if (dispatched) {
                         this.#logger.debug(`DomRenderer: Event 'command:submit' for "${commandString}" dispatched successfully.`);
-                        this.toggleInventory(false); // Close inventory
+                        this.toggleInventory(false); // Close inventory on success
                     } else {
                         this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or other error).`);
+                        // Consider showing feedback to the user here if dispatch fails
                     }
                 });
                 li.appendChild(dropButton);
+                // Item selection logic (example)
                 li.addEventListener('click', () => {
                     const currentSelected = this.#inventoryList?.querySelector('.selected');
                     if (currentSelected) {
@@ -463,6 +412,7 @@ class DomRenderer {
                     }
                     li.classList.add('selected');
                     this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`);
+                    // Potentially dispatch an event here: ui:inventory_item_selected { itemId: item.id }
                 });
                 this.#inventoryList.appendChild(li);
             });
@@ -477,9 +427,10 @@ class DomRenderer {
      * @param {string} propertyPath - Dot-notation path to the property to set (e.g., 'style.color', 'dataset.value', 'textContent').
      * @param {*} value - The value to set the property to.
      * @returns {{count: number, modified: number, failed: number}} - Object indicating total elements found, how many were modified, and how many failed to update.
-     * @deprecated Functionality likely moved to DomMutationService or specific renderers.
+     * @deprecated Functionality likely moved to DomMutationService or specific renderers. Consider removal if unused.
      */
     mutate(selector, propertyPath, value) {
+        // Use document context from outputDiv if available, fallback otherwise
         const doc = this.#outputDiv?.ownerDocument;
         if (!doc) {
             this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", document context is not available.`);
@@ -504,17 +455,20 @@ class DomRenderer {
 
         elements.forEach(element => {
             try {
+                // Direct property checks first
                 if (propertyPath === 'textContent') {
                     if (element.textContent !== value) {
                         element.textContent = value;
                         successCount++;
                     }
                 } else if (propertyPath === 'innerHTML') {
+                    // Use with caution due to XSS risks if value is user-controlled
                     if (element.innerHTML !== value) {
                         element.innerHTML = value;
                         successCount++;
                     }
                 } else {
+                    // Use utility for nested properties
                     const changed = setPropertyByPath(element, propertyPath, value);
                     if (changed) {
                         successCount++;
@@ -528,11 +482,13 @@ class DomRenderer {
         const failedCount = totalFound - successCount;
         const modifiedCount = successCount;
 
+        // Refined logging based on outcome
         if (failedCount > 0) {
-            this.#logger.warn(`DomRenderer.mutate: Encountered ${failedCount} issue(s) while setting property "${propertyPath}" for selector "${selector}".`);
+            this.#logger.warn(`DomRenderer.mutate: Encountered ${failedCount} issue(s) while setting property "${propertyPath}" for selector "${selector}". ${modifiedCount} succeeded out of ${totalFound}.`);
         } else if (modifiedCount > 0) {
             this.#logger.debug(`DomRenderer.mutate: Successfully modified property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
         } else if (totalFound > 0 && modifiedCount === 0 && failedCount === 0) {
+            // This means the property already had the target value
             this.#logger.debug(`DomRenderer.mutate: Found ${totalFound} element(s) for selector "${selector}", property "${propertyPath}" already had the target value.`);
         }
 
