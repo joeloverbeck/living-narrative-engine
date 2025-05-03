@@ -2,14 +2,17 @@
 
 // Export interfaces and base classes
 export * from './IDocumentContext.js';
-export * from './rendererBase.js';
+export * from './rendererBase.js'; // Ensure RendererBase export is correct
 
 // Export concrete classes and utilities
-export * from './documentContext.js'; // Export concrete implementation(s) too
-export * from './domElementFactory.js';
+// Ensure concrete DocumentContext is exported if needed directly
+// export * from './documentContext.js'; // Uncomment if direct import needed elsewhere
+// Using named export for DocumentContext from its file:
+export {default as DocumentContext} from './documentContext.js';
+export {default as DomElementFactory} from './domElementFactory.js';
 export * from './uiMessageRenderer.js';
+export * from './TitleRenderer.js'; // <-- ADDED Export for TitleRenderer
 
 // Export other renderers as they are created
-// export * from './titleRenderer.js';
 // export * from './inputStateController.js';
 // ...etc
