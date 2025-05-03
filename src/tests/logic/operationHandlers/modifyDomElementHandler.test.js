@@ -14,7 +14,7 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
 
     beforeEach(() => {
         mockLogger = createMockLogger();
-        mockDomRenderer = createMockDomRenderer();
+        mockDomRenderer = createMockDomRenderer(); // Uses the corrected default mock from testUtils
         handler = new ModifyDomElementHandler({
             logger: mockLogger,
             domRenderer: mockDomRenderer
@@ -28,9 +28,6 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
     test('should construct with logger and domRenderer', () => {
         const testHandler = new ModifyDomElementHandler({logger: mockLogger, domRenderer: mockDomRenderer});
         expect(testHandler).toBeDefined();
-        // ****** CORRECTION: Removed assertions for private fields ******
-        // Cannot directly access private #logger and #domRenderer
-        // Their correct injection is implicitly tested by other tests using the handler
     });
 
     test('should throw error if logger is missing or invalid', () => {
@@ -62,7 +59,8 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
             property: 'textContent',
             value: 'New Text',
         };
-        const expectedResult = {modifiedCount: 1, failures: []};
+        // ****** CORRECTION: Use count, modified, failed ******
+        const expectedResult = {count: 1, modified: 1, failed: 0};
         mockDomRenderer.mutate.mockReturnValue(expectedResult);
 
         handler.execute(params, executionContext);
@@ -75,15 +73,21 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
         );
 
         // Assert logs
+        expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Initial, Result, Success
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             1,
             'MODIFY_DOM_ELEMENT: Handler executing with params:',
             params
         );
-        // Handler now uses modifiedCount, so this should pass if modifiedCount > 0
+        // ****** CORRECTION: Check the 2nd debug log (result) ******
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             2,
-            expect.stringContaining('Modified property "textContent" on 1 element(s)'),
+            'MODIFY_DOM_ELEMENT: Mutation attempt result for selector "#my-element": Found 1, Modified 1, Failed 0.'
+        );
+        // ****** CORRECTION: Check the 3rd debug log (success) ******
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(
+            3,
+            expect.stringContaining('Modified property "textContent" on 1 element(s) matching selector "#my-element" with value:'), // Uses 'modified' count
             'New Text'
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
@@ -96,24 +100,32 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
             property: '  data-trimmed ',
             value: 'Trimmed Value',
         };
-        const expectedResult = {modifiedCount: 1, failures: []};
+        // ****** CORRECTION: Use count, modified, failed ******
+        const expectedResult = {count: 1, modified: 1, failed: 0};
         mockDomRenderer.mutate.mockReturnValue(expectedResult);
 
         handler.execute(params, executionContext);
 
         expect(mockDomRenderer.mutate).toHaveBeenCalledWith(
-            '#padded-id',
-            'data-trimmed',
+            '#padded-id', // Trimmed
+            'data-trimmed', // Trimmed
             'Trimmed Value'
         );
+        expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Initial, Result, Success
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             1,
             'MODIFY_DOM_ELEMENT: Handler executing with params:',
             params // Original params are logged first
         );
+        // ****** CORRECTION: Check the 2nd debug log (result) ******
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             2,
-            expect.stringContaining('Modified property "data-trimmed" on 1 element(s) matching selector "#padded-id"'),
+            'MODIFY_DOM_ELEMENT: Mutation attempt result for selector "#padded-id": Found 1, Modified 1, Failed 0.'
+        );
+        // ****** CORRECTION: Check the 3rd debug log (success) ******
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(
+            3,
+            expect.stringContaining('Modified property "data-trimmed" on 1 element(s) matching selector "#padded-id" with value:'),
             'Trimmed Value' // Success log uses trimmed values implicitly
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
@@ -128,7 +140,8 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
             value: 'active',
         };
         const executionContextNoLogger = {variables: new Map()};
-        const expectedResult = {modifiedCount: 1, failures: []};
+        // ****** CORRECTION: Use count, modified, failed ******
+        const expectedResult = {count: 1, modified: 1, failed: 0};
         mockDomRenderer.mutate.mockReturnValue(expectedResult);
 
         // Create a new handler instance for this test to ensure the default logger is used
@@ -143,14 +156,21 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
         expect(mockDomRenderer.mutate).toHaveBeenCalledWith('div', 'className', 'active');
 
         // Check if the *handler's* logger was used (mockLogger in this setup)
+        expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Initial, Result, Success
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             1,
             'MODIFY_DOM_ELEMENT: Handler executing with params:',
             params
         );
+        // ****** CORRECTION: Check the 2nd debug log (result) ******
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             2,
-            expect.stringContaining('Modified property "className" on 1 element(s)'),
+            'MODIFY_DOM_ELEMENT: Mutation attempt result for selector "div": Found 1, Modified 1, Failed 0.'
+        );
+        // ****** CORRECTION: Check the 3rd debug log (success) ******
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(
+            3,
+            expect.stringContaining('Modified property "className" on 1 element(s) matching selector "div" with value:'),
             'active'
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
@@ -169,19 +189,23 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
         invalidParamsList.forEach((invalidParams, index) => {
             mockDomRenderer.mutate.mockClear();
             mockLogger.error.mockClear();
-            mockLogger.debug.mockClear();
+            mockLogger.debug.mockClear(); // Clear debug for isolation
 
             const result = handler.execute(invalidParams, executionContext);
 
             expect(result).toBeUndefined();
+            // Initial debug log *is* expected before validation failure
+            expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                'MODIFY_DOM_ELEMENT: Handler executing with params:', invalidParams
+            );
+            // Error log *is* expected
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expect.stringContaining('MODIFY_DOM_ELEMENT: Invalid or incomplete parameters.'),
                 {params: invalidParams}
             );
             expect(mockDomRenderer.mutate).not.toHaveBeenCalled();
-            // ****** CORRECTION: Removed assertion checking against debug log ******
-            // The initial debug log IS expected, even before validation fails.
         });
     });
 
@@ -190,25 +214,32 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
         const validValues = [null, false, 0, ''];
         validValues.forEach((value, index) => {
             const params = {selector: '#test', property: 'data-val', value};
-            const expectedResult = {modifiedCount: 1, failures: []};
-            mockDomRenderer.mutate.mockReturnValue(expectedResult);
+            // ****** CORRECTION: Use count, modified, failed ******
+            const expectedResult = {count: 1, modified: 1, failed: 0};
+
+            // ****** CORRECTION: Clear and set mock *inside* the loop ******
             mockLogger.error.mockClear();
             mockLogger.debug.mockClear();
             mockLogger.warn.mockClear();
             mockDomRenderer.mutate.mockClear();
+            mockDomRenderer.mutate.mockReturnValue(expectedResult); // Set return value for THIS iteration
 
             handler.execute(params, executionContext);
 
             expect(mockLogger.error).not.toHaveBeenCalled();
-            expect(mockLogger.warn).not.toHaveBeenCalled(); // Should not warn if modifiedCount > 0
+            expect(mockLogger.warn).not.toHaveBeenCalled(); // Should not warn if modified > 0
             expect(mockDomRenderer.mutate).toHaveBeenCalledTimes(1);
             expect(mockDomRenderer.mutate).toHaveBeenCalledWith('#test', 'data-val', value);
 
-            expect(mockLogger.debug).toHaveBeenCalledTimes(2); // Initial + Success
-            expect(mockLogger.debug).toHaveBeenNthCalledWith(1, expect.any(String), params);
+            expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Initial + Result + Success
+            expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'MODIFY_DOM_ELEMENT: Handler executing with params:', params);
             expect(mockLogger.debug).toHaveBeenNthCalledWith(
                 2,
-                expect.stringContaining('Modified property "data-val" on 1 element(s)'),
+                'MODIFY_DOM_ELEMENT: Mutation attempt result for selector "#test": Found 1, Modified 1, Failed 0.'
+            );
+            expect(mockLogger.debug).toHaveBeenNthCalledWith(
+                3,
+                expect.stringContaining('Modified property "data-val" on 1 element(s) matching selector "#test" with value:'),
                 value
             );
         });
@@ -216,8 +247,9 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
 
     test('execute() should log warning if domRenderer.mutate returns zero modified elements', () => {
         const params = {selector: '.non-existent', property: 'display', value: 'none'};
-        const resultZeroMods = {modifiedCount: 0, failures: []}; // Correct mock result
-        mockDomRenderer.mutate.mockReturnValue(resultZeroMods);
+        // ****** CORRECTION: Use count, modified, failed - scenario where 0 found ******
+        const resultZeroFound = {count: 0, modified: 0, failed: 0};
+        mockDomRenderer.mutate.mockReturnValue(resultZeroFound);
         mockLogger.warn.mockClear();
         mockLogger.debug.mockClear();
         mockLogger.error.mockClear();
@@ -226,12 +258,18 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
 
         expect(mockDomRenderer.mutate).toHaveBeenCalledWith('.non-existent', 'display', 'none');
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith( // Message from the code
+        // ****** CORRECTION: Match the exact warning message from handler ******
+        expect(mockLogger.warn).toHaveBeenCalledWith(
             `MODIFY_DOM_ELEMENT: No elements found or modified for selector ".non-existent".`
         );
-        // Ensure success log didn't happen
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1); // Only the initial debug log
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.any(String), params);
+        // ****** CORRECTION: Expect 2 debug logs (Initial + Result) ******
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'MODIFY_DOM_ELEMENT: Handler executing with params:', params);
+        // ****** CORRECTION: Check the content of the second debug log ******
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(
+            2,
+            'MODIFY_DOM_ELEMENT: Mutation attempt result for selector ".non-existent": Found 0, Modified 0, Failed 0.'
+        );
         expect(mockLogger.error).not.toHaveBeenCalled(); // Should not error
     });
 
@@ -243,12 +281,17 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
             property: 'dataset.value',
             value: 123,
         };
+        const failureDetails = [ // Handler doesn't log these details yet, but mock can provide them
+            {selector: '.multiple:nth-child(2)', error: 'Invalid state'},
+            {selector: '.multiple:nth-child(4)', error: 'Could not apply'}
+        ];
+        // ****** CORRECTION: Use count, modified, failed ******
+        // Scenario: 5 found, 3 modified successfully, 2 failed
         const mutationResultWithFailures = {
-            modifiedCount: 3, // Assume 3 were targeted/modified
-            failures: [     // But 2 failed
-                {selector: '.multiple:nth-child(2)', error: 'Invalid state'},
-                {selector: '.multiple:nth-child(4)', error: 'Could not apply'}
-            ]
+            count: 5,
+            modified: 3,
+            failed: 2,
+            // failures: failureDetails // Can include details if handler uses them
         };
         mockDomRenderer.mutate.mockReturnValue(mutationResultWithFailures);
         mockLogger.error.mockClear();
@@ -259,20 +302,28 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
 
         expect(mockDomRenderer.mutate).toHaveBeenCalledTimes(1);
 
-        // Check for the success log (HANDLER LOGS THIS IF modifiedCount > 0, REGARDLESS OF FAILURES)
-        expect(mockLogger.debug).toHaveBeenCalledTimes(2); // Initial + success count log
-        expect(mockLogger.debug).toHaveBeenNthCalledWith(1, expect.any(String), params);
+        // Check logs: Initial, Result, Success (for modified > 0), Error (for failed > 0)
+        expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Initial + Result + Success
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'MODIFY_DOM_ELEMENT: Handler executing with params:', params);
         expect(mockLogger.debug).toHaveBeenNthCalledWith(
             2,
-            expect.stringContaining('Modified property "dataset.value" on 3 element(s)'), // Uses modifiedCount
+            'MODIFY_DOM_ELEMENT: Mutation attempt result for selector ".multiple": Found 5, Modified 3, Failed 2.' // Uses correct counts
+        );
+        expect(mockLogger.debug).toHaveBeenNthCalledWith(
+            3,
+            // Uses 'modified' count
+            expect.stringContaining('Modified property "dataset.value" on 3 element(s) matching selector ".multiple" with value:'),
             123
         );
 
         // Expect an ERROR log detailing the failures
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith( // Message from the code
-            `MODIFY_DOM_ELEMENT: Failed to modify property "dataset.value" on 2 element(s) matching selector ".multiple".`, // Uses failures.length
-            mutationResultWithFailures.failures // Logs the failures array
+        // ****** CORRECTION: Match the exact error message from handler ******
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            // Uses 'failed' and 'count'
+            `MODIFY_DOM_ELEMENT: Failed to modify property "dataset.value" on 2 out of 5 element(s) matching selector ".multiple".`,
+            // The current handler doesn't log the details array, just the message
+            // If it did, the assertion would be: mutationResultWithFailures.failures
         );
         expect(mockLogger.warn).not.toHaveBeenCalled(); // Should not warn if failures occurred
     });
@@ -302,7 +353,7 @@ describe('ModifyDomElementHandler (Unit Tests)', () => {
         );
         // Ensure success/warning logs weren't called
         expect(mockLogger.debug).toHaveBeenCalledTimes(1); // Only initial debug log
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.any(String), params);
+        expect(mockLogger.debug).toHaveBeenCalledWith('MODIFY_DOM_ELEMENT: Handler executing with params:', params);
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 });

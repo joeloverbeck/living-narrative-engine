@@ -53,8 +53,8 @@ export {DomRenderer};
 export function createMockDomRenderer() {
     return {
         renderMessage: jest.fn().mockReturnValue(true), // Default success
-        // Corrected default return value based on test expectations
-        mutate: jest.fn().mockReturnValue({modifiedCount: 1, failures: []}),
+        // ****** CORRECTION: Default return value uses 'count', 'modified', 'failed' ******
+        mutate: jest.fn().mockReturnValue({count: 1, modified: 1, failed: 0}), // Default successful modification of 1 element
         setTitle: jest.fn(),
         clearOutput: jest.fn(),
         setInputState: jest.fn(),
