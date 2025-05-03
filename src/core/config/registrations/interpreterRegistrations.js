@@ -47,7 +47,6 @@ export function registerInterpreters(container) {
     const logger = container.resolve(tokens.ILogger);
     logger.info('Interpreter Registrations: Starting...');
 
-    // --- 1. Register Operation Handlers (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.DispatchEventHandler, c => new DispatchEventHandler({
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
@@ -84,13 +83,14 @@ export function registerInterpreters(container) {
     logger.debug('Interpreter Registrations: Registered QueryComponentHandler.');
 
     registrar.singletonFactory(tokens.ModifyDomElementHandler, c => new ModifyDomElementHandler({
-        logger: c.resolve(tokens.ILogger)
+        logger: c.resolve(tokens.ILogger),
+        domRenderer: c.resolve(tokens.DomRenderer)
     }));
     logger.debug('Interpreter Registrations: Registered ModifyDomElementHandler.');
 
     registrar.singletonFactory(tokens.AppendUiMessageHandler, c => new AppendUiMessageHandler({
-        logger: c.resolve(tokens.ILogger)
-        // domRenderer: c.resolve(tokens.DomRenderer) // Optional
+        logger: c.resolve(tokens.ILogger),
+        domRenderer: c.resolve(tokens.DomRenderer)
     }));
     logger.debug('Interpreter Registrations: Registered AppendUiMessageHandler.');
 
@@ -106,7 +106,6 @@ export function registerInterpreters(container) {
     logger.debug('Interpreter Registrations: Registered QuerySystemDataHandler.');
 
 
-    // --- 2. Register Operation Registry (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.OperationRegistry, (c) => {
         const internalLogger = c.resolve(tokens.ILogger);
         const registry = new OperationRegistry({logger: internalLogger});
@@ -140,7 +139,6 @@ export function registerInterpreters(container) {
     logger.info('Interpreter Registrations: Registered OperationRegistry factory.');
 
 
-    // --- 3. Register Operation Interpreter (No changes needed here for shutdown) ---
     registrar.singletonFactory(tokens.OperationInterpreter, c => new OperationInterpreter({
         logger: c.resolve(tokens.ILogger),
         operationRegistry: c.resolve(tokens.OperationRegistry)
@@ -148,9 +146,6 @@ export function registerInterpreters(container) {
     logger.info('Interpreter Registrations: Registered OperationInterpreter.');
 
 
-    // --- 4. Register System Logic Interpreter ---
-    // --- MODIFIED: Added SHUTDOWNABLE tag ---
-    // Ensure SystemLogicInterpreter has a shutdown() method to clean up subscriptions if necessary.
     registrar.tagged([...INITIALIZABLE, ...SHUTDOWNABLE]).singletonFactory(tokens.SystemLogicInterpreter, (c) => {
         const systemLogger = c.resolve(tokens.ILogger);
         systemLogger.debug('Interpreter Registrations: SystemLogicInterpreter factory creating instance...');
