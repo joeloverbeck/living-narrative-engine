@@ -69,13 +69,13 @@ export function registerUI(container, {inputElement, document: doc}) { // Added 
 
     // 3. UI Message Renderer (Handles messages/echoes) - Ticket M-1.3
     // Uses single() because it's a class with dependencies passed directly to constructor
-    registrar.single(tokens.UIMessageRenderer, UiMessageRenderer, [
+    registrar.single(tokens.UiMessageRenderer, UiMessageRenderer, [
         tokens.ILogger,                    // Dependency 1: logger
         tokens.IDocumentContext,            // Dependency 2: doc
         tokens.IValidatedEventDispatcher,  // Dependency 3: ved (Using VED now)
         tokens.DomElementFactory           // Dependency 4: factory
     ]);
-    logger.info(`UI Registrations: Registered ${tokens.UIMessageRenderer} (using VED).`);
+    logger.info(`UI Registrations: Registered ${tokens.UiMessageRenderer} (using VED).`);
 
     // --- Register other new renderers here as they are created (e.g., TitleRenderer) ---
     // registrar.single(tokens.TitleRenderer, TitleRenderer, [...deps]);
