@@ -189,7 +189,7 @@ export class UiMessageRenderer extends RendererBase {
         if (payload.error && payload.error.message) {
             message += `\nDetails: ${payload.error.message}`;
         }
-        this.logger.fatal(`${this._logPrefix} Fatal error displayed: ${message}`); // Use logger from base
+        this.logger.error(`${this._logPrefix} Fatal error displayed: ${message}`); // Use logger from base
         this.render(message, 'fatal', false); // Render as plain text for safety
     }
 
