@@ -12,10 +12,10 @@ export {default as DomElementFactory} from './domElementFactory.js';
 export * from './uiMessageRenderer.js';
 export * from './TitleRenderer.js';
 export * from './InputStateController.js';
-export * from './locationRenderer.js'; // <-- ADDED Export for LocationRenderer
+export * from './locationRenderer.js';
+export * from './inventoryPanel.js';
 
 // Export other renderers as they are created
-// export * from './inventoryPanel.js'; // L-5.2 candidate
 // export * from './actionButtonsRenderer.js'; // L-6.2 candidate
 // export * from './domMutationService.js'; // L-7.2 candidate (if kept)
 // ...etc

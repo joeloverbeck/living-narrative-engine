@@ -4,13 +4,14 @@
 // --- T-2.2: Removed title handling logic ---
 // --- I-3.2: Removed input handling logic (setInputState, #handleDisableInput) ---
 // --- L-4.2: Removed location handling logic (renderLocation, #handleDisplayLocation) ---
+// --- INV-5.2: Removed inventory logic (#createInventoryPanel, #updateInventoryUI, toggleInventory, #handleRenderInventory) ---
 
 // --- Import Utilities ---
 // Assuming setPropertyByPath exists and is needed for other cases.
 import {setPropertyByPath} from '../utils/domUtils.js';
 
 // --- Import Interfaces ---
-/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */ // Legacy, should be removed eventually if EventBus dependency is fully purged
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -26,29 +27,29 @@ import {setPropertyByPath} from '../utils/domUtils.js';
  * Title control has been moved to `TitleRenderer`.
  * Message rendering has been moved to `UiMessageRenderer`.
  * Location rendering has been moved to `LocationRenderer`.
+ * Inventory panel management has been moved to `InventoryPanel`.
  *
  * @deprecated This class is being refactored into smaller, focused components. Functionality is being moved. See `dom-ui/` directory.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
-    #outputDiv;
-    // I-3.2 / L-4.2: #inputElement / #outputDiv might still be needed by remaining methods or base classes
+    #outputDiv; // Might be needed by clearOutput or mutate
     /** @type {HTMLInputElement} */
-    #inputElement;
+    #inputElement; // Needed by InputStateController, but reference might be needed elsewhere temporarily?
     /** @type {EventBus} */
-    #eventBus;
+    #eventBus; // Legacy, aim to remove
     /** @type {ValidatedEventDispatcher} */
     #validatedEventDispatcher;
     /** @type {ILogger} */
     #logger;
 
-    // --- Inventory UI Elements ---
-    /** @type {HTMLElement | null} */
-    #inventoryPanel = null;
-    /** @type {HTMLElement | null} */
-    #inventoryList = null;
-    /** @type {boolean} */
-    #isInventoryVisible = false;
+    // --- INV-5.2: Inventory UI Elements REMOVED ---
+    // /** @type {HTMLElement | null} */
+    // #inventoryPanel = null; // REMOVED
+    // /** @type {HTMLElement | null} */
+    // #inventoryList = null; // REMOVED
+    // /** @type {boolean} */
+    // #isInventoryVisible = false; // REMOVED
 
     // --- Action Buttons Elements ---
     /** @type {HTMLElement | null} */
@@ -59,7 +60,7 @@ class DomRenderer {
      * @param {object} dependencies - The required dependencies.
      * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed (might be used by remaining methods).
      * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands (used by InputStateController now).
-     * @param {EventBus} dependencies.eventBus - The application's event bus instance.
+     * @param {EventBus} dependencies.eventBus - The application's event bus instance (legacy).
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
      * @param {ILogger} dependencies.logger - Service for logging messages.
      * @param {HTMLHeadingElement} [dependencies.titleElement] - DEPRECATED: Handled by TitleRenderer.
@@ -74,7 +75,9 @@ class DomRenderer {
         }
         // titleElement validation removed (T-2.2)
         if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.dispatch !== 'function') {
-            throw new Error('DomRenderer requires a valid EventBus instance.');
+            // Keeping legacy EventBus for now if still needed by some parts
+            this.#logger?.warn('DomRenderer: EventBus instance validation passed, but aim to remove this dependency.');
+            // throw new Error('DomRenderer requires a valid EventBus instance.'); // Soften error during transition
         }
         if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
             throw new Error('DomRenderer requires a valid ValidatedEventDispatcher instance.');
@@ -83,17 +86,21 @@ class DomRenderer {
             throw new Error('DomRenderer requires a valid ILogger instance.');
         }
 
-        this.#outputDiv = outputDiv; // Still stored, might be needed by clearOutput or mutate
-        this.#inputElement = inputElement; // Still stored, though direct usage removed (I-3.2)
-        this.#eventBus = eventBus;
+        this.#outputDiv = outputDiv;
+        this.#inputElement = inputElement;
+        this.#eventBus = eventBus; // Store legacy bus if provided
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#logger = logger;
 
-        // --- Initialize Inventory UI ---
-        const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+        // --- INV-5.2: Initialize Inventory UI REMOVED ---
+        // const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+        // if (doc) {
+        // this.#createInventoryPanel(doc); // REMOVED
+        // } else { ... }
 
+        // --- Initialize Action Buttons Container ---
+        const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
         if (doc) {
-            this.#createInventoryPanel(doc);
             this.#actionButtonsContainer = doc.getElementById('action-buttons-container');
             if (!this.#actionButtonsContainer) {
                 this.#logger.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
@@ -101,49 +108,19 @@ class DomRenderer {
                 this.#logger.info("DomRenderer: Found '#action-buttons-container'.");
             }
         } else {
-            this.#logger.warn('DomRenderer: Skipping UI panel/container initialization as "document" context could not be determined.');
+            this.#logger.warn('DomRenderer: Skipping action button container initialization as "document" context could not be determined.');
         }
 
 
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        // T-2.2 / I-3.2 / L-4.2: Adjusted log message
-        this.#logger.info('DomRenderer initialized (title, input, & location handling moved).');
+        // T-2.2 / I-3.2 / L-4.2 / INV-5.2: Adjusted log message
+        this.#logger.info('DomRenderer initialized (title, input, location, & inventory handling moved).');
     }
 
-    #createInventoryPanel(doc) {
-        if (!doc) {
-            this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" context is not available.');
-            return;
-        }
-
-        this.#inventoryPanel = doc.createElement('div');
-        this.#inventoryPanel.id = 'inventory-panel';
-        this.#inventoryPanel.classList.add('inventory-panel', 'hidden'); // Start hidden
-
-        const header = doc.createElement('h3');
-        header.textContent = 'Inventory';
-        this.#inventoryPanel.appendChild(header);
-
-        this.#inventoryList = doc.createElement('ul');
-        this.#inventoryList.id = 'inventory-list';
-        this.#inventoryPanel.appendChild(this.#inventoryList);
-
-        const closeButton = doc.createElement('button');
-        closeButton.textContent = 'Close';
-        closeButton.onclick = () => this.toggleInventory(false); // Force hide
-        this.#inventoryPanel.appendChild(closeButton);
-
-        const gameContainer = doc.getElementById('game-container');
-        if (gameContainer) {
-            gameContainer.appendChild(this.#inventoryPanel);
-        } else {
-            this.#logger.warn('DomRenderer: Could not find #game-container to append inventory panel. Appending to body.');
-            doc.body.appendChild(this.#inventoryPanel);
-        }
-    }
-
+    // --- INV-5.2: #createInventoryPanel REMOVED ---
+    // #createInventoryPanel(doc) { ... }
 
     #subscribeToEvents() {
         // --- Standard UI Events ---
@@ -155,20 +132,27 @@ class DomRenderer {
 
         // --- Game Specific UI Events ---
         // L-4.2: REMOVED subscription for event:display_location
-        // this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this)); // <<-- REMOVED
 
-        // --- Inventory UI Events ---
-        this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this));
-        this.#eventBus.subscribe('event:toggle_inventory', () => this.toggleInventory());
-        // Note: 'ui:request_inventory_render' is dispatched internally by toggleInventory
+        // --- INV-5.2: Inventory UI Events REMOVED ---
+        // this.#eventBus.subscribe('event:render_inventory', this.#handleRenderInventory.bind(this)); // REMOVED
+        // this.#eventBus.subscribe('event:toggle_inventory', () => this.toggleInventory()); // REMOVED
 
         // --- Action Buttons Events ---
-        this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
+        // Assuming this stays in DomRenderer for now, or moves to ActionButtonsRenderer later
+        // TODO: Migrate to VED if possible/necessary
+        if (this.#eventBus) { // Check if legacy bus exists
+            this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
+        } else {
+            this.#logger.warn('DomRenderer: Skipping subscription to "event:update_available_actions" as legacy EventBus is not available.');
+            // Potentially subscribe via VED if event exists there
+            // this.#validatedEventDispatcher.subscribe('event:update_available_actions', ...)
+        }
+
 
         // T-2.2: Removed subscriptions for Initialization Events
 
-        // T-2.2 / I-3.2 / L-4.2: Adjusted log message
-        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init/input/location events).');
+        // T-2.2 / I-3.2 / L-4.2 / INV-5.2: Adjusted log message
+        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init/input/location/inventory events).');
     }
 
     // --- Private Event Handlers ---
@@ -177,37 +161,15 @@ class DomRenderer {
 
     // I-3.2: Removed #handleDisableInput method
 
-    /**
-     * @private
-     * @param {object} data - Expected { type: string, payload: InventoryRenderPayload }
-     */
-    #handleRenderInventory(data) {
-        const payload = data?.payload;
-        if (!this.#inventoryList) {
-            this.#logger.error('Inventory list element not found!');
-            return;
-        }
-        const doc = this.#inventoryList?.ownerDocument;
-        if (!doc) {
-            this.#logger.error('DomRenderer: Cannot update inventory UI, document context not found.');
-            return;
-        }
-
-        if (!payload || !Array.isArray(payload.items)) {
-            this.#logger.warn("DomRenderer received 'event:render_inventory' with invalid data structure or payload:", data);
-            this.#inventoryList.innerHTML = '<li>Error loading inventory.</li>';
-            return;
-        }
-        this.#updateInventoryUI(payload.items, doc); // Pass doc
-    }
-
-    // L-4.2: REMOVED #handleDisplayLocation method
+    // --- INV-5.2: #handleRenderInventory REMOVED ---
     // /**
     //  * @private
-    //  * @param {object} data - Expected { type: string, payload: LocationDisplayPayload }
-    //  * @deprecated Moved to LocationRenderer
+    //  * @param {object} data - Expected { type: string, payload: InventoryRenderPayload }
+    //  * @deprecated Moved to InventoryPanel
     //  */
-    // #handleDisplayLocation(data) { ... } // <<-- REMOVED
+    // #handleRenderInventory(data) { ... } // REMOVED
+
+    // L-4.2: REMOVED #handleDisplayLocation method
 
     // M-1.2: Removed #handleShowMessage method body
 
@@ -218,13 +180,15 @@ class DomRenderer {
     /**
      * @private
      * @param {object} data - Expected { type: string, payload: UIUpdateActionsPayload }
+     * @deprecated Functionality should move to ActionButtonsRenderer.
      */
     #handleUpdateActions(data) {
         const eventData = data?.payload;
 
         if (!this.#actionButtonsContainer) {
-            this.#logger.warn('DomRenderer: Cannot update action buttons, container element is null.');
-            return; // Error already logged in constructor if applicable
+            // Logged in constructor if null initially. Log subsequent calls if it becomes null.
+            // this.#logger.warn('DomRenderer: Cannot update action buttons, container element is null.');
+            return;
         }
         const doc = this.#actionButtonsContainer.ownerDocument;
         if (!doc) {
@@ -258,6 +222,10 @@ class DomRenderer {
 
                 button.addEventListener('click', async () => {
                     const commandToSubmit = button.textContent;
+                    if (!commandToSubmit) { // Basic check
+                        this.#logger.warn(`DomRenderer: Action button clicked, but textContent is empty.`);
+                        return;
+                    }
                     this.#logger.debug(`DomRenderer: Action button "${commandToSubmit}" clicked. Attempting validated dispatch...`);
                     const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
                         'command:submit',
@@ -285,11 +253,6 @@ class DomRenderer {
     // M-1.2: Removed renderMessage method body
 
     // L-4.2: REMOVED renderLocation method
-    // /**
-    //  * @param {LocationDisplayPayload} locationData
-    //  * @deprecated Functionality moved to LocationRenderer.
-    //  * */
-    // renderLocation(locationData) { ... } // <<-- REMOVED
 
     /** @deprecated Functionality likely moved to specific renderers or facade. May still be useful for clearing general output area if needed. */
     clearOutput() {
@@ -302,122 +265,21 @@ class DomRenderer {
 
     // I-3.2: Removed setInputState method
 
-    /**
-     * @param {boolean} [forceState]
-     * @deprecated Functionality moved to InventoryPanel.
-     * */
-    toggleInventory(forceState) {
-        if (!this.#inventoryPanel) {
-            this.#logger.warn("DomRenderer: Cannot toggle inventory, panel element does not exist.");
-            return;
-        }
-        const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
-        if (shouldBeVisible) {
-            const doc = this.#inventoryPanel.ownerDocument;
-            if (!doc) {
-                this.#logger.error("DomRenderer: Cannot request inventory render, document context unavailable.");
-                return;
-            }
-            // Request update *before* showing to avoid flicker with old data
-            this.#eventBus.dispatch('ui:request_inventory_render', {}); // Request happens first
-            this.#inventoryPanel.classList.remove('hidden'); // Then show panel
-            this.#isInventoryVisible = true;
-        } else {
-            this.#inventoryPanel.classList.add('hidden');
-            this.#isInventoryVisible = false;
-        }
-    }
+    // --- INV-5.2: toggleInventory REMOVED ---
+    // /**
+    //  * @param {boolean} [forceState]
+    //  * @deprecated Functionality moved to InventoryPanel.
+    //  * */
+    // toggleInventory(forceState) { ... } // REMOVED
 
-    /**
-     * @private
-     * @param {ItemUIData[]} itemsData
-     * @param {Document} doc - The document context to use for creating elements.
-     * @deprecated Functionality moved to InventoryPanel.
-     */
-    #updateInventoryUI(itemsData, doc) { // Accept doc as parameter
-        if (!doc) {
-            this.#logger.error('DomRenderer: Cannot update inventory UI, document context is missing.');
-            return;
-        }
-        if (!this.#inventoryList) {
-            this.#logger.error('DomRenderer: Cannot update inventory UI, list element is null.');
-            return;
-        }
-        this.#inventoryList.innerHTML = ''; // Clear existing items
-        if (itemsData.length === 0) {
-            const emptyLi = doc.createElement('li'); // Use correct document
-            emptyLi.textContent = '(Empty)';
-            emptyLi.classList.add('inventory-item-empty');
-            this.#inventoryList.appendChild(emptyLi);
-        } else {
-            itemsData.forEach(item => {
-                const li = doc.createElement('li'); // Use correct document
-                li.classList.add('inventory-item');
-                li.dataset.itemId = item.id;
-                const itemName = item.name || '(Unnamed Item)';
-                if (item.icon) {
-                    const img = doc.createElement('img'); // Use correct document
-                    img.src = item.icon;
-                    img.alt = itemName;
-                    img.classList.add('inventory-item-icon');
-                    li.appendChild(img);
-                } else {
-                    const iconPlaceholder = doc.createElement('span'); // Use correct document
-                    iconPlaceholder.classList.add('inventory-item-icon-placeholder');
-                    iconPlaceholder.textContent = '📦';
-                    li.appendChild(iconPlaceholder);
-                }
-                const nameSpan = doc.createElement('span'); // Use correct document
-                nameSpan.classList.add('inventory-item-name');
-                nameSpan.textContent = itemName;
-                li.appendChild(nameSpan);
-                const dropButton = doc.createElement('button'); // Use correct document
-                dropButton.textContent = 'Drop';
-                dropButton.classList.add('inventory-item-drop-button');
-                dropButton.dataset.itemName = itemName; // Store name for command
-                dropButton.addEventListener('click', async (event) => {
-                    event.stopPropagation(); // Prevent li click handler
-                    const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
-                    const parentLi = clickedButton.closest('li');
-                    if (!parentLi) {
-                        this.#logger.error('DomRenderer: Could not find parent <li> for drop button.');
-                        return;
-                    }
-                    const itemIdToDrop = parentLi.dataset.itemId;
-                    const itemNameToDrop = clickedButton.dataset.itemName; // Retrieve name
-                    if (!itemIdToDrop || !itemNameToDrop) {
-                        this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.', {
-                            itemId: itemIdToDrop,
-                            itemName: itemNameToDrop
-                        });
-                        return;
-                    }
-                    const commandString = `drop ${itemNameToDrop}`; // Use name in command
-                    this.#logger.debug(`DomRenderer: Inventory Drop button for "${itemNameToDrop}" clicked. Attempting validated dispatch...`);
-                    const dispatched = await this.#validatedEventDispatcher.dispatchValidated('command:submit', {command: commandString});
-                    if (dispatched) {
-                        this.#logger.debug(`DomRenderer: Event 'command:submit' for "${commandString}" dispatched successfully.`);
-                        this.toggleInventory(false); // Close inventory on success
-                    } else {
-                        this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or other error).`);
-                        // Consider showing feedback to the user here if dispatch fails
-                    }
-                });
-                li.appendChild(dropButton);
-                // Item selection logic (example)
-                li.addEventListener('click', () => {
-                    const currentSelected = this.#inventoryList?.querySelector('.selected');
-                    if (currentSelected) {
-                        currentSelected.classList.remove('selected');
-                    }
-                    li.classList.add('selected');
-                    this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`);
-                    // Potentially dispatch an event here: ui:inventory_item_selected { itemId: item.id }
-                });
-                this.#inventoryList.appendChild(li);
-            });
-        }
-    }
+    // --- INV-5.2: #updateInventoryUI REMOVED ---
+    // /**
+    //  * @private
+    //  * @param {ItemUIData[]} itemsData
+    //  * @param {Document} doc - The document context to use for creating elements.
+    //  * @deprecated Functionality moved to InventoryPanel.
+    //  */
+    // #updateInventoryUI(itemsData, doc) { ... } // REMOVED
 
     /**
      * Mutates properties of DOM elements matching a selector within the correct document context.
@@ -449,6 +311,7 @@ class DomRenderer {
 
         totalFound = elements.length;
         if (totalFound === 0) {
+            // This is common, change to debug level
             this.#logger.debug(`DomRenderer.mutate: Selector "${selector}" found no elements in the current document context.`);
             return {count: 0, modified: 0, failed: 0};
         }
@@ -499,7 +362,21 @@ class DomRenderer {
         };
     }
 
-
+    /**
+     * Dispose method for cleanup.
+     * Unsubscribes from any remaining legacy EventBus listeners.
+     * @deprecated Part of the overall deprecation of DomRenderer.
+     */
+    dispose() {
+        this.#logger.debug('DomRenderer disposing...');
+        // If EventBus subscriptions were added, ensure they are removed
+        // Example (requires storing subscription handles, which wasn't done above):
+        // this.#eventBus?.unsubscribe(...);
+        // For now, just log
+        if (this.#eventBus) {
+            this.#logger.debug('DomRenderer: Manual cleanup of legacy EventBus subscriptions might be needed if handlers were stored.');
+        }
+    }
 }
 
 export default DomRenderer;
