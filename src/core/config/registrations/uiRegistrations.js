@@ -1,5 +1,4 @@
 // src/core/config/registrations/uiRegistrations.js
-// ****** CORRECTED FILE ******
 
 /**
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
@@ -19,7 +18,6 @@ import {
     LocationRenderer,
     InventoryPanel,
     ActionButtonsRenderer,
-    DomMutationService,
     DomUiFacade,
     // Base utilities
     DomElementFactory,
@@ -160,15 +158,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
-
-    // DomMutationService (Generic DOM manipulation)
-    // Uses single() as dependencies are standard services. Registered under Interface token.
-    registrar.single(tokens.IDomMutationService, DomMutationService, [
-        tokens.ILogger,
-        tokens.IDocumentContext
-    ]);
-    logger.debug(`UI Registrations: Registered ${tokens.IDomMutationService}.`);
-
 
     // --- 3. Register Facade ---
     // Register DomUiFacade under the OLD DomRenderer token for backward compatibility.

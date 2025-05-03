@@ -1,5 +1,5 @@
 // src/tests/core/config/registrations/interpreterRegistrations.test.js
-// ****** CORRECTED FILE (Removed All DOM/UI Handlers/Services) ******
+// ****** CORRECTED FILE (Updated tags assertion) ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -11,10 +11,6 @@
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-// --- VVVVV Imports removed VVVVV ---
-// /** @typedef {import('../../../../domUI/IDomMutationService.js').IDomMutationService} IDomMutationService */ // REMOVED
-// /** @typedef {import('../../../../domUI/uiMessageRenderer.js').UiMessageRenderer} UiMessageRenderer */ // REMOVED (Assuming no other registered handler needs it)
-// --- ^^^^^ Imports removed ^^^^^ ---
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -38,7 +34,6 @@ jest.mock('../../../../logic/operationHandlers/removeComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/queryComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/setVariableHandler.js');
 jest.mock('../../../../logic/operationHandlers/querySystemDataHandler.js');
-// Mocks for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
 // --- Import AFTER mocking ---
 import OperationRegistry from '../../../../logic/operationRegistry.js';
@@ -52,7 +47,6 @@ import RemoveComponentHandler from '../../../../logic/operationHandlers/removeCo
 import QueryComponentHandler from '../../../../logic/operationHandlers/queryComponentHandler.js';
 import SetVariableHandler from '../../../../logic/operationHandlers/setVariableHandler.js';
 import QuerySystemDataHandler from '../../../../logic/operationHandlers/querySystemDataHandler.js';
-// Imports for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
 // --- Mock Implementations ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
@@ -68,10 +62,6 @@ const mockEntityManager = {
 };
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
 const mockSystemDataRegistry = {query: jest.fn(), registerSource: jest.fn()};
-// --- VVVVV Mocks removed VVVVV ---
-// const mockDomMutationService = {mutate: jest.fn()}; // REMOVED
-// const mockUiMessageRenderer = {render: jest.fn()}; // REMOVED (Assuming no handler needs it)
-// --- ^^^^^ Mocks removed ^^^^^ ---
 
 // --- Mock DI Container ---
 const createMockContainer = () => {
@@ -156,10 +146,6 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
-        // --- VVVVV Pre-registrations removed VVVVV ---
-        // mockContainer.register(tokens.IDomMutationService, mockDomMutationService, {lifecycle: 'singleton'}); // REMOVED
-        // mockContainer.register(tokens.UiMessageRenderer, mockUiMessageRenderer, {lifecycle: 'singleton'}); // REMOVED (Assuming no handler needs it)
-        // --- ^^^^^ Pre-registrations removed ^^^^^ ---
 
         // Clear implementation mocks
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -169,10 +155,6 @@ describe('registerInterpreters', () => {
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
         Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.());
-        // --- VVVVV Mock clears removed VVVVV ---
-        // Object.values(mockDomMutationService).forEach(fn => fn.mockClear?.()); // REMOVED
-        // mockUiMessageRenderer.render.mockClear?.(); // REMOVED
-        // --- ^^^^^ Mock clears removed ^^^^^ ---
 
         // Clear constructor mocks defined via jest.mock() for USED handlers/interpreters
         OperationRegistry.mockClear?.();
@@ -191,7 +173,6 @@ describe('registerInterpreters', () => {
         QueryComponentHandler.mockClear?.();
         SetVariableHandler.mockClear?.();
         QuerySystemDataHandler.mockClear?.();
-        // Clear calls for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
     }); // End beforeEach
 
@@ -213,7 +194,9 @@ describe('registerInterpreters', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({
             lifecycle: 'singletonFactory',
-            tags: expect.arrayContaining(['Initializable', 'Shutdownable'])
+            // ***** CORRECTED LINE BELOW *****
+            tags: expect.arrayContaining(['initializableSystem', 'shutdownable'])
+            // ***** CORRECTED LINE ABOVE *****
         }));
 
         // Explicitly check that removed handlers are NOT registered
@@ -321,7 +304,5 @@ describe('registerInterpreters', () => {
             systemDataRegistry: mockSystemDataRegistry
         }));
     });
-
-    // Tests for AppendUiMessageHandler and ModifyDomElementHandler are now removed.
 
 }); // End describe
