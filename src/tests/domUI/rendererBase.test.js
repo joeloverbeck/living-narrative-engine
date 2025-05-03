@@ -5,7 +5,7 @@
  */
 
 import {describe, expect, it, jest} from '@jest/globals';
-import RendererBase from '../../domUI/RendererBase.js';
+import {RendererBase} from '../../domUI/index.js';
 import DocumentContext from '../../domUI/documentContext.js'; // Need a concrete implementation for testing
 
 // --- Mock Dependencies ---
