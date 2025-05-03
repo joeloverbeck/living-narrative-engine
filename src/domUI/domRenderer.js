@@ -1,6 +1,7 @@
 // src/domUI/domRenderer.js
 // --- FIX for TC3: Added 'success' to validTypes ---
 // --- FIX for TC2 (Current Issue): Changed 'warn' to 'warning' ---
+// --- T-2.2: Removed title handling logic ---
 
 // --- Import Utilities ---
 // Assuming setPropertyByPath exists and is needed for other cases.
@@ -26,8 +27,9 @@ class DomRenderer {
     #outputDiv;
     /** @type {HTMLInputElement} */
     #inputElement;
-    /** @type {HTMLHeadingElement} */
-    #titleElement;
+    // T-2.2: Removed #titleElement
+    // /** @type {HTMLHeadingElement} */
+    // #titleElement;
     /** @type {EventBus} */
     #eventBus;
     // --- EVENT-MIGR-018: Inject ValidatedEventDispatcher ---
@@ -54,29 +56,27 @@ class DomRenderer {
      * @param {object} dependencies - The required dependencies.
      * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed.
      * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands.
-     * @param {HTMLHeadingElement} dependencies.titleElement - The H1 element for displaying titles/status.
      * @param {EventBus} dependencies.eventBus - The application's event bus instance.
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
      * @param {ILogger} dependencies.logger - Service for logging messages.
+     * T-2.2: Removed titleElement dependency
+     * @param {HTMLHeadingElement} dependencies.titleElement - The H1 element for displaying titles/status. REMOVED
      */
-    constructor({outputDiv, inputElement, titleElement, eventBus, validatedEventDispatcher, logger}) {
+    constructor({outputDiv, inputElement, /* T-2.2: titleElement, */ eventBus, validatedEventDispatcher, logger}) {
         // --- Constructor Validation ---
-        // Check if outputDiv is a truthy object and an Element node (nodeType 1)
         if (!outputDiv || typeof outputDiv !== 'object' || outputDiv.nodeType !== 1) {
             throw new Error('DomRenderer requires a valid output DOM Element.');
         }
-        // Check for input element specifically by nodeType and tagName
         if (!inputElement || typeof inputElement !== 'object' || inputElement.nodeType !== 1 || inputElement.tagName !== 'INPUT') {
             throw new Error('DomRenderer requires a valid HTMLInputElement.');
         }
-        // Check for H1 element specifically by nodeType and tagName
-        if (!titleElement || typeof titleElement !== 'object' || titleElement.nodeType !== 1 || titleElement.tagName !== 'H1') {
-            throw new Error('DomRenderer requires a valid HTMLHeadingElement (H1).');
-        }
+        // T-2.2: Removed titleElement validation
+        // if (!titleElement || typeof titleElement !== 'object' || titleElement.nodeType !== 1 || titleElement.tagName !== 'H1') {
+        //     throw new Error('DomRenderer requires a valid HTMLHeadingElement (H1).');
+        // }
         if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.dispatch !== 'function') {
             throw new Error('DomRenderer requires a valid EventBus instance.');
         }
-        // --- EVENT-MIGR-018: Validate new dependencies ---
         if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
             throw new Error('DomRenderer requires a valid ValidatedEventDispatcher instance.'); // AC5
         }
@@ -86,19 +86,17 @@ class DomRenderer {
 
         this.#outputDiv = outputDiv;
         this.#inputElement = inputElement;
-        this.#titleElement = titleElement;
+        // T-2.2: Removed #titleElement assignment
+        // this.#titleElement = titleElement;
         this.#eventBus = eventBus;
         this.#validatedEventDispatcher = validatedEventDispatcher; // AC5
         this.#logger = logger; // AC5
 
         // --- Initialize Inventory UI ---
-        // Get the document context from one of the passed elements
         const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
 
         if (doc) {
             this.#createInventoryPanel(doc);
-
-            // --- Initialize Action Buttons Container (FEAT-UI-ACTIONS-03) ---
             this.#actionButtonsContainer = doc.getElementById('action-buttons-container');
             if (!this.#actionButtonsContainer) {
                 this.#logger.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
@@ -113,11 +111,11 @@ class DomRenderer {
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        this.#logger.info('DomRenderer initialized and subscribed to events.'); // Adjusted message
+        // T-2.2: Adjusted log message
+        this.#logger.info('DomRenderer initialized (title handling moved to TitleRenderer).');
     }
 
     #createInventoryPanel(doc) { // Pass document context
-        // Check if running in a browser environment with 'document'
         if (!doc) {
             this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" context is not available.');
             return;
@@ -156,7 +154,8 @@ class DomRenderer {
         this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // Standardized input disable
         // M-1.2: Removed subscription for ui:show_message
         // M-1.2: Removed subscription for ui:show_fatal_error
-        this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this)); // Standardized title update - NEW (Ticket 18)
+        // T-2.2: Removed subscription for ui:set_title
+        // this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this));
 
         // --- Game Specific UI Events ---
         this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
@@ -169,22 +168,24 @@ class DomRenderer {
         // --- Action Buttons Events (FEAT-UI-ACTIONS-03) ---
         this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
 
+        // T-2.2: Removed subscriptions for Initialization Events (handled by TitleRenderer now)
         // --- Initialization Events (Ticket 17) ---
-        this.#eventBus.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this));
-        this.#eventBus.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this));
-        this.#eventBus.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this));
-        this.#eventBus.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this));
-        this.#eventBus.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        this.#eventBus.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        this.#eventBus.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        this.#eventBus.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this));
-        this.#eventBus.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this));
-        this.#eventBus.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        this.#eventBus.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        this.#eventBus.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        this.#eventBus.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this));
+        // this.#eventBus.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this));
+        // this.#eventBus.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this));
+        // this.#eventBus.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this));
 
-        this.#logger.info('DomRenderer event subscriptions complete (including standardized UI, initialization, actions).');
+        // T-2.2: Adjusted log message
+        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init events).');
     }
 
     // --- Private Event Handlers ---
@@ -216,7 +217,6 @@ class DomRenderer {
             this.#logger.error('Inventory list element not found!');
             return;
         }
-        // Get document context
         const doc = this.#inventoryList?.ownerDocument;
         if (!doc) {
             this.#logger.error('DomRenderer: Cannot update inventory UI, document context not found.');
@@ -248,10 +248,7 @@ class DomRenderer {
         } else {
             this.#logger.warn("DomRenderer received '" + data?.type + "' event with invalid or incomplete payload:", data);
             // M-1.2: NOTE: This uses renderMessage which is being removed.
-            // This error condition will need to be handled differently, perhaps via ui:show_message event.
-            // For now, log the error as the original renderMessage call will fail.
             this.#logger.error('Error: Could not display location details due to invalid data format received. Payload:', data);
-            // this.renderMessage('Error: Could not display location details due to invalid data format received.', 'error', {allowHtml: false}); // Original line
         }
     }
 
@@ -259,20 +256,20 @@ class DomRenderer {
 
     // M-1.2: Removed #handleFatalError method body
 
-    /**
-     * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
-     * @private
-     * @param {object} data - Expected { type: string, payload: UISetTitlePayload }
-     */
-    #handleSetTitle(data) {
-        const payload = data?.payload;
-        // Correctly uses 'text' property from payload
-        if (payload && typeof payload.text === 'string') {
-            this.setTitle(payload.text);
-        } else {
-            this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload structure or missing 'text' property:", data);
-        }
-    }
+    // T-2.2: Removed #handleSetTitle method
+    // /**
+    //  * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
+    //  * @private
+    //  * @param {object} data - Expected { type: string, payload: UISetTitlePayload }
+    //  */
+    // #handleSetTitle(data) {
+    //     const payload = data?.payload;
+    //     if (payload && typeof payload.text === 'string') {
+    //         this.setTitle(payload.text);
+    //     } else {
+    //         this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload structure or missing 'text' property:", data);
+    //     }
+    // }
 
     /**
      * @private
@@ -335,140 +332,25 @@ class DomRenderer {
         });
     }
 
-    // --- Ticket 17: Initialization Event Handlers ---
-    // These handlers now expect the full event object { type, payload }
-
-    /** @private @param {object} data - Expected { type: string, payload?: InitializationStartedPayload } */
-    #handleInitializationStarted(data) {
-        const payload = data?.payload;
-        const worldName = payload?.worldName ? ` for world '${payload.worldName}'` : '';
-        const message = `Initializing game${worldName}...`;
-        this.#logger.info(`DomRenderer: ${message}`);
-        this.setTitle(message);
-        this.clearOutput();
-        // M-1.2: NOTE: This uses renderMessage which is being removed.
-        // This initialization step will need to dispatch 'ui:show_message' instead.
-        this.#logger.info(`System Message (was renderMessage): ${message}`);
-        // this.renderMessage(message, 'system'); // Original line
-    }
-
-    /**
-     * @private
-     * @param {object} data - Expected { type: string, payload?: InitializationStepStartedPayload }
-     */
-    #handleInitializationStepStarted(data) {
-        const payload = data?.payload;
-        const eventName = data?.type; // Get event type from the event object
-        let statusMessage = "Initializing...";
-
-        // Determine message based on which step started
-        switch (eventName) {
-            case 'initialization:world_loader:started':
-                statusMessage = `Loading world data${payload?.worldName ? ` for '${payload.worldName}'` : ''}...`;
-                break;
-            case 'initialization:system_initializer:started':
-                statusMessage = `Initializing core systems${payload?.tag ? ` (tag: ${payload.tag})` : ''}...`;
-                break;
-            case 'initialization:game_state_initializer:started':
-                statusMessage = "Setting up initial game state...";
-                break;
-            case 'initialization:world_initializer:started':
-                statusMessage = "Creating world entities...";
-                break;
-            case 'initialization:input_setup_service:started':
-                statusMessage = "Configuring input handler...";
-                break;
-            default:
-                if (eventName) {
-                    const parts = eventName.split(':');
-                    if (parts.length >= 3) {
-                        statusMessage = `Initializing ${parts[1].replace(/_/g, ' ')}...`;
-                    }
-                }
-        }
-
-        this.#logger.info(`DomRenderer: Initialization Step Started - ${statusMessage}`);
-        this.setTitle(statusMessage);
-        // M-1.2: NOTE: This uses renderMessage which is being removed.
-        // This initialization step will need to dispatch 'ui:show_message' instead.
-        this.#logger.info(`System Message (was renderMessage): ${statusMessage}`);
-        // this.renderMessage(statusMessage, 'system'); // Original line
-    }
-
-
-    /** @private @param {object} data - Expected { type: string, payload?: InitializationCompletedPayload } */
-    #handleInitializationCompleted(data) {
-        const message = "Initialization complete. Ready to start!";
-        this.#logger.info(`DomRenderer: ${message}`);
-        this.setTitle("Game Ready");
-        // M-1.2: NOTE: This uses renderMessage which is being removed.
-        // This initialization step will need to dispatch 'ui:show_message' instead.
-        this.#logger.info(`System Success Message (was renderMessage): ${message}`);
-        // this.renderMessage(message, 'system-success'); // Original line
-    }
-
-    /** @private @param {object} data - Expected { type: string, payload: InitializationFailedPayload } */
-    #handleInitializationFailed(data) {
-        const payload = data?.payload;
-        this.#logger.error("DomRenderer: Received overall initialization failure event.", data);
-        // M-1.2: NOTE: This now simulates a fatal error event. This should probably
-        // be dispatched directly by the InitializationService instead of simulating it here.
-        // However, for now, we keep the simulation logic but note that handleFatalError
-        // itself has been removed. This simulation will therefore log an error but won't
-        // render anything directly in this class anymore.
-        this.#logger.error(`FATAL ERROR (Simulated via handleFatalError): Title: Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}, Message: ${payload?.error || 'An unknown initialization error occurred.'}, Details: ${payload?.stack}`);
-        /* // Original call to the now removed #handleFatalError
-        this.#handleFatalError({
-            type: 'ui:show_fatal_error',
-            payload: {
-                title: `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`,
-                message: payload?.error || 'An unknown initialization error occurred.',
-                details: payload?.stack
-            }
-        });
-        */
-    }
-
-    /** @private @param {object} data - Expected { type: string, payload: InitializationStepFailedPayload } */
-    #handleInitializationStepFailed(data) {
-        const payload = data?.payload;
-        const eventName = data?.type;
-        let stepName = 'A specific initialization step';
-        if (eventName) {
-            const parts = eventName.split(':');
-            if (parts.length >= 3) {
-                stepName = `${parts[1].replace(/_/g, ' ')} initialization`;
-            }
-        }
-        const errorMessage = payload?.error || 'Unknown error during step.';
-        const fullMessage = `${stepName} failed: ${errorMessage}`;
-        this.#logger.error(`DomRenderer: Initialization Step Failed - ${fullMessage}`, payload);
-        this.setTitle(`${stepName} Failed`);
-        // M-1.2: NOTE: This uses renderMessage which is being removed.
-        // This initialization step will need to dispatch 'ui:show_message' instead.
-        this.#logger.error(`Error Message (was renderMessage): ${fullMessage}`);
-        // this.renderMessage(fullMessage, 'error', {allowHtml: false}); // Original line
-        if (payload?.stack) {
-            // M-1.2: NOTE: This uses renderMessage which is being removed.
-            // This detail will need to be included in the 'ui:show_message' payload.
-            this.#logger.error(`Error Details (was renderMessage): <pre>${payload.stack}</pre>`);
-            // this.renderMessage(`Details: <pre>${payload.stack}</pre>`, 'error', {allowHtml: true}); // Original line
-        }
-    }
-
-    // --- End Ticket 17 Handlers ---
-
+    // --- Ticket 17 / T-2.2: Initialization Event Handlers REMOVED ---
+    // These are now handled by TitleRenderer and potentially UiMessageRenderer
+    // #handleInitializationStarted(...) { ... }
+    // #handleInitializationStepStarted(...) { ... }
+    // #handleInitializationCompleted(...) { ... }
+    // #handleInitializationFailed(...) { ... }
+    // #handleInitializationStepFailed(...) { ... }
 
     // --- Public Rendering Methods ---
 
-    /** @param {string} titleText */
-    setTitle(titleText) {
-        if (this.#titleElement) {
-            this.#titleElement.textContent = titleText;
-        } else {
-            this.#logger.warn("DomRenderer: Cannot set title, #titleElement is null.");
-        }
-    }
+    // T-2.2: Removed setTitle method
+    // /** @param {string} titleText */
+    // setTitle(titleText) {
+    //     if (this.#titleElement) {
+    //         this.#titleElement.textContent = titleText;
+    //     } else {
+    //         this.#logger.warn("DomRenderer: Cannot set title, #titleElement is null.");
+    //     }
+    // }
 
     // M-1.2: Removed renderMessage method body
 
@@ -495,8 +377,6 @@ class DomRenderer {
             outputHtml += '<p class="location__exits">Exits: None</p>';
         }
         // M-1.2: NOTE: This uses renderMessage which is being removed.
-        // This logic needs to move to LocationRenderer which will use UiMessageRenderer or similar.
-        // For now, log the HTML that would have been rendered.
         this.#logger.info(`Location HTML (was renderMessage): ${outputHtml}`);
         // this.renderMessage(outputHtml, 'location', {allowHtml: true}); // Original line
     }
@@ -535,7 +415,6 @@ class DomRenderer {
         }
         const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
         if (shouldBeVisible) {
-            // Get document context before dispatching render request
             const doc = this.#inventoryPanel.ownerDocument;
             if (!doc) {
                 this.#logger.error("DomRenderer: Cannot request inventory render, document context unavailable.");
@@ -646,8 +525,7 @@ class DomRenderer {
      * @deprecated Functionality likely moved to DomMutationService or specific renderers.
      */
     mutate(selector, propertyPath, value) {
-        // Get document context from a known element
-        const doc = this.#outputDiv?.ownerDocument; // Or this.#inputElement?.ownerDocument, etc.
+        const doc = this.#outputDiv?.ownerDocument;
         if (!doc) {
             this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", document context is not available.`);
             return {count: 0, modified: 0, failed: 0};
@@ -657,7 +535,6 @@ class DomRenderer {
         let successCount = 0;
         let elements;
         try {
-            // Use the correct document context
             elements = doc.querySelectorAll(selector);
         } catch (error) {
             this.#logger.error(`DomRenderer.mutate: Invalid selector "${selector}".`, error);
@@ -666,61 +543,48 @@ class DomRenderer {
 
         totalFound = elements.length;
         if (totalFound === 0) {
-            // Changed from warn to debug as this is expected in some cases (like TC7)
             this.#logger.debug(`DomRenderer.mutate: Selector "${selector}" found no elements in the current document context.`);
             return {count: 0, modified: 0, failed: 0};
         }
 
         elements.forEach(element => {
             try {
-                // Direct handling for common properties
                 if (propertyPath === 'textContent') {
-                    // Optimization: Only count as success if value actually changes
                     if (element.textContent !== value) {
                         element.textContent = value;
                         successCount++;
                     }
                 } else if (propertyPath === 'innerHTML') {
-                    // Optimization: Only count as success if value actually changes
                     if (element.innerHTML !== value) {
                         element.innerHTML = value;
                         successCount++;
                     }
                 } else {
-                    // Fallback to utility for nested/complex properties
-                    // Note: setPropertyByPath would need its own change detection to optimize
-                    const changed = setPropertyByPath(element, propertyPath, value); // Assuming setPropertyByPath returns true if changed
-                    if (changed) { // Or simply increment if setPropertyByPath doesn't return status
+                    const changed = setPropertyByPath(element, propertyPath, value);
+                    if (changed) {
                         successCount++;
                     }
                 }
             } catch (error) {
-                // Log error with stringified value for better debugging
                 this.#logger.error(`DomRenderer.mutate: Failed to set property "${propertyPath}" on element matched by "${selector}". Value: ${JSON.stringify(value)}`, error);
-                // Failure count calculated below based on totalFound - successCount
             }
         });
 
-        const failedCount = totalFound - successCount; // Failures are elements found but not successfully modified
-        const modifiedCount = successCount; // Renamed for clarity
+        const failedCount = totalFound - successCount;
+        const modifiedCount = successCount;
 
-        // Keep internal DomRenderer logs minimal/informative - Handler does more detailed outcome logging
         if (failedCount > 0) {
             this.#logger.warn(`DomRenderer.mutate: Encountered ${failedCount} issue(s) while setting property "${propertyPath}" for selector "${selector}".`);
         } else if (modifiedCount > 0) {
-            // Changed from info to debug - the handler logs the success message the test checks
             this.#logger.debug(`DomRenderer.mutate: Successfully modified property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
         } else if (totalFound > 0 && modifiedCount === 0 && failedCount === 0) {
-            // Optional: Log when elements were found but no change was needed
             this.#logger.debug(`DomRenderer.mutate: Found ${totalFound} element(s) for selector "${selector}", property "${propertyPath}" already had the target value.`);
         }
 
-        // ****** ENSURE CONSISTENT RETURN STRUCTURE ******
-        // Return counts for handler processing
         return {
-            count: totalFound,    // How many elements matched the selector
-            modified: modifiedCount, // How many were successfully changed
-            failed: failedCount      // How many failed during the attempt (due to errors)
+            count: totalFound,
+            modified: modifiedCount,
+            failed: failedCount
         };
     }
 
