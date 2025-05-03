@@ -2,6 +2,7 @@
 // --- FIX for TC3: Added 'success' to validTypes ---
 // --- FIX for TC2 (Current Issue): Changed 'warn' to 'warning' ---
 // --- T-2.2: Removed title handling logic ---
+// --- I-3.2: Removed input handling logic (setInputState, #handleDisableInput) ---
 
 // --- Import Utilities ---
 // Assuming setPropertyByPath exists and is needed for other cases.
@@ -15,21 +16,23 @@ import {setPropertyByPath} from '../utils/domUtils.js';
 
 /**
  * Implements the IGameRenderer contract using direct DOM manipulation.
- * Handles rendering messages, location details, controlling the input element's visual state,
- * updating the main title, managing the inventory UI panel, and rendering action buttons.
+ * Handles rendering messages, location details, updating the main title,
+ * managing the inventory UI panel, and rendering action buttons.
  * Subscribes itself to necessary UI events via the EventBus.
  * Uses ValidatedEventDispatcher for specific outgoing events requiring validation.
+ *
+ * Input state control has been moved to `InputStateController`.
+ * Title control has been moved to `TitleRenderer`.
+ * Message rendering has been moved to `UiMessageRenderer`.
  *
  * @deprecated This class is being refactored into smaller, focused components. Functionality is being moved. See `dom-ui/` directory.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
     #outputDiv;
+    // I-3.2: #inputElement is no longer directly used by methods in this class after refactor.
     /** @type {HTMLInputElement} */
     #inputElement;
-    // T-2.2: Removed #titleElement
-    // /** @type {HTMLHeadingElement} */
-    // #titleElement;
     /** @type {EventBus} */
     #eventBus;
     // --- EVENT-MIGR-018: Inject ValidatedEventDispatcher ---
@@ -55,14 +58,13 @@ class DomRenderer {
      * Creates an instance of DomRenderer.
      * @param {object} dependencies - The required dependencies.
      * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed.
-     * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands.
+     * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands (used by InputStateController now).
      * @param {EventBus} dependencies.eventBus - The application's event bus instance.
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
      * @param {ILogger} dependencies.logger - Service for logging messages.
-     * T-2.2: Removed titleElement dependency
-     * @param {HTMLHeadingElement} dependencies.titleElement - The H1 element for displaying titles/status. REMOVED
+     * @param {HTMLHeadingElement} [dependencies.titleElement] - DEPRECATED: Handled by TitleRenderer.
      */
-    constructor({outputDiv, inputElement, /* T-2.2: titleElement, */ eventBus, validatedEventDispatcher, logger}) {
+    constructor({outputDiv, inputElement, /* titleElement, */ eventBus, validatedEventDispatcher, logger}) {
         // --- Constructor Validation ---
         if (!outputDiv || typeof outputDiv !== 'object' || outputDiv.nodeType !== 1) {
             throw new Error('DomRenderer requires a valid output DOM Element.');
@@ -70,10 +72,7 @@ class DomRenderer {
         if (!inputElement || typeof inputElement !== 'object' || inputElement.nodeType !== 1 || inputElement.tagName !== 'INPUT') {
             throw new Error('DomRenderer requires a valid HTMLInputElement.');
         }
-        // T-2.2: Removed titleElement validation
-        // if (!titleElement || typeof titleElement !== 'object' || titleElement.nodeType !== 1 || titleElement.tagName !== 'H1') {
-        //     throw new Error('DomRenderer requires a valid HTMLHeadingElement (H1).');
-        // }
+        // titleElement validation removed (T-2.2)
         if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.dispatch !== 'function') {
             throw new Error('DomRenderer requires a valid EventBus instance.');
         }
@@ -85,9 +84,8 @@ class DomRenderer {
         }
 
         this.#outputDiv = outputDiv;
-        this.#inputElement = inputElement;
-        // T-2.2: Removed #titleElement assignment
-        // this.#titleElement = titleElement;
+        this.#inputElement = inputElement; // Still stored, though direct usage removed (I-3.2)
+        // #titleElement assignment removed (T-2.2)
         this.#eventBus = eventBus;
         this.#validatedEventDispatcher = validatedEventDispatcher; // AC5
         this.#logger = logger; // AC5
@@ -111,8 +109,8 @@ class DomRenderer {
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        // T-2.2: Adjusted log message
-        this.#logger.info('DomRenderer initialized (title handling moved to TitleRenderer).');
+        // T-2.2 / I-3.2: Adjusted log message
+        this.#logger.info('DomRenderer initialized (title & input handling moved).');
     }
 
     #createInventoryPanel(doc) { // Pass document context
@@ -149,13 +147,13 @@ class DomRenderer {
 
 
     #subscribeToEvents() {
-        // --- Standard UI Events (Ticket 18) ---
+        // --- Standard UI Events ---
         // M-1.2: Removed subscription for event:command_echo
-        this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // Standardized input disable
+        // I-3.2: Removed subscription for event:disable_input
+        // this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // REMOVED
         // M-1.2: Removed subscription for ui:show_message
         // M-1.2: Removed subscription for ui:show_fatal_error
         // T-2.2: Removed subscription for ui:set_title
-        // this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this));
 
         // --- Game Specific UI Events ---
         this.#eventBus.subscribe('event:display_location', this.#handleDisplayLocation.bind(this));
@@ -168,43 +166,24 @@ class DomRenderer {
         // --- Action Buttons Events (FEAT-UI-ACTIONS-03) ---
         this.#eventBus.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this));
 
-        // T-2.2: Removed subscriptions for Initialization Events (handled by TitleRenderer now)
-        // --- Initialization Events (Ticket 17) ---
-        // this.#eventBus.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this));
-        // this.#eventBus.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this));
-        // this.#eventBus.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this));
-        // this.#eventBus.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this));
-        // this.#eventBus.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        // this.#eventBus.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        // this.#eventBus.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this));
-        // this.#eventBus.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this));
+        // T-2.2: Removed subscriptions for Initialization Events
 
-        // T-2.2: Adjusted log message
-        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init events).');
+        // T-2.2 / I-3.2: Adjusted log message
+        this.#logger.info('DomRenderer event subscriptions complete (excluding title/init/input events).');
     }
 
     // --- Private Event Handlers ---
 
     // M-1.2: Removed #handleCommandEcho method body
 
-    /**
-     * Handles disabling the input field. (Ticket 18: Standardized Event)
-     * @private
-     * @param {object} data - Expected { type: string, payload: EventDisableInputPayload }
-     */
-    #handleDisableInput(data) {
-        const payload = data?.payload;
-        const message = (payload && typeof payload.message === 'string') ? payload.message : 'Input disabled.';
-        if (!payload || typeof payload.message !== 'string') {
-            this.#logger.warn("DomRenderer received 'event:disable_input' without specific message in payload, using default:", data, ` -> "${message}"`);
-        }
-        this.setInputState(false, message);
-    }
+    // I-3.2: Removed #handleDisableInput method
+    // /**
+    //  * Handles disabling the input field. (Ticket 18: Standardized Event)
+    //  * @private
+    //  * @param {object} data - Expected { type: string, payload: EventDisableInputPayload }
+    //  * @deprecated Moved to InputStateController
+    //  */
+    // #handleDisableInput(data) { ... } // REMOVED
 
 
     /**
@@ -248,6 +227,7 @@ class DomRenderer {
         } else {
             this.#logger.warn("DomRenderer received '" + data?.type + "' event with invalid or incomplete payload:", data);
             // M-1.2: NOTE: This uses renderMessage which is being removed.
+            // Now handled by UiMessageRenderer
             this.#logger.error('Error: Could not display location details due to invalid data format received. Payload:', data);
         }
     }
@@ -257,19 +237,6 @@ class DomRenderer {
     // M-1.2: Removed #handleFatalError method body
 
     // T-2.2: Removed #handleSetTitle method
-    // /**
-    //  * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
-    //  * @private
-    //  * @param {object} data - Expected { type: string, payload: UISetTitlePayload }
-    //  */
-    // #handleSetTitle(data) {
-    //     const payload = data?.payload;
-    //     if (payload && typeof payload.text === 'string') {
-    //         this.setTitle(payload.text);
-    //     } else {
-    //         this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload structure or missing 'text' property:", data);
-    //     }
-    // }
 
     /**
      * @private
@@ -333,24 +300,10 @@ class DomRenderer {
     }
 
     // --- Ticket 17 / T-2.2: Initialization Event Handlers REMOVED ---
-    // These are now handled by TitleRenderer and potentially UiMessageRenderer
-    // #handleInitializationStarted(...) { ... }
-    // #handleInitializationStepStarted(...) { ... }
-    // #handleInitializationCompleted(...) { ... }
-    // #handleInitializationFailed(...) { ... }
-    // #handleInitializationStepFailed(...) { ... }
 
     // --- Public Rendering Methods ---
 
     // T-2.2: Removed setTitle method
-    // /** @param {string} titleText */
-    // setTitle(titleText) {
-    //     if (this.#titleElement) {
-    //         this.#titleElement.textContent = titleText;
-    //     } else {
-    //         this.#logger.warn("DomRenderer: Cannot set title, #titleElement is null.");
-    //     }
-    // }
 
     // M-1.2: Removed renderMessage method body
 
@@ -376,9 +329,17 @@ class DomRenderer {
         } else {
             outputHtml += '<p class="location__exits">Exits: None</p>';
         }
-        // M-1.2: NOTE: This uses renderMessage which is being removed.
-        this.#logger.info(`Location HTML (was renderMessage): ${outputHtml}`);
-        // this.renderMessage(outputHtml, 'location', {allowHtml: true}); // Original line
+        // M-1.2: NOTE: This originally used renderMessage, which is now gone.
+        // We should probably trigger a VED event for UiMessageRenderer instead.
+        // For now, just log it.
+        this.#logger.info(`[Refactor Placeholder] Location Rendered: ${locationData.name}`);
+        this.#logger.debug(`Location HTML (would be sent to UiMessageRenderer): ${outputHtml}`);
+        // Example VED dispatch (assuming schema exists):
+        // this.#validatedEventDispatcher.dispatchValidated('textUI:display_message', {
+        //     message: outputHtml,
+        //     type: 'location', // Or a more specific type
+        //     allowHtml: true
+        // });
     }
 
     /** @deprecated Functionality likely moved to specific renderers or facade. */
@@ -390,19 +351,13 @@ class DomRenderer {
         }
     }
 
-    /**
-     * @param {boolean} enabled
-     * @param {string} placeholderText
-     * @deprecated Functionality moved to InputStateController.
-     */
-    setInputState(enabled, placeholderText) {
-        if (!this.#inputElement) {
-            this.#logger.error("DomRenderer: Cannot set input state, #inputElement is null.");
-            return;
-        }
-        this.#inputElement.disabled = !enabled;
-        this.#inputElement.placeholder = placeholderText;
-    }
+    // I-3.2: Removed setInputState method
+    // /**
+    //  * @param {boolean} enabled
+    //  * @param {string} placeholderText
+    //  * @deprecated Functionality moved to InputStateController.
+    //  */
+    // setInputState(enabled, placeholderText) { ... } // REMOVED
 
     /**
      * @param {boolean} [forceState]

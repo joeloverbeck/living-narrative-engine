@@ -11,8 +11,9 @@ export * from './rendererBase.js'; // Ensure RendererBase export is correct
 export {default as DocumentContext} from './documentContext.js';
 export {default as DomElementFactory} from './domElementFactory.js';
 export * from './uiMessageRenderer.js';
-export * from './TitleRenderer.js'; // <-- ADDED Export for TitleRenderer
+export * from './TitleRenderer.js';
+export * from './InputStateController.js';
 
 // Export other renderers as they are created
-// export * from './inputStateController.js';
+// export * from './locationRenderer.js';
 // ...etc

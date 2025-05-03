@@ -1,0 +1,168 @@
+// src/domUI/inputStateController.js
+import {RendererBase} from './rendererBase.js';
+
+/**
+ * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('../core/validation/schemas/eventPayloads').EventDisableInputPayload} EventDisableInputPayload // Assuming schema exists
+ * @typedef {import('../core/validation/schemas/eventPayloads').TextUIEnableInputPayload} TextUIEnableInputPayload // Assuming schema exists
+ */
+
+/**
+ * Manages the enabled/disabled state and placeholder text of a specific HTML input element.
+ * Subscribes to VED events like 'event:disable_input' and 'textUI:enable_input'
+ * to reactively update the input's state.
+ */
+export class InputStateController extends RendererBase {
+    /**
+     * The HTML input element being controlled.
+     * @private
+     * @type {HTMLInputElement}
+     */
+    #inputElement;
+
+    /**
+     * Stores VED subscriptions for later disposal.
+     * @private
+     * @type {Array<IEventSubscription|undefined>}
+     */
+    #subscriptions = [];
+
+    /**
+     * Creates an instance of InputStateController.
+     *
+     * @param {object} deps - Dependencies object.
+     * @param {ILogger} deps.logger - The logger instance.
+     * @param {IDocumentContext} deps.documentContext - The document context (not directly used but part of RendererBase).
+     * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
+     * @param {HTMLElement | null} deps.inputElement - The specific input element to manage. Must be an HTMLInputElement.
+     * @throws {Error} If dependencies are invalid or inputElement is not a valid HTMLInputElement.
+     */
+    constructor({logger, documentContext, validatedEventDispatcher, inputElement}) {
+        // Pass base dependencies to RendererBase constructor
+        super({logger, documentContext, validatedEventDispatcher});
+
+        // --- Validate specific inputElement dependency ---
+        if (!inputElement || inputElement.nodeType !== 1) {
+            const errMsg = `${this._logPrefix} 'inputElement' dependency is missing or not a valid DOM element.`;
+            this.logger.error(errMsg);
+            throw new Error(errMsg);
+        }
+        // Check specifically if it's an INPUT element
+        // Using tagName for broader compatibility (works in jsdom/browser)
+        if (inputElement.tagName !== 'INPUT') {
+            const errMsg = `${this._logPrefix} 'inputElement' must be an HTMLInputElement (<input>), but received '${inputElement.tagName}'.`;
+            this.logger.error(errMsg, {element: inputElement});
+            throw new Error(errMsg); // Acceptance criteria: Throws if element not <input>
+        }
+
+        this.#inputElement = /** @type {HTMLInputElement} */ (inputElement);
+        this.logger.debug(`${this._logPrefix} Attached to INPUT element.`);
+
+        // Subscribe to events that affect the input state
+        this.#subscribeToEvents();
+    }
+
+    /**
+     * Subscribes to VED events relevant for updating the input state.
+     * @private
+     */
+    #subscribeToEvents() {
+        const ved = this.validatedEventDispatcher; // Alias for brevity
+
+        // Listen for events telling us to disable the input
+        this.#subscriptions.push(
+            ved.subscribe('event:disable_input', this.#handleDisableInput.bind(this))
+        );
+
+        // Listen for events telling us to enable the input (used in tests, future-proofing)
+        this.#subscriptions.push(
+            ved.subscribe('textUI:enable_input', this.#handleEnableInput.bind(this))
+        );
+
+        this.logger.debug(`${this._logPrefix} Subscribed to VED events 'event:disable_input' and 'textUI:enable_input'.`);
+    }
+
+    // --- Private Event Handlers ---
+
+    /**
+     * Handles the 'event:disable_input' event.
+     * @private
+     * @param {EventDisableInputPayload | object} payload - Expected payload for 'event:disable_input'.
+     * @param {string} eventType - The name of the triggered event.
+     */
+    #handleDisableInput(payload, eventType) {
+        // Default message if payload is missing or malformed
+        const message = (payload && typeof payload.message === 'string') ? payload.message : 'Input disabled.';
+
+        if (!payload || typeof payload.message !== 'string') {
+            this.logger.warn(`${this._logPrefix} Received '${eventType}' without specific message in payload, using default: "${message}"`, payload);
+        }
+
+        this.setEnabled(false, message);
+    }
+
+    /**
+     * Handles the 'textUI:enable_input' event.
+     * @private
+     * @param {TextUIEnableInputPayload | object} payload - Expected payload for 'textUI:enable_input'.
+     * @param {string} eventType - The name of the triggered event.
+     */
+    #handleEnableInput(payload, eventType) {
+        // Default placeholder if payload is missing or malformed
+        const placeholder = (payload && typeof payload.placeholder === 'string') ? payload.placeholder : 'Enter command...';
+
+        if (!payload || typeof payload.placeholder !== 'string') {
+            this.logger.warn(`${this._logPrefix} Received '${eventType}' without specific placeholder in payload, using default: "${placeholder}"`, payload);
+        }
+
+        this.setEnabled(true, placeholder);
+    }
+
+    // --- Public API ---
+
+    /**
+     * Enables or disables the managed input element and sets its placeholder text.
+     *
+     * @param {boolean} enabled - `true` to enable the input, `false` to disable it.
+     * @param {string} [placeholderText=''] - The placeholder text to display in the input field. Defaults to empty string.
+     */
+    setEnabled(enabled, placeholderText = '') {
+        if (!this.#inputElement) {
+            // Should not happen if constructor validation passed
+            this.logger.error(`${this._logPrefix} Cannot set input state, internal #inputElement reference is missing.`);
+            return;
+        }
+
+        // Ensure types are correct before assignment
+        const isDisabled = !Boolean(enabled); // Explicitly convert to boolean
+        const placeholder = String(placeholderText); // Explicitly convert to string
+
+        // Only update DOM if the state actually changes
+        if (this.#inputElement.disabled !== isDisabled) {
+            this.#inputElement.disabled = isDisabled;
+            this.logger.debug(`${this._logPrefix} Input ${isDisabled ? 'disabled' : 'enabled'}.`);
+        }
+
+        if (this.#inputElement.placeholder !== placeholder) {
+            this.#inputElement.placeholder = placeholder;
+            this.logger.debug(`${this._logPrefix} Input placeholder set to: "${placeholder}"`);
+        }
+    }
+
+    /**
+     * Dispose method for cleanup. Unsubscribes from all VED events.
+     */
+    dispose() {
+        this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
+        this.#subscriptions.forEach(sub => {
+            if (sub && typeof sub.unsubscribe === 'function') {
+                sub.unsubscribe();
+            }
+        });
+        this.#subscriptions = []; // Clear the array
+        super.dispose(); // Calls logger.debug in base class
+    }
+}
