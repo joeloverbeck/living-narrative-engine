@@ -10,6 +10,7 @@
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../../../core/domRenderer.js').default} DomRenderer */ // Added for DomRenderer type hinting
 /** @typedef {any} AppContainer */ // Using 'any' as the custom container type isn't defined
 
 // --- Jest Imports ---
@@ -72,6 +73,8 @@ const mockSystemDataRegistry = {
     query: jest.fn(),
     registerSource: jest.fn()
 };
+// DR-01.7: Pre-register tokens.DomRenderer dummy
+const mockDomRenderer = {renderMessage: jest.fn(), mutate: jest.fn()};
 
 
 // --- Mock Custom DI Container (Copied from uiRegistrations.test.js) ---
@@ -166,6 +169,9 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
+        // DR-01.7: Register the DomRenderer dummy
+        mockContainer.register(tokens.DomRenderer, mockDomRenderer, {lifecycle: 'singleton'});
+
 
         // Clear call counts on the mock service functions
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -175,6 +181,8 @@ describe('registerInterpreters', () => {
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
         Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.());
+        // DR-01.7: Clear DomRenderer mock calls
+        Object.values(mockDomRenderer).forEach(fn => fn.mockClear?.());
 
         // Clear call counts on the MOCKED Class constructors
         OperationRegistry.mockClear();
@@ -332,5 +340,44 @@ describe('registerInterpreters', () => {
             logger: mockLogger,
             systemDataRegistry: mockSystemDataRegistry // Check the mock was passed
         });
+    });
+
+    // DR-01.7: Add tests for AppendUiMessageHandler and ModifyDomElementHandler
+    it('resolving AppendUiMessageHandler does not throw', () => {
+        registerInterpreters(mockContainer);
+        let handler;
+        expect(() => {
+            handler = mockContainer.resolve(tokens.AppendUiMessageHandler);
+        }).not.toThrow();
+        expect(handler).toBeDefined();
+        expect(AppendUiMessageHandler).toHaveBeenCalledTimes(1); // Singleton factory
+        // Apply the requested expectation update:
+        expect(AppendUiMessageHandler).toHaveBeenCalledWith({
+            logger: mockLogger,
+            domRenderer: expect.any(Object) // Checks if the resolved dependency is an object (our mockDomRenderer)
+        });
+        // Optionally check if it's the specific mock instance
+        expect(AppendUiMessageHandler).toHaveBeenCalledWith(expect.objectContaining({
+            domRenderer: mockDomRenderer
+        }));
+    });
+
+    it('resolving ModifyDomElementHandler does not throw', () => {
+        registerInterpreters(mockContainer);
+        let handler;
+        expect(() => {
+            handler = mockContainer.resolve(tokens.ModifyDomElementHandler);
+        }).not.toThrow();
+        expect(handler).toBeDefined();
+        expect(ModifyDomElementHandler).toHaveBeenCalledTimes(1); // Singleton factory
+        // Apply the requested expectation update:
+        expect(ModifyDomElementHandler).toHaveBeenCalledWith({
+            logger: mockLogger,
+            domRenderer: expect.any(Object) // Checks if the resolved dependency is an object (our mockDomRenderer)
+        });
+        // Optionally check if it's the specific mock instance
+        expect(ModifyDomElementHandler).toHaveBeenCalledWith(expect.objectContaining({
+            domRenderer: mockDomRenderer
+        }));
     });
 });
