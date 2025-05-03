@@ -1,439 +1,277 @@
 // src/tests/domUI/uiMessageRenderer.test.js
-/**
- * @fileoverview Unit tests for UiMessageRenderer.
- * @jest-environment jsdom
- */
+import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {JSDOM} from 'jsdom';
+import {UiMessageRenderer} from '../../domUI/index.js';
+import DocumentContext from '../../domUI/documentContext';
+import ConsoleLogger from '../../core/services/consoleLogger'; // Assuming ConsoleLogger implements ILogger
+import ValidatedEventDispatcher from '../../services/validatedEventDispatcher'; // Assuming this implements IValidatedEventDispatcher
 
-import {describe, expect, it, jest, beforeEach, afterEach} from '@jest/globals';
-import UiMessageRenderer from '../../domUI/uiMessageRenderer.js';
-import RendererBase from '../../domUI/rendererBase.js';
-import DocumentContext from '../../domUI/documentContext.js';
-import DomElementFactory from '../../domUI/domElementFactory.js'; // Import the actual class for prototype spying
-
-// --- Mock Dependencies ---
-
-const createMockLogger = () => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-});
-
-// Mock VED remains the same as provided
-const createMockVed = () => {
-    const subscriptions = new Map(); // Key: eventName, Value: Array of handlers
-
-    return {
-        // Mock subscribe: Stores handler, returns void
-        subscribe: jest.fn((eventName, handler) => {
-            if (!subscriptions.has(eventName)) {
-                subscriptions.set(eventName, []);
-            }
-            subscriptions.get(eventName).push(handler);
-            // Returns void, matching real VED
-        }),
-        // Mock unsubscribe: Removes the specific handler
-        unsubscribe: jest.fn((eventName, handler) => {
-            const handlers = subscriptions.get(eventName);
-            if (handlers) {
-                const index = handlers.indexOf(handler);
-                if (index > -1) {
-                    handlers.splice(index, 1);
-                    if (handlers.length === 0) {
-                        subscriptions.delete(eventName);
-                    }
-                }
-            }
-            // Returns void, matching real VED
-        }),
-        dispatchValidated: jest.fn(),
-        // Helper for tests to simulate event dispatch
-        _simulateDispatch: (eventName, payload) => {
-            const handlers = subscriptions.get(eventName);
-            if (handlers) {
-                // Iterate over a copy in case a handler unsubscribes itself
-                [...handlers].forEach(handler => handler(payload, eventName));
-            }
-        },
-        // Helper to check if a specific handler is subscribed (optional)
-        _isSubscribed: (eventName, handler) => {
-            const handlers = subscriptions.get(eventName);
-            return handlers ? handlers.includes(handler) : false;
-        },
-        _getSubscriptionsMap: () => subscriptions, // Keep for potential debugging
-    };
-};
-
-// --- Test Suite ---
+// Mock dependencies
+jest.mock('../../core/services/consoleLogger');
+jest.mock('../../services/validatedEventDispatcher');
 
 describe('UiMessageRenderer', () => {
+    let dom;
+    let document;
+    let docContext;
     let mockLogger;
     let mockVed;
-    let outputDiv;
-    let renderer;
-    let factoryPSpy; // To hold the spy for DomElementFactory.prototype.p
+    let container;
 
     beforeEach(() => {
-        mockLogger = createMockLogger();
-        mockVed = createMockVed();
+        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="messages"></div></body></html>`);
+        document = dom.window.document;
+        docContext = new DocumentContext(document.body); // Pass body element
 
-        // *** FIX: Spy on the prototype BEFORE renderer instantiation ***
-        factoryPSpy = jest.spyOn(DomElementFactory.prototype, 'p');
+        // Clear mocks and create new instances for each test
+        mockLogger = new ConsoleLogger();
+        mockVed = new ValidatedEventDispatcher(null, mockLogger); // Assuming constructor args
 
-        document.body.innerHTML = '<div id="test-output" style="height: 100px; overflow-y: scroll;"></div>'; // Add style for scroll test
-        outputDiv = document.getElementById('test-output');
-        if (!outputDiv) throw new Error("Test setup failed: could not find #test-output");
-
-        // Reset scrollTop/scrollHeight for consistency
-        Object.defineProperty(outputDiv, 'scrollHeight', {configurable: true, value: 100});
-        Object.defineProperty(outputDiv, 'scrollTop', {configurable: true, value: 0, writable: true});
-
-
-        renderer = new UiMessageRenderer({
-            logger: mockLogger,
-            ved: mockVed,
-            outputDiv: outputDiv,
+        // Spy on logger methods
+        jest.spyOn(mockLogger, 'info').mockImplementation(() => {
         });
+        jest.spyOn(mockLogger, 'warn').mockImplementation(() => {
+        });
+        jest.spyOn(mockLogger, 'error').mockImplementation(() => {
+        });
+        jest.spyOn(mockLogger, 'debug').mockImplementation(() => {
+        });
+
+        container = document.getElementById('messages'); // Default container
     });
 
     afterEach(() => {
-        // Check if renderer exists before disposing, in case constructor failed
-        if (renderer && typeof renderer.dispose === 'function') {
-            renderer.dispose();
-        }
-        document.body.innerHTML = '';
-        // *** FIX: Ensure prototype spy is restored ***
-        if (factoryPSpy) {
-            factoryPSpy.mockRestore();
-        }
-        jest.restoreAllMocks(); // Restore any other mocks
+        jest.clearAllMocks();
+        document.body.innerHTML = ''; // Clean up DOM
     });
 
-    // --- Constructor Tests ---
-    describe('Constructor', () => {
-        // No changes needed here based on errors
-        it('should extend RendererBase', () => {
-            expect(renderer).toBeInstanceOf(RendererBase);
-        });
+    // --- Helper to create renderer ---
+    const createRenderer = (selector = '#messages', options = {}) => {
+        return new UiMessageRenderer(mockLogger, docContext, mockVed, selector, options);
+    };
 
-        it('should throw an error if outputDiv is missing or invalid', () => {
-            // Need to restore the spy temporarily as it affects the constructor call here
-            if (factoryPSpy) factoryPSpy.mockRestore();
-            expect(() => new UiMessageRenderer({logger: mockLogger, ved: mockVed, outputDiv: null}))
-                .toThrow('UiMessageRenderer requires a valid outputDiv HTMLElement.');
-            expect(() => new UiMessageRenderer({
-                logger: mockLogger,
-                ved: mockVed,
-                outputDiv: {nodeType: 1}
-            })) // Not an HTMLElement instance
-                .toThrow('UiMessageRenderer requires a valid outputDiv HTMLElement.');
-            expect(() => new UiMessageRenderer({
-                logger: mockLogger,
-                ved: mockVed,
-                outputDiv: document.createTextNode('text')
-            }))
-                .toThrow('UiMessageRenderer requires a valid outputDiv HTMLElement.');
-            // Re-apply spy if it was active
-            factoryPSpy = jest.spyOn(DomElementFactory.prototype, 'p');
-        });
+    // --- Test Scenarios ---
 
-        it('should store the outputDiv reference', () => {
-            expect(renderer).toBeDefined(); // Simple check, assuming #outputDiv is set
-            // We cannot easily check the private field directly without modifying the class
-        });
+    describe('Default Selector (#messages)', () => {
+        it('should render info message with default options (allowHtml=false)', () => {
+            const renderer = createRenderer();
+            const text = 'Info message test';
+            renderer.render(text, 'info');
 
-        it('should create DocumentContext and DomElementFactory internally', () => {
-            // We test that the doc context passed to super is correct type
-            expect(renderer.doc).toBeInstanceOf(DocumentContext);
-            // We infer factory creation happened because render() works in other tests
-            // and constructor doesn't throw (assuming valid inputs).
-            // Direct verification of #factory instance is difficult.
-        });
-
-        it('should subscribe to VED events using ved.subscribe', () => {
-            expect(mockVed.subscribe).toHaveBeenCalledWith('event:command_echo', expect.any(Function));
-            expect(mockVed.subscribe).toHaveBeenCalledWith('ui:show_message', expect.any(Function));
-            expect(mockVed.subscribe).toHaveBeenCalledWith('ui:show_fatal_error', expect.any(Function));
-            expect(mockVed.subscribe).toHaveBeenCalledTimes(3);
-        });
-
-        it('should log initialization info', () => {
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('[Ui::UiMessageRenderer] Initialized and subscribed to VED events.'));
-        });
-    });
-
-    // --- render() Method Tests ---
-    describe('render()', () => {
-        // No changes needed for passing tests here
-        it('should append a new paragraph element to the outputDiv', () => {
-            // Ensure the prototype spy doesn't interfere if not needed
-            factoryPSpy.mockImplementation(function (...args) {
-                // Call the original implementation or a basic mock that returns an element
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderer.render('Test message', 'info');
-            const messageElement = outputDiv.querySelector('p.message.message--info');
+            const messageElement = container.querySelector('p');
             expect(messageElement).not.toBeNull();
-            expect(messageElement).toBeInstanceOf(HTMLParagraphElement);
-            expect(outputDiv.children.length).toBe(1);
-            expect(outputDiv.firstChild).toBe(messageElement);
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.innerHTML).not.toBe(text); // Should not interpret HTML
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
+            expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
-        it('should set textContent correctly when allowHtml is false (default)', () => {
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderer.render('Hello <world>', 'debug');
-            const messageElement = outputDiv.querySelector('p.message--debug');
-            expect(messageElement.textContent).toBe('Hello <world>');
-            expect(messageElement.innerHTML).toBe('Hello &lt;world&gt;'); // JSDOM automatically escapes
-        });
+        it('should render fatal error message with default options (allowHtml=false)', () => {
+            const renderer = createRenderer();
+            const text = 'Fatal error test';
+            renderer.render(text, 'fatal');
 
-        it('should set innerHTML correctly when allowHtml is true', () => {
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderer.render('Hello <strong>world</strong>', 'success', true);
-            const messageElement = outputDiv.querySelector('p.message--success');
-            expect(messageElement.innerHTML).toBe('Hello <strong>world</strong>');
-            expect(messageElement.querySelector('strong')).not.toBeNull();
-            expect(messageElement.textContent).toBe('Hello world');
-        });
-
-        it('should add correct CSS classes based on type', () => {
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderer.render('Info', 'info');
-            renderer.render('Warn', 'warning');
-            renderer.render('Err', 'error');
-            renderer.render('Cmd', 'command');
-            renderer.render('Sys', 'system');
-
-            expect(outputDiv.querySelector('.message--info')).not.toBeNull();
-            expect(outputDiv.querySelector('.message--warning')).not.toBeNull();
-            expect(outputDiv.querySelector('.message--error')).not.toBeNull();
-            expect(outputDiv.querySelector('.message--command')).not.toBeNull();
-            expect(outputDiv.querySelector('.message--system')).not.toBeNull();
-        });
-
-        it("should default to 'info' class if type is invalid", () => {
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderer.render('Invalid type test', 'invalid-type');
-            const messageElement = outputDiv.querySelector('p.message');
+            const messageElement = container.querySelector('p');
             expect(messageElement).not.toBeNull();
-            expect(messageElement.classList.contains('message--info')).toBe(true);
-            expect(messageElement.classList.contains('message--invalid-type')).toBe(false);
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.classList.contains('message-fatal')).toBe(true);
+            expect(mockLogger.error).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
+            expect(mockLogger.info).not.toHaveBeenCalled();
         });
 
-        it('should scroll the outputDiv to the bottom', () => {
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            // Set a different scrollHeight to simulate content added
-            Object.defineProperty(outputDiv, 'scrollHeight', {configurable: true, value: 500});
-            expect(outputDiv.scrollTop).toBe(0); // Verify initial state
+        it('should render command echo message with default options (allowHtml=false)', () => {
+            const renderer = createRenderer();
+            const text = '> look around';
+            renderer.render(text, 'echo');
 
-            renderer.render('Scroll test', 'info');
-
-            // Check if scrollTop was set to the new scrollHeight
-            expect(outputDiv.scrollTop).toBe(500);
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.classList.contains('message-echo')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
+            expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
-        it('should log an error and return false if factory fails', () => {
-            // *** FIX: Use the spy on the prototype, configured for this test ***
-            factoryPSpy.mockReturnValue(null); // Make the factory's 'p' method fail
+        it('should render info message respecting constructor allowHtml=true', () => {
+            const renderer = createRenderer('#messages', {allowHtml: true});
+            const text = 'Info <b>bold</b> test';
+            renderer.render(text, 'info');
 
-            const result = renderer.render('Test', 'info');
-
-            expect(result).toBe(false); // Verify it now returns false
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create message element using factory.'));
-            expect(factoryPSpy).toHaveBeenCalled(); // Ensure the mocked method was called
-        });
-    });
-
-    // --- Event Handler Tests ---
-    describe('Event Handlers', () => {
-        // No changes needed here based on errors
-        let renderSpy;
-
-        beforeEach(() => {
-            // Need to ensure the prototype spy doesn't break render calls here
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-            renderSpy = jest.spyOn(renderer, 'render');
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.innerHTML).toBe(text);
+            expect(messageElement.textContent).toBe('Info bold test');
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
 
-        it('#handleCommandEcho should call render with correct arguments', () => {
-            const payload = {command: 'look'};
-            mockVed._simulateDispatch('event:command_echo', payload);
-            expect(renderSpy).toHaveBeenCalledWith('> look', 'command', false);
+        it('should render fatal message respecting constructor allowHtml=true', () => {
+            const renderer = createRenderer('#messages', {allowHtml: true});
+            const text = 'Fatal <i>italic</i> test';
+            renderer.render(text, 'fatal');
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.innerHTML).toBe(text);
+            expect(messageElement.textContent).toBe('Fatal italic test');
+            expect(messageElement.classList.contains('message-fatal')).toBe(true);
+            expect(mockLogger.error).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
 
-        it('#handleCommandEcho should warn if payload is invalid', () => {
-            mockVed._simulateDispatch('event:command_echo', {cmd: 'wrong'}); // Invalid payload
-            expect(renderSpy).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'event:command_echo' with invalid payload structure:"), {cmd: 'wrong'});
+        it('should render echo message respecting constructor allowHtml=true', () => {
+            const renderer = createRenderer('#messages', {allowHtml: true});
+            const text = '> look <u>underlined</u>';
+            renderer.render(text, 'echo');
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.innerHTML).toBe(text);
+            expect(messageElement.textContent).toBe('> look underlined');
+            expect(messageElement.classList.contains('message-echo')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
 
-        it('#handleShowMessage should call render with payload arguments', () => {
-            const payload = {text: 'Hello there!', type: 'system', allowHtml: true};
-            mockVed._simulateDispatch('ui:show_message', payload);
-            expect(renderSpy).toHaveBeenCalledWith('Hello there!', 'system', true);
+        it('should allow render options to override constructor allowHtml (true overrides false)', () => {
+            const renderer = createRenderer('#messages', {allowHtml: false}); // Constructor default
+            const text = 'Render <b>override</b> test';
+            renderer.render(text, 'info', {allowHtml: true}); // Render option
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.innerHTML).toBe(text);
+            expect(messageElement.textContent).toBe('Render override test');
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
 
-        it('#handleShowMessage should use defaults if optional payload args are missing', () => {
-            const payload = {text: 'Default message'};
-            mockVed._simulateDispatch('ui:show_message', payload);
-            // render method itself applies defaults if type/allowHtml are undefined
-            expect(renderSpy).toHaveBeenCalledWith('Default message', undefined, undefined);
-        });
+        it('should allow render options to override constructor allowHtml (false overrides true)', () => {
+            const renderer = createRenderer('#messages', {allowHtml: true}); // Constructor sets true
+            const text = 'Render <b>override</b> test';
+            renderer.render(text, 'info', {allowHtml: false}); // Render option sets false
 
-
-        it('#handleShowMessage should warn if payload is invalid', () => {
-            mockVed._simulateDispatch('ui:show_message', {message: 'wrong'}); // Invalid payload
-            expect(renderSpy).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'ui:show_message' with invalid payload structure:"), {message: 'wrong'});
-        });
-
-        it('#handleFatalError should clear output and render formatted error message', () => {
-            const clearSpy = jest.spyOn(renderer, 'clearOutput');
-            const payload = {title: 'Core Meltdown', message: 'System unstable.', details: 'Stack trace...'};
-            mockVed._simulateDispatch('ui:show_fatal_error', payload);
-
-            expect(clearSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledTimes(2); // Title+Message and Details
-            expect(renderSpy).toHaveBeenCalledWith('<strong>FATAL ERROR: Core Meltdown</strong><br>System unstable.', 'error', true);
-            expect(renderSpy).toHaveBeenCalledWith('Details: <pre>Stack trace...</pre>', 'error', true);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('FATAL ERROR displayed via event \'ui:show_fatal_error\': Core Meltdown - System unstable.'));
-        });
-
-        it('#handleFatalError should render generic error if payload is invalid', () => {
-            const clearSpy = jest.spyOn(renderer, 'clearOutput');
-            mockVed._simulateDispatch('ui:show_fatal_error', {error: 'bad'}); // Invalid
-            expect(clearSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith('<strong>An unspecified fatal error occurred.</strong>', 'error', true);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'ui:show_fatal_error' with invalid payload structure:"), {error: 'bad'});
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            // textContent should be the raw text, innerHTML should have escaped HTML
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.innerHTML).toBe('Render &lt;b&gt;override&lt;/b&gt; test');
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
     });
 
-    // --- clearOutput() Method Tests ---
-    describe('clearOutput()', () => {
-        // No changes needed here based on errors
+    describe('Custom Selector', () => {
+        const customSelector = '#custom-output';
+
         beforeEach(() => {
-            // Ensure factory spy doesn't interfere
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
-            });
-        });
-        it('should remove all child elements from the outputDiv', () => {
-            renderer.render('Message 1');
-            renderer.render('Message 2');
-            expect(outputDiv.children.length).toBe(2);
-
-            renderer.clearOutput();
-
-            expect(outputDiv.children.length).toBe(0);
-            expect(outputDiv.innerHTML).toBe('');
+            // Create the custom container
+            const customContainer = document.createElement('div');
+            customContainer.id = 'custom-output';
+            document.body.appendChild(customContainer);
+            container = customContainer; // Update reference for assertions
         });
 
-        it('should log that output was cleared', () => {
-            renderer.clearOutput();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('[Ui::UiMessageRenderer] Output cleared.'));
+        it('should render info message in custom container (allowHtml=false)', () => {
+            const renderer = createRenderer(customSelector);
+            const text = 'Custom container info';
+            renderer.render(text, 'info');
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
+            expect(document.getElementById('messages').innerHTML).toBe(''); // Default container should be empty
+        });
+
+        it('should render fatal message in custom container (allowHtml=false)', () => {
+            const renderer = createRenderer(customSelector);
+            const text = 'Custom container fatal';
+            renderer.render(text, 'fatal');
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.classList.contains('message-fatal')).toBe(true);
+            expect(mockLogger.error).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
+        });
+
+        it('should render info message with HTML in custom container (allowHtml=true)', () => {
+            const renderer = createRenderer(customSelector, {allowHtml: true});
+            const text = 'Custom <b>HTML</b> info';
+            renderer.render(text, 'info');
+
+            const messageElement = container.querySelector('p');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.innerHTML).toBe(text);
+            expect(messageElement.textContent).toBe('Custom HTML info');
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
     });
 
-    // --- dispose() Method Tests ---
-    describe('dispose()', () => {
-        let unsubscribeSpy;
-
-        beforeEach(() => {
-            // Ensure factory spy doesn't interfere if renderer is used before dispose
-            factoryPSpy.mockImplementation(function (...args) {
-                const element = document.createElement('p');
-                if (args[0] && Array.isArray(args[0])) {
-                    element.classList.add(...args[0]);
-                }
-                return element;
+    describe('Custom Tags', () => {
+        it('should use custom container and message tags from options', () => {
+            const renderer = createRenderer('#messages', {
+                messageContainerTag: 'ul',
+                messageElementTag: 'li',
             });
-            unsubscribeSpy = jest.spyOn(mockVed, 'unsubscribe');
+            // The default div#messages still exists, but ensureContainer should create a new one if necessary
+            // Let's remove the default one first to be sure.
+            document.getElementById('messages').remove();
+
+            const text = 'List item message';
+            renderer.render(text, 'info');
+
+            const listContainer = document.getElementById('messages');
+            expect(listContainer).not.toBeNull();
+            expect(listContainer.tagName).toBe('UL');
+
+            const messageElement = listContainer.querySelector('li');
+            expect(messageElement).not.toBeNull();
+            expect(messageElement.tagName).toBe('LI');
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.classList.contains('message-info')).toBe(true);
+            expect(mockLogger.info).toHaveBeenCalledWith(`[Ui::UiMessageRenderer] ${text}`);
         });
+    });
 
-        it('should call ved.unsubscribe for all stored handlers', () => {
-            // *** FIX: Remove direct access to private #subscriptions ***
-            // We know 3 subscriptions happen in the constructor.
-
-            renderer.dispose();
-
-            // Check that unsubscribe was called for each subscription made
-            expect(unsubscribeSpy).toHaveBeenCalledTimes(3);
-            // Check that it was called with the expected event names
-            expect(unsubscribeSpy).toHaveBeenCalledWith('event:command_echo', expect.any(Function));
-            expect(unsubscribeSpy).toHaveBeenCalledWith('ui:show_message', expect.any(Function));
-            expect(unsubscribeSpy).toHaveBeenCalledWith('ui:show_fatal_error', expect.any(Function));
-        });
-
-        it('should log disposal information', () => {
-            renderer.dispose();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('[Ui::UiMessageRenderer] Disposed 3 event subscriptions.'));
-            expect(unsubscribeSpy).toHaveBeenCalledTimes(3); // Verify it actually tried to unsubscribe
-        });
-
-
-        it('should clear the internal map even if unsubscribe throws', () => {
-            // Make unsubscribe throw an error
-            unsubscribeSpy.mockImplementation(() => {
-                throw new Error("Test unsubscribe error");
+    describe('Error Handling', () => {
+        it('should log warning if selector is invalid', () => {
+            // Hide expected console error from JSDOM/CSSSelecter for this specific test
+            const spyConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
             });
 
-            // *** FIX: Remove check for initial map size ***
-            // const storedHandlers = renderer['_UiMessageRenderer__subscriptions']; // REMOVED
-            // expect(storedHandlers.size).toBe(3); // REMOVED
+            const renderer = createRenderer('invalid///selector');
+            renderer.render('Test message');
 
-            renderer.dispose(); // Call dispose, which should catch errors
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid selector'));
+            expect(container.innerHTML).toBe(''); // No message should be added
 
-            expect(mockLogger.error).toHaveBeenCalledTimes(3); // Error logged for each attempt
-            expect(unsubscribeSpy).toHaveBeenCalledTimes(3); // Ensure unsubscribe was attempted 3 times
+            spyConsoleError.mockRestore(); // Restore console.error
+        });
 
-            // *** FIX: Remove check for final map size ***
-            // We cannot reliably check the private map size after clearing without modifying the source code.
-            // We trust the implementation's `this.#subscriptions.clear();` line.
-            // expect(storedHandlers.size).toBe(0); // REMOVED
+        it('should log warning if selector does not find an element', () => {
+            const renderer = createRenderer('#non-existent-element');
+            renderer.render('Test message');
+
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Message container "#non-existent-element" not found'));
+            expect(document.getElementById('messages').innerHTML).toBe(''); // Default container is empty
+            expect(document.getElementById('non-existent-element')).toBeNull(); // Target container doesn't exist
+        });
+
+        it('should log warning and return if container cannot be ensured', () => {
+            // Mock docContext.query to simulate failure even after creation attempt
+            jest.spyOn(docContext, 'query').mockReturnValue(null);
+            const renderer = createRenderer('#messages'); // Use a valid selector initially
+            renderer.render('Test message');
+
+            // It should try to find/create, fail, and log warn twice (find + create attempt)
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Message container "#messages" not found. Attempting to create.'));
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Failed to ensure message container "#messages" exists.'));
+            // Ensure no logs of the message itself happened
+            expect(mockLogger.info).not.toHaveBeenCalled();
+            expect(mockLogger.error).not.toHaveBeenCalled();
         });
     });
 });
