@@ -4,6 +4,7 @@ import {PrerequisiteEvaluationService} from '../services/prerequisiteEvaluationS
 import {jest} from '@jest/globals';
 import DomRenderer from '../core/domRenderer.js'; // Import DomRenderer
 
+// --- Mock PrerequisiteEvaluationService ---
 jest.mock('../services/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test
 
 export function createMockPrerequisiteEvaluationService() {
@@ -26,14 +27,34 @@ export function createMockPrerequisiteEvaluationService() {
     return mockInstance;
 }
 
+// --- Mock Logger ---
+/**
+ * Creates a mock logger object with Jest mock functions for standard levels.
+ * @returns {{info: jest.Mock, warn: jest.Mock, error: jest.Mock, debug: jest.Mock}}
+ */
+export function createMockLogger() {
+    return {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+    };
+}
+
+
+// --- Mock DomRenderer ---
 // Re-export DomRenderer so tests can import it from this central utility
 export {DomRenderer};
 
-// Optional: Add a helper to create a mocked DomRenderer instance
+/**
+ * Creates a mock DOM Renderer object with Jest mock functions for its methods.
+ * @returns {object} A mock DomRenderer instance.
+ */
 export function createMockDomRenderer() {
     return {
         renderMessage: jest.fn().mockReturnValue(true), // Default success
-        mutate: jest.fn().mockReturnValue({count: 1, failed: 0, modified: 1}), // Default success
+        // Corrected default return value based on test expectations
+        mutate: jest.fn().mockReturnValue({modifiedCount: 1, failures: []}),
         setTitle: jest.fn(),
         clearOutput: jest.fn(),
         setInputState: jest.fn(),

@@ -32,10 +32,10 @@ class ModifyDomElementHandler {
      * @param {IDomRenderer} dependencies.domRenderer - DOM rendering service.
      */
     constructor({logger, domRenderer}) {
-        if (!logger || typeof logger.info !== 'function') {
+        if (!logger || typeof logger.info !== 'function') { // Basic validation
             throw new Error('ModifyDomElementHandler requires a valid ILogger instance.');
         }
-        if (!domRenderer || typeof domRenderer.mutate !== 'function') {
+        if (!domRenderer || typeof domRenderer.mutate !== 'function') { // Basic validation
             throw new Error('ModifyDomElementHandler requires a valid IDomRenderer instance.');
         }
         this.#logger = logger;
@@ -54,14 +54,14 @@ class ModifyDomElementHandler {
      */
     execute(params, executionContext) {
         const logger = executionContext?.logger ?? this.#logger; // Prefer context logger
-        // --- MODIFIED LINE: Pass params object directly ---
-        logger.debug('MODIFY_DOM_ELEMENT: Handler executing with params:', params); // Log received params object
+        // Log first, then validate
+        logger.debug('MODIFY_DOM_ELEMENT: Handler executing with params:', params);
 
         if (!params || typeof params.selector !== 'string' || !params.selector.trim() ||
             typeof params.property !== 'string' || !params.property.trim() ||
             params.value === undefined) { // Value can be null/false/0, so just check for undefined
             logger.error('MODIFY_DOM_ELEMENT: Invalid or incomplete parameters.', {params});
-            return;
+            return; // Stop execution if validation fails
         }
 
         const {selector, property, value} = params;
@@ -69,16 +69,32 @@ class ModifyDomElementHandler {
         const trimmedProperty = property.trim();
 
         // Delegate modification to DomRenderer
-        try { // Added try...catch around the mutate call for safety
+        try {
             const res = this.#domRenderer.mutate(trimmedSelector, trimmedProperty, value);
-            if (res.failed > 0) {
-                // Log specifics about failures if needed, using res.errors or similar if available from mutate
-                logger.error(`MODIFY_DOM_ELEMENT: Failed to modify property "${trimmedProperty}" for ${res.failed} element(s) matching selector "${trimmedSelector}".`);
-            } else if (res.modified > 0) { // Check if any were actually modified
-                logger.debug(`MODIFY_DOM_ELEMENT: Modified property "${trimmedProperty}" on ${res.modified} element(s) matching selector "${trimmedSelector}" with value:`, value);
-            } else {
+
+            // ****** CORRECTION: Use res.failures and res.modifiedCount ******
+            const failureCount = res.failures ? res.failures.length : 0; // Safely get failure count
+            const modifiedCount = res.modifiedCount ?? 0; // Safely get modified count
+
+            if (failureCount > 0) {
+                // Log error if there were failures
+                logger.error(
+                    `MODIFY_DOM_ELEMENT: Failed to modify property "${trimmedProperty}" on ${failureCount} element(s) matching selector "${trimmedSelector}".`,
+                    res.failures // Log the failure details array
+                );
+            }
+
+            // Log success only if elements were actually modified AND there were no failures reported above
+            // (Or adjust logic if partial success + failure logging is desired differently)
+            if (modifiedCount > 0) {
+                logger.debug(
+                    `MODIFY_DOM_ELEMENT: Modified property "${trimmedProperty}" on ${modifiedCount} element(s) matching selector "${trimmedSelector}" with value:`,
+                    value
+                );
+            } else if (failureCount === 0) { // Only warn if no elements found AND no failures occurred
                 logger.warn(`MODIFY_DOM_ELEMENT: No elements found or modified for selector "${trimmedSelector}".`);
             }
+
         } catch (error) {
             logger.error(`MODIFY_DOM_ELEMENT: Error during DOM mutation via DomRenderer for selector "${trimmedSelector}":`, error);
         }

@@ -1,4 +1,5 @@
 // Filename: src/tests/integration/bootstrap.test.js
+// ****** CORRECTED FILE ******
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
@@ -20,7 +21,9 @@ describe('Application Bootstrap Integration Test', () => {
         // Using actual elements ensures type compatibility if constructors check instanceof
         mockOutputDiv = document.createElement('div');
         mockInputElement = document.createElement('input');
-        mockTitleElement = document.createElement('div'); // Or h1, etc.
+        // VVVVVV CORRECTED LINE VVVVVV
+        mockTitleElement = document.createElement('h1'); // Changed from 'div' to 'h1'
+        // ^^^^^^ CORRECTED LINE ^^^^^^
 
         // 2. Create a fresh AppContainer instance for each test
         container = new AppContainer();
@@ -107,28 +110,32 @@ describe('Application Bootstrap Integration Test', () => {
             .toBeUndefined(); // initializeAll returns void (Promise<void>)
     });
 
+    // THIS TEST SHOULD NOW PASS
     it('should resolve multiple INITIALIZABLE services via SystemInitializer', async () => {
         // --- Arrange ---
         // Spy on the container's resolveByTag method *before* configuration
         // Note: Spying on the prototype if direct instance spying is problematic
-        const resolveByTagSpy = jest.spyOn(AppContainer.prototype, 'resolveByTag');
+        // We need to spy on the actual instance's method AFTER the instance is created
+        container = new AppContainer(); // Create container first
+        const resolveByTagSpy = jest.spyOn(container, 'resolveByTag'); // Spy on the instance method
 
         // Configure the container
         configureContainer(container, {
             outputDiv: mockOutputDiv,
             inputElement: mockInputElement,
-            titleElement: mockTitleElement,
+            titleElement: mockTitleElement, // Now passes the correct h1 element
         });
 
         // Resolve the initializer *after* configuration
         const systemInitializer = container.resolve(tokens.SystemInitializer);
 
         // --- Act ---
+        // This call should no longer throw the DomRenderer error
         await systemInitializer.initializeAll();
 
         // --- Assert ---
         // Check that resolveByTag was called *by the initializer* with the correct tag
-        expect(resolveByTagSpy).toHaveBeenCalledWith(INITIALIZABLE[0]); // INITIALIZABLE is defined as ['initializable']
+        expect(resolveByTagSpy).toHaveBeenCalledWith(INITIALIZABLE[0]); // INITIALIZABLE is defined as ['initializableSystem']
 
         // Restore the spy
         resolveByTagSpy.mockRestore();
@@ -137,6 +144,7 @@ describe('Application Bootstrap Integration Test', () => {
         // This relies on initializeAll not throwing and the services being singletons.
         // Resolve them *after* initializeAll has run.
         expect(() => container.resolve(tokens.GameRuleSystem)).not.toThrow();
+        // This resolution was previously failing due to the DomRenderer dependency issue
         expect(() => container.resolve(tokens.SystemLogicInterpreter)).not.toThrow();
         // Add more checks for key initializable systems if desired
     });

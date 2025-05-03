@@ -3,7 +3,7 @@
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 
 // Mock the dependency BEFORE importing the class under test
-const mockRenderMessage = jest.fn();
+const mockRenderMessage = jest.fn().mockReturnValue(true); // *** MODIFIED: Return true by default ***
 const mockDomRenderer = {
     renderMessage: mockRenderMessage,
 };
@@ -33,6 +33,8 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        // Reset the mock's default behavior in case a test changed it with mockReturnValueOnce etc.
+        mockRenderMessage.mockReturnValue(true);
         // Instantiate the handler with mocks
         handler = new AppendUiMessageHandler({logger: mockLogger, domRenderer: mockDomRenderer});
     });
@@ -77,8 +79,9 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
             'APPEND_UI_MESSAGE: Attempting to append message via DomRenderer to selector "#outputDiv"',
             {text: 'Test message', type: 'info', allowHtml: false}
         );
+        // *** MODIFIED: Made assertion more specific to match the code's output ***
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer') // Success log might vary slightly
+            'APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer to "#outputDiv".'
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -106,8 +109,9 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
             'APPEND_UI_MESSAGE: Attempting to append message via DomRenderer to selector "#specific-area"',
             {text: '<h1>Html Message</h1>', type: 'warning', allowHtml: true}
         );
+        // *** NOTE: This assertion was already correct and specific ***
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer to "#specific-area"')
+            'APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer to "#specific-area".'
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -127,6 +131,10 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('APPEND_UI_MESSAGE: Attempting to append message'), expect.anything()
         );
+        // Check success log is also called now
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer to "#outputDiv".'
+        );
     });
 
     it('execute() should log error and return if params are missing or invalid', () => {
@@ -137,39 +145,48 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
         expect(mockLogger.error).toHaveBeenCalledWith('APPEND_UI_MESSAGE: Invalid or missing required "text" parameter.', {params: null});
         expect(mockDomRenderer.renderMessage).not.toHaveBeenCalled();
         jest.clearAllMocks(); // Reset mocks for next case
+        mockRenderMessage.mockReturnValue(true); // Re-establish default mock behavior if needed after clear
 
         // Test undefined params
         handler.execute(undefined, executionContext);
         expect(mockLogger.error).toHaveBeenCalledWith('APPEND_UI_MESSAGE: Invalid or missing required "text" parameter.', {params: undefined});
         expect(mockDomRenderer.renderMessage).not.toHaveBeenCalled();
         jest.clearAllMocks();
+        mockRenderMessage.mockReturnValue(true);
 
         // Test missing text
         handler.execute({message_type: 'info'}, executionContext);
         expect(mockLogger.error).toHaveBeenCalledWith('APPEND_UI_MESSAGE: Invalid or missing required "text" parameter.', {params: {message_type: 'info'}});
         expect(mockDomRenderer.renderMessage).not.toHaveBeenCalled();
         jest.clearAllMocks();
+        mockRenderMessage.mockReturnValue(true);
 
         // Test empty text
         handler.execute({text: '  '}, executionContext); // Whitespace only
         expect(mockLogger.error).toHaveBeenCalledWith('APPEND_UI_MESSAGE: Invalid or missing required "text" parameter.', {params: {text: '  '}});
         expect(mockDomRenderer.renderMessage).not.toHaveBeenCalled();
         jest.clearAllMocks();
+        mockRenderMessage.mockReturnValue(true);
     });
 
     it('execute() should log error if domRenderer.renderMessage returns false', () => {
         const params = {text: 'Failure case'};
         const executionContext = {logger: mockLogger};
 
-        // Configure mock to return false
-        mockRenderMessage.mockReturnValueOnce(false);
+        // Configure mock to return false specifically for this test
+        mockRenderMessage.mockReturnValueOnce(false); // Override default for this call
 
         handler.execute(params, executionContext);
 
         expect(mockDomRenderer.renderMessage).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith('APPEND_UI_MESSAGE: Failed to render via DomRenderer.');
+        // Check the "attempt" log was still called
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining('APPEND_UI_MESSAGE: Attempting to append message'), expect.anything()
+        );
+        // Check the success log was NOT called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(
-            expect.stringContaining('Successfully rendered message') // Success log should not be called
+            expect.stringContaining('Successfully rendered message')
         );
     });
 
@@ -178,8 +195,8 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
         const executionContext = {logger: mockLogger};
         const testError = new Error('Renderer exploded');
 
-        // Configure mock to throw
-        mockRenderMessage.mockImplementationOnce(() => {
+        // Configure mock to throw specifically for this test
+        mockRenderMessage.mockImplementationOnce(() => { // Use mockImplementationOnce for throwing
             throw testError;
         });
 
@@ -190,8 +207,13 @@ describe('AppendUiMessageHandler (Unit Tests)', () => {
             `APPEND_UI_MESSAGE: Error occurred while calling DomRenderer for selector "#outputDiv".`,
             {error: testError, params: params}
         );
+        // Check the "attempt" log was still called
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining('APPEND_UI_MESSAGE: Attempting to append message'), expect.anything()
+        );
+        // Check the success log was NOT called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(
-            expect.stringContaining('Successfully rendered message') // Success log should not be called
+            expect.stringContaining('Successfully rendered message')
         );
     });
 

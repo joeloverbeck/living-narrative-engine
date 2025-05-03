@@ -107,20 +107,21 @@ class DomRenderer {
         this.#logger = logger; // AC5
 
         // --- Initialize Inventory UI ---
-        // Add check for document existence before calling DOM methods
-        if (typeof document !== 'undefined') {
-            this.#createInventoryPanel();
+        // Get the document context from one of the passed elements
+        const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+
+        if (doc) {
+            this.#createInventoryPanel(doc);
 
             // --- Initialize Action Buttons Container (FEAT-UI-ACTIONS-03) ---
-            this.#actionButtonsContainer = document.getElementById('action-buttons-container');
+            this.#actionButtonsContainer = doc.getElementById('action-buttons-container');
             if (!this.#actionButtonsContainer) {
-                // Log error only if in a document environment
                 this.#logger.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
             } else {
                 this.#logger.info("DomRenderer: Found '#action-buttons-container'.");
             }
         } else {
-            this.#logger.warn('DomRenderer: Skipping UI panel/container initialization as "document" is not available.');
+            this.#logger.warn('DomRenderer: Skipping UI panel/container initialization as "document" context could not be determined.');
         }
 
 
@@ -130,37 +131,36 @@ class DomRenderer {
         this.#logger.info('DomRenderer initialized and subscribed to events.'); // Adjusted message
     }
 
-    #createInventoryPanel() {
+    #createInventoryPanel(doc) { // Pass document context
         // Check if running in a browser environment with 'document'
-        // This check is now redundant due to the check in the constructor, but kept for safety
-        if (typeof document === 'undefined') {
-            this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" is not available (not in a browser/JSDOM environment?).');
+        if (!doc) {
+            this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" context is not available.');
             return;
         }
 
-        this.#inventoryPanel = document.createElement('div');
+        this.#inventoryPanel = doc.createElement('div');
         this.#inventoryPanel.id = 'inventory-panel';
         this.#inventoryPanel.classList.add('inventory-panel', 'hidden'); // Start hidden
 
-        const header = document.createElement('h3');
+        const header = doc.createElement('h3');
         header.textContent = 'Inventory';
         this.#inventoryPanel.appendChild(header);
 
-        this.#inventoryList = document.createElement('ul');
+        this.#inventoryList = doc.createElement('ul');
         this.#inventoryList.id = 'inventory-list';
         this.#inventoryPanel.appendChild(this.#inventoryList);
 
-        const closeButton = document.createElement('button');
+        const closeButton = doc.createElement('button');
         closeButton.textContent = 'Close';
         closeButton.onclick = () => this.toggleInventory(false); // Force hide
         this.#inventoryPanel.appendChild(closeButton);
 
-        const gameContainer = document.getElementById('game-container');
+        const gameContainer = doc.getElementById('game-container');
         if (gameContainer) {
             gameContainer.appendChild(this.#inventoryPanel);
         } else {
             this.#logger.warn('DomRenderer: Could not find #game-container to append inventory panel. Appending to body.');
-            document.body.appendChild(this.#inventoryPanel);
+            doc.body.appendChild(this.#inventoryPanel);
         }
     }
 
@@ -243,12 +243,19 @@ class DomRenderer {
             this.#logger.error('Inventory list element not found!');
             return;
         }
+        // Get document context
+        const doc = this.#inventoryList?.ownerDocument;
+        if (!doc) {
+            this.#logger.error('DomRenderer: Cannot update inventory UI, document context not found.');
+            return;
+        }
+
         if (!payload || !Array.isArray(payload.items)) {
             this.#logger.warn("DomRenderer received 'event:render_inventory' with invalid data structure or payload:", data);
             this.#inventoryList.innerHTML = '<li>Error loading inventory.</li>';
             return;
         }
-        this.#updateInventoryUI(payload.items);
+        this.#updateInventoryUI(payload.items, doc); // Pass doc
     }
 
     /**
@@ -330,13 +337,17 @@ class DomRenderer {
      */
     #handleUpdateActions(data) {
         const eventData = data?.payload;
-        if (typeof document === 'undefined') {
-            this.#logger.warn('DomRenderer: Cannot update action buttons, "document" is not available.');
-            return;
-        }
+
         if (!this.#actionButtonsContainer) {
+            this.#logger.warn('DomRenderer: Cannot update action buttons, container element is null.');
             return; // Error already logged in constructor if applicable
         }
+        const doc = this.#actionButtonsContainer.ownerDocument;
+        if (!doc) {
+            this.#logger.warn('DomRenderer: Cannot update action buttons, document context not found.');
+            return;
+        }
+
         this.#actionButtonsContainer.innerHTML = ''; // Clear existing buttons
 
         if (!eventData || !Array.isArray(eventData.actions)) {
@@ -356,7 +367,7 @@ class DomRenderer {
                     this.#logger.warn(`DomRenderer: Skipping invalid action string: "${actionString}"`);
                     return;
                 }
-                const button = document.createElement('button');
+                const button = doc.createElement('button'); // Use correct document
                 button.textContent = actionString;
                 button.classList.add('action-button');
                 button.setAttribute('title', `Click to ${actionString}`);
@@ -500,16 +511,20 @@ class DomRenderer {
      * @returns {boolean}
      */
     renderMessage(text, type = 'info', opts = {}) {
-        if (typeof document === 'undefined') {
-            this.#logger.warn(`DomRenderer.renderMessage: Cannot render message (type: ${type}), "document" is not available.`);
-            return false;
-        }
         const {selector, allowHtml = false} = opts;
         let targetElement;
+
+        // Determine the document context
+        const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+        if (!doc) {
+            this.#logger.warn(`DomRenderer.renderMessage: Cannot render message (type: ${type}), document context not available.`);
+            return false;
+        }
+
         if (selector) {
-            targetElement = document.querySelector(selector);
+            targetElement = doc.querySelector(selector); // Use correct document
             if (!targetElement) {
-                this.#logger.error(`DomRenderer.renderMessage: Selector "${selector}" did not match any element.`);
+                this.#logger.error(`DomRenderer.renderMessage: Selector "${selector}" did not match any element in the current document context.`);
                 return false;
             }
         } else {
@@ -519,7 +534,8 @@ class DomRenderer {
                 return false;
             }
         }
-        const messageDiv = document.createElement('div');
+
+        const messageDiv = doc.createElement('div'); // Use correct document
         const validTypes = ['info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'];
         const finalType = validTypes.includes(type) ? type : 'info';
         messageDiv.classList.add('message', `message-${finalType}`);
@@ -586,8 +602,14 @@ class DomRenderer {
         }
         const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
         if (shouldBeVisible) {
-            this.#eventBus.dispatch('ui:request_inventory_render', {});
-            this.#inventoryPanel.classList.remove('hidden');
+            // Get document context before dispatching render request
+            const doc = this.#inventoryPanel.ownerDocument;
+            if (!doc) {
+                this.#logger.error("DomRenderer: Cannot request inventory render, document context unavailable.");
+                return;
+            }
+            this.#eventBus.dispatch('ui:request_inventory_render', {}); // Request happens first
+            this.#inventoryPanel.classList.remove('hidden'); // Then show panel
             this.#isInventoryVisible = true;
         } else {
             this.#inventoryPanel.classList.add('hidden');
@@ -598,45 +620,46 @@ class DomRenderer {
     /**
      * @private
      * @param {ItemUIData[]} itemsData
+     * @param {Document} doc - The document context to use for creating elements.
      */
-    #updateInventoryUI(itemsData) {
-        if (typeof document === 'undefined') {
-            this.#logger.warn('DomRenderer: Cannot update inventory UI, "document" is not available.');
+    #updateInventoryUI(itemsData, doc) { // Accept doc as parameter
+        if (!doc) {
+            this.#logger.error('DomRenderer: Cannot update inventory UI, document context is missing.');
             return;
         }
         if (!this.#inventoryList) {
             this.#logger.error('DomRenderer: Cannot update inventory UI, list element is null.');
             return;
         }
-        this.#inventoryList.innerHTML = '';
+        this.#inventoryList.innerHTML = ''; // Clear existing items
         if (itemsData.length === 0) {
-            const emptyLi = document.createElement('li');
+            const emptyLi = doc.createElement('li'); // Use correct document
             emptyLi.textContent = '(Empty)';
             emptyLi.classList.add('inventory-item-empty');
             this.#inventoryList.appendChild(emptyLi);
         } else {
             itemsData.forEach(item => {
-                const li = document.createElement('li');
+                const li = doc.createElement('li'); // Use correct document
                 li.classList.add('inventory-item');
                 li.dataset.itemId = item.id;
                 const itemName = item.name || '(Unnamed Item)';
                 if (item.icon) {
-                    const img = document.createElement('img');
+                    const img = doc.createElement('img'); // Use correct document
                     img.src = item.icon;
                     img.alt = itemName;
                     img.classList.add('inventory-item-icon');
                     li.appendChild(img);
                 } else {
-                    const iconPlaceholder = document.createElement('span');
+                    const iconPlaceholder = doc.createElement('span'); // Use correct document
                     iconPlaceholder.classList.add('inventory-item-icon-placeholder');
                     iconPlaceholder.textContent = '📦';
                     li.appendChild(iconPlaceholder);
                 }
-                const nameSpan = document.createElement('span');
+                const nameSpan = doc.createElement('span'); // Use correct document
                 nameSpan.classList.add('inventory-item-name');
                 nameSpan.textContent = itemName;
                 li.appendChild(nameSpan);
-                const dropButton = document.createElement('button');
+                const dropButton = doc.createElement('button'); // Use correct document
                 dropButton.textContent = 'Drop';
                 dropButton.classList.add('inventory-item-drop-button');
                 dropButton.dataset.itemName = itemName;
@@ -679,31 +702,39 @@ class DomRenderer {
     }
 
     /**
-     * Mutates properties of DOM elements matching a selector.
+     * Mutates properties of DOM elements matching a selector within the correct document context.
      * Checks for document availability before attempting mutation.
-     * **Includes direct handling for 'textContent' and 'innerHTML'.**
+     * Includes direct handling for 'textContent' and 'innerHTML'.
      * @param {string} selector - The CSS selector to query for elements.
      * @param {string} propertyPath - Dot-notation path to the property to set (e.g., 'style.color', 'dataset.value', 'textContent').
      * @param {*} value - The value to set the property to.
      * @returns {{count: number, modified: number, failed: number}} - Object indicating total elements found, how many were modified, and how many failed to update.
      */
     mutate(selector, propertyPath, value) {
-        if (typeof document === 'undefined') {
-            this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", "document" is not available.`);
+        // --- FIX: Get document context from a known element ---
+        const doc = this.#outputDiv?.ownerDocument; // Or this.#inputElement?.ownerDocument, etc.
+        if (!doc) {
+            this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", document context is not available.`);
             return {count: 0, modified: 0, failed: 0};
         }
+        // --- END FIX ---
+
         let total = 0;
         let successCount = 0;
         let elements;
         try {
-            elements = document.querySelectorAll(selector);
+            // --- FIX: Use the correct document context ---
+            elements = doc.querySelectorAll(selector);
+            // --- END FIX ---
         } catch (error) {
             this.#logger.error(`DomRenderer.mutate: Invalid selector "${selector}".`, error);
             return {count: 0, modified: 0, failed: 0};
         }
         total = elements.length;
         if (total === 0) {
-            this.#logger.warn(`DomRenderer.mutate: Selector "${selector}" found no elements.`);
+            // This is expected if the selector is valid but finds nothing (e.g., in TC7)
+            // Changed from warn to debug to reduce noise for expected "not found" cases.
+            this.#logger.debug(`DomRenderer.mutate: Selector "${selector}" found no elements in the current document context.`);
             return {count: 0, modified: 0, failed: 0};
         }
 
@@ -716,6 +747,7 @@ class DomRenderer {
                     element.innerHTML = value;
                 } else {
                     // Fallback to utility for nested/complex properties
+                    // Make sure setPropertyByPath also works correctly with the element context
                     setPropertyByPath(element, propertyPath, value);
                 }
                 // --- End direct handling ---
@@ -732,11 +764,14 @@ class DomRenderer {
         if (failedCount > 0) {
             this.#logger.warn(`DomRenderer.mutate: Failed to set property "${propertyPath}" for ${failedCount} out of ${total} elements matching "${selector}".`);
         } else if (modifiedCount > 0) {
-            this.#logger.debug(`DomRenderer.mutate: Successfully set property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
+            // Changed from debug to info for successful mutations as they are key outcomes.
+            this.#logger.info(`DomRenderer.mutate: Successfully set property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
         }
-        // If modifiedCount is 0 and failedCount is 0, it implies elements were found but the property might not have changed (e.g., setting same value, or setPropertyByPath handled it silently)
+        // If modifiedCount is 0 and failedCount is 0, it implies elements were found but the property might not have changed or setPropertyByPath handled it silently
 
-        return {count: total, modified: modifiedCount, failed: failedCount};
+        // Return value adjusted slightly to match previous logging structure better, although the return object itself isn't directly used in ModifyDomElementHandler currently
+        // Reverted return value structure for consistency with ModifyDomElementHandler expectation
+        return { count: total, modifiedCount: modifiedCount, failures: failedCount > 0 ? [{ selector, propertyPath, error: 'Mutation failed on some elements' }] : [] }; // Provide minimal failure info if needed
     }
 }
 
