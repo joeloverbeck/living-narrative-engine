@@ -1,236 +1,174 @@
 // src/domUI/uiMessageRenderer.js
-/**
- * @fileoverview Renders command echoes, general messages, and fatal errors
- * to a designated output container in the DOM.
- */
-
-import RendererBase from './RendererBase.js';
-import DomElementFactory from './domElementFactory.js'; // Assuming shared factory
-import DocumentContext from './documentContext.js'; // To create context for factory
-
-// --- Import Interfaces ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../core/eventBus.js').EventListener} EventListener */ // Type for listener functions
-/** @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext */
-
-// --- Import Event Payloads (assuming these structures exist based on DomRenderer) ---
-/** @typedef {import('../eventSystem/payloads.js').EventCommandEchoPayload} EventCommandEchoPayload */
-/** @typedef {import('../eventSystem/payloads.js').UIShowMessagePayload} UIShowMessagePayload */
-
-/** @typedef {import('../eventSystem/payloads.js').UIShowFatalErrorPayload} UIShowFatalErrorPayload */
+import {RendererBase} from './rendererBase.js';
+import DomElementFactory from './domElementFactory.js';
 
 /**
- * Handles rendering messages, command echoes, and fatal errors to a specific DOM element.
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('./domElementFactory').DomElementFactory} DomElementFactory
  */
-class UiMessageRenderer extends RendererBase {
-    /** @private @type {HTMLElement} The root element where messages are appended. */
-    #outputDiv;
-    /** @private @type {DomElementFactory} Factory for creating DOM elements. */
+
+/**
+ * @typedef {'info' | 'error' | 'echo' | 'fatal'} MessageType
+ */
+
+/**
+ * @class UiMessageRenderer
+ * @extends RendererBase
+ * @description Handles rendering general messages, command echoes, and fatal errors to the UI.
+ */
+export class UiMessageRenderer extends RendererBase {
+    /** @private @type {HTMLElement|null} */
+    #messageList = null;
+    /** @private @type {DomElementFactory} */
     #factory;
-    /**
-     * @private
-     * @type {Map<string, EventListener>} Map to store event names and their bound handler functions for disposal.
-     * Key: eventName (string)
-     * Value: bound handler function (EventListener)
-     */
-    #subscriptions = new Map();
+    /** @private @type {Array<IEventSubscription>} */
+    #subscriptions = [];
 
     /**
-     * Creates an instance of UiMessageRenderer.
-     * @param {object} dependencies - The required dependencies.
-     * @param {ILogger} dependencies.logger - Service for logging messages.
-     * @param {ValidatedEventDispatcher} dependencies.ved - Service for dispatching/subscribing to validated events.
-     * @param {HTMLElement} dependencies.outputDiv - The DOM element to render messages into.
-     * @throws {Error} If outputDiv is not a valid HTMLElement.
-     * @throws {Error} If required dependencies are missing or invalid (handled by RendererBase).
+     * @param {ILogger} logger
+     * @param {IDocumentContext} doc
+     * @param {IValidatedEventDispatcher} ved
+     * @param {DomElementFactory} factory
      */
-    constructor({logger, ved, outputDiv}) {
-        if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
-            throw new Error('UiMessageRenderer requires a valid outputDiv HTMLElement.');
-        }
+    constructor(logger, doc, ved, factory) {
+        super(logger, doc, ved); // VED is now passed here
 
-        // Create a specific DocumentContext for the outputDiv's ownerDocument
-        const docContext = new DocumentContext(outputDiv);
-        // Create a DomElementFactory using this context
-        const factory = new DomElementFactory(docContext);
+        if (!factory) throw new Error(`${this.constructor.name}: DomElementFactory dependency is missing.`);
+        this.#factory = factory;
 
-        // Pass core dependencies and the derived docContext to the base class
-        super({logger, ved, docContext});
+        this.#ensureMessageList();
 
-        this.#outputDiv = outputDiv;
-        this.#factory = factory; // Store the factory instance
+        // Subscribe to events via VED
+        this.#subscriptions.push(
+            this.ved.subscribe('textUI:display_message', this.#onShow.bind(this))
+        );
+        this.#subscriptions.push(
+            this.ved.subscribe('core:system_error_occurred', this.#onShowFatal.bind(this))
+        );
+        this.#subscriptions.push(
+            this.ved.subscribe('core:action_executed', this.#onCommandEcho.bind(this))
+        );
+        this.#subscriptions.push(
+            this.ved.subscribe('core:action_failed', this.#onCommandEcho.bind(this))
+        );
 
-        this.#subscribeToEvents();
-        this.logger.info(`${this._logPrefix} Initialized and subscribed to VED events.`);
+        this.logger.debug(`[${this.constructor.name}] Subscribed to VED events.`);
     }
 
     /**
-     * Subscribes to relevant events from the ValidatedEventDispatcher and stores handlers for disposal.
+     * Finds or creates the message list container element.
      * @private
      */
-    #subscribeToEvents() {
-        // Define event names and their corresponding bound handler methods
-        const eventHandlers = {
-            'event:command_echo': this.#handleCommandEcho.bind(this),
-            'ui:show_message': this.#handleShowMessage.bind(this),
-            'ui:show_fatal_error': this.#handleFatalError.bind(this),
-        };
-
-        // Iterate, subscribe, and store the handler for later unsubscribe
-        for (const [eventName, handler] of Object.entries(eventHandlers)) {
-            try {
-                this.ved.subscribe(eventName, handler);
-                this.#subscriptions.set(eventName, handler); // Store eventName and the *exact* bound function reference
-                this.logger.debug(`${this._logPrefix} Subscribed to VED event: ${eventName}`);
-            } catch (error) {
-                this.logger.error(`${this._logPrefix} Failed to subscribe to VED event ${eventName}:`, error);
+    #ensureMessageList() {
+        if (!this.#messageList) {
+            this.#messageList = this.doc.query('#message-list');
+            if (!this.#messageList) {
+                this.logger.error('[UiMessageRenderer] Could not find #message-list element!');
+                const mainContent = this.doc.query('#main-content');
+                if (mainContent) {
+                    this.#messageList = this.#factory.ul('message-list', ['message-list']);
+                    mainContent.appendChild(this.#messageList);
+                    this.logger.warn('[UiMessageRenderer] #message-list created dynamically.');
+                } else {
+                    this.logger.error('[UiMessageRenderer] Cannot find #main-content to append message list.');
+                    this.#messageList = this.#factory.ul('message-list-fallback', []);
+                }
             }
         }
-
-        this.logger.debug(`${this._logPrefix} Finished setting up ${this.#subscriptions.size} VED subscriptions.`);
+        if (!this.#messageList) {
+            this.logger.fatal('[UiMessageRenderer] Failed to find or create #message-list. Messages will not be displayed.');
+            this.#messageList = this.#factory.ul('message-list-dummy', []);
+        }
     }
 
-    // --- REMOVED: #findEventNameByHandler - No longer needed with the new subscription approach ---
-
     /**
-     * Renders a message text into the output container.
-     *
-     * @param {string} text - The message content.
-     * @param {string} [type='info'] - The type of message (e.g., 'info', 'error', 'warning', 'command', 'system'). Used for CSS styling.
-     * @param {boolean} [allowHtml=false] - If true, the text is treated as HTML; otherwise, it's treated as plain text.
-     * @returns {boolean} True if the message was rendered successfully, false otherwise.
+     * Renders a message to the UI.
+     * @param {string} text - The message text.
+     * @param {MessageType} [type='info'] - The type of message ('info', 'error', 'echo', 'fatal').
+     * @param {boolean} [allowHtml=false] - Whether to render the text as HTML.
      */
     render(text, type = 'info', allowHtml = false) {
-        if (!this.#outputDiv || !this.#factory) {
-            this.logger.error(`${this._logPrefix} Cannot render message - outputDiv or factory is not available.`);
-            return false;
+        this.#ensureMessageList();
+        if (!this.#messageList || !this.#messageList.appendChild) { // Extra check for valid element
+            this.logger.error(`[UiMessageRenderer] Cannot render message, list element invalid or not found. Type: ${type}, Text: ${text}`);
+            return;
         }
 
-        // Define valid message types for CSS class generation
-        const validTypes = ['info', 'warning', 'error', 'success', 'debug', 'command', 'location', 'system', 'system-success'];
-        const finalType = validTypes.includes(type) ? type : 'info';
+        const messageItem = this.#factory.li(null, ['message', `message-${type}`]);
 
-        // Use the factory to create a paragraph element for the message
-        const messageElement = this.#factory.p([`message`, `message--${finalType}`]); // Use BEM-like convention
-
-        if (!messageElement) {
-            this.logger.error(`${this._logPrefix} Failed to create message element using factory.`);
-            // *** FIX 2: Return false on failure ***
-            return false;
-        }
-
-        // Set content based on allowHtml flag
         if (allowHtml) {
-            messageElement.innerHTML = text; // Be cautious with HTML injection
+            messageItem.innerHTML = text;
         } else {
-            messageElement.textContent = text;
+            messageItem.textContent = text;
         }
 
-        // Append to the output container
-        this.#outputDiv.appendChild(messageElement);
-
-        // Scroll to the bottom
-        // Avoid error in test environments where layout properties might not be fully supported
-        try {
-            this.#outputDiv.scrollTop = this.#outputDiv.scrollHeight;
-        } catch (e) {
-            this.logger.warn(`${this._logPrefix} Could not set scrollTop, possibly due to test environment limitations.`, e);
-        }
-
-
-        this.logger.debug(`${this._logPrefix} Rendered message (type: ${finalType}, html: ${allowHtml}): "${text.substring(0, 50)}..."`);
-        return true;
+        this.#messageList.appendChild(messageItem);
+        this.#scrollToBottom();
+        this.logger.debug(`[UiMessageRenderer] Rendered message: ${type} - ${text.substring(0, 50)}...`);
     }
 
     /**
-     * Clears all messages from the output container.
-     */
-    clearOutput() {
-        if (this.#outputDiv) {
-            this.#outputDiv.innerHTML = '';
-            this.logger.info(`${this._logPrefix} Output cleared.`);
-        } else {
-            this.logger.warn(`${this._logPrefix} Cannot clear output, outputDiv is null.`);
-        }
-    }
-
-
-    // --- Private Event Handlers ---
-
-    /**
-     * Handles command echo events.
+     * Handles the 'textUI:display_message' event from VED.
      * @private
-     * @param {EventCommandEchoPayload} payload - The event payload.
-     * @param {string} eventName - The name of the event.
+     * @param {object} payload - The event payload.
+     * @param {string} payload.message - The text to display.
+     * @param {MessageType} [payload.type='info'] - The message type.
+     * @param {boolean} [payload.allowHtml=false] - Whether HTML is allowed.
      */
-    #handleCommandEcho(payload, eventName) {
-        if (payload && typeof payload.command === 'string') {
-            this.render(`> ${payload.command}`, 'command', false); // Commands are usually plain text
-        } else {
-            this.logger.warn(`${this._logPrefix} Received '${eventName}' with invalid payload structure:`, payload);
-        }
+    #onShow(payload) {
+        this.render(payload.message, payload.type || 'info', payload.allowHtml || false);
     }
 
     /**
-     * Handles general message display events.
+     * Handles the 'core:system_error_occurred' event from VED.
      * @private
-     * @param {UIShowMessagePayload} payload - The event payload.
-     * @param {string} eventName - The name of the event.
+     * @param {object} payload - The event payload.
+     * @param {string} payload.message - The error message text.
+     * @param {Error} [payload.error] - Optional associated error object.
      */
-    #handleShowMessage(payload, eventName) {
-        if (payload && typeof payload.text === 'string') {
-            // Type and allowHtml are optional in payload, default handled by render()
-            this.render(payload.text, payload.type, payload.allowHtml);
-        } else {
-            this.logger.warn(`${this._logPrefix} Received '${eventName}' with invalid payload structure:`, payload);
+    #onShowFatal(payload) {
+        let message = payload.message;
+        if (payload.error && payload.error.message) {
+            message += `\nDetails: ${payload.error.message}`;
         }
+        this.logger.fatal(`[UiMessageRenderer] Fatal error displayed: ${message}`);
+        this.render(message, 'fatal', false);
     }
 
     /**
-     * Handles fatal error display events. Clears previous output first.
+     * Handles command echo events ('core:action_executed', 'core:action_failed') from VED.
      * @private
-     * @param {UIShowFatalErrorPayload} payload - The event payload.
-     * @param {string} eventName - The name of the event.
+     * @param {object} payload - The event payload.
+     * @param {string} payload.originalInput - The original command input by the player.
      */
-    #handleFatalError(payload, eventName) {
-        if (payload && typeof payload.title === 'string' && typeof payload.message === 'string') {
-            this.clearOutput(); // Clear previous messages on fatal error
-            // Render title and message, allowing HTML for potential formatting
-            this.render(`<strong>FATAL ERROR: ${payload.title}</strong><br>${payload.message}`, 'error', true);
-            if (payload.details) {
-                // Render details separately, potentially pre-formatted
-                this.render(`Details: <pre>${payload.details}</pre>`, 'error', true);
-            }
-            this.logger.error(`${this._logPrefix} FATAL ERROR displayed via event '${eventName}': ${payload.title} - ${payload.message}`);
+    #onCommandEcho(payload) {
+        if (payload && typeof payload.originalInput === 'string' && payload.originalInput.trim()) {
+            this.render(`> ${payload.originalInput}`, 'echo');
         } else {
-            this.logger.warn(`${this._logPrefix} Received '${eventName}' with invalid payload structure:`, payload);
-            // Render a generic fatal error message if payload is bad
-            this.clearOutput();
-            this.render('<strong>An unspecified fatal error occurred.</strong>', 'error', true);
+            this.logger.warn('[UiMessageRenderer] Received command echo event without valid originalInput.', payload);
         }
     }
 
     /**
-     * Unsubscribes all event listeners this instance created by iterating through the stored handlers.
-     * Should be called when the component is destroyed or no longer needed.
+     * Scrolls the message list to the bottom.
+     * @private
+     */
+    #scrollToBottom() {
+        if (this.#messageList && typeof this.#messageList.scrollTop !== 'undefined') { // Check scroll properties exist
+            this.#messageList.scrollTop = this.#messageList.scrollHeight;
+        }
+    }
+
+    /**
+     * Unsubscribes from all VED events.
      */
     dispose() {
-        let count = 0;
-        // *** FIX for VED: Iterate stored handlers and call VED.unsubscribe ***
-        this.#subscriptions.forEach((handler, eventName) => {
-            try {
-                // Call VED's unsubscribe with the event name and the stored handler function
-                this.ved.unsubscribe(eventName, handler);
-                count++;
-                this.logger.debug(`${this._logPrefix} Unsubscribed from VED event: ${eventName}`);
-            } catch (error) {
-                this.logger.error(`${this._logPrefix} Error unsubscribing from VED event ${eventName}:`, error);
-            }
-        });
-        this.#subscriptions.clear(); // Clear the internal map
-        this.logger.info(`${this._logPrefix} Disposed ${count} event subscriptions.`);
+        this.logger.debug(`[${this.constructor.name}] Disposing subscriptions.`);
+        this.#subscriptions.forEach(sub => sub.unsubscribe());
+        this.#subscriptions = [];
+        super.dispose(); // Call base dispose
     }
 }
-
-export default UiMessageRenderer;

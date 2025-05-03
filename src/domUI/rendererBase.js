@@ -1,93 +1,46 @@
-// src/domUI/RendererBase.js
-/**
- * @fileoverview Abstract base class for UI renderers.
- * Provides common dependencies (logger, event dispatcher, document context)
- * and helper methods like a standardized logging prefix.
- */
-
-// --- Import Interfaces ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-
-/** @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext */
+// src/domUI/rendererBase.js
 
 /**
- * Abstract base class for UI rendering components.
- * Ensures essential dependencies are injected and provides common utilities.
- * Child classes must implement their specific rendering logic.
+ * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
  */
-class RendererBase {
+
+/**
+ * @abstract
+ * @class RendererBase
+ * @description Base class for UI renderers to reduce boilerplate. Provides common dependencies.
+ */
+export class RendererBase {
     /** @protected @type {ILogger} */
-    _logger;
-    /** @protected @type {ValidatedEventDispatcher} */
-    _ved;
+    logger;
     /** @protected @type {IDocumentContext} */
-    _docContext;
+    doc;
+    /** @protected @type {IValidatedEventDispatcher} */
+    ved; // Changed from eventBus to ved
 
     /**
-     * Creates an instance of a RendererBase-derived class.
-     * @param {object} dependencies - The required dependencies.
-     * @param {ILogger} dependencies.logger - Service for logging messages.
-     * @param {ValidatedEventDispatcher} dependencies.ved - Service for dispatching validated events.
-     * @param {IDocumentContext} dependencies.docContext - Service for interacting with the document.
-     * @throws {Error} If any dependency is missing or invalid.
+     * @param {ILogger} logger - The logger instance.
+     * @param {IDocumentContext} doc - The document context.
+     * @param {IValidatedEventDispatcher} ved - The validated event dispatcher.
      */
-    constructor({logger, ved, docContext}) {
-        // --- Dependency Validation ---
-        if (!logger || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function') {
-            throw new Error(`${this.constructor.name} requires a valid ILogger instance.`);
+    constructor(logger, doc, ved) {
+        if (this.constructor === RendererBase) {
+            throw new Error("Abstract classes can't be instantiated.");
         }
-        if (!ved || typeof ved.dispatchValidated !== 'function') {
-            throw new Error(`${this.constructor.name} requires a valid ValidatedEventDispatcher instance.`);
-        }
-        // Check for the core methods of IDocumentContext
-        if (!docContext || typeof docContext.query !== 'function' || typeof docContext.create !== 'function') {
-            throw new Error(`${this.constructor.name} requires a valid IDocumentContext instance.`);
-        }
+        // Type assertions/checks for required dependencies
+        if (!logger) throw new Error(`${this.constructor.name}: Logger dependency is missing.`);
+        if (!doc) throw new Error(`${this.constructor.name}: DocumentContext dependency is missing.`);
+        if (!ved) throw new Error(`${this.constructor.name}: ValidatedEventDispatcher dependency is missing.`);
 
-        this._logger = logger;
-        this._ved = ved;
-        this._docContext = docContext;
-
-        this._logger.debug(`${this._logPrefix} Initialized.`);
+        this.logger = logger;
+        this.doc = doc;
+        this.ved = ved; // Changed from eventBus to ved
+        this.logger.debug(`[${this.constructor.name}] Initialized.`);
     }
 
-    /**
-     * Protected getter for the logger instance.
-     * @protected
-     * @returns {ILogger}
-     */
-    get logger() {
-        return this._logger;
-    }
-
-    /**
-     * Protected getter for the ValidatedEventDispatcher instance.
-     * @protected
-     * @returns {ValidatedEventDispatcher}
-     */
-    get ved() {
-        return this._ved;
-    }
-
-    /**
-     * Protected getter for the IDocumentContext instance.
-     * @protected
-     * @returns {IDocumentContext}
-     */
-    get doc() {
-        return this._docContext;
-    }
-
-    /**
-     * Generates a standardized log prefix string based on the class name.
-     * Example: "[Ui::MyRenderer]"
-     * @protected
-     * @returns {string} The formatted log prefix.
-     */
-    get _logPrefix() {
-        return `[Ui::${this.constructor.name}]`;
+    dispose() {
+        this.logger.debug(`[${this.constructor.name}] Disposing.`);
+        // Base cleanup if any
     }
 }
-
-export default RendererBase;

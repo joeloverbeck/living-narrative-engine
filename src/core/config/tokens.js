@@ -120,6 +120,10 @@ export const tokens = Object.freeze({
     ISchemaValidator: 'ISchemaValidator',
     IDataRegistry: 'IDataRegistry',
     ISpatialIndexManager: 'ISpatialIndexManager',
+    WindowDocument: 'WindowDocument',
+    IDocumentContext: 'IDocumentContext',
+    DomElementFactory: 'DomElementFactory',
+    UIMessageRenderer: 'UIMessageRenderer',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',

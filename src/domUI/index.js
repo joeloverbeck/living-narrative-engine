@@ -1,21 +1,15 @@
-// src/dom-ui/index.js (Updated Barrel File)
-/**
- * @fileoverview Barrel file for the dom-ui module.
- * Exports key classes and interfaces for easy consumption.
- */
+// src/domUI/index.js
 
-// Interfaces / Types
-export * from './IDocumentContext.js'; // Export the typedef if needed (JSDoc only)
+// Export interfaces and base classes
+export * from './IDocumentContext.js';
+export * from './rendererBase.js';
 
-// Core Utilities / Base Classes
-export {default as DocumentContext} from './documentContext.js';
-export {default as DomElementFactory} from './domElementFactory.js';
-export {default as RendererBase} from './RendererBase.js'; // Export the base class
+// Export concrete classes and utilities
+export * from './documentContext.js'; // Export concrete implementation(s) too
+export * from './domElementFactory.js';
+export * from './uiMessageRenderer.js';
 
-// Concrete Renderers (Add these as they are created)
-export {default as UiMessageRenderer} from './UiMessageRenderer.js'; // <-- ADDED EXPORT
-// export { default as TitleRenderer } from './TitleRenderer.js';
-// ... etc.
-
-// Facade (Add when created)
-// export { default as DomUiFacade } from './DomUiFacade.js';
+// Export other renderers as they are created
+// export * from './titleRenderer.js';
+// export * from './inputStateController.js';
+// ...etc
