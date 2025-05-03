@@ -43,14 +43,36 @@ describe('UiMessageRenderer', () => {
         });
 
         // Spy on factory methods (and provide basic mock implementations)
-        jest.spyOn(mockDomElementFactory, 'li').mockImplementation((id) => {
+        jest.spyOn(mockDomElementFactory, 'li').mockImplementation((cls, text) => { // Adjusted mock signature
             const li = document.createElement('li');
-            if (id) li.id = id;
+            // Helper to add classes based on factory logic
+            const addClasses = (element, classes) => {
+                if (!classes) return;
+                if (Array.isArray(classes)) {
+                    element.classList.add(...classes.filter(c => c));
+                } else if (typeof classes === 'string') {
+                    const clsArr = classes.split(' ').filter(c => c);
+                    if (clsArr.length > 0) element.classList.add(...clsArr);
+                }
+            };
+            addClasses(li, cls);
+            if (text !== undefined) li.textContent = text;
             return li;
         });
-        jest.spyOn(mockDomElementFactory, 'ul').mockImplementation((id) => {
+        jest.spyOn(mockDomElementFactory, 'ul').mockImplementation((id, cls) => { // Adjusted mock signature
             const ul = document.createElement('ul');
             if (id) ul.id = id;
+            // Helper to add classes based on factory logic
+            const addClasses = (element, classes) => {
+                if (!classes) return;
+                if (Array.isArray(classes)) {
+                    element.classList.add(...classes.filter(c => c));
+                } else if (typeof classes === 'string') {
+                    const clsArr = classes.split(' ').filter(c => c);
+                    if (clsArr.length > 0) element.classList.add(...clsArr);
+                }
+            };
+            addClasses(ul, cls);
             return ul;
         });
 
@@ -60,7 +82,8 @@ describe('UiMessageRenderer', () => {
         jest.spyOn(docContext, 'query'); // Spy on query generally
         docContext.query.mockImplementation((selector) => { // Provide general implementation
             if (selector === '#message-list') {
-                return messageList;
+                // Use the potentially modified messageList variable
+                return document.getElementById('message-list');
             }
             if (selector === '#main-content') {
                 return document.getElementById('main-content');
@@ -298,14 +321,13 @@ describe('UiMessageRenderer', () => {
             fatalHandler({message: 123}); // Test wrong message type
 
             // It should render a generic fatal message
-            const messageElement = container.querySelector('li.message-fatal');
+            const messageElement = container.querySelector('li.message-fatal'); // Query the original container
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe('An unspecified fatal system error occurred.');
-            expect(mockLogger.error).toHaveBeenCalledTimes(3); // Called for each bad payload
+            // Check logs - error for payload, debug for render
+            expect(mockLogger.error).toHaveBeenCalledTimes(3);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Received invalid 'core:system_error_occurred' payload."), expect.anything());
-            // Also check the generic render log
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Rendered message: fatal - An unspecified fatal system error occurred."));
-
         });
 
         it('should unsubscribe from events on dispose', () => {
@@ -337,8 +359,9 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #message-list element!'));
             // Since #main-content exists and factory is mocked, it should *attempt* to create it
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('#message-list created dynamically.'));
+            // --- FIX: Check only for the first argument ---
             expect(mockDomElementFactory.ul).toHaveBeenCalledWith('message-list');
-            // Ensure it was added back to the DOM
+            // Ensure it was added back to the DOM (ul mock returns a real element)
             expect(document.getElementById('message-list')).not.toBeNull();
             expect(document.getElementById('message-list').tagName).toBe('UL');
         });
@@ -364,15 +387,56 @@ describe('UiMessageRenderer', () => {
         });
 
         it('should log error and not render if message list is invalid after ensure', () => {
+            // 1. Create renderer (ensure runs successfully initially)
             const renderer = createRenderer();
-            // Sabotage the list after creation (simulate unexpected state)
-            renderer["_UiMessageRenderer__messageList"] = null; // Directly set private member for test
+            // Verify it was found initially using the internal getter provided for testing
+            expect(renderer["_UiMessageRenderer__messageList"]).not.toBeNull();
+            expect(renderer["_UiMessageRenderer__messageList"].id).toBe('message-list');
 
+            // 2. Re-configure mock to simulate list disappearing AFTER initial setup
+            //    AND prevent its recreation.
+            docContext.query.mockImplementation((selector) => {
+                if (selector === '#message-list') {
+                    return null; // Simulate it's gone from DOM query
+                }
+                if (selector === '#main-content') {
+                    // Still allow finding main-content if ensure tries to recreate
+                    return document.getElementById('main-content');
+                }
+                return document.querySelector(selector); // Fallback for other queries
+            });
+            // ALSO mock the factory to fail creating the UL if ensure tries that path
+            mockDomElementFactory.ul.mockReturnValue(null);
+
+            // 3. Sabotage the internal reference *just before* calling render
+            renderer["_UiMessageRenderer__messageList"] = null;
+
+            // 4. Call render.
+            //    - It calls #ensureMessageList.
+            //    - #ensureMessageList sees internal ref is null.
+            //    - docContext.query('#message-list') returns null (due to mock).
+            //    - domElementFactory.ul() returns null (due to mock).
+            //    - #ensureMessageList fails to set this.#messageList.
+            //    - render proceeds to check if this.#messageList is valid.
+            //    - The check `!this.#messageList` is now true.
             renderer.render('Test message');
 
+            // 5. Assert the expected error log from the check in render()
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message, list element invalid or not found.'));
-            expect(container.innerHTML).toBe(''); // Check the original container (ul) is empty
+            // The original container (messageList initially assigned to container var) might have been removed or replaced
+            // Check that the *current* message list in the DOM (if any) is empty, or simply that the render didn't add an LI.
+            const currentMessageList = document.getElementById('message-list');
+            if (currentMessageList) {
+                expect(currentMessageList.querySelector('li')).toBeNull();
+            } else {
+                // If the list couldn't even be recreated, that's fine too.
+                // The main point is no 'li' was added.
+                expect(document.querySelector('#message-list li')).toBeNull();
+            }
+            // Also ensure factory wasn't called to make an LI
+            expect(mockDomElementFactory.li).not.toHaveBeenCalled();
         });
+
 
         it('should log error and not render if DomElementFactory is missing', () => {
             // Create renderer *without* the factory
@@ -386,7 +450,8 @@ describe('UiMessageRenderer', () => {
             renderer.render('Test message');
 
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message, DomElementFactory is missing.'));
-            expect(container.innerHTML).toBe('');
+            const currentMessageList = document.getElementById('message-list');
+            expect(currentMessageList.innerHTML).toBe(''); // List exists but should be empty
         });
 
         it('should log error if DOM element factory fails to create li', () => {
@@ -411,25 +476,29 @@ describe('UiMessageRenderer', () => {
             expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4); // Should only be called once per subscription
             // Base dispose log might be called twice, but subscription log only once
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.')); // Logged on first call
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.')); // Base class log
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.')); // Base class log (called potentially twice, check at least once)
         });
 
         it('should handle scrolling correctly', () => {
             const renderer = createRenderer();
-            // Mock scroll properties/methods
+            // Get the actual message list element via the test accessor
+            const actualMessageList = renderer["_UiMessageRenderer__messageList"];
+            expect(actualMessageList).not.toBeNull(); // Ensure it exists
+
+            // Mock scroll properties/methods on the *actual* element
             const scrollIntoViewMock = jest.fn();
-            Object.defineProperty(messageList, 'scrollHeight', {configurable: true, value: 500});
-            Object.defineProperty(messageList, 'scrollTop', {configurable: true, writable: true, value: 0});
-            messageList.scrollIntoView = scrollIntoViewMock;
+            Object.defineProperty(actualMessageList, 'scrollHeight', {configurable: true, value: 500});
+            Object.defineProperty(actualMessageList, 'scrollTop', {configurable: true, writable: true, value: 0});
+            actualMessageList.scrollIntoView = scrollIntoViewMock; // Attach mock method
 
 
             renderer.render('Message 1');
             // Check direct scroll assignment first
-            expect(messageList.scrollTop).toBe(500);
+            expect(actualMessageList.scrollTop).toBe(500);
 
 
             // Test fallback if scrollTop isn't defined (less likely with JSDOM but good coverage)
-            Object.defineProperty(messageList, 'scrollTop', {configurable: true, value: undefined});
+            Object.defineProperty(actualMessageList, 'scrollTop', {configurable: true, value: undefined}); // Make scrollTop undefined
             renderer.render('Message 2');
             expect(scrollIntoViewMock).toHaveBeenCalledWith({behavior: 'smooth', block: 'end'});
         });
