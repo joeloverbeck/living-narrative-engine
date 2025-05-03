@@ -1,6 +1,7 @@
 // src/tests/integration/textUISetTitle.integration.test.js
 
 import {describe, it, expect, beforeEach, afterEach, jest} from '@jest/globals';
+import {JSDOM} from 'jsdom'; // Import JSDOM
 
 // --- System Under Test (SUT) & Core Dependencies ---
 import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js';
@@ -8,10 +9,9 @@ import EventBus from '../../core/eventBus.js'; // Using EventBus for dispatch
 import OperationInterpreter from '../../logic/operationInterpreter.js';
 import OperationRegistry from '../../logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
+// --- NEW: Import ModifyDomElementHandler & DomRenderer ---
 import ModifyDomElementHandler from '../../logic/operationHandlers/modifyDomElementHandler.js';
-// Supporting modules implicitly used by the above
-import * as contextAssembler from '../../logic/contextAssembler.js';
-import * as contextUtils from '../../logic/contextUtils.js';
+import DomRenderer from '../../core/domRenderer.js';
 
 // --- Type Imports (Optional, for clarity) ---
 /** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */
@@ -24,22 +24,28 @@ const mockLogger = {
     error: jest.fn(),
     debug: jest.fn(),
 };
+// Mock ValidatedEventDispatcher
+const mockValidatedEventDispatcher = {
+    dispatchValidated: jest.fn().mockResolvedValue(true), // Assume success by default
+};
+
 
 // Simple EntityManager Stub (minimal implementation for this test)
 class MockEntityManager {
     getEntityInstance(id) {
-        // Only needs to return something truthy if an ID is expected,
-        // otherwise context assembler handles null/undefined lookups.
         if (id) {
-            // Return a basic object structure if needed by context assembler logic
-            // For this specific rule, actor/target aren't deeply inspected, so just id is ok.
-            return { id: id };
+            return {id: id};
         }
         return undefined;
     }
-    // These methods are needed by contextAssembler/handlers but not critical logic for *this* test
-    getComponentData(entityId, componentType) { return undefined; }
-    hasComponent(entityId, componentType) { return false; }
+
+    getComponentData(entityId, componentType) {
+        return undefined;
+    }
+
+    hasComponent(entityId, componentType) {
+        return false;
+    }
 }
 
 // Simple DataRegistry Stub
@@ -61,7 +67,6 @@ class MockDataRegistry {
 }
 
 // --- Test Data: Event and Rule Definitions ---
-
 const textUiSetTitleEventDef = {
     "$schema": "http://example.com/schemas/event-definition.schema.json",
     "id": "textUI:set_title",
@@ -69,9 +74,9 @@ const textUiSetTitleEventDef = {
     "payloadSchema": {
         "type": "object",
         "properties": {
-            "text": { "type": "string", "description": "The text content." }
+            "text": {"type": "string", "description": "The text content."}
         },
-        "required": [ "text" ],
+        "required": ["text"],
         "additionalProperties": false
     }
 };
@@ -81,8 +86,8 @@ const uiSetTitleRuleDef = {
     "event_type": "textUI:set_title",
     "condition": { // Condition checks payload and text property are not null/undefined
         "and": [
-            { "!=": [ { "var": "event.payload" }, null ] },
-            { "!=": [ { "var": "event.payload.text" }, null ] }
+            {"!=": [{"var": "event.payload"}, null]},
+            {"!=": [{"var": "event.payload.text"}, null]} // Check 'text', not 'title'
         ]
     },
     "actions": [
@@ -99,55 +104,88 @@ const uiSetTitleRuleDef = {
 };
 
 const INITIAL_TITLE_TEXT = 'Initial Title';
+const TITLE_ID = 'title-element';
+const OUTPUT_DIV_ID = 'outputDiv'; // Needed for DomRenderer
+const INPUT_ID = 'command-input'; // Needed for DomRenderer
 
 // --- Test Suite ---
 describe('Integration Test: textUI:set_title Event Flow', () => {
 
-    // REMOVE THIS - 'dom' instance variable is no longer needed
-    // let dom;
-
-    // Keep other variable declarations
+    // JSDOM variables
+    let dom;
+    let window;
+    let document;
+    // Core service variables
     let eventBus;
     let mockEntityManager;
     let mockDataRegistry;
     let opRegistry;
     let jsonLogicService;
-    let modifyDomHandler;
+    let domRenderer; // REAL DomRenderer instance
+    let modifyDomHandler; // REAL ModifyDomElementHandler instance
     let operationInterpreter;
     let systemLogicInterpreter;
+    // DOM Elements
+    let titleElement;
+    let outputDiv;
+    let inputElement;
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // 1. Reset the DOM Body Content (using Jest's global document)
-        // This ensures the H1 exists for each test run
-        document.body.innerHTML = `
-            <h1 id="title-element">${INITIAL_TITLE_TEXT}</h1>
-        `;
+        // --- NEW: Create JSDOM instance and elements ---
+        dom = new JSDOM(`<!DOCTYPE html><html><body>
+          <div id="game-container">
+            <h1 id="${TITLE_ID}">${INITIAL_TITLE_TEXT}</h1>
+            <div id="${OUTPUT_DIV_ID}"></div>
+            <div id="action-buttons-container"></div>
+            <input type="text" id="${INPUT_ID}" placeholder="Enter command..." />
+          </div>
+        </body></html>`);
+        window = dom.window;
+        document = window.document;
 
-        // REMOVE THESE LINES - Jest handles JSDOM setup/globals
-        // dom = new JSDOM(`...`);
-        // global.document = dom.window.document;
-        // global.window = dom.window;
+        // Get references to DOM elements
+        titleElement = document.getElementById(TITLE_ID);
+        outputDiv = document.getElementById(OUTPUT_DIV_ID);
+        inputElement = document.getElementById(INPUT_ID);
+        // --- End JSDOM Setup ---
 
-        // 2. Instantiate Mocks and Stubs (Keep This)
+        // Instantiate Mocks and Common Services
         mockEntityManager = new MockEntityManager();
         mockDataRegistry = new MockDataRegistry([uiSetTitleRuleDef], [textUiSetTitleEventDef]);
-
-        // 3. Instantiate Real Services (Keep This)
         eventBus = new EventBus();
-        jsonLogicService = new JsonLogicEvaluationService({ logger: mockLogger });
-        opRegistry = new OperationRegistry({ logger: mockLogger });
-        modifyDomHandler = new ModifyDomElementHandler({ logger: mockLogger });
+        jsonLogicService = new JsonLogicEvaluationService({logger: mockLogger});
+        opRegistry = new OperationRegistry({logger: mockLogger});
+
+        // --- NEW: Instantiate REAL DomRenderer and ModifyDomElementHandler ---
+        domRenderer = new DomRenderer({
+            outputDiv: outputDiv,
+            inputElement: inputElement,
+            titleElement: titleElement, // Pass the real title element
+            eventBus: eventBus,
+            validatedEventDispatcher: mockValidatedEventDispatcher,
+            logger: mockLogger
+        });
+        modifyDomHandler = new ModifyDomElementHandler({
+            logger: mockLogger,
+            domRenderer: domRenderer // Pass the real DomRenderer
+        });
+        // --- End NEW Instantiation ---
+
         operationInterpreter = new OperationInterpreter({
             logger: mockLogger,
-            operationRegistry: opRegistry
+            operationRegistry: opRegistry,
+            jsonLogicEvaluationService: jsonLogicService,
+            entityManager: mockEntityManager
+            // Provide mock worldContext if needed
         });
 
-        // 4. Register the Handler (Keep This)
+        // --- NEW: Register the REAL handler instance ---
         opRegistry.register('MODIFY_DOM_ELEMENT', modifyDomHandler.execute.bind(modifyDomHandler));
+        // --- End NEW Registration ---
 
-        // 5. Instantiate System Under Test (SystemLogicInterpreter) (Keep This)
+        // Instantiate SUT (SystemLogicInterpreter)
         systemLogicInterpreter = new SystemLogicInterpreter({
             logger: mockLogger,
             eventBus: eventBus,
@@ -156,71 +194,70 @@ describe('Integration Test: textUI:set_title Event Flow', () => {
             entityManager: mockEntityManager,
             operationInterpreter: operationInterpreter
         });
-
-        // 6. Initialize the Interpreter (Keep This)
-        systemLogicInterpreter.initialize();
+        systemLogicInterpreter.initialize(); // Subscribe SUT to EventBus
     });
 
     afterEach(() => {
-        // REMOVE THESE LINES - Jest handles JSDOM cleanup
-        // global.document = undefined;
-        // global.window = undefined;
-
-        // Keep mock restoration
         jest.restoreAllMocks();
+        if (dom) {
+            dom.window.close(); // Clean up JSDOM
+        }
+        systemLogicInterpreter = null; // Help GC
+        mockDataRegistry = null;
     });
+
 
     // --- Test Cases (Following the Plan) ---
 
     it('TC1: Happy Path - should update the title element text content', async () => {
-        const titleElement = document.getElementById('title-element');
         expect(titleElement).not.toBeNull();
         expect(titleElement.textContent).toBe(INITIAL_TITLE_TEXT);
 
         const newTitle = "Welcome, Player!";
-        const payload = { text: newTitle };
+        const payload = {text: newTitle}; // Payload key is 'text'
 
         await eventBus.dispatch('textUI:set_title', payload);
-
-        // *** ADD DELAY HERE ***
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 0)); // Allow async processing
 
         // Assert DOM Change
         expect(titleElement.textContent).toBe(newTitle);
 
-        // Assert Logs (Now checked after delay)
-        // --- Updated Expectation: Check for the handler log specifically, matching BOTH arguments ---
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("MODIFY_DOM_ELEMENT: Handler executing with params:"), // Matcher for the first argument (the message)
-            expect.any(String) // Matcher for the second argument (the stringified params)
-        );
-        // --- Keep other relevant log checks if desired ---
+        // Assert Logs
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Processing rule \'rule:ui_set_title_from_event\''));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Condition evaluation final boolean result: true'));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Executing 1 actions'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully set property "textContent" on element 1/1 (selector: "#title-element")`));
+        // Check handler execution log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'MODIFY_DOM_ELEMENT: Handler executing with params:',
+            expect.stringContaining(`"selector":"#${TITLE_ID}","property":"textContent","value":"${newTitle}"`)
+        );
+        // Check DomRenderer success log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining(`Modified property "textContent" on 1 element(s) matching selector "#${TITLE_ID}"`)
+        );
         expect(mockLogger.error).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
     });
 
     it('TC2: Condition Failure - should NOT update title when payload is null', async () => {
-        const titleElement = document.getElementById('title-element');
         const payload = null; // Explicitly null
 
         await eventBus.dispatch('textUI:set_title', payload);
+        await new Promise(resolve => setTimeout(resolve, 0)); // Allow async processing (though nothing should happen)
 
         // Assert DOM unchanged
         expect(titleElement.textContent).toBe(INITIAL_TITLE_TEXT);
         // Assert logs indicate condition failure
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Rule 'rule:ui_set_title_from_event' actions skipped"));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("due to condition evaluating to false"));
-        // Assert handler was not called (indirectly check via debug logs)
+        // Assert handler was not called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing'));
     });
 
     it('TC3: Condition Failure - should NOT update title when payload is undefined', async () => {
-        const titleElement = document.getElementById('title-element');
         // Dispatch without payload argument, which defaults to {} in EventBus, but contextAssembler makes it null
         await eventBus.dispatch('textUI:set_title'); // No payload
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         // Assert DOM unchanged
         expect(titleElement.textContent).toBe(INITIAL_TITLE_TEXT);
@@ -231,94 +268,86 @@ describe('Integration Test: textUI:set_title Event Flow', () => {
     });
 
     it('TC4: Condition Failure - should NOT update title when payload lacks "text" property', async () => {
-        const titleElement = document.getElementById('title-element');
-        const payload = { anotherProp: "some value" }; // Missing 'text'
+        const payload = {anotherProp: "some value"}; // Missing 'text'
 
         await eventBus.dispatch('textUI:set_title', payload);
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         // Assert DOM unchanged
         expect(titleElement.textContent).toBe(INITIAL_TITLE_TEXT);
-        // Assert logs indicate condition failure
+        // Assert logs indicate condition failure (event.payload.text is null/undefined)
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Rule 'rule:ui_set_title_from_event' actions skipped"));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("due to condition evaluating to false"));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing'));
     });
 
     it('TC5: Condition Failure - should NOT update title when payload "text" is null', async () => {
-        const titleElement = document.getElementById('title-element');
-        const payload = { text: null }; // 'text' is explicitly null
+        const payload = {text: null}; // 'text' is explicitly null
 
         await eventBus.dispatch('textUI:set_title', payload);
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         // Assert DOM unchanged
         expect(titleElement.textContent).toBe(INITIAL_TITLE_TEXT);
-        // Assert logs indicate condition failure
+        // Assert logs indicate condition failure (event.payload.text is null)
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Rule 'rule:ui_set_title_from_event' actions skipped"));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("due to condition evaluating to false"));
         expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing'));
     });
 
     it('TC6: Edge Case - should update title to an empty string', async () => {
-        const titleElement = document.getElementById('title-element');
-        const payload = { text: "" }; // Empty string
+        const payload = {text: ""}; // Empty string
 
         await eventBus.dispatch('textUI:set_title', payload);
-
-        // *** ADD DELAY HERE ***
         await new Promise(resolve => setTimeout(resolve, 0));
 
         // Assert DOM change
         expect(titleElement.textContent).toBe("");
 
-        // Assert Logs (Now checked after delay)
-        // --- Updated Expectation: Check for the handler log specifically, matching BOTH arguments ---
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("MODIFY_DOM_ELEMENT: Handler executing with params:"), // Matcher for the first argument (the message)
-            expect.any(String) // Matcher for the second argument (the stringified params)
-        );
-        // --- Keep other relevant log checks if desired ---
+        // Assert Logs
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Processing rule \'rule:ui_set_title_from_event\''));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Condition evaluation final boolean result: true')); // "" !== null
-        // The original assertion was: expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing')
-        // Let's keep it similar or use the more specific one above. The one above is better.
-        // expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully set property "textContent" on element 1/1 (selector: "#title-element")`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Executing 1 actions'));
+        // Check handler execution log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'MODIFY_DOM_ELEMENT: Handler executing with params:',
+            expect.stringContaining(`"selector":"#${TITLE_ID}","property":"textContent","value":""`) // Value is empty string
+        );
+        // Check DomRenderer success log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining(`Modified property "textContent" on 1 element(s) matching selector "#${TITLE_ID}"`)
+        );
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it('TC7: Robustness - should log warning and not fail when target element is missing', async () => {
-        const titleElement = document.getElementById('title-element');
-        expect(titleElement).not.toBeNull();
-        titleElement.remove();
+        titleElement.remove(); // Remove the target H1 element
+        expect(document.getElementById(TITLE_ID)).toBeNull(); // Verify removal
 
-        const payload = { text: "Should Not Appear" };
+        const payload = {text: "Should Not Appear"};
 
         await eventBus.dispatch('textUI:set_title', payload);
-
-        // *** ADD DELAY HERE ***
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        // Assert
-        expect(document.getElementById('title-element')).toBeNull();
-        expect(mockLogger.error).not.toHaveBeenCalled();
-
-        // Assert Logs (Now checked after delay)
-        // Check the flow proceeded up to the handler attempt
+        // Assert Logs
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Processing rule \'rule:ui_set_title_from_event\''));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Condition evaluation final boolean result: true'));
-        // --- Updated Expectation: Check for the handler log specifically, matching BOTH arguments ---
+        // Check handler execution attempt log
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("MODIFY_DOM_ELEMENT: Handler executing with params:"), // Matcher for the first argument (the message)
-            expect.any(String) // Matcher for the second argument (the stringified params)
+            'MODIFY_DOM_ELEMENT: Handler executing with params:',
+            expect.stringContaining(`"selector":"#${TITLE_ID}","property":"textContent","value":"Should Not Appear"`)
         );
-        // The original assertion was: expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing')
-        // expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('MODIFY_DOM_ELEMENT: Handler executing'));
-
-        // Check for the WARNING log from the handler
-        expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+        // Check WARNING log from DomRenderer due to missing element
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('MODIFY_DOM_ELEMENT: No DOM elements found matching selector "#title-element"')
+            expect.stringContaining(`DomRenderer.mutate: Selector "#${TITLE_ID}" found no elements.`)
         );
+        // Check WARNING log from ModifyDomElementHandler due to missing element
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            `MODIFY_DOM_ELEMENT: No elements found or modified for selector "#${TITLE_ID}".`
+        );
+
+        expect(mockLogger.error).not.toHaveBeenCalled(); // Should not be an error, just warnings
+        expect(mockLogger.warn).toHaveBeenCalledTimes(2); // 1 from DomRenderer, 1 from Handler
     });
 
 });
