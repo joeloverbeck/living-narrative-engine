@@ -2,7 +2,6 @@
 // Export interfaces and base classes
 export * from './IDocumentContext.js';
 export * from './rendererBase.js'; // Ensure RendererBase export is correct
-export * from './IDomMutationService.js';
 
 // Export concrete classes and utilities
 export {default as DocumentContext} from './documentContext.js';

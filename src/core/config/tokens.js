@@ -37,7 +37,6 @@
  * @property {DiToken} LocationRenderer - Token for the component rendering location details.
  * @property {DiToken} InventoryPanel - Token for the component managing the inventory panel UI.
  * @property {DiToken} ActionButtonsRenderer - Token for the component rendering available action buttons.
- * @property {DiToken} IDomMutationService - Token for the service handling generic DOM mutations.
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
@@ -129,8 +128,6 @@
  * @property {DiToken} AddComponentHandler - Token for the 'ADD_COMPONENT' operation handler.
  * @property {DiToken} RemoveComponentHandler - Token for the 'REMOVE_COMPONENT' operation handler.
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
- * @property {DiToken} ModifyDomElementHandler - Token for the 'MODIFY_DOM_ELEMENT' operation handler.
- * @property {DiToken} AppendUiMessageHandler - Token for the 'APPEND_UI_MESSAGE' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
  * @property {DiToken} QuerySystemDataHandler - Token for the 'QUERY_SYSTEM_DATA' operation handler.
  */

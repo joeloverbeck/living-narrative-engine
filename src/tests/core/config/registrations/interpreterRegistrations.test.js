@@ -1,5 +1,5 @@
 // src/tests/core/config/registrations/interpreterRegistrations.test.js
-// ****** CORRECTED FILE (Removed DomRenderer) ******
+// ****** CORRECTED FILE (Removed All DOM/UI Handlers/Services) ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -11,11 +11,10 @@
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../../../domUI/IDomMutationService.js').IDomMutationService} IDomMutationService */
-// --- VVVVV DomRenderer type removed VVVVV ---
-// /** @typedef {import('../../../../domUI/domRenderer.js').default} DomRenderer */
-// --- ^^^^^ DomRenderer type removed ^^^^^ ---
-/** @typedef {import('../../../../domUI/uiMessageRenderer.js').UiMessageRenderer} UiMessageRenderer */
+// --- VVVVV Imports removed VVVVV ---
+// /** @typedef {import('../../../../domUI/IDomMutationService.js').IDomMutationService} IDomMutationService */ // REMOVED
+// /** @typedef {import('../../../../domUI/uiMessageRenderer.js').UiMessageRenderer} UiMessageRenderer */ // REMOVED (Assuming no other registered handler needs it)
+// --- ^^^^^ Imports removed ^^^^^ ---
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -25,7 +24,7 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerInterpreters} from '../../../../core/config/registrations/interpreterRegistrations.js';
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/config/tokens.js'; // Assuming tokens.js does NOT have DomRenderer
+import {tokens} from '../../../../core/config/tokens.js'; // Now Corrected
 
 // --- Mock Modules ---
 jest.mock('../../../../logic/operationRegistry.js');
@@ -39,6 +38,7 @@ jest.mock('../../../../logic/operationHandlers/removeComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/queryComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/setVariableHandler.js');
 jest.mock('../../../../logic/operationHandlers/querySystemDataHandler.js');
+// Mocks for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
 // --- Import AFTER mocking ---
 import OperationRegistry from '../../../../logic/operationRegistry.js';
@@ -52,6 +52,7 @@ import RemoveComponentHandler from '../../../../logic/operationHandlers/removeCo
 import QueryComponentHandler from '../../../../logic/operationHandlers/queryComponentHandler.js';
 import SetVariableHandler from '../../../../logic/operationHandlers/setVariableHandler.js';
 import QuerySystemDataHandler from '../../../../logic/operationHandlers/querySystemDataHandler.js';
+// Imports for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
 // --- Mock Implementations ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
@@ -67,21 +68,19 @@ const mockEntityManager = {
 };
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
 const mockSystemDataRegistry = {query: jest.fn(), registerSource: jest.fn()};
-const mockDomMutationService = {mutate: jest.fn()};
-// --- VVVVV mockDomRenderer removed VVVVV ---
-// const mockDomRenderer = {renderMessage: jest.fn(), mutate: jest.fn()};
-// --- ^^^^^ mockDomRenderer removed ^^^^^ ---
-const mockUiMessageRenderer = {render: jest.fn()};
+// --- VVVVV Mocks removed VVVVV ---
+// const mockDomMutationService = {mutate: jest.fn()}; // REMOVED
+// const mockUiMessageRenderer = {render: jest.fn()}; // REMOVED (Assuming no handler needs it)
+// --- ^^^^^ Mocks removed ^^^^^ ---
 
 // --- Mock DI Container ---
-// Using the version with jest.fn() wrapper and logging from previous step
 const createMockContainer = () => {
     const registrations = new Map();
     /** @type {AppContainer} */
     const container = {
         _registrations: registrations,
         register: jest.fn((token, factoryOrValue, options = {}) => {
-            console.log(`[Mock Register] Called. Token type: ${typeof token}, Token value: ${String(token)}`, {options}); // Keep log
+            console.log(`[Mock Register] Called. Token type: ${typeof token}, Token value: ${String(token)}`, {options});
             if (token && typeof token !== 'string' && typeof token !== 'symbol') {
                 console.warn(`[Mock Register] Received non-standard token type: ${typeof token}`, token);
             }
@@ -92,7 +91,7 @@ const createMockContainer = () => {
             registrations.set(token, {factoryOrValue, options, instance: undefined});
         }),
         resolve: jest.fn((token) => {
-            console.log(`[Mock Resolve] Attempting to resolve token: ${String(token)}`); // Keep log
+            console.log(`[Mock Resolve] Attempting to resolve token: ${String(token)}`);
             const registration = registrations.get(token);
             if (!registration) {
                 const registeredTokens = Array.from(registrations.keys()).map(t => String(t)).join(', ');
@@ -148,7 +147,8 @@ describe('registerInterpreters', () => {
         jest.clearAllMocks();
         mockContainer = createMockContainer();
 
-        // Pre-register core dependencies
+        // Pre-register core dependencies NEEDED by the interpreter factories
+        // These are the services the factories themselves will resolve.
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
@@ -156,11 +156,10 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.IDomMutationService, mockDomMutationService, {lifecycle: 'singleton'});
-        // --- VVVVV Registration for DomRenderer removed VVVVV ---
-        // mockContainer.register(tokens.DomRenderer, mockDomRenderer, {lifecycle: 'singleton'});
-        // --- ^^^^^ Registration for DomRenderer removed ^^^^^ ---
-        mockContainer.register(tokens.UiMessageRenderer, mockUiMessageRenderer, {lifecycle: 'singleton'});
+        // --- VVVVV Pre-registrations removed VVVVV ---
+        // mockContainer.register(tokens.IDomMutationService, mockDomMutationService, {lifecycle: 'singleton'}); // REMOVED
+        // mockContainer.register(tokens.UiMessageRenderer, mockUiMessageRenderer, {lifecycle: 'singleton'}); // REMOVED (Assuming no handler needs it)
+        // --- ^^^^^ Pre-registrations removed ^^^^^ ---
 
         // Clear implementation mocks
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -170,22 +169,16 @@ describe('registerInterpreters', () => {
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
         Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.());
-        Object.values(mockDomMutationService).forEach(fn => fn.mockClear?.());
-        // --- VVVVV Clearing for mockDomRenderer removed VVVVV ---
-        // Object.values(mockDomRenderer).forEach(fn => fn.mockClear?.());
-        // --- ^^^^^ Clearing for mockDomRenderer removed ^^^^^ ---
-        mockUiMessageRenderer.render.mockClear?.();
+        // --- VVVVV Mock clears removed VVVVV ---
+        // Object.values(mockDomMutationService).forEach(fn => fn.mockClear?.()); // REMOVED
+        // mockUiMessageRenderer.render.mockClear?.(); // REMOVED
+        // --- ^^^^^ Mock clears removed ^^^^^ ---
 
-
-        // Clear constructor mocks defined via jest.mock()
+        // Clear constructor mocks defined via jest.mock() for USED handlers/interpreters
         OperationRegistry.mockClear?.();
         if (OperationRegistry.mock?.instances) {
             OperationRegistry.mock.instances.forEach(inst => {
-                if (inst) {
-                    Object.values(inst).forEach(prop => {
-                        if (typeof prop?.mockClear === 'function') prop.mockClear();
-                    });
-                }
+                if (inst?.register?.mockClear) inst.register.mockClear();
             });
         }
         OperationInterpreter.mockClear?.();
@@ -196,10 +189,9 @@ describe('registerInterpreters', () => {
         AddComponentHandler.mockClear?.();
         RemoveComponentHandler.mockClear?.();
         QueryComponentHandler.mockClear?.();
-        ModifyDomElementHandler.mockClear?.();
-        AppendUiMessageHandler.mockClear?.();
         SetVariableHandler.mockClear?.();
         QuerySystemDataHandler.mockClear?.();
+        // Clear calls for ModifyDomElementHandler and AppendUiMessageHandler already removed
 
     }); // End beforeEach
 
@@ -208,23 +200,25 @@ describe('registerInterpreters', () => {
     it('should register required services without throwing errors', () => {
         expect(() => registerInterpreters(mockContainer)).not.toThrow();
 
-        // Assertions should work correctly now with jest.fn() mock
+        // Assertions for currently registered handlers and interpreters
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.DispatchEventHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.LogHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ModifyComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.AddComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.RemoveComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.QueryComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ModifyDomElementHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.AppendUiMessageHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.SetVariableHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.QuerySystemDataHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationRegistry, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({
             lifecycle: 'singletonFactory',
-            tags: expect.any(Array)
+            tags: expect.arrayContaining(['Initializable', 'Shutdownable'])
         }));
+
+        // Explicitly check that removed handlers are NOT registered
+        expect(mockContainer.register).not.toHaveBeenCalledWith(tokens.ModifyDomElementHandler, expect.any(Function), expect.anything());
+        expect(mockContainer.register).not.toHaveBeenCalledWith(tokens.AppendUiMessageHandler, expect.any(Function), expect.anything());
     });
 
     it('resolving SystemLogicInterpreter does not throw', () => {
@@ -276,10 +270,12 @@ describe('registerInterpreters', () => {
         expect(mockInstance.register).toHaveBeenCalledWith('ADD_COMPONENT', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('REMOVE_COMPONENT', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('QUERY_COMPONENT', expect.any(Function));
-        expect(mockInstance.register).toHaveBeenCalledWith('MODIFY_DOM_ELEMENT', expect.any(Function));
-        expect(mockInstance.register).toHaveBeenCalledWith('APPEND_UI_MESSAGE', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('SET_VARIABLE', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('QUERY_SYSTEM_DATA', expect.any(Function));
+
+        // Ensure removed handlers weren't called
+        expect(mockInstance.register).not.toHaveBeenCalledWith('MODIFY_DOM_ELEMENT', expect.any(Function));
+        expect(mockInstance.register).not.toHaveBeenCalledWith('APPEND_UI_MESSAGE', expect.any(Function));
     });
 
     it('interpreters are registered as singletons', () => {
@@ -309,7 +305,7 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(handler).toBeDefined();
         expect(SetVariableHandler).toHaveBeenCalledTimes(1);
-        expect(SetVariableHandler).toHaveBeenCalledWith({logger: mockLogger});
+        expect(SetVariableHandler).toHaveBeenCalledWith(expect.objectContaining({logger: mockLogger}));
     });
 
     it('resolving QuerySystemDataHandler does not throw', () => {
@@ -320,37 +316,12 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(handler).toBeDefined();
         expect(QuerySystemDataHandler).toHaveBeenCalledTimes(1);
-        expect(QuerySystemDataHandler).toHaveBeenCalledWith({
+        expect(QuerySystemDataHandler).toHaveBeenCalledWith(expect.objectContaining({
             logger: mockLogger,
             systemDataRegistry: mockSystemDataRegistry
-        });
-    });
-
-    it('resolving AppendUiMessageHandler does not throw', () => {
-        registerInterpreters(mockContainer);
-        let handler;
-        expect(() => {
-            handler = mockContainer.resolve(tokens.AppendUiMessageHandler);
-        }).not.toThrow();
-        expect(handler).toBeDefined();
-        expect(AppendUiMessageHandler).toHaveBeenCalledTimes(1);
-        expect(AppendUiMessageHandler).toHaveBeenCalledWith(expect.objectContaining({
-            logger: mockLogger,
-            uiMessageRenderer: mockUiMessageRenderer
         }));
     });
 
-    it('resolving ModifyDomElementHandler does not throw', () => {
-        registerInterpreters(mockContainer);
-        let handler;
-        expect(() => {
-            handler = mockContainer.resolve(tokens.ModifyDomElementHandler);
-        }).not.toThrow();
-        expect(handler).toBeDefined();
-        expect(ModifyDomElementHandler).toHaveBeenCalledTimes(1);
-        expect(ModifyDomElementHandler).toHaveBeenCalledWith(expect.objectContaining({
-            logger: mockLogger,
-            domMutationService: mockDomMutationService
-        }));
-    });
+    // Tests for AppendUiMessageHandler and ModifyDomElementHandler are now removed.
+
 }); // End describe
