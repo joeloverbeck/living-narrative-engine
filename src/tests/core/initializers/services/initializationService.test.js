@@ -199,7 +199,8 @@ describe('InitializationService', () => {
                 'SystemInitializer',
                 // 'GameStateInitializer', // REMOVED
                 'WorldInitializer',
-                'InputSetupService'
+                'InputSetupService',
+                'DomUiFacade'
                 // 'GameLoop' // Already correctly removed
             ]);
 

@@ -39,7 +39,7 @@
 
 // --- Class Definition ---
 
-import {tokens} from "semver";
+import {tokens} from '../../config/tokens.js'; // <<< CORRECTED IMPORT PATH
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -158,7 +158,7 @@ class InitializationService {
 
             this.#logger.debug('Resolving DomUiFacade to instantiate UI components...');
             try {
-                this.#container.resolve(tokens.DomUiFacade); // Resolve the facade
+                this.#container.resolve(tokens.DomUiFacade); // Resolve the facade using the CORRECT token
                 this.#logger.info('InitializationService: DomUiFacade resolved, UI components instantiated.');
             } catch (uiResolveError) {
                 // If resolving the UI fails, it's serious but maybe not fatal for headless operation?
