@@ -37,8 +37,6 @@ jest.mock('../../../../logic/operationHandlers/modifyComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/addComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/removeComponentHandler.js');
 jest.mock('../../../../logic/operationHandlers/queryComponentHandler.js');
-jest.mock('../../../../logic/operationHandlers/modifyDomElementHandler.js');
-jest.mock('../../../../logic/operationHandlers/appendUiMessageHandler.js');
 jest.mock('../../../../logic/operationHandlers/setVariableHandler.js');
 jest.mock('../../../../logic/operationHandlers/querySystemDataHandler.js');
 
@@ -52,8 +50,6 @@ import ModifyComponentHandler from '../../../../logic/operationHandlers/modifyCo
 import AddComponentHandler from '../../../../logic/operationHandlers/addComponentHandler.js';
 import RemoveComponentHandler from '../../../../logic/operationHandlers/removeComponentHandler.js';
 import QueryComponentHandler from '../../../../logic/operationHandlers/queryComponentHandler.js';
-import ModifyDomElementHandler from '../../../../logic/operationHandlers/modifyDomElementHandler.js';
-import AppendUiMessageHandler from '../../../../logic/operationHandlers/appendUiMessageHandler.js';
 import SetVariableHandler from '../../../../logic/operationHandlers/setVariableHandler.js';
 import QuerySystemDataHandler from '../../../../logic/operationHandlers/querySystemDataHandler.js';
 

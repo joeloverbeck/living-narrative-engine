@@ -7,7 +7,6 @@ export * from './IDomMutationService.js';
 // Export concrete classes and utilities
 export {default as DocumentContext} from './documentContext.js';
 export {default as DomElementFactory} from './domElementFactory.js';
-export {DomMutationService} from './domMutationService.js'; // Use named export
 export * from './uiMessageRenderer.js';
 export * from './TitleRenderer.js';
 export * from './InputStateController.js';

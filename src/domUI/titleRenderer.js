@@ -71,7 +71,7 @@ export class TitleRenderer extends RendererBase {
         // based on actual VED schema definition. Using old EventBus names as placeholders.
 
         // Direct title setting
-        this.#subscriptions.push(ved.subscribe('ui:set_title', this.#handleSetTitle.bind(this)));
+        this.#subscriptions.push(ved.subscribe('textUI:set_title', this.#handleSetTitle.bind(this)));
 
         // Initialization Events
         this.#subscriptions.push(ved.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this)));
@@ -104,9 +104,9 @@ export class TitleRenderer extends RendererBase {
     // --- Private Event Handlers (Adapted from DomRenderer) ---
 
     /**
-     * Handles setting the main title directly via 'ui:set_title'.
+     * Handles setting the main title directly via 'textUI:set_title'.
      * @private
-     * @param {object} payload - Expected payload for 'ui:set_title' (e.g., { text: string }).
+     * @param {object} payload - Expected payload for 'textUI:set_title' (e.g., { text: string }).
      * @param {string} eventType - The name of the triggered event.
      */
     #handleSetTitle(payload, eventType) {

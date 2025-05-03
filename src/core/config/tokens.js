@@ -155,17 +155,15 @@ export const tokens = Object.freeze({
     IDocumentContext: 'IDocumentContext',
     DomElementFactory: 'DomElementFactory',
     UiMessageRenderer: 'UiMessageRenderer',
-    TitleRenderer: 'TitleRenderer', // ADDED DI-8.2
-    InputStateController: 'InputStateController', // ADDED DI-8.2
-    LocationRenderer: 'LocationRenderer', // ADDED DI-8.2
-    InventoryPanel: 'InventoryPanel', // ADDED DI-8.2
-    ActionButtonsRenderer: 'ActionButtonsRenderer', // ADDED DI-8.2
-    IDomMutationService: 'IDomMutationService', // ADDED DI-8.2 (Interface Token)
-    DomUiFacade: 'DomUiFacade', // ADDED DI-8.2
+    TitleRenderer: 'TitleRenderer',
+    InputStateController: 'InputStateController',
+    LocationRenderer: 'LocationRenderer',
+    InventoryPanel: 'InventoryPanel',
+    ActionButtonsRenderer: 'ActionButtonsRenderer',
+    DomUiFacade: 'DomUiFacade',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
-    ManifestLoader: 'ManifestLoader', // Deprecated?
     RuleLoader: 'RuleLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     ActionLoader: 'ActionLoader',
@@ -251,8 +249,6 @@ export const tokens = Object.freeze({
     AddComponentHandler: 'AddComponentHandler',
     RemoveComponentHandler: 'RemoveComponentHandler',
     QueryComponentHandler: 'QueryComponentHandler',
-    ModifyDomElementHandler: 'ModifyDomElementHandler',
-    AppendUiMessageHandler: 'AppendUiMessageHandler',
     SetVariableHandler: 'SetVariableHandler',
     QuerySystemDataHandler: 'QuerySystemDataHandler',
 });

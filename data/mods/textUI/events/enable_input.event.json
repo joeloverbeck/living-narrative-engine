@@ -1,23 +1,19 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
   "id": "textUI:enable_input",
-  "description": "Signals the UI to enable the command input field for a specific entity, optionally setting its placeholder text, and potentially focusing it.",
+  "description": "Signals the UI to enable the primary command input field, optionally setting its placeholder text.",
   "payloadSchema": {
     "type": "object",
+    "description": "Payload for the textUI:enable_input event.",
     "properties": {
       "placeholder": {
-        "description": "The placeholder text to display in the input field when it's empty (e.g., 'Enter command...').",
-        "type": "string"
-      },
-      "entityId": {
-        "description": "The unique ID of the entity whose turn it is and for whom input is being enabled.",
-        "type": "string"
+        "description": "Optional. The placeholder text to display in the input field when it's empty. Defaults to 'Enter command...'.",
+        "type": "string",
+        "default": "Enter command..."
       }
     },
-    "required": [
-      "placeholder"
-    ],
+    "required": [],
     "additionalProperties": false,
-    "$comment": "This event tells the UI that the game is ready for the next command from a specific entity. The placeholder provides guidance."
+    "$comment": "This event tells the UI that the game is ready for the next command input. The placeholder provides guidance."
   }
 }

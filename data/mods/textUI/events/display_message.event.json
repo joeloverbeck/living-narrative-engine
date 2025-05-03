@@ -6,13 +6,13 @@
     "type": "object",
     "description": "Payload for the textUI:display_message event.",
     "properties": {
-      "text": {
+      "message": {
         "type": "string",
         "description": "The message content to display to the user."
       },
       "type": {
         "type": "string",
-        "description": "A category hint for the message. Used for formatting or filtering in the UI.",
+        "description": "A category hint for the message. Used for formatting or filtering in the UI. Defaults to 'info'.",
         "enum": [
           "info",
           "warning",
@@ -24,13 +24,20 @@
           "sound",
           "prompt",
           "internal",
-          "debug"
-        ]
+          "debug",
+          "echo",
+          "fatal"
+        ],
+        "default": "info"
+      },
+      "allowHtml": {
+        "type": "boolean",
+        "description": "If true, the message content will be treated as HTML; otherwise, it will be treated as plain text. Defaults to false.",
+        "default": false
       }
     },
     "required": [
-      "text",
-      "type"
+      "message"
     ],
     "additionalProperties": false
   }
