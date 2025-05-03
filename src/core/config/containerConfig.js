@@ -58,7 +58,8 @@ export function configureContainer(
     registerInfrastructure(container); // Registers SystemServiceRegistry, GameDataRepository, SystemDataRegistry (Ticket #7)
 
     // --- UI (needs ValidatedEventDispatcher from infrastructure) ------------
-    registerUI(container, {outputDiv, inputElement, titleElement});
+    // Pass outputDiv and titleElement along, and assume document is globally accessible or handle differently
+    registerUI(container, {outputDiv, inputElement, titleElement, document: window.document}); // Pass required elements + document
 
     // --- Pure domain‑logic services -----------------------------------------
     registerDomainServices(container);
