@@ -1,4 +1,4 @@
-// src/core/dependencyInjection/registrarHelpers.js
+// src/core/config/registrarHelpers.js
 // ****** CORRECTED FILE ******
 
 /**
@@ -187,7 +187,7 @@ export class Registrar {
         // Delegate to the base register method with the correct lifecycle for this pattern.
         // The factory created by _createFactoryForObjectInjection doesn't need the container arg itself,
         // but the container needs to call it once to create the singleton.
-        this.register(token, factory, { lifecycle: 'singleton' });
+        this.register(token, factory, {lifecycle: 'singleton'});
         return this;
     }
 
@@ -201,7 +201,7 @@ export class Registrar {
      */
     instance(token, instance) {
         const factoryFn = () => instance; // Factory just returns the existing instance
-        this.register(token, factoryFn, { lifecycle: 'singleton' });
+        this.register(token, factoryFn, {lifecycle: 'singleton'});
         return this;
     }
 
@@ -209,6 +209,7 @@ export class Registrar {
      * Registers a factory function as a singleton.
      * Use this when instantiation logic is more complex than just `new Ctor(depsMap)`,
      * especially when the factory needs the container itself.
+     * The factory is called once and the result is cached.
      *
      * @template T
      * @param {DiToken} token - The key to register the dependency under.
@@ -221,7 +222,7 @@ export class Registrar {
         }
         // Use the base register method, applying pending tags and setting the CORRECT lifecycle
         // ----- VVVVVV THE FIX IS HERE VVVVVV -----
-        this.register(token, factoryFn, { lifecycle: 'singletonFactory' });
+        this.register(token, factoryFn, {lifecycle: 'singletonFactory'});
         // ----- ^^^^^^ THE FIX IS HERE ^^^^^^ -----
         return this;
     }
@@ -239,7 +240,7 @@ export class Registrar {
      */
     transient(token, Ctor, deps = []) {
         const factory = _createFactoryForObjectInjection(Ctor, deps);
-        this.register(token, factory, { lifecycle: 'transient' });
+        this.register(token, factory, {lifecycle: 'transient'});
         return this;
     }
 
@@ -256,7 +257,7 @@ export class Registrar {
         if (typeof factoryFn !== 'function') {
             throw new Error(`Registrar.transientFactory requires a function for token "${String(token)}", but received type ${typeof factoryFn}`);
         }
-        this.register(token, factoryFn, { lifecycle: 'transient' });
+        this.register(token, factoryFn, {lifecycle: 'transient'});
         return this;
     }
 }

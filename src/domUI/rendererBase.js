@@ -20,9 +20,9 @@ export class RendererBase {
     /** @protected @type {ILogger} */
     logger;
     /** @protected @type {IDocumentContext} */
-    doc;
+    documentContext;
     /** @protected @type {IValidatedEventDispatcher} */
-    ved;
+    validatedEventDispatcher;
     /**
      * @protected
      * @readonly
@@ -36,12 +36,12 @@ export class RendererBase {
      * Logs initialization upon successful setup.
      *
      * @param {ILogger} logger - The logger instance. Must not be null or undefined.
-     * @param {IDocumentContext} doc - The document context abstraction. Must not be null or undefined.
-     * @param {IValidatedEventDispatcher} ved - The validated event dispatcher. Must not be null or undefined.
+     * @param {IDocumentContext} documentContext - The document context abstraction. Must not be null or undefined.
+     * @param {IValidatedEventDispatcher} validatedEventDispatcher - The validated event dispatcher. Must not be null or undefined.
      * @throws {Error} If the class is instantiated directly (it's abstract).
-     * @throws {Error} If logger, doc, or ved dependencies are missing.
+     * @throws {Error} If logger, documentContext, or ved dependencies are missing.
      */
-    constructor(logger, doc, ved) {
+    constructor({logger, documentContext, validatedEventDispatcher}) {
         const className = this.constructor.name; // Get concrete class name
 
         if (className === 'RendererBase') {
@@ -52,16 +52,16 @@ export class RendererBase {
         if (!logger || typeof logger.debug !== 'function') { // Basic check for logger presence and a method
             throw new Error(`${className}: Logger dependency is missing or invalid.`);
         }
-        if (!doc || typeof doc.query !== 'function' || typeof doc.create !== 'function') { // Basic check for doc presence and methods
+        if (!documentContext || typeof documentContext.query !== 'function' || typeof documentContext.create !== 'function') { // Basic check for documentContext presence and methods
             throw new Error(`${className}: DocumentContext dependency is missing or invalid.`);
         }
-        if (!ved || typeof ved.dispatchValidated !== 'function') { // Basic check for ved presence and a method
+        if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') { // Basic check for ved presence and a method
             throw new Error(`${className}: ValidatedEventDispatcher dependency is missing or invalid.`);
         }
 
         this.logger = logger;
-        this.doc = doc;
-        this.ved = ved;
+        this.documentContext = documentContext;
+        this.validatedEventDispatcher = validatedEventDispatcher;
         this._logPrefix = `[${className}]`; // Standardized log prefix
 
         // Use the prefix in the initialization log
