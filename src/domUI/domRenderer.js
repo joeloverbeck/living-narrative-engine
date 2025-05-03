@@ -18,6 +18,8 @@ import {setPropertyByPath} from '../utils/domUtils.js';
  * updating the main title, managing the inventory UI panel, and rendering action buttons.
  * Subscribes itself to necessary UI events via the EventBus.
  * Uses ValidatedEventDispatcher for specific outgoing events requiring validation.
+ *
+ * @deprecated This class is being refactored into smaller, focused components. Functionality is being moved. See `dom-ui/` directory.
  */
 class DomRenderer {
     /** @type {HTMLElement} */
@@ -150,10 +152,10 @@ class DomRenderer {
 
     #subscribeToEvents() {
         // --- Standard UI Events (Ticket 18) ---
-        this.#eventBus.subscribe('event:command_echo', this.#handleCommandEcho.bind(this)); // Often useful for UI debugging
+        // M-1.2: Removed subscription for event:command_echo
         this.#eventBus.subscribe('event:disable_input', this.#handleDisableInput.bind(this)); // Standardized input disable
-        this.#eventBus.subscribe('ui:show_message', this.#handleShowMessage.bind(this)); // Standardized message display
-        this.#eventBus.subscribe('ui:show_fatal_error', this.#handleFatalError.bind(this)); // Standardized fatal error display
+        // M-1.2: Removed subscription for ui:show_message
+        // M-1.2: Removed subscription for ui:show_fatal_error
         this.#eventBus.subscribe('ui:set_title', this.#handleSetTitle.bind(this)); // Standardized title update - NEW (Ticket 18)
 
         // --- Game Specific UI Events ---
@@ -187,19 +189,7 @@ class DomRenderer {
 
     // --- Private Event Handlers ---
 
-    /**
-     * Handles command echo events.
-     * @private
-     * @param {object} data - Expected { type: string, payload: EventCommandEchoPayload }
-     */
-    #handleCommandEcho(data) {
-        const payload = data?.payload; // Adjust based on actual event structure from EventBus
-        if (payload && typeof payload.command === 'string') {
-            this.renderMessage(`> ${payload.command}`, 'command');
-        } else {
-            this.#logger.warn("DomRenderer received 'event:command_echo' with invalid data structure:", data);
-        }
-    }
+    // M-1.2: Removed #handleCommandEcho method body
 
     /**
      * Handles disabling the input field. (Ticket 18: Standardized Event)
@@ -257,51 +247,17 @@ class DomRenderer {
             this.renderLocation(locationData);
         } else {
             this.#logger.warn("DomRenderer received '" + data?.type + "' event with invalid or incomplete payload:", data);
-            this.renderMessage('Error: Could not display location details due to invalid data format received.', 'error', {allowHtml: false});
+            // M-1.2: NOTE: This uses renderMessage which is being removed.
+            // This error condition will need to be handled differently, perhaps via ui:show_message event.
+            // For now, log the error as the original renderMessage call will fail.
+            this.#logger.error('Error: Could not display location details due to invalid data format received. Payload:', data);
+            // this.renderMessage('Error: Could not display location details due to invalid data format received.', 'error', {allowHtml: false}); // Original line
         }
     }
 
-    /**
-     * Handles general message display events. (Ticket 18: Standardized Event)
-     * @private
-     * @param {object} data - Expected { type: string, payload: UIShowMessagePayload }
-     */
-    #handleShowMessage(data) {
-        const payload = data?.payload;
-        // Adjusted valid types list in this handler to align with renderMessage correction
-        const validTypes = ['info', 'warning', 'error', 'success', 'debug', 'command', 'location', 'system', 'system-success'];
-        if (payload && typeof payload.text === 'string') {
-            // Use the corrected list for validation here as well, though renderMessage handles the default
-            const type = validTypes.includes(payload.type) ? payload.type : 'info';
-            this.renderMessage(payload.text, type);
-        } else {
-            this.#logger.warn("DomRenderer received 'ui:show_message' with invalid payload structure:", data);
-        }
-    }
+    // M-1.2: Removed #handleShowMessage method body
 
-
-    /**
-     * Handles fatal error display events. (Ticket 18: Standardized Event)
-     * Clears output, shows error in title and message area.
-     * @private
-     * @param {object} data - Expected { type: string, payload: UIShowFatalErrorPayload }
-     */
-    #handleFatalError(data) {
-        const payload = data?.payload;
-        if (payload && typeof payload.title === 'string' && typeof payload.message === 'string') {
-            this.clearOutput();
-            this.setTitle(`FATAL ERROR: ${payload.title}`);
-            this.renderMessage(`<strong>${payload.title}</strong><br>${payload.message}`, 'error', {allowHtml: true});
-            if (payload.details) {
-                this.renderMessage(`Details: <pre>${payload.details}</pre>`, 'error', {allowHtml: true});
-            }
-            this.#logger.error(`FATAL ERROR displayed: ${payload.title} - ${payload.message}`);
-        } else {
-            this.#logger.warn("DomRenderer received 'ui:show_fatal_error' with invalid payload structure:", data);
-            this.setTitle('FATAL ERROR');
-            this.renderMessage('An unspecified fatal error occurred.', 'error', {allowHtml: false});
-        }
-    }
+    // M-1.2: Removed #handleFatalError method body
 
     /**
      * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
@@ -390,7 +346,10 @@ class DomRenderer {
         this.#logger.info(`DomRenderer: ${message}`);
         this.setTitle(message);
         this.clearOutput();
-        this.renderMessage(message, 'system');
+        // M-1.2: NOTE: This uses renderMessage which is being removed.
+        // This initialization step will need to dispatch 'ui:show_message' instead.
+        this.#logger.info(`System Message (was renderMessage): ${message}`);
+        // this.renderMessage(message, 'system'); // Original line
     }
 
     /**
@@ -430,7 +389,10 @@ class DomRenderer {
 
         this.#logger.info(`DomRenderer: Initialization Step Started - ${statusMessage}`);
         this.setTitle(statusMessage);
-        this.renderMessage(statusMessage, 'system');
+        // M-1.2: NOTE: This uses renderMessage which is being removed.
+        // This initialization step will need to dispatch 'ui:show_message' instead.
+        this.#logger.info(`System Message (was renderMessage): ${statusMessage}`);
+        // this.renderMessage(statusMessage, 'system'); // Original line
     }
 
 
@@ -439,14 +401,24 @@ class DomRenderer {
         const message = "Initialization complete. Ready to start!";
         this.#logger.info(`DomRenderer: ${message}`);
         this.setTitle("Game Ready");
-        this.renderMessage(message, 'system-success');
+        // M-1.2: NOTE: This uses renderMessage which is being removed.
+        // This initialization step will need to dispatch 'ui:show_message' instead.
+        this.#logger.info(`System Success Message (was renderMessage): ${message}`);
+        // this.renderMessage(message, 'system-success'); // Original line
     }
 
     /** @private @param {object} data - Expected { type: string, payload: InitializationFailedPayload } */
     #handleInitializationFailed(data) {
         const payload = data?.payload;
         this.#logger.error("DomRenderer: Received overall initialization failure event.", data);
-        this.#handleFatalError({ // Simulate the expected structure for fatal error handler
+        // M-1.2: NOTE: This now simulates a fatal error event. This should probably
+        // be dispatched directly by the InitializationService instead of simulating it here.
+        // However, for now, we keep the simulation logic but note that handleFatalError
+        // itself has been removed. This simulation will therefore log an error but won't
+        // render anything directly in this class anymore.
+        this.#logger.error(`FATAL ERROR (Simulated via handleFatalError): Title: Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}, Message: ${payload?.error || 'An unknown initialization error occurred.'}, Details: ${payload?.stack}`);
+        /* // Original call to the now removed #handleFatalError
+        this.#handleFatalError({
             type: 'ui:show_fatal_error',
             payload: {
                 title: `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`,
@@ -454,6 +426,7 @@ class DomRenderer {
                 details: payload?.stack
             }
         });
+        */
     }
 
     /** @private @param {object} data - Expected { type: string, payload: InitializationStepFailedPayload } */
@@ -471,9 +444,15 @@ class DomRenderer {
         const fullMessage = `${stepName} failed: ${errorMessage}`;
         this.#logger.error(`DomRenderer: Initialization Step Failed - ${fullMessage}`, payload);
         this.setTitle(`${stepName} Failed`);
-        this.renderMessage(fullMessage, 'error', {allowHtml: false});
+        // M-1.2: NOTE: This uses renderMessage which is being removed.
+        // This initialization step will need to dispatch 'ui:show_message' instead.
+        this.#logger.error(`Error Message (was renderMessage): ${fullMessage}`);
+        // this.renderMessage(fullMessage, 'error', {allowHtml: false}); // Original line
         if (payload?.stack) {
-            this.renderMessage(`Details: <pre>${payload.stack}</pre>`, 'error', {allowHtml: true});
+            // M-1.2: NOTE: This uses renderMessage which is being removed.
+            // This detail will need to be included in the 'ui:show_message' payload.
+            this.#logger.error(`Error Details (was renderMessage): <pre>${payload.stack}</pre>`);
+            // this.renderMessage(`Details: <pre>${payload.stack}</pre>`, 'error', {allowHtml: true}); // Original line
         }
     }
 
@@ -491,56 +470,12 @@ class DomRenderer {
         }
     }
 
+    // M-1.2: Removed renderMessage method body
+
     /**
-     * @param {string} text
-     * @param {string} [type='info']
-     * @param {{selector?: string, allowHtml?: boolean}=} [opts={}]
-     * @returns {boolean}
-     */
-    renderMessage(text, type = 'info', opts = {}) {
-        const {selector, allowHtml = false} = opts;
-        let targetElement;
-
-        // Determine the document context
-        const doc = this.#outputDiv?.ownerDocument || (typeof document !== 'undefined' ? document : null);
-        if (!doc) {
-            this.#logger.warn(`DomRenderer.renderMessage: Cannot render message (type: ${type}), document context not available.`);
-            return false;
-        }
-
-        if (selector) {
-            targetElement = doc.querySelector(selector); // Use correct document
-            if (!targetElement) {
-                this.#logger.error(`DomRenderer.renderMessage: Selector "${selector}" did not match any element in the current document context.`);
-                return false;
-            }
-        } else {
-            targetElement = this.#outputDiv;
-            if (!targetElement) {
-                this.#logger.error(`DomRenderer.renderMessage: Default target element (#outputDiv) is missing.`);
-                return false;
-            }
-        }
-
-        const messageDiv = doc.createElement('div'); // Use correct document
-        // --- CORRECTED LINE: Replaced 'warn' with 'warning' ---
-        const validTypes = ['info', 'warning', 'error', 'success', 'debug', 'command', 'location', 'system', 'system-success'];
-        const finalType = validTypes.includes(type) ? type : 'info';
-        messageDiv.classList.add('message', `message-${finalType}`);
-        if (allowHtml) {
-            messageDiv.innerHTML = text;
-        } else {
-            messageDiv.textContent = text;
-        }
-        targetElement.appendChild(messageDiv);
-        if (targetElement === this.#outputDiv) {
-            this.#outputDiv.scrollTop = this.#outputDiv.scrollHeight;
-        }
-        return true;
-    }
-
-
-    /** @param {LocationDisplayPayload} locationData */
+     * @param {LocationDisplayPayload} locationData
+     * @deprecated Functionality moved to LocationRenderer.
+     * */
     renderLocation(locationData) {
         let outputHtml = '';
         outputHtml += `<h2 class="location__name">${locationData.name || 'Unnamed Location'}</h2>`;
@@ -559,9 +494,14 @@ class DomRenderer {
         } else {
             outputHtml += '<p class="location__exits">Exits: None</p>';
         }
-        this.renderMessage(outputHtml, 'location', {allowHtml: true});
+        // M-1.2: NOTE: This uses renderMessage which is being removed.
+        // This logic needs to move to LocationRenderer which will use UiMessageRenderer or similar.
+        // For now, log the HTML that would have been rendered.
+        this.#logger.info(`Location HTML (was renderMessage): ${outputHtml}`);
+        // this.renderMessage(outputHtml, 'location', {allowHtml: true}); // Original line
     }
 
+    /** @deprecated Functionality likely moved to specific renderers or facade. */
     clearOutput() {
         if (this.#outputDiv) {
             this.#outputDiv.innerHTML = '';
@@ -573,6 +513,7 @@ class DomRenderer {
     /**
      * @param {boolean} enabled
      * @param {string} placeholderText
+     * @deprecated Functionality moved to InputStateController.
      */
     setInputState(enabled, placeholderText) {
         if (!this.#inputElement) {
@@ -583,7 +524,10 @@ class DomRenderer {
         this.#inputElement.placeholder = placeholderText;
     }
 
-    /** @param {boolean} [forceState] */
+    /**
+     * @param {boolean} [forceState]
+     * @deprecated Functionality moved to InventoryPanel.
+     * */
     toggleInventory(forceState) {
         if (!this.#inventoryPanel) {
             this.#logger.warn("DomRenderer: Cannot toggle inventory, panel element does not exist.");
@@ -610,6 +554,7 @@ class DomRenderer {
      * @private
      * @param {ItemUIData[]} itemsData
      * @param {Document} doc - The document context to use for creating elements.
+     * @deprecated Functionality moved to InventoryPanel.
      */
     #updateInventoryUI(itemsData, doc) { // Accept doc as parameter
         if (!doc) {
@@ -698,6 +643,7 @@ class DomRenderer {
      * @param {string} propertyPath - Dot-notation path to the property to set (e.g., 'style.color', 'dataset.value', 'textContent').
      * @param {*} value - The value to set the property to.
      * @returns {{count: number, modified: number, failed: number}} - Object indicating total elements found, how many were modified, and how many failed to update.
+     * @deprecated Functionality likely moved to DomMutationService or specific renderers.
      */
     mutate(selector, propertyPath, value) {
         // --- FIX: Get document context from a known element ---
@@ -760,11 +706,19 @@ class DomRenderer {
 
         // Return value adjusted slightly to match previous logging structure better, although the return object itself isn't directly used in ModifyDomElementHandler currently
         // Reverted return value structure for consistency with ModifyDomElementHandler expectation
+        // M-1.2: Note structure change for clarity, even if deprecated
         return {
             count: total,
-            modifiedCount: modifiedCount, // Use 'modifiedCount' key
-            failures: failedCount > 0 ? [{selector, propertyPath, error: 'Mutation failed on some elements'}] : []
-        }; // Provide minimal failure info if needed
+            modified: modifiedCount,
+            failed: failedCount
+        };
+        /* // Original structure (if strictly needed by something still using this deprecated method)
+         return {
+             count: total,
+             modifiedCount: modifiedCount, // Use 'modifiedCount' key
+             failures: failedCount > 0 ? [{selector, propertyPath, error: 'Mutation failed on some elements'}] : []
+         }; // Provide minimal failure info if needed
+         */
     }
 
 
