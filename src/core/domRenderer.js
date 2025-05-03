@@ -1,4 +1,6 @@
 // src/core/domRenderer.js
+// --- FIX for TC3: Added 'success' to validTypes ---
+// --- FIX for TC2 (Current Issue): Changed 'warn' to 'warning' ---
 
 // --- Import Utilities ---
 // Assuming setPropertyByPath exists and is needed for other cases.
@@ -285,13 +287,17 @@ class DomRenderer {
      */
     #handleShowMessage(data) {
         const payload = data?.payload;
+        // Adjusted valid types list in this handler to align with renderMessage correction
+        const validTypes = ['info', 'warning', 'error', 'success', 'debug', 'command', 'location', 'system', 'system-success'];
         if (payload && typeof payload.text === 'string') {
-            const type = ['info', 'warn', 'error', 'debug', 'system', 'system-success'].includes(payload.type) ? payload.type : 'info';
+            // Use the corrected list for validation here as well, though renderMessage handles the default
+            const type = validTypes.includes(payload.type) ? payload.type : 'info';
             this.renderMessage(payload.text, type);
         } else {
             this.#logger.warn("DomRenderer received 'ui:show_message' with invalid payload structure:", data);
         }
     }
+
 
     /**
      * Handles fatal error display events. (Ticket 18: Standardized Event)
@@ -536,7 +542,8 @@ class DomRenderer {
         }
 
         const messageDiv = doc.createElement('div'); // Use correct document
-        const validTypes = ['info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'];
+        // --- CORRECTED LINE: Replaced 'warn' with 'warning' ---
+        const validTypes = ['info', 'warning', 'error', 'success', 'debug', 'command', 'location', 'system', 'system-success'];
         const finalType = validTypes.includes(type) ? type : 'info';
         messageDiv.classList.add('message', `message-${finalType}`);
         if (allowHtml) {
@@ -550,6 +557,7 @@ class DomRenderer {
         }
         return true;
     }
+
 
     /** @param {LocationDisplayPayload} locationData */
     renderLocation(locationData) {
@@ -771,8 +779,14 @@ class DomRenderer {
 
         // Return value adjusted slightly to match previous logging structure better, although the return object itself isn't directly used in ModifyDomElementHandler currently
         // Reverted return value structure for consistency with ModifyDomElementHandler expectation
-        return { count: total, modifiedCount: modifiedCount, failures: failedCount > 0 ? [{ selector, propertyPath, error: 'Mutation failed on some elements' }] : [] }; // Provide minimal failure info if needed
+        return {
+            count: total,
+            modifiedCount: modifiedCount, // Use 'modifiedCount' key
+            failures: failedCount > 0 ? [{selector, propertyPath, error: 'Mutation failed on some elements'}] : []
+        }; // Provide minimal failure info if needed
     }
+
+
 }
 
 export default DomRenderer;

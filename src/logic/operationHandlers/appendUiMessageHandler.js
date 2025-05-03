@@ -1,4 +1,5 @@
 // src/logic/operationHandlers/appendUiMessageHandler.js
+// --- DEBUG: Log incoming params ---
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -69,6 +70,10 @@ class AppendUiMessageHandler {
      */
     execute(params, executionContext) {
         const logger = executionContext?.logger ?? this.#logger;
+
+        // --- DEBUG: Log raw parameters received ---
+        logger.debug('APPEND_UI_MESSAGE: Received params:', params);
+        // --- END DEBUG ---
 
         // 1. Validate Parameters
         // Check if params exist and text is a non-empty string (as it's required)
