@@ -1,18 +1,18 @@
 // src/logic/operationHandlers/appendUiMessageHandler.js
-// --- DEBUG: Log incoming params ---
+// --- REFACTORED to use UiMessageRenderer ---
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
-/** @typedef {import('../../domUI/domRenderer.js').default} DomRenderer */ // Now required
+/** @typedef {import('../../domUI/uiMessageRenderer.js').UiMessageRenderer} UiMessageRenderer */ // Import the correct renderer
 
 /**
  * Parameters for the APPEND_UI_MESSAGE operation.
  * Note: Assumes placeholders in text/message_type are resolved before execution.
  * @typedef {object} AppendUiMessageParams
- * @property {string} [selector='#outputDiv'] - CSS selector for the container element.
+ * @property {string} [selector='#outputDiv'] - CSS selector for the container element. (NOTE: Now IGNORED by this handler due to UiMessageRenderer)
  * @property {string} text - The message content (required, pre-resolved).
  * @property {string} [message_type='info'] - The type hint for styling (pre-resolved).
  * @property {boolean} [allow_html=false] - Whether to treat 'text' as HTML.
@@ -21,7 +21,7 @@
 /**
  * @class AppendUiMessageHandler
  * Implements the OperationHandler interface for the "APPEND_UI_MESSAGE" operation type.
- * Delegates to DomRenderer to append a new message element to a specified DOM container.
+ * Delegates to UiMessageRenderer to append a new message element to the standard message list.
  *
  * @implements {OperationHandler}
  */
@@ -36,33 +36,34 @@ class AppendUiMessageHandler {
     /**
      * @private
      * @readonly
-     * @type {DomRenderer}
+     * @type {UiMessageRenderer} // Dependency changed
      */
-    #domRenderer; // Now required and stored
+    #uiMessageRenderer; // Now required and stored
 
     /**
      * Creates an instance of AppendUiMessageHandler.
      * @param {object} dependencies
      * @param {ILogger} dependencies.logger - Logging service.
-     * @param {DomRenderer} dependencies.domRenderer - UI rendering service. Required for DOM manipulation.
+     * @param {UiMessageRenderer} dependencies.uiMessageRenderer - UI message rendering service. Required.
      * @throws {Error} If logger is not a valid ILogger instance.
-     * @throws {Error} If domRenderer is not provided.
+     * @throws {Error} If uiMessageRenderer is not provided or invalid.
      */
-    constructor({logger, domRenderer}) {
+    constructor({logger, uiMessageRenderer}) {
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
             throw new Error('AppendUiMessageHandler requires a valid ILogger instance.');
         }
-        if (!domRenderer) { // Add check
-            throw new Error('DomRenderer required');
+        // Check if uiMessageRenderer has the expected 'render' method
+        if (!uiMessageRenderer || typeof uiMessageRenderer.render !== 'function') {
+            throw new Error('AppendUiMessageHandler requires a valid UiMessageRenderer instance.');
         }
         this.#logger = logger;
-        this.#domRenderer = domRenderer; // Store domRenderer
-        this.#logger.debug("AppendUiMessageHandler initialized with DomRenderer."); // Update log message
+        this.#uiMessageRenderer = uiMessageRenderer; // Store uiMessageRenderer
+        this.#logger.debug("AppendUiMessageHandler initialized with UiMessageRenderer."); // Update log message
     }
 
     /**
      * Executes the APPEND_UI_MESSAGE operation.
-     * Delegates message rendering to the DomRenderer.
+     * Delegates message rendering to the UiMessageRenderer.
      *
      * @param {OperationParams | AppendUiMessageParams | null | undefined} params - The parameters for the operation.
      * @param {ExecutionContext} executionContext - The context of the execution (used for logging).
@@ -85,7 +86,7 @@ class AppendUiMessageHandler {
         // 2. Determine Parameter Values (with defaults from schema)
         const selector = (typeof params.selector === 'string' && params.selector.trim())
             ? params.selector.trim()
-            : '#outputDiv'; // Default selector
+            : '#outputDiv'; // Default selector (but will be ignored)
         const messageText = params.text; // Already validated as non-empty string
         const messageType = (typeof params.message_type === 'string' && params.message_type.trim())
             ? params.message_type.trim()
@@ -94,32 +95,40 @@ class AppendUiMessageHandler {
             ? params.allow_html
             : false; // Default allow_html
 
-        logger.debug(`APPEND_UI_MESSAGE: Attempting to append message via DomRenderer to selector "${selector}"`, {
-            text: messageText, // Log the actual text being used
+        logger.debug(`APPEND_UI_MESSAGE: Attempting to append message via UiMessageRenderer`, {
+            text: messageText,
             type: messageType,
-            allowHtml: allowHtml
+            allowHtml: allowHtml,
+            originalSelector: selector // Log the selector received, even if unused
         });
 
-        // 3. Delegate Rendering to DomRenderer
+        // --- Log if selector was provided but is ignored ---
+        if (params.selector && selector !== '#outputDiv') {
+            logger.warn(`APPEND_UI_MESSAGE: The 'selector' parameter ("${selector}") is provided but ignored. UiMessageRenderer always targets the default message list.`);
+        }
+
+        // 3. Delegate Rendering to UiMessageRenderer
         try {
-            const ok = this.#domRenderer.renderMessage(
+            // Call UiMessageRenderer's render method
+            this.#uiMessageRenderer.render(
                 messageText,
                 messageType,
-                {selector, allowHtml} // Pass options object
+                allowHtml
             );
-            if (!ok) {
-                // Error already logged by DomRenderer presumably, but log failure here too.
-                logger.error('APPEND_UI_MESSAGE: Failed to render via DomRenderer.');
-            } else {
-                logger.debug(`APPEND_UI_MESSAGE: Successfully rendered message via DomRenderer to "${selector}".`);
-            }
+            // Assume success if no error is thrown by UiMessageRenderer
+            logger.debug(`APPEND_UI_MESSAGE: Successfully delegated message rendering to UiMessageRenderer.`);
+
         } catch (error) {
-            logger.error(`APPEND_UI_MESSAGE: Error occurred while calling DomRenderer for selector "${selector}".`, {
+            // Catch errors specifically from the UiMessageRenderer call
+            logger.error(`APPEND_UI_MESSAGE: Error occurred while calling UiMessageRenderer.render.`, {
                 error: error,
-                params: params
+                params: { // Log the parameters used for the call
+                    text: messageText,
+                    type: messageType,
+                    allowHtml: allowHtml
+                }
             });
         }
-        // Direct DOM Manipulation branch removed as requested.
     }
 }
 

@@ -13,7 +13,6 @@
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
-// --- MODIFIED: Import SHUTDOWNABLE tag ---
 import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 
 // --- Core Service Imports ---
@@ -82,16 +81,20 @@ export function registerInterpreters(container) {
     }));
     logger.debug('Interpreter Registrations: Registered QueryComponentHandler.');
 
+    // ModifyDomElementHandler still depends on the old DomRenderer
     registrar.singletonFactory(tokens.ModifyDomElementHandler, c => new ModifyDomElementHandler({
         logger: c.resolve(tokens.ILogger),
-        domRenderer: c.resolve(tokens.DomRenderer)
+        domRenderer: c.resolve(tokens.DomRenderer) // Keep DomRenderer here until this handler is refactored
     }));
     logger.debug('Interpreter Registrations: Registered ModifyDomElementHandler.');
 
+    // --- CORRECTED REGISTRATION for AppendUiMessageHandler ---
     registrar.singletonFactory(tokens.AppendUiMessageHandler, c => new AppendUiMessageHandler({
         logger: c.resolve(tokens.ILogger),
-        domRenderer: c.resolve(tokens.DomRenderer)
+        // domRenderer: c.resolve(tokens.DomRenderer) // Old incorrect line
+        uiMessageRenderer: c.resolve(tokens.UiMessageRenderer) // Corrected: Inject UiMessageRenderer
     }));
+    // --- END CORRECTION ---
     logger.debug('Interpreter Registrations: Registered AppendUiMessageHandler.');
 
     registrar.singletonFactory(tokens.SetVariableHandler, c => new SetVariableHandler({
@@ -129,7 +132,7 @@ export function registerInterpreters(container) {
         registry.register('REMOVE_COMPONENT', bindExecute(tokens.RemoveComponentHandler));
         registry.register('QUERY_COMPONENT', bindExecute(tokens.QueryComponentHandler));
         registry.register('MODIFY_DOM_ELEMENT', bindExecute(tokens.ModifyDomElementHandler));
-        registry.register('APPEND_UI_MESSAGE', bindExecute(tokens.AppendUiMessageHandler));
+        registry.register('APPEND_UI_MESSAGE', bindExecute(tokens.AppendUiMessageHandler)); // This now resolves the correctly configured handler
         registry.register('SET_VARIABLE', bindExecute(tokens.SetVariableHandler));
         registry.register('QUERY_SYSTEM_DATA', bindExecute(tokens.QuerySystemDataHandler));
 
