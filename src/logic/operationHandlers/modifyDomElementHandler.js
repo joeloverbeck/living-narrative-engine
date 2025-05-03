@@ -1,9 +1,8 @@
-// src/logic/operationHandlers/modifyDomElementHandler.js (New File)
-
-import {setPropertyByPath} from '../../utils/domUtils.js';
+// src/logic/operationHandlers/modifyDomElementHandler.js
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../core/interfaces/coreServices.js').IDomRenderer} IDomRenderer */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 
@@ -17,29 +16,37 @@ import {setPropertyByPath} from '../../utils/domUtils.js';
 /**
  * @class ModifyDomElementHandler
  * Implements the OperationHandler interface for the "MODIFY_DOM_ELEMENT" operation type.
- * Finds DOM element(s) using a CSS selector and modifies a specified property.
+ * Delegates DOM element modification to the DomRenderer service.
  * @implements {OperationHandler}
  */
 class ModifyDomElementHandler {
     /** @type {ILogger} */
     #logger;
+    /** @type {IDomRenderer} */
+    #domRenderer;
 
     /**
      * Creates an instance of ModifyDomElementHandler.
      * @param {object} dependencies
      * @param {ILogger} dependencies.logger - Logging service.
+     * @param {IDomRenderer} dependencies.domRenderer - DOM rendering service.
      */
-    constructor({logger}) {
+    constructor({logger, domRenderer}) {
         if (!logger || typeof logger.info !== 'function') {
             throw new Error('ModifyDomElementHandler requires a valid ILogger instance.');
         }
+        if (!domRenderer || typeof domRenderer.mutate !== 'function') {
+            throw new Error('ModifyDomElementHandler requires a valid IDomRenderer instance.');
+        }
         this.#logger = logger;
+        this.#domRenderer = domRenderer;
     }
 
     /**
      * Executes the MODIFY_DOM_ELEMENT operation.
      * Expects parameters: selector (string), property (string), value (*).
      * Placeholders in 'value' should be pre-resolved by OperationInterpreter.
+     * Delegates the actual modification to the DomRenderer service.
      *
      * @param {ModifyDomElementParams | null | undefined} params - The parameters for the operation.
      * @param {ExecutionContext} executionContext - The execution context (used primarily for logging here).
@@ -60,58 +67,19 @@ class ModifyDomElementHandler {
         const trimmedSelector = selector.trim();
         const trimmedProperty = property.trim();
 
-        logger.debug(`MODIFY_DOM_ELEMENT: Attempting to modify property "${trimmedProperty}" with value "${JSON.stringify(value)}" on element(s) matching selector "${trimmedSelector}"...`);
-
-        try {
-            // Use querySelectorAll to handle potential multiple matches,
-            // though for things like a title ID, we usually expect one.
-            const elements = document.querySelectorAll(trimmedSelector);
-
-            logger.debug(`MODIFY_DOM_ELEMENT: Found ${elements.length} elements for selector "${trimmedSelector}"`); // Log element count
-            if (elements.length === 0) {
-                logger.warn(`MODIFY_DOM_ELEMENT: No DOM elements found matching selector "${trimmedSelector}".`);
-                return;
+        // Delegate modification to DomRenderer
+        try { // Added try...catch around the mutate call for safety
+            const res = this.#domRenderer.mutate(trimmedSelector, trimmedProperty, value);
+            if (res.failed > 0) {
+                // Log specifics about failures if needed, using res.errors or similar if available from mutate
+                logger.error(`MODIFY_DOM_ELEMENT: Failed to modify property "${trimmedProperty}" for ${res.failed} element(s) matching selector "${trimmedSelector}".`);
+            } else if (res.modified > 0) { // Check if any were actually modified
+                logger.debug(`MODIFY_DOM_ELEMENT: Modified property "${trimmedProperty}" on ${res.modified} element(s) matching selector "${trimmedSelector}" with value:`, value);
+            } else {
+                logger.warn(`MODIFY_DOM_ELEMENT: No elements found or modified for selector "${trimmedSelector}".`);
             }
-
-            elements.forEach((element, index) => {
-                // Set the property using the helper function for potentially nested properties
-                const success = setPropertyByPath(element, trimmedProperty, value);
-
-                if (success) {
-                    logger.debug(`MODIFY_DOM_ELEMENT: Successfully set property "${trimmedProperty}" on element ${index + 1}/${elements.length} (selector: "${trimmedSelector}")`);
-                } else {
-                    logger.error(`MODIFY_DOM_ELEMENT: Failed to set property "${trimmedProperty}" on element ${index + 1}/${elements.length} (selector: "${trimmedSelector}"). Check path validity and element structure.`);
-                }
-
-                // --- Original direct assignment (kept for reference, less flexible) ---
-                // try {
-                //     // Direct assignment might not work for nested props like 'style.color'
-                //     // element[trimmedProperty] = value; // Less Robust
-                //     if (trimmedProperty === 'textContent') {
-                //          element.textContent = value; // Specific handling if needed
-                //     } else if (trimmedProperty === 'innerHTML') {
-                //          element.innerHTML = value; // Specific handling if needed
-                //     } else if (trimmedProperty.startsWith('style.')) {
-                //          const styleProp = trimmedProperty.substring(6); // e.g., 'color'
-                //          element.style[styleProp] = value;
-                //     } else if (trimmedProperty.startsWith('dataset.')) {
-                //         const datasetProp = trimmedProperty.substring(8); // e.g., 'userId'
-                //         element.dataset[datasetProp] = value;
-                //     }
-                //     else {
-                //          // Generic attempt - might fail for complex cases
-                //          element[trimmedProperty] = value;
-                //      }
-                //     logger.debug(`MODIFY_DOM_ELEMENT: Successfully set property "${trimmedProperty}" on element ${index + 1}/${elements.length} (selector: "${trimmedSelector}")`);
-                // } catch (propError) {
-                //     logger.error(`MODIFY_DOM_ELEMENT: Error setting property "${trimmedProperty}" on element ${index + 1}/${elements.length} (selector: "${trimmedSelector}"):`, propError);
-                // }
-                // --- End Original ---
-            });
-
         } catch (error) {
-            // Catch errors during querySelectorAll or general processing
-            logger.error(`MODIFY_DOM_ELEMENT: Error processing operation for selector "${trimmedSelector}":`, error);
+            logger.error(`MODIFY_DOM_ELEMENT: Error during DOM mutation via DomRenderer for selector "${trimmedSelector}":`, error);
         }
     }
 }
