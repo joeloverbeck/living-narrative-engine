@@ -1,6 +1,7 @@
 // src/core/domRenderer.js
 
 // --- Import Utilities ---
+// Assuming setPropertyByPath exists and is needed for other cases.
 import {setPropertyByPath} from '../utils/domUtils.js';
 
 // --- Import Interfaces ---
@@ -65,22 +66,26 @@ class DomRenderer {
 
     /**
      * Creates an instance of DomRenderer.
-     * @param {HTMLElement} outputDiv - The main element where game output is displayed.
-     * @param {HTMLInputElement} inputElement - The input element for player commands.
-     * @param {HTMLHeadingElement} titleElement - The H1 element for displaying titles/status.
-     * @param {EventBus} eventBus - The application's event bus instance.
-     * @param {ValidatedEventDispatcher} validatedEventDispatcher - Service for dispatching validated events.
-     * @param {ILogger} logger - Service for logging messages.
+     * @param {object} dependencies - The required dependencies.
+     * @param {HTMLElement} dependencies.outputDiv - The main element where game output is displayed.
+     * @param {HTMLInputElement} dependencies.inputElement - The input element for player commands.
+     * @param {HTMLHeadingElement} dependencies.titleElement - The H1 element for displaying titles/status.
+     * @param {EventBus} dependencies.eventBus - The application's event bus instance.
+     * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
+     * @param {ILogger} dependencies.logger - Service for logging messages.
      */
     constructor({outputDiv, inputElement, titleElement, eventBus, validatedEventDispatcher, logger}) {
         // --- Constructor Validation ---
-        if (!outputDiv || !(outputDiv instanceof HTMLElement)) {
-            throw new Error('DomRenderer requires a valid output HTMLElement.');
+        // Check if outputDiv is a truthy object and an Element node (nodeType 1)
+        if (!outputDiv || typeof outputDiv !== 'object' || outputDiv.nodeType !== 1) {
+            throw new Error('DomRenderer requires a valid output DOM Element.');
         }
-        if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
+        // Check for input element specifically by nodeType and tagName
+        if (!inputElement || typeof inputElement !== 'object' || inputElement.nodeType !== 1 || inputElement.tagName !== 'INPUT') {
             throw new Error('DomRenderer requires a valid HTMLInputElement.');
         }
-        if (!titleElement || !(titleElement instanceof HTMLHeadingElement)) {
+        // Check for H1 element specifically by nodeType and tagName
+        if (!titleElement || typeof titleElement !== 'object' || titleElement.nodeType !== 1 || titleElement.tagName !== 'H1') {
             throw new Error('DomRenderer requires a valid HTMLHeadingElement (H1).');
         }
         if (!eventBus || typeof eventBus.subscribe !== 'function' || typeof eventBus.dispatch !== 'function') {
@@ -102,23 +107,37 @@ class DomRenderer {
         this.#logger = logger; // AC5
 
         // --- Initialize Inventory UI ---
-        this.#createInventoryPanel();
+        // Add check for document existence before calling DOM methods
+        if (typeof document !== 'undefined') {
+            this.#createInventoryPanel();
 
-        // --- Initialize Action Buttons Container (FEAT-UI-ACTIONS-03) ---
-        this.#actionButtonsContainer = document.getElementById('action-buttons-container');
-        if (!this.#actionButtonsContainer) {
-            this.#logger.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
+            // --- Initialize Action Buttons Container (FEAT-UI-ACTIONS-03) ---
+            this.#actionButtonsContainer = document.getElementById('action-buttons-container');
+            if (!this.#actionButtonsContainer) {
+                // Log error only if in a document environment
+                this.#logger.error("DomRenderer Error: Could not find the required '#action-buttons-container' element in the DOM. Action buttons will not be rendered.");
+            } else {
+                this.#logger.info("DomRenderer: Found '#action-buttons-container'.");
+            }
         } else {
-            this.#logger.info("DomRenderer: Found '#action-buttons-container'.");
+            this.#logger.warn('DomRenderer: Skipping UI panel/container initialization as "document" is not available.');
         }
+
 
         // Subscribe to necessary events internally
         this.#subscribeToEvents();
 
-        this.#logger.info('DomRenderer initialized, inventory panel created, action button container referenced, and subscribed to events.');
+        this.#logger.info('DomRenderer initialized and subscribed to events.'); // Adjusted message
     }
 
     #createInventoryPanel() {
+        // Check if running in a browser environment with 'document'
+        // This check is now redundant due to the check in the constructor, but kept for safety
+        if (typeof document === 'undefined') {
+            this.#logger.warn('DomRenderer: Cannot create inventory panel, "document" is not available (not in a browser/JSDOM environment?).');
+            return;
+        }
+
         this.#inventoryPanel = document.createElement('div');
         this.#inventoryPanel.id = 'inventory-panel';
         this.#inventoryPanel.classList.add('inventory-panel', 'hidden'); // Start hidden
@@ -188,48 +207,56 @@ class DomRenderer {
     /**
      * Handles command echo events.
      * @private
-     * @param {EventCommandEchoPayload} data
+     * @param {object} data - Expected { type: string, payload: EventCommandEchoPayload }
      */
     #handleCommandEcho(data) {
-        if (data && typeof data.command === 'string') {
-            // Use new renderMessage, default options are fine (to #outputDiv, allowHtml=false by default)
-            this.renderMessage(`> ${data.command}`, 'command');
+        const payload = data?.payload; // Adjust based on actual event structure from EventBus
+        if (payload && typeof payload.command === 'string') {
+            this.renderMessage(`> ${payload.command}`, 'command');
         } else {
-            this.#logger.warn("DomRenderer received 'event:command_echo' with invalid data:", data);
+            this.#logger.warn("DomRenderer received 'event:command_echo' with invalid data structure:", data);
         }
     }
 
     /**
      * Handles disabling the input field. (Ticket 18: Standardized Event)
      * @private
-     * @param {EventDisableInputPayload} data - Payload may contain a `message` to use as placeholder.
+     * @param {object} data - Expected { type: string, payload: EventDisableInputPayload }
      */
     #handleDisableInput(data) {
-        // Verify payload and update input state/placeholder
-        const message = (data && typeof data.message === 'string') ? data.message : 'Input disabled.';
-        if (!data || typeof data.message !== 'string') {
-            this.#logger.warn("DomRenderer received 'event:disable_input' without specific message, using default:", data, ` -> "${message}"`);
+        const payload = data?.payload;
+        const message = (payload && typeof payload.message === 'string') ? payload.message : 'Input disabled.';
+        if (!payload || typeof payload.message !== 'string') {
+            this.#logger.warn("DomRenderer received 'event:disable_input' without specific message in payload, using default:", data, ` -> "${message}"`);
         }
-        this.setInputState(false, message); // Set disabled state and placeholder message
+        this.setInputState(false, message);
     }
 
 
-    /** @private @param {InventoryRenderPayload} payload */
-    #handleRenderInventory(payload) {
+    /**
+     * @private
+     * @param {object} data - Expected { type: string, payload: InventoryRenderPayload }
+     */
+    #handleRenderInventory(data) {
+        const payload = data?.payload;
         if (!this.#inventoryList) {
             this.#logger.error('Inventory list element not found!');
             return;
         }
         if (!payload || !Array.isArray(payload.items)) {
-            this.#logger.warn("DomRenderer received 'event:render_inventory' with invalid data:", payload);
+            this.#logger.warn("DomRenderer received 'event:render_inventory' with invalid data structure or payload:", data);
             this.#inventoryList.innerHTML = '<li>Error loading inventory.</li>';
             return;
         }
         this.#updateInventoryUI(payload.items);
     }
 
-    /** @private @param {LocationDisplayPayload} locationData */
-    #handleDisplayLocation(locationData) {
+    /**
+     * @private
+     * @param {object} data - Expected { type: string, payload: LocationDisplayPayload }
+     */
+    #handleDisplayLocation(data) {
+        const locationData = data?.payload;
         if (locationData &&
             typeof locationData.name === 'string' &&
             typeof locationData.description === 'string' &&
@@ -239,8 +266,7 @@ class DomRenderer {
         ) {
             this.renderLocation(locationData);
         } else {
-            this.#logger.warn("DomRenderer received '" + 'event:display_location' + "' event with invalid or incomplete data:", locationData);
-            // Use new renderMessage, explicitly allow HTML for error message formatting if needed
+            this.#logger.warn("DomRenderer received '" + data?.type + "' event with invalid or incomplete payload:", data);
             this.renderMessage('Error: Could not display location details due to invalid data format received.', 'error', {allowHtml: false});
         }
     }
@@ -248,16 +274,15 @@ class DomRenderer {
     /**
      * Handles general message display events. (Ticket 18: Standardized Event)
      * @private
-     * @param {UIShowMessagePayload} payload - Should contain `text` and optional `type`.
+     * @param {object} data - Expected { type: string, payload: UIShowMessagePayload }
      */
-    #handleShowMessage(payload) {
-        // Verify payload and render message
+    #handleShowMessage(data) {
+        const payload = data?.payload;
         if (payload && typeof payload.text === 'string') {
             const type = ['info', 'warn', 'error', 'debug', 'system', 'system-success'].includes(payload.type) ? payload.type : 'info';
-            // Use new renderMessage, defaults are fine (to #outputDiv, allowHtml=false)
             this.renderMessage(payload.text, type);
         } else {
-            this.#logger.warn("DomRenderer received 'ui:show_message' with invalid payload:", payload);
+            this.#logger.warn("DomRenderer received 'ui:show_message' with invalid payload structure:", data);
         }
     }
 
@@ -265,53 +290,57 @@ class DomRenderer {
      * Handles fatal error display events. (Ticket 18: Standardized Event)
      * Clears output, shows error in title and message area.
      * @private
-     * @param {UIShowFatalErrorPayload} payload - Should contain `title`, `message`, and optional `details`.
+     * @param {object} data - Expected { type: string, payload: UIShowFatalErrorPayload }
      */
-    #handleFatalError(payload) {
-        // Verify payload and update UI for fatal error
+    #handleFatalError(data) {
+        const payload = data?.payload;
         if (payload && typeof payload.title === 'string' && typeof payload.message === 'string') {
             this.clearOutput();
-            this.setTitle(`FATAL ERROR: ${payload.title}`); // Update H1 Title
-            // Render formatted error message in output div, allow HTML for title/message separation
+            this.setTitle(`FATAL ERROR: ${payload.title}`);
             this.renderMessage(`<strong>${payload.title}</strong><br>${payload.message}`, 'error', {allowHtml: true});
             if (payload.details) {
-                // Render details if provided, allow HTML for <pre> tag
                 this.renderMessage(`Details: <pre>${payload.details}</pre>`, 'error', {allowHtml: true});
             }
             this.#logger.error(`FATAL ERROR displayed: ${payload.title} - ${payload.message}`);
         } else {
-            this.#logger.warn("DomRenderer received 'ui:show_fatal_error' with invalid payload:", payload);
-            this.setTitle('FATAL ERROR'); // Fallback title
-            // Fallback message, no HTML needed
+            this.#logger.warn("DomRenderer received 'ui:show_fatal_error' with invalid payload structure:", data);
+            this.setTitle('FATAL ERROR');
             this.renderMessage('An unspecified fatal error occurred.', 'error', {allowHtml: false});
         }
-        // Input should generally be disabled by the service dispatching the fatal error.
     }
 
     /**
      * Handles setting the main title directly via an event. (Ticket 18: Standardized Event - NEW)
      * @private
-     * @param {UISetTitlePayload} payload - Should contain `title` text.
+     * @param {object} data - Expected { type: string, payload: UISetTitlePayload }
      */
-    #handleSetTitle(payload) {
-        if (payload && typeof payload.title === 'string') {
-            this.setTitle(payload.title); // Update H1 Title
+    #handleSetTitle(data) {
+        const payload = data?.payload;
+        // Correctly uses 'text' property from payload
+        if (payload && typeof payload.text === 'string') {
+            this.setTitle(payload.text);
         } else {
-            this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload:", payload);
+            this.#logger.warn("DomRenderer received 'ui:set_title' with invalid payload structure or missing 'text' property:", data);
         }
     }
 
-    // --- NEW: Handler for Action Buttons (FEAT-UI-ACTIONS-03) ---
-    /** @private @param {UIUpdateActionsPayload} eventData */
-    #handleUpdateActions(eventData) {
-        if (!this.#actionButtonsContainer) {
-            // Already logged in constructor if missing
+    /**
+     * @private
+     * @param {object} data - Expected { type: string, payload: UIUpdateActionsPayload }
+     */
+    #handleUpdateActions(data) {
+        const eventData = data?.payload;
+        if (typeof document === 'undefined') {
+            this.#logger.warn('DomRenderer: Cannot update action buttons, "document" is not available.');
             return;
+        }
+        if (!this.#actionButtonsContainer) {
+            return; // Error already logged in constructor if applicable
         }
         this.#actionButtonsContainer.innerHTML = ''; // Clear existing buttons
 
         if (!eventData || !Array.isArray(eventData.actions)) {
-            this.#logger.warn('DomRenderer received invalid "event:update_available_actions" payload:', eventData);
+            this.#logger.warn('DomRenderer received invalid "event:update_available_actions" payload structure:', data);
             return;
         }
 
@@ -327,35 +356,25 @@ class DomRenderer {
                     this.#logger.warn(`DomRenderer: Skipping invalid action string: "${actionString}"`);
                     return;
                 }
-
                 const button = document.createElement('button');
                 button.textContent = actionString;
                 button.classList.add('action-button');
                 button.setAttribute('title', `Click to ${actionString}`);
 
-                // --- EVENT-MIGR-018: Refactor click listener for validation ---
-                button.addEventListener('click', async () => { // Make listener async
-                    const commandToSubmit = button.textContent; // Or actionString from the outer scope
+                button.addEventListener('click', async () => {
+                    const commandToSubmit = button.textContent;
                     this.#logger.debug(`DomRenderer: Action button "${commandToSubmit}" clicked. Attempting validated dispatch...`);
-
-                    // AC1, AC2: Use ValidatedEventDispatcher for 'command:submit'
-                    // AC4: Implicitly uses EventDefinition/payloadSchema via dispatcher
                     const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
                         'command:submit',
                         {command: commandToSubmit}
                     );
-
-                    // AC3: Failure handling (log, skip) is done *inside* dispatchValidated
-                    // Log the outcome of the dispatch attempt
                     if (dispatched) {
                         this.#logger.debug(`DomRenderer: Event 'command:submit' for "${commandToSubmit}" dispatched successfully.`);
                     } else {
-                        this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandToSubmit}" was NOT dispatched (validation failed or other error). See previous dispatcher logs.`); // Warning level as failure is significant
+                        this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandToSubmit}" was NOT dispatched (validation failed or other error). See previous dispatcher logs.`);
                     }
                 });
-
                 this.#actionButtonsContainer.appendChild(button);
-
             } catch (error) {
                 this.#logger.error(`DomRenderer: Error creating button for action "${actionString}":`, error);
             }
@@ -363,31 +382,27 @@ class DomRenderer {
     }
 
     // --- Ticket 17: Initialization Event Handlers ---
+    // These handlers now expect the full event object { type, payload }
 
-    /**
-     * Handles the overall initialization sequence starting.
-     * @private
-     * @param {InitializationStartedPayload} [payload] - Optional payload (e.g., worldName).
-     */
-    #handleInitializationStarted(payload) {
+    /** @private @param {object} data - Expected { type: string, payload?: InitializationStartedPayload } */
+    #handleInitializationStarted(data) {
+        const payload = data?.payload;
         const worldName = payload?.worldName ? ` for world '${payload.worldName}'` : '';
         const message = `Initializing game${worldName}...`;
         this.#logger.info(`DomRenderer: ${message}`);
         this.setTitle(message);
-        this.clearOutput(); // Clear previous game output
-        // Use new renderMessage, defaults are fine
+        this.clearOutput();
         this.renderMessage(message, 'system');
     }
 
     /**
-     * Handles the start of a specific initialization step (e.g., world loading).
-     * Updates the title to show progress.
      * @private
-     * @param {InitializationStepStartedPayload} payload - Event payload (contains eventName).
-     * @param {string} eventName - The specific event name (e.g., 'initialization:world_loader:started').
+     * @param {object} data - Expected { type: string, payload?: InitializationStepStartedPayload }
      */
-    #handleInitializationStepStarted(payload, eventName) {
-        let statusMessage = "Initializing..."; // Default
+    #handleInitializationStepStarted(data) {
+        const payload = data?.payload;
+        const eventName = data?.type; // Get event type from the event object
+        let statusMessage = "Initializing...";
 
         // Determine message based on which step started
         switch (eventName) {
@@ -407,81 +422,61 @@ class DomRenderer {
                 statusMessage = "Configuring input handler...";
                 break;
             default:
-                // Try to derive from event name if possible
-                const parts = eventName.split(':');
-                if (parts.length >= 3) {
-                    statusMessage = `Initializing ${parts[1].replace(/_/g, ' ')}...`;
+                if (eventName) {
+                    const parts = eventName.split(':');
+                    if (parts.length >= 3) {
+                        statusMessage = `Initializing ${parts[1].replace(/_/g, ' ')}...`;
+                    }
                 }
         }
 
         this.#logger.info(`DomRenderer: Initialization Step Started - ${statusMessage}`);
         this.setTitle(statusMessage);
-        // Use new renderMessage, defaults are fine
         this.renderMessage(statusMessage, 'system');
     }
 
 
-    /**
-     * Handles the completion of the overall initialization sequence.
-     * @private
-     * @param {InitializationCompletedPayload} [payload] - Optional payload.
-     */
-    #handleInitializationCompleted(payload) {
+    /** @private @param {object} data - Expected { type: string, payload?: InitializationCompletedPayload } */
+    #handleInitializationCompleted(data) {
         const message = "Initialization complete. Ready to start!";
         this.#logger.info(`DomRenderer: ${message}`);
-        this.setTitle("Game Ready"); // Or clear it, depending on preference
-        // Use new renderMessage, defaults are fine
-        this.renderMessage(message, 'system-success'); // Use a distinct style
-        // Note: GameLoop will typically enable input after this via textUI:enable_input.
+        this.setTitle("Game Ready");
+        this.renderMessage(message, 'system-success');
     }
 
-    /**
-     * Handles the failure of the overall initialization sequence.
-     * Uses the fatal error handler for consistency.
-     * @private
-     * @param {InitializationFailedPayload} payload - Payload containing error details.
-     */
-    #handleInitializationFailed(payload) {
-        this.#logger.error("DomRenderer: Received overall initialization failure event.", payload);
-        // Use the standardized fatal error handler
-        this.#handleFatalError({
-            title: `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`,
-            message: payload?.error || 'An unknown initialization error occurred.',
-            details: payload?.stack
+    /** @private @param {object} data - Expected { type: string, payload: InitializationFailedPayload } */
+    #handleInitializationFailed(data) {
+        const payload = data?.payload;
+        this.#logger.error("DomRenderer: Received overall initialization failure event.", data);
+        this.#handleFatalError({ // Simulate the expected structure for fatal error handler
+            type: 'ui:show_fatal_error',
+            payload: {
+                title: `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`,
+                message: payload?.error || 'An unknown initialization error occurred.',
+                details: payload?.stack
+            }
         });
-        // Input should already be disabled by InitializationService logic triggering this.
     }
 
-    /**
-     * Handles the failure of a specific initialization step.
-     * Displays a non-fatal error message indicating the step that failed.
-     * The overall sequence might still fail later, which would trigger #handleInitializationFailed.
-     * @private
-     * @param {InitializationStepFailedPayload} payload - Payload containing error details.
-     * @param {string} eventName - The specific event name (e.g., 'initialization:world_loader:failed').
-     */
-    #handleInitializationStepFailed(payload, eventName) {
-        // Try to derive step name from event name
+    /** @private @param {object} data - Expected { type: string, payload: InitializationStepFailedPayload } */
+    #handleInitializationStepFailed(data) {
+        const payload = data?.payload;
+        const eventName = data?.type;
         let stepName = 'A specific initialization step';
-        const parts = eventName.split(':');
-        if (parts.length >= 3) {
-            stepName = `${parts[1].replace(/_/g, ' ')} initialization`;
+        if (eventName) {
+            const parts = eventName.split(':');
+            if (parts.length >= 3) {
+                stepName = `${parts[1].replace(/_/g, ' ')} initialization`;
+            }
         }
-
         const errorMessage = payload?.error || 'Unknown error during step.';
         const fullMessage = `${stepName} failed: ${errorMessage}`;
-
         this.#logger.error(`DomRenderer: Initialization Step Failed - ${fullMessage}`, payload);
-        // Update title to show failure, but maybe not FATAL yet
         this.setTitle(`${stepName} Failed`);
-        // Use new renderMessage, allowHtml=false is fine
         this.renderMessage(fullMessage, 'error', {allowHtml: false});
         if (payload?.stack) {
-            // Use new renderMessage, allow HTML for <pre>
             this.renderMessage(`Details: <pre>${payload.stack}</pre>`, 'error', {allowHtml: true});
         }
-        // Don't necessarily clear output or disable input here,
-        // as the main InitializationService handles the final failure state.
     }
 
     // --- End Ticket 17 Handlers ---
@@ -489,10 +484,7 @@ class DomRenderer {
 
     // --- Public Rendering Methods ---
 
-    /**
-     * Sets the main H1 title/status text.
-     * @param {string} titleText
-     */
+    /** @param {string} titleText */
     setTitle(titleText) {
         if (this.#titleElement) {
             this.#titleElement.textContent = titleText;
@@ -502,16 +494,18 @@ class DomRenderer {
     }
 
     /**
-     * Renders a message to a specified DOM element or the default output div.
-     * @param {string} text - The text content or HTML string to render.
-     * @param {string} [type='info'] - The message type (used for CSS class 'message-{type}'). Valid types: 'info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'.
-     * @param {{selector?: string, allowHtml?: boolean}=} [opts={}] - Rendering options.
-     * @returns {boolean} - True if the message was successfully appended, false otherwise.
+     * @param {string} text
+     * @param {string} [type='info']
+     * @param {{selector?: string, allowHtml?: boolean}=} [opts={}]
+     * @returns {boolean}
      */
     renderMessage(text, type = 'info', opts = {}) {
+        if (typeof document === 'undefined') {
+            this.#logger.warn(`DomRenderer.renderMessage: Cannot render message (type: ${type}), "document" is not available.`);
+            return false;
+        }
         const {selector, allowHtml = false} = opts;
         let targetElement;
-
         if (selector) {
             targetElement = document.querySelector(selector);
             if (!targetElement) {
@@ -521,43 +515,31 @@ class DomRenderer {
         } else {
             targetElement = this.#outputDiv;
             if (!targetElement) {
-                // This should ideally not happen if constructor succeeded, but check defensively.
                 this.#logger.error(`DomRenderer.renderMessage: Default target element (#outputDiv) is missing.`);
                 return false;
             }
         }
-
         const messageDiv = document.createElement('div');
-        // Ensure type is one of the known/styled types
         const validTypes = ['info', 'warn', 'error', 'debug', 'command', 'location', 'system', 'system-success'];
         const finalType = validTypes.includes(type) ? type : 'info';
         messageDiv.classList.add('message', `message-${finalType}`);
-
         if (allowHtml) {
             messageDiv.innerHTML = text;
         } else {
             messageDiv.textContent = text;
         }
-
         targetElement.appendChild(messageDiv);
-
-        // Auto-scroll only if rendering to the default output div
         if (targetElement === this.#outputDiv) {
             this.#outputDiv.scrollTop = this.#outputDiv.scrollHeight;
         }
-
         return true;
     }
 
-    /**
-     * Renders the location details based on the provided payload.
-     * @param {LocationDisplayPayload} locationData
-     */
+    /** @param {LocationDisplayPayload} locationData */
     renderLocation(locationData) {
         let outputHtml = '';
         outputHtml += `<h2 class="location__name">${locationData.name || 'Unnamed Location'}</h2>`;
         outputHtml += `<p class="location__description">${locationData.description || 'You see nothing remarkable.'}</p>`;
-
         if (locationData.items && locationData.items.length > 0) {
             const itemNames = locationData.items.map(item => item.name || 'unnamed item').join(', ');
             outputHtml += `<p class="location__items">Items here: ${itemNames}</p>`;
@@ -572,18 +554,20 @@ class DomRenderer {
         } else {
             outputHtml += '<p class="location__exits">Exits: None</p>';
         }
-        // Use new renderMessage, explicitly allow HTML for the location block
         this.renderMessage(outputHtml, 'location', {allowHtml: true});
     }
 
     clearOutput() {
-        this.#outputDiv.innerHTML = '';
+        if (this.#outputDiv) {
+            this.#outputDiv.innerHTML = '';
+        } else {
+            this.#logger.warn("DomRenderer: Cannot clear output, #outputDiv is null.");
+        }
     }
 
     /**
-     * Sets the enabled/disabled state and placeholder text of the input element.
-     * @param {boolean} enabled - True to enable, false to disable.
-     * @param {string} placeholderText - Text to display when the input is empty.
+     * @param {boolean} enabled
+     * @param {string} placeholderText
      */
     setInputState(enabled, placeholderText) {
         if (!this.#inputElement) {
@@ -594,17 +578,14 @@ class DomRenderer {
         this.#inputElement.placeholder = placeholderText;
     }
 
-    /**
-     * Toggles the visibility of the inventory panel.
-     * If the inventory is being shown, dispatches an event to request its content.
-     * @param {boolean} [forceState] - Optional: true to force show, false to force hide.
-     */
+    /** @param {boolean} [forceState] */
     toggleInventory(forceState) {
-        if (!this.#inventoryPanel) return;
+        if (!this.#inventoryPanel) {
+            this.#logger.warn("DomRenderer: Cannot toggle inventory, panel element does not exist.");
+            return;
+        }
         const shouldBeVisible = forceState === undefined ? !this.#isInventoryVisible : forceState;
-
         if (shouldBeVisible) {
-            // Dispatch event to request inventory data
             this.#eventBus.dispatch('ui:request_inventory_render', {});
             this.#inventoryPanel.classList.remove('hidden');
             this.#isInventoryVisible = true;
@@ -615,17 +596,19 @@ class DomRenderer {
     }
 
     /**
-     * Updates the inventory UI based on the provided item data payload.
      * @private
-     * @param {ItemUIData[]} itemsData - Array of item data for UI rendering.
+     * @param {ItemUIData[]} itemsData
      */
     #updateInventoryUI(itemsData) {
+        if (typeof document === 'undefined') {
+            this.#logger.warn('DomRenderer: Cannot update inventory UI, "document" is not available.');
+            return;
+        }
         if (!this.#inventoryList) {
             this.#logger.error('DomRenderer: Cannot update inventory UI, list element is null.');
             return;
         }
         this.#inventoryList.innerHTML = '';
-
         if (itemsData.length === 0) {
             const emptyLi = document.createElement('li');
             emptyLi.textContent = '(Empty)';
@@ -636,9 +619,7 @@ class DomRenderer {
                 const li = document.createElement('li');
                 li.classList.add('inventory-item');
                 li.dataset.itemId = item.id;
-
                 const itemName = item.name || '(Unnamed Item)';
-
                 if (item.icon) {
                     const img = document.createElement('img');
                     img.src = item.icon;
@@ -651,17 +632,14 @@ class DomRenderer {
                     iconPlaceholder.textContent = '📦';
                     li.appendChild(iconPlaceholder);
                 }
-
                 const nameSpan = document.createElement('span');
                 nameSpan.classList.add('inventory-item-name');
                 nameSpan.textContent = itemName;
                 li.appendChild(nameSpan);
-
                 const dropButton = document.createElement('button');
                 dropButton.textContent = 'Drop';
                 dropButton.classList.add('inventory-item-drop-button');
                 dropButton.dataset.itemName = itemName;
-
                 dropButton.addEventListener('click', async (event) => {
                     event.stopPropagation();
                     const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
@@ -676,24 +654,17 @@ class DomRenderer {
                         this.#logger.error('DomRenderer: Drop button clicked, but missing item ID or name from dataset.');
                         return;
                     }
-
                     const commandString = `drop ${itemNameToDrop}`;
                     this.#logger.debug(`DomRenderer: Inventory Drop button for "${itemNameToDrop}" clicked. Attempting validated dispatch...`);
-
-                    const dispatched = await this.#validatedEventDispatcher.dispatchValidated(
-                        'command:submit',
-                        {command: commandString}
-                    );
-
+                    const dispatched = await this.#validatedEventDispatcher.dispatchValidated('command:submit', {command: commandString});
                     if (dispatched) {
                         this.#logger.debug(`DomRenderer: Event 'command:submit' for "${commandString}" dispatched successfully.`);
-                        this.toggleInventory(false); // Close inventory on successful drop command dispatch
+                        this.toggleInventory(false); // Close inventory
                     } else {
-                        this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or other error). See previous dispatcher logs.`);
+                        this.#logger.warn(`DomRenderer: Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or other error).`);
                     }
                 });
                 li.appendChild(dropButton);
-
                 li.addEventListener('click', () => {
                     const currentSelected = this.#inventoryList?.querySelector('.selected');
                     if (currentSelected) {
@@ -702,7 +673,6 @@ class DomRenderer {
                     li.classList.add('selected');
                     this.#logger.debug(`Selected item: ${itemName} (ID: ${item.id})`);
                 });
-
                 this.#inventoryList.appendChild(li);
             });
         }
@@ -710,50 +680,63 @@ class DomRenderer {
 
     /**
      * Mutates properties of DOM elements matching a selector.
+     * Checks for document availability before attempting mutation.
+     * **Includes direct handling for 'textContent' and 'innerHTML'.**
      * @param {string} selector - The CSS selector to query for elements.
-     * @param {string} propertyPath - Dot-notation path to the property to set (e.g., 'style.color', 'dataset.value').
+     * @param {string} propertyPath - Dot-notation path to the property to set (e.g., 'style.color', 'dataset.value', 'textContent').
      * @param {*} value - The value to set the property to.
-     * @returns {{count: number, failed: number}} - Object indicating total elements found and how many failed to update.
+     * @returns {{count: number, modified: number, failed: number}} - Object indicating total elements found, how many were modified, and how many failed to update.
      */
     mutate(selector, propertyPath, value) {
+        if (typeof document === 'undefined') {
+            this.#logger.warn(`DomRenderer.mutate: Cannot mutate elements for selector "${selector}", "document" is not available.`);
+            return {count: 0, modified: 0, failed: 0};
+        }
         let total = 0;
         let successCount = 0;
         let elements;
-
         try {
             elements = document.querySelectorAll(selector);
         } catch (error) {
             this.#logger.error(`DomRenderer.mutate: Invalid selector "${selector}".`, error);
-            return {count: 0, failed: 0};
+            return {count: 0, modified: 0, failed: 0};
         }
-
         total = elements.length;
-
         if (total === 0) {
             this.#logger.warn(`DomRenderer.mutate: Selector "${selector}" found no elements.`);
-            // Return success (0 found, 0 failed)
-            return {count: 0, failed: 0};
+            return {count: 0, modified: 0, failed: 0};
         }
 
         elements.forEach(element => {
             try {
-                // NOTE: The 'setPropertyByPath' utility function needs to be implemented
-                // in src/utils/objectUtils.js for this to work.
-                // Assuming it exists and works like: setPropertyByPath(object, path, value) -> throws on error
-                setPropertyByPath(element, propertyPath, value);
+                // --- Direct handling for common properties ---
+                if (propertyPath === 'textContent') {
+                    element.textContent = value;
+                } else if (propertyPath === 'innerHTML') {
+                    element.innerHTML = value;
+                } else {
+                    // Fallback to utility for nested/complex properties
+                    setPropertyByPath(element, propertyPath, value);
+                }
+                // --- End direct handling ---
                 successCount++;
             } catch (error) {
-                this.#logger.error(`DomRenderer.mutate: Failed to set property "${propertyPath}" on element matched by "${selector}".`, error);
-                // Failure for this element is counted implicitly (total - successCount)
+                // Log error with stringified value for better debugging
+                this.#logger.error(`DomRenderer.mutate: Failed to set property "${propertyPath}" on element matched by "${selector}". Value: ${JSON.stringify(value)}`, error);
             }
         });
 
         const failedCount = total - successCount;
+        const modifiedCount = successCount; // Renamed for clarity
+
         if (failedCount > 0) {
             this.#logger.warn(`DomRenderer.mutate: Failed to set property "${propertyPath}" for ${failedCount} out of ${total} elements matching "${selector}".`);
+        } else if (modifiedCount > 0) {
+            this.#logger.debug(`DomRenderer.mutate: Successfully set property "${propertyPath}" on ${modifiedCount} element(s) matching "${selector}"`);
         }
+        // If modifiedCount is 0 and failedCount is 0, it implies elements were found but the property might not have changed (e.g., setting same value, or setPropertyByPath handled it silently)
 
-        return {count: total, failed: failedCount};
+        return {count: total, modified: modifiedCount, failed: failedCount};
     }
 }
 

@@ -45,6 +45,9 @@ class OperationInterpreter {
                 resolvedParameters = resolvePlaceholders(operation.parameters, executionContext, this.#logger);
                 // <<< --- ADDED LOG --- >>>
                 this.#logger.info(`*** OperationInterpreter placeholders resolved for: ${opType} ***`);
+                // --- ADD THIS LOG ---
+                this.#logger.debug(`Resolved parameters for ${opType}:`, JSON.stringify(resolvedParameters));
+                // --- END ADD THIS LOG ---
             } catch (interpolationError) {
                 this.#logger.error(`Error resolving placeholders for operation type "${opType}". Skipping handler invocation.`, interpolationError);
                 // <<< --- ADDED LOG --- >>>
