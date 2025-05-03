@@ -81,17 +81,31 @@ export function registerInterpreters(container) {
     }));
     logger.debug('Interpreter Registrations: Registered QueryComponentHandler.');
 
-    // ModifyDomElementHandler still depends on the old DomRenderer
-    registrar.singletonFactory(tokens.ModifyDomElementHandler, c => new ModifyDomElementHandler({
-        logger: c.resolve(tokens.ILogger),
-        domRenderer: c.resolve(tokens.DomRenderer) // Keep DomRenderer here until this handler is refactored
-    }));
-    logger.debug('Interpreter Registrations: Registered ModifyDomElementHandler.');
+    // --- UPDATED REGISTRATION for ModifyDomElementHandler ---
+    // Depends on the new DomMutationService
+    registrar.singletonFactory(tokens.ModifyDomElementHandler, c => {
+        // Ensure DomMutationService is registered elsewhere with the token IDomMutationService
+        const mutationService = c.resolve(tokens.IDomMutationService);
+        if (!mutationService) {
+            logger.error('Interpreter Registrations: Failed to resolve IDomMutationService for ModifyDomElementHandler. Check DI configuration.');
+            // Optionally return a dummy handler or throw to prevent partial initialization
+            return {
+                execute: () => {
+                    logger.error("ModifyDomElementHandler not initialized due to missing dependency: IDomMutationService");
+                }
+            };
+        }
+        return new ModifyDomElementHandler({
+            logger: c.resolve(tokens.ILogger),
+            domMutationService: mutationService // Inject the new service with the correct property name
+        });
+    });
+    logger.debug('Interpreter Registrations: Registered ModifyDomElementHandler (using DomMutationService).');
+    // --- END UPDATE ---
 
     // --- CORRECTED REGISTRATION for AppendUiMessageHandler ---
     registrar.singletonFactory(tokens.AppendUiMessageHandler, c => new AppendUiMessageHandler({
         logger: c.resolve(tokens.ILogger),
-        // domRenderer: c.resolve(tokens.DomRenderer) // Old incorrect line
         uiMessageRenderer: c.resolve(tokens.UiMessageRenderer) // Corrected: Inject UiMessageRenderer
     }));
     // --- END CORRECTION ---
@@ -116,10 +130,17 @@ export function registerInterpreters(container) {
 
         const bindExecute = (token) => {
             const handlerInstance = c.resolve(token);
-            if (!handlerInstance || typeof handlerInstance.execute !== 'function') {
-                internalLogger.error(`Interpreter Registrations: Failed to resolve or find execute method for handler token "${token.description || token.toString()}". Cannot register in OperationRegistry.`);
+            // Added a more descriptive error if resolution fails
+            if (!handlerInstance) {
+                internalLogger.error(`Interpreter Registrations: Failed to resolve handler token "${token.description || token.toString()}" required by OperationRegistry.`);
                 return (params, context) => {
-                    internalLogger.error(`Operation handler for token "${token.description || token.toString()}" was not properly resolved or bound. Operation skipped.`);
+                    internalLogger.error(`Operation handler for token "${token.description || token.toString()}" was not resolved. Operation skipped.`);
+                };
+            }
+            if (typeof handlerInstance.execute !== 'function') {
+                internalLogger.error(`Interpreter Registrations: Resolved instance for token "${token.description || token.toString()}" does not have an 'execute' method.`);
+                return (params, context) => {
+                    internalLogger.error(`Operation handler for token "${token.description || token.toString()}" is invalid (missing execute). Operation skipped.`);
                 };
             }
             return handlerInstance.execute.bind(handlerInstance);
@@ -132,7 +153,7 @@ export function registerInterpreters(container) {
         registry.register('REMOVE_COMPONENT', bindExecute(tokens.RemoveComponentHandler));
         registry.register('QUERY_COMPONENT', bindExecute(tokens.QueryComponentHandler));
         registry.register('MODIFY_DOM_ELEMENT', bindExecute(tokens.ModifyDomElementHandler));
-        registry.register('APPEND_UI_MESSAGE', bindExecute(tokens.AppendUiMessageHandler)); // This now resolves the correctly configured handler
+        registry.register('APPEND_UI_MESSAGE', bindExecute(tokens.AppendUiMessageHandler));
         registry.register('SET_VARIABLE', bindExecute(tokens.SetVariableHandler));
         registry.register('QUERY_SYSTEM_DATA', bindExecute(tokens.QuerySystemDataHandler));
 

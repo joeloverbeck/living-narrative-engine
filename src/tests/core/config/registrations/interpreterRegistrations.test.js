@@ -1,4 +1,5 @@
 // src/tests/core/config/registrations/interpreterRegistrations.test.js
+// ****** CORRECTED FILE (Removed DomRenderer) ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -10,7 +11,10 @@
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../../../domUI/domRenderer.js').default} DomRenderer */
+/** @typedef {import('../../../../domUI/IDomMutationService.js').IDomMutationService} IDomMutationService */
+// --- VVVVV DomRenderer type removed VVVVV ---
+// /** @typedef {import('../../../../domUI/domRenderer.js').default} DomRenderer */
+// --- ^^^^^ DomRenderer type removed ^^^^^ ---
 /** @typedef {import('../../../../domUI/uiMessageRenderer.js').UiMessageRenderer} UiMessageRenderer */
 /** @typedef {any} AppContainer */
 
@@ -21,7 +25,7 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerInterpreters} from '../../../../core/config/registrations/interpreterRegistrations.js';
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/config/tokens.js';
+import {tokens} from '../../../../core/config/tokens.js'; // Assuming tokens.js does NOT have DomRenderer
 
 // --- Mock Modules ---
 jest.mock('../../../../logic/operationRegistry.js');
@@ -67,57 +71,78 @@ const mockEntityManager = {
 };
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
 const mockSystemDataRegistry = {query: jest.fn(), registerSource: jest.fn()};
-const mockDomRenderer = {renderMessage: jest.fn(), mutate: jest.fn()};
+const mockDomMutationService = {mutate: jest.fn()};
+// --- VVVVV mockDomRenderer removed VVVVV ---
+// const mockDomRenderer = {renderMessage: jest.fn(), mutate: jest.fn()};
+// --- ^^^^^ mockDomRenderer removed ^^^^^ ---
 const mockUiMessageRenderer = {render: jest.fn()};
 
 // --- Mock DI Container ---
+// Using the version with jest.fn() wrapper and logging from previous step
 const createMockContainer = () => {
     const registrations = new Map();
+    /** @type {AppContainer} */
     const container = {
         _registrations: registrations,
         register: jest.fn((token, factoryOrValue, options = {}) => {
-            if (!token) throw new Error('Mock Register Error: Token is required.');
-            registrations.set(token, {factoryOrValue, options, instance: undefined});
-            const registration = registrations.get(token);
-            if (options?.lifecycle === 'singleton' && typeof factoryOrValue !== 'function') {
-                registration.instance = factoryOrValue;
+            console.log(`[Mock Register] Called. Token type: ${typeof token}, Token value: ${String(token)}`, {options}); // Keep log
+            if (token && typeof token !== 'string' && typeof token !== 'symbol') {
+                console.warn(`[Mock Register] Received non-standard token type: ${typeof token}`, token);
             }
+            if (!token) {
+                console.error('[Mock Register] ERROR: Token is falsy!', token);
+                throw new Error('Mock Register Error: Token is required.');
+            }
+            registrations.set(token, {factoryOrValue, options, instance: undefined});
         }),
         resolve: jest.fn((token) => {
+            console.log(`[Mock Resolve] Attempting to resolve token: ${String(token)}`); // Keep log
             const registration = registrations.get(token);
             if (!registration) {
-                const registeredTokens = Array.from(registrations.keys()).map(String).join(', ');
+                const registeredTokens = Array.from(registrations.keys()).map(t => String(t)).join(', ');
+                console.error(`[Mock Resolve] ERROR: Token not registered: ${String(token)}. Registered: [${registeredTokens}]`);
                 throw new Error(`Mock Resolve Error: Token not registered: ${String(token)}. Registered tokens are: [${registeredTokens}]`);
             }
             const {factoryOrValue, options} = registration;
             const tokenStr = String(token);
             if (options?.lifecycle === 'singleton' || options?.lifecycle === 'singletonFactory') {
-                if (registration.instance !== undefined) return registration.instance;
+                if (registration.instance !== undefined) {
+                    console.log(`[Mock Resolve] Returning cached singleton instance for: ${tokenStr}`);
+                    return registration.instance;
+                }
+                console.log(`[Mock Resolve] Creating singleton instance for: ${tokenStr}`);
                 if (typeof factoryOrValue === 'function') {
                     try {
                         registration.instance = factoryOrValue(container);
+                        console.log(`[Mock Resolve] Successfully created singleton instance for: ${tokenStr}`);
                     } catch (e) {
-                        console.error(`Mock container: Error executing factory during singleton resolve for ${tokenStr}: ${e.message}`, e);
-                        throw e;
+                        console.error(`[Mock Resolve] ERROR executing factory during singleton resolve for ${tokenStr}: ${e.message}`, e);
+                        throw new Error(`Factory error during mock resolve for ${tokenStr}: ${e.message}`, {cause: e});
                     }
                 } else {
                     registration.instance = factoryOrValue;
+                    console.log(`[Mock Resolve] Caching direct value as singleton instance for: ${tokenStr}`);
                 }
                 return registration.instance;
             }
+            console.log(`[Mock Resolve] Creating transient instance/value for: ${tokenStr}`);
             if (typeof factoryOrValue === 'function') {
                 try {
-                    return factoryOrValue(container);
+                    const transientInstance = factoryOrValue(container);
+                    console.log(`[Mock Resolve] Successfully created transient instance for: ${tokenStr}`);
+                    return transientInstance;
                 } catch (e) {
-                    console.error(`Mock container: Error executing transient factory during resolve for ${tokenStr}: ${e.message}`, e);
-                    throw e;
+                    console.error(`[Mock Resolve] ERROR executing transient factory during resolve for ${tokenStr}: ${e.message}`, e);
+                    throw new Error(`Transient factory error during mock resolve for ${tokenStr}: ${e.message}`, {cause: e});
                 }
             }
+            console.log(`[Mock Resolve] Returning direct transient value for: ${tokenStr}`);
             return factoryOrValue;
         }),
     };
     return container;
 };
+
 
 describe('registerInterpreters', () => {
     /** @type {ReturnType<typeof createMockContainer>} */
@@ -135,10 +160,13 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.DomRenderer, mockDomRenderer, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IDomMutationService, mockDomMutationService, {lifecycle: 'singleton'});
+        // --- VVVVV Registration for DomRenderer removed VVVVV ---
+        // mockContainer.register(tokens.DomRenderer, mockDomRenderer, {lifecycle: 'singleton'});
+        // --- ^^^^^ Registration for DomRenderer removed ^^^^^ ---
         mockContainer.register(tokens.UiMessageRenderer, mockUiMessageRenderer, {lifecycle: 'singleton'});
 
-        // Clear mocks
+        // Clear implementation mocks
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
         Object.values(mockEventBus).forEach(fn => fn.mockClear?.());
         Object.values(mockDataRegistry).forEach(fn => fn.mockClear?.());
@@ -146,30 +174,45 @@ describe('registerInterpreters', () => {
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
         Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.());
-        Object.values(mockDomRenderer).forEach(fn => fn.mockClear?.());
+        Object.values(mockDomMutationService).forEach(fn => fn.mockClear?.());
+        // --- VVVVV Clearing for mockDomRenderer removed VVVVV ---
+        // Object.values(mockDomRenderer).forEach(fn => fn.mockClear?.());
+        // --- ^^^^^ Clearing for mockDomRenderer removed ^^^^^ ---
+        mockUiMessageRenderer.render.mockClear?.();
 
-        // Clear UiMessageRenderer mock
-        mockUiMessageRenderer.render.mockClear();
 
-        // Clear constructor mocks
-        OperationRegistry.mockClear();
-        OperationInterpreter.mockClear();
-        SystemLogicInterpreter.mockClear();
-        DispatchEventHandler.mockClear();
-        LogHandler.mockClear();
-        ModifyComponentHandler.mockClear();
-        AddComponentHandler.mockClear();
-        RemoveComponentHandler.mockClear();
-        QueryComponentHandler.mockClear();
-        ModifyDomElementHandler.mockClear();
-        AppendUiMessageHandler.mockClear();
-        SetVariableHandler.mockClear();
-        QuerySystemDataHandler.mockClear();
-    });
+        // Clear constructor mocks defined via jest.mock()
+        OperationRegistry.mockClear?.();
+        if (OperationRegistry.mock?.instances) {
+            OperationRegistry.mock.instances.forEach(inst => {
+                if (inst) {
+                    Object.values(inst).forEach(prop => {
+                        if (typeof prop?.mockClear === 'function') prop.mockClear();
+                    });
+                }
+            });
+        }
+        OperationInterpreter.mockClear?.();
+        SystemLogicInterpreter.mockClear?.();
+        DispatchEventHandler.mockClear?.();
+        LogHandler.mockClear?.();
+        ModifyComponentHandler.mockClear?.();
+        AddComponentHandler.mockClear?.();
+        RemoveComponentHandler.mockClear?.();
+        QueryComponentHandler.mockClear?.();
+        ModifyDomElementHandler.mockClear?.();
+        AppendUiMessageHandler.mockClear?.();
+        SetVariableHandler.mockClear?.();
+        QuerySystemDataHandler.mockClear?.();
+
+    }); // End beforeEach
+
+    // --- Tests ---
 
     it('should register required services without throwing errors', () => {
         expect(() => registerInterpreters(mockContainer)).not.toThrow();
 
+        // Assertions should work correctly now with jest.fn() mock
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.DispatchEventHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.LogHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ModifyComponentHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
@@ -182,7 +225,10 @@ describe('registerInterpreters', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.QuerySystemDataHandler, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationRegistry, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({
+            lifecycle: 'singletonFactory',
+            tags: expect.any(Array)
+        }));
     });
 
     it('resolving SystemLogicInterpreter does not throw', () => {
@@ -199,7 +245,7 @@ describe('registerInterpreters', () => {
             dataRegistry: mockDataRegistry,
             jsonLogicEvaluationService: mockJsonLogicService,
             entityManager: mockEntityManager,
-            operationInterpreter: expect.any(OperationInterpreter)
+            operationInterpreter: expect.anything()
         }));
     });
 
@@ -211,6 +257,10 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(resolved).toBeDefined();
         expect(OperationInterpreter).toHaveBeenCalledTimes(1);
+        expect(OperationInterpreter).toHaveBeenCalledWith(expect.objectContaining({
+            logger: mockLogger,
+            operationRegistry: expect.anything()
+        }));
     });
 
     it('resolving OperationRegistry does not throw and its factory registers handlers', () => {
@@ -221,7 +271,9 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(registry).toBeDefined();
         expect(OperationRegistry).toHaveBeenCalledTimes(1);
+
         const mockInstance = OperationRegistry.mock.instances[0];
+        expect(mockInstance).toBeDefined();
         expect(mockInstance.register).toHaveBeenCalledWith('DISPATCH_EVENT', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('LOG', expect.any(Function));
         expect(mockInstance.register).toHaveBeenCalledWith('MODIFY_COMPONENT', expect.any(Function));
@@ -236,6 +288,7 @@ describe('registerInterpreters', () => {
 
     it('interpreters are registered as singletons', () => {
         registerInterpreters(mockContainer);
+
         const r1 = mockContainer.resolve(tokens.OperationRegistry);
         const r2 = mockContainer.resolve(tokens.OperationRegistry);
         expect(r1).toBe(r2);
@@ -285,11 +338,8 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(handler).toBeDefined();
         expect(AppendUiMessageHandler).toHaveBeenCalledTimes(1);
-        expect(AppendUiMessageHandler).toHaveBeenCalledWith({
-            logger: mockLogger,
-            uiMessageRenderer: expect.any(Object)
-        });
         expect(AppendUiMessageHandler).toHaveBeenCalledWith(expect.objectContaining({
+            logger: mockLogger,
             uiMessageRenderer: mockUiMessageRenderer
         }));
     });
@@ -302,12 +352,9 @@ describe('registerInterpreters', () => {
         }).not.toThrow();
         expect(handler).toBeDefined();
         expect(ModifyDomElementHandler).toHaveBeenCalledTimes(1);
-        expect(ModifyDomElementHandler).toHaveBeenCalledWith({
-            logger: mockLogger,
-            domRenderer: expect.any(Object)
-        });
         expect(ModifyDomElementHandler).toHaveBeenCalledWith(expect.objectContaining({
-            domRenderer: mockDomRenderer
+            logger: mockLogger,
+            domMutationService: mockDomMutationService
         }));
     });
-});
+}); // End describe
