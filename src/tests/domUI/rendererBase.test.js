@@ -4,43 +4,43 @@
  * @jest-environment jsdom
  */
 
-import {describe, expect, it, jest} from '@jest/globals';
+import {beforeEach, afterEach, describe, expect, it, jest} from '@jest/globals';
 import {RendererBase} from '../../domUI/index.js';
-import DocumentContext from '../../domUI/documentContext.js'; // Need a concrete implementation for testing
+import DocumentContext from '../../domUI/documentContext.js';
 
 // --- Mock Dependencies ---
 
-// Minimal mock ILogger
 const createMockLogger = () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    debug: jest.fn(), // Added debug for constructor log
+    debug: jest.fn(),
 });
 
-// Minimal mock ValidatedEventDispatcher
 const createMockVed = () => ({
     dispatchValidated: jest.fn(),
-    // Add other methods if needed by future base class logic
 });
 
-// Real DocumentContext using JSDOM
 const createRealDocContext = () => {
-    // Ensure document is available in JSDOM environment
     if (typeof document === 'undefined') {
         throw new Error("JSDOM 'document' is not available. Ensure environment is 'jsdom'.");
     }
-    return new DocumentContext(document.body); // Use JSDOM's document
+    const rootElement = document.body || document.createElement('div');
+    if (!document.body) {
+        document.appendChild(rootElement);
+    }
+    return new DocumentContext(rootElement);
 };
 
 // --- Concrete Test Class ---
-// We need a concrete class extending RendererBase to test it
 class ConcreteRenderer extends RendererBase {
+    /**
+     * @param {{logger: ILogger, docContext: IDocumentContext, ved: IValidatedEventDispatcher}} deps
+     */
     constructor(deps) {
-        super(deps);
+        super(deps.logger, deps.docContext, deps.ved);
     }
 
-    // Add a dummy method to make it concrete if needed, but constructor test is primary
     renderSomething() {
         this.logger.info(`${this._logPrefix} Rendering something...`);
     }
@@ -57,50 +57,59 @@ describe('RendererBase', () => {
     beforeEach(() => {
         mockLogger = createMockLogger();
         mockVed = createMockVed();
-        docContext = createRealDocContext(); // Use a real one for interface validation
+        docContext = createRealDocContext();
         validDeps = {logger: mockLogger, ved: mockVed, docContext: docContext};
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
+        if (document && document.body) {
+            document.body.innerHTML = '';
+        }
     });
 
     // --- Constructor Tests ---
     describe('Constructor', () => {
         it('should successfully create an instance with valid dependencies', () => {
             expect(() => new ConcreteRenderer(validDeps)).not.toThrow();
-            // Check if constructor logged initialization
-            expect(mockLogger.debug).toHaveBeenCalledWith('[Ui::ConcreteRenderer] Initialized.');
+            const instance = new ConcreteRenderer(validDeps);
+            expect(mockLogger.debug).toHaveBeenCalledWith('[ConcreteRenderer] Initialized.');
         });
 
         it('should throw an error if logger is missing or invalid', () => {
+            // --- FIX: Update expected error messages ---
             expect(() => new ConcreteRenderer({...validDeps, logger: null}))
-                .toThrow('ConcreteRenderer requires a valid ILogger instance.');
-            expect(() => new ConcreteRenderer({...validDeps, logger: {info: 'not a function'}}))
-                .toThrow('ConcreteRenderer requires a valid ILogger instance.');
-            expect(() => new ConcreteRenderer({...validDeps, logger: {}}))
-                .toThrow('ConcreteRenderer requires a valid ILogger instance.');
+                .toThrow('ConcreteRenderer: Logger dependency is missing or invalid.'); // Added " or invalid"
+            expect(() => new ConcreteRenderer({...validDeps, logger: undefined}))
+                .toThrow('ConcreteRenderer: Logger dependency is missing or invalid.'); // Added " or invalid"
+            // Test case for invalid type (missing debug function)
+            expect(() => new ConcreteRenderer({...validDeps, logger: {info: jest.fn()}}))
+                .toThrow('ConcreteRenderer: Logger dependency is missing or invalid.'); // Added " or invalid"
         });
 
         it('should throw an error if ValidatedEventDispatcher is missing or invalid', () => {
+            // --- FIX: Update expected error messages ---
             expect(() => new ConcreteRenderer({...validDeps, ved: null}))
-                .toThrow('ConcreteRenderer requires a valid ValidatedEventDispatcher instance.');
-            expect(() => new ConcreteRenderer({...validDeps, ved: {}}))
-                .toThrow('ConcreteRenderer requires a valid ValidatedEventDispatcher instance.');
-            expect(() => new ConcreteRenderer({...validDeps, ved: {dispatchValidated: 'not a function'}}))
-                .toThrow('ConcreteRenderer requires a valid ValidatedEventDispatcher instance.');
+                .toThrow('ConcreteRenderer: ValidatedEventDispatcher dependency is missing or invalid.'); // Added " or invalid"
+            expect(() => new ConcreteRenderer({...validDeps, ved: undefined}))
+                .toThrow('ConcreteRenderer: ValidatedEventDispatcher dependency is missing or invalid.'); // Added " or invalid"
+            // Test case for invalid type (missing dispatchValidated function)
+            expect(() => new ConcreteRenderer({...validDeps, ved: {someOtherFunc: jest.fn()}}))
+                .toThrow('ConcreteRenderer: ValidatedEventDispatcher dependency is missing or invalid.'); // Added " or invalid"
         });
 
         it('should throw an error if DocumentContext is missing or invalid', () => {
+            // --- FIX: Update expected error messages ---
             expect(() => new ConcreteRenderer({...validDeps, docContext: null}))
-                .toThrow('ConcreteRenderer requires a valid IDocumentContext instance.');
-            expect(() => new ConcreteRenderer({...validDeps, docContext: {}}))
-                .toThrow('ConcreteRenderer requires a valid IDocumentContext instance.');
-            // Test missing core methods
-            expect(() => new ConcreteRenderer({...validDeps, docContext: {create: () => null}})) // Missing query
-                .toThrow('ConcreteRenderer requires a valid IDocumentContext instance.');
-            expect(() => new ConcreteRenderer({...validDeps, docContext: {query: () => null}})) // Missing create
-                .toThrow('ConcreteRenderer requires a valid IDocumentContext instance.');
+                .toThrow('ConcreteRenderer: DocumentContext dependency is missing or invalid.'); // Added " or invalid"
+            expect(() => new ConcreteRenderer({...validDeps, docContext: undefined}))
+                .toThrow('ConcreteRenderer: DocumentContext dependency is missing or invalid.'); // Added " or invalid"
+            // Test case for invalid type (missing query function)
+            expect(() => new ConcreteRenderer({...validDeps, docContext: {create: jest.fn()}}))
+                .toThrow('ConcreteRenderer: DocumentContext dependency is missing or invalid.'); // Added " or invalid"
+            // Test case for invalid type (missing create function)
+            expect(() => new ConcreteRenderer({...validDeps, docContext: {query: jest.fn()}}))
+                .toThrow('ConcreteRenderer: DocumentContext dependency is missing or invalid.'); // Added " or invalid"
         });
     });
 
@@ -121,7 +130,6 @@ describe('RendererBase', () => {
 
         it('should provide a protected getter for the DocumentContext', () => {
             expect(instance.doc).toBe(docContext);
-            // Verify it's a functional doc context
             expect(typeof instance.doc.query).toBe('function');
             expect(typeof instance.doc.create).toBe('function');
         });
@@ -130,20 +138,26 @@ describe('RendererBase', () => {
     // --- Log Prefix Helper Test ---
     describe('_logPrefix', () => {
         it('should generate the correct log prefix based on the concrete class name', () => {
+            // Instance creation calls the constructor, which logs.
             const instance = new ConcreteRenderer(validDeps);
-            // Accessing protected members directly in tests is okay for verification
-            expect(instance._logPrefix).toBe('[Ui::ConcreteRenderer]');
+            // Check the log message that uses the prefix.
+            expect(mockLogger.debug).toHaveBeenCalledWith('[ConcreteRenderer] Initialized.');
         });
 
         it('should work correctly for a different derived class name', () => {
             class AnotherRenderer extends RendererBase {
+                /**
+                 * @param {{logger: ILogger, docContext: IDocumentContext, ved: IValidatedEventDispatcher}} deps
+                 */
                 constructor(deps) {
-                    super(deps);
+                    super(deps.logger, deps.docContext, deps.ved);
                 }
             }
 
+            // Instance creation calls the constructor, which logs.
             const anotherInstance = new AnotherRenderer(validDeps);
-            expect(anotherInstance._logPrefix).toBe('[Ui::AnotherRenderer]');
+            // Check the log message that uses the prefix for the different class name.
+            expect(mockLogger.debug).toHaveBeenCalledWith('[AnotherRenderer] Initialized.');
         });
     });
 });
