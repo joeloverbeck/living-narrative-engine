@@ -168,13 +168,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
                 expect(buildCallOrder[0]).toBeGreaterThan(createCallsOrder[createCallsOrder.length - 1]);
             }
 
-
-            // Verify event dispatching (including the final completed event)
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:started',
-                {},
-                {allowSchemaNotFound: true}
-            );
             // Check fine-grained events
             for (const def of mockEntityDefinitions) {
                 expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
@@ -183,15 +176,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
                     {allowSchemaNotFound: true}
                 );
             }
-            // Check completed event payload and logging
-            const expectedCompletedPayload = {totalInstantiatedCount: mockEntityDefinitions.length};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:completed',
-                expectedCompletedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // This assertion should now pass because we awaited the function
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:completed' event.", expectedCompletedPayload);
         });
 
         it('should skip invalid entity definitions and log warnings', async () => { // <-- Add async
@@ -222,14 +206,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
 
             // Verify spatial index and completion event
             expect(mockEntityManager.buildInitialSpatialIndex).toHaveBeenCalledTimes(1);
-            const expectedCompletedPayload = {totalInstantiatedCount: validCount};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:completed',
-                expectedCompletedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // Check debug log as well
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:completed' event.", expectedCompletedPayload);
         });
 
         it('should skip instantiation if entity already exists and log warning', async () => { // <-- Add async
@@ -250,14 +226,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
 
             // Verify spatial index and completion event
             expect(mockEntityManager.buildInitialSpatialIndex).toHaveBeenCalledTimes(1);
-            const expectedCompletedPayload = {totalInstantiatedCount: mockEntityDefinitions.length - 1};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:completed',
-                expectedCompletedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // Check debug log
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:completed' event.", expectedCompletedPayload);
         });
 
         it('should handle empty entity definitions gracefully', async () => { // <-- Add async
@@ -269,15 +237,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
             expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
             expect(mockLogger.warn).toHaveBeenCalledWith('WorldInitializer: No entity definitions found. World may be empty.');
             expect(mockEntityManager.buildInitialSpatialIndex).toHaveBeenCalledTimes(1); // Still builds index
-
-            const expectedCompletedPayload = {totalInstantiatedCount: 0};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:completed',
-                expectedCompletedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // Check debug log
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:completed' event.", expectedCompletedPayload);
         });
 
         it('should throw, log error, and dispatch failed event if repository throws', async () => { // <-- Add async
@@ -295,21 +254,10 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
             expect(mockEntityManager.buildInitialSpatialIndex).not.toHaveBeenCalled();
 
             // Verify event dispatches (start and fail)
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:started', {}, {allowSchemaNotFound: true}
-            );
-            const expectedFailedPayload = {error: repoError.message, stack: repoError.stack};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:failed',
-                expectedFailedPayload,
-                {allowSchemaNotFound: true}
-            );
             // Verify completion event NOT called
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
                 'initialization:world_initializer:completed', expect.anything(), expect.anything()
             );
-            // Check debug log for failure event
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:failed' event.", expectedFailedPayload);
         });
 
         it('should log warning, dispatch event, and continue if a single entity instantiation fails (returns null)', async () => { // <-- Add async
@@ -348,14 +296,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
 
             // Verify spatial index and completion event (count reflects failure)
             expect(mockEntityManager.buildInitialSpatialIndex).toHaveBeenCalledTimes(1);
-            const expectedCompletedPayload = {totalInstantiatedCount: mockEntityDefinitions.length - 1};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:completed',
-                expectedCompletedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // Check debug log for completion
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:completed' event.", expectedCompletedPayload);
         });
 
         it('should throw, log error, and dispatch failed event if buildInitialSpatialIndex throws', async () => { // <-- Add async
@@ -373,17 +313,6 @@ describe('WorldInitializer (Universal Instantiation Refactor)', () => {
 
             // Error logging and event dispatch
             expect(mockLogger.error).toHaveBeenCalledWith('WorldInitializer: CRITICAL ERROR during entity instantiation or index build:', indexError);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:started', {}, {allowSchemaNotFound: true}
-            );
-            const expectedFailedPayload = {error: indexError.message, stack: indexError.stack};
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:world_initializer:failed',
-                expectedFailedPayload,
-                {allowSchemaNotFound: true}
-            );
-            // Check debug log for failure event
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:world_initializer:failed' event.", expectedFailedPayload);
 
             // Verify completion event NOT called
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
