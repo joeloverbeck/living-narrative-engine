@@ -181,15 +181,6 @@ describe('InitializationService', () => {
             expect(result.error).toBeUndefined();
         });
 
-        it('should dispatch completed event on success', async () => {
-            await initializationService.runInitializationSequence(testWorldName);
-            expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:initialization_service:completed',
-                {worldName: testWorldName},
-                {allowSchemaNotFound: true}
-            );
-        });
-
         // --- Error Handling Tests ---
 
         const testError = new Error('Test Initialization Step Failed');

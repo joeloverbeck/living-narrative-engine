@@ -161,14 +161,6 @@ class InitializationService {
             // --- Success ---
             this.#logger.info(`InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`);
 
-            // --- Ticket 16: Dispatch 'completed' event ---
-            // Payload no longer includes gameLoopInstanceId
-            const completedPayload = {worldName}; // <<< MODIFIED PAYLOAD
-            this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:completed', completedPayload, {allowSchemaNotFound: true})
-                .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:completed' event.", completedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:completed' event", e));
-            // --- End Ticket 16 ---
-
             // Return simplified success object, without gameLoop
             return {
                 success: true

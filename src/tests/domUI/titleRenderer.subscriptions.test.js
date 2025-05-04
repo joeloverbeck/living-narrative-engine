@@ -98,7 +98,7 @@ describe('TitleRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Attached to H1 element.');
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events'));
             // --- FIX: Correct subscription count ---
-            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(15); // Check number of subscriptions
+            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(14); // Check number of subscriptions
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
@@ -294,15 +294,6 @@ describe('TitleRenderer', () => {
             );
         });
 
-        it('should handle "initialization:initialization_service:started" event', () => {
-            simulateEvent('initialization:initialization_service:started');
-            expect(renderer.set).toHaveBeenCalledWith('Initializing game...');
-
-            renderer.set.mockClear();
-            simulateEvent('initialization:initialization_service:started', {worldName: 'TestWorld'});
-            expect(renderer.set).toHaveBeenCalledWith("Initializing game for world 'TestWorld'...");
-        });
-
         it('should handle "initialization:initialization_service:completed" event', () => {
             simulateEvent('initialization:initialization_service:completed');
             expect(renderer.set).toHaveBeenCalledWith('Game Ready');
@@ -384,7 +375,7 @@ describe('TitleRenderer', () => {
         it('should call unsubscribe on all active subscriptions', () => {
             const initialSubscriptionCount = unsubscribeSpies.length;
             // --- FIX: Correct subscription count ---
-            expect(initialSubscriptionCount).toBe(15); // Ensure subscriptions were made
+            expect(initialSubscriptionCount).toBe(14); // Ensure subscriptions were made
 
             renderer.dispose();
 

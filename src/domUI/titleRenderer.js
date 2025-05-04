@@ -74,7 +74,6 @@ export class TitleRenderer extends RendererBase {
         this.#subscriptions.push(ved.subscribe('textUI:set_title', this.#handleSetTitle.bind(this)));
 
         // Initialization Events
-        this.#subscriptions.push(ved.subscribe('initialization:initialization_service:started', this.#handleInitializationStarted.bind(this)));
         this.#subscriptions.push(ved.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this)));
         this.#subscriptions.push(ved.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this)));
 
@@ -115,17 +114,6 @@ export class TitleRenderer extends RendererBase {
         } else {
             this.logger.warn(`${this._logPrefix} Received '${eventType}' with invalid payload structure or missing 'text' property:`, payload);
         }
-    }
-
-    /**
-     * Handles 'initialization:initialization_service:started'.
-     * @private
-     * @param {object} payload - Expected payload (e.g., { worldName?: string }).
-     */
-    #handleInitializationStarted(payload) {
-        const worldName = payload?.worldName ? ` for world '${payload.worldName}'` : '';
-        const message = `Initializing game${worldName}...`;
-        this.set(message);
     }
 
     /**
