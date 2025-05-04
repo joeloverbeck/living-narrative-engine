@@ -29,7 +29,8 @@
       "display_message.event.json",
       "enable_input.event.json",
       "disable_input.event.json",
-      "command_echo.event.json"
+      "command_echo.event.json",
+      "update_available_actions.event.json"
     ],
     "operations": [
     ]

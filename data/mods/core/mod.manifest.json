@@ -20,6 +20,7 @@
     "locations": [
     ],
     "actions": [
+      "wait.action.json"
     ],
     "rules": [
       "turn_started.rule.json"

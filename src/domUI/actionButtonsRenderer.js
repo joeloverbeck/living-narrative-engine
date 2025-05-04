@@ -10,14 +10,14 @@ import DomElementFactory from './domElementFactory.js';
  */
 
 /**
- * Represents the payload for the 'event:update_available_actions' event.
+ * Represents the payload for the 'textUI:update_available_actions' event.
  * @typedef {object} UIUpdateActionsPayload
  * @property {string[]} actions - An array of action strings (commands) available to the player.
  */
 
 /**
  * Manages the rendering of action buttons in a specified container element.
- * Subscribes to 'event:update_available_actions' to dynamically update the buttons.
+ * Subscribes to 'textUI:update_available_actions' to dynamically update the buttons.
  */
 export class ActionButtonsRenderer extends RendererBase {
     /**
@@ -91,19 +91,19 @@ export class ActionButtonsRenderer extends RendererBase {
 
         this.#subscriptions.push(
             // Listen for the event that carries the list of available actions
-            ved.subscribe('event:update_available_actions', this.#handleUpdateActions.bind(this))
+            ved.subscribe('textUI:update_available_actions', this.#handleUpdateActions.bind(this))
         );
 
-        this.logger.debug(`${this._logPrefix} Subscribed to VED event 'event:update_available_actions'.`);
+        this.logger.debug(`${this._logPrefix} Subscribed to VED event 'textUI:update_available_actions'.`);
     }
 
     // --- Private Event Handler ---
 
     /**
-     * Handles the 'event:update_available_actions' event from VED.
+     * Handles the 'textUI:update_available_actions' event from VED.
      * Validates the payload and calls the public render method.
      * @private
-     * @param {UIUpdateActionsPayload | object} payload - Expected payload for 'event:update_available_actions'.
+     * @param {UIUpdateActionsPayload | object} payload - Expected payload for 'textUI:update_available_actions'.
      * @param {string} eventType - The name of the triggered event.
      */
     #handleUpdateActions(payload, eventType) {
@@ -116,7 +116,7 @@ export class ActionButtonsRenderer extends RendererBase {
             // Filter out any non-string actions just in case
             const validActions = validatedPayload.actions.filter(action => typeof action === 'string');
             if (validActions.length !== validatedPayload.actions.length) {
-                this.logger.warn(`${this._logPrefix} Received 'event:update_available_actions' with some non-string items in the actions array. Only string actions will be rendered.`, payload);
+                this.logger.warn(`${this._logPrefix} Received 'textUI:update_available_actions' with some non-string items in the actions array. Only string actions will be rendered.`, payload);
             }
             this.render(validActions);
         } else {

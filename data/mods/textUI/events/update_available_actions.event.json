@@ -1,0 +1,26 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "textUI:update_available_actions",
+  "description": "Signals a UI component (like the action buttons renderer) to update the display of currently available player actions based on the provided list.",
+  "payloadSchema": {
+    "type": "object",
+    "title": "UIUpdateActionsPayload",
+    "description": "Defines the payload for the 'textUI:update_available_actions' event, containing the list of available action commands.",
+    "properties": {
+      "actions": {
+        "type": "array",
+        "description": "An array of action command strings available to the player. These are typically displayed as buttons or links.",
+        "items": {
+          "type": "string",
+          "description": "A single action command string (e.g., 'look', 'take sword', 'go north').",
+          "minLength": 1,
+          "$comment": "minLength ensures non-empty strings, aligning with the renderer's trim check."
+        }
+      }
+    },
+    "required": [
+      "actions"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -6,6 +6,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // <-- ADDED Import for structured type
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -85,8 +86,6 @@ class PlayerTurnHandler extends ITurnHandler {
 
         // Inject and assign logger first
         if (!logger || typeof logger.error !== 'function') {
-            // Avoid console.error in constructor for testability if logger is the dep being tested
-            // Rely on the thrown Error.
             throw new Error('PlayerTurnHandler: Invalid or missing logger dependency.');
         }
         this.#logger = logger;
@@ -181,7 +180,7 @@ class PlayerTurnHandler extends ITurnHandler {
             // If #_promptPlayerForAction threw an error
             this.#logger.error(`PlayerTurnHandler: Error during turn initiation/prompt for ${actor.id}: ${initError.message}`, initError);
             // Ensure the turn ends and the promise is rejected.
-            await this.#_handleTurnEnd(actor.id, initError, true);
+            await this.#_handleTurnEnd(actor.id, initError, true); // Mark as rejection needed
             // Do not re-throw initError here. The rejection of promiseForCaller is sufficient.
         }
 
@@ -232,7 +231,7 @@ class PlayerTurnHandler extends ITurnHandler {
                 this.#logger.error(`PlayerTurnHandler: Failed to re-prompt player ${actorId} after empty command: ${promptError.message}`, promptError);
                 // Check state before ending turn
                 if (this.#currentActor && this.#currentActor.id === actorId) {
-                    await this.#_handleTurnEnd(actorId, promptError, true);
+                    await this.#_handleTurnEnd(actorId, promptError, true); // Mark as rejection needed
                 }
             }
             return; // Don't process empty commands
@@ -320,7 +319,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
                 this.#logger.info(`PlayerTurnHandler: Signalling FAILED turn end for ${actorId} due to error.`);
                 // Ensure the promise is rejected
-                await this.#_handleTurnEnd(actorId, error, true);
+                await this.#_handleTurnEnd(actorId, error, true); // Mark as rejection needed
             } else {
                 this.#logger.warn(`PlayerTurnHandler: Error caught for ${actorId}, but turn state seems invalid. Cannot reliably signal turn end.`);
             }
@@ -329,6 +328,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
     /**
      * Discovers available actions and dispatches the 'core:player_turn_prompt' event.
+     * Ensures the dispatched payload's `availableActions` is an array of non-empty action IDs.
      * @private
      * @param {Entity} actor - The player actor.
      * @returns {Promise<void>}
@@ -348,9 +348,12 @@ class PlayerTurnHandler extends ITurnHandler {
 
         const actorId = actor.id;
         this.#logger.debug(`PlayerTurnHandler: Preparing prompt for ${actorId}. Discovering actions...`);
-        let availableActions = [];
+        /** @type {DiscoveredActionInfo[]} */
+        let discoveredActionInfo = []; // <-- Updated type
+        let actionIdsToSend = []; // Initialize array for valid IDs
 
         try {
+            // Assume getLocationOfEntity returns the entity or throws if not found
             const currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
 
             // --- Re-check state AFTER await ---
@@ -360,17 +363,30 @@ class PlayerTurnHandler extends ITurnHandler {
             }
             // --- End Re-check ---
 
+            // Create context object for ActionDiscoverySystem
             const context = {
-                actingEntity: actor,
+                actor: actor, // Use the provided actor entity
                 currentLocation: currentLocation,
-                entityManager: this.#entityManager,
-                gameDataRepository: this.#gameDataRepository,
-                logger: this.#logger,
-                worldContext: this.#worldContext,
+                entityManager: this.#entityManager, // Pass injected dependency
+                gameDataRepository: this.#gameDataRepository, // Pass injected dependency
+                logger: this.#logger, // Pass logger
+                worldContext: this.#worldContext // Pass world context if needed by discovery/validation
+                // Add other context properties as needed by ActionDiscoverySystem or validation rules
             };
 
-            availableActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
-            this.#logger.debug(`PlayerTurnHandler: Discovered ${availableActions.length} actions for ${actorId}.`);
+
+            // --- Get structured action info ---
+            discoveredActionInfo = await this.#actionDiscoverySystem.getValidActions(actor, context);
+            this.#logger.debug(`PlayerTurnHandler: Discovered ${discoveredActionInfo.length} actions (with info) for ${actorId}.`);
+
+            // --- *** FIX APPLIED HERE *** ---
+            // Map discovered action info objects to just their IDs and filter
+            actionIdsToSend = (discoveredActionInfo || []) // Handle potential null/undefined result
+                .map(actionInfo => actionInfo?.id) // Extract the 'id' property
+                .filter(id => typeof id === 'string' && id.length > 0); // Keep only valid string IDs
+            // --- *** END FIX *** ---
+
+            this.#logger.debug(`PlayerTurnHandler: Filtered to ${actionIdsToSend.length} valid action IDs for dispatch: [${actionIdsToSend.join(', ')}]`);
 
             // --- Re-check state BEFORE dispatch ---
             if (!this.#currentActor || actor.id !== this.#currentActor.id || !this.#turnPromiseResolve) {
@@ -381,8 +397,9 @@ class PlayerTurnHandler extends ITurnHandler {
 
             await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
                 entityId: actorId,
-                availableActions: availableActions.map(a => a.id)
+                availableActions: actionIdsToSend // Use the filtered array of IDs
             });
+            this.#logger.debug(`Dispatched core:player_turn_prompt for ${actorId} with ${actionIdsToSend.length} actions.`);
 
         } catch (error) {
             this.#logger.error(`PlayerTurnHandler: Error during action discovery or prompting for ${actorId}: ${error.message}`, error);
@@ -394,6 +411,7 @@ class PlayerTurnHandler extends ITurnHandler {
                     if (!this.#currentActor || actor.id !== this.#currentActor.id || !this.#turnPromiseResolve) {
                         this.#logger.warn(`PlayerTurnHandler: Turn state changed just before dispatching ERROR prompt for ${actorId}. Aborting dispatch.`);
                     } else {
+                        // Dispatch with empty valid actions on error
                         await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
                             entityId: actorId,
                             availableActions: [], // Send empty actions on error
@@ -417,19 +435,21 @@ class PlayerTurnHandler extends ITurnHandler {
      * @private
      * @param {string} actorId - The ID of the actor whose turn is ending.
      * @param {any} [rejectionReason=null] - If provided, the turn promise is rejected with this reason. Otherwise, it's resolved.
-     * @param {boolean} [isError=false] - Deprecated flag, use rejectionReason check.
+     * @param {boolean} [isRejection=false] - Explicit flag to indicate rejection (alternative to checking rejectionReason).
      * @returns {Promise<void>}
      */
-    async #_handleTurnEnd(actorId, rejectionReason = null) { // Removed unused isError param
+    async #_handleTurnEnd(actorId, rejectionReason = null, isRejection = false) {
+        // Determine if this is intended as a rejection
+        const shouldReject = isRejection || (rejectionReason !== null && rejectionReason !== undefined);
+
         // --- Check State ---
-        // Check if the turn is *currently* active for the given actorId for *this* handler instance.
         if (!this.#currentActor || this.#currentActor.id !== actorId) {
             this.#logger.warn(`PlayerTurnHandler: #_handleTurnEnd called for ${actorId}, but current actor is ${this.#currentActor?.id || 'null'}. Turn may have already ended or belongs to another handler.`);
             return; // Exit if not the active turn for this handler
         }
         // --- End Check State ---
 
-        const endingType = rejectionReason ? 'error' : 'normal';
+        const endingType = shouldReject ? 'error' : 'normal';
         this.#logger.info(`PlayerTurnHandler: Ending turn for actor ${actorId} (${endingType}).`);
 
         // Keep copies of the promise handlers *before* cleanup nullifies them
@@ -447,12 +467,12 @@ class PlayerTurnHandler extends ITurnHandler {
         // --- End Dispatch Event ---
 
         // --- Settle Promise --- (Use saved handlers)
-        if (rejectionReason) {
+        if (shouldReject) {
             if (reject) {
-                this.#logger.warn(`PlayerTurnHandler: Rejecting turn promise for ${actorId}. Reason: ${rejectionReason?.message || rejectionReason}`);
+                const reasonMsg = rejectionReason instanceof Error ? rejectionReason.message : String(rejectionReason);
+                this.#logger.warn(`PlayerTurnHandler: Rejecting turn promise for ${actorId}. Reason: ${reasonMsg}`);
                 reject(rejectionReason); // Use the saved reject function
             } else {
-                // This should ideally not happen if the entry check passed, indicates potential race condition or logic error elsewhere
                 this.#logger.error(`PlayerTurnHandler: Cannot reject turn promise for ${actorId} - reject handler missing despite active turn check passing!`);
             }
         } else {
@@ -460,7 +480,6 @@ class PlayerTurnHandler extends ITurnHandler {
                 this.#logger.debug(`PlayerTurnHandler: Resolving turn promise for ${actorId}.`);
                 resolve(); // Use the saved resolve function
             } else {
-                // This should ideally not happen if the entry check passed
                 this.#logger.error(`PlayerTurnHandler: Cannot resolve turn promise for ${actorId} - resolve handler missing despite active turn check passing!`);
             }
         }
@@ -526,10 +545,14 @@ class PlayerTurnHandler extends ITurnHandler {
 
             // Dispatch turn_ended *after* rejection and cleanup, if we had an active turn ID
             if (actorIdForEvent) {
-                this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorIdForEvent})
-                    .catch(dispatchError => {
+                // Wrap dispatch in an async IIFE or just call it without await if sync dispatch is okay here
+                (async () => {
+                    try {
+                        await this.#validatedEventDispatcher.dispatchValidated('core:turn_ended', {entityId: actorIdForEvent});
+                    } catch (dispatchError) {
                         this.#logger.error(`${handlerId}: Failed to dispatch core:turn_ended during forced destroy cleanup for ${actorIdForEvent}: ${dispatchError.message}`, dispatchError);
-                    });
+                    }
+                })();
             }
         }
         // --- End Handle Active Turn ---

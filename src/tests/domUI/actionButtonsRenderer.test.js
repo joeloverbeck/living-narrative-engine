@@ -221,7 +221,7 @@ describe('ActionButtonsRenderer', () => {
     }); // End Button Click Simulation describe
 
 
-    describe('VED Event Handling (event:update_available_actions)', () => {
+    describe('VED Event Handling (textUI:update_available_actions)', () => {
         let updateActionsHandler;
         let mockSubscription;
         let rendererInstance;
@@ -231,7 +231,7 @@ describe('ActionButtonsRenderer', () => {
             mockSubscription = {unsubscribe: jest.fn()};
             // Reset the spy/mock implementation for subscribe specifically for this block
             jest.spyOn(mockVed, 'subscribe').mockImplementation((eventName, handler) => {
-                if (eventName === 'event:update_available_actions') {
+                if (eventName === 'textUI:update_available_actions') {
                     updateActionsHandler = handler; // Capture the handler
                 }
                 return mockSubscription; // Return the mock subscription object
@@ -241,7 +241,7 @@ describe('ActionButtonsRenderer', () => {
 
             // Ensure handler was captured
             if (!updateActionsHandler) {
-                throw new Error("Test setup failed: VED handler for 'event:update_available_actions' was not captured.");
+                throw new Error("Test setup failed: VED handler for 'textUI:update_available_actions' was not captured.");
             }
             // Clear mocks that might have been called during construction before the actual test call
             mockLogger.warn.mockClear();
@@ -251,7 +251,7 @@ describe('ActionButtonsRenderer', () => {
 
         it('should call render with valid actions from payload', () => {
             const payload = {actions: ['north', 'south', 'east', 'west']};
-            const eventType = 'event:update_available_actions';
+            const eventType = 'textUI:update_available_actions';
 
             updateActionsHandler(payload, eventType); // Call the captured handler
 
@@ -263,37 +263,37 @@ describe('ActionButtonsRenderer', () => {
 
         it('should call render with filtered string actions if payload contains non-strings, logging a warning', () => {
             const payload = {actions: ['north', null, 'south', 123, '', '  ', 'west', undefined]};
-            const eventType = 'event:update_available_actions';
+            const eventType = 'textUI:update_available_actions';
             const expectedFilteredActions = ['north', 'south', '', '  ', 'west']; // Handler filters to only strings
 
             updateActionsHandler(payload, eventType);
 
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Received '${eventType}' event. Payload:`), payload);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Received \'event:update_available_actions\' with some non-string items in the actions array. Only string actions will be rendered.'), payload);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Received \'textUI:update_available_actions\' with some non-string items in the actions array. Only string actions will be rendered.'), payload);
             expect(rendererInstance.render).toHaveBeenCalledTimes(1);
             expect(rendererInstance.render).toHaveBeenCalledWith(expectedFilteredActions);
         });
 
         it('should call render with empty list and log warning if payload is invalid', () => {
-            const eventType = 'event:update_available_actions';
+            const eventType = 'textUI:update_available_actions';
 
             // Case 1: Null payload
             updateActionsHandler(null, eventType);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'event:update_available_actions'. Clearing action buttons."), null);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), null);
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
             rendererInstance.render.mockClear();
             mockLogger.warn.mockClear();
 
             // Case 2: Empty object
             updateActionsHandler({}, eventType);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'event:update_available_actions'. Clearing action buttons."), {});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), {});
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
             rendererInstance.render.mockClear();
             mockLogger.warn.mockClear();
 
             // Case 3: Actions property is not an array
             updateActionsHandler({actions: 'not-an-array'}, eventType);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'event:update_available_actions'. Clearing action buttons."), {actions: 'not-an-array'});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), {actions: 'not-an-array'});
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
 
             // Ensure render was called once for each invalid case tested here

@@ -177,11 +177,11 @@ describe('ActionButtonsRenderer', () => {
         });
 
 
-        it('should subscribe to VED event event:update_available_actions', () => {
+        it('should subscribe to VED event textUI:update_available_actions', () => {
             createRenderer();
             expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
-            expect(mockVed.subscribe).toHaveBeenCalledWith('event:update_available_actions', expect.any(Function));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Subscribed to VED event 'event:update_available_actions'."));
+            expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:update_available_actions', expect.any(Function));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Subscribed to VED event 'textUI:update_available_actions'."));
         });
     }); // End Constructor describe
 

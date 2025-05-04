@@ -1,10 +1,10 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json#",
-  "id": "event:update_available_actions",
+  "id": "textUI:update_available_actions",
   "description": "Communicates the list of currently available actions for the player to the UI, allowing dynamic rendering of action elements.",
   "payloadSchema": {
     "type": "object",
-    "description": "Payload for the event:update_available_actions event.",
+    "description": "Payload for the textUI:update_available_actions event.",
     "properties": {
       "actions": {
         "type": "array",
