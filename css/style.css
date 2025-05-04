@@ -456,7 +456,7 @@ h1 {
 }
 
 /* --- Action Button Styles (FEAT-UI-ACTIONS-01) --- */
-#action-buttons-container {
+#action-buttons {
     /* AC4: Container Styling */
     display: flex; /* Enable flex layout */
     flex-wrap: wrap; /* Allow buttons to wrap to next line */

@@ -1,9 +1,9 @@
 {
-  "id": "isekai:counter_lady",
+  "id": "isekai:receptionist",
   "components": {
     "core:actor": {},
     "core:name": {
-      "text": "Counter Lady"
+      "text": "Receptionist"
     },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
