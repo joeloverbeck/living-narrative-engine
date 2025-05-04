@@ -95,12 +95,6 @@ class SystemInitializer {
                 await system.initialize();
                 this.#logger.info(`SystemInitializer: System ${systemName} initialized successfully.`);
 
-                // Dispatch individual success event
-                const successPayload = {systemName};
-                this.#validatedEventDispatcher.dispatchValidated('system:initialized', successPayload, {allowSchemaNotFound: true})
-                    .then(() => this.#logger.debug(`Dispatched 'system:initialized' event for ${systemName}.`))
-                    .catch(e => this.#logger.error(`Failed to dispatch 'system:initialized' event for ${systemName}.`, e));
-
             } catch (initError) {
                 this.#logger.error(`SystemInitializer: Error initializing system '${systemName}'. Continuing. Error: ${initError.message}`, initError);
 

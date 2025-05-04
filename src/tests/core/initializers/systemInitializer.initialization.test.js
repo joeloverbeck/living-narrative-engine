@@ -315,7 +315,6 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockSystemGood1.initialize).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initializing system: SystemGood1...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: System SystemGood1 initialized successfully.');
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood1'}, {allowSchemaNotFound: true});
 
             // NoInit
             expect(mockSystemNoInit.someOtherMethod).not.toHaveBeenCalled(); // Ensure its other methods aren't called
@@ -335,7 +334,6 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initializing system: SystemGood2...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: System SystemGood2 initialized successfully.');
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood2'}, {allowSchemaNotFound: true});
 
             // BadInitType
             expect(mockLogger.debug).toHaveBeenCalledWith("SystemInitializer: System 'SystemBadInitType' has no initialize() method, skipping."); // Correct check is for function type
@@ -346,7 +344,7 @@ describe('SystemInitializer (Tag-Based)', () => {
             // Verify overall counts
             expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only from mockSystemFailInit
             expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only from mockSystemNull
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(3);
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
         });
 
         it('[Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
@@ -432,14 +430,12 @@ describe('SystemInitializer (Tag-Based)', () => {
             );
 
             // Check event dispatches
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood1'}, {allowSchemaNotFound: true});
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialization_failed', {
                 systemName: 'SystemFailInit',
                 error: initError.message,
                 stack: initError.stack
             }, {allowSchemaNotFound: true});
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood2'}, {allowSchemaNotFound: true});
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(3);
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
 
             // Should only have the one error from mockSystemFailInit
             expect(mockLogger.error).toHaveBeenCalledTimes(1);
