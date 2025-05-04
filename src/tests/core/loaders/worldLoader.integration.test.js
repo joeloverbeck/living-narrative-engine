@@ -382,19 +382,6 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         // 15. Verify registry.clear was not called again.
         expect(mockRegistry.clear).toHaveBeenCalledTimes(clearCalls); // Still 1
 
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:completed',
-            expect.objectContaining({
-                worldName: worldName,
-                modsLoaded: [coreModId],
-                counts: expect.objectContaining({ // Check counts based on mock loader return values
-                    actions: {count: 2, overrides: 0, errors: 0},
-                    components: {count: 1, overrides: 0, errors: 0},
-                    characters: {count: 1, overrides: 0, errors: 0}
-                })
-            }),
-            {allowSchemaNotFound: true}
-        );
         // Ensure failure events were not called
         expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
             'initialization:world_loader:failed', expect.anything(), expect.anything()

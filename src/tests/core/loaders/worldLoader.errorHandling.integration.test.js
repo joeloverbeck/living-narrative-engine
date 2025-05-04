@@ -1,6 +1,6 @@
 // Filename: src/tests/core/loaders/worldLoader.errorHandling.integration.test.js
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 // --- SUT ---
 import WorldLoader from '../../../core/loaders/worldLoader.js';
@@ -8,14 +8,17 @@ import WorldLoader from '../../../core/loaders/worldLoader.js';
 // --- Dependencies to Mock ---
 // Mock static/imported functions BEFORE importing WorldLoader
 import * as ModDependencyValidatorModule from '../../../core/modding/modDependencyValidator.js';
+
 jest.mock('../../../core/modding/modDependencyValidator.js', () => ({
     validate: jest.fn(),
 }));
 
 import * as ModVersionValidatorModule from '../../../core/modding/modVersionValidator.js';
+
 jest.mock('../../../core/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../../core/modding/modLoadOrderResolver.js';
+
 jest.mock('../../../core/modding/modLoadOrderResolver.js', () => ({
     resolveOrder: jest.fn(),
 }));
@@ -136,8 +139,8 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
             getStartingLocationId: jest.fn(() => null),
         };
 
-        mockLogger = { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
-        mockSchemaLoader = { loadAndCompileAllSchemas: jest.fn() };
+        mockLogger = {info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn()};
+        mockSchemaLoader = {loadAndCompileAllSchemas: jest.fn()};
         mockValidator = {
             isSchemaLoaded: jest.fn(), // Will be configured below
             addSchema: jest.fn(), removeSchema: jest.fn(), getValidator: jest.fn(), validate: jest.fn(),
@@ -149,27 +152,27 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
             getWorldBasePath: jest.fn(() => 'worlds'), getGameConfigFilename: jest.fn(() => 'game.json'),
             getModsBasePath: jest.fn(() => 'mods'), getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
         };
-        mockGameConfigLoader = { loadConfig: jest.fn() };
-        mockModManifestLoader = { loadRequestedManifests: jest.fn() };
+        mockGameConfigLoader = {loadConfig: jest.fn()};
+        mockModManifestLoader = {loadRequestedManifests: jest.fn()};
 
         // Mock individual content loaders
-        mockActionLoader = { loadItemsForMod: jest.fn() };
-        mockComponentLoader = { loadItemsForMod: jest.fn() }; // This will throw for badMod
-        mockEventLoader = { loadItemsForMod: jest.fn() };
-        mockRuleLoader = { loadItemsForMod: jest.fn() };
-        mockEntityLoader = { loadItemsForMod: jest.fn() };
+        mockActionLoader = {loadItemsForMod: jest.fn()};
+        mockComponentLoader = {loadItemsForMod: jest.fn()}; // This will throw for badMod
+        mockEventLoader = {loadItemsForMod: jest.fn()};
+        mockRuleLoader = {loadItemsForMod: jest.fn()};
+        mockEntityLoader = {loadItemsForMod: jest.fn()};
 
-        mockValidatedEventDispatcher = { dispatchValidated: jest.fn().mockResolvedValue(undefined) };
+        mockValidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(undefined)};
 
 
         // --- 2. Define Mock Data (as per TEST-LOADER-7.4) ---
         mockCoreManifest = {
             id: coreModId, version: '1.0.0', name: 'Core', gameVersion: '^1.0.0',
-            content: { actions: ['core_action.json'] },
+            content: {actions: ['core_action.json']},
         };
         mockBadModManifest = {
             id: badModId, version: '1.0.0', name: 'Bad Mod', gameVersion: '^1.0.0',
-            content: { components: ['bad_comp.json'], rules: ['good_rule.json'] },
+            content: {components: ['bad_comp.json'], rules: ['good_rule.json']},
         };
 
         mockManifestMap = new Map();
@@ -205,8 +208,10 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         mockModManifestLoader.loadRequestedManifests.mockResolvedValue(mockManifestMap);
 
         // Static/Imported Mocks (assume success)
-        mockedModDependencyValidator.mockImplementation(() => { /* Assume success */ });
-        mockedValidateModEngineVersions.mockImplementation(() => { /* Assume success */ });
+        mockedModDependencyValidator.mockImplementation(() => { /* Assume success */
+        });
+        mockedValidateModEngineVersions.mockImplementation(() => { /* Assume success */
+        });
         mockedResolveOrder.mockReturnValue([coreModId, badModId]); // Define load order
 
         // --- Configure Content Loader Mocks (Specific behaviors) ---
@@ -214,13 +219,13 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
             if (modIdArg === coreModId && typeNameArg === 'actions') {
                 const itemId = `${coreModId}:action1`;
-                const itemData = { id: itemId, value: 'core_action_data' };
+                const itemData = {id: itemId, value: 'core_action_data'};
                 mockRegistry.store('actions', itemId, itemData);
                 mockLogger.debug(`Mock ActionLoader: Stored ${itemId} for ${modIdArg}`);
                 // Return structure matching LoadItemsResult for aggregation
-                return { count: 1, overrides: 0, errors: 0 };
+                return {count: 1, overrides: 0, errors: 0};
             }
-            return { count: 0, overrides: 0, errors: 0 };
+            return {count: 0, overrides: 0, errors: 0};
         });
 
         // ComponentLoader: THROWS for badMod
@@ -229,25 +234,25 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
                 mockLogger.debug(`Mock ComponentLoader: Simulating error for ${modIdArg}/${typeNameArg}`);
                 throw new Error(simulatedErrorMessage); // Simulate the error
             }
-            return { count: 0, overrides: 0, errors: 0 };
+            return {count: 0, overrides: 0, errors: 0};
         });
 
         // RuleLoader: Succeeds for badMod
         mockRuleLoader.loadItemsForMod.mockImplementation(async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
             if (modIdArg === badModId && typeNameArg === 'rules') {
                 const itemId = `${badModId}:rule1`;
-                const itemData = { id: itemId, value: 'badMod_rule_data' };
+                const itemData = {id: itemId, value: 'badMod_rule_data'};
                 mockRegistry.store('rules', itemId, itemData);
                 mockLogger.debug(`Mock RuleLoader: Stored ${itemId} for ${modIdArg}`);
                 // Return structure matching LoadItemsResult for aggregation
-                return { count: 1, overrides: 0, errors: 0 };
+                return {count: 1, overrides: 0, errors: 0};
             }
-            return { count: 0, overrides: 0, errors: 0 };
+            return {count: 0, overrides: 0, errors: 0};
         });
 
         // Other loaders are mocked but won't be called based on manifests
-        mockEventLoader.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
-        mockEntityLoader.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+        mockEventLoader.loadItemsForMod.mockResolvedValue({count: 0, overrides: 0, errors: 0});
+        mockEntityLoader.loadItemsForMod.mockResolvedValue({count: 0, overrides: 0, errors: 0});
 
 
         // --- 4. Instantiate SUT ---
@@ -316,11 +321,11 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
 
         // Verify the registry contains core:action1
         const coreAction = mockRegistry.get('actions', `${coreModId}:action1`);
-        expect(coreAction).toEqual({ id: 'core:action1', value: 'core_action_data' });
+        expect(coreAction).toEqual({id: 'core:action1', value: 'core_action_data'});
 
         // Verify the registry contains badMod:rule1
         const badModRule = mockRegistry.get('rules', `${badModId}:rule1`);
-        expect(badModRule).toEqual({ id: 'badMod:rule1', value: 'badMod_rule_data' });
+        expect(badModRule).toEqual({id: 'badMod:rule1', value: 'badMod_rule_data'});
 
         // Verify the registry does not contain the component from bad_comp.json (re-check getAll)
         expect(mockRegistry.getAll('components').length).toBe(0);
@@ -365,20 +370,6 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
             expect.any(Object)
         );
         // *******************************************************************
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:completed',
-            expect.objectContaining({ worldName, modsLoaded: [coreModId, badModId] }),
-            expect.any(Object)
-        );
-        // Check the counts in the completed event payload (from previous correction, should be okay)
-        const completedCall = mockValidatedEventDispatcher.dispatchValidated.mock.calls.find(
-            call => call[0] === 'initialization:world_loader:completed'
-        );
-        expect(completedCall[1].counts).toEqual({
-            actions: { count: 1, overrides: 0, errors: 0 },
-            rules: { count: 1, overrides: 0, errors: 0 },
-            components: { count: 0, overrides: 0, errors: 1 } // Reflects the error during load
-        });
 
         // Ensure failure event was NOT called
         expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(

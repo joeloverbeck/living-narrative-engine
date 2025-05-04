@@ -205,8 +205,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
             'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
             expect.objectContaining({ error: simulatedError })
         );
-        // Ensure events were dispatched (or attempted)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:world_loader:failed', expect.objectContaining({ error: simulatedError.message }), expect.any(Object));
     });
 
     // ── Test Case: Dependency Cycle ─────────────────────────────────────────
@@ -258,8 +256,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
         const expectedMapArg = new Map(validationMap); // Clone map for comparison
         expect(mockResolveOrder).toHaveBeenCalledWith([modAId, modBId], expectedMapArg, mockLogger);
 
-        // Ensure events were dispatched (or attempted)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:world_loader:failed', expect.objectContaining({ error: expect.stringContaining('DEPENDENCY_CYCLE') }), expect.any(Object));
     });
 
 
@@ -297,13 +293,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
 
 
         expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(gameSchemaId);
-        // Ensure events were dispatched (or attempted)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:failed',
-            // The error payload in the event should match the *internal* error caught
-            expect.objectContaining({ error: expect.stringContaining(expectedInternalErrorMessage) }),
-            expect.any(Object)
-        );
     });
 
     // ── Test Case: Missing Essential Schema (mod-manifest) ──────────────────
@@ -352,13 +341,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
         expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(manifestSchemaId); // Fail
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(entitySchemaId);
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(actionsSchemaId);
-
-        // Ensure events were dispatched (or attempted)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:failed',
-            expect.objectContaining({ error: expect.stringContaining(expectedInternalErrorMessage) }),
-            expect.any(Object)
-        );
     });
 
 
@@ -412,13 +394,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
         // *** FIX: Correct typo isSChemaLoaded -> isSchemaLoaded ***
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(actionsSchemaId);
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(eventsSchemaId);
-
-        // Ensure events were dispatched (or attempted)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:failed',
-            expect.objectContaining({ error: expect.stringContaining(expectedInternalErrorMessage) }),
-            expect.any(Object)
-        );
     });
 
 });

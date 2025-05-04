@@ -480,26 +480,6 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         // Verify registry.clear was called only once at the beginning
         expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
 
-        // ***** CORRECTION HERE *****
-        // Check 'completed' event payload
-        // The actual `totalCounts` object ONLY includes keys for content types that were processed.
-        const expectedTotalCounts = {
-            actions: {count: 3, overrides: 1, errors: 0},     // Populated because ActionLoader ran
-            components: {count: 1, overrides: 0, errors: 0}, // Populated because ComponentLoader ran
-            // Other keys (events, rules, items, etc.) are intentionally omitted
-            // because their loaders were not invoked due to lack of manifest content,
-            // and thus they won't appear in the actual `totalCounts` object passed in the event.
-        };
-        const expectedCompletedPayload = {
-            worldName,
-            modsLoaded: [coreModId, overrideModId],
-            counts: expectedTotalCounts // Use the corrected counts object
-        };
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:completed',
-            expectedCompletedPayload, // Compare against the accurately structured payload
-            {allowSchemaNotFound: true}
-        );
         // --- End Event Dispatching Assertions ---
     });
 });

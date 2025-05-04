@@ -416,22 +416,10 @@ class WorldLoader {
             // --- Step 8: Log Summary ---
             this.#logLoadSummary(worldName, requestedModIds, this.#finalOrder, incompatibilityCount, totalCounts);
 
-            // --- Step 9: Dispatch 'completed' event ---
-            const completedPayload = {worldName, modsLoaded: this.#finalOrder, counts: totalCounts};
-            this.#validatedEventDispatcher.dispatchValidated('initialization:world_loader:completed', completedPayload, {allowSchemaNotFound: true})
-                .then(() => this.#logger.debug("Dispatched 'initialization:world_loader:completed' event.", completedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_loader:completed' event", e));
-
         } catch (err) {
             // --- REVISED CATCH BLOCK ---
             this.#logger.error('WorldLoader: CRITICAL load failure during world/mod loading sequence.', {error: err});
             this.#registry.clear(); // Ensure registry is cleared on failure
-
-            // --- Dispatch 'failed' event ---
-            const failedPayload = {worldName, error: err?.message || 'Unknown error', stack: err?.stack};
-            this.#validatedEventDispatcher.dispatchValidated('initialization:world_loader:failed', failedPayload, {allowSchemaNotFound: true})
-                .then(() => this.#logger.debug("Dispatched 'initialization:world_loader:failed' event.", failedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_loader:failed' event", e));
 
             // Explicitly check the type of error before deciding how to re-throw
             if (err instanceof ModDependencyError) {
