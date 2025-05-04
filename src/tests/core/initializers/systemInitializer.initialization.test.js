@@ -72,20 +72,20 @@ describe('SystemInitializer (Tag-Based)', () => {
         // Create Mock System Instances
         mockSystemGood1 = {
             initialize: jest.fn().mockResolvedValue(undefined),
-            constructor: { name: 'SystemGood1' }
+            constructor: {name: 'SystemGood1'}
         };
         mockSystemGood2 = {
             initialize: jest.fn().mockResolvedValue(undefined),
-            constructor: { name: 'SystemGood2' }
+            constructor: {name: 'SystemGood2'}
         };
-        mockSystemNoInit = { someOtherMethod: jest.fn(), constructor: { name: 'SystemNoInit' } };
+        mockSystemNoInit = {someOtherMethod: jest.fn(), constructor: {name: 'SystemNoInit'}};
         mockSystemFailInit = {
             initialize: jest.fn().mockRejectedValue(initError),
-            constructor: { name: 'SystemFailInit' }
+            constructor: {name: 'SystemFailInit'}
         };
         mockSystemBadInitType = {
             initialize: 'not a function',
-            constructor: { name: 'SystemBadInitType' }
+            constructor: {name: 'SystemBadInitType'}
         };
         mockSystemNull = null;
 
@@ -134,9 +134,10 @@ describe('SystemInitializer (Tag-Based)', () => {
         });
 
         it('should throw an error if ILogger is not provided', () => {
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
             // Need a valid resolver for this test
-            const tempResolver = { resolveByTag: jest.fn() };
+            const tempResolver = {resolveByTag: jest.fn()};
             // Call constructor with object structure
             const action = () => new SystemInitializer({
                 resolver: tempResolver,
@@ -165,7 +166,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         });
 
         it('should throw an error if IServiceResolver does not support resolveByTag', () => {
-            const invalidResolver = { someOtherMethod: jest.fn() }; // Missing resolveByTag
+            const invalidResolver = {someOtherMethod: jest.fn()}; // Missing resolveByTag
             // Call constructor with object structure
             const action = () => new SystemInitializer({
                 // Cast to 'any' only to satisfy the compiler for the test setup
@@ -180,7 +181,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         });
 
         it('should throw an error if ValidatedEventDispatcher does not support dispatchValidated', () => { // Added test
-            const invalidDispatcher = { someOtherMethod: jest.fn() }; // Missing dispatchValidated
+            const invalidDispatcher = {someOtherMethod: jest.fn()}; // Missing dispatchValidated
             // Call constructor with object structure
             const action = () => new SystemInitializer({
                 resolver: mockResolver,
@@ -302,10 +303,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
             // Check overall start/complete logs and events
             expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Starting initialization for systems tagged with '${testInitializationTag}'...`);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:started', { tag: testInitializationTag }, { allowSchemaNotFound: true });
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initialization loop for tagged systems completed.');
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:completed', { tag: testInitializationTag, count: 6 }, { allowSchemaNotFound: true }); // count = total resolved items
-
 
             // Check resolver call
             expect(mockResolver.resolveByTag).toHaveBeenCalledWith(testInitializationTag);
@@ -317,7 +315,7 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockSystemGood1.initialize).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initializing system: SystemGood1...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: System SystemGood1 initialized successfully.');
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', { systemName: 'SystemGood1' }, { allowSchemaNotFound: true });
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood1'}, {allowSchemaNotFound: true});
 
             // NoInit
             expect(mockSystemNoInit.someOtherMethod).not.toHaveBeenCalled(); // Ensure its other methods aren't called
@@ -327,13 +325,17 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initializing system: SystemFailInit...');
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Error initializing system 'SystemFailInit'. Continuing. Error: ${initError.message}`), initError);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialization_failed', { systemName: 'SystemFailInit', error: initError.message, stack: initError.stack }, { allowSchemaNotFound: true });
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialization_failed', {
+                systemName: 'SystemFailInit',
+                error: initError.message,
+                stack: initError.stack
+            }, {allowSchemaNotFound: true});
 
             // Good2
             expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initializing system: SystemGood2...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: System SystemGood2 initialized successfully.');
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', { systemName: 'SystemGood2' }, { allowSchemaNotFound: true });
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood2'}, {allowSchemaNotFound: true});
 
             // BadInitType
             expect(mockLogger.debug).toHaveBeenCalledWith("SystemInitializer: System 'SystemBadInitType' has no initialize() method, skipping."); // Correct check is for function type
@@ -344,7 +346,7 @@ describe('SystemInitializer (Tag-Based)', () => {
             // Verify overall counts
             expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only from mockSystemFailInit
             expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only from mockSystemNull
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2 + 2 + 1); // start, complete, good1, failInit, good2
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(3);
         });
 
         it('[Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
@@ -356,11 +358,6 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Proceeding to initialize 0 resolved systems sequentially...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initialization loop for tagged systems completed.');
 
-            // Check events
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:started', { tag: testInitializationTag }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:completed', { tag: testInitializationTag, count: 0 }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // Only start and complete
-
             // No systems to initialize
             expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
             expect(mockSystemFailInit.initialize).not.toHaveBeenCalled();
@@ -369,7 +366,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         });
 
         it('[Non-Array Result] should handle resolver returning non-array gracefully', async () => {
-            mockResolver.resolveByTag.mockResolvedValue({ not: 'an array' }); // Simulate non-array return
+            mockResolver.resolveByTag.mockResolvedValue({not: 'an array'}); // Simulate non-array return
             await systemInitializer.initializeAll();
 
             expect(mockResolver.resolveByTag).toHaveBeenCalledWith(testInitializationTag);
@@ -379,11 +376,6 @@ describe('SystemInitializer (Tag-Based)', () => {
             expect(mockLogger.info).toHaveBeenCalledWith(`SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`);
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Proceeding to initialize 0 resolved systems sequentially...');
             expect(mockLogger.info).toHaveBeenCalledWith('SystemInitializer: Initialization loop for tagged systems completed.');
-
-            // Check events
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:started', { tag: testInitializationTag }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:completed', { tag: testInitializationTag, count: 0 }, { allowSchemaNotFound: true }); // Count is 0
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // Only start and complete
 
             expect(mockLogger.error).not.toHaveBeenCalled();
             expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only the non-array warning
@@ -411,23 +403,9 @@ describe('SystemInitializer (Tag-Based)', () => {
                 resolveTagError // The original error object should be passed as the second arg to logger.error
             );
 
-            // Check events - start and fail should be called
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:started', { tag: testInitializationTag }, { allowSchemaNotFound: true });
-
-            // <<< FIX: Assert against the payload using the *wrapper error's* details >>>
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:system_initializer:failed', // Event name
-                { // Payload
-                    tag: testInitializationTag,
-                    error: expectedThrownErrorMessage, // The message from the error caught and dispatched by initializeAll
-                    stack: expect.any(String)          // The stack trace from the error caught by initializeAll
-                },
-                { allowSchemaNotFound: true } // Options
-            );
-
             // Complete event should NOT be called
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('initialization:system_initializer:completed', expect.anything(), expect.anything());
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // start, failed
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(0); // start, failed
 
             // Should not proceed to initialize
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Proceeding to initialize'));
@@ -454,12 +432,14 @@ describe('SystemInitializer (Tag-Based)', () => {
             );
 
             // Check event dispatches
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:started', { tag: testInitializationTag }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', { systemName: 'SystemGood1' }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialization_failed', { systemName: 'SystemFailInit', error: initError.message, stack: initError.stack }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', { systemName: 'SystemGood2' }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('initialization:system_initializer:completed', { tag: testInitializationTag, count: 3 }, { allowSchemaNotFound: true });
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1 + 1 + 1 + 1 + 1); // start, good1, fail, good2, complete
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood1'}, {allowSchemaNotFound: true});
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialization_failed', {
+                systemName: 'SystemFailInit',
+                error: initError.message,
+                stack: initError.stack
+            }, {allowSchemaNotFound: true});
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('system:initialized', {systemName: 'SystemGood2'}, {allowSchemaNotFound: true});
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(3);
 
             // Should only have the one error from mockSystemFailInit
             expect(mockLogger.error).toHaveBeenCalledTimes(1);

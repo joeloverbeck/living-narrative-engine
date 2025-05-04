@@ -35,7 +35,7 @@ class SystemInitializer {
      * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
      * @throws {Error} If resolver, logger, initializationTag, or validatedEventDispatcher is invalid or missing.
      */
-    constructor({ resolver, logger, validatedEventDispatcher, initializationTag }) {
+    constructor({resolver, logger, validatedEventDispatcher, initializationTag}) {
         // Simplified validation for brevity, assume checks pass
         if (!resolver || typeof resolver.resolveByTag !== 'function') throw new Error("SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.");
         if (!logger) throw new Error('SystemInitializer requires an ILogger instance.');
@@ -96,8 +96,8 @@ class SystemInitializer {
                 this.#logger.info(`SystemInitializer: System ${systemName} initialized successfully.`);
 
                 // Dispatch individual success event
-                const successPayload = { systemName };
-                this.#validatedEventDispatcher.dispatchValidated('system:initialized', successPayload, { allowSchemaNotFound: true })
+                const successPayload = {systemName};
+                this.#validatedEventDispatcher.dispatchValidated('system:initialized', successPayload, {allowSchemaNotFound: true})
                     .then(() => this.#logger.debug(`Dispatched 'system:initialized' event for ${systemName}.`))
                     .catch(e => this.#logger.error(`Failed to dispatch 'system:initialized' event for ${systemName}.`, e));
 
@@ -105,8 +105,12 @@ class SystemInitializer {
                 this.#logger.error(`SystemInitializer: Error initializing system '${systemName}'. Continuing. Error: ${initError.message}`, initError);
 
                 // Dispatch individual failure event
-                const failurePayload = { systemName, error: initError?.message || 'Unknown error', stack: initError?.stack };
-                this.#validatedEventDispatcher.dispatchValidated('system:initialization_failed', failurePayload, { allowSchemaNotFound: true })
+                const failurePayload = {
+                    systemName,
+                    error: initError?.message || 'Unknown error',
+                    stack: initError?.stack
+                };
+                this.#validatedEventDispatcher.dispatchValidated('system:initialization_failed', failurePayload, {allowSchemaNotFound: true})
                     .then(() => this.#logger.debug(`Dispatched 'system:initialization_failed' event for ${systemName}.`))
                     .catch(e => this.#logger.error(`Failed to dispatch 'system:initialization_failed' event for ${systemName}.`, e));
             }
@@ -130,14 +134,6 @@ class SystemInitializer {
     async initializeAll() {
         this.#logger.info(`SystemInitializer: Starting initialization for systems tagged with '${this.#initializationTag}'...`);
 
-        // --- Ticket 16: Dispatch 'started' event ---
-        const startPayload = { tag: this.#initializationTag };
-        // Rename existing event for consistency
-        this.#validatedEventDispatcher.dispatchValidated('initialization:system_initializer:started', startPayload, { allowSchemaNotFound: true })
-            .then(() => this.#logger.debug("Dispatched 'initialization:system_initializer:started' event.", startPayload))
-            .catch(e => this.#logger.error("Failed to dispatch 'initialization:system_initializer:started' event", e));
-        // --- End Ticket 16 ---
-
         let systemsToInitialize = [];
         try {
             systemsToInitialize = await this._resolveSystems();
@@ -149,24 +145,9 @@ class SystemInitializer {
 
             this.#logger.info('SystemInitializer: Initialization loop for tagged systems completed.');
 
-            // --- Ticket 16: Dispatch 'completed' event ---
-            const completedPayload = { tag: this.#initializationTag, count: systemsToInitialize.length };
-            // Rename existing event for consistency
-            this.#validatedEventDispatcher.dispatchValidated('initialization:system_initializer:completed', completedPayload, { allowSchemaNotFound: true })
-                .then(() => this.#logger.debug("Dispatched 'initialization:system_initializer:completed' event.", completedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:system_initializer:completed' event", e));
-            // --- End Ticket 16 ---
-
         } catch (error) {
             // This catch block handles critical errors from _resolveSystems
             // Error already logged by _resolveSystems.
-
-            // --- Ticket 16: Dispatch 'failed' event (for critical resolution failure) ---
-            const failedPayload = { tag: this.#initializationTag, error: error?.message || 'Unknown resolution error', stack: error?.stack };
-            this.#validatedEventDispatcher.dispatchValidated('initialization:system_initializer:failed', failedPayload, { allowSchemaNotFound: true })
-                .then(() => this.#logger.debug("Dispatched 'initialization:system_initializer:failed' event.", failedPayload))
-                .catch(e => this.#logger.error("Failed to dispatch 'initialization:system_initializer:failed' event", e));
-            // --- End Ticket 16 ---
 
             // Re-throw the critical resolution error to halt the overall initialization sequence.
             throw error;
