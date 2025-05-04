@@ -1,6 +1,7 @@
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
-
 /** @typedef {import('../../entities/entity.js').default} Entity */
+// --- Make sure DiscoveredActionInfo is defined or imported here ---
+/** @typedef {import('./actionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // Example import if defined elsewhere
 
 /**
  * @interface IActionDiscoverySystem
@@ -15,8 +16,9 @@ export class IActionDiscoverySystem {
      * @param {Entity} actingEntity - The entity for whom to discover actions.
      * @param {ActionContext} context - The current context, including location and potentially other relevant state.
      * Note: The `parsedCommand` property within this context will likely be undefined during discovery.
-     * @returns {Promise<string[]>} A promise that resolves to an array of formatted command strings
-     * representing the valid actions (e.g., ["move north", "take rusty key"]). Returns an empty array if no actions are valid.
+     * @returns {Promise<DiscoveredActionInfo[]>} A promise that resolves to an array of objects,
+     * each containing the action ID and the formatted command string (e.g., [{id: "core:go", command: "go north"}]).
+     * Returns an empty array if no actions are valid. // <<< --- MODIFIED THIS LINE ---
      * @throws {Error} Implementations might throw errors for unexpected issues during discovery.
      */
     async getValidActions(actingEntity, context) {

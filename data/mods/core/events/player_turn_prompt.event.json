@@ -13,11 +13,27 @@
       },
       "availableActions": {
         "type": "array",
-        "description": "An array of action definitions representing the actions currently available to the player.",
+        "description": "An array of objects, each representing a valid action the player can currently take, including its ID and formatted command.",
         "items": {
-          "type": "string"
+          "type": "object",
+          "description": "Object containing the action ID and its formatted command string.",
+          "properties": {
+            "id": {
+              "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+              "description": "The unique ID of the action definition (e.g., 'core:wait')."
+            },
+            "command": {
+              "type": "string",
+              "description": "The formatted command string ready for display/parsing (e.g., 'wait', 'go north')."
+            }
+          },
+          "required": [
+            "id",
+            "command"
+          ],
+          "additionalProperties": false
         },
-        "uniqueItems": true
+        "uniqueItems": false
       }
     },
     "required": [

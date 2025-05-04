@@ -35,6 +35,9 @@ describe('ActionButtonsRenderer', () => {
         }
         element.textContent = textContent;
 
+        // Store attributes for later checks if needed
+        element._attributes = {};
+
         // Event listener mock store
         element._listeners = {};
         element.addEventListener = jest.fn((event, cb) => {
@@ -49,14 +52,19 @@ describe('ActionButtonsRenderer', () => {
         element.click = jest.fn(async () => {
             if (element._listeners['click']) {
                 for (const listener of element._listeners['click']) {
-                    await listener();
+                    await listener(); // Correctly await async listeners
                 }
             }
         });
 
         // Spy on native methods we might want to check calls for
-        jest.spyOn(element, 'setAttribute');
+        jest.spyOn(element, 'setAttribute').mockImplementation((name, value) => {
+            element._attributes[name] = value; // Store attribute value
+        });
+        // Add getAttribute mock to retrieve stored attributes
+        element.getAttribute = jest.fn((name) => element._attributes[name]);
         jest.spyOn(element, 'remove');
+
 
         return element;
     };
@@ -146,14 +154,17 @@ describe('ActionButtonsRenderer', () => {
 
     describe('Button Click Simulation', () => {
         it('should dispatch validated core:submit_command event on button click', async () => {
-            const actions = ['examine'];
-            // Ensure factory mock returns a clickable element
+            // --- UPDATED: Use AvailableAction object ---
+            const actions = [{id: 'test:examine', command: 'examine'}];
+            // --- END UPDATE ---
+
+            // Ensure factory mock returns a clickable element with correct text
             const mockButton = createMockElement('button', '', ['action-button'], 'examine');
             // Reset factory mock for this test
             jest.spyOn(mockDomElementFactoryInstance, 'button').mockReturnValue(mockButton);
 
             const renderer = createRenderer();
-            renderer.render(actions);
+            renderer.render(actions); // Render with the object
 
             // Button was created by the mock factory and appended
             expect(mockButton.click).toBeDefined(); // Ensure mock click exists
@@ -163,13 +174,17 @@ describe('ActionButtonsRenderer', () => {
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockVed.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'examine'});
             expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Event 'core:submit_command' for \"examine\" dispatched successfully."));
+            // --- ADDED: Check that render didn't log a warning ---
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("Skipping invalid"));
         });
 
         it('should log warning if dispatchValidated returns false', async () => {
             mockVed.dispatchValidated.mockResolvedValue(false); // Setup VED mock response
 
-            const actions = ['inventory'];
+            // --- UPDATED: Use AvailableAction object ---
+            const actions = [{id: 'test:inv', command: 'inventory'}];
             const mockButton = createMockElement('button', '', ['action-button'], 'inventory');
+            // --- END UPDATE ---
             jest.spyOn(mockDomElementFactoryInstance, 'button').mockReturnValue(mockButton);
 
             const renderer = createRenderer();
@@ -187,8 +202,10 @@ describe('ActionButtonsRenderer', () => {
             const testError = new Error('Dispatch failed');
             mockVed.dispatchValidated.mockRejectedValue(testError); // Setup VED mock response
 
-            const actions = ['help'];
+            // --- UPDATED: Use AvailableAction object ---
+            const actions = [{id: 'test:help', command: 'help'}];
             const mockButton = createMockElement('button', '', ['action-button'], 'help');
+            // --- END UPDATE ---
             jest.spyOn(mockDomElementFactoryInstance, 'button').mockReturnValue(mockButton);
 
             const renderer = createRenderer();
@@ -204,18 +221,29 @@ describe('ActionButtonsRenderer', () => {
         });
 
         it('should log warning and not dispatch if button textContent is empty at time of click', async () => {
-            const mockButton = createMockElement('button', '', ['action-button'], ''); // Button with empty text
+            // --- UPDATED: Render a valid button first, then manipulate it ---
+            const actions = [{id: 'test:action1', command: 'action1'}]; // Valid action object
+            const mockButton = createMockElement('button', '', ['action-button'], 'action1');
             jest.spyOn(mockDomElementFactoryInstance, 'button').mockReturnValue(mockButton);
 
             const renderer = createRenderer();
-            renderer.render(['action1']); // Render one button, which will be the empty one
+            renderer.render(actions); // Render the button
 
+            // Make sure render didn't skip it
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("Skipping invalid"));
+            expect(mockButton.textContent).toBe('action1');
+            expect(mockButton.getAttribute('data-action-id')).toBe('test:action1');
 
+            // NOW, manually clear the text content before clicking
+            mockButton.textContent = '';
             expect(mockButton.textContent).toBe('');
+            // --- END UPDATE ---
 
             await mockButton.click(); // Simulate click
 
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Action button clicked, but textContent is unexpectedly empty."));
+            // --- UPDATED: Check for the correct warning from the click handler ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Action button clicked, but textContent is unexpectedly empty. ID: ${mockButton.getAttribute('data-action-id')}`));
+            // --- END UPDATE ---
             expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
         });
     }); // End Button Click Simulation describe
@@ -250,28 +278,63 @@ describe('ActionButtonsRenderer', () => {
         });
 
         it('should call render with valid actions from payload', () => {
-            const payload = {actions: ['north', 'south', 'east', 'west']};
+            // --- UPDATED: Use AvailableAction objects ---
+            const payload = {
+                actions: [
+                    {id: 'core:go_n', command: 'north'},
+                    {id: 'core:go_s', command: 'south'},
+                    {id: 'core:examine', command: 'examine room'},
+                ]
+            };
+            // --- END UPDATE ---
             const eventType = 'textUI:update_available_actions';
 
             updateActionsHandler(payload, eventType); // Call the captured handler
 
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Received '${eventType}' event. Payload:`), payload);
             expect(rendererInstance.render).toHaveBeenCalledTimes(1);
+            // --- UPDATED: Expect the same array of objects ---
             expect(rendererInstance.render).toHaveBeenCalledWith(payload.actions);
+            // --- END UPDATE ---
             expect(mockLogger.warn).not.toHaveBeenCalled(); // No warning for valid payload
         });
 
-        it('should call render with filtered string actions if payload contains non-strings, logging a warning', () => {
-            const payload = {actions: ['north', null, 'south', 123, '', '  ', 'west', undefined]};
+        it('should call render with filtered valid action objects, logging a warning', () => {
+            // --- UPDATED: Use a mix of valid/invalid objects and other types ---
+            const payload = {
+                actions: [
+                    {id: 'core:go_n', command: 'north'},        // Valid
+                    null,                                     // Invalid type
+                    {id: 'core:go_s'},                          // Invalid object (missing command)
+                    {command: 'examine'},                       // Invalid object (missing id)
+                    {id: 'core:take', command: 'take sword'}, // Valid
+                    123,                                      // Invalid type
+                    {id: '', command: 'empty_id'},            // Invalid object (empty id)
+                    {id: 'core:drop', command: '  '},         // Invalid object (empty command)
+                    'a string',                               // Invalid type
+                    {id: 'core:wait', command: 'wait'},         // Valid
+                    undefined,                                // Invalid type
+                ]
+            };
             const eventType = 'textUI:update_available_actions';
-            const expectedFilteredActions = ['north', 'south', '', '  ', 'west']; // Handler filters to only strings
+            // Filtered list should only contain the valid objects
+            const expectedFilteredActions = [
+                {id: 'core:go_n', command: 'north'},
+                {id: 'core:take', command: 'take sword'},
+                {id: 'core:wait', command: 'wait'},
+            ];
+            // --- END UPDATE ---
 
             updateActionsHandler(payload, eventType);
 
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Received '${eventType}' event. Payload:`), payload);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Received \'textUI:update_available_actions\' with some non-string items in the actions array. Only string actions will be rendered.'), payload);
+            // --- UPDATED: Check for the new warning message ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'textUI:update_available_actions' with some invalid items in the actions array. Only valid action objects will be rendered."), payload);
+            // --- END UPDATE ---
             expect(rendererInstance.render).toHaveBeenCalledTimes(1);
+            // --- UPDATED: Check for the correctly filtered objects ---
             expect(rendererInstance.render).toHaveBeenCalledWith(expectedFilteredActions);
+            // --- END UPDATE ---
         });
 
         it('should call render with empty list and log warning if payload is invalid', () => {
@@ -281,22 +344,23 @@ describe('ActionButtonsRenderer', () => {
             updateActionsHandler(null, eventType);
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), null);
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
-            rendererInstance.render.mockClear();
+            rendererInstance.render.mockClear(); // Clear for next assertion
             mockLogger.warn.mockClear();
 
             // Case 2: Empty object
             updateActionsHandler({}, eventType);
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), {});
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
-            rendererInstance.render.mockClear();
+            rendererInstance.render.mockClear(); // Clear for next assertion
             mockLogger.warn.mockClear();
 
             // Case 3: Actions property is not an array
-            updateActionsHandler({actions: 'not-an-array'}, eventType);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), {actions: 'not-an-array'});
+            const invalidPayload3 = {actions: 'not-an-array'};
+            updateActionsHandler(invalidPayload3, eventType);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid or incomplete payload for 'textUI:update_available_actions'. Clearing action buttons."), invalidPayload3);
             expect(rendererInstance.render).toHaveBeenCalledWith([]);
 
-            // Ensure render was called once for each invalid case tested here
+            // Ensure render was called once for this last invalid case tested here
             expect(rendererInstance.render).toHaveBeenCalledTimes(1); // Because it was cleared after each call
         });
     }); // End VED Event Handling describe

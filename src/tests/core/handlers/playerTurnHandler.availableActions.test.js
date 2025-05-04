@@ -1,4 +1,5 @@
 // src/tests/core/handlers/playerTurnHandler.availableActions.test.js
+// --- FILE START (Entire file content as requested) ---
 
 // --- Mock Dependencies ---
 // Assume these are utility functions or classes to create basic mocks
@@ -91,79 +92,63 @@ describe('PlayerTurnHandler', () => {
 
     // --- Tests focusing on #_promptPlayerForAction via handleTurn ---
 
-    it('should dispatch core:player_turn_prompt with valid string IDs when actions are discovered', async () => {
-        // Arrange: Mock Action Discovery to return valid actions
+    // --- MODIFIED TEST ---
+    it('should dispatch core:player_turn_prompt with valid action objects when actions are discovered', async () => {
+        // Arrange: Mock Action Discovery to return valid action objects {id, command}
         const discoveredActions = [
-            {id: 'core:move', name: 'Move'},
-            {id: 'core:attack', name: 'Attack'},
-            {id: 'custom:skill', name: 'Use Skill'},
+            {id: 'core:move', command: 'move north'}, // Use command property
+            {id: 'core:attack', command: 'attack goblin'},
+            {id: 'custom:skill', command: 'cast heal'},
         ];
         mockActionDiscoverySystem.getValidActions.mockResolvedValue(discoveredActions);
 
         // Act: Start the turn, BUT DON'T await its completion.
         handler.handleTurn(mockActor);
         // Yield control to allow async operations within handleTurn (like dispatch) to proceed
-        await new Promise(resolve => setTimeout(resolve, 0)); // <--- MODIFIED WAIT
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         // Assert: Check that dispatchValidated was called correctly for the prompt
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'core:player_turn_prompt',
             expect.objectContaining({
                 entityId: mockActor.id,
-                availableActions: ['core:move', 'core:attack', 'custom:skill'], // Expect array of strings
+                availableActions: discoveredActions, // Expect the exact array of objects
             })
         );
         expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure no errors were logged during prompt
     });
 
-    it('should dispatch core:player_turn_prompt with an EMPTY array if discovered actions contains only undefined', async () => {
-        // Arrange: Mock Action Discovery to return an array with undefined (simulating the bug)
-        const discoveredActions = [undefined];
-        mockActionDiscoverySystem.getValidActions.mockResolvedValue(discoveredActions);
+    // --- REMOVED TEST ---
+    // This test checked the handler's internal filtering, which was removed.
+    // Responsibility is now on ActionDiscoverySystem to return clean data.
+    // it('should dispatch core:player_turn_prompt with an EMPTY array if discovered actions contains only undefined', async () => { ... });
 
-        // Act: Start the turn, don't await completion
-        handler.handleTurn(mockActor);
-        // Yield control
-        await new Promise(resolve => setTimeout(resolve, 0)); // <--- MODIFIED WAIT
-
-        // Assert: Check that the dispatched payload has an empty array (due to filtering)
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'core:player_turn_prompt',
-            expect.objectContaining({
-                entityId: mockActor.id,
-                availableActions: [], // *** Crucial: Expect empty array, not [undefined] ***
-            })
-        );
-        expect(mockLogger.error).not.toHaveBeenCalled();
-    });
-
-    it('should dispatch core:player_turn_prompt filtering out actions without IDs or null/undefined actions', async () => {
-        // Arrange: Mock Action Discovery with mixed valid and invalid entries
+    // --- MODIFIED TEST ---
+    it('should dispatch core:player_turn_prompt with the exact valid action objects returned by discovery', async () => {
+        // Arrange: Mock Action Discovery to return *only* valid action objects.
+        // Assumes ActionDiscoverySystem itself handles filtering now.
         const discoveredActions = [
-            {id: 'core:wait', name: 'Wait'},
-            null, // Invalid entry
-            {name: 'Action Without ID'}, // Invalid entry (missing ID)
-            undefined, // Invalid entry
-            {id: 'core:look', name: 'Look'},
-            {id: '', name: 'Action With Empty ID'}, // Invalid entry (empty string ID)
+            {id: 'core:wait', command: 'wait'},
+            {id: 'core:look', command: 'look'},
         ];
         mockActionDiscoverySystem.getValidActions.mockResolvedValue(discoveredActions);
 
         // Act: Start the turn, don't await completion
         handler.handleTurn(mockActor);
         // Yield control
-        await new Promise(resolve => setTimeout(resolve, 0)); // <--- MODIFIED WAIT
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-        // Assert: Check that only valid string IDs are included
+        // Assert: Check that the exact objects returned by the mock are dispatched
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'core:player_turn_prompt',
             expect.objectContaining({
                 entityId: mockActor.id,
-                availableActions: ['core:wait', 'core:look'], // Only valid, non-empty string IDs
+                availableActions: discoveredActions, // Expect the exact array of objects
             })
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
+
 
     it('should dispatch core:player_turn_prompt with an empty array if action discovery returns an empty array', async () => {
         // Arrange: Mock Action Discovery to return an empty array
@@ -180,13 +165,13 @@ describe('PlayerTurnHandler', () => {
             'core:player_turn_prompt',
             expect.objectContaining({
                 entityId: mockActor.id,
-                availableActions: [],
+                availableActions: [], // This remains correct
             })
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    // This test was already correct because the promise rejects, stopping the wait.
+    // This test should still pass as is, error handling dispatches an empty array
     it('should dispatch core:player_turn_prompt with an empty array and error message if action discovery throws', async () => {
         // Arrange: Mock Action Discovery to throw an error
         const discoveryError = new Error('Failed to discover actions!');
@@ -202,7 +187,7 @@ describe('PlayerTurnHandler', () => {
             'core:player_turn_prompt',
             expect.objectContaining({
                 entityId: mockActor.id,
-                availableActions: [], // Empty actions on error
+                availableActions: [], // Empty actions on error - This remains correct
                 error: discoveryError.message, // Error message included
             })
         );
@@ -217,3 +202,4 @@ describe('PlayerTurnHandler', () => {
     // TODO: Add more tests for other parts of PlayerTurnHandler (command handling, turn ending, etc.)
     // These tests *will* need to simulate the 'core:submit_command' event and potentially mock commandProcessor results.
 });
+// --- FILE END ---

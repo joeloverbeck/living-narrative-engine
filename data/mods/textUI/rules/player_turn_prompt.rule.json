@@ -2,14 +2,25 @@
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "enable_input_on_player_turn",
   "event_type": "core:player_turn_prompt",
-  "comment": "Listens for the prompt for player input and enables the text command input UI.",
+  "comment": "Listens for the prompt for player input. Enables the text command input UI and updates the available action buttons.",
   "actions": [
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Signal the text UI component to enable the primary command input field, using the default placeholder text.",
+      "comment": "Signal the text UI component to enable the primary command input field.",
       "parameters": {
         "eventType": "textUI:enable_input",
         "payload": {}
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Signal the action buttons renderer to update with the available actions from the triggering event's payload.",
+      "parameters": {
+        "eventType": "textUI:update_available_actions",
+        "payload": {
+          "actions": "{evaluationContext.event.payload.availableActions}"
+        },
+        "$comment": "The '{evaluationContext.event.payload.availableActions}' string will be resolved by resolvePlaceholders. Since it's the entire string, it will return the actual array found at that path within the ExecutionContext, which matches the expected payload schema for textUI:update_available_actions."
       }
     }
   ]

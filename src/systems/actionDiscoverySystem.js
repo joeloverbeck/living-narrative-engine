@@ -211,5 +211,3 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
         return validActions; // Return the array of {id, command} objects
     }
 }
-
-// --- FILE END ---

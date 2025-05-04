@@ -6,7 +6,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // <-- ADDED Import for structured type
+/** @typedef {import('../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // <-- Used for structured type
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -20,6 +20,17 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
 /** @typedef {{type: string, payload: CommandSubmitEventData}} CommandSubmitEvent */ // EventBus structure
 /** @typedef {(event: CommandSubmitEvent | CommandSubmitEventData) => Promise<void>} CommandSubmitListener */
 /** @typedef {import('../../actions/actionTypes.js').ActionDefinitionMinimal} ActionDefinitionMinimal */ // For available actions list
+
+// --- *** MODIFICATION: Define PlayerTurnPrompt Payload Type *** ---
+/**
+ * @typedef {object} PlayerTurnPromptPayload
+ * @property {string} entityId - The unique ID of the player entity being prompted.
+ * @property {DiscoveredActionInfo[]} availableActions - Array of objects containing valid action IDs and commands.
+ * @property {string} [error] - Optional error message if prompting occurred due to an error.
+ */
+
+// --- *** END MODIFICATION *** ---
+
 
 /**
  * @class PlayerTurnHandler
@@ -327,8 +338,8 @@ class PlayerTurnHandler extends ITurnHandler {
     }
 
     /**
-     * Discovers available actions and dispatches the 'core:player_turn_prompt' event.
-     * Ensures the dispatched payload's `availableActions` is an array of non-empty action IDs.
+     * Discovers available actions and dispatches the 'core:player_turn_prompt' event
+     * with the full action info objects ({id, command}).
      * @private
      * @param {Entity} actor - The player actor.
      * @returns {Promise<void>}
@@ -349,8 +360,7 @@ class PlayerTurnHandler extends ITurnHandler {
         const actorId = actor.id;
         this.#logger.debug(`PlayerTurnHandler: Preparing prompt for ${actorId}. Discovering actions...`);
         /** @type {DiscoveredActionInfo[]} */
-        let discoveredActionInfo = []; // <-- Updated type
-        let actionIdsToSend = []; // Initialize array for valid IDs
+        let discoveredActionInfo = []; // Will hold {id, command} objects
 
         try {
             // Assume getLocationOfEntity returns the entity or throws if not found
@@ -377,16 +387,12 @@ class PlayerTurnHandler extends ITurnHandler {
 
             // --- Get structured action info ---
             discoveredActionInfo = await this.#actionDiscoverySystem.getValidActions(actor, context);
-            this.#logger.debug(`PlayerTurnHandler: Discovered ${discoveredActionInfo.length} actions (with info) for ${actorId}.`);
+            this.#logger.debug(`PlayerTurnHandler: Discovered ${discoveredActionInfo.length} action objects (with info) for ${actorId}.`);
 
-            // --- *** FIX APPLIED HERE *** ---
-            // Map discovered action info objects to just their IDs and filter
-            actionIdsToSend = (discoveredActionInfo || []) // Handle potential null/undefined result
-                .map(actionInfo => actionInfo?.id) // Extract the 'id' property
-                .filter(id => typeof id === 'string' && id.length > 0); // Keep only valid string IDs
-            // --- *** END FIX *** ---
-
-            this.#logger.debug(`PlayerTurnHandler: Filtered to ${actionIdsToSend.length} valid action IDs for dispatch: [${actionIdsToSend.join(', ')}]`);
+            // --- *** MODIFICATION: REMOVED MAPPING TO IDs *** ---
+            // The 'discoveredActionInfo' array already contains the desired objects.
+            // No need to map to actionIdsToSend anymore.
+            // --- *** END MODIFICATION *** ---
 
             // --- Re-check state BEFORE dispatch ---
             if (!this.#currentActor || actor.id !== this.#currentActor.id || !this.#turnPromiseResolve) {
@@ -395,11 +401,15 @@ class PlayerTurnHandler extends ITurnHandler {
             }
             // --- End Re-check ---
 
-            await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
+            // --- *** MODIFICATION: DISPATCH FULL OBJECTS *** ---
+            /** @type {PlayerTurnPromptPayload} */
+            const payload = {
                 entityId: actorId,
-                availableActions: actionIdsToSend // Use the filtered array of IDs
-            });
-            this.#logger.debug(`Dispatched core:player_turn_prompt for ${actorId} with ${actionIdsToSend.length} actions.`);
+                availableActions: discoveredActionInfo // Use the full array of {id, command} objects
+            };
+            await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', payload);
+            this.#logger.debug(`Dispatched core:player_turn_prompt for ${actorId} with ${discoveredActionInfo.length} action objects.`);
+            // --- *** END MODIFICATION *** ---
 
         } catch (error) {
             this.#logger.error(`PlayerTurnHandler: Error during action discovery or prompting for ${actorId}: ${error.message}`, error);
@@ -412,11 +422,13 @@ class PlayerTurnHandler extends ITurnHandler {
                         this.#logger.warn(`PlayerTurnHandler: Turn state changed just before dispatching ERROR prompt for ${actorId}. Aborting dispatch.`);
                     } else {
                         // Dispatch with empty valid actions on error
-                        await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', {
+                        /** @type {PlayerTurnPromptPayload} */
+                        const errorPayload = {
                             entityId: actorId,
                             availableActions: [], // Send empty actions on error
                             error: error.message // Optionally include error info
-                        });
+                        };
+                        await this.#validatedEventDispatcher.dispatchValidated('core:player_turn_prompt', errorPayload);
                         this.#logger.warn(`Dispatched core:player_turn_prompt with empty actions due to error for ${actorId}.`);
                     }
                 } catch (dispatchError) {
