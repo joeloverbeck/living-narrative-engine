@@ -54,7 +54,7 @@
 * **Line Number:** ~207
 * **Event Name:** `textUI:display_message`
 * **Payload Structure/Example:** `{ text: string, type: 'warning', recipientEntityId?: string }` (Example: `{ text: 'Please enter a command.', type: 'warning', recipientEntityId: [actorId] }`)
-* **Dispatch Context/Reason:** Warning: The player submitted an empty or invalid command string via the `command:submit` event.
+* **Dispatch Context/Reason:** Warning: The player submitted an empty or invalid command string via the `core:submit_command` event.
 
 * **Line Number:** ~241
 * **Event Name:** `textUI:disable_input`

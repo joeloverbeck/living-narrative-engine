@@ -34,7 +34,8 @@
       "command_parse_failed.event.json",
       "action_executed.event.json",
       "action_failed.event.json",
-      "system_error_occurred.event.json"
+      "system_error_occurred.event.json",
+      "submit_command.event.json"
     ],
     "operations": [
     ]

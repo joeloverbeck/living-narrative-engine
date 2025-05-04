@@ -483,11 +483,11 @@ describe('InventoryPanel', () => {
         };
 
 
-        it('should dispatch "command:submit" with correct payload on drop click when visible', async () => {
+        it('should dispatch "core:submit_command" with correct payload on drop click when visible', async () => {
             panel.toggle(true); // Make visible
             mockValidatedEventDispatcher.dispatchValidated.mockClear(); // Clear toggle dispatch
             await findAndClickDropButton(mockListElement);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('command:submit', {command: 'drop Rusty Dagger'});
+            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'drop Rusty Dagger'});
         });
 
         it('should call toggle(false) after successful dispatch if panel was visible', async () => {
@@ -548,7 +548,7 @@ describe('InventoryPanel', () => {
             const dispatchError = new Error('Dispatch failed');
             mockValidatedEventDispatcher.dispatchValidated.mockRejectedValue(dispatchError);
             await findAndClickDropButton(mockListElement);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Error occurred during dispatch of 'command:submit' for \"drop Rusty Dagger\""), dispatchError);
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Error occurred during dispatch of 'core:submit_command' for \"drop Rusty Dagger\""), dispatchError);
             expect(toggleSpy).not.toHaveBeenCalledWith(false);
             toggleSpy.mockRestore();
         });

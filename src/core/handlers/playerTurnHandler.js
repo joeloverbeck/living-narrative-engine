@@ -24,7 +24,7 @@ import {ITurnHandler} from '../interfaces/ITurnHandler.js';
  * @class PlayerTurnHandler
  * @extends ITurnHandler
  * @implements {ITurnHandler}
- * @description Handles the turn logic for player-controlled entities. Waits for 'command:submit' events,
+ * @description Handles the turn logic for player-controlled entities. Waits for 'core:submit_command' events,
  * processes commands via CommandProcessor, and dispatches semantic events like 'core:player_turn_prompt'
  * and 'core:turn_ended'. Does NOT dispatch UI-specific events.
  */
@@ -54,7 +54,7 @@ class PlayerTurnHandler extends ITurnHandler {
     #turnPromiseReject = null;
 
     /**
-     * Stores the reference to the bound event listener function for 'command:submit'.
+     * Stores the reference to the bound event listener function for 'core:submit_command'.
      * @private
      * @type {CommandSubmitListener | null}
      */
@@ -132,11 +132,11 @@ class PlayerTurnHandler extends ITurnHandler {
         this.#commandSubmitListener = (eventData) => this.#handleSubmittedCommand(eventData);
 
         try {
-            this.#validatedEventDispatcher.subscribe('command:submit', this.#commandSubmitListener);
-            this.#logger.debug('PlayerTurnHandler initialized successfully and subscribed to command:submit via VED.');
+            this.#validatedEventDispatcher.subscribe('core:submit_command', this.#commandSubmitListener);
+            this.#logger.debug('PlayerTurnHandler initialized successfully and subscribed to core:submit_command via VED.');
         } catch (subError) {
-            this.#logger.error(`PlayerTurnHandler: Failed to subscribe to command:submit via VED: ${subError.message}`, subError);
-            throw new Error(`PlayerTurnHandler: Failed to subscribe to VED event 'command:submit'.`);
+            this.#logger.error(`PlayerTurnHandler: Failed to subscribe to core:submit_command via VED: ${subError.message}`, subError);
+            throw new Error(`PlayerTurnHandler: Failed to subscribe to VED event 'core:submit_command'.`);
         }
     }
 
@@ -192,7 +192,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
 
     /**
-     * Handles the 'command:submit' event received via VED.
+     * Handles the 'core:submit_command' event received via VED.
      * Validates the command and delegates to processing if a turn is active.
      * @private
      * @param {CommandSubmitEvent | CommandSubmitEventData} eventData - The event data.
@@ -202,12 +202,12 @@ class PlayerTurnHandler extends ITurnHandler {
         const payload = /** @type {CommandSubmitEventData} */ (eventData?.payload ?? eventData);
         const commandString = payload?.command?.trim(); // Trim received command
 
-        this.#logger.debug(`PlayerTurnHandler: Received command:submit event. Payload: ${JSON.stringify(payload)}`);
+        this.#logger.debug(`PlayerTurnHandler: Received core:submit_command event. Payload: ${JSON.stringify(payload)}`);
 
         // --- Check if a turn is active FOR THIS HANDLER INSTANCE ---
         const currentActorAtStart = this.#currentActor; // Capture current actor state
         if (!currentActorAtStart) {
-            this.#logger.warn(`PlayerTurnHandler: Received command:submit but no player turn is active. Ignoring.`);
+            this.#logger.warn(`PlayerTurnHandler: Received core:submit_command but no player turn is active. Ignoring.`);
             return;
         }
         const actorId = currentActorAtStart.id;
@@ -220,7 +220,7 @@ class PlayerTurnHandler extends ITurnHandler {
         // --- End checks ---
 
         if (!commandString) {
-            this.#logger.warn(`PlayerTurnHandler: Received command:submit with empty command string. Re-prompting actor ${actorId}.`);
+            this.#logger.warn(`PlayerTurnHandler: Received core:submit_command with empty command string. Re-prompting actor ${actorId}.`);
             try {
                 // Ensure the actor hasn't changed mid-check
                 if (this.#currentActor && this.#currentActor.id === actorId) {
@@ -537,10 +537,10 @@ class PlayerTurnHandler extends ITurnHandler {
         // --- Unsubscribe ---
         if (this.#commandSubmitListener) {
             try {
-                this.#validatedEventDispatcher.unsubscribe('command:submit', this.#commandSubmitListener);
-                this.#logger.debug(`${handlerId}: Unsubscribed from command:submit via VED.`);
+                this.#validatedEventDispatcher.unsubscribe('core:submit_command', this.#commandSubmitListener);
+                this.#logger.debug(`${handlerId}: Unsubscribed from core:submit_command via VED.`);
             } catch (unsubscribeError) {
-                this.#logger.error(`${handlerId}: Error unsubscribing from command:submit via VED: ${unsubscribeError.message}`, unsubscribeError);
+                this.#logger.error(`${handlerId}: Error unsubscribing from core:submit_command via VED: ${unsubscribeError.message}`, unsubscribeError);
             }
             this.#commandSubmitListener = null;
         }

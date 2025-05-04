@@ -13,7 +13,7 @@ import {tokens} from '../config/tokens.js';
 /**
  * @class InputSetupService
  * @description Configures the InputHandler, linking user command input to the
- * event system via 'command:submit' events.
+ * event system via 'core:submit_command' events.
  */
 class InputSetupService {
     /** @private @type {AppContainer} */
@@ -53,7 +53,7 @@ class InputSetupService {
      * @public
      * @description Configures the application's InputHandler by resolving it
      * and setting its command processing callback. The callback now dispatches
-     * a 'command:submit' event instead of directly interacting with GameLoop.
+     * a 'core:submit_command' event instead of directly interacting with GameLoop.
      * Dispatches 'initialization:input_setup_service:started/completed/failed' events.
      * @returns {void}
      * @throws {Error} If the InputHandler cannot be resolved or configured.
@@ -68,8 +68,8 @@ class InputSetupService {
             // --- Define the Command Processing Callback ---
             const processInputCommand = async (command) => {
                 // Echo command back to UI via VED (remains useful)
-                this.#validatedEventDispatcher.dispatchValidated('ui:command_echo', {command})
-                    .catch(e => this.#logger.error("Failed dispatching ui:command_echo", e));
+                this.#validatedEventDispatcher.dispatchValidated('textUI:command_echo', {command})
+                    .catch(e => this.#logger.error("Failed dispatching textUI:command_echo", e));
 
                 // --- REFACTORED LOGIC ---
                 // Instead of checking GameLoop and calling its method,
@@ -77,16 +77,16 @@ class InputSetupService {
                 // The PlayerTurnHandler (or other interested systems) will
                 // subscribe to this event and decide whether to act on it based
                 // on the current game state (e.g., is it the player's turn?).
-                this.#logger.debug(`InputSetupService: Dispatching command:submit for command "${command}"`);
-                this.#validatedEventDispatcher.dispatchValidated('command:submit', {command})
-                    .catch(e => this.#logger.error(`Failed dispatching command:submit for command "${command}"`, e)); // Log dispatch errors specifically for command:submit
+                this.#logger.debug(`InputSetupService: Dispatching core:submit_command for command "${command}"`);
+                this.#validatedEventDispatcher.dispatchValidated('core:submit_command', {command})
+                    .catch(e => this.#logger.error(`Failed dispatching core:submit_command for command "${command}"`, e)); // Log dispatch errors specifically for core:submit_command
                 // --- END REFACTORED LOGIC ---
             };
 
             // Set the callback on the InputHandler instance
             inputHandler.setCommandCallback(processInputCommand);
 
-            this.#logger.info('InputSetupService: InputHandler resolved and command callback configured to dispatch command:submit events.');
+            this.#logger.info('InputSetupService: InputHandler resolved and command callback configured to dispatch core:submit_command events.');
 
         } catch (error) {
             this.#logger.error('InputSetupService: Failed to resolve or configure InputHandler.', error);

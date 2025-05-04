@@ -94,7 +94,7 @@ describe('InputStateController', () => {
         it('should subscribe to VED events on construction', () => {
             createController();
             expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
-            expect(mockVed.subscribe).toHaveBeenCalledWith('event:disable_input', expect.any(Function));
+            expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:disable_input', expect.any(Function));
             expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:enable_input', expect.any(Function));
         });
     });
@@ -309,15 +309,15 @@ describe('InputStateController', () => {
     });
 
     describe('Event Handling (VED)', () => {
-        it('should handle valid event:disable_input event', () => {
+        it('should handle valid textUI:disable_input event', () => {
             const controller = createController();
-            const disableHandler = getVedHandler('event:disable_input');
+            const disableHandler = getVedHandler('textUI:disable_input');
             inputElement.disabled = false; // Start enabled
             inputElement.placeholder = 'start';
             jest.clearAllMocks();
 
             const payload = {message: 'System busy...'};
-            disableHandler(payload, 'event:disable_input'); // Should call setEnabled(false, 'System busy...')
+            disableHandler(payload, 'textUI:disable_input'); // Should call setEnabled(false, 'System busy...')
 
             expect(inputElement.disabled).toBe(true);
             expect(inputElement.placeholder).toBe('System busy...');
@@ -327,27 +327,27 @@ describe('InputStateController', () => {
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
-        it('should handle event:disable_input event with missing/invalid payload (use default message)', () => {
+        it('should handle textUI:disable_input event with missing/invalid payload (use default message)', () => {
             const controller = createController();
-            const disableHandler = getVedHandler('event:disable_input');
+            const disableHandler = getVedHandler('textUI:disable_input');
             inputElement.disabled = false; // Start enabled
             inputElement.placeholder = 'start';
             jest.clearAllMocks();
 
-            disableHandler(null, 'event:disable_input'); // Calls setEnabled(false, 'Input disabled.')
+            disableHandler(null, 'textUI:disable_input'); // Calls setEnabled(false, 'Input disabled.')
             expect(inputElement.disabled).toBe(true);
             expect(inputElement.placeholder).toBe('Input disabled.'); // Default message set
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'event:disable_input' without specific message"), null);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'textUI:disable_input' without specific message"), null);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Input disabled.')); // Changed
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Input placeholder set to: "Input disabled."')); // Changed
             mockLogger.warn.mockClear();
             mockLogger.debug.mockClear();
 
             // Call again with different invalid payload - state should NOT change
-            disableHandler({someOtherProp: true}, 'event:disable_input'); // Calls setEnabled(false, 'Input disabled.') again
+            disableHandler({someOtherProp: true}, 'textUI:disable_input'); // Calls setEnabled(false, 'Input disabled.') again
             expect(inputElement.disabled).toBe(true); // Still true
             expect(inputElement.placeholder).toBe('Input disabled.'); // Still same placeholder
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'event:disable_input' without specific message"), {someOtherProp: true});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received 'textUI:disable_input' without specific message"), {someOtherProp: true});
             // --- FIX: Assert that debug was NOT called because state didn't change ---
             expect(mockLogger.debug).not.toHaveBeenCalled();
         });

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:submit_command",
+  "description": "Event dispatched when a user (or UI element acting on their behalf) submits a command string for processing, typically during the player's turn or in response to a prompt.",
+  "payloadSchema": {
+    "type": "object",
+    "description": "The payload containing the command string.",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "The raw command string submitted by the user or UI.",
+        "minLength": 1,
+        "pattern": "^\\S(.*\\S)?$",
+        "$comment": "Ensures the command is a non-empty string and doesn't have leading/trailing whitespace (though trimming is often done by handlers)."
+      }
+    },
+    "required": [
+      "command"
+    ],
+    "additionalProperties": false
+  }
+}

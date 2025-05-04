@@ -19,12 +19,17 @@
     "rules": [
       "welcome_message.rule.json",
       "turn_started.rule.json",
-      "player_turn_prompt.rule.json"
+      "player_turn_prompt.rule.json",
+      "command_echo.rule.json",
+      "submit_command.rule.json",
+      "command_parse_failed.rule.json"
     ],
     "events": [
       "set_title.event.json",
       "display_message.event.json",
-      "enable_input.event.json"
+      "enable_input.event.json",
+      "disable_input.event.json",
+      "command_echo.event.json"
     ],
     "operations": [
     ]

@@ -12,7 +12,7 @@ import {RendererBase} from './rendererBase.js';
 
 /**
  * Manages the enabled/disabled state and placeholder text of a specific HTML input element.
- * Subscribes to VED events like 'event:disable_input' and 'textUI:enable_input'
+ * Subscribes to VED events like 'textUI:disable_input' and 'textUI:enable_input'
  * to reactively update the input's state.
  */
 export class InputStateController extends RendererBase {
@@ -74,7 +74,7 @@ export class InputStateController extends RendererBase {
 
         // Listen for events telling us to disable the input
         this.#subscriptions.push(
-            ved.subscribe('event:disable_input', this.#handleDisableInput.bind(this))
+            ved.subscribe('textUI:disable_input', this.#handleDisableInput.bind(this))
         );
 
         // Listen for events telling us to enable the input (used in tests, future-proofing)
@@ -82,15 +82,15 @@ export class InputStateController extends RendererBase {
             ved.subscribe('textUI:enable_input', this.#handleEnableInput.bind(this))
         );
 
-        this.logger.debug(`${this._logPrefix} Subscribed to VED events 'event:disable_input' and 'textUI:enable_input'.`);
+        this.logger.debug(`${this._logPrefix} Subscribed to VED events 'textUI:disable_input' and 'textUI:enable_input'.`);
     }
 
     // --- Private Event Handlers ---
 
     /**
-     * Handles the 'event:disable_input' event.
+     * Handles the 'textUI:disable_input' event.
      * @private
-     * @param {EventDisableInputPayload | object} payload - Expected payload for 'event:disable_input'.
+     * @param {EventDisableInputPayload | object} payload - Expected payload for 'textUI:disable_input'.
      * @param {string} eventType - The name of the triggered event.
      */
     #handleDisableInput(payload, eventType) {

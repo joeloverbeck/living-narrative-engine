@@ -143,7 +143,7 @@ describe('InitializationService', () => {
             expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('CRITICAL ERROR'), expect.any(Error));
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('initialization:initialization_service:failed', expect.anything(), expect.anything());
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('ui:show_fatal_error', expect.anything());
-            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('ui:disable_input', expect.anything());
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.anything());
         });
 
         // --- Failure Paths Helper ---
@@ -186,10 +186,10 @@ describe('InitializationService', () => {
             const fatalErrorResult = fatalErrorCall ? mockValidatedEventDispatcher.dispatchValidated.mock.results[mockValidatedEventDispatcher.dispatchValidated.mock.calls.indexOf(fatalErrorCall)] : undefined;
             if (fatalErrorResult?.type !== 'throw') {
                 expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                    'ui:disable_input',
+                    'textUI:disable_input',
                     {message: 'Fatal error during initialization. Cannot continue.'}
                 );
-                expect(mockLogger.info).toHaveBeenCalledWith('InitializationService: Dispatched ui:show_fatal_error and ui:disable_input events.');
+                expect(mockLogger.info).toHaveBeenCalledWith('InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.');
             }
 
 
@@ -426,7 +426,7 @@ describe('InitializationService', () => {
             // Ensure no CRITICAL failure events were dispatched
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('initialization:initialization_service:failed', expect.anything(), expect.anything());
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('ui:show_fatal_error', expect.anything());
-            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('ui:disable_input', expect.anything());
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith('textUI:disable_input', expect.anything());
         });
 
 
@@ -440,7 +440,7 @@ describe('InitializationService', () => {
 
             // 2. Simulate the failure of the event dispatch for UI events
             mockValidatedEventDispatcher.dispatchValidated.mockImplementation(async (eventName, payload) => {
-                if (eventName === 'ui:show_fatal_error' || eventName === 'ui:disable_input') {
+                if (eventName === 'ui:show_fatal_error' || eventName === 'textUI:disable_input') {
                     throw dispatchError; // Simulate failure ONLY for UI events
                 }
                 // Allow other dispatches (like 'failed') to succeed for this test
@@ -478,11 +478,11 @@ describe('InitializationService', () => {
                 expect.anything() // options like {allowSchemaNotFound: true}
             );
 
-            // Because 'ui:show_fatal_error' threw, 'ui:disable_input' should NOT have been called AFTER it
+            // Because 'ui:show_fatal_error' threw, 'textUI:disable_input' should NOT have been called AFTER it
             const calls = mockValidatedEventDispatcher.dispatchValidated.mock.calls;
             const failedCallIndex = calls.findIndex(call => call[0] === 'initialization:initialization_service:failed');
             const uiFatalCallIndex = calls.findIndex(call => call[0] === 'ui:show_fatal_error');
-            const uiDisableCallIndex = calls.findIndex(call => call[0] === 'ui:disable_input');
+            const uiDisableCallIndex = calls.findIndex(call => call[0] === 'textUI:disable_input');
 
             expect(failedCallIndex).toBeGreaterThanOrEqual(0); // init failed event called
             expect(uiFatalCallIndex).toBeGreaterThanOrEqual(0); // ui fatal called

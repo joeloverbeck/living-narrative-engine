@@ -279,12 +279,12 @@ describe('InitializationService', () => {
                 })
             );
             expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'ui:disable_input',
+                'textUI:disable_input',
                 expect.objectContaining({
                     message: expect.stringContaining('Fatal error during initialization'),
                 })
             );
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Dispatched ui:show_fatal_error and ui:disable_input events.'));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Dispatched ui:show_fatal_error and textUI:disable_input events.'));
         });
 
         it('should log error if dispatching UI error events fails after critical error', async () => {

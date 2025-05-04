@@ -138,7 +138,7 @@ describe('InputSetupService', () => {
         it('should call logger.info with the correct configuration message', () => {
             service.configureInputHandler();
             // Check the specific info message was logged
-            expect(mockLogger.info).toHaveBeenCalledWith('InputSetupService: InputHandler resolved and command callback configured to dispatch command:submit events.');
+            expect(mockLogger.info).toHaveBeenCalledWith('InputSetupService: InputHandler resolved and command callback configured to dispatch core:submit_command events.');
             // Optionally, check the debug message still occurs
             expect(mockLogger.debug).toHaveBeenCalledWith('InputSetupService: Attempting to configure InputHandler...');
         });
@@ -181,19 +181,19 @@ describe('InputSetupService', () => {
             }
         });
 
-        it('should call validatedEventDispatcher.dispatchValidated with ui:command_echo', async () => {
+        it('should call validatedEventDispatcher.dispatchValidated with textUI:command_echo', async () => {
             await capturedCallback(testCommand);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'ui:command_echo',
+                'textUI:command_echo',
                 {command: testCommand}
             );
         });
 
-        // --- UPDATED: Check for 'command:submit' dispatch ---
-        it('should call validatedEventDispatcher.dispatchValidated with command:submit', async () => {
+        // --- UPDATED: Check for 'core:submit_command' dispatch ---
+        it('should call validatedEventDispatcher.dispatchValidated with core:submit_command', async () => {
             await capturedCallback(testCommand);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'command:submit',
+                'core:submit_command',
                 {command: testCommand}
             );
             // Check it was called (at least) twice total: once for echo, once for submit
@@ -210,10 +210,10 @@ describe('InputSetupService', () => {
 
         // Test for calling gameLoop.processSubmittedCommand removed
 
-        // Test for NOT calling ui:disable_input removed (was specific to gameLoop running case)
+        // Test for NOT calling textUI:disable_input removed (was specific to gameLoop running case)
 
         // --- UPDATED: Check order of echo and submit dispatches ---
-        it('should call ui:command_echo before command:submit', async () => {
+        it('should call textUI:command_echo before core:submit_command', async () => {
             await capturedCallback(testCommand);
 
             // Find the specific calls *after* the callback invocation
@@ -223,8 +223,8 @@ describe('InputSetupService', () => {
             // Filter calls made *during* the callback execution (simplest: check last 2 relevant calls)
             const callbackCalls = calls.slice(-2); // Assuming echo and submit are the last 2 VED calls
 
-            const echoCall = callbackCalls.find(call => call && call[0] === 'ui:command_echo');
-            const submitCall = callbackCalls.find(call => call && call[0] === 'command:submit');
+            const echoCall = callbackCalls.find(call => call && call[0] === 'textUI:command_echo');
+            const submitCall = callbackCalls.find(call => call && call[0] === 'core:submit_command');
 
             expect(echoCall).toBeDefined();
             expect(submitCall).toBeDefined();

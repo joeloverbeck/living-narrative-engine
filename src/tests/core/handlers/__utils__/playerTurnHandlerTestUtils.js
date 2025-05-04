@@ -20,7 +20,7 @@ export const makeDeps = () => {
     const validatedEventDispatcher = {
         dispatchValidated: jest.fn().mockResolvedValue(true),
         subscribe: jest.fn((evt, fn) => {
-            if (evt === 'command:submit') savedVedListener = fn;
+            if (evt === 'core:submit_command') savedVedListener = fn;
         }),
         unsubscribe: jest.fn(),
         getSavedCommandSubmitListener: () => savedVedListener,

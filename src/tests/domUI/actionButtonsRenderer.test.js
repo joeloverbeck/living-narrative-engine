@@ -145,7 +145,7 @@ describe('ActionButtonsRenderer', () => {
     };
 
     describe('Button Click Simulation', () => {
-        it('should dispatch validated command:submit event on button click', async () => {
+        it('should dispatch validated core:submit_command event on button click', async () => {
             const actions = ['examine'];
             // Ensure factory mock returns a clickable element
             const mockButton = createMockElement('button', '', ['action-button'], 'examine');
@@ -161,8 +161,8 @@ describe('ActionButtonsRenderer', () => {
             await mockButton.click(); // Simulate click on the mock button
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('command:submit', {command: 'examine'});
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Event 'command:submit' for \"examine\" dispatched successfully."));
+            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'examine'});
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("Event 'core:submit_command' for \"examine\" dispatched successfully."));
         });
 
         it('should log warning if dispatchValidated returns false', async () => {
@@ -178,8 +178,8 @@ describe('ActionButtonsRenderer', () => {
             await mockButton.click(); // Simulate click
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('command:submit', {command: 'inventory'});
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Event 'command:submit' for \"inventory\" was NOT dispatched"));
+            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'inventory'});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Event 'core:submit_command' for \"inventory\" was NOT dispatched"));
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining("dispatched successfully"));
         });
 
@@ -197,8 +197,8 @@ describe('ActionButtonsRenderer', () => {
             await mockButton.click(); // Simulate click
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('command:submit', {command: 'help'});
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Error occurred during dispatch of 'command:submit' for \"help\":"), testError);
+            expect(mockVed.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'help'});
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Error occurred during dispatch of 'core:submit_command' for \"help\":"), testError);
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining("dispatched successfully"));
             expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("was NOT dispatched"));
         });

@@ -141,30 +141,30 @@ export class ActionButtonsRenderer extends RendererBase {
     }
 
     /**
-     * Helper to dispatch a 'command:submit' event via VED.
+     * Helper to dispatch a 'core:submit_command' event via VED.
      * @private
      * @param {string} commandString - The command text to submit.
      * @returns {Promise<boolean>} True if the event was successfully dispatched, false otherwise.
      */
     async #dispatchSubmitCommand(commandString) {
-        this.logger.debug(`${this._logPrefix} Attempting to dispatch 'command:submit' for: "${commandString}"`);
+        this.logger.debug(`${this._logPrefix} Attempting to dispatch 'core:submit_command' for: "${commandString}"`);
         try {
             // Make sure to use the injected instance from the base class
             const dispatched = await this.validatedEventDispatcher.dispatchValidated(
-                'command:submit',
+                'core:submit_command',
                 {command: commandString} // Ensure payload matches expected schema
             );
 
             if (dispatched) {
-                this.logger.info(`${this._logPrefix} Event 'command:submit' for "${commandString}" dispatched successfully.`);
+                this.logger.info(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" dispatched successfully.`);
                 return true;
             } else {
                 // Validation likely failed or an interceptor prevented dispatch
-                this.logger.warn(`${this._logPrefix} Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or prevented by listener). See VED logs.`);
+                this.logger.warn(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" was NOT dispatched (validation failed or prevented by listener). See VED logs.`);
                 return false;
             }
         } catch (error) {
-            this.logger.error(`${this._logPrefix} Error occurred during dispatch of 'command:submit' for "${commandString}":`, error);
+            this.logger.error(`${this._logPrefix} Error occurred during dispatch of 'core:submit_command' for "${commandString}":`, error);
             return false;
         }
     }
@@ -175,7 +175,7 @@ export class ActionButtonsRenderer extends RendererBase {
     /**
      * Renders a list of action buttons into the container element.
      * Clears previous buttons and creates new ones based on the provided actions array.
-     * Each button, when clicked, dispatches a 'command:submit' event.
+     * Each button, when clicked, dispatches a 'core:submit_command' event.
      *
      * @param {string[]} actions - An array of strings, where each string represents an action command.
      */

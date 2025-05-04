@@ -142,7 +142,7 @@ describe('Integration – Core Turn Loop', () => {
         inputElem = document.createElement('input');
         inputHandler = new InputHandler(
             inputElem,
-            cmd => ved.dispatchValidated('command:submit', {command: cmd}),
+            cmd => ved.dispatchValidated('core:submit_command', {command: cmd}),
             ved
         );
         // Spy on the enable method *after* instance creation
@@ -180,7 +180,7 @@ describe('Integration – Core Turn Loop', () => {
         await flushPromises();
 
         expect(ved.dispatchValidated).toHaveBeenCalledWith(
-            'command:submit',
+            'core:submit_command',
             {command: 'wait'}
         );
         expect(commandProcessor.processCommand).toHaveBeenCalledWith(player, 'wait');
@@ -238,7 +238,7 @@ describe('Integration – Core Turn Loop', () => {
         await flushPromises(); // Allow command submission and processing attempt
 
         // Check command was submitted
-        expect(ved.dispatchValidated).toHaveBeenCalledWith('command:submit', {command: 'fail_command'});
+        expect(ved.dispatchValidated).toHaveBeenCalledWith('core:submit_command', {command: 'fail_command'});
         // Check CommandProcessor was called (and subsequently rejected)
         expect(commandProcessor.processCommand).toHaveBeenCalledWith(player, 'fail_command');
 

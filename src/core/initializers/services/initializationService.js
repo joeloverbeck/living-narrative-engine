@@ -183,10 +183,10 @@ class InitializationService {
                     message: `Initialization failed for world '${worldName}'. Reason: ${error.message || 'Unknown error'}`,
                     details: error.stack // Provide stack trace for detailed view if UI supports it
                 });
-                await this.#validatedEventDispatcher.dispatchValidated('ui:disable_input', {
+                await this.#validatedEventDispatcher.dispatchValidated('textUI:disable_input', {
                     message: 'Fatal error during initialization. Cannot continue.'
                 });
-                this.#logger.info('InitializationService: Dispatched ui:show_fatal_error and ui:disable_input events.');
+                this.#logger.info('InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.');
             } catch (dispatchError) {
                 this.#logger.error(`InitializationService: Failed to dispatch UI error events after initialization failure:`, dispatchError);
             }

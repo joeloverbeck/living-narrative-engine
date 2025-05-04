@@ -86,7 +86,7 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
         // Assert: Should subscribe to the command event during construction
         expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
         expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-            'command:submit',
+            'core:submit_command',
             expect.any(Function) // Check that some function was passed as listener
         );
     });
@@ -202,11 +202,11 @@ describe('PlayerTurnHandler Constructor Dependency Validation', () => {
 
         // Act & Assert: Check for the specific error thrown by the constructor's catch block
         expect(() => new PlayerTurnHandler(dependencies))
-            .toThrow("PlayerTurnHandler: Failed to subscribe to VED event 'command:submit'.");
+            .toThrow("PlayerTurnHandler: Failed to subscribe to VED event 'core:submit_command'.");
 
         // Assert: Logger should have been called before the subscription attempt failed
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining('Failed to subscribe to command:submit via VED'),
+            expect.stringContaining('Failed to subscribe to core:submit_command via VED'),
             subscriptionError // Check that the original error was logged
         );
     });

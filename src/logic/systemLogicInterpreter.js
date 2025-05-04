@@ -311,8 +311,6 @@ class SystemLogicInterpreter {
             return;
         }
 
-        this.#logger.info(`---> Entering action sequence for: ${scopeDescription}. ${actions.length} actions total.`);
-
         for (let i = 0; i < actions.length; i++) {
             const operation = actions[i];
             const operationIndex = i + 1;

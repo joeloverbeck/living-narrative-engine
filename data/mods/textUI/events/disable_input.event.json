@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "textUI:disable_input",
+  "description": "Signals that the primary text command input element should be disabled, preventing the user from typing commands. The payload includes a message that should typically be displayed as the input field's placeholder text while disabled.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "The message to display in the input field's placeholder attribute when it is disabled (e.g., 'Input disabled.', 'Processing...', 'Fatal error during initialization. Cannot continue.')."
+      }
+    },
+    "required": [
+      "message"
+    ],
+    "additionalProperties": false,
+    "$comment": "Used by InputStateController to update the placeholder and disable the input. Also used by InputHandler to stop processing Enter key."
+  }
+}

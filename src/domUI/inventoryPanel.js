@@ -330,27 +330,27 @@ export class InventoryPanel extends RendererBase {
     }
 
     /**
-     * Helper to dispatch a 'command:submit' event via VED.
+     * Helper to dispatch a 'core:submit_command' event via VED.
      * @private
      * @param {string} commandString - The command text to submit.
      * @returns {Promise<boolean>} True if the event was successfully dispatched, false otherwise.
      */
     async #dispatchSubmitCommand(commandString) {
-        this.logger.debug(`${this._logPrefix} Attempting to dispatch 'command:submit' for: "${commandString}"`);
+        this.logger.debug(`${this._logPrefix} Attempting to dispatch 'core:submit_command' for: "${commandString}"`);
         try {
             const dispatched = await this.validatedEventDispatcher.dispatchValidated(
-                'command:submit',
+                'core:submit_command',
                 {command: commandString}
             );
             if (dispatched) {
-                this.logger.info(`${this._logPrefix} Event 'command:submit' for "${commandString}" dispatched successfully.`);
+                this.logger.info(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" dispatched successfully.`);
                 return true;
             } else {
-                this.logger.warn(`${this._logPrefix} Event 'command:submit' for "${commandString}" was NOT dispatched (validation failed or prevented).`);
+                this.logger.warn(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" was NOT dispatched (validation failed or prevented).`);
                 return false;
             }
         } catch (error) {
-            this.logger.error(`${this._logPrefix} Error occurred during dispatch of 'command:submit' for "${commandString}":`, error);
+            this.logger.error(`${this._logPrefix} Error occurred during dispatch of 'core:submit_command' for "${commandString}":`, error);
             return false;
         }
     }

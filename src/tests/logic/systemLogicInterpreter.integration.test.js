@@ -160,9 +160,6 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Event: ${eventType}] Shared context assembled successfully.`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_NO_COND_BASIC.rule_id}] No condition defined or condition is empty. Defaulting to passed.`));
 
-        // Action execution logs - Check via the spy on OperationInterpreter
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
-
         // Verify OperationInterpreter.execute was called correctly
         expect(executeSpy).toHaveBeenCalledTimes(1);
         expect(executeSpy).toHaveBeenCalledWith(
@@ -231,9 +228,6 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         );
         expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledTimes(1);
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`[Rule ${RULE_COND_TRUE_BASIC.rule_id}] Condition evaluation raw result: true`));
-
-        // Action execution logs - Check via the spy on OperationInterpreter
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
 
         // Verify OperationInterpreter.execute was called correctly
         expect(executeSpy).toHaveBeenCalledTimes(1); // Check execute was called
@@ -309,7 +303,6 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         );
 
         // Check that action sequence logs were NOT generated and executeSpy was NOT called
-        expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`---> Entering action sequence for: Rule '${RULE_COND_FALSE_BASIC.rule_id}'`));
         expect(executeSpy).not.toHaveBeenCalled(); // Verify OperationInterpreter.execute wasn't called
         expect(mockLogHandler).not.toHaveBeenCalled(); // Verify the mock handler wasn't called either
         expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_COND_FALSE_BASIC.rule_id}'`));

@@ -40,11 +40,7 @@ class OperationInterpreter {
         if (handler) {
             let resolvedParameters;
             try {
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.info(`*** OperationInterpreter resolving placeholders for: ${opType} ***`);
                 resolvedParameters = resolvePlaceholders(operation.parameters, executionContext, this.#logger);
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.info(`*** OperationInterpreter placeholders resolved for: ${opType} ***`);
                 // --- ADD THIS LOG ---
                 this.#logger.debug(`Resolved parameters for ${opType}:`, JSON.stringify(resolvedParameters));
                 // --- END ADD THIS LOG ---

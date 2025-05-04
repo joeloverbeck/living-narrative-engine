@@ -12,10 +12,10 @@ describe('PlayerTurnHandler – constructor & dependency validation', () => {
         deps = makeDeps();
     });
 
-    it('stores deps & subscribes to command:submit via VED', () => {
+    it('stores deps & subscribes to core:submit_command via VED', () => {
         const handler = new PlayerTurnHandler(deps);
         expect(deps.validatedEventDispatcher.subscribe)
-            .toHaveBeenCalledWith('command:submit', expect.any(Function));
+            .toHaveBeenCalledWith('core:submit_command', expect.any(Function));
         expect(deps.validatedEventDispatcher.getSavedCommandSubmitListener())
             .toEqual(expect.any(Function));
         expect(deps.eventBus.subscribe).not.toHaveBeenCalled();

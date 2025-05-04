@@ -19,7 +19,7 @@ describe('PlayerTurnHandler – destroy & cleanup', () => {
         const listener = deps.validatedEventDispatcher.getSavedCommandSubmitListener();
         handler.destroy();
         if (listener) expect(deps.validatedEventDispatcher.unsubscribe)
-            .toHaveBeenCalledWith('command:submit', listener);
+            .toHaveBeenCalledWith('core:submit_command', listener);
         const calls = deps.validatedEventDispatcher.unsubscribe.mock.calls.length;
         handler.destroy();
         expect(deps.validatedEventDispatcher.unsubscribe).toHaveBeenCalledTimes(calls);
