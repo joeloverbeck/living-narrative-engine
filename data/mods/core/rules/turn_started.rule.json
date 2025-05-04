@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "handle_turn_started",
+  "rule_id": "turn_started",
   "comment": "Handles the start of an entity's turn by marking them as the current actor.",
   "event_type": "core:turn_started",
   "actions": [

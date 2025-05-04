@@ -1,15 +1,15 @@
 // src/core/config/registrations/uiRegistrations.js
-// ****** CORRECTED FILE ******
 
 /**
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
- * This version reflects the refactoring of DomRenderer into individual components.
+ * This version reflects the refactoring of DomRenderer into individual components
+ * and the update of InputHandler's dependency.
  */
 
 // --- Core & Service Imports ---
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
-import InputHandler from '../../inputHandler.js'; // Legacy Input Handler
+import InputHandler from '../../inputHandler.js'; // Legacy Input Handler (Updated Dependency)
 
 // --- NEW DOM UI Component Imports ---
 import {
@@ -25,24 +25,20 @@ import {
     DocumentContext
 } from '../../../domUI/index.js'; // Use index for cleaner imports
 
-// --- OLD Imports ---
-// REMOVED: import DomRenderer from '../../../domUI/domRenderer.js';
-// REMOVED: import DomMutationService
-
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../eventBus.js').default} EventBus */ // Still needed for legacy InputHandler
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/IInputHandler.js').IInputHandler} IInputHandler */
-
 /** @typedef {import('../../../domUI/IDocumentContext').IDocumentContext} IDocumentContext */
 
+// REMOVED: EventBus typedef specifically for InputHandler
 
 /**
  * Registers UI-specific dependencies after the DomRenderer refactor.
  * - Registers individual renderers/controllers.
  * - Registers the DomUiFacade under its own token.
+ * - Registers the InputHandler with its updated dependency.
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -53,9 +49,6 @@ import {
  * @param {Document} uiElements.document - The global document object.
  */
 export function registerUI(container, {outputDiv, inputElement, titleElement, document: doc}) {
-    // *** NOTE: If errors persist, the bug is likely within the Registrar class ***
-    // *** (src/core/config/registrarHelpers.js), specifically how its methods  ***
-    // *** (.instance, .single, .singletonFactory) call container.register().   ***
     const registrar = new Registrar(container);
     /** @type {ILogger} */
     const logger = container.resolve(tokens.ILogger);
@@ -124,7 +117,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // InventoryPanel (Manages inventory UI)
     registrar.singletonFactory(tokens.InventoryPanel, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
-        // Attempt to find the conventional container, log if not found
         const inventoryContainer = docContext.query('#game-container');
         if (!inventoryContainer) {
             logger.warn(`UI Registrations: Could not find '#game-container' element for InventoryPanel. Panel might not attach correctly.`);
@@ -134,7 +126,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            containerElement: inventoryContainer // Pass the queried (potentially null) element
+            containerElement: inventoryContainer
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
@@ -142,7 +134,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // ActionButtonsRenderer (Renders action buttons)
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
-        // Attempt to find the conventional container, log if not found
         const buttonsContainer = docContext.query('#action-buttons');
         if (!buttonsContainer) {
             logger.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
@@ -152,13 +143,12 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            actionButtonsContainer: buttonsContainer // Pass the queried (potentially null) element
+            actionButtonsContainer: buttonsContainer
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
     // --- 3. Register Facade ---
-    // *** CHANGED: Register DomUiFacade under its OWN token ***
     registrar.single(tokens.DomUiFacade, DomUiFacade, [
         tokens.ActionButtonsRenderer,
         tokens.InventoryPanel,
@@ -167,23 +157,20 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         tokens.InputStateController,
         tokens.UiMessageRenderer
     ]);
-    // *** CHANGED: Update log message ***
     logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 
-    // --- 4. Legacy Input Handler (Keep temporarily) ---
-    // Still uses EventBus and direct element access. Needs refactoring separately.
+    // --- 4. Legacy Input Handler (Dependency Updated) ---
+    // Now uses ValidatedEventDispatcher instead of EventBus.
     registrar.singletonFactory(tokens.IInputHandler, (c) => new InputHandler(
-        c.resolve(tokens.inputElement), // Direct input element
-        null, // oldCommandHistoryService - assuming null is acceptable or it's registered elsewhere
-        c.resolve(tokens.EventBus)      // LEGACY EventBus dependency
+        c.resolve(tokens.inputElement),       // Direct input element
+        undefined,                            // Command callback (can be set later)
+        c.resolve(tokens.IValidatedEventDispatcher) // *** UPDATED DEPENDENCY ***
     ));
-    logger.warn(`UI Registrations: Registered legacy InputHandler against ${tokens.IInputHandler} token (still uses EventBus).`);
+    // Updated warning message
+    logger.warn(`UI Registrations: Registered InputHandler against ${tokens.IInputHandler} token (uses IValidatedEventDispatcher).`);
 
     // --- 5. Removed Registrations ---
-    // REMOVED: DomMutationService registration block
-    // REMOVED: Old DomRenderer registration block
     logger.info('UI Registrations: Deprecated registrations (DomRenderer, DomMutationService) removed.');
-
 
     logger.info('UI Registrations: Complete.');
 }

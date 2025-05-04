@@ -18,7 +18,8 @@
     ],
     "rules": [
       "welcome_message.rule.json",
-      "turn_started.rule.json"
+      "turn_started.rule.json",
+      "player_turn_prompt.rule.json"
     ],
     "events": [
       "set_title.event.json",

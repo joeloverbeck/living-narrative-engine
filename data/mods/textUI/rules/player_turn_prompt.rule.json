@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "enable_input_on_player_turn",
+  "event_type": "core:player_turn_prompt",
+  "comment": "Listens for the prompt for player input and enables the text command input UI.",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Signal the text UI component to enable the primary command input field, using the default placeholder text.",
+      "parameters": {
+        "eventType": "textUI:enable_input",
+        "payload": {}
+      }
+    }
+  ]
+}

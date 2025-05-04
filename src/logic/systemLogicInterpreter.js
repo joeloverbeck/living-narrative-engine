@@ -176,7 +176,6 @@ class SystemLogicInterpreter {
         this.#logger.debug(`Received event: ${eventType}. Found ${matchingRules.length} potential rule(s).`, {payload: event.payload});
 
         if (matchingRules.length === 0) {
-            this.#logger.debug(`No system rules found for event type: ${eventType}`);
             return;
         }
 
@@ -433,6 +432,7 @@ class SystemLogicInterpreter {
         this.#boundEventHandler = null; // Release reference
         this.#logger.info('SystemLogicInterpreter: Shutdown complete.');
     }
+
     // --- End Added Shutdown Method ---
 
 }
