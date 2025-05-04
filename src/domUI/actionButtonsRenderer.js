@@ -18,9 +18,16 @@ import DomElementFactory from './domElementFactory.js';
  */
 
 /**
- * Represents the payload for the 'textUI:update_available_actions' event.
- * @typedef {object} UIUpdateActionsPayload
+ * Represents the *inner* payload containing the actions array.
+ * @typedef {object} UIUpdateActionsInnerPayload
  * @property {AvailableAction[]} actions - An array of action objects available to the player.
+ */
+
+/**
+ * Represents the *full event object* received by the subscriber.
+ * @typedef {object} UIUpdateActionsEventObject
+ * @property {string} type - The event type name (e.g., 'textUI:update_available_actions').
+ * @property {UIUpdateActionsInnerPayload} payload - The inner payload containing the actions.
  */
 
 /**
@@ -28,37 +35,23 @@ import DomElementFactory from './domElementFactory.js';
  * Subscribes to 'textUI:update_available_actions' to dynamically update the buttons.
  */
 export class ActionButtonsRenderer extends RendererBase {
-    /**
-     * The container element where action buttons are rendered.
-     * @private
-     * @type {HTMLElement}
-     */
+    /** @private @type {HTMLElement} */
     #actionButtonsContainer;
-
-    /**
-     * Factory for creating DOM elements programmatically.
-     * @private
-     * @type {DomElementFactory}
-     */
+    /** @private @type {DomElementFactory} */
     #domElementFactory;
-
-    /**
-     * Stores VED subscriptions for later disposal.
-     * @private
-     * @type {Array<IEventSubscription|undefined>}
-     */
+    /** @private @type {Array<IEventSubscription|undefined>} */
     #subscriptions = [];
+    /** @private @readonly */
+    _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions'; // Store for subscription/logging
 
     /**
      * Creates an instance of ActionButtonsRenderer.
-     *
-     * @param {object} deps - Dependencies object.
-     * @param {ILogger} deps.logger - The logger instance.
-     * @param {IDocumentContext} deps.documentContext - The document context.
-     * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
-     * @param {DomElementFactory} deps.domElementFactory - Factory for creating DOM elements.
-     * @param {HTMLElement | null} deps.actionButtonsContainer - The specific container element for action buttons.
-     * @throws {Error} If dependencies are invalid, especially actionButtonsContainer or domElementFactory.
+     * @param {object} deps Dependencies object.
+     * @param {ILogger} deps.logger
+     * @param {IDocumentContext} deps.documentContext
+     * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
+     * @param {DomElementFactory} deps.domElementFactory
+     * @param {HTMLElement | null} deps.actionButtonsContainer
      */
     constructor({
                     logger,
@@ -69,7 +62,6 @@ export class ActionButtonsRenderer extends RendererBase {
                 }) {
         super({logger, documentContext, validatedEventDispatcher});
 
-        // --- Validate specific dependencies ---
         if (!domElementFactory || typeof domElementFactory.create !== 'function') {
             const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid.`;
             this.logger.error(errMsg);
@@ -77,78 +69,81 @@ export class ActionButtonsRenderer extends RendererBase {
         }
         this.#domElementFactory = domElementFactory;
 
-        // Acceptance Criteria: Throws if container missing
         if (!actionButtonsContainer || actionButtonsContainer.nodeType !== 1) {
             const errMsg = `${this._logPrefix} 'actionButtonsContainer' dependency is missing or not a valid DOM element.`;
             this.logger.error(errMsg, {receivedElement: actionButtonsContainer});
-            throw new Error(errMsg); // Throw as required by acceptance criteria
+            throw new Error(errMsg);
         }
         this.#actionButtonsContainer = actionButtonsContainer;
         this.logger.debug(`${this._logPrefix} Attached to action buttons container element:`, actionButtonsContainer);
 
-        // Subscribe to events that trigger button updates
         this.#subscribeToEvents();
     }
 
-    /**
-     * Subscribes to VED events relevant for updating the action buttons.
-     * @private
-     */
+    /** @private */
     #subscribeToEvents() {
         const ved = this.validatedEventDispatcher;
-
         this.#subscriptions.push(
-            // Listen for the event that carries the list of available actions
-            ved.subscribe('textUI:update_available_actions', this.#handleUpdateActions.bind(this))
+            ved.subscribe(this._EVENT_TYPE_SUBSCRIBED, this.#handleUpdateActions.bind(this))
         );
-
-        this.logger.debug(`${this._logPrefix} Subscribed to VED event 'textUI:update_available_actions'.`);
+        this.logger.debug(`${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`);
     }
 
     // --- Private Event Handler ---
 
     /**
-     * Handles the 'textUI:update_available_actions' event from VED.
-     * Validates the payload and calls the public render method.
+     * Handles the event object dispatched for 'textUI:update_available_actions'.
+     * Extracts the actions array from the event object's payload property.
+     * Validates the actions array and calls the public render method.
+     * NOTE: Assumes the handler receives ONE argument: the event object { type: string, payload: { actions: [...] } }.
      * @private
-     * @param {UIUpdateActionsPayload | object} payload - Expected payload for 'textUI:update_available_actions'.
-     * @param {string} eventType - The name of the triggered event.
+     * @param {UIUpdateActionsEventObject | object | null | undefined} eventObject - The full event object received from VED.
      */
-    #handleUpdateActions(payload, eventType) {
-        this.logger.debug(`${this._logPrefix} Received '${eventType}' event. Payload:`, payload);
+    #handleUpdateActions(eventObject) {
+        const eventTypeForLog = eventObject?.type ?? this._EVENT_TYPE_SUBSCRIBED; // Use actual type if available
+        this.logger.debug(`${this._logPrefix} Received event object for '${eventTypeForLog}'. Event Object:`, eventObject);
 
-        // Basic payload validation
-        if (payload && Array.isArray(payload.actions)) {
-            // Type assertion for clarity after validation
-            const validatedPayload = /** @type {UIUpdateActionsPayload} */ (payload);
+        // *** CORRECTED VALIDATION LOGIC ***
+        // Check if the eventObject is valid, has a payload object, and that payload has an 'actions' array.
+        if (eventObject &&
+            typeof eventObject === 'object' &&
+            eventObject.payload && // Check if inner payload exists
+            typeof eventObject.payload === 'object' && // Check if inner payload is an object
+            Array.isArray(eventObject.payload.actions)) // Check for actions array *inside* inner payload
+        {
+            // Type assertion for clarity after validation (assuming eventObject matches UIUpdateActionsEventObject structure)
+            const validatedEventObject = /** @type {UIUpdateActionsEventObject} */ (eventObject);
+            const innerPayload = validatedEventObject.payload; // Access the inner payload
 
-            // Filter out any invalid action objects
-            // --- NOTE: This filter matches the stricter validation we're adding to render() ---
-            const validActions = validatedPayload.actions.filter(action =>
+            // Filter out any invalid action objects within the 'actions' array
+            const validActions = innerPayload.actions.filter(action =>
                 action && typeof action === 'object' &&
-                typeof action.id === 'string' && action.id.length > 0 && // ID must be non-empty string
-                typeof action.command === 'string' && action.command.trim().length > 0 // Command must be non-empty/whitespace string
+                typeof action.id === 'string' && action.id.length > 0 &&
+                typeof action.command === 'string' && action.command.trim().length > 0
             );
 
-            if (validActions.length !== validatedPayload.actions.length) {
-                this.logger.warn(`${this._logPrefix} Received '${eventType}' with some invalid items in the actions array. Only valid action objects will be rendered.`, payload);
+            // Warn if some actions were filtered out
+            if (validActions.length !== innerPayload.actions.length) {
+                this.logger.warn(`${this._logPrefix} Received '${eventTypeForLog}' with some invalid items in the nested actions array. Only valid action objects will be rendered. Original event object:`, eventObject);
             }
+
+            // Render using only the valid actions extracted from the inner payload
             this.render(validActions);
+
         } else {
-            this.logger.warn(`${this._logPrefix} Received invalid or incomplete payload for '${eventType}'. Clearing action buttons. Payload:`, payload);
-            this.render([]); // Clear buttons if payload is bad
+            // Log a warning if the event object structure is not as expected
+            this.logger.warn(`${this._logPrefix} Received invalid or incomplete event object structure for '${eventTypeForLog}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons. Received object:`, eventObject);
+            // Render with an empty array to clear the buttons
+            this.render([]);
         }
     }
 
+
     // --- Private Helpers ---
 
-    /**
-     * Clears the content of the action buttons container element.
-     * @private
-     */
+    /** @private */
     #clearContainer() {
         if (this.#actionButtonsContainer) {
-            // More robust clearing than innerHTML = ''
             while (this.#actionButtonsContainer.firstChild) {
                 this.#actionButtonsContainer.removeChild(this.#actionButtonsContainer.firstChild);
             }
@@ -156,25 +151,22 @@ export class ActionButtonsRenderer extends RendererBase {
     }
 
     /**
-     * Helper to dispatch a 'core:submit_command' event via VED.
      * @private
-     * @param {string} commandString - The command text to submit.
-     * @returns {Promise<boolean>} True if the event was successfully dispatched, false otherwise.
+     * @param {string} commandString
+     * @returns {Promise<boolean>}
      */
     async #dispatchSubmitCommand(commandString) {
         this.logger.debug(`${this._logPrefix} Attempting to dispatch 'core:submit_command' for: "${commandString}"`);
         try {
-            // Make sure to use the injected instance from the base class
             const dispatched = await this.validatedEventDispatcher.dispatchValidated(
                 'core:submit_command',
-                {command: commandString} // Ensure payload matches expected schema
+                {command: commandString}
             );
 
             if (dispatched) {
                 this.logger.info(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" dispatched successfully.`);
                 return true;
             } else {
-                // Validation likely failed or an interceptor prevented dispatch
                 this.logger.warn(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" was NOT dispatched (validation failed or prevented by listener). See VED logs.`);
                 return false;
             }
@@ -188,26 +180,23 @@ export class ActionButtonsRenderer extends RendererBase {
     // --- Public API ---
 
     /**
-     * Renders a list of action buttons into the container element.
-     * Clears previous buttons and creates new ones based on the provided actions array.
-     * Each button, when clicked, dispatches a 'core:submit_command' event.
-     *
-     * @param {AvailableAction[]} actions - An array of action objects, where each object contains an action ID and command string.
+     * Renders action buttons based on the provided actions array.
+     * @param {AvailableAction[]} actions - An array of valid action objects.
      */
     render(actions) {
+        // Basic validation of dependencies (should have been caught in constructor)
         if (!this.#actionButtonsContainer) {
-            // Should not happen if constructor threw error correctly
-            this.logger.error(`${this._logPrefix} Cannot render action buttons, container element is not set or invalid.`);
+            this.logger.error(`${this._logPrefix} Cannot render action buttons, container element is not set.`);
             return;
         }
         if (!this.#domElementFactory) {
-            // Should not happen if constructor validated correctly
             this.logger.error(`${this._logPrefix} Cannot render action buttons, domElementFactory is not available.`);
             return;
         }
+        // Validate input 'actions' is an array
         if (!Array.isArray(actions)) {
-            this.logger.error(`${this._logPrefix} Invalid actions argument received. Expected array, got:`, actions);
-            this.#clearContainer(); // Clear container on invalid input
+            this.logger.error(`${this._logPrefix} Invalid actions argument received in render(). Expected array, got:`, actions);
+            this.#clearContainer();
             return;
         }
 
@@ -216,71 +205,55 @@ export class ActionButtonsRenderer extends RendererBase {
 
         // 2. Handle empty actions list
         if (actions.length === 0) {
-            this.logger.debug(`${this._logPrefix} No actions provided, container cleared.`);
-            return; // Nothing more to do
+            this.logger.debug(`${this._logPrefix} No actions provided to render, container cleared.`);
+            return;
         }
-
-        this.logger.debug(`${this._logPrefix} Rendering ${actions.length} action buttons.`);
 
         // 3. Create and append buttons for each action
         actions.forEach(actionObject => {
-            // --- UPDATED VALIDATION: Now also checks for valid 'id' ---
-            if (!actionObject ||
-                typeof actionObject.id !== 'string' || actionObject.id.length === 0 || // ID must be non-empty string
-                typeof actionObject.command !== 'string' || actionObject.command.trim() === '') // Command must be non-empty/whitespace string
-            {
-                this.logger.warn(`${this._logPrefix} Skipping invalid or empty action object in list: `, actionObject);
-                return; // Skip this action
+            // Validate each action object *again* for robustness (belt-and-suspenders)
+            if (!actionObject || typeof actionObject.id !== 'string' || actionObject.id.length === 0 ||
+                typeof actionObject.command !== 'string' || actionObject.command.trim() === '') {
+                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render: `, actionObject);
+                return;
             }
-            // --- END UPDATED VALIDATION ---
 
             const commandText = actionObject.command.trim();
-            const actionId = actionObject.id; // ID is now guaranteed valid here
-
-            // Use DomElementFactory to create the button
-            // TODO: Get class name from a central ui-classes.ts/enum if available
+            const actionId = actionObject.id;
             const button = this.#domElementFactory.button(commandText, 'action-button');
 
             if (!button) {
                 this.logger.error(`${this._logPrefix} Failed to create button element for action: "${commandText}" (ID: ${actionId})`);
-                return; // Skip if button creation failed
+                return;
             }
 
-            // Add title attribute for accessibility/tooltip
             button.setAttribute('title', `Click to ${commandText}`);
-            // Optional: Add data attribute for the action ID
             button.setAttribute('data-action-id', actionId);
 
-            // Attach click listener to dispatch command
             button.addEventListener('click', async () => {
-                const commandToSubmit = button.textContent; // Get text at time of click
+                const commandToSubmit = button.textContent?.trim();
                 if (!commandToSubmit) {
-                    this.logger.warn(`${this._logPrefix} Action button clicked, but textContent is unexpectedly empty. ID: ${button.getAttribute('data-action-id')}`);
+                    this.logger.warn(`${this._logPrefix} Action button clicked, but its textContent is unexpectedly empty or whitespace. ID: ${button.getAttribute('data-action-id')}`);
                     return;
                 }
-                // Call the private helper to dispatch the event
                 await this.#dispatchSubmitCommand(commandToSubmit);
-                // Optional: Add visual feedback on click? (e.g., brief style change)
             });
 
-            // Append the fully configured button to the container
             this.#actionButtonsContainer.appendChild(button);
         });
 
-        this.logger.info(`${this._logPrefix} Rendered ${this.#actionButtonsContainer.children.length} action buttons.`);
+        this.logger.info(`${this._logPrefix} Rendered ${this.#actionButtonsContainer.children.length} action buttons into container.`);
     }
 
     /**
-     * Dispose method for cleanup. Unsubscribes from all VED events.
+     * Dispose method for cleanup.
      */
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
-            }
-        });
-        this.#subscriptions = []; // Clear the array
-        super.dispose(); // Call base class dispose for logging
+        this.#subscriptions.forEach(sub => sub?.unsubscribe());
+        this.#subscriptions = [];
+        super.dispose();
     }
 }
+
+// --- END OF CORRECTED ActionButtonsRenderer.js ---

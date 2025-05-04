@@ -23,6 +23,7 @@ describe('ActionButtonsRenderer', () => {
     let mockVed;
     let mockDomElementFactoryInstance; // To hold instance used in most tests
     let actionButtonsContainer; // The specific container for this renderer
+    const CLASS_PREFIX = '[ActionButtonsRenderer]'; // Define prefix for easier use in expects
 
     // --- Mock Elements ---
     // Creates a mock element with spied methods, letting JSDOM handle implementation
@@ -209,6 +210,11 @@ describe('ActionButtonsRenderer', () => {
             actionButtonsContainer.appendChild.mockClear();
 
             const renderer = createRenderer();
+            // *** ADDED: Clear logger mocks AFTER constructor and BEFORE render ***
+            mockLogger.debug.mockClear();
+            mockLogger.info.mockClear();
+            // *** END ADDITION ***
+
             renderer.render([]); // Render empty list
 
             // Verify the old button was removed
@@ -217,7 +223,9 @@ describe('ActionButtonsRenderer', () => {
             expect(actionButtonsContainer.children.length).toBe(0);
             // Verify factory and logs
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('No actions provided, container cleared.'));
+            // *** UPDATED: Check log with prefix ***
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container cleared.`));
+            // *** END UPDATE ***
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringMatching(/Rendered \d+ action buttons/));
             // appendChild should not have been called *during the render*
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled(); // Check after clearing mock
@@ -233,6 +241,9 @@ describe('ActionButtonsRenderer', () => {
             ];
             // --- END UPDATE ---
             const renderer = createRenderer();
+            // *** ADDED: Clear info log from constructor ***
+            mockLogger.info.mockClear();
+            // *** END ADDITION ***
             renderer.render(actions);
 
             // --- UPDATED: Assertions should now pass ---
@@ -260,7 +271,9 @@ describe('ActionButtonsRenderer', () => {
                 expect(actionButtonsContainer.appendChild).toHaveBeenCalledWith(mockButton); // Verify it was appended
             });
             // Check log message based on *actual* children count after render
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rendered ${actionButtonsContainer.children.length} action buttons.`));
+            // *** UPDATED: Check log with prefix and wording ***
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${actionButtonsContainer.children.length} action buttons into container.`));
+            // *** END UPDATE ***
         });
 
         it('should skip invalid actions (invalid objects, non-objects) and log warning', () => { // <-- Renamed test and updated focus
@@ -274,7 +287,7 @@ describe('ActionButtonsRenderer', () => {
                 123,                                        // Invalid type
                 {id: 'test:examine', command: 'examine chest'},// Valid
                 '',                                         // Invalid type (empty string)
-                {id: '', command: 'empty id'},              // Invalid object (empty id technically allowed by schema, but not desirable? Assuming code rejects)
+                {id: '', command: 'empty id'},              // Invalid object (empty id rejected by code)
                 {id: 'test:drop', command: 'drop key'},       // Valid
             ];
             // Filter based on the validation inside render()
@@ -287,6 +300,10 @@ describe('ActionButtonsRenderer', () => {
             // --- END UPDATE ---
 
             const renderer = createRenderer();
+            // *** ADDED: Clear logs from constructor ***
+            mockLogger.warn.mockClear();
+            mockLogger.info.mockClear();
+            // *** END ADDITION ***
             renderer.render(actions);
 
             // --- UPDATED: Assertions based on filtering OBJECTS ---
@@ -305,24 +322,26 @@ describe('ActionButtonsRenderer', () => {
                 // --- END UPDATE ---
             });
 
-            // --- UPDATED: Verify specific warnings for INVALID OBJECTS/TYPES ---
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), null);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), {id: 'test:go_e'});
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), {command: 'examine'});
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), {
+            // --- UPDATED: Verify specific warnings for INVALID OBJECTS/TYPES with prefix and wording ---
+            const warningBase = `${CLASS_PREFIX} Skipping invalid action object during render: `;
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), null);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), {id: 'test:go_e'});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), {command: 'examine'});
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), {
                 id: 'test:take',
                 command: '   '
             });
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), 123);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), '');
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), 123);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), '');
             // Assuming empty ID string is rejected by the code's validation check (id.length > 0)
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Skipping invalid or empty action object in list: '), {
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), {
                 id: '',
                 command: 'empty id'
             });
             // --- END UPDATE ---
-
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rendered ${validActions.length} action buttons.`));
+            // *** UPDATED: Check info log with prefix and wording ***
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${validActions.length} action buttons into container.`));
+            // *** END UPDATE ***
         });
 
 
@@ -336,57 +355,73 @@ describe('ActionButtonsRenderer', () => {
             actionButtonsContainer.appendChild.mockClear();
 
             const renderer = createRenderer();
+            // *** UPDATED: Define expected error string base ***
+            const errorBase = `${CLASS_PREFIX} Invalid actions argument received in render(). Expected array, got:`;
+            // *** END UPDATE ***
 
             // Test case 1: String
-            renderer.render('not an array');
+            const input1 = 'not an array';
+            mockLogger.error.mockClear(); // Clear before call
+            renderer.render(input1);
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton); // Clearing should have happened
             expect(actionButtonsContainer.children.length).toBe(0); // Container should be empty
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actions argument received. Expected array, got:'), 'not an array');
+            // *** UPDATED: Check error log with prefix and wording ***
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(errorBase), input1);
+            // *** END UPDATE ***
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled(); // No buttons should be created
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled(); // No buttons appended *by render*
 
             // Reset mocks and DOM for next case
-            mockLogger.error.mockClear();
             mockDomElementFactoryInstance.button.mockClear();
             actionButtonsContainer.appendChild(oldButton); // Put back button
             actionButtonsContainer.removeChild.mockClear(); // Clear removeChild spy calls
             actionButtonsContainer.appendChild.mockClear(); // Clear appendChild spy calls again
 
             // Test case 2: Null
-            renderer.render(null);
+            const input2 = null;
+            mockLogger.error.mockClear(); // Clear before call
+            renderer.render(input2);
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
             expect(actionButtonsContainer.children.length).toBe(0);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actions argument received. Expected array, got:'), null);
+            // *** UPDATED: Check error log with prefix and wording ***
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(errorBase), input2);
+            // *** END UPDATE ***
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled();
 
             // Reset mocks and DOM for next case
-            mockLogger.error.mockClear();
             actionButtonsContainer.appendChild(oldButton);
             actionButtonsContainer.removeChild.mockClear();
             actionButtonsContainer.appendChild.mockClear();
 
 
             // Test case 3: Undefined
-            renderer.render(undefined);
+            const input3 = undefined;
+            mockLogger.error.mockClear(); // Clear before call
+            renderer.render(input3);
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
             expect(actionButtonsContainer.children.length).toBe(0);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actions argument received. Expected array, got:'), undefined);
+            // *** UPDATED: Check error log with prefix and wording ***
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(errorBase), input3);
+            // *** END UPDATE ***
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled();
 
             // Reset mocks and DOM for next case
-            mockLogger.error.mockClear();
             actionButtonsContainer.appendChild(oldButton);
             actionButtonsContainer.removeChild.mockClear();
             actionButtonsContainer.appendChild.mockClear();
 
 
             // Test case 4: Object (not array)
-            renderer.render({actions: []}); // Object is not an array
+            const input4 = {actions: []}; // Object is not an array
+            mockLogger.error.mockClear(); // Clear before call
+            renderer.render(input4);
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
             expect(actionButtonsContainer.children.length).toBe(0);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actions argument received. Expected array, got:'), {actions: []});
+            // *** UPDATED: Check error log with prefix and wording ***
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(errorBase), input4);
+            // *** END UPDATE ***
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled();
         });
@@ -398,6 +433,7 @@ describe('ActionButtonsRenderer', () => {
                 {id: 'test:fail', command: 'fail_command'}, // This one will cause factory to return null
                 {id: 'test:go_n', command: 'go north'}
             ];
+            const expectedFinalButtonCount = 2;
             // --- END UPDATE ---
 
             // Reset the mock for this specific test
@@ -411,12 +447,16 @@ describe('ActionButtonsRenderer', () => {
 
 
             const renderer = createRenderer();
+            // *** ADDED: Clear logs from constructor ***
+            mockLogger.error.mockClear();
+            mockLogger.info.mockClear();
+            // *** END ADDITION ***
             renderer.render(actions);
 
             // --- UPDATED: Assertions should now pass ---
             expect(mockDomElementFactoryInstance.button).toHaveBeenCalledTimes(actions.length); // Factory attempted for all
-            expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(2); // Appended only 2
-            expect(actionButtonsContainer.children.length).toBe(2); // Check final DOM state
+            expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(expectedFinalButtonCount); // Appended only 2
+            expect(actionButtonsContainer.children.length).toBe(expectedFinalButtonCount); // Check final DOM state
             // --- END UPDATE ---
 
             // Check that the appended buttons were the correct ones
@@ -426,10 +466,12 @@ describe('ActionButtonsRenderer', () => {
             expect(actionButtonsContainer.appendChild).toHaveBeenCalledWith(goNorthButton);
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalledWith(null); // Ensure null wasn't appended
 
-            // --- UPDATED: Check error log with command text and ID ---
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create button element for action: "fail_command" (ID: test:fail)'));
+            // --- UPDATED: Check error log with prefix, command text and ID ---
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Failed to create button element for action: "fail_command" (ID: test:fail)`));
             // --- END UPDATE ---
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rendered 2 action buttons.`)); // Log based on actual final count
+            // *** UPDATED: Check info log with prefix and wording ***
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${expectedFinalButtonCount} action buttons into container.`)); // Log based on actual final count
+            // *** END UPDATE ***
         });
 
     }); // End render() describe
