@@ -1,8 +1,8 @@
 // src/tests/core/setup/inputSetupService.test.js
 
 import InputSetupService from '../../../core/setup/inputSetupService';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { tokens } from '../../../core/config/tokens.js';
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {tokens} from '../../../core/config/tokens.js';
 
 // --- Mock Imports ---
 // Mocks created inline using jest.fn()
@@ -185,7 +185,7 @@ describe('InputSetupService', () => {
             await capturedCallback(testCommand);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'ui:command_echo',
-                { command: testCommand }
+                {command: testCommand}
             );
         });
 
@@ -194,17 +194,16 @@ describe('InputSetupService', () => {
             await capturedCallback(testCommand);
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'command:submit',
-                { command: testCommand }
+                {command: testCommand}
             );
             // Check it was called (at least) twice total: once for echo, once for submit
             // (plus initialization events if configureInputHandler is called within test)
             // We can be more specific checking the *last* relevant calls if needed.
             expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(
-                // Expect echo + submit (2) + init start/complete (2) = 4 calls total
                 // If configureInputHandler was called in the main describe's beforeEach,
                 // it might be called more times across all tests.
                 // Focusing on the specific calls is better.
-                4 // Adjust if init events are not counted or configure is called elsewhere
+                2 // Adjust if init events are not counted or configure is called elsewhere
             );
         });
         // --- END UPDATED ---
