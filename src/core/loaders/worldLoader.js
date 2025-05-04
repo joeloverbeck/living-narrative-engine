@@ -197,14 +197,7 @@ class WorldLoader {
      * @throws {Error | ModDependencyError} Re-throws critical errors encountered during the loading sequence.
      */
     async loadWorld(worldName) {
-        this.#logger.info(`WorldLoader: Starting load sequence (World Hint: '${worldName}') …`);
-
-        // --- Dispatch 'started' event ---
-        const startPayload = {worldName};
-        this.#validatedEventDispatcher.dispatchValidated('initialization:world_loader:started', startPayload, {allowSchemaNotFound: true})
-            .then(() => this.#logger.debug("Dispatched 'initialization:world_loader:started' event.", startPayload))
-            .catch(e => this.#logger.error("Failed to dispatch 'initialization:world_loader:started' event", e));
-        // --- End event dispatch ---
+        this.#logger.info(`WorldLoader: Starting load sequence (World Hint: '${worldName}') ...`);
 
         let requestedModIds = [];
         let incompatibilityCount = 0;

@@ -244,8 +244,7 @@ class TurnManager {
                     entityId: actorId,
                     entityType: entityType
                 });
-                this.#logger.debug(`Dispatched core:turn_started for ${actorId}`);
-            } catch(dispatchError) {
+            } catch (dispatchError) {
                 this.#logger.error(`Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`, dispatchError);
                 // Decide how to proceed - maybe stop the game? For now, log and continue.
             }

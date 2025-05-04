@@ -414,11 +414,6 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
 
         // Verify event dispatcher calls (optional but good practice)
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:started',
-            expect.objectContaining({ worldName }),
-            expect.objectContaining({ allowSchemaNotFound: true }) // Check options too
-        );
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'initialization:world_loader:completed',
             expect.objectContaining({
                 worldName,

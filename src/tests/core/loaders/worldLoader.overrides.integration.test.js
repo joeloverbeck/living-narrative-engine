@@ -355,11 +355,6 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
 
         // 7. Verify Event Dispatcher calls
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:started',
-            expect.objectContaining({ worldName }),
-            expect.anything()
-        );
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'initialization:world_loader:completed',
             expect.objectContaining({
                 worldName,

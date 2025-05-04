@@ -177,12 +177,17 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         mockConfiguration.getContentTypeSchemaId.mockImplementation((typeName) => {
             // This mock correctly generates the IDs like 'schema:actions' via default
             switch (typeName) {
-                case 'game': return 'schema:game';
-                case 'components': return 'schema:components';
-                case 'mod-manifest': return 'schema:mod-manifest';
-                case 'entities': return 'schema:entities';
+                case 'game':
+                    return 'schema:game';
+                case 'components':
+                    return 'schema:components';
+                case 'mod-manifest':
+                    return 'schema:mod-manifest';
+                case 'entities':
+                    return 'schema:entities';
                 // Let others fall through to default
-                default: return `schema:${typeName}`;
+                default:
+                    return `schema:${typeName}`;
             }
         });
 
@@ -210,10 +215,12 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         mockModManifestLoader.loadRequestedManifests.mockResolvedValue(mockManifestMap);
 
         // Configure ModDependencyValidator
-        mockedModDependencyValidator.mockImplementation(() => {});
+        mockedModDependencyValidator.mockImplementation(() => {
+        });
 
         // Configure validateModEngineVersions
-        mockedValidateModEngineVersions.mockImplementation(() => {});
+        mockedValidateModEngineVersions.mockImplementation(() => {
+        });
 
         // Configure resolveOrder
         mockedResolveOrder.mockReturnValue([coreModId]);
@@ -237,7 +244,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
                         mockRegistry.store(typeName, itemId, itemData); // Use typeName for registry storage
                     }
                     // Simulate the expected return structure {count, overrides, errors}
-                    return { count: count, overrides: 0, errors: 0 };
+                    return {count: count, overrides: 0, errors: 0};
                 }
                 mockLogger.error(`Mock ${typeName}Loader unexpectedly called with:`, {modIdArg, typeNameArg});
                 throw new Error(`Mock ${typeName}Loader unexpectedly called`);
@@ -375,25 +382,18 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         // 15. Verify registry.clear was not called again.
         expect(mockRegistry.clear).toHaveBeenCalledTimes(clearCalls); // Still 1
 
-        // Verify ValidatedEventDispatcher calls
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(2);
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:started',
-            { worldName },
-            { allowSchemaNotFound: true }
-        );
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'initialization:world_loader:completed',
             expect.objectContaining({
                 worldName: worldName,
                 modsLoaded: [coreModId],
                 counts: expect.objectContaining({ // Check counts based on mock loader return values
-                    actions: { count: 2, overrides: 0, errors: 0 },
-                    components: { count: 1, overrides: 0, errors: 0 },
-                    characters: { count: 1, overrides: 0, errors: 0 }
+                    actions: {count: 2, overrides: 0, errors: 0},
+                    components: {count: 1, overrides: 0, errors: 0},
+                    characters: {count: 1, overrides: 0, errors: 0}
                 })
             }),
-            { allowSchemaNotFound: true }
+            {allowSchemaNotFound: true}
         );
         // Ensure failure events were not called
         expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalledWith(

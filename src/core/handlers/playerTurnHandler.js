@@ -177,7 +177,6 @@ class PlayerTurnHandler extends ITurnHandler {
         try {
             // Attempt to discover actions and dispatch the initial prompt
             await this.#_promptPlayerForAction(actor);
-            this.#logger.debug(`PlayerTurnHandler: Initial prompt dispatched for ${actor.id}. Waiting for command input.`);
         } catch (initError) {
             // If #_promptPlayerForAction threw an error
             this.#logger.error(`PlayerTurnHandler: Error during turn initiation/prompt for ${actor.id}: ${initError.message}`, initError);
@@ -384,7 +383,6 @@ class PlayerTurnHandler extends ITurnHandler {
                 entityId: actorId,
                 availableActions: availableActions.map(a => a.id)
             });
-            this.#logger.debug(`PlayerTurnHandler: Dispatched core:player_turn_prompt for ${actorId}.`);
 
         } catch (error) {
             this.#logger.error(`PlayerTurnHandler: Error during action discovery or prompting for ${actorId}: ${error.message}`, error);

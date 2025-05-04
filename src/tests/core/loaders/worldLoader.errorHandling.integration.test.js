@@ -354,13 +354,6 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`Mod '${badModId}' loaded in .*ms: rules\\(1\\) -> Overrides\\(0\\), Errors\\(1\\)`)));
         expect(mockLogger.info).toHaveBeenCalledWith(`--- Finished loading content for mod: ${badModId} ---`);
 
-
-        // Verify event dispatcher was called for start/content_fail/complete
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'initialization:world_loader:started',
-            expect.objectContaining({ worldName }),
-            expect.any(Object)
-        );
         // ******** FIX: Update assertion for content_load_failed event ********
         expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
             'initialization:world_loader:content_load_failed',
