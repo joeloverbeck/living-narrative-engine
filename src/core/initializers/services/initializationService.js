@@ -113,15 +113,6 @@ class InitializationService {
             return {success: false, error: error};
         }
 
-        // --- Ticket 16: Dispatch 'started' event ---
-        const startPayload = {worldName};
-        this.#validatedEventDispatcher.dispatchValidated('initialization:initialization_service:started', startPayload, {allowSchemaNotFound: true})
-            .then(() => this.#logger.debug("Dispatched 'initialization:initialization_service:started' event.", startPayload))
-            .catch(e => this.#logger.error("Failed to dispatch 'initialization:initialization_service:started' event", e));
-        // --- End Ticket 16 ---
-
-        // 'gameLoop' variable removed, no longer needed here.
-
         try {
             // --- 1. Load World Data ---
             this.#logger.debug('Resolving WorldLoader...');

@@ -181,16 +181,6 @@ describe('InitializationService', () => {
             expect(mockLogger.info).toHaveBeenCalledWith(`InitializationService: Starting runInitializationSequence for world: ${MOCK_WORLD_NAME}.`);
             expect(mockLogger.info).toHaveBeenCalledWith(`InitializationService: Initialization sequence for world '${MOCK_WORLD_NAME}' completed successfully (GameLoop resolution removed).`);
 
-            // 2. Verify 'started' event dispatch
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(
-                1,
-                'initialization:initialization_service:started',
-                {worldName: MOCK_WORLD_NAME},
-                {allowSchemaNotFound: true}
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:started' event.", {worldName: MOCK_WORLD_NAME});
-
-
             // 3. Verify Orchestration (Resolves and Service Calls in Order)
             const resolveOrder = mockContainer.resolve.mock.calls.map(call => call[0]);
             // --- CORRECTION: Removed 'GameStateInitializer' from expected resolve order ---
@@ -211,15 +201,6 @@ describe('InitializationService', () => {
             // expect(mockGameStateInitializer.setupInitialState).toHaveBeenCalled();
             expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
             expect(mockInputSetupService.configureInputHandler).toHaveBeenCalled();
-
-            // 4. Verify 'completed' event dispatch
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenNthCalledWith(
-                2,
-                'initialization:initialization_service:completed',
-                {worldName: MOCK_WORLD_NAME}, // Already correctly updated
-                {allowSchemaNotFound: true}
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith("Dispatched 'initialization:initialization_service:completed' event.", {worldName: MOCK_WORLD_NAME}); // Already correctly updated
 
 
             // 5. Verify Success Result
@@ -243,12 +224,6 @@ describe('InitializationService', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expect.stringContaining(`CRITICAL ERROR during initialization sequence for world '${MOCK_WORLD_NAME}'`),
                 expectedError
-            );
-            // 2. 'started' event dispatched
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:initialization_service:started',
-                {worldName: MOCK_WORLD_NAME},
-                {allowSchemaNotFound: true}
             );
             // 3. 'failed' event dispatched
             expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(

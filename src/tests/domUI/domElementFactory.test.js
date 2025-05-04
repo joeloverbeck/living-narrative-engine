@@ -301,8 +301,8 @@ describe('DomElementFactory', () => {
         });
 
         it('should create an element with id', () => {
-            const el = factory.create('article', {id: 'main-content'});
-            expect(el.id).toBe('main-content');
+            const el = factory.create('article', {id: 'outputDiv'});
+            expect(el.id).toBe('outputDiv');
         });
 
         it('should create an element with classes', () => {

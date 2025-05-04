@@ -6,7 +6,6 @@ import DomElementFactory from './domElementFactory.js';   // keep this import
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
  */
 
 /**
@@ -109,7 +108,7 @@ export class UiMessageRenderer extends RendererBase {
 
         this.logger.error(`${this._logPrefix} Could not find #message-list element!`);
 
-        const mainContent = this.documentContext.query('#main-content');
+        const mainContent = this.documentContext.query('#outputDiv');
         if (mainContent && this.#domElementFactory) {
             const created = this.#domElementFactory.ul('message-list');
             if (created) {
@@ -121,7 +120,7 @@ export class UiMessageRenderer extends RendererBase {
                 this.logger.error(`${this._logPrefix} Failed to create #message-list element dynamically.`);
             }
         } else if (!mainContent) {
-            this.logger.error(`${this._logPrefix} Cannot find #main-content to append message list.`);
+            this.logger.error(`${this._logPrefix} Cannot find #outputDiv to append message list.`);
         } else {
             this.logger.error(`${this._logPrefix} Cannot create #message-list dynamically due to missing factory.`);
         }

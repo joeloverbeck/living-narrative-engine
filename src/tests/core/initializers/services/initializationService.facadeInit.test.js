@@ -133,15 +133,6 @@ describe('InitializationService', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('requires a valid non-empty worldName'));
         });
 
-        it('should dispatch started event', async () => {
-            await initializationService.runInitializationSequence(testWorldName);
-            expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'initialization:initialization_service:started',
-                {worldName: testWorldName},
-                {allowSchemaNotFound: true}
-            );
-        });
-
         it('should call core initialization steps in order', async () => {
             await initializationService.runInitializationSequence(testWorldName);
 

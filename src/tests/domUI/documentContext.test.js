@@ -18,22 +18,18 @@ describe('DocumentContext', () => {
         document = global.document;
 
         // Set up the basic HTML structure needed for the tests within Jest's document body.
-        // The afterEach block would normally handle clearing content from the previous test run.
         document.body.innerHTML = '<div id="app-root"><span class="existing-span"></span></div>';
 
-        // Re-assign globals from the current window object just in case (though likely redundant)
+        // Re-assign globals from the current window object just in case
         global.HTMLElement = window.HTMLElement;
         global.Element = window.Element;
         global.Node = window.Node;
+        global.Document = window.Document; // Ensure Document constructor is available globally
     });
 
-    // Clean up the DOM after each test - Currently disabled as it didn't prevent the crash
+    // Clean up the DOM after each test
     afterEach(() => {
-        // --- DOM CLEANUP COMMENTED OUT FOR DEBUGGING THE CRASH ---
-        // while (document.body.firstChild) {
-        //     document.body.removeChild(document.body.firstChild);
-        // }
-        // --- END COMMENTED OUT SECTION ---
+        document.body.innerHTML = ''; // Clear body content
 
         // Restore mocks after each test
         jest.restoreAllMocks();
@@ -46,15 +42,14 @@ describe('DocumentContext', () => {
             expect(directCheck).not.toBeNull();
             expect(directCheck.tagName).toBe('DIV');
 
-            const docContext = new DocumentContext();
+            const docContext = new DocumentContext(); // No argument relies on global.document check
             expect(docContext.document).toBe(global.document);
 
             const contextDirectQueryResult = docContext.document?.querySelector('#app-root');
+            expect(contextDirectQueryResult).not.toBeNull(); // Verify context's document works
 
             const queriedElement = docContext.query('#app-root');
-
             expect(queriedElement).not.toBeNull();
-            expect(queriedElement).toBeDefined();
             expect(queriedElement).toBeInstanceOf(global.window.HTMLDivElement);
             expect(queriedElement?.id).toBe('app-root');
             expect(queriedElement?.ownerDocument).toBe(global.document);
@@ -95,19 +90,16 @@ describe('DocumentContext', () => {
         let rootElement;
 
         beforeEach(() => {
-            // Ensure the element exists for this test, resetting if necessary due to disabled cleanup
-            if (!global.document.getElementById('app-root')) {
-                document.body.innerHTML = '<div id="app-root"><span class="existing-span"></span></div>';
-            }
+            // Element is created in the main beforeEach block
             rootElement = global.document.getElementById('app-root');
             if (!rootElement) {
-                throw new Error('Test setup failed: Could not find #app-root in Jest\'s global document even after reset.');
+                throw new Error('Test setup failed: Could not find #app-root in Jest\'s global document.');
             }
         });
 
         it("should use the root element's ownerDocument for querying", () => {
             const docContext = new DocumentContext(rootElement);
-            expect(docContext.document).toBe(global.document);
+            expect(docContext.document).toBe(global.document); // Should resolve to the ownerDocument
 
             const queriedSpan = docContext.query('.existing-span');
             expect(queriedSpan).toBeInstanceOf(global.window.HTMLSpanElement);
@@ -139,5 +131,63 @@ describe('DocumentContext', () => {
             expect(docContext.document).toBe(global.document);
         });
     });
+
+    // --- NEW Test Suite: Passing Document Directly ---
+    describe('when initialized with the document object directly', () => {
+        it('should use the passed document for querying', () => {
+            // Pass Jest's global document directly
+            const docContext = new DocumentContext(document);
+            expect(docContext.document).toBe(document); // Check it stored the passed document
+
+            const queriedElement = docContext.query('#app-root');
+            expect(queriedElement).not.toBeNull();
+            expect(queriedElement).toBeInstanceOf(window.HTMLDivElement); // Use window from beforeEach
+            expect(queriedElement?.id).toBe('app-root');
+            expect(queriedElement?.ownerDocument).toBe(document);
+        });
+
+        it('should use the passed document for creating elements', () => {
+            const docContext = new DocumentContext(document);
+            expect(docContext.document).toBe(document);
+
+            const newDiv = docContext.create('div');
+            expect(newDiv).toBeInstanceOf(window.HTMLDivElement);
+            expect(newDiv?.tagName).toBe('DIV');
+            expect(newDiv?.ownerDocument).toBe(document);
+        });
+
+        it('should expose the passed document via the document getter', () => {
+            const docContext = new DocumentContext(document);
+            expect(docContext.document).toBe(document);
+        });
+
+        it('should still return null when querying for a non-existent element', () => {
+            const docContext = new DocumentContext(document);
+            const result = docContext.query('#non-existent-id-passed-doc');
+            expect(result).toBeNull();
+        });
+
+        it('should handle invalid selectors gracefully during query and return null', () => {
+            const docContext = new DocumentContext(document);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
+
+            const result = docContext.query('>invalid');
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalled();
+        });
+
+        it('should handle create errors gracefully', () => {
+            const docContext = new DocumentContext(document);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
+
+            // Attempt to create an invalid element tag name
+            const result = docContext.create('<invalid-tag>');
+            expect(result).toBeNull();
+            expect(consoleErrorSpy).toHaveBeenCalled();
+        });
+    });
+    // --- End NEW Test Suite ---
 
 });

@@ -46,7 +46,7 @@ const setupDomMocks = () => {
     mockTitleElement.id = 'title-element';
 
     mockDocument.body.innerHTML = `
-        <div id="game-container"><div id="main-content"><ul id="message-list"></ul></div><div id="action-buttons"></div></div>`;
+        <div id="game-container"><div id="outputDiv"><ul id="message-list"></ul></div><div id="action-buttons"></div></div>`;
     mockDocument.body.appendChild(mockOutputDiv);
     mockDocument.body.appendChild(mockTitleElement);
     mockDocument.body.appendChild(mockInputElement);

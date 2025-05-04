@@ -28,38 +28,52 @@ class DocumentContext {
      * or the availability of `global.document`.
      * Logs an error if no valid document context can be found.
      *
-     * @param {HTMLElement | null | undefined} [root] - Optional root element. If provided and valid,
-     * its ownerDocument will be used as the context. Otherwise, it falls back to the global `document`.
+     * @param {HTMLElement | Document | null | undefined} [root] - Optional root element or document. If it's a Document, it's used directly.
+     * If it's a valid HTMLElement, its ownerDocument will be used. Otherwise, it falls back to the global `document`.
      */
     constructor(root) {
         let contextFound = false;
 
-        // Define the HTMLElement constructor relevant to the current environment (global preferred for tests)
+        // Define the relevant constructors for the current environment
+        const EnvDocument = (typeof global !== 'undefined' && global.Document)
+            ? global.Document
+            : (typeof Document !== 'undefined' ? Document : undefined);
+
         const EnvHTMLElement = (typeof global !== 'undefined' && global.HTMLElement)
             ? global.HTMLElement
             : (typeof HTMLElement !== 'undefined' ? HTMLElement : undefined);
 
-        // 1. Try using the root element's ownerDocument if root is valid
-        if (EnvHTMLElement && root instanceof EnvHTMLElement && root.ownerDocument) {
+        // --- START FIX ---
+        // 1. Check if the provided 'root' argument is itself the Document object
+        if (EnvDocument && root instanceof EnvDocument) {
+            this.#docContext = root;
+            contextFound = true;
+            // console.debug('[DocumentContext] Initialized using provided root argument as Document.');
+        }
+        // --- END FIX ---
+
+        // 2. Try using the root element's ownerDocument if root is a valid HTMLElement
+        // (Adjusted step number)
+        if (!contextFound && EnvHTMLElement && root instanceof EnvHTMLElement && root.ownerDocument) {
             this.#docContext = root.ownerDocument;
             contextFound = true;
             // console.debug('[DocumentContext] Initialized using ownerDocument from provided root element.');
         }
 
-        // 2. If no context from root, explicitly try using the global document (most common fallback for JSDOM)
+        // 3. If no context yet, explicitly try using the global document
+        // (Adjusted step number)
         if (!contextFound && typeof global !== 'undefined' && typeof global.document !== 'undefined') {
             this.#docContext = global.document;
             contextFound = true;
             // console.debug('[DocumentContext] Initialized using global.document.');
         }
 
-        // 3. REMOVED fallback checking for local scope 'document' as it caused issues in tests.
-        // Context must come from root or global.document.
-
-        // 4. Set to null and log error if no context could be determined after all checks
+        // 4. Set to null and log error if no context could be determined
+        // (Adjusted step number)
         if (!contextFound) {
             this.#docContext = null; // Ensure it's null if no context found
-            console.error('[DocumentContext] Construction failed: Could not determine a valid document context. Needs root element or global.document.');
+            // Updated error message slightly to include the new check possibility
+            console.error('[DocumentContext] Construction failed: Could not determine a valid document context. Needs a Document instance, root element with ownerDocument, or global.document.');
         }
     }
 

@@ -23,7 +23,7 @@ describe('UiMessageRenderer', () => {
     let messageList; // Define messageList here
 
     beforeEach(() => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="main-content"><ul id="message-list"></ul></div></body></html>`); // Ensure #main-content and #message-list exist
+        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="outputDiv"><ul id="message-list"></ul></div></body></html>`); // Ensure #outputDiv and #message-list exist
         document = dom.window.document;
         docContext = new DocumentContext(document.body);
 
@@ -85,8 +85,8 @@ describe('UiMessageRenderer', () => {
                 // Use the potentially modified messageList variable
                 return document.getElementById('message-list');
             }
-            if (selector === '#main-content') {
-                return document.getElementById('main-content');
+            if (selector === '#outputDiv') {
+                return document.getElementById('outputDiv');
             }
             // Fallback to original JSDOM querySelector for other selectors if needed
             return document.querySelector(selector);
@@ -350,14 +350,14 @@ describe('UiMessageRenderer', () => {
             // Spy on querySelector to ensure it returns null for #message-list
             docContext.query.mockImplementation((selector) => {
                 if (selector === '#message-list') return null;
-                if (selector === '#main-content') return document.getElementById('main-content'); // Allow finding main-content
+                if (selector === '#outputDiv') return document.getElementById('outputDiv'); // Allow finding outputDiv
                 return document.querySelector(selector);
             });
 
             createRenderer(); // Constructor calls #ensureMessageList
 
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #message-list element!'));
-            // Since #main-content exists and factory is mocked, it should *attempt* to create it
+            // Since #outputDiv exists and factory is mocked, it should *attempt* to create it
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('#message-list created dynamically.'));
             // --- FIX: Check only for the first argument ---
             expect(mockDomElementFactory.ul).toHaveBeenCalledWith('message-list');
@@ -366,13 +366,13 @@ describe('UiMessageRenderer', () => {
             expect(document.getElementById('message-list').tagName).toBe('UL');
         });
 
-        it('should log error if #main-content is missing during list creation', () => {
+        it('should log error if #outputDiv is missing during list creation', () => {
             // Setup: Remove both list and main content
             document.getElementById('message-list')?.remove();
-            document.getElementById('main-content')?.remove();
+            document.getElementById('outputDiv')?.remove();
             // Spy on querySelector to ensure it returns null for both
             docContext.query.mockImplementation((selector) => {
-                if (selector === '#message-list' || selector === '#main-content') {
+                if (selector === '#message-list' || selector === '#outputDiv') {
                     return null;
                 }
                 return document.querySelector(selector);
@@ -381,7 +381,7 @@ describe('UiMessageRenderer', () => {
             createRenderer(); // Constructor calls #ensureMessageList
 
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #message-list element!'));
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot find #main-content to append message list.'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot find #outputDiv to append message list.'));
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to find or create #message-list.'));
             expect(mockDomElementFactory.ul).not.toHaveBeenCalled(); // Creation should not have been attempted
         });
@@ -399,9 +399,9 @@ describe('UiMessageRenderer', () => {
                 if (selector === '#message-list') {
                     return null; // Simulate it's gone from DOM query
                 }
-                if (selector === '#main-content') {
-                    // Still allow finding main-content if ensure tries to recreate
-                    return document.getElementById('main-content');
+                if (selector === '#outputDiv') {
+                    // Still allow finding outputDiv if ensure tries to recreate
+                    return document.getElementById('outputDiv');
                 }
                 return document.querySelector(selector); // Fallback for other queries
             });
