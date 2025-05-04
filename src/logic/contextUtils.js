@@ -81,7 +81,7 @@ export function resolvePlaceholders(input, context, logger, currentPath = '') {
 
                 if (!placeholderPath) {
                     // Should not happen, but defensively check.
-                    logger?.warn(`Failed to extract path from placeholder match: "<span class="math-inline">\{match\}" in string "</span>{input}"`);
+                    logger?.warn(`Failed to extract path from placeholder match: "${match}" in string "${input}"`);
                     return match; // Return original match if path extraction fails
                 }
 
@@ -102,7 +102,7 @@ export function resolvePlaceholders(input, context, logger, currentPath = '') {
                     // Convert resolved value to string for replacement within the larger string.
                     // Handle null explicitly, otherwise return String(value).
                     const stringValue = resolvedValue === null ? 'null' : String(resolvedValue);
-                    logger?.debug(`Replaced placeholder <span class="math-inline">\{placeholderSyntax\} with string\: "</span>{stringValue}"`);
+                    logger?.debug(`Replaced placeholder ${placeholderSyntax} with string\: "${stringValue}"`);
                     return stringValue;
                 } else {
                     logger?.warn(`Cannot resolve placeholder path "${placeholderPath}" from ${placeholderSyntax}: Context is not a valid object. Path: ${fullLogPath}`);
@@ -118,7 +118,7 @@ export function resolvePlaceholders(input, context, logger, currentPath = '') {
         // Recursively resolve for each item in the array
         let changed = false;
         const resolvedArray = input.map((item, index) => {
-            const resolvedItem = resolvePlaceholders(item, context, logger, `<span class="math-inline">\{currentPath\}\[</span>{index}]`);
+            const resolvedItem = resolvePlaceholders(item, context, logger, `${currentPath}\[${index}]`);
             if (resolvedItem !== item) {
                 changed = true;
             }
@@ -133,7 +133,7 @@ export function resolvePlaceholders(input, context, logger, currentPath = '') {
         for (const key in input) {
             if (Object.prototype.hasOwnProperty.call(input, key)) {
                 const originalValue = input[key];
-                const resolvedValue = resolvePlaceholders(originalValue, context, logger, `<span class="math-inline">\{currentPath\}\.</span>{key}`);
+                const resolvedValue = resolvePlaceholders(originalValue, context, logger, `${currentPath}\.${key}`);
                 if (resolvedValue !== originalValue) {
                     changed = true;
                 }

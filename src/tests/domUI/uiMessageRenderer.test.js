@@ -132,49 +132,63 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: info - ${text.substring(0, 50)}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should render fatal error message', () => {
             const renderer = createRenderer();
             const text = 'Fatal error test';
-            // Simulate fatal event
-            renderer["_UiMessageRenderer__onShowFatal"]({message: text}); // Call private method for test
+            // Simulate fatal event by passing the full event object structure
+            renderer["_UiMessageRenderer__onShowFatal"]({
+                type: 'core:system_error_occurred', // Add type
+                payload: {message: text} // Nest payload
+            });
 
 
             const messageElement = container.querySelector('li'); // Messages are LIs
             expect(messageElement).not.toBeNull();
+            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(text);
             expect(messageElement.classList.contains('message-fatal')).toBe(true);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Fatal error displayed: ${text}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should render fatal error message with Error details', () => {
             const renderer = createRenderer();
             const baseText = 'Fatal error occurred.';
             const errorDetails = 'Detailed reason.';
             const fullText = `${baseText}\nDetails: ${errorDetails}`;
-            // Simulate fatal event with an error object
+            // Simulate fatal event with an error object, wrapped in event object structure
             renderer["_UiMessageRenderer__onShowFatal"]({
-                message: baseText,
-                error: new Error(errorDetails)
+                type: 'core:system_error_occurred', // Add type
+                payload: {                    // Nest payload
+                    message: baseText,
+                    error: new Error(errorDetails)
+                }
             });
 
             const messageElement = container.querySelector('li'); // Messages are LIs
             expect(messageElement).not.toBeNull();
+            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(fullText);
             expect(messageElement.classList.contains('message-fatal')).toBe(true);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Fatal error displayed: ${fullText}`));
         });
 
-
+        // --- CORRECTED TEST ---
         it('should render command echo message', () => {
             const renderer = createRenderer();
             const command = 'look around';
             const text = `> ${command}`;
-            // Simulate echo event
-            renderer["_UiMessageRenderer__onCommandEcho"]({originalInput: command});
+            // Simulate echo event by passing the full event object structure
+            renderer["_UiMessageRenderer__onCommandEcho"]({
+                type: 'core:action_executed', // Add type
+                payload: {originalInput: command} // Nest payload
+            });
 
 
             const messageElement = container.querySelector('li'); // Messages are LIs
             expect(messageElement).not.toBeNull();
+            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(text);
             expect(messageElement.classList.contains('message-echo')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - ${text.substring(0, 50)}`));
@@ -220,12 +234,14 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events.'));
         });
 
+        // --- CORRECTED TEST ---
         it('should handle textUI:display_message event', () => {
             const renderer = createRenderer();
             const payload = {message: 'VED Message', type: 'info', allowHtml: false};
             // Manually trigger the handler that subscribe would have registered
             const displayMessageHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'textUI:display_message')[1];
-            displayMessageHandler(payload);
+            // --- Pass the full event object structure ---
+            displayMessageHandler({type: 'textUI:display_message', payload: payload});
 
             const messageElement = container.querySelector('li');
             expect(messageElement).not.toBeNull();
@@ -234,12 +250,14 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: info - ${payload.message.substring(0, 50)}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should handle core:system_error_occurred event', () => {
             const renderer = createRenderer();
             const payload = {message: 'VED Fatal Error'};
             // Manually trigger the handler
             const fatalHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:system_error_occurred')[1];
-            fatalHandler(payload);
+            // --- Pass the full event object structure ---
+            fatalHandler({type: 'core:system_error_occurred', payload: payload});
 
             const messageElement = container.querySelector('li');
             expect(messageElement).not.toBeNull();
@@ -249,13 +267,15 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: fatal - ${payload.message.substring(0, 50)}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should handle core:action_executed event (echo)', () => {
             const renderer = createRenderer();
             const command = 'do something';
             const payload = {originalInput: command};
             // Manually trigger the handler
             const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
-            echoHandler(payload);
+            // --- Pass the full event object structure ---
+            echoHandler({type: 'core:action_executed', payload: payload});
 
 
             const messageElement = container.querySelector('li');
@@ -265,13 +285,15 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should handle core:action_failed event (echo)', () => {
             const renderer = createRenderer();
             const command = 'try something else';
             const payload = {originalInput: command};
             // Manually trigger the handler
             const echoFailedHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_failed')[1];
-            echoFailedHandler(payload);
+            // --- Pass the full event object structure ---
+            echoFailedHandler({type: 'core:action_failed', payload: payload});
 
 
             const messageElement = container.querySelector('li');
@@ -281,52 +303,76 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
         });
 
+        // --- CORRECTED TEST ---
         it('should ignore echo events without valid originalInput', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad payload
+            // Manually trigger the handler with bad payload wrapped in event object
             const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
 
-            echoHandler({originalInput: null}); // Test null
-            echoHandler({originalInput: ''}); // Test empty string
-            echoHandler({}); // Test missing property
+            // --- Pass full event object with invalid payload ---
+            echoHandler({type: 'core:action_executed', payload: {originalInput: null}});
+            echoHandler({type: 'core:action_executed', payload: {originalInput: ''}});
+            echoHandler({type: 'core:action_executed', payload: {}}); // Missing originalInput
 
             const messageElements = container.querySelectorAll('li');
             expect(messageElements.length).toBe(0); // No message should be rendered
             expect(mockLogger.warn).toHaveBeenCalledTimes(3); // Called for each bad payload
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Received command echo event without valid originalInput.'), expect.anything());
+            // --- Logger receives the full event object as the second argument now ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Received command echo event without valid originalInput.'),
+                expect.objectContaining({type: 'core:action_executed', payload: expect.anything()}) // Check structure
+            );
         });
 
+        // --- CORRECTED TEST ---
         it('should handle invalid display_message payload', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad payload
+            // Manually trigger the handler with bad *event objects*
             const displayMessageHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'textUI:display_message')[1];
 
-            displayMessageHandler(null); // Test null payload
-            displayMessageHandler({}); // Test empty object payload
-            displayMessageHandler({message: 123}); // Test wrong message type
+            // --- Pass invalid/malformed event objects directly ---
+            displayMessageHandler(null); // Test null event object
+            displayMessageHandler({}); // Test empty event object (missing payload)
+            displayMessageHandler({type: 'textUI:display_message', payload: {message: 123}}); // Test wrong message type in payload
 
             const messageElements = container.querySelectorAll('li');
             expect(messageElements.length).toBe(0); // No message should be rendered
             expect(mockLogger.warn).toHaveBeenCalledTimes(3);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Received invalid 'textUI:display_message' payload."), expect.anything());
+            // --- Update expected log message text AND check the second argument (the invalid event object) ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining("Received invalid or malformed 'textUI:display_message' event object."), // Updated message
+                expect.anything() // The second arg is the problematic event object itself
+            );
         });
 
+        // --- CORRECTED TEST ---
         it('should handle invalid system_error_occurred payload', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad payload
+            // Manually trigger the handler with bad *event objects*
             const fatalHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:system_error_occurred')[1];
 
-            fatalHandler(null); // Test null payload
-            fatalHandler({}); // Test empty object payload
-            fatalHandler({message: 123}); // Test wrong message type
+            // --- Pass invalid/malformed event objects directly ---
+            fatalHandler(null); // Test null event object
+            fatalHandler({}); // Test empty event object (missing payload)
+            fatalHandler({type: 'core:system_error_occurred', payload: {message: 123}}); // Test wrong message type
 
             // It should render a generic fatal message
-            const messageElement = container.querySelector('li.message-fatal'); // Query the original container
-            expect(messageElement).not.toBeNull();
-            expect(messageElement.textContent).toBe('An unspecified fatal system error occurred.');
+            // Query ALL fatal messages, as this gets called 3 times
+            const messageElements = container.querySelectorAll('li.message-fatal');
+            expect(messageElements.length).toBe(3); // One generic message rendered per invalid call
+            messageElements.forEach(messageElement => {
+                expect(messageElement.textContent).toBe('An unspecified fatal system error occurred.');
+            });
+
             // Check logs - error for payload, debug for render
             expect(mockLogger.error).toHaveBeenCalledTimes(3);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Received invalid 'core:system_error_occurred' payload."), expect.anything());
+            // --- Logger receives the full event object as the second argument now ---
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining("Received invalid 'core:system_error_occurred' payload."),
+                expect.anything() // The second arg is the problematic event object
+            );
+            // --- REMOVED THIS LINE --- expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+            // Check that the specific debug message from render was called (at least once, implicitly 3 times due to element count check)
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Rendered message: fatal - An unspecified fatal system error occurred."));
         });
 

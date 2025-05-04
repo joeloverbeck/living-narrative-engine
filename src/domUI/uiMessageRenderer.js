@@ -6,10 +6,19 @@ import DomElementFactory from './domElementFactory.js';   // keep this import
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription // Added for clarity
+ * @typedef {import('../core/interfaces/IEvent').IEvent} IEvent // Added for clarity
  */
 
 /**
- * @typedef {'info'|'error'|'echo'|'fatal'} MessageType
+ * @typedef {'info'|'warning'|'error'|'success'|'combat'|'combat_hit'|'combat_critical'|'sound'|'prompt'|'internal'|'debug'|'echo'|'fatal'} MessageType
+ */
+
+/**
+ * @typedef {object} DisplayMessagePayload
+ * @property {string} message The message content to display to the user.
+ * @property {MessageType} [type='info'] A category hint for the message.
+ * @property {boolean} [allowHtml=false] If true, the message content will be treated as HTML.
  */
 
 /**
@@ -187,31 +196,55 @@ export class UiMessageRenderer extends RendererBase {
     // VED handlers
     //----------------------------------------------------------------------
 
-    #onShow(payload) {
-        if (payload && typeof payload.message === 'string') {
-            this.render(payload.message, payload.type || 'info', payload.allowHtml || false);
+    /**
+     * Handles the 'textUI:display_message' event.
+     * @param {IEvent<DisplayMessagePayload>} eventObject The full event object delivered by the event bus.
+     */
+    #onShow(eventObject) {
+        // --- CORRECTED CODE ---
+        // Check if the eventObject and its nested payload exist, and if the message is a string.
+        if (eventObject && eventObject.payload && typeof eventObject.payload.message === 'string') {
+            // Access properties from the nested payload
+            const message = eventObject.payload.message;
+            const type = eventObject.payload.type || 'info'; // Use default if not provided
+            const allowHtml = eventObject.payload.allowHtml || false; // Use default if not provided
+
+            this.render(message, type, allowHtml);
         } else {
-            this.logger.warn(`${this._logPrefix} Received invalid 'textUI:display_message' payload.`, payload);
+            // Log the received eventObject for debugging if it's not structured as expected
+            this.logger.warn(`${this._logPrefix} Received invalid or malformed 'textUI:display_message' event object.`, eventObject);
         }
+        // --- END CORRECTION ---
     }
 
-    #onShowFatal(payload) {
+    /**
+     * Handles the 'core:system_error_occurred' event.
+     * @param {IEvent<any>} eventObject The full event object.
+     */
+    #onShowFatal(eventObject) {
+        const payload = eventObject?.payload; // Safely access payload
         if (!payload || typeof payload.message !== 'string') {
-            this.logger.error(`${this._logPrefix} Received invalid 'core:system_error_occurred' payload.`, payload);
+            this.logger.error(`${this._logPrefix} Received invalid 'core:system_error_occurred' payload.`, eventObject);
             this.render('An unspecified fatal system error occurred.', 'fatal');
             return;
         }
         let msg = payload.message;
+        // Assuming 'error' might be part of the payload structure
         if (payload.error?.message) msg += `\nDetails: ${payload.error.message}`;
         this.logger.error(`${this._logPrefix} Fatal error displayed: ${msg}`);
         this.render(msg, 'fatal');
     }
 
-    #onCommandEcho(payload) {
+    /**
+     * Handles 'core:action_executed' and 'core:action_failed' for command echo.
+     * @param {IEvent<any>} eventObject The full event object.
+     */
+    #onCommandEcho(eventObject) {
+        const payload = eventObject?.payload; // Safely access payload
         if (payload && typeof payload.originalInput === 'string' && payload.originalInput.trim()) {
             this.render(`> ${payload.originalInput}`, 'echo');
         } else {
-            this.logger.warn(`${this._logPrefix} Received command echo event without valid originalInput.`, payload);
+            this.logger.warn(`${this._logPrefix} Received command echo event without valid originalInput.`, eventObject);
         }
     }
 

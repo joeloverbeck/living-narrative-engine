@@ -392,7 +392,7 @@ describe('ActionExecutor', () => {
           //       Looking at your code snippet, the action ID *is* missing from the specific error log lines
           //       within #resolveLiteralSource. Double-check the exact output if needed.
           //       If the action ID *should* be there, you'd add it back:
-          // expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '<span class="math-inline">\{sourceString\}' for action '</span>{actionDef.id}'. Value: '${valueString}'.`)
+          // expect.stringContaining(`PayloadValueResolverService (#resolveLiteralSource): Failed to parse number from literal source '${sourceString}' for action '${actionDef.id}'. Value: '${valueString}'.`)
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(actionDef.dispatch_event.eventName, {});

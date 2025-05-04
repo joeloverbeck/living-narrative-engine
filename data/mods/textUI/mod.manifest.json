@@ -17,7 +17,8 @@
     "actions": [
     ],
     "rules": [
-      "welcome_message.rule.json"
+      "welcome_message.rule.json",
+      "turn_started.rule.json"
     ],
     "events": [
       "set_title.event.json",

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "turn_started",
+  "comment": "Handles the start of an entity's turn by notifying the UI.",
+  "event_type": "core:turn_started",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Send a message to the UI indicating whose turn has started and their type (player/AI), using data from the triggering event.",
+      "parameters": {
+        "eventType": "textUI:display_message",
+        "payload": {
+          "message": "{event.payload.entityId} ({event.payload.entityType}) turn started."
+        }
+      }
+    }
+  ]
+}
