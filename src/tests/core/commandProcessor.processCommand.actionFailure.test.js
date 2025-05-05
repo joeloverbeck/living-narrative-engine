@@ -22,18 +22,17 @@ const mockLogger = {
     debug: jest.fn(),
 };
 
+// --- FIX: Use jest.fn() for methods ---
 const mockValidatedEventDispatcher = {
     dispatchValidated: jest.fn(),
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
+    // subscribe: jest.fn(), // Include if needed
+    // unsubscribe: jest.fn(), // Include if needed
 };
 
-// ****** START #7 Change: Update mockWorldContext definition ******
 const mockWorldContext = {
-    getLocationOfEntity: jest.fn(), // New method
+    getLocationOfEntity: jest.fn(),
     getPlayer: jest.fn(),
 };
-// ****** END #7 Change ******
 
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
@@ -49,10 +48,9 @@ const createValidMocks = () => ({
     commandParser: {...mockCommandParser, parse: jest.fn()},
     actionExecutor: {...mockActionExecutor, executeAction: jest.fn()},
     logger: {...mockLogger, info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()},
+    // --- FIX: Ensure VED mock is fresh ---
     validatedEventDispatcher: {...mockValidatedEventDispatcher, dispatchValidated: jest.fn()},
-    // ****** START #7 Change: Update mock return in helper ******
     worldContext: {...mockWorldContext, getLocationOfEntity: jest.fn(), getPlayer: jest.fn()},
-    // ****** END #7 Change ******
     entityManager: {...mockEntityManager, getEntityInstance: jest.fn(), addComponent: jest.fn()},
     gameDataRepository: {...mockGameDataRepository, getActionDefinition: jest.fn()},
 });
@@ -73,33 +71,29 @@ describe('CommandProcessor', () => {
         mockActor = {id: 'player1', name: 'ActionFailTester'};
         mockLocation = {id: 'room1', name: 'Battle Room'};
 
-        // Clear mocks AFTER instantiation if needed, or reset specific ones
-        // jest.clearAllMocks(); // Be careful with this if mocks are needed immediately after construction
-
-        // Reset specific mocks before the actual test logic runs
+        // Clear specific mocks after instantiation
         Object.values(mocks.logger).forEach(fn => fn.mockClear());
         mocks.commandParser.parse.mockClear();
         mocks.actionExecutor.executeAction.mockClear();
         mocks.validatedEventDispatcher.dispatchValidated.mockClear();
-        // ****** START #7 Change: Clear new mock method ******
-        mocks.worldContext.getLocationOfEntity.mockClear(); // Clear the worldContext mock
-        // ****** END #7 Change ******
+        mocks.worldContext.getLocationOfEntity.mockClear();
         mocks.worldContext.getPlayer.mockClear();
+        mocks.entityManager.getEntityInstance.mockClear(); // Ensure these are also cleared if used
+        mocks.entityManager.addComponent.mockClear();
+        mocks.gameDataRepository.getActionDefinition.mockClear();
+
+        // --- FIX: Set default mock implementations needed by the tests ---
+        // Mock VED dispatch to resolve successfully by default
+        mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
+        // Mock location lookup to succeed by default for these tests
+        mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
     });
 
 
     // --- processCommand Tests for Action Failure (Result success: false) ---
     describe('processCommand', () => {
 
-        beforeEach(() => {
-            // Configure mocks specific to this describe block if needed
-            // Mock VED dispatch to resolve successfully by default
-            mocks.validatedEventDispatcher.dispatchValidated.mockResolvedValue(true);
-            // ****** START #7 Change: Mock new location lookup method ******
-            // Mock location lookup to succeed by default for these tests
-            mocks.worldContext.getLocationOfEntity.mockReturnValue(mockLocation);
-            // ****** END #7 Change ******
-        });
+        // No inner beforeEach needed as defaults are set in outer one
 
         // --- Sub-Ticket 4.1.13.7 Test Case ---
         it('should handle action failure when executeAction returns success: false', async () => {
@@ -116,13 +110,14 @@ describe('CommandProcessor', () => {
             };
             const actionResult = { // Define the failed action result
                 success: false,
-                messages: [{text: 'Target dodged!', type: 'combat'}]
-                // Assuming `endsTurn` defaults to true if missing or action logic decides it
+                messages: [{text: 'Target dodged!', type: 'combat'}],
+                // Explicitly set endsTurn for clarity in test, adjust if default is different
+                endsTurn: true
             };
 
             // Configure parser to return the valid parsed command
             mocks.commandParser.parse.mockReturnValue(parsedCommand);
-            // Location lookup is already mocked to succeed in the inner beforeEach
+            // Location lookup is already mocked to succeed
 
             // Configure action executor to resolve with the failed actionResult
             mocks.actionExecutor.executeAction.mockResolvedValue(actionResult);
@@ -131,11 +126,13 @@ describe('CommandProcessor', () => {
             const result = await commandProcessor.processCommand(mockActor, commandInput);
 
             // Assert: Check the returned CommandResult precisely
+            // Note: Your code includes a check for VED dispatch success affecting the internalError
+            // Assuming VED succeeds here based on the mock setup
             expect(result).toEqual({
                 success: false, // Should reflect actionResult.success
-                turnEnded: true, // Turn should end even if the action failed (assuming default or logic)
+                turnEnded: true, // Should reflect actionResult.endsTurn or default
                 error: null, // No top-level error for logical action failure
-                internalError: `Action ${parsedCommand.actionId} failed. See actionResult for details.`, // Internal note
+                internalError: `Action ${parsedCommand.actionId} failed. See actionResult for details.`, // Internal note (assumes VED dispatch succeeded)
                 actionResult: actionResult // Include the original ActionResult
             });
 
@@ -147,7 +144,7 @@ describe('CommandProcessor', () => {
             // Assert: Check logger.info call for logging the final CommandResult summary
             expect(mocks.logger.info).toHaveBeenCalledWith(
                 // Updated log message to reflect logical failure note
-                expect.stringContaining(`CommandProcessor: Action ${parsedCommand.actionId} processed for actor ${mockActor.id}. CommandResult: { success: false, turnEnded: true } (Logical failure)`)
+                `CommandProcessor: Action ${parsedCommand.actionId} processed for actor ${mockActor.id}. CommandResult: { success: false, turnEnded: true } (Logical failure)`
             );
 
             // Assert: Check that logger.error related to exceptions was NOT called
@@ -156,10 +153,11 @@ describe('CommandProcessor', () => {
             // Assert: Check that VED *was* called for the core:action_failed event
             expect(mocks.validatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
                 'core:action_failed',
-                expect.objectContaining({
+                expect.objectContaining({ // Use objectContaining for flexibility
                     actorId: mockActor.id,
                     actionId: parsedCommand.actionId,
-                    error: 'Target dodged!', // Correct error message
+                    commandString: commandInput, // Ensure command string is included if expected
+                    error: 'Target dodged!', // Correct error message derived from actionResult.messages
                     isExecutionError: false, // Logical failure
                     actionResult: actionResult // Include full result
                 })
@@ -167,27 +165,35 @@ describe('CommandProcessor', () => {
 
             // Assert: Check necessary prior steps *were* called
             expect(mocks.commandParser.parse).toHaveBeenCalledWith(commandInput);
-            // ****** START #7 Change: Check new worldContext mock call ******
             expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
             expect(mocks.worldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
-            // ****** END #7 Change ******
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledTimes(1);
 
             // Assert: Check context passed to executeAction
-            // Check executeAction arguments, ensuring context includes worldContext
+            // --- START FIX ---
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledWith(
                 parsedCommand.actionId,
-                expect.objectContaining({ // Check the context object structure
+                expect.objectContaining({ // Check the context object structure accurately
                     actingEntity: mockActor,
                     currentLocation: mockLocation,
                     parsedCommand: parsedCommand,
-                    gameDataRepository: mocks.gameDataRepository,
-                    entityManager: mocks.entityManager,
-                    dispatch: expect.any(Function),
+                    // Expect eventBus with a dispatch function inside
+                    eventBus: expect.objectContaining({
+                        dispatch: expect.any(Function)
+                    }),
+                    // Expect the logger object
                     logger: mocks.logger,
-                    worldContext: mocks.worldContext, // Check worldContext is passed
+                    // Expect the specific VED instance
+                    validatedEventDispatcher: mocks.validatedEventDispatcher,
+                    // Expect the world context object
+                    worldContext: mocks.worldContext,
+                    // Expect entity manager and game data repo
+                    entityManager: mocks.entityManager,
+                    gameDataRepository: mocks.gameDataRepository
                 })
             );
+            // --- END FIX ---
+
 
             // Assert: Check that logger.warn was not called (based on code changes)
             expect(mocks.logger.warn).not.toHaveBeenCalled();

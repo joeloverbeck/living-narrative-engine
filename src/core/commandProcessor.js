@@ -211,6 +211,13 @@ class CommandProcessor {
                 };
             }
 
+            /** -----------------------------------------------------------
+             *  Build the ActionContext that is passed to ActionExecutor
+             *  -----------------------------------------------------------
+             *  - playerEntity   – what TargetResolutionService expects
+             *  - eventBus       – shim that forwards to ValidatedEventDispatcher
+             *  - validatedEventDispatcher kept for other services
+             */
             /** @type {ActionContext} */
             const actionContext = {
                 actingEntity: actor,
@@ -218,13 +225,28 @@ class CommandProcessor {
                 parsedCommand: parsedCommand,
                 gameDataRepository: this.#gameDataRepository,
                 entityManager: this.#entityManager,
-                dispatch: this.#validatedEventDispatcher.dispatchValidated.bind(this.#validatedEventDispatcher),
+
+                // TargetResolutionService still calls  eventBus.dispatch(...)
+                eventBus: {
+                    dispatch: (eventName, payload) =>
+                        this.#validatedEventDispatcher.dispatchValidated(eventName, payload)
+                },
+
+                // keep direct access in case other code wants it
+                validatedEventDispatcher: this.#validatedEventDispatcher,
+
                 logger: this.#logger,
                 worldContext: this.#worldContext
             };
-            this.#logger.debug(`CommandProcessor: ActionContext built successfully for actor ${actorId}: ${JSON.stringify({
-                actingEntityId: actor.id, currentLocationId: currentLocation.id, actionId: parsedCommand.actionId
-            })}`);
+
+            this.#logger.debug(
+                `CommandProcessor: ActionContext built successfully for actor ${actorId}: `
+                + JSON.stringify({
+                    playerEntityId: actor.id,
+                    currentLocationId: currentLocation.id,
+                    actionId: parsedCommand.actionId
+                })
+            );
 
             // --- 4. Execute Action ---
             let executionSuccessful = false; // Track if action execution completed without exception

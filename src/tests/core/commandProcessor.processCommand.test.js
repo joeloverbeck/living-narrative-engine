@@ -150,6 +150,7 @@ describe('CommandProcessor', () => {
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledTimes(1);
 
             // Assert executeAction was called with the correct actionId and a valid context object
+            // --- START CORRECTION ---
             expect(mocks.actionExecutor.executeAction).toHaveBeenCalledWith(
                 parsedCommand.actionId,
                 expect.objectContaining({
@@ -158,11 +159,16 @@ describe('CommandProcessor', () => {
                     parsedCommand: parsedCommand,
                     gameDataRepository: mocks.gameDataRepository,
                     entityManager: mocks.entityManager,
-                    dispatch: expect.any(Function),
+                    // dispatch: expect.any(Function), // <-- REMOVED this line
+                    eventBus: expect.objectContaining({ // <-- ADDED this block
+                        dispatch: expect.any(Function)
+                    }),
+                    validatedEventDispatcher: mocks.validatedEventDispatcher, // <-- ADDED this line
                     logger: mocks.logger,
                     worldContext: mocks.worldContext // Check worldContext is passed
                 })
             );
+            // --- END CORRECTION ---
 
             expect(mocks.logger.debug).toHaveBeenCalledWith(`CommandProcessor: Action executor returned result for action ${parsedCommand.actionId}: ${JSON.stringify(actionResult)}`);
             expect(mocks.logger.info).toHaveBeenCalledWith(expect.stringContaining(`CommandProcessor: Action ${parsedCommand.actionId} processed for actor ${mockActor.id}. CommandResult: { success: true, turnEnded: true }`));
