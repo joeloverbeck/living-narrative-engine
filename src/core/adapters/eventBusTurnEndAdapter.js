@@ -1,6 +1,7 @@
 // src/core/adapters/eventBusTurnEndAdapter.js
 
 import {ITurnEndPort} from '../ports/ITurnEndPort.js';
+import {TURN_ENDED_ID} from "../constants/eventIds.js";
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
@@ -52,12 +53,12 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
 
         try {
             if (this.#isSafe) {
-                await this.#dispatcher.dispatchSafely('core:turn_ended', payload);
+                await this.#dispatcher.dispatchSafely(TURN_ENDED_ID, payload);
             } else {
-                await this.#dispatcher.dispatchValidated('core:turn_ended', payload);
+                await this.#dispatcher.dispatchValidated(TURN_ENDED_ID, payload);
             }
         } catch (err) {
-            this.#log.error("Error dispatching 'core:turn_ended' via VED", err);
+            this.#log.error("Error dispatching TURN_ENDED_ID via VED", err);
             throw err;
         }
     }

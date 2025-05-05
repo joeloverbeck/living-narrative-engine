@@ -7,7 +7,8 @@
 import TurnManager from '../../core/turnManager'; // Adjust path as needed
 // Removed unused Entity import: import Entity from '../../entities/entity';
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js'; // Import component IDs
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
+import {TURN_ENDED_ID} from "../../core/constants/eventIds.js"; // Import component IDs
 
 
 // --- Mock Dependencies ---
@@ -257,7 +258,7 @@ describe('TurnManager', () => {
             // Check subscription happened
             expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1);
             expect(mockDispatcher.subscribe).toHaveBeenCalledWith(
-                'core:turn_ended', // Assuming this is the constant TURN_ENDED_EVENT_TYPE
+                TURN_ENDED_ID, // Assuming this is the constant TURN_ENDED_EVENT_TYPE
                 expect.any(Function) // Check that a handler function was passed
             );
             // Check the spy that mocks advanceTurn

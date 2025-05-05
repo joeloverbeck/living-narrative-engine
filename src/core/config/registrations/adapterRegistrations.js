@@ -15,14 +15,14 @@
 /** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 
 // --- Adapter Imports ---
-import { EventBusCommandInputGateway } from '../../adapters/eventBusCommandInputGateway.js';
-import { EventBusPromptAdapter } from '../../adapters/eventBusPromptAdapter.js';
-import { EventBusTurnEndAdapter } from '../../adapters/EventBusTurnEndAdapter.js'; // Corrected filename case
+import {EventBusCommandInputGateway} from '../../adapters/eventBusCommandInputGateway.js';
+import {EventBusPromptAdapter} from '../../adapters/eventBusPromptAdapter.js';
+import EventBusTurnEndAdapter from '../../adapters/eventBusTurnEndAdapter.js'; // Corrected filename case
 
 // --- DI & Helper Imports ---
-import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
-import { SHUTDOWNABLE } from "../tags.js"; // Import SHUTDOWNABLE if needed (e.g., for destroy methods)
+import {tokens} from '../tokens.js';
+import {Registrar} from '../registrarHelpers.js';
+import {SHUTDOWNABLE} from "../tags.js"; // Import SHUTDOWNABLE if needed (e.g., for destroy methods)
 
 /**
  * Registers the default port adapters.
@@ -45,7 +45,7 @@ export function registerAdapters(container) {
             logger.error(`Adapter Registration: Failed to resolve ${tokens.IValidatedEventDispatcher} for ${tokens.ICommandInputPort}.`);
             throw new Error(`Missing dependency ${tokens.IValidatedEventDispatcher} for EventBusCommandInputGateway`);
         }
-        return new EventBusCommandInputGateway({ validatedEventDispatcher: ved });
+        return new EventBusCommandInputGateway({validatedEventDispatcher: ved});
     });
     logger.debug(`Adapter Registration: Registered EventBusCommandInputGateway as ${tokens.ICommandInputPort} tagged with ${SHUTDOWNABLE.join(', ')}.`);
 

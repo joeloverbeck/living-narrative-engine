@@ -66,7 +66,7 @@ class GameRuleSystem {
     console.log("GameRuleSystem: Subscribed #handlePlayerMovedLook to '" + 'event:entity_moved' + "' for post-move auto-look.");
 
     // Future logic like turn progression subscriptions would go here.
-    // Example: this.#eventBus.subscribe('core:turn_ended', this.#handleTurnEnd.bind(this));
+    // Example: this.#eventBus.subscribe(TURN_ENDED_ID, this.#handleTurnEnd.bind(this));
 
     console.log('GameRuleSystem: Initialization complete.');
   }

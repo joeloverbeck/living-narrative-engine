@@ -3,6 +3,7 @@
 
 import EventBusTurnEndAdapter from '../../../core/adapters/eventBusTurnEndAdapter.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
+import {TURN_ENDED_ID} from "../../../core/constants/eventIds.js";
 
 // --- Mocks ---
 const mockSafeDispatcher = {
@@ -59,7 +60,7 @@ describe('EventBusTurnEndAdapter', () => {
 
         expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
         expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
-            'core:turn_ended', { entityId, success: true }
+            TURN_ENDED_ID, {entityId, success: true}
         );
     });
 
@@ -71,7 +72,7 @@ describe('EventBusTurnEndAdapter', () => {
 
         expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
         expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-            'core:turn_ended', { entityId, success: true }
+            TURN_ENDED_ID, {entityId, success: true}
         );
         expect(mockSafeDispatcher.dispatchSafely).not.toHaveBeenCalled(); // Ensure safe wasn't called
     });
@@ -104,7 +105,7 @@ describe('EventBusTurnEndAdapter', () => {
 
         await expect(adapter.turnEnded(entityId)).rejects.toThrow(dispatchError);
         expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Error dispatching 'core:turn_ended' via VED"), expect.any(Error));
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Error dispatching TURN_ENDED_ID via VED"), expect.any(Error));
 
         errorSpy.mockRestore();
     });

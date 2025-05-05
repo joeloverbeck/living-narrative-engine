@@ -14,9 +14,7 @@
 
 // Import the necessary component ID constants
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../types/components.js';
-
-// <<< Define the event type we expect for turn completion >>>
-const TURN_ENDED_EVENT_TYPE = 'core:turn_ended'; // Assuming this event is dispatched when ITurnEndPort.notifyTurnEnded is called
+import {TURN_ENDED_ID} from "./constants/eventIds.js";
 
 /**
  * @class TurnManager
@@ -295,7 +293,7 @@ class TurnManager {
                     }
                 });
 
-                this.#logger.debug(`Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_EVENT_TYPE}' event.`);
+                this.#logger.debug(`Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`);
                 // --- The Turn Manager now passively waits for the event ---
             }
         } catch (error) {
@@ -323,20 +321,20 @@ class TurnManager {
             return;
         }
         try {
-            this.#logger.debug(`Subscribing to '${TURN_ENDED_EVENT_TYPE}' event.`);
+            this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
             // Type assertion for the payload based on assumed event structure
-            /** @param {SystemEventPayloads['core:turn_ended']} payload */
+            /** @param {SystemEventPayloads[TURN_ENDED_ID]} payload */
             const handler = (payload) => {
                 this.#handleTurnEndedEvent(payload);
             };
-            this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(TURN_ENDED_EVENT_TYPE, handler);
+            this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(TURN_ENDED_ID, handler);
             if (typeof this.#turnEndedUnsubscribe !== 'function') { // More robust check
                 this.#turnEndedUnsubscribe = null; // Reset if invalid
                 throw new Error("Subscription function did not return an unsubscribe callback.");
             }
         } catch (error) {
-            this.#logger.error(`CRITICAL: Failed to subscribe to ${TURN_ENDED_EVENT_TYPE}. Turn advancement will likely fail. Error: ${error.message}`, error);
-            this.#dispatchSystemError(`Failed to subscribe to ${TURN_ENDED_EVENT_TYPE}. Game cannot proceed reliably.`, error) // Pass error obj
+            this.#logger.error(`CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail. Error: ${error.message}`, error);
+            this.#dispatchSystemError(`Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`, error) // Pass error obj
                 .catch(e => this.#logger.error(`Failed to dispatch system error after subscription failure: ${e.message}`));
             this.stop().catch(e => this.#logger.error(`Error stopping manager after subscription failure: ${e.message}`));
         }
@@ -348,11 +346,11 @@ class TurnManager {
      */
     #unsubscribeFromTurnEnd() {
         if (this.#turnEndedUnsubscribe) {
-            this.#logger.debug(`Unsubscribing from '${TURN_ENDED_EVENT_TYPE}' event.`);
+            this.#logger.debug(`Unsubscribing from '${TURN_ENDED_ID}' event.`);
             try {
                 this.#turnEndedUnsubscribe();
             } catch (error) {
-                this.#logger.error(`Error calling unsubscribe function for ${TURN_ENDED_EVENT_TYPE}: ${error.message}`, error);
+                this.#logger.error(`Error calling unsubscribe function for ${TURN_ENDED_ID}: ${error.message}`, error);
             } finally {
                 this.#turnEndedUnsubscribe = null;
             }
@@ -362,24 +360,24 @@ class TurnManager {
     }
 
     /**
-     * Handles the received 'core:turn_ended' event.
+     * Handles the received TURN_ENDED_ID event.
      * Checks if it matches the current actor and advances the turn if so.
-     * @param {SystemEventPayloads['core:turn_ended']} payload - The event payload. Expected: { entityId: string, success: boolean }
+     * @param {SystemEventPayloads[TURN_ENDED_ID]} payload - The event payload. Expected: { entityId: string, success: boolean }
      * @private
      */
     #handleTurnEndedEvent(payload) {
         if (!this.#isRunning) {
-            this.#logger.debug(`Received '${TURN_ENDED_EVENT_TYPE}' but manager is stopped. Ignoring.`);
+            this.#logger.debug(`Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`);
             return;
         }
 
         const endedActorId = payload?.entityId;
         const successStatus = payload?.success; // true for success, false for failure
 
-        this.#logger.debug(`Received '${TURN_ENDED_EVENT_TYPE}' event for entity ${endedActorId}. Success: ${successStatus}. Current actor: ${this.#currentActor?.id || 'None'}`);
+        this.#logger.debug(`Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus}. Current actor: ${this.#currentActor?.id || 'None'}`);
 
         if (!this.#currentActor) {
-            this.#logger.warn(`Received '${TURN_ENDED_EVENT_TYPE}' for ${endedActorId}, but there is no current actor set in TurnManager. Ignoring.`);
+            this.#logger.warn(`Received '${TURN_ENDED_ID}' for ${endedActorId}, but there is no current actor set in TurnManager. Ignoring.`);
             return;
         }
 
@@ -398,7 +396,7 @@ class TurnManager {
             setTimeout(() => this.advanceTurn(), 0);
 
         } else {
-            this.#logger.warn(`Received '${TURN_ENDED_EVENT_TYPE}' for entity ${endedActorId}, but expected end for current actor ${this.#currentActor.id}. Ignoring event.`);
+            this.#logger.warn(`Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but expected end for current actor ${this.#currentActor.id}. Ignoring event.`);
             // Consider adding timeout logic if turns stall.
         }
     }

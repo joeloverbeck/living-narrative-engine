@@ -4,6 +4,7 @@
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 import TurnManager from '../../core/turnManager.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
+import {TURN_ENDED_ID} from "../../core/constants/eventIds.js";
 
 // --- Mock Dependencies ---
 const mockLogger = {
@@ -77,7 +78,7 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
         mockUnsubscribe = jest.fn();
         // Capture the handler passed to subscribe
         mockDispatcher.subscribe.mockClear().mockImplementation((eventType, handler) => {
-            if (eventType === 'core:turn_ended') {
+            if (eventType === TURN_ENDED_ID) {
                 capturedTurnEndedHandler = handler; // Capture the handler
             }
             return mockUnsubscribe; // Return the mock unsubscribe function

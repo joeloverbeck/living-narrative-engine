@@ -3,6 +3,7 @@
 
 import {beforeEach, describe, expect, jest, test, afterEach} from '@jest/globals'; // Added afterEach
 import TurnManager from '../../core/turnManager.js';
+import {TURN_ENDED_ID} from "../../core/constants/eventIds.js";
 
 // Absolute minimal mocks (ensure they satisfy constructor checks)
 const mockLogger = {debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn()};
@@ -81,7 +82,7 @@ describe('TurnManager Minimal Test', () => {
         // Assert
         // Check logs/calls from both start() and advanceTurn()
         expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // From start()
-        expect(mockDispatcher.subscribe).toHaveBeenCalledWith('core:turn_ended', expect.any(Function)); // From start() -> #subscribeToTurnEnd
+        expect(mockDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, expect.any(Function)); // From start() -> #subscribeToTurnEnd
         expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() initiating...'); // From advanceTurn()
 
         // Check isEmpty was called

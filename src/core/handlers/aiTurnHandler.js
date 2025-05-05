@@ -193,7 +193,7 @@ class AITurnHandler extends ITurnHandler {
             }
             // <<< END Notify >>>
 
-            // Responsibility of TurnManager (reacting to notifyTurnEnded) to dispatch 'core:turn_ended'
+            // Responsibility of TurnManager (reacting to notifyTurnEnded) to dispatch TURN_ENDED_ID
 
             this.#logger.info(`${className}: AI turn fully concluded for actor: ${actorId}.`);
         }
