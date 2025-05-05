@@ -1,5 +1,4 @@
 // src/core/services/turnHandlerResolver.js
-// --- FILE START (Entire file content as requested) ---
 
 // --- Interface Imports ---
 import {ITurnHandlerResolver} from '../interfaces/ITurnHandlerResolver.js';
@@ -47,15 +46,16 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
         }
         this.#logger = logger;
 
-        if (!playerTurnHandler || typeof playerTurnHandler.handleTurn !== 'function') { // Check if it looks like an ITurnHandler
-            this.#logger.error('TurnHandlerResolver: Invalid or missing playerTurnHandler dependency.');
+        // *** CORRECTED: Check for startTurn instead of handleTurn ***
+        if (!playerTurnHandler || typeof playerTurnHandler.startTurn !== 'function') { // Check if it looks like an ITurnHandler (using startTurn)
+            this.#logger.error('TurnHandlerResolver: Invalid or missing playerTurnHandler dependency (requires startTurn).');
             throw new Error('TurnHandlerResolver: Invalid or missing playerTurnHandler dependency.');
         }
         this.#playerTurnHandler = playerTurnHandler;
 
-        // Added validation for AI handler
-        if (!aiTurnHandler || typeof aiTurnHandler.handleTurn !== 'function') { // Check if it looks like an ITurnHandler
-            this.#logger.error('TurnHandlerResolver: Invalid or missing aiTurnHandler dependency.');
+        // *** CORRECTED: Check for startTurn instead of handleTurn ***
+        if (!aiTurnHandler || typeof aiTurnHandler.startTurn !== 'function') { // Check if it looks like an ITurnHandler (using startTurn)
+            this.#logger.error('TurnHandlerResolver: Invalid or missing aiTurnHandler dependency (requires startTurn).');
             throw new Error('TurnHandlerResolver: Invalid or missing aiTurnHandler dependency.');
         }
         this.#aiTurnHandler = aiTurnHandler;

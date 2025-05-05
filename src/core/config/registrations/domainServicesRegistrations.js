@@ -1,4 +1,5 @@
 // src/core/config/registrations/domainServicesRegistrations.js
+// ****** MODIFIED FILE ******
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
@@ -13,22 +14,21 @@ import ActionExecutor from "../../../actions/actionExecutor.js"; // Concrete Cla
 import CommandParser from "../../commandParser.js";             // Concrete Class Import
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../worldContext.js';       // Concrete Class Import
-// --- ADDED TurnOrderService IMPORT ---
 import {TurnOrderService} from "../../turnOrder/turnOrderService.js"; // Adjust path if needed
-// --- ADDED CommandProcessor IMPORT --- // <<< NEW
-import CommandProcessor from "../../commandProcessor.js"; // <<< NEW
+import CommandProcessor from "../../commandProcessor.js";
+import PlayerPromptService from '../../services/playerPromptService.js'; // <<< ADDED IMPORT
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-// --- ADDED Type Imports for CommandProcessor Dependencies --- // <<< NEW
 /** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/./IWorldContext.js').IWorldContext} IWorldContext */
-
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // <<< CORRECTED path
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */ // <<< ADDED
+/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */ // <<< ADDED
 
 
 /**
@@ -49,7 +49,7 @@ export function registerDomainServices(container) {
     // Register other domain services using the helper or direct registration as preferred
     r.single(tokens.ConditionEvaluationService, ConditionEvaluationService, [tokens.EntityManager]);
     r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
-        [tokens.EntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]); // Use interface token if available
+        [tokens.EntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
     r.single(tokens.TargetResolutionService, TargetResolutionService, []);
     r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [tokens.ILogger]);
     r.single(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder,
@@ -64,13 +64,13 @@ export function registerDomainServices(container) {
     // --- Register ActionExecutor against its Interface Token ---
     r.single(tokens.IActionExecutor, ActionExecutor,
         [tokens.GameDataRepository, tokens.TargetResolutionService, tokens.ActionValidationService,
-            tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.IValidatedEventDispatcher]); // Use interface token if available
-    log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`); // <<< Added Log
+            tokens.PayloadValueResolverService, tokens.EventBus, tokens.ILogger, tokens.IValidatedEventDispatcher]);
+    log.debug(`Domain-services Registration: Registered ${tokens.IActionExecutor}.`);
 
     // --- Register IWorldContext ---
     r.singletonFactory(tokens.IWorldContext, c => new WorldContext(
-        /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)), // Resolve EntityManager
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger))             // Resolve ILogger
+        /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
+        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     ));
     log.debug(`Domain Services Registration: Registered ${String(tokens.IWorldContext)}.`);
 
@@ -79,39 +79,58 @@ export function registerDomainServices(container) {
         const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository));
         return new CommandParser(gameDataRepoInstance);
     }, {lifecycle: 'singleton'});
-    log.debug(`Domain-services Registration: Registered ${tokens.ICommandParser}.`); // <<< Added Log
+    log.debug(`Domain-services Registration: Registered ${tokens.ICommandParser}.`);
 
-    // --- Register CommandProcessor against its Interface Token using explicit factory function --- // <<< NEW
+    // --- Register CommandProcessor against its Interface Token using explicit factory function ---
     r.singletonFactory(tokens.ICommandProcessor, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${tokens.ICommandProcessor}...`);
-        // Resolve all dependencies for CommandProcessor's options object
         const commandProcessorDeps = {
             commandParser: /** @type {ICommandParser} */ (c.resolve(tokens.ICommandParser)),
             actionExecutor: /** @type {IActionExecutor} */ (c.resolve(tokens.IActionExecutor)),
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
             validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)), // <<< Use correct token & name
+            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
             entityManager: /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
             gameDataRepository: /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
         };
         log.debug(`Domain-services Registration: Dependencies for ${tokens.ICommandProcessor} resolved.`);
         return new CommandProcessor(commandProcessorDeps);
     });
-    log.debug(`Domain-services Registration: Registered ${tokens.ICommandProcessor} factory.`); // <<< Added Log
+    log.debug(`Domain-services Registration: Registered ${tokens.ICommandProcessor} factory.`);
 
-    // --- ADDED TurnOrderService REGISTRATION ---
-    // Register TurnOrderService as a singleton using a factory function
-    // to explicitly pass the dependency object.
+    // --- Register TurnOrderService ---
     r.singletonFactory(tokens.ITurnOrderService, (c) => {
         const dependencies = {
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
-            // Add other dependencies here if TurnOrderService constructor changes
         };
         return new TurnOrderService(dependencies);
     });
     log.debug(`Domain-services Registration: Registered ${tokens.ITurnOrderService}.`);
-    // --- END ADDED REGISTRATION ---
 
+    // --- Register PlayerPromptService --- // <<< ADDED REGISTRATION BLOCK
+    r.singletonFactory(tokens.PlayerPromptService, (c) => {
+        log.debug(`Domain-services Registration: Factory creating ${tokens.PlayerPromptService}...`);
+        // Resolve all dependencies for PlayerPromptService's options object
+        const playerPromptDeps = {
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (c.resolve(tokens.IActionDiscoverySystem)),
+            promptOutputPort: /** @type {IPromptOutputPort} */ (c.resolve(tokens.IPromptOutputPort)),
+            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+            entityManager: /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
+            gameDataRepository: /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository))
+        };
+        // Verify all dependencies were resolved (optional, but good practice)
+        for (const [key, value] of Object.entries(playerPromptDeps)) {
+            if (!value) {
+                log.error(`Domain-services Registration: Failed to resolve dependency "${key}" for ${tokens.PlayerPromptService}.`);
+                throw new Error(`Missing dependency "${key}" for ${tokens.PlayerPromptService}`);
+            }
+        }
+        log.debug(`Domain-services Registration: Dependencies for ${tokens.PlayerPromptService} resolved.`);
+        return new PlayerPromptService(playerPromptDeps);
+    });
+    log.debug(`Domain Services Registration: Registered ${tokens.PlayerPromptService} factory.`);
+    // --- END ADDED REGISTRATION BLOCK ---
 
     log.info('Domain-services Registration: complete.');
 }

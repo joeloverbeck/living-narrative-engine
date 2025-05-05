@@ -14,14 +14,14 @@ const mockLogger = {
 };
 
 const mockDispatcher = {
-    dispatch: jest.fn(), // Keep if used elsewhere
+    dispatch: jest.fn(),
     dispatchValidated: jest.fn().mockResolvedValue(true),
+    subscribe: jest.fn().mockReturnValue(jest.fn()), // Returns mock unsubscribe
 };
 
 const mockEntityManager = {
     activeEntities: new Map(),
-    getEntityInstance: jest.fn(), // Checked by constructor
-    // Keep other mocks if needed
+    getEntityInstance: jest.fn(),
 };
 
 const mockTurnOrderService = {
@@ -34,16 +34,17 @@ const mockTurnOrderService = {
     clearCurrentRound: jest.fn(),
 };
 
-// Mock Turn Handler
 const mockTurnHandler = {
-    constructor: {name: 'MockTurnHandler'}, // For logging checks
-    handleTurn: jest.fn().mockResolvedValue(undefined),
+    constructor: {name: 'MockTurnHandler'},
+    startTurn: jest.fn().mockResolvedValue(undefined),
+    handleTurn: jest.fn().mockResolvedValue(undefined), // Keep if needed
+    destroy: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockTurnHandlerResolver = {
     resolveHandler: jest.fn(),
 };
-// --- END FIXED MOCKS ---
+// --- END MOCKS ---
 
 // Helper to create mock entities
 const createMockEntity = (id, isActor = true, isPlayer = false) => ({
@@ -61,21 +62,34 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
     let instance;
     let stopSpy;
     let initialAdvanceTurnSpy;
+    let mockUnsubscribe;
+    let capturedTurnEndedHandler; // <<< To capture the handler function
 
     beforeEach(async () => {
         jest.clearAllMocks();
+        capturedTurnEndedHandler = null; // Reset captured handler
 
         // --- Reset Mocks ---
         mockEntityManager.activeEntities = new Map();
-        mockTurnOrderService.isEmpty.mockResolvedValue(false); // Default: Queue NOT empty
+        mockTurnOrderService.isEmpty.mockResolvedValue(false);
         mockTurnOrderService.getNextEntity.mockResolvedValue(null);
-        mockDispatcher.dispatchValidated.mockResolvedValue(true);
-        mockTurnOrderService.clearCurrentRound.mockResolvedValue(); // Async if needed
+        mockDispatcher.dispatchValidated.mockClear().mockResolvedValue(true);
+        mockUnsubscribe = jest.fn();
+        // Capture the handler passed to subscribe
+        mockDispatcher.subscribe.mockClear().mockImplementation((eventType, handler) => {
+            if (eventType === 'core:turn_ended') {
+                capturedTurnEndedHandler = handler; // Capture the handler
+            }
+            return mockUnsubscribe; // Return the mock unsubscribe function
+        });
+        mockTurnOrderService.clearCurrentRound.mockResolvedValue();
 
+        mockTurnHandler.startTurn.mockClear().mockResolvedValue(undefined);
         mockTurnHandler.handleTurn.mockClear().mockResolvedValue(undefined);
-        mockTurnHandlerResolver.resolveHandler.mockClear();
-        mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler); // Default return
+        mockTurnHandler.destroy.mockClear().mockResolvedValue(undefined);
+        mockTurnHandlerResolver.resolveHandler.mockClear().mockResolvedValue(mockTurnHandler);
 
+        // --- Instantiate TurnManager ---
         instance = new TurnManager({
             logger: mockLogger,
             dispatcher: mockDispatcher,
@@ -84,12 +98,17 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
             turnHandlerResolver: mockTurnHandlerResolver
         });
 
-        stopSpy = jest.spyOn(instance, 'stop').mockImplementation(async () => {});
+        stopSpy = jest.spyOn(instance, 'stop').mockImplementation(async () => {
+        });
 
-        // --- Set instance to running state (suppressing initial advanceTurn) ---
-        initialAdvanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockImplementationOnce(async () => {});
+        // --- Start instance (this calls subscribe and captures the handler) ---
+        initialAdvanceTurnSpy = jest.spyOn(instance, 'advanceTurn').mockImplementationOnce(async () => {
+        });
         await instance.start();
         initialAdvanceTurnSpy.mockRestore();
+
+        // Expect that the handler was captured during start()
+        expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
 
         // --- Clear mocks called during setup ---
         mockLogger.info.mockClear();
@@ -100,210 +119,204 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
         mockTurnOrderService.isEmpty.mockClear();
         mockTurnOrderService.getNextEntity.mockClear();
         mockTurnHandlerResolver.resolveHandler.mockClear();
+        mockTurnHandler.startTurn.mockClear();
         mockTurnHandler.handleTurn.mockClear();
+        mockTurnHandler.destroy.mockClear();
 
-        // Re-apply default mocks needed for tests in this block
+        // Re-apply default mocks needed post-setup
         mockTurnOrderService.isEmpty.mockResolvedValue(false);
         mockDispatcher.dispatchValidated.mockResolvedValue(true);
         mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler);
-        mockTurnHandler.handleTurn.mockResolvedValue(undefined);
+        mockTurnHandler.startTurn.mockResolvedValue(undefined);
     });
 
-    afterEach(() => {
-        if (stopSpy) stopSpy.mockRestore();
-        // initialAdvanceTurnSpy is restored in beforeEach
+    afterEach(async () => {
+        // Ensure stop is called to potentially trigger unsubscribe
+        if (instance && instance['#isRunning']) {
+            await instance.stop();
+        } else if (stopSpy) {
+            stopSpy.mockRestore();
+        }
         instance = null;
+        capturedTurnEndedHandler = null;
+        // Ensure timers are restored if a test fails before useRealTimers
+        jest.useRealTimers();
     });
 
-    // --- Updated Test Cases ---
+    // --- Test Cases ---
 
-    test('Player actor identified: resolves handler, calls handleTurn', async () => {
+    test('Player actor identified: resolves handler, calls startTurn, dispatches event', async () => {
+        // --- FIX: Enable fake timers for this test ---
+        jest.useFakeTimers();
+        // --- END FIX ---
+
         // Arrange
-        const playerActor = createMockEntity('player-1', true, true); // isPlayer = true
-        const entityType = 'player'; // Define expected type
+        const playerActor = createMockEntity('player-1', true, true);
+        const entityType = 'player';
         mockTurnOrderService.getNextEntity.mockResolvedValue(playerActor);
-        mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler);
 
         // Act
-        await instance.advanceTurn();
+        await instance.advanceTurn(); // Initiates the turn
 
-        // Assert
+        // Assert initial actions
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
         expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-        // --- FIX START: Correct log message format ---
-        expect(mockLogger.info).toHaveBeenCalledWith(`>>> Starting turn for Entity: ${playerActor.id} (${entityType}) <<<`);
-        // --- FIX END ---
-        expect(mockLogger.debug).toHaveBeenCalledWith(`Resolving turn handler for entity ${playerActor.id}...`);
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('identified as type:'));
-        // Verify resolver call
-        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);
-        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(playerActor);
-        // Verify handler call
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Calling handleTurn on ${mockTurnHandler.constructor.name}`));
-        expect(mockTurnHandler.handleTurn).toHaveBeenCalledTimes(1);
-        expect(mockTurnHandler.handleTurn).toHaveBeenCalledWith(playerActor);
-        // --- FIX START: Correct log message for handleTurn completion ---
-        // Note: The code actually logs "handleTurn promise resolved..." now.
-        // If the handler calls advanceTurn, further logs would appear AFTER this promise resolves.
-        // This assertion checks that the promise resolution was logged *before* waiting for advanceTurn.
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`handleTurn promise resolved for ${mockTurnHandler.constructor.name} for entity ${playerActor.id}`));
-        // --- FIX END ---
-        expect(stopSpy).not.toHaveBeenCalled();
-        // --- FIX START: Check core:turn_started dispatch ---
+        expect(mockLogger.info).toHaveBeenCalledWith(`>>> Starting turn initiation for Entity: ${playerActor.id} (${entityType}) <<<`);
         expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith('core:turn_started', {
             entityId: playerActor.id,
             entityType: entityType
         });
-        // --- FIX END ---
+        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(playerActor);
+        expect(mockTurnHandler.startTurn).toHaveBeenCalledWith(playerActor);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Turn initiation for ${playerActor.id} started via ${mockTurnHandler.constructor.name}. TurnManager now WAITING for 'core:turn_ended' event.`));
+        expect(stopSpy).not.toHaveBeenCalled();
+
+        // Simulate the turn ending by calling the captured handler
+        expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
+        capturedTurnEndedHandler({entityId: playerActor.id, success: true});
+
+        // Advance timers to process the setTimeout in the handler
+        await jest.runAllTimersAsync(); // <<< This should now work
+        expect(mockTurnHandler.destroy).toHaveBeenCalledTimes(1); // Check handler cleanup
+
+        // --- FIX: Disable fake timers ---
+        jest.useRealTimers();
+        // --- END FIX ---
     });
 
-    test('AI actor identified: resolves handler, calls handleTurn', async () => {
+    test('AI actor identified: resolves handler, calls startTurn, dispatches event', async () => {
+        // --- FIX: Enable fake timers for this test ---
+        jest.useFakeTimers();
+        // --- END FIX ---
+
         // Arrange
-        const aiActor = createMockEntity('ai-goblin', true, false); // isPlayer = false
-        const entityType = 'ai'; // Define expected type
+        const aiActor = createMockEntity('ai-goblin', true, false);
+        const entityType = 'ai';
         mockTurnOrderService.getNextEntity.mockResolvedValue(aiActor);
-        mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler);
 
         // Act
         await instance.advanceTurn();
 
-        // Assert
+        // Assert initial actions
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
         expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-        // --- FIX START: Correct log message format ---
-        expect(mockLogger.info).toHaveBeenCalledWith(`>>> Starting turn for Entity: ${aiActor.id} (${entityType}) <<<`);
-        // --- FIX END ---
-        expect(mockLogger.debug).toHaveBeenCalledWith(`Resolving turn handler for entity ${aiActor.id}...`);
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('identified as type:'));
-        // Verify resolver call
-        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);
-        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(aiActor);
-        // Verify handler call
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Calling handleTurn on ${mockTurnHandler.constructor.name}`));
-        expect(mockTurnHandler.handleTurn).toHaveBeenCalledTimes(1);
-        expect(mockTurnHandler.handleTurn).toHaveBeenCalledWith(aiActor);
-        // --- FIX START: Correct log message for handleTurn completion ---
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`handleTurn promise resolved for ${mockTurnHandler.constructor.name} for entity ${aiActor.id}`));
-        // --- FIX END ---
-        expect(stopSpy).not.toHaveBeenCalled();
-        // --- FIX START: Check core:turn_started dispatch ---
+        expect(mockLogger.info).toHaveBeenCalledWith(`>>> Starting turn initiation for Entity: ${aiActor.id} (${entityType}) <<<`);
         expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith('core:turn_started', {
             entityId: aiActor.id,
             entityType: entityType
         });
-        // --- FIX END ---
+        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(aiActor);
+        expect(mockTurnHandler.startTurn).toHaveBeenCalledWith(aiActor);
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Turn initiation for ${aiActor.id} started via ${mockTurnHandler.constructor.name}. TurnManager now WAITING for 'core:turn_ended' event.`));
+        expect(stopSpy).not.toHaveBeenCalled();
+
+        // Simulate the turn ending by calling the captured handler
+        expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
+        capturedTurnEndedHandler({entityId: aiActor.id, success: true});
+
+        // Advance timers to process the setTimeout in the handler
+        await jest.runAllTimersAsync(); // <<< This should now work
+        expect(mockTurnHandler.destroy).toHaveBeenCalledTimes(1);
+
+        // --- FIX: Disable fake timers ---
+        jest.useRealTimers();
+        // --- END FIX ---
     });
 
-    test('Handles handleTurn rejection gracefully (error logged, advances turn)', async () => {
+    test('Handles startTurn initiation rejection gracefully (error logged, dispatches error, advances turn)', async () => {
         // Arrange
-        const aiActor = createMockEntity('ai-reject-handler', true, false);
-        const entityType = 'ai';
+        const aiActor = createMockEntity('ai-reject-start', true, false);
         mockTurnOrderService.getNextEntity.mockResolvedValue(aiActor);
-        const handlerError = new Error("Handler action failed");
-        const expectedErrorMsg = `Error during turn handling resolution or execution for entity ${aiActor.id}: ${handlerError.message}`;
+        const handlerError = new Error("StartTurn action failed during initiation");
+        const expectedLogMsg = `Error during handler.startTurn() initiation for entity ${aiActor.id} (${mockTurnHandler.constructor.name}): ${handlerError.message}`;
+        const expectedDispatchDetails = `Error initiating turn for ${aiActor.id}.`;
 
         mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler);
-        mockTurnHandler.handleTurn.mockRejectedValue(handlerError);
+        mockTurnHandler.startTurn.mockRejectedValue(handlerError);
 
         const advanceTurnRecurseSpy = jest.spyOn(instance, 'advanceTurn');
-        let callCount = 0;
-        advanceTurnRecurseSpy.mockImplementation(async () => {
-            callCount++;
-            if (callCount === 1) {
-                await Reflect.apply(TurnManager.prototype.advanceTurn, instance, []);
-            } else {
-                mockLogger.debug('Recursive advanceTurn call after error suppressed by mock.');
-            }
-        });
+        // Use fake timers AND spy on global.setTimeout
+        jest.useFakeTimers();
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
 
         // Act
-        await expect(instance.advanceTurn()).resolves.toBeUndefined();
+        await instance.advanceTurn();
 
-        // Assert side effects *during* the first call
-        expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-        expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(aiActor);
-        expect(mockTurnHandler.handleTurn).toHaveBeenCalledWith(aiActor);
+        // Assert startTurn called and rejected
+        expect(mockTurnHandler.startTurn).toHaveBeenCalledWith(aiActor);
 
-        // Assert error handling logs
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg, handlerError);
-        expect(mockLogger.warn).toHaveBeenCalledWith(`Attempting to advance turn after handling error for actor ${aiActor.id}.`);
-
-        // --- FIX START: Correct dispatch expectations ---
-        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // turn_started AND system_error
-        // 1. Check core:turn_started
-        expect(mockDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'core:turn_started', {
-            entityId: aiActor.id,
-            entityType: entityType
-        });
-        // 2. Check core:system_error_occurred
-        expect(mockDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'core:system_error_occurred', {
-            message: `Error during turn processing for ${aiActor.id}. Attempting recovery.`, // Check specific message
+        // Assert error logging and dispatch
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMsg, handlerError);
+        // The #dispatchSystemError helper extracts the error message for details
+        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith('core:system_error_occurred', {
+            message: expectedDispatchDetails,
             type: 'error',
-            details: expectedErrorMsg // Check specific details
+            details: handlerError.message // Expecting the raw error message here
         });
-        // --- FIX END ---
+        expect(mockLogger.warn).toHaveBeenCalledWith(`Manually advancing turn after startTurn initiation failure for ${aiActor.id}.`);
 
-        // Assert the recursive call happened
-        expect(advanceTurnRecurseSpy).toHaveBeenCalledTimes(2);
-        expect(mockLogger.debug).toHaveBeenCalledWith('Recursive advanceTurn call after error suppressed by mock.');
+        // Assert on the setTimeout spy
+        expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+        expect(setTimeoutSpy).toHaveBeenLastCalledWith(expect.any(Function), 0);
 
+        // Fast-forward timers
+        jest.runOnlyPendingTimers();
+
+        // Assert advanceTurn was called again
+        expect(advanceTurnRecurseSpy).toHaveBeenCalledTimes(2); // Initial + recursive
         expect(stopSpy).not.toHaveBeenCalled();
+
+        // Cleanup spy and timers
+        setTimeoutSpy.mockRestore();
+        jest.useRealTimers();
         advanceTurnRecurseSpy.mockRestore();
     });
 
-    test('Handles resolver failure gracefully (error logged, advances turn)', async () => {
+    test('Handles resolver failure gracefully (critical error logged, dispatches error, stops)', async () => {
         // Arrange
         const playerActor = createMockEntity('player-no-resolver', true, true);
-        const entityType = 'player';
+        const entityType = 'player'; // <<< Added for turn_started check
         mockTurnOrderService.getNextEntity.mockResolvedValue(playerActor);
         const resolveError = new Error("Cannot resolve handler");
-        const expectedErrorMsg = `Error during turn handling resolution or execution for entity ${playerActor.id}: ${resolveError.message}`;
 
         mockTurnHandlerResolver.resolveHandler.mockRejectedValue(resolveError);
 
         const advanceTurnRecurseSpy = jest.spyOn(instance, 'advanceTurn');
-        let callCount = 0;
-        advanceTurnRecurseSpy.mockImplementation(async () => {
-            callCount++;
-            if (callCount === 1) {
-                await Reflect.apply(TurnManager.prototype.advanceTurn, instance, []);
-            } else {
-                mockLogger.debug('Recursive advanceTurn call after error suppressed by mock.');
-            }
-        });
+        // No fake timers needed here
 
         // Act
-        await expect(instance.advanceTurn()).resolves.toBeUndefined();
+        await instance.advanceTurn();
 
-        // Assert
+        // Assert resolution attempted
         expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(playerActor);
-        expect(mockTurnHandler.handleTurn).not.toHaveBeenCalled(); // Handler should not be called
+        expect(mockTurnHandler.startTurn).not.toHaveBeenCalled();
 
-        // Assert error handling logs
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg, resolveError);
-        expect(mockLogger.warn).toHaveBeenCalledWith(`Attempting to advance turn after handling error for actor ${playerActor.id}.`);
+        // Assert critical error logging, dispatch, and stop
+        // 1. Logger gets the prefixed message
+        const expectedLogMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${resolveError.message}`;
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMsg, resolveError);
 
-        // --- FIX START: Correct dispatch expectations ---
-        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(2); // turn_started AND system_error
-        // 1. Check core:turn_started
-        expect(mockDispatcher.dispatchValidated).toHaveBeenNthCalledWith(1, 'core:turn_started', {
-            entityId: playerActor.id,
-            entityType: entityType
+        // 2. Dispatcher gets turn_started before the error happens
+        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith('core:turn_started', {
+            entityId: playerActor.id, entityType: entityType
         });
-        // 2. Check core:system_error_occurred
-        expect(mockDispatcher.dispatchValidated).toHaveBeenNthCalledWith(2, 'core:system_error_occurred', {
-            message: `Error during turn processing for ${playerActor.id}. Attempting recovery.`, // Check specific message
+
+        // 3. Dispatcher gets system_error_occurred with the raw error message in details
+        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith('core:system_error_occurred', {
+            message: 'System Error during turn advancement. Stopping game.',
             type: 'error',
-            details: expectedErrorMsg // Check specific details
+            // --- CORRECTION START ---
+            details: resolveError.message // Expect the raw message as per #dispatchSystemError logic
+            // --- CORRECTION END ---
         });
-        // --- FIX END ---
 
-        // Assert the recursive call happened
-        expect(advanceTurnRecurseSpy).toHaveBeenCalledTimes(2);
-        expect(mockLogger.debug).toHaveBeenCalledWith('Recursive advanceTurn call after error suppressed by mock.');
+        // 4. Stop is called
+        expect(stopSpy).toHaveBeenCalledTimes(1);
 
-        expect(stopSpy).not.toHaveBeenCalled();
+        // advanceTurn should NOT have been called recursively in this critical path
+        expect(advanceTurnRecurseSpy).toHaveBeenCalledTimes(1);
+
+        // Clean up spy
         advanceTurnRecurseSpy.mockRestore();
     });
 

@@ -1,19 +1,17 @@
 // src/core/config/registrations/infrastructureRegistrations.js
+// ****** MODIFIED FILE ******
+
 import EventBus from '../../eventBus.js';
 import SpatialIndexManager from '../../spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import {GameDataRepository} from '../../services/gameDataRepository.js';
 import EntityManager from '../../../entities/entityManager.js';
 import ValidatedEventDispatcher from '../../../services/validatedEventDispatcher.js'; // Concrete Class Import
+import {SafeEventDispatcher} from '../../utils/safeEventDispatcher.js';
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import {SystemServiceRegistry} from "../../services/systemServiceRegistry.js";
 import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
-
-// Assuming ActionLoader and EventLoader tokens exist and loaders are registered elsewhere
-// (e.g., in loaderRegistrations.js)
-// Example: import ActionLoader from '../../services/actionLoader.js';
-// Example: import EventLoader from '../../services/eventLoader.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -30,6 +28,8 @@ import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
  * @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher // For WorldLoader & Self
+ * @typedef {import('../../utils/safeEventDispatcher.js').default} SafeEventDispatcher // >>> ADDED <<<
+ * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher // For SafeEventDispatcher
  */
 
 export function registerInfrastructure(container) {
@@ -96,6 +96,17 @@ export function registerInfrastructure(container) {
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     }), {lifecycle: 'singleton'});
     log.debug(`Infrastructure Registration: Registered ${tokens.IValidatedEventDispatcher}.`);
+
+
+    // >>> Register SafeEventDispatcher <<<
+    // Depends on IValidatedEventDispatcher and ILogger. Registered against ISafeEventDispatcher token.
+    // NOTE: Assumes SafeEventDispatcher exists at src/core/utils/safeEventDispatcher.js
+    // and its constructor takes an object { validatedEventDispatcher, logger }.
+    r.singletonFactory(tokens.ISafeEventDispatcher, c => new SafeEventDispatcher({
+        validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+    }));
+    log.debug(`Infrastructure Registration: Registered ${tokens.ISafeEventDispatcher}.`);
 
 
     r.singletonFactory(tokens.SystemServiceRegistry, c => new SystemServiceRegistry(

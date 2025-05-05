@@ -1,5 +1,5 @@
 // src/core/config/tokens.js
-// ****** CORRECTED FILE ******
+// ****** MODIFIED FILE ******
 
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -69,8 +69,11 @@
  * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
  * @property {DiToken} SystemDataRegistry - Token for the registry mapping system IDs to data sources.
+ * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting.
+ * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes. // <<< ADDED (Ticket 5.3)
  *
  * --- Core Service Interfaces ---
+ * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
  * @property {DiToken} IActionExecutor - Token for executing game actions interface.
  * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
@@ -80,6 +83,9 @@
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
+ * @property {DiToken} ICommandInputPort - Token for the command input port interface.
+ * @property {DiToken} IPromptOutputPort - Token for the prompt output port interface.
+ * @property {DiToken} ITurnEndPort - Token for the turn end port interface.
  *
  * --- Quest Services ---
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
@@ -187,17 +193,23 @@ export const tokens = Object.freeze({
     AITurnHandler: 'AITurnHandler',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
+    PlayerPromptService: 'PlayerPromptService',
+    CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
 
     // Core Service Interfaces
+    ISafeEventDispatcher: 'ISafeEventDispatcher',
     IValidatedEventDispatcher: 'IValidatedEventDispatcher',
     IActionExecutor: 'IActionExecutor',
     IWorldContext: 'IWorldContext',
     ICommandParser: 'ICommandParser',
     ICommandProcessor: 'ICommandProcessor',
     IActionDiscoverySystem: 'IActionDiscoverySystem',
-    IInputHandler: 'IInputHandler',
+    IInputHandler: 'IInputHandler', // May become obsolete
     ITurnOrderService: 'ITurnOrderService',
     ITurnManager: 'ITurnManager',
+    ICommandInputPort: 'ICommandInputPort',
+    IPromptOutputPort: 'IPromptOutputPort',
+    ITurnEndPort: 'ITurnEndPort',
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',

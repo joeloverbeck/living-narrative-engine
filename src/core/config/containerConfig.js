@@ -1,4 +1,5 @@
 // src/core/config/containerConfig.js
+// ****** MODIFIED FILE ******
 
 // --- Import DI tokens & helpers ---
 import {tokens} from './tokens.js'; // Corrected path assuming tokens.js is in the same directory
@@ -11,7 +12,7 @@ import ConsoleLogger from '../services/consoleLogger.js'; // Corrected path assu
 // --- Import necessary types for registry population ---
 /** @typedef {import('../services/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
 /** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */ // <<< ADDED Ticket #7
+/** @typedef {import('../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 
 // --- Import registration bundle functions ---
 import {registerLoaders} from './registrations/loadersRegistrations.js';
@@ -22,7 +23,8 @@ import {registerCoreSystems} from './registrations/coreSystemsRegistrations.js';
 import {registerInterpreters} from './registrations/interpreterRegistrations.js';
 import {registerInitializers} from './registrations/initializerRegistrations.js';
 import {registerRuntime} from './registrations/runtimeRegistrations.js';
-import {registerOrchestration} from './registrations/orchestrationRegistrations.js'; // <<< ADDED
+import {registerOrchestration} from './registrations/orchestrationRegistrations.js';
+import { registerAdapters } from './registrations/adapterRegistrations.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
 
@@ -55,17 +57,23 @@ export function configureContainer(
     // --- Core data infrastructure -------------------------------------------
     registerLoaders(container);
     // Infrastructure must come after Loaders if loaders define interfaces used here
-    registerInfrastructure(container); // Registers SystemServiceRegistry, GameDataRepository, SystemDataRegistry (Ticket #7)
+    registerInfrastructure(container); // Registers SystemServiceRegistry, GameDataRepository, SystemDataRegistry (Ticket #7), IValidatedEventDispatcher, ISafeEventDispatcher
 
     // --- UI (needs ValidatedEventDispatcher from infrastructure) ------------
     // Pass outputDiv and titleElement along, and assume document is globally accessible or handle differently
     registerUI(container, {outputDiv, inputElement, titleElement, document: window.document}); // Pass required elements + document
 
     // --- Pure domain‑logic services -----------------------------------------
-    registerDomainServices(container);
+    registerDomainServices(container); // Registers CommandProcessor, ActionExecutor etc.
+
+    // --- Port Adapters (depend on infrastructure, domain services) ----------
+    // >>> ADDED: Register Port Adapters <<<
+    // Need to be registered after dispatchers (infra) are available.
+    registerAdapters(container); // Registers ICommandInputPort, IPromptOutputPort, ITurnEndPort implementations
 
     // --- Feature / gameplay bundles -----------------------------------------
-    registerCoreSystems(container);
+    // These might depend on the Ports/Adapters in the future, so register Adapters first.
+    registerCoreSystems(container); // Registers TurnManager, Player/AI Turn Handlers etc.
 
     // --- Logic interpretation layer -----------------------------------------
     registerInterpreters(container); // Register handlers and interpreters
@@ -74,7 +82,7 @@ export function configureContainer(
     registerInitializers(container);
 
     // --- Runtime loop & input plumbing --------------------------------------
-    registerRuntime(container); // Registers GameLoop
+    registerRuntime(container); // Registers InputSetupService
 
     // --- High-level Orchestration Services (Init/Shutdown) -----------------
     // <<< ADDED: Register orchestration services AFTER their dependencies (Logger, VED, GameLoop) are registered.

@@ -35,15 +35,18 @@ const mockLogger = {
     debug: jest.fn(),
 };
 
+// *** FIXED: Added mock for the 'subscribe' method ***
 const mockDispatcher = {
     dispatchValidated: jest.fn(),
-};
-
-// *** FIXED: Mock ITurnHandlerResolver with the CORRECT method name ***
-const mockTurnHandlerResolver = {
-    resolveHandler: jest.fn(), // <<< CORRECTED METHOD NAME
+    subscribe: jest.fn(() => jest.fn()), // Mock subscribe to return a mock unsubscribe function
 };
 // --- END FIXED ---
+
+
+const mockTurnHandlerResolver = {
+    resolveHandler: jest.fn(),
+};
+
 
 // Helper function to create basic mock entities
 const createMockEntity = (id, isActor = false, isPlayer = false) => {
@@ -79,9 +82,12 @@ describe('TurnManager', () => {
         mockTurnOrderService.isEmpty.mockResolvedValue(true);
         mockTurnOrderService.getNextEntity.mockResolvedValue(null);
         mockDispatcher.dispatchValidated.mockResolvedValue(true);
-        // *** FIXED: Reset the CORRECT mock method ***
+        // *** FIXED: Reset the new mock method too ***
+        mockDispatcher.subscribe.mockClear();
+        // Make sure the inner unsubscribe mock is also cleared/reset if needed,
+        // though jest.clearAllMocks() might handle the return value mock.
+        // If issues arise, you might need explicit reset logic for the returned function.
         mockTurnHandlerResolver.resolveHandler.mockClear();
-        // Default needed? Probably not for these base tests, but doesn't hurt
         mockTurnHandlerResolver.resolveHandler.mockResolvedValue(null);
 
 
@@ -90,14 +96,14 @@ describe('TurnManager', () => {
         mockAiEntity1 = createMockEntity('ai-1', true, false);
         mockAiEntity2 = createMockEntity('ai-2', true, false);
 
-        // *** FIXED: Instantiate TurnManager with the CORRECT mock resolver ***
+        // *** FIXED: Instantiate TurnManager with the CORRECT dispatcher mock ***
         // Should no longer throw here
         turnManager = new TurnManager({
             turnOrderService: mockTurnOrderService,
             entityManager: mockEntityManager,
             logger: mockLogger,
-            dispatcher: mockDispatcher,
-            turnHandlerResolver: mockTurnHandlerResolver, // Pass corrected mock
+            dispatcher: mockDispatcher, // Pass corrected dispatcher mock
+            turnHandlerResolver: mockTurnHandlerResolver,
         });
 
         // Clear constructor log for cleaner test assertions below if needed
@@ -113,8 +119,8 @@ describe('TurnManager', () => {
             turnOrderService: mockTurnOrderService,
             entityManager: mockEntityManager,
             logger: mockLogger,
-            dispatcher: mockDispatcher,
-            turnHandlerResolver: mockTurnHandlerResolver, // Pass corrected mock
+            dispatcher: mockDispatcher, // Pass corrected dispatcher mock
+            turnHandlerResolver: mockTurnHandlerResolver,
         });
 
         expect(TurnManager).toBeDefined();
@@ -138,6 +144,8 @@ describe('TurnManager', () => {
         mockEntityManager._setActiveEntities(entities);
         expect(Array.from(mockEntityManager.activeEntities.values())).toEqual(entities);
     });
+
+    // Add more tests for start, stop, advanceTurn, etc. later
 
 });
 // --- FILE END ---

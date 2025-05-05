@@ -70,12 +70,13 @@ const createValidMocks = () => ({
         error: jest.fn(),
         debug: jest.fn(),
     },
+    // *** FIXED: Add subscribe method to the valid mock ***
     dispatcher: {
         dispatchValidated: jest.fn(),
+        subscribe: jest.fn(() => jest.fn()), // subscribe should return an unsubscribe function
     },
-    // *** FIXED: Use correct method name 'resolveHandler' in mock ***
     turnHandlerResolver: {
-        resolveHandler: jest.fn(), // <<< CORRECTED METHOD NAME
+        resolveHandler: jest.fn(),
     }
 });
 
@@ -88,7 +89,7 @@ describe('TurnManager', () => {
         mockEntityManager = mocks.entityManager;
         mockLogger = mocks.logger;
         mockDispatcher = mocks.dispatcher;
-        mockTurnHandlerResolver = mocks.turnHandlerResolver; // Assign the corrected mock
+        mockTurnHandlerResolver = mocks.turnHandlerResolver;
 
         // Reset mock EntityManager's internal state
         mockEntityManager._setActiveEntities([]); // Clear entities
@@ -97,8 +98,7 @@ describe('TurnManager', () => {
         mockTurnOrderService.isEmpty.mockResolvedValue(true);
         mockTurnOrderService.getNextEntity.mockResolvedValue(null);
         mockDispatcher.dispatchValidated.mockResolvedValue(true);
-        // *** FIXED: Set default return value for the correct mock method ***
-        mockTurnHandlerResolver.resolveHandler.mockReturnValue({handleTurn: jest.fn()}); // Default valid resolved handler
+        mockTurnHandlerResolver.resolveHandler.mockReturnValue({startTurn: jest.fn()}); // Default valid resolved handler
 
         // Create fresh mock entities for each test run
         mockPlayerEntity = createMockEntity('player-1', true, true);
@@ -110,15 +110,16 @@ describe('TurnManager', () => {
     describe('constructor', () => {
         it('should instantiate successfully with valid dependencies', () => {
             let turnManager;
+            // *** This test should now pass because the mock dispatcher in createValidMocks includes 'subscribe' ***
             expect(() => {
                 turnManager = new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
                     logger: mockLogger,
-                    dispatcher: mockDispatcher,
-                    turnHandlerResolver: mockTurnHandlerResolver, // Pass the corrected mock
+                    dispatcher: mockDispatcher, // This mock now has subscribe
+                    turnHandlerResolver: mockTurnHandlerResolver,
                 });
-            }).not.toThrow(); // This should now pass
+            }).not.toThrow();
 
             expect(turnManager).toBeInstanceOf(TurnManager);
             expect(mockLogger.info).toHaveBeenCalledWith('TurnManager initialized successfully.');
@@ -132,13 +133,15 @@ describe('TurnManager', () => {
             const expectedErrorMsg = 'TurnManager requires a valid ITurnOrderService instance.';
             expect(() => {
                 new TurnManager({
-                    // turnOrderService: undefined,
+                    // turnOrderService: undefined, // Missing
                     entityManager: mockEntityManager,
                     logger: mockLogger,
                     dispatcher: mockDispatcher,
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            // Note: console.error is called directly in the constructor if logger isn't valid yet
+            // We don't explicitly check console.error here as the primary check is the thrown error.
         });
 
         it('should throw an error if turnOrderService is invalid (missing clearCurrentRound)', () => {
@@ -161,7 +164,7 @@ describe('TurnManager', () => {
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
-                    // entityManager: undefined,
+                    // entityManager: undefined, // Missing
                     logger: mockLogger,
                     dispatcher: mockDispatcher,
                     turnHandlerResolver: mockTurnHandlerResolver,
@@ -183,7 +186,7 @@ describe('TurnManager', () => {
             }).toThrow(expectedErrorMsg);
         });
 
-        // Logger (Keep these as they are, assuming console spy logic is intended)
+        // Logger (Keep these as they are)
         it('should throw an error if logger is missing', () => {
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
             });
@@ -192,11 +195,13 @@ describe('TurnManager', () => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
-                    // logger: undefined,
+                    // logger: undefined, // Missing
                     dispatcher: mockDispatcher,
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            // Check console was used as fallback
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             consoleErrorSpy.mockRestore();
         });
 
@@ -214,6 +219,7 @@ describe('TurnManager', () => {
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             consoleErrorSpy.mockRestore();
         });
 
@@ -230,35 +236,60 @@ describe('TurnManager', () => {
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             consoleErrorSpy.mockRestore();
         });
 
         it('should throw an error if logger is invalid (missing error)', () => {
+            // No console spy needed here as the logger.error is expected to exist for the check itself
+            // BUT the constructor uses logger.error *after* the check if other dependencies fail.
+            // Let's spy on console just in case a *different* dependency fails *before* the dispatcher/resolver
+            // and the constructor falls back to console.error because the provided logger is invalid.
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-            const invalidLogger = {...mockLogger, error: undefined};
+            const invalidLogger = {...mockLogger, error: undefined}; // Logger is invalid
             const expectedErrorMsg = 'TurnManager requires a valid ILogger instance.';
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
-                    logger: invalidLogger,
+                    logger: invalidLogger, // Pass the invalid logger
                     dispatcher: mockDispatcher,
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            // Check console was used as fallback
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             consoleErrorSpy.mockRestore();
         });
 
 
-        // Dispatcher (Keep these as they are)
+        // --- Dispatcher validation tests (Corrected) ---
         it('should throw an error if dispatcher is missing', () => {
-            const expectedErrorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance.';
+            // *** FIXED: Expect the NEW error message ***
+            const expectedErrorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
                     logger: mockLogger,
-                    // dispatcher: undefined,
+                    // dispatcher: undefined, // Missing
+                    turnHandlerResolver: mockTurnHandlerResolver,
+                });
+            }).toThrow(expectedErrorMsg);
+            // Check logger was called correctly (since logger is valid here)
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+        });
+
+        it('should throw an error if dispatcher is invalid (missing dispatchValidated)', () => {
+            // *** FIXED: Expect the NEW error message ***
+            const invalidDispatcher = {...mockDispatcher, dispatchValidated: undefined}; // Missing dispatchValidated
+            const expectedErrorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
+            expect(() => {
+                new TurnManager({
+                    turnOrderService: mockTurnOrderService,
+                    entityManager: mockEntityManager,
+                    logger: mockLogger,
+                    dispatcher: invalidDispatcher, // Pass invalid dispatcher
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
@@ -266,49 +297,52 @@ describe('TurnManager', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
         });
 
-        it('should throw an error if dispatcher is invalid (missing dispatchValidated)', () => {
-            const invalidDispatcher = {...mockDispatcher, dispatchValidated: undefined};
-            const expectedErrorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance.';
+        // *** ADDED: New test case for missing subscribe ***
+        it('should throw an error if dispatcher is invalid (missing subscribe)', () => {
+            const invalidDispatcher = {...mockDispatcher, subscribe: undefined}; // Missing subscribe
+            const expectedErrorMsg = 'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
                     logger: mockLogger,
-                    dispatcher: invalidDispatcher,
+                    dispatcher: invalidDispatcher, // Pass invalid dispatcher
                     turnHandlerResolver: mockTurnHandlerResolver,
                 });
             }).toThrow(expectedErrorMsg);
+            // Check logger was called correctly
             expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
         });
+        // <<< END Corrected/Added Dispatcher tests >>>
 
-        // --- TurnHandlerResolver validation tests (Corrected) ---
+
+        // --- TurnHandlerResolver validation tests (Corrected by fixing mock setup) ---
         it('should throw an error if turnHandlerResolver is missing', () => {
-            // *** FIXED: Expect the NEW error message ***
             const expectedErrorMsgRegex = /requires a valid ITurnHandlerResolver instance \(with resolveHandler method\)/;
+            // *** This should now work because mockDispatcher (provided via beforeEach) is valid ***
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
                     logger: mockLogger,
-                    dispatcher: mockDispatcher,
+                    dispatcher: mockDispatcher, // Valid dispatcher is passed
                     // turnHandlerResolver: undefined, // Missing
                 });
             }).toThrow(expectedErrorMsgRegex);
-            // Check logger was called with the correct message part
+            // Check logger was called with the correct message part (use stringContaining for flexibility)
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('requires a valid ITurnHandlerResolver instance (with resolveHandler method)'));
         });
 
-        // *** FIXED: Test description and expected error message ***
         it('should throw an error if turnHandlerResolver is invalid (missing resolveHandler)', () => {
-            // Provide an object that is explicitly missing the 'resolveHandler' function
-            const invalidResolver = { someOtherMethod: jest.fn() };
+            const invalidResolver = { someOtherMethod: jest.fn() }; // Missing resolveHandler
             const expectedErrorMsgRegex = /requires a valid ITurnHandlerResolver instance \(with resolveHandler method\)/;
+            // *** This should now work because mockDispatcher (provided via beforeEach) is valid ***
             expect(() => {
                 new TurnManager({
                     turnOrderService: mockTurnOrderService,
                     entityManager: mockEntityManager,
                     logger: mockLogger,
-                    dispatcher: mockDispatcher,
+                    dispatcher: mockDispatcher, // Valid dispatcher is passed
                     turnHandlerResolver: invalidResolver, // Pass the object missing the correct method
                 });
             }).toThrow(expectedErrorMsgRegex);
