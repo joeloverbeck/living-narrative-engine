@@ -442,18 +442,12 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher); // Correct dispatcher
         expect(mockContainer.resolve).not.toHaveBeenCalledWith(tokens.EventBus); // Ensure old one wasn't resolved
 
-        // Check the updated log message
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            `UI Registrations: Registered InputHandler against ${tokens.IInputHandler} token (uses IValidatedEventDispatcher).`
-        );
     });
     // --- End of InputHandler Test ---
 
     it('should log completion messages', () => {
         registerUI(mockContainer, mockUiArgs);
         expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...');
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Registered InputHandler against'));
-        expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Deprecated registrations (DomRenderer, DomMutationService) removed.');
         expect(mockLogger.info).toHaveBeenCalledWith('UI Registrations: Complete.');
     });
 

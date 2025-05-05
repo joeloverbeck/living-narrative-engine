@@ -2,11 +2,11 @@
 // ****** MODIFIED FILE ******
 
 // --- Import DI tokens & helpers ---
-import {tokens} from './tokens.js'; // Corrected path assuming tokens.js is in the same directory
-import {Registrar} from './registrarHelpers.js'; // Corrected path assuming registrarHelpers.js is one level up
+import {tokens} from './tokens.js';
+import {Registrar} from './registrarHelpers.js';
 
 // --- Import Logger ---
-import ConsoleLogger from '../services/consoleLogger.js'; // Corrected path assuming consoleLogger is in ../services/
+import ConsoleLogger from '../services/consoleLogger.js';
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 // --- Import necessary types for registry population ---
@@ -20,11 +20,11 @@ import {registerInfrastructure} from './registrations/infrastructureRegistration
 import {registerUI} from './registrations/uiRegistrations.js';
 import {registerDomainServices} from './registrations/domainServicesRegistrations.js';
 import {registerCoreSystems} from './registrations/coreSystemsRegistrations.js';
-import {registerInterpreters} from './registrations/interpreterRegistrations.js';
+import {registerInterpreters} from './registrations/interpreterRegistrations.js'; // <<< Keep import
 import {registerInitializers} from './registrations/initializerRegistrations.js';
 import {registerRuntime} from './registrations/runtimeRegistrations.js';
 import {registerOrchestration} from './registrations/orchestrationRegistrations.js';
-import { registerAdapters } from './registrations/adapterRegistrations.js';
+import {registerAdapters} from './registrations/adapterRegistrations.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
 
@@ -32,7 +32,7 @@ import { registerAdapters } from './registrations/adapterRegistrations.js';
  * Configures the application's dependency‑injection container.
  *
  * The function now delegates all granular registrations to small, focused
- * "bundle" modules.  This keeps the file readable while preserving the
+ * "bundle" modules. This keeps the file readable while preserving the
  * explicit start‑up order.
  *
  * @param {AppContainer} container
@@ -54,53 +54,46 @@ export function configureContainer(
     const logger = container.resolve(tokens.ILogger);
     logger.info('Container Config: starting bundle registration…');
 
-    // --- Core data infrastructure -------------------------------------------
+    // --- Registration Order ---
+    // 1. Loaders & Core Infrastructure (Data access, basic services)
     registerLoaders(container);
-    // Infrastructure must come after Loaders if loaders define interfaces used here
-    registerInfrastructure(container); // Registers SystemServiceRegistry, GameDataRepository, SystemDataRegistry (Ticket #7), IValidatedEventDispatcher, ISafeEventDispatcher
+    registerInfrastructure(container); // Registers EventDispatchers, Registries etc.
 
-    // --- UI (needs ValidatedEventDispatcher from infrastructure) ------------
-    // Pass outputDiv and titleElement along, and assume document is globally accessible or handle differently
-    registerUI(container, {outputDiv, inputElement, titleElement, document: window.document}); // Pass required elements + document
+    // 2. UI Layer (Depends on Infrastructure like EventDispatchers)
+    registerUI(container, {outputDiv, inputElement, titleElement, document: window.document});
 
-    // --- Pure domain‑logic services -----------------------------------------
-    registerDomainServices(container); // Registers CommandProcessor, ActionExecutor etc.
+    // 3. Domain Logic Services (Business rules, core calculations)
+    registerDomainServices(container); // Registers CommandProcessor, PlayerPromptService etc.
 
-    // --- Port Adapters (depend on infrastructure, domain services) ----------
-    // >>> ADDED: Register Port Adapters <<<
-    // Need to be registered after dispatchers (infra) are available.
+    // 4. Logic Interpretation Layer (Depends on Domain Services, Infrastructure) // <<< MOVED UP
+    registerInterpreters(container); // Registers CommandOutcomeInterpreter, OperationInterpreter etc.
+
+    // 5. Port Adapters (Depends on Infrastructure, Domain Services)
     registerAdapters(container); // Registers ICommandInputPort, IPromptOutputPort, ITurnEndPort implementations
 
-    // --- Feature / gameplay bundles -----------------------------------------
-    // These might depend on the Ports/Adapters in the future, so register Adapters first.
+    // 6. Core Systems & Gameplay Bundles (Depends on Interpreters, Adapters, Domain Services) // <<< ORDER CHANGED
     registerCoreSystems(container); // Registers TurnManager, Player/AI Turn Handlers etc.
 
-    // --- Logic interpretation layer -----------------------------------------
-    registerInterpreters(container); // Register handlers and interpreters
-
-    // --- Initializers (Sub-components like SystemInitializer, not the main orchestration) ---
+    // 7. Initializers (Depend on registered systems/services)
     registerInitializers(container);
 
-    // --- Runtime loop & input plumbing --------------------------------------
-    registerRuntime(container); // Registers InputSetupService
+    // 8. Runtime loop & input plumbing (Depends on various services)
+    registerRuntime(container);
 
-    // --- High-level Orchestration Services (Init/Shutdown) -----------------
-    // <<< ADDED: Register orchestration services AFTER their dependencies (Logger, VED, GameLoop) are registered.
+    // 9. High-level Orchestration Services (Depend on initializers, runtime)
     registerOrchestration(container);
 
     logger.info('Container Config: all core bundles registered.');
 
     // --- Populate Registries (Post-Registration Steps) ---
-    // This section executes *after* all service registrations are complete,
-    // ensuring the required instances are available for resolution.
-
-    // --- Populate SystemServiceRegistry (Sub-Ticket 6.6) ---
+    // (Keep this section as it was)
+    // --- Populate SystemServiceRegistry ---
     try {
         logger.debug('Container Config: Populating SystemServiceRegistry...');
         const systemServiceRegistry = /** @type {SystemServiceRegistry} */ (
             container.resolve(tokens.SystemServiceRegistry)
         );
-        const gameDataRepoForSSR = /** @type {GameDataRepository} */ ( // Renamed to avoid conflict below
+        const gameDataRepoForSSR = /** @type {GameDataRepository} */ (
             container.resolve(tokens.GameDataRepository)
         );
         const serviceKey = 'GameDataRepository';
@@ -112,33 +105,21 @@ export function configureContainer(
         throw new Error(`Failed to populate SystemServiceRegistry: ${error.message}`);
     }
 
-    // --- Populate SystemDataRegistry (Ticket #7) ---
+    // --- Populate SystemDataRegistry ---
     try {
         logger.debug('Container Config: Populating SystemDataRegistry...');
-
-        // 1. Resolve the SystemDataRegistry instance (registered in infrastructureRegistrations)
         const systemDataRegistry = /** @type {SystemDataRegistry} */ (
             container.resolve(tokens.SystemDataRegistry)
         );
-
-        // 2. Resolve the GameDataRepository instance (registered in infrastructureRegistrations)
         const gameDataRepo = /** @type {GameDataRepository} */ (
             container.resolve(tokens.GameDataRepository)
         );
-
-        // 3. Define the string key (as per ticket description)
         const dataSourceKey = 'GameDataRepository';
-
-        // 4. Call the registry's registration method
         logger.debug(`Container Config: Registering data source '${dataSourceKey}' in SystemDataRegistry...`);
-        systemDataRegistry.registerSource(dataSourceKey, gameDataRepo); // AC: GameDataRepository registered with ID "GameDataRepository"
-
+        systemDataRegistry.registerSource(dataSourceKey, gameDataRepo);
         logger.info(`Container Config: Data source '${dataSourceKey}' successfully registered in SystemDataRegistry.`);
-
     } catch (error) {
-        // Log an error if resolution or registration fails
         logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', error);
-        // Re-throw the error to potentially halt application startup if essential
         throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`);
     }
     // --- End SystemDataRegistry Population ---

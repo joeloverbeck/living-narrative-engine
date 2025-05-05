@@ -277,16 +277,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     "PlayerTurnHandler",
     [Function],
     {
-      "dependencies": [
-        "ILogger",
-        "IActionDiscoverySystem",
-        "IValidatedEventDispatcher",
-        "ICommandProcessor",
-        "IWorldContext",
-        "EntityManager",
-        "GameDataRepository",
-      ],
-      "lifecycle": "singleton",
+      "lifecycle": "singletonFactory",
       "tags": [
         "shutdownable",
       ],

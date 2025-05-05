@@ -1,14 +1,16 @@
 // src/core/config/registrations/interpreterRegistrations.js
+// ****** MODIFIED FILE ******
 
 /**
  * @fileoverview Registers the logic interpretation layer services:
- * OperationRegistry, OperationInterpreter, SystemLogicInterpreter, and their handlers.
+ * OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CommandOutcomeInterpreter, and their handlers. // <<< Updated description
  */
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
-/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */ // Corrected path
+/** @typedef {import('../../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */ // Corrected path
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -19,6 +21,7 @@ import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 import OperationRegistry from '../../../logic/operationRegistry.js';
 import OperationInterpreter from '../../../logic/operationInterpreter.js';
 import SystemLogicInterpreter from '../../../logic/systemLogicInterpreter.js';
+import CommandOutcomeInterpreter from '../../interpreters/commandOutcomeInterpreter.js'; // <<< ADDED IMPORT
 
 // --- Handler Imports ---
 import DispatchEventHandler from '../../../logic/operationHandlers/dispatchEventHandler.js';
@@ -33,7 +36,7 @@ import QuerySystemDataHandler from '../../../logic/operationHandlers/querySystem
 
 /**
  * Registers the OperationRegistry, OperationInterpreter, SystemLogicInterpreter,
- * and all associated Operation Handlers.
+ * CommandOutcomeInterpreter, and all associated Operation Handlers. // <<< Updated description
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -44,6 +47,16 @@ export function registerInterpreters(container) {
     const logger = container.resolve(tokens.ILogger);
     logger.info('Interpreter Registrations: Starting...');
 
+    // --- Register CommandOutcomeInterpreter FIRST (needed by PlayerTurnHandler, registered later) --- // <<< ADDED BLOCK
+    registrar.singletonFactory(tokens.CommandOutcomeInterpreter, c => new CommandOutcomeInterpreter({
+        logger: c.resolve(tokens.ILogger),
+        dispatcher: c.resolve(tokens.ISafeEventDispatcher) // Uses ISafeEventDispatcher
+    }));
+    logger.debug('Interpreter Registrations: Registered CommandOutcomeInterpreter.');
+    // --- END ADDED BLOCK ---
+
+
+    // --- Register Operation Handlers ---
     registrar.singletonFactory(tokens.DispatchEventHandler, c => new DispatchEventHandler({
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher)
@@ -91,6 +104,7 @@ export function registerInterpreters(container) {
     logger.debug('Interpreter Registrations: Registered QuerySystemDataHandler.');
 
 
+    // --- Register OperationRegistry (aggregates handlers) ---
     registrar.singletonFactory(tokens.OperationRegistry, (c) => {
         const internalLogger = c.resolve(tokens.ILogger);
         const registry = new OperationRegistry({logger: internalLogger});
@@ -128,7 +142,7 @@ export function registerInterpreters(container) {
     });
     logger.info('Interpreter Registrations: Registered OperationRegistry factory.');
 
-
+    // --- Register Interpreters (depend on registry/handlers) ---
     registrar.singletonFactory(tokens.OperationInterpreter, c => new OperationInterpreter({
         logger: c.resolve(tokens.ILogger),
         operationRegistry: c.resolve(tokens.OperationRegistry)

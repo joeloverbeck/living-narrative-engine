@@ -166,11 +166,6 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         undefined,                            // Command callback (can be set later)
         c.resolve(tokens.IValidatedEventDispatcher) // *** UPDATED DEPENDENCY ***
     ));
-    // Updated warning message
-    logger.warn(`UI Registrations: Registered InputHandler against ${tokens.IInputHandler} token (uses IValidatedEventDispatcher).`);
-
-    // --- 5. Removed Registrations ---
-    logger.info('UI Registrations: Deprecated registrations (DomRenderer, DomMutationService) removed.');
 
     logger.info('UI Registrations: Complete.');
 }

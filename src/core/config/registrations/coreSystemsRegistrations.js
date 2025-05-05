@@ -13,18 +13,24 @@
 /** @typedef {import('../../interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED
 /** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */ // Assuming EventBus type definition exists
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Corrected typedef name
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
-/** @typedef {import('../../interfaces/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Assuming type definition exists
+/** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */ // Corrected path & default export
 /** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists
 /** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */ // Assuming type definition exists
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Assuming type definition exists
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */ // <<< ADDED
+/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */ // <<< ADDED
+/** @typedef {import('../../services/playerPromptService.js').default} PlayerPromptService */ // <<< ADDED
+/** @typedef {import('../../interpreters/commandOutcomeInterpreter.js').default} CommandOutcomeInterpreter */ // <<< ADDED
 /** @typedef {import('../../handlers/playerTurnHandler.js').default} PlayerTurnHandler */ // Added for resolver dependency
 /** @typedef {import('../../handlers/aiTurnHandler.js').default} AITurnHandler */ // Added for resolver dependency
 /** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */ // Added for TurnManager dependency
+
 
 // --- System Imports ---
 import GameRuleSystem from '../../../systems/gameRuleSystem.js';
@@ -74,7 +80,6 @@ export function registerCoreSystems(container) {
     let registrationCount = 0; // Initialize counter
 
     // --- Systems (Tagged as Initializable only) ---
-    // (Registrations for GameRuleSystem, EquipmentEffectSystem, etc. go here as before)
     registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
         tokens.EventBus, tokens.IWorldContext, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
     ]);
@@ -134,7 +139,6 @@ export function registerCoreSystems(container) {
 
 
     // --- Systems with Shutdown() (Tagged with both INITIALIZABLE and SHUTDOWNABLE) ---
-    // (Registrations for CombatSystem, WorldPresenceSystem, etc. go here as before)
     const initializableAndShutdownable = [...INITIALIZABLE, ...SHUTDOWNABLE];
     const tagsString = initializableAndShutdownable.join(', '); // For logging
 
@@ -201,63 +205,62 @@ export function registerCoreSystems(container) {
     registrationCount++;
 
 
-    // --- *** MOVED: Register Turn Handlers & Resolver FIRST *** ---
-
+    // --- VVVVVV CORRECTED REGISTRATION BLOCK VVVVVV ---
     // Register PlayerTurnHandler (Singleton due to event subscription & destroy() method)
     // Tagged SHUTDOWNABLE because it needs cleanup via destroy().
-    registrar.tagged(SHUTDOWNABLE).single(tokens.PlayerTurnHandler, PlayerTurnHandler, [
-        tokens.ILogger,                     // logger
-        tokens.IActionDiscoverySystem,      // actionDiscoverySystem
-        tokens.IValidatedEventDispatcher,   // validatedEventDispatcher
-        tokens.ICommandProcessor,           // commandProcessor
-        tokens.IWorldContext,               // worldContext (was gameStateManager)
-        tokens.EntityManager,               // entityManager
-        tokens.GameDataRepository,          // gameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.PlayerTurnHandler)} (Singleton) tagged with ${SHUTDOWNABLE.join(', ')}.`);
+    // Use singletonFactory to handle the object constructor parameter correctly.
+    registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) =>
+        new PlayerTurnHandler({
+            logger: c.resolve(tokens.ILogger),
+            actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
+            commandProcessor: c.resolve(tokens.ICommandProcessor),
+            worldContext: c.resolve(tokens.IWorldContext),
+            entityManager: c.resolve(tokens.EntityManager),
+            gameDataRepository: c.resolve(tokens.GameDataRepository),
+            promptOutputPort: c.resolve(tokens.IPromptOutputPort),
+            turnEndPort: c.resolve(tokens.ITurnEndPort),
+            playerPromptService: c.resolve(tokens.PlayerPromptService),
+            commandOutcomeInterpreter: c.resolve(tokens.CommandOutcomeInterpreter),
+            safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher)
+        })
+    );
+    logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler}.`);
     registrationCount++;
 
     // Register AITurnHandler (Singleton appropriate, constructor takes object)
     // Not tagged SHUTDOWNABLE as it currently has no destroy() method.
-    // Use singletonFactory to handle the object constructor parameter.
-    // --- MODIFICATION START (FIX: Add worldContext dependency) ---
     registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
         logger: c.resolve(tokens.ILogger),
         commandProcessor: c.resolve(tokens.ICommandProcessor),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem), // Inject discovery system
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        worldContext: c.resolve(tokens.IWorldContext) // <<< THIS WAS MISSING
+        worldContext: c.resolve(tokens.IWorldContext),
+        turnEndPort: c.resolve(tokens.ITurnEndPort)      // <-- this was missing
     }));
-    // --- MODIFICATION END ---
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.AITurnHandler)} (Singleton).`);
+    logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
     registrationCount++;
+
 
     // Register TurnHandlerResolver (Singleton is appropriate)
     // No specific tags needed unless it requires init/shutdown hooks later.
-    // Uses singletonFactory as its constructor might not follow the single-object pattern.
     registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
         logger: c.resolve(tokens.ILogger),
-        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler), // Resolve the registered PlayerTurnHandler
-        aiTurnHandler: c.resolve(tokens.AITurnHandler)          // Resolve the registered AITurnHandler
+        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler),
+        aiTurnHandler: c.resolve(tokens.AITurnHandler)
     }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.TurnHandlerResolver)} (Singleton).`);
     registrationCount++;
 
 
     // --- Register TurnManager AFTER its dependencies ---
     // Tagged as INITIALIZABLE
-    /**
-     * Registers the TurnManager as a singleton factory, tagged as initializable.
-     * @type {ITurnManager}
-     */
+    /** @type {ITurnManager} */ // Add type hint for clarity
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
         turnOrderService: c.resolve(tokens.ITurnOrderService),
         entityManager: c.resolve(tokens.EntityManager),
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver) // Resolver is injected here (NOW RESOLVABLE)
+        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver)
     }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.ITurnManager)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     // Final log message using the incremented counter
