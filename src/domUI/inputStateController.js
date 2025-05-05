@@ -6,8 +6,8 @@ import {RendererBase} from './rendererBase.js';
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
- * @typedef {import('../core/validation/schemas/eventPayloads').EventDisableInputPayload} EventDisableInputPayload // Assuming schema exists
- * @typedef {import('../core/validation/schemas/eventPayloads').TextUIEnableInputPayload} TextUIEnableInputPayload // Assuming schema exists
+ * @typedef {import('../core/interfaces/EventTypes').EventObject<import('../core/validation/schemas/eventPayloads').EventDisableInputPayload>} DisableInputEvent // Type for the whole event object
+ * @typedef {import('../core/interfaces/EventTypes').EventObject<import('../core/validation/schemas/eventPayloads').TextUIEnableInputPayload>} EnableInputEvent // Type for the whole event object
  */
 
 /**
@@ -90,16 +90,27 @@ export class InputStateController extends RendererBase {
     /**
      * Handles the 'textUI:disable_input' event.
      * @private
-     * @param {EventDisableInputPayload | object} payload - Expected payload for 'textUI:disable_input'.
-     * @param {string} eventType - The name of the triggered event.
+     * @param {DisableInputEvent} event - The full event object ({ type, payload }).
      */
-    #handleDisableInput(payload, eventType) {
-        // Default message if payload is missing or malformed
-        const message = (payload && typeof payload.message === 'string') ? payload.message : 'Input disabled.';
+    #handleDisableInput(event) {
+        // *** FIX START ***
+        // Extract payload and type from the event object
+        const payload = event.payload;
+        const eventType = event.type; // Use event.type for logging/warnings
 
-        if (!payload || typeof payload.message !== 'string') {
-            this.logger.warn(`${this._logPrefix} Received '${eventType}' without specific message in payload, using default: "${message}"`, payload);
+        // Default message if payload is missing or message is not a string
+        const defaultMessage = 'Input disabled.';
+        // Use optional chaining (?.) for safer access
+        const message = (payload && typeof payload.message === 'string') ? payload.message : defaultMessage;
+
+        // Log warning if the specific message wasn't found
+        if (message === defaultMessage) {
+            // Log based on whether payload existed but lacked message, or payload was missing entirely
+            if (!payload || typeof payload.message !== 'string') {
+                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'message' string in payload, using default: "${defaultMessage}"`, {receivedEvent: event});
+            }
         }
+        // *** FIX END ***
 
         this.setEnabled(false, message);
     }
@@ -107,16 +118,26 @@ export class InputStateController extends RendererBase {
     /**
      * Handles the 'textUI:enable_input' event.
      * @private
-     * @param {TextUIEnableInputPayload | object} payload - Expected payload for 'textUI:enable_input'.
-     * @param {string} eventType - The name of the triggered event.
+     * @param {EnableInputEvent} event - The full event object ({ type, payload }).
      */
-    #handleEnableInput(payload, eventType) {
-        // Default placeholder if payload is missing or malformed
-        const placeholder = (payload && typeof payload.placeholder === 'string') ? payload.placeholder : 'Enter command...';
+    #handleEnableInput(event) {
+        // *** FIX START ***
+        // Extract payload and type from the event object
+        const payload = event.payload;
+        const eventType = event.type; // Use event.type for logging/warnings
 
-        if (!payload || typeof payload.placeholder !== 'string') {
-            this.logger.warn(`${this._logPrefix} Received '${eventType}' without specific placeholder in payload, using default: "${placeholder}"`, payload);
+        // Default placeholder if payload is missing or placeholder is not a string
+        const defaultPlaceholder = 'Enter command...';
+        // Use optional chaining (?.) for safer access
+        const placeholder = (payload && typeof payload.placeholder === 'string') ? payload.placeholder : defaultPlaceholder;
+
+        // Log warning if the specific placeholder wasn't found
+        if (placeholder === defaultPlaceholder) {
+            if (!payload || typeof payload.placeholder !== 'string') {
+                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default: "${defaultPlaceholder}"`, {receivedEvent: event});
+            }
         }
+        // *** FIX END ***
 
         this.setEnabled(true, placeholder);
     }
