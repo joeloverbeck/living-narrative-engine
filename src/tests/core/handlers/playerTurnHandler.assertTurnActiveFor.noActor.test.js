@@ -1,7 +1,7 @@
 // src/tests/core/handlers/playerTurnHandler.assertTurnActiveFor.noActor.test.js
-// --- FILE START ---
+// --- FILE START (Entire file content as requested) ---
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Module to Test ---
 // Adjust the path according to your project structure
@@ -15,16 +15,24 @@ const mockLogger = {
     error: jest.fn(),
     debug: jest.fn(),
 };
-const mockActionDiscoverySystem = { getValidActions: jest.fn() };
-const mockCommandProcessor = { processCommand: jest.fn() };
-const mockWorldContext = { getLocationOfEntity: jest.fn() };
-const mockEntityManager = { getEntityInstance: jest.fn() };
-const mockGameDataRepository = { getActionDefinition: jest.fn() };
-const mockPromptOutputPort = { prompt: jest.fn() };
-const mockTurnEndPort = { notifyTurnEnded: jest.fn() };
-const mockPlayerPromptService = { prompt: jest.fn() };
-const mockCommandOutcomeInterpreter = { interpret: jest.fn() };
-const mockSafeEventDispatcher = { dispatchSafely: jest.fn() };
+const mockActionDiscoverySystem = {getValidActions: jest.fn()};
+const mockCommandProcessor = {processCommand: jest.fn()};
+const mockWorldContext = {getLocationOfEntity: jest.fn()};
+const mockEntityManager = {getEntityInstance: jest.fn()};
+const mockGameDataRepository = {getActionDefinition: jest.fn()};
+const mockPromptOutputPort = {prompt: jest.fn()};
+const mockTurnEndPort = {notifyTurnEnded: jest.fn()};
+const mockPlayerPromptService = {prompt: jest.fn()};
+const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn()};
+
+// <<< ADDED: Mock for CommandInputPort >>>
+const mockUnsubscribe = jest.fn(); // Mock the unsubscribe function
+const mockCommandInputPort = {
+    onCommand: jest.fn(() => mockUnsubscribe), // onCommand returns the mock unsubscribe fn
+};
+// <<< END ADDED Mock >>>
+
 
 // --- Test Suite ---
 describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active', () => { // Slightly updated description
@@ -36,8 +44,13 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
     beforeEach(() => {
         // Reset all mocks before each test run
         jest.clearAllMocks();
+        // <<< Reset added mock too >>>
+        mockUnsubscribe.mockClear();
+        mockCommandInputPort.onCommand.mockClear();
+
 
         // Instantiate the handler with all mocks
+        // <<< UPDATED: Added commandInputPort >>>
         handler = new PlayerTurnHandler({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystem,
@@ -47,12 +60,14 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
+            commandInputPort: mockCommandInputPort, // <<< ADDED Dependency
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
         });
 
         // Handler starts idle (#currentActor is null).
+        // Crucially, #commandUnsubscribeFn is also null.
     });
 
     afterEach(() => { // No need for async here as destroy likely won't do much
@@ -69,7 +84,7 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
     });
 
     // <<< UPDATED Test Description >>>
-    it('should log warning (from _handleTurnEnd catch) and do nothing else when called while no turn is active', async () => {
+    it('should log warning (from _handleTurnEnd guard) and do nothing else when called while no turn is active', async () => { // Updated description
         // Define the message embedded within the warning log
         const expectedAssertionErrorMessage = `${className}: Assertion Failed - Turn is not active. Expected actor '${testActorId}' but no turn is in progress.`;
         // Define the full warning log message expected from _handleTurnEnd's catch block
@@ -78,38 +93,35 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
 
 
         // --- Steps ---
-        // 1. Call _handleTurnEnd when no turn is active (#currentActor is null).
-        //    Pass 'null' error and 'false' isRejection (default) -> status: success
+        // 1. Call _handleTurnEnd when no turn is active (#currentActor is null, #commandUnsubscribeFn is null).
+        //    Pass 'null' error -> status: success
         await handler._handleTurnEnd(testActorId, null);
 
         // --- Assertions ---
 
         // 1. No Error Thrown Upwards:
-        //    _handleTurnEnd catches the internal assertion error.
+        //    _handleTurnEnd catches the internal assertion error. (Handled by Jest not failing the test)
 
         // 2. Logging:
-        // <<< REMOVED: Check for logger.error >>>
-        // expect(mockLogger.error).toHaveBeenCalledTimes(1);
-        // expect(mockLogger.error).toHaveBeenCalledWith(expectedAssertionErrorMessage);
-
-        // Expect ONLY the WARN log from the catch block in _handleTurnEnd
+        // Expect ONLY the WARN log from the guard block in _handleTurnEnd
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarningMessage); // Check the exact warning message
-
 
         // 3. No Port Call:
         //    Assertion failed early.
         expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
 
-        // 4. No State Cleanup Attempt:
-        //    Assertion failed early.
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Cleaning up actor reference'));
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining('Notifying TurnEndPort'));
+        // 4. Minimal State Cleanup Attempt:
+        //    Assertion failed early, _unsubscribeFromCommands is called, but since
+        //    #commandUnsubscribeFn is null, the actual unsubscribe function isn't executed.
+        // <<< UPDATED ASSERTION >>>
+        expect(mockUnsubscribe).not.toHaveBeenCalled(); // Verify unsubscribe was NOT attempted
 
         // 5. No Other Logs:
         //    Ensure no other unexpected logs were called.
         expect(mockLogger.error).not.toHaveBeenCalled(); // Explicitly check error wasn't called
         expect(mockLogger.info).not.toHaveBeenCalled(); // No 'Ending turn...' info log expected
+        // Check debug logs - only the "no function found" log should appear
     });
 });
 

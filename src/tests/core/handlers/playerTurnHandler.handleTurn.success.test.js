@@ -1,13 +1,13 @@
 // src/tests/core/handlers/playerTurnHandler.handleTurn.success.test.js
 // --- FILE START ---
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Module to Test ---
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler.js';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same)
+// (Existing mocks remain the same)
 const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
@@ -35,6 +35,13 @@ const mockPromptOutputPort = {
 const mockTurnEndPort = {
     notifyTurnEnded: jest.fn(),
 };
+// <<< ADDED Mock for CommandInputPort >>>
+// Mock the onCommand method to return a mock unsubscribe function
+const mockUnsubscribe = jest.fn();
+const mockCommandInputPort = {
+    onCommand: jest.fn(() => mockUnsubscribe), // Return the mock unsubscribe function
+};
+// <<< END ADDED Mock >>>
 const mockPlayerPromptService = {
     prompt: jest.fn(),
 };
@@ -46,11 +53,11 @@ const mockSafeEventDispatcher = {
 };
 
 // --- Test Suite ---
-// <<< UPDATED Suite Description >>>
 describe('PlayerTurnHandler: startTurn Initiation and Validation', () => {
     /** @type {PlayerTurnHandler} */
     let handler;
-    const mockActor = { id: 'player-1', name: 'Tester' }; // Example mock actor
+    const mockActor = {id: 'player-1', name: 'Tester'}; // Example mock actor
+    const className = PlayerTurnHandler.name; // Get class name for logs
 
     beforeEach(() => {
         // Reset mocks before each test
@@ -66,6 +73,7 @@ describe('PlayerTurnHandler: startTurn Initiation and Validation', () => {
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
+            commandInputPort: mockCommandInputPort, // <<< ADDED missing dependency
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
@@ -81,24 +89,26 @@ describe('PlayerTurnHandler: startTurn Initiation and Validation', () => {
         // Ensure graceful cleanup if a turn was somehow left active
         try {
             if (handler) {
-                await handler.destroy(); // Call destroy to trigger cleanup if needed
+                // Ensure handler.destroy() is called, which should call the unsubscribe function
+                handler.destroy();
             }
         } catch (e) {
             // suppress errors during cleanup
         } finally {
             handler = null;
         }
+        // Optional: Check if unsubscribe was called during cleanup if a turn was started
+        // if (mockCommandInputPort.onCommand.mock.calls.length > 0) {
+        //     expect(mockUnsubscribe).toHaveBeenCalled();
+        // }
     });
 
-    // <<< UPDATED Test Description >>>
-    it('should initiate the turn, set internal actor, call PlayerPromptService.prompt, and NOT end the turn', async () => {
+    it('should initiate the turn, subscribe to commands, set actor, call prompt, and NOT end the turn', async () => {
         // --- Setup ---
         // PlayerPromptService.prompt is mocked to resolve in beforeEach
+        // commandInputPort.onCommand is mocked to return mockUnsubscribe
 
         // --- Steps ---
-        // 1. Define mockActor (defined above)
-        // 2. Call startTurn and await its completion (initiation phase)
-        // <<< UPDATED: Call startTurn >>>
         await handler.startTurn(mockActor);
 
         // 3. Allow microtasks (like the internal prompt call) to settle
@@ -106,76 +116,116 @@ describe('PlayerTurnHandler: startTurn Initiation and Validation', () => {
 
         // --- Assertions ---
 
-        // 1. Internal State (Conceptual): Verified indirectly by prompt call.
+        // 1. Command Subscription: Verify onCommand was called exactly once.
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
+        // Verify it was called with a function (the bound handler method)
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(expect.any(Function));
 
-        // 2. Prompt Service Call:
-        // Crucial: Verifies the main action of successful initiation.
+        // 2. Internal State (Conceptual): Verified indirectly by prompt call.
+
+        // 3. Prompt Service Call: Verifies the main action of successful initiation.
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor);
 
-        // 3. Promise State:
-        // The promise returned by startTurn should have resolved successfully as initiation completed.
-        // (We implicitly tested this by successfully awaiting it without error).
+        // 4. Promise State: Implicitly tested by successfully awaiting startTurn.
 
-        // 4. Turn Not Ended:
-        // Crucial: Verify no turn-ending actions occurred during initiation.
+        // 5. Turn Not Ended: Verify no turn-ending actions occurred during initiation.
         expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
 
-        // 5. Other Mocks Not Called:
+        // 6. Other Mocks Not Called:
         expect(mockCommandProcessor.processCommand).not.toHaveBeenCalled();
         expect(mockCommandOutcomeInterpreter.interpret).not.toHaveBeenCalled();
-        // PlayerPromptService calls these internally, so they might be called IF prompt was called.
-        // If we strictly test ONLY startTurn's direct actions, these might be omitted or checked differently.
-        // expect(mockActionDiscoverySystem.getValidActions).not.toHaveBeenCalled(); // Called by PlayerPromptService
-        // expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled(); // Called by PlayerPromptService
 
-        // <<< REMOVED: Cleanup/destroy/rejection check - no longer applicable/needed for this test's goal >>>
-        // await handler.destroy();
-        // await expect(turnPromise).rejects.toThrow('PlayerTurnHandler destroyed during turn.');
+        // 7. Unsubscribe NOT called yet
+        expect(mockUnsubscribe).not.toHaveBeenCalled();
     });
 
-    // <<< UPDATED Test Description >>>
     it('should throw an error if startTurn is called with an invalid actor', async () => {
-        // <<< UPDATED: Call startTurn >>>
-        // Expect startTurn itself to throw synchronously for invalid input
-        const expectedError = `${PlayerTurnHandler.name}: Actor must be a valid entity.`;
+        const expectedError = `${className}: Actor must be a valid entity.`;
         await expect(handler.startTurn(null)).rejects.toThrow(expectedError);
         await expect(handler.startTurn({})).rejects.toThrow(expectedError);
 
         // Verify logging and side effects
-        expect(mockLogger.error).toHaveBeenCalledWith(`${PlayerTurnHandler.name}: Attempted to start turn for an invalid actor.`);
+        expect(mockLogger.error).toHaveBeenCalledWith(`${className}: Attempted to start turn for an invalid actor.`);
+        expect(mockCommandInputPort.onCommand).not.toHaveBeenCalled(); // Subscription shouldn't happen
         expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled();
-        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled(); // Ensure turn end wasn't triggered
+        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
     });
 
-    // <<< UPDATED Test Description >>>
     it('should throw an error if startTurn is called while another turn is active', async () => {
-        const firstActor = { id: 'player-1' };
-        const secondActor = { id: 'player-2' };
+        const firstActor = {id: 'player-1'};
+        const secondActor = {id: 'player-2'};
 
         // Start the first turn and wait for initiation
-        // <<< UPDATED: Call startTurn >>>
         await handler.startTurn(firstActor);
         await new Promise(process.nextTick); // Allow internal prompt call to settle
 
-        // Verify the first prompt happened
+        // Verify the first subscription and prompt happened
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(firstActor);
 
         // Attempt to start a second turn - expect immediate rejection
-        // <<< UPDATED: Call startTurn >>>
-        const expectedError = `${PlayerTurnHandler.name}: Attempted to start a new turn for ${secondActor.id} while turn for ${firstActor.id} is already in progress.`;
+        const expectedError = `${className}: Attempted to start a new turn for ${secondActor.id} while turn for ${firstActor.id} is already in progress.`;
         await expect(handler.startTurn(secondActor)).rejects.toThrow(expectedError);
 
         // Assertions
         expect(mockLogger.error).toHaveBeenCalledWith(expectedError);
-        // Ensure prompt was only called for the first actor (no second call attempt)
+        // Ensure subscription/prompt were only called for the first actor
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1); // Still only 1 call total
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Still only 1 call total
-        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled(); // Turn end should not have been called
+        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
+    });
 
-        // <<< REMOVED: Cleanup/destroy/rejection check - no longer applicable/needed for this test's goal >>>
-        // await handler.destroy();
-        // await expect(firstTurnPromise).rejects.toThrow('PlayerTurnHandler destroyed during turn.');
+    // <<< NEW TEST for subscription failure >>>
+    it('should handle and re-throw errors if command subscription fails', async () => {
+        const actor = {id: 'player-fail-sub'};
+        const subscriptionError = new Error('Subscription failed!');
+        mockCommandInputPort.onCommand.mockImplementation(() => {
+            throw subscriptionError; // Simulate subscription throwing an error
+        });
+        // OR simulate returning null/undefined if that's a possible failure mode
+        // mockCommandInputPort.onCommand.mockReturnValue(null);
+        // const subscriptionError = new Error('CommandInputPort.onCommand did not return a valid unsubscribe function.');
+
+
+        // Expect startTurn to reject with the subscription error
+        await expect(handler.startTurn(actor)).rejects.toThrow(subscriptionError.message);
+
+        // Verify logging and side effects
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${className}: Critical error during turn initiation for ${actor.id}`), subscriptionError);
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1); // Attempted subscription
+        expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled(); // Prompt shouldn't happen if sub fails
+        // Check if _handleTurnEnd was called due to the error during initiation
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(actor.id, false); // Should signal failure
+
+        // Reset mock implementation for other tests if needed, although beforeEach handles it
+        mockCommandInputPort.onCommand.mockImplementation(() => mockUnsubscribe);
+    });
+
+    // <<< NEW TEST for prompt failure during initiation >>>
+    it('should handle errors if the initial prompt fails during startTurn', async () => {
+        const actor = {id: 'player-fail-prompt'};
+        const promptError = new Error('Initial Prompt Failed!');
+        mockPlayerPromptService.prompt.mockRejectedValue(promptError); // Make prompt fail
+
+        // Expect startTurn to reject because the internal error handling in startTurn re-throws
+        // Note: This assumes startTurn's catch block correctly calls _handleTurnEnd and re-throws.
+        await expect(handler.startTurn(actor)).rejects.toThrow(promptError.message);
+
+        // Verify logging and side effects
+        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1); // Subscription should still happen first
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Prompt was attempted
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(actor);
+        // Check if _handleTurnEnd was called due to the error during initiation
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${className}: Critical error during turn initiation for ${actor.id}`), promptError);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(actor.id, false); // Should signal failure
+        expect(mockUnsubscribe).toHaveBeenCalledTimes(1); // Unsubscribe should be called during _handleTurnEnd
+
+        // Reset mock implementation for other tests
+        mockPlayerPromptService.prompt.mockResolvedValue();
     });
 
 });

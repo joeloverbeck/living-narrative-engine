@@ -1,7 +1,7 @@
-// src/tests/core/handlers/PlayerTurnHandler/constructor.validation.test.js
-// --- FILE START ---
+// src/tests/core/handlers/playerTurnHandler.constructor.validation.test.js
+// --- FILE START (Entire corrected file) ---
 
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach} from '@jest/globals';
 
 // --- Module to Test ---
 // Adjust the path according to your project structure
@@ -37,6 +37,11 @@ const createValidDeps = () => ({
     turnEndPort: {
         notifyTurnEnded: jest.fn(),
     },
+    // <<< ADDED Missing Dependency >>>
+    commandInputPort: {
+        onCommand: jest.fn(), // Add the required method
+    },
+    // <<< END ADDED Dependency >>>
     playerPromptService: {
         prompt: jest.fn(),
     },
@@ -74,14 +79,14 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Logger
     describe('Logger Validation', () => {
         it('should throw if logger is null', () => {
-            const deps = { ...validDeps, logger: null };
+            const deps = {...validDeps, logger: null};
             // Constructor logs to console.error before throwing, we check the throw
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing logger/i);
         });
 
         it('should throw if logger is missing the error method', () => {
-            const invalidLogger = { info: jest.fn(), debug: jest.fn() }; // Missing error
-            const deps = { ...validDeps, logger: invalidLogger };
+            const invalidLogger = {info: jest.fn(), debug: jest.fn()}; // Missing error
+            const deps = {...validDeps, logger: invalidLogger};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing logger/i);
         });
     });
@@ -89,12 +94,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Action Discovery System
     describe('ActionDiscoverySystem Validation', () => {
         it('should throw if actionDiscoverySystem is null', () => {
-            const deps = { ...validDeps, actionDiscoverySystem: null };
+            const deps = {...validDeps, actionDiscoverySystem: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing actionDiscoverySystem/i);
         });
 
         it('should throw if actionDiscoverySystem is invalid (missing getValidActions)', () => {
-            const deps = { ...validDeps, actionDiscoverySystem: {} };
+            const deps = {...validDeps, actionDiscoverySystem: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing actionDiscoverySystem/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -106,12 +111,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Command Processor
     describe('CommandProcessor Validation', () => {
         it('should throw if commandProcessor is null', () => {
-            const deps = { ...validDeps, commandProcessor: null };
+            const deps = {...validDeps, commandProcessor: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandProcessor/i);
         });
 
         it('should throw if commandProcessor is invalid (missing processCommand)', () => {
-            const deps = { ...validDeps, commandProcessor: {} };
+            const deps = {...validDeps, commandProcessor: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandProcessor/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -123,12 +128,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test World Context
     describe('WorldContext Validation', () => {
         it('should throw if worldContext is null', () => {
-            const deps = { ...validDeps, worldContext: null };
+            const deps = {...validDeps, worldContext: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing worldContext/i);
         });
 
         it('should throw if worldContext is invalid (missing getLocationOfEntity)', () => {
-            const deps = { ...validDeps, worldContext: {} };
+            const deps = {...validDeps, worldContext: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing worldContext/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -140,12 +145,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Entity Manager
     describe('EntityManager Validation', () => {
         it('should throw if entityManager is null', () => {
-            const deps = { ...validDeps, entityManager: null };
+            const deps = {...validDeps, entityManager: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing entityManager/i);
         });
 
         it('should throw if entityManager is invalid (missing getEntityInstance)', () => {
-            const deps = { ...validDeps, entityManager: {} };
+            const deps = {...validDeps, entityManager: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing entityManager/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -157,12 +162,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Game Data Repository
     describe('GameDataRepository Validation', () => {
         it('should throw if gameDataRepository is null', () => {
-            const deps = { ...validDeps, gameDataRepository: null };
+            const deps = {...validDeps, gameDataRepository: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing gameDataRepository/i);
         });
 
         it('should throw if gameDataRepository is invalid (missing getActionDefinition)', () => {
-            const deps = { ...validDeps, gameDataRepository: {} };
+            const deps = {...validDeps, gameDataRepository: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing gameDataRepository/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -174,12 +179,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Prompt Output Port
     describe('PromptOutputPort Validation', () => {
         it('should throw if promptOutputPort is null', () => {
-            const deps = { ...validDeps, promptOutputPort: null };
+            const deps = {...validDeps, promptOutputPort: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing promptOutputPort/i);
         });
 
         it('should throw if promptOutputPort is invalid (missing prompt method)', () => {
-            const deps = { ...validDeps, promptOutputPort: {} };
+            const deps = {...validDeps, promptOutputPort: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing promptOutputPort/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -191,12 +196,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Turn End Port
     describe('TurnEndPort Validation', () => {
         it('should throw if turnEndPort is null', () => {
-            const deps = { ...validDeps, turnEndPort: null };
+            const deps = {...validDeps, turnEndPort: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing turnEndPort/i);
         });
 
         it('should throw if turnEndPort is invalid (missing notifyTurnEnded method)', () => {
-            const deps = { ...validDeps, turnEndPort: {} };
+            const deps = {...validDeps, turnEndPort: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing turnEndPort/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -205,15 +210,33 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
         });
     });
 
+    // <<< ADDED Validation Tests for CommandInputPort >>>
+    describe('CommandInputPort Validation', () => {
+        it('should throw if commandInputPort is null', () => {
+            const deps = {...validDeps, commandInputPort: null};
+            expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandInputPort/i);
+        });
+
+        it('should throw if commandInputPort is invalid (missing onCommand method)', () => {
+            const deps = {...validDeps, commandInputPort: {}};
+            expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandInputPort/i);
+            // Verify logger.error was called (if logger is valid)
+            expect(validDeps.logger.error).toHaveBeenCalledWith(
+                expect.stringContaining('Invalid or missing commandInputPort (requires onCommand method)')
+            );
+        });
+    });
+    // <<< END ADDED Validation Tests >>>
+
     // Test Player Prompt Service
     describe('PlayerPromptService Validation', () => {
         it('should throw if playerPromptService is null', () => {
-            const deps = { ...validDeps, playerPromptService: null };
+            const deps = {...validDeps, playerPromptService: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing playerPromptService/i);
         });
 
         it('should throw if playerPromptService is invalid (missing prompt method)', () => {
-            const deps = { ...validDeps, playerPromptService: {} };
+            const deps = {...validDeps, playerPromptService: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing playerPromptService/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -225,12 +248,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Command Outcome Interpreter
     describe('CommandOutcomeInterpreter Validation', () => {
         it('should throw if commandOutcomeInterpreter is null', () => {
-            const deps = { ...validDeps, commandOutcomeInterpreter: null };
+            const deps = {...validDeps, commandOutcomeInterpreter: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandOutcomeInterpreter/i);
         });
 
         it('should throw if commandOutcomeInterpreter is invalid (missing interpret method)', () => {
-            const deps = { ...validDeps, commandOutcomeInterpreter: {} };
+            const deps = {...validDeps, commandOutcomeInterpreter: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing commandOutcomeInterpreter/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
@@ -242,12 +265,12 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
     // Test Safe Event Dispatcher
     describe('SafeEventDispatcher Validation', () => {
         it('should throw if safeEventDispatcher is null', () => {
-            const deps = { ...validDeps, safeEventDispatcher: null };
+            const deps = {...validDeps, safeEventDispatcher: null};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
         });
 
         it('should throw if safeEventDispatcher is invalid (missing dispatchSafely method)', () => {
-            const deps = { ...validDeps, safeEventDispatcher: {} };
+            const deps = {...validDeps, safeEventDispatcher: {}};
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(

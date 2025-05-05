@@ -1,7 +1,7 @@
 // src/tests/core/handlers/playerTurnHandler.handleSubmittedCommand.noActiveTurn.test.js
 // --- FILE START ---
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 
 // --- Module to Test ---
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler.js'; // Adjust path as needed
@@ -35,6 +35,9 @@ const mockPromptOutputPort = {
 const mockTurnEndPort = {
     notifyTurnEnded: jest.fn(),
 };
+const mockCommandInputPort = {
+    onCommand: jest.fn(), // Needed for constructor validation
+};
 const mockPlayerPromptService = {
     prompt: jest.fn(),
 };
@@ -46,9 +49,10 @@ const mockSafeEventDispatcher = {
 };
 
 // --- Test Suite ---
-describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn', () => { // <-- Updated describe title slightly
+describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn', () => {
     /** @type {PlayerTurnHandler} */
     let handler;
+    const className = PlayerTurnHandler.name; // Get class name for logs
 
     beforeEach(() => {
         // Reset mocks before each test
@@ -65,6 +69,7 @@ describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn'
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
+            commandInputPort: mockCommandInputPort,
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
@@ -82,13 +87,13 @@ describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn'
 
     it('should ignore the command and log a warning if called when no turn is active', async () => {
         // --- Setup ---
-        const commandData = { command: 'look' };
+        const commandString = 'look'; // Pass a string as expected by the method signature
         // The handler is initialized in beforeEach, #currentActor is null.
 
         // --- Steps ---
         // Invoke the internal method using bracket notation with the underscore prefix.
         // It's async, so await it.
-        await handler['_handleSubmittedCommand'](commandData); // <-- Renamed call target
+        await handler['_handleSubmittedCommand'](commandString); // Pass the command string
 
         // --- Assertions ---
 
@@ -97,7 +102,6 @@ describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn'
         expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled();
         expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
         expect(mockCommandOutcomeInterpreter.interpret).not.toHaveBeenCalled();
-        // Check other potentially related mocks as well
         expect(mockActionDiscoverySystem.getValidActions).not.toHaveBeenCalled();
         expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
         expect(mockSafeEventDispatcher.dispatchSafely).not.toHaveBeenCalled();
@@ -105,13 +109,23 @@ describe('PlayerTurnHandler: _handleSubmittedCommand Called When No Active Turn'
         // 2. Logging: Verify the specific warning message was logged.
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Received submitted command but no player turn is active. Ignoring.')
+            `${className}: Received submitted command but no player turn is active. Ignoring.` // Use className variable
         );
 
         // 3. Other Logs: Ensure no other logs (like info/error related to processing) occurred.
         expect(mockLogger.info).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Received submitted command. Payload:'));
+
+        // 4. Debug Logs: Check both expected debug messages
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2); // <<< CORRECTED: Expect 2 calls
+        // Check constructor log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `${className} initialized successfully with all dependencies.` // Use className variable
+        );
+        // Check _handleSubmittedCommand log
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `${className}: Received submitted command via subscription: "${commandString}"` // Use className variable
+        );
 
     });
 });

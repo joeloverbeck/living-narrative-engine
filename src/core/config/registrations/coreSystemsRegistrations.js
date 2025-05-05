@@ -220,6 +220,7 @@ export function registerCoreSystems(container) {
             promptOutputPort: c.resolve(tokens.IPromptOutputPort),
             turnEndPort: c.resolve(tokens.ITurnEndPort),
             playerPromptService: c.resolve(tokens.PlayerPromptService),
+            commandInputPort: c.resolve(tokens.ICommandInputPort),
             commandOutcomeInterpreter: c.resolve(tokens.CommandOutcomeInterpreter),
             safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher)
         })
