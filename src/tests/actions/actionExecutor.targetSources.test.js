@@ -16,7 +16,7 @@ import {ResolutionStatus} from '../../services/targetResolutionService.js'; // I
 
 // Mock dependencies
 const mockGameDataRepository = {
-    getAction: jest.fn(),
+    getActionDefinition: jest.fn(),
 };
 const mockTargetResolutionService = {
     resolveActionTarget: jest.fn(),
@@ -296,7 +296,7 @@ describe('ActionExecutor', () => {
                         id: 'test:target_id_ok',
                         dispatch_event: {eventName: 'test:event_target_id_ok', payload: {[payloadKey]: sourceString}}
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     await executor.executeAction(actionDef.id, mockContext);
 
@@ -316,7 +316,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     mockContext.parsedCommand.directObjectPhrase = 'north';
 
@@ -345,7 +345,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Override resolution result for this test
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
                         createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -368,7 +368,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Override resolution result for this test
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
                         createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {
@@ -405,7 +405,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Resolution already mocked in beforeEach for target. Sources
 
                     await executor.executeAction(actionDef.id, mockContext);
@@ -429,7 +429,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Resolution already mocked in beforeEach for target. Sources
 
                     await executor.executeAction(actionDef.id, mockContext);
@@ -451,7 +451,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     mockContext.parsedCommand.directObjectPhrase = 'north';
 
@@ -479,7 +479,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
                         createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {
                             targetType: 'entity',
@@ -531,7 +531,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     await executor.executeAction(actionDef.id, mockContext);
 
@@ -553,7 +553,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceStringMissing}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     await executor.executeAction(actionDef.id, mockContext);
 
@@ -576,7 +576,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceStringMissingComp}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Ensure StatsComponent is NOT on mockTargetEntity
 
                     await executor.executeAction(actionDef.id, mockContext);
@@ -603,7 +603,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceStringUnknownComp}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Ensure registry mock returns undefined for this specific component name
                     mockContext.entityManager.componentRegistry.get.mockImplementation((name) => {
                         if (name === 'HealthComponent') return MockHealthComponent; // Allow known component
@@ -636,7 +636,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString} // target.component.HealthComponent.current
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     mockContext.parsedCommand.directObjectPhrase = 'north';
 
@@ -663,7 +663,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString} // target.component.HealthComponent.current
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
                         createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {
                             targetType: 'entity',
@@ -700,7 +700,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     await executor.executeAction(actionDef.id, mockContext);
 
@@ -721,7 +721,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
 
                     // --- FIX START: Ensure component exists using correct signature ---
                     mockTargetEntity.addComponent('HealthComponent', {current: 50, max: 100});
@@ -758,7 +758,7 @@ describe('ActionExecutor', () => {
                             payload: {[payloadKey]: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Uses default successful target resolution from parent beforeEach
 
                     await executor.executeAction(actionDef.id, mockContext);
@@ -782,7 +782,7 @@ describe('ActionExecutor', () => {
                             payload: {keyTargetShort: sourceString}
                         }
                     });
-                    mockGameDataRepository.getAction.mockReturnValue(actionDef);
+                    mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
                     // Uses default successful target resolution from parent beforeEach
 
                     await executor.executeAction(actionDef.id, mockContext);

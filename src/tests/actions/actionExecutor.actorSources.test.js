@@ -16,7 +16,7 @@ import {ResolutionStatus} from '../../services/targetResolutionService.js'; // I
 
 // Mock dependencies
 const mockGameDataRepository = {
-  getAction: jest.fn(),
+  getActionDefinition: jest.fn(),
 };
 const mockTargetResolutionService = {
   resolveActionTarget: jest.fn(),
@@ -286,7 +286,7 @@ describe('ActionExecutor', () => {
             id: 'test:actor_id_ok',
             dispatch_event: {eventName: 'test:event_actor_id_ok', payload: {[payloadKey]: sourceString}}
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -311,7 +311,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -339,7 +339,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -377,7 +377,7 @@ describe('ActionExecutor', () => {
             id: 'test:actor_name_comp',
             dispatch_event: {eventName: 'test:event_actor_name_comp', payload: {[payloadKey]: sourceString}}
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -408,7 +408,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -436,7 +436,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -462,7 +462,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -501,7 +501,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -528,7 +528,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceStringMissing}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -560,7 +560,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceStringMissingComp}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -591,7 +591,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceStringUnknownComp}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -621,7 +621,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -647,7 +647,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -683,7 +683,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})
@@ -713,7 +713,7 @@ describe('ActionExecutor', () => {
               payload: {[payloadKey]: sourceString}
             }
           });
-          mockGameDataRepository.getAction.mockReturnValue(actionDef);
+          mockGameDataRepository.getActionDefinition.mockReturnValue(actionDef);
           // Override default resolution to ensure 'none' type doesn't interfere
           mockTargetResolutionService.resolveActionTarget.mockResolvedValue(
             createMockResolutionResult(ResolutionStatus.FOUND_UNIQUE, {targetType: 'none'})

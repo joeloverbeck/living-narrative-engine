@@ -70,7 +70,7 @@ class ActionExecutor extends IActionExecutor {
                     logger
                 }) {
         super();
-        
+
         if (!gameDataRepository) throw new Error("ActionExecutor: Missing required dependency 'gameDataRepository'.");
         if (!targetResolutionService) throw new Error("ActionExecutor: Missing required dependency 'targetResolutionService'.");
         if (!actionValidationService) throw new Error("ActionExecutor: Missing required dependency 'actionValidationService'.");
@@ -173,13 +173,23 @@ class ActionExecutor extends IActionExecutor {
 
     /** @private Fetches ActionDefinition. Logs error if not found. */
     #fetchActionDefinition(actionId) {
-        this.#logger?.debug(`Helper #fetchActionDefinition: Finding definition for '${actionId}'...`);
-        const actionDefinition = this.#gameDataRepository.getAction(actionId); // Still needs GameDataRepository
+        this.#logger?.debug(
+            `Helper #fetchActionDefinition: Finding definition for '${actionId}'...`
+        );
+
+        // Correct repository call
+        const actionDefinition = this.#gameDataRepository.getActionDefinition(actionId);
+
         if (!actionDefinition) {
-            this.#logger?.error(`Helper #fetchActionDefinition: Action definition not found for ID: ${actionId}`);
+            this.#logger?.error(
+                `Helper #fetchActionDefinition: Action definition not found for ID: ${actionId}`
+            );
             return undefined;
         }
-        this.#logger?.debug(`Helper #fetchActionDefinition: Found definition for '${actionId}'.`);
+
+        this.#logger?.debug(
+            `Helper #fetchActionDefinition: Found definition for '${actionId}'.`
+        );
         return actionDefinition;
     }
 
