@@ -163,7 +163,8 @@ describe('GameEngine start() - Failure Scenarios', () => {
     });
 
     // Add a dummy function to the global scope for the spyOn above
-    global.setCurrentEngineInstance_TEST_HELPER = (instance) => {};
+    global.setCurrentEngineInstance_TEST_HELPER = (instance) => {
+    };
 
 
     afterEach(() => {
@@ -613,60 +614,5 @@ describe('GameEngine start() - Failure Scenarios', () => {
         });
     });
 
-    // ========================================================================= //
-    // === Dispatcher Failure Post-Init Test (Corrected)                   === //
-    // ========================================================================= //
-    describe('[TEST-ENG-032] GameEngine Start - ValidatedEventDispatcher Resolution Failure Post-Init', () => {
-        it('should log error but not fail overall initialization if dispatcher fails to resolve for final message', async () => {
-            const worldName = 'testWorld';
-            const dispatcherResolveError = new Error('Dispatcher Gone Post-Init');
-            // Init service reports success
-            const initResultSuccess = {success: true, error: null, gameLoop: mockGameLoop};
-            mockInitializationService.runInitializationSequence.mockResolvedValue(initResultSuccess);
-            mockTurnManager.start.mockResolvedValue(undefined); // Ensure turn manager starts successfully
-
-            // Custom resolver: Provide everything EXCEPT the dispatcher for the final step
-            mockAppContainer.resolve.mockImplementation((key) => {
-                if (key === tokens.ILogger) return mockLogger;
-                if (key === tokens.InitializationService) return mockInitializationService;
-                if (key === tokens.ITurnManager) return mockTurnManager;
-                if (key === tokens.IValidatedEventDispatcher) throw dispatcherResolveError; // Fail here
-                // Do NOT return GameLoop here, GameEngine doesn't resolve it.
-                return undefined;
-            });
-
-            const gameEngineInstance = new GameEngine({container: mockAppContainer});
-            setCurrentEngineInstance_TEST_HELPER(gameEngineInstance);
-
-            mockLogger.error.mockClear();
-            mockTurnManager.start.mockClear(); // Clear before act
-            mockTurnManager.start.mockResolvedValue(undefined); // Re-apply success mock
-            mockvalidatedEventDispatcher.dispatchValidated.mockClear();
-            mockInitializationService.runInitializationSequence.mockClear();
-
-            // --- Act ---
-            // IMPORTANT: The overall start should RESOLVE because the failure is only in the optional post-message dispatch
-            await expect(gameEngineInstance.start(worldName)).resolves.toBeUndefined();
-
-            // --- Assert ---
-            expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(worldName);
-            expect(mockTurnManager.start).toHaveBeenCalledTimes(1); // Turn manager should have started
-            expect(getIsInitialized()).toBe(true); // Engine IS initialized successfully
-            // NO GameLoop check needed
-
-            // Verify dispatcher resolution was attempted *after* TurnManager start
-            const resolveCalls = mockAppContainer.resolve.mock.calls;
-            const dispatcherCall = resolveCalls.find(call => call[0] === tokens.IValidatedEventDispatcher);
-            expect(dispatcherCall).toBeDefined();
-
-            // Check the specific error log for the dispatcher failure
-            expect(mockLogger.error).toHaveBeenCalledTimes(1);
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`Failed to resolve or use ${tokens.IValidatedEventDispatcher} to send post-start message.`),
-                dispatcherResolveError
-            );
-            expect(mockvalidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled(); // Dispatch couldn't happen
-        });
-    });
 
 }); // End describe block for gameEngine.start.failure.test.js

@@ -137,22 +137,6 @@ class GameEngine {
             );
             this.#logger?.info('GameEngine: Starting TurnManager...');
             await turnManager.start(); // Start turns via TurnManager
-            this.#logger?.info('GameEngine: TurnManager started successfully.');
-            // REMOVED: Direct call to gameLoop.start()
-
-            // --- Dispatch Post-Start Message (Optional) ---
-            try {
-                const dispatcher = /** @type {ValidatedEventDispatcher} */ (
-                    this.#container.resolve(tokens.IValidatedEventDispatcher)
-                );
-                await dispatcher.dispatchValidated('textUI:display_message', {
-                    text: 'Game ready. Turn processing started.', // Updated message
-                    type: 'info'
-                });
-            } catch (dispatchError) {
-                this.#logger?.error(`GameEngine: Failed to resolve or use ${tokens.IValidatedEventDispatcher} to send post-start message.`, dispatchError);
-            }
-
         } catch (error) {
             // --- Handle Critical Service Setup/Invocation or Initialization Errors ---
             this.#logger?.error(`GameEngine: CRITICAL ERROR during initialization or TurnManager startup for world '${worldName}'.`, error);

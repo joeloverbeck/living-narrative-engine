@@ -128,15 +128,6 @@ describe('GameEngine start() - Success Path (Initialization Delegated)', () => {
         // 4. Verify TurnManager.start was called
         expect(mockTurnManager.start).toHaveBeenCalledTimes(1); // <<< ADDED Assertion
 
-        // 5. Verify ValidatedEventDispatcher was resolved for the final message
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-
-        // 6. Verify the final "Game ready..." message was dispatched
-        expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'textUI:display_message',
-            {text: 'Game ready. Turn processing started.', type: 'info'} // Adjusted message based on GameEngine code
-        );
-
         // --- Assert NO LONGER USED MOCKS ---
         // Verify GameLoop.start was NOT called directly by GameEngine (TurnManager handles this now)
         expect(mockGameLoop.start).not.toHaveBeenCalled(); // <<< UPDATED Assertion
@@ -153,8 +144,7 @@ describe('GameEngine start() - Success Path (Initialization Delegated)', () => {
         const resolveOrder = mockAppContainer.resolve.mock.calls.map(call => call[0]);
         expect(resolveOrder).toEqual([
             tokens.InitializationService,
-            tokens.ITurnManager,
-            tokens.IValidatedEventDispatcher
+            tokens.ITurnManager
         ]);
     });
 
@@ -211,7 +201,6 @@ describe('GameEngine start() - Success Path (Initialization Delegated)', () => {
         // Logs related to resolving and starting TurnManager
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Resolving TurnManager...'); // <<< ADDED Assertion
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting TurnManager...'); // <<< ADDED Assertion
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: TurnManager started successfully.'); // <<< ADDED Assertion
 
         // Ensure logs related to starting the *GameLoop directly* are GONE
         expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: Starting GameLoop...'); // <<< UPDATED Assertion

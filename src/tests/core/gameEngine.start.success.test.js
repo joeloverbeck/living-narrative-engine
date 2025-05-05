@@ -36,10 +36,7 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
 
         // Mock ILogger
         mockLogger = {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-            debug: jest.fn(),
+            info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
         };
 
         // Mock GameLoop
@@ -57,16 +54,12 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
 
         // Mock TurnManager
         mockTurnManager = {
-            start: jest.fn().mockResolvedValue(undefined),
-            stop: jest.fn().mockResolvedValue(undefined),
+            start: jest.fn().mockResolvedValue(undefined), stop: jest.fn().mockResolvedValue(undefined),
         };
 
         // Mock AppContainer
         mockAppContainer = {
-            resolve: jest.fn(),
-            register: jest.fn(),
-            disposeSingletons: jest.fn(),
-            reset: jest.fn(),
+            resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn(),
         };
 
         // Configure default AppContainer resolve behavior
@@ -90,9 +83,7 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
 
         // Configure default InitializationService success
         mockInitializationService.runInitializationSequence.mockResolvedValue({
-            success: true,
-            gameLoop: mockGameLoop,
-            error: null
+            success: true, gameLoop: mockGameLoop, error: null
         });
     });
 
@@ -114,13 +105,7 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Initialization sequence reported success'));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Resolving TurnManager...'));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Starting TurnManager...'));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('TurnManager started successfully.'));
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'textUI:display_message',
-            expect.objectContaining({text: 'Game ready. Turn processing started.', type: 'info'})
-        );
+        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(0);
     });
 
     // Test Case: Already Initialized

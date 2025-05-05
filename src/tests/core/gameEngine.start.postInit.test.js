@@ -94,7 +94,6 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Initialization sequence reported success.');
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Resolving TurnManager...');
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting TurnManager...');
-            expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: TurnManager started successfully.');
             expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: Starting GameLoop...');
             expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: GameLoop started successfully.');
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('GameDataRepository resolved'));
@@ -126,15 +125,12 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
 
             // Assert: Check that unrelated services were NOT resolved *during this specific start call*
-            expect(mockAppContainer.resolve).not.toHaveBeenCalledWith(tokens.GameStateManager);
             expect(mockAppContainer.resolve).not.toHaveBeenCalledWith(tokens.GameLoop); // GameLoop shouldn't be resolved by start() itself
 
             // Optional: Verify other expected resolutions during this start call
             expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.InitializationService);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-            // Count should be 3 (InitService + TurnManager + EventDispatcher)
-            expect(mockAppContainer.resolve).toHaveBeenCalledTimes(3);
+            expect(mockAppContainer.resolve).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -173,12 +169,7 @@ describe('GameEngine start() - Post-Initialization Success Logic', () => {
             expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.InitializationService);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'textUI:display_message',
-                expectedPayload
-            );
-            expect(mockAppContainer.resolve).toHaveBeenCalledTimes(3);
+            expect(mockAppContainer.resolve).toHaveBeenCalledTimes(2);
         });
     });
 
