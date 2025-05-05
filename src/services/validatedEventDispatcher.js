@@ -1,3 +1,5 @@
+// src/services/validatedEventDispatcher.js
+
 /**
  * @fileoverview Defines the ValidatedEventDispatcher service.
  * This service validates event payloads against schemas (if available)
@@ -86,7 +88,10 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
                         if (!validationResult.isValid) {
                             validationPassed = false;
                             const errorDetails = validationResult.errors?.map(e => `[${e.instancePath || 'root'}]: ${e.message}`).join('; ') || 'No details available';
-                            this.#logger.error(`VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`, { payload, errors: validationResult.errors });
+                            this.#logger.error(`VED: Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: ${errorDetails}`, {
+                                payload,
+                                errors: validationResult.errors
+                            });
                             shouldDispatch = false;
                         } else {
                             this.#logger.debug(`VED: Payload validation SUCCEEDED for event '${eventName}'.`);
@@ -137,15 +142,24 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
 
     /**
      * Subscribes a listener function to a specific event name.
-     * Delegates directly to the underlying EventBus.
+     * Delegates directly to the underlying EventBus and returns a function
+     * that can be called to unsubscribe the listener.
      * @param {string} eventName - The name of the event to subscribe to.
      * @param {EventListener} listener - The function to call when the event is dispatched.
-     * @returns {void}
+     * @returns {() => void} A function that, when called, unsubscribes the listener.
      */
     subscribe(eventName, listener) {
         this.#logger.debug(`VED: Delegating subscription for event "${eventName}" to EventBus.`);
-        // Delegate directly to the internal EventBus instance
+        // Delegate subscription to the internal EventBus instance
         this.#eventBus.subscribe(eventName, listener);
+
+        // --- FIX START ---
+        // Return an unsubscribe function that delegates to the EventBus's unsubscribe
+        return () => {
+            this.#logger.debug(`VED: Executing unsubscribe callback for "${eventName}". Delegating to EventBus.`);
+            this.#eventBus.unsubscribe(eventName, listener);
+        };
+        // --- FIX END ---
     }
 
     /**
