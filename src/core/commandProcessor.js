@@ -1,7 +1,7 @@
 // src/core/commandProcessor.js
 
 // --- Static Imports ---
-import { ResolutionStatus } from '../services/targetResolutionService.js';
+import {ResolutionStatus} from '../services/targetResolutionService.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -257,7 +257,7 @@ class CommandProcessor {
             };
         }
 
-        return { isValid: true, actorId: actorId, trimmedCommand: trimmedCommand, errorResult: null };
+        return {isValid: true, actorId: actorId, trimmedCommand: trimmedCommand, errorResult: null};
     }
 
     /**
@@ -307,7 +307,7 @@ class CommandProcessor {
         }
 
         this.#logger.debug(`CommandProcessor.#_parseCommand: Parsing successful for "${commandString}", action ID: ${parsedCommand.actionId}.`);
-        return { parsedCommand: parsedCommand, errorResult: null };
+        return {parsedCommand: parsedCommand, errorResult: null};
     }
 
     /**
@@ -337,7 +337,7 @@ class CommandProcessor {
         }
 
         this.#logger.debug(`CommandProcessor.#_fetchActionDefinition: Found ActionDefinition for '${actionId}'.`);
-        return { actionDefinition: actionDefinition, errorResult: null };
+        return {actionDefinition: actionDefinition, errorResult: null};
     }
 
     /**
@@ -365,23 +365,23 @@ class CommandProcessor {
                     this.#logger.error(`CommandProcessor.#_fetchLocationContext: ${internalMsg}`);
                     // This is a significant issue if an action requiring location context is attempted by an unlocated entity.
                     await this.#dispatchSystemError(userMsg, internalMsg);
-                    return { currentLocation: null, errorResult: this.#_createFailureResult(userMsg, internalMsg) };
+                    return {currentLocation: null, errorResult: this.#_createFailureResult(userMsg, internalMsg)};
                 } else {
                     // Action does not require a location, or targets 'self' or 'none'.
                     this.#logger.debug(`CommandProcessor.#_fetchLocationContext: Actor ${actorId} has no current location, but action '${actionDefinition.id}' (domain: '${actionDefinition.target_domain}') allows this. Proceeding without location context.`);
-                    return { currentLocation: null, errorResult: null }; // Legitimately null location for this action
+                    return {currentLocation: null, errorResult: null}; // Legitimately null location for this action
                 }
             } else {
                 // Location successfully fetched
                 this.#logger.debug(`CommandProcessor.#_fetchLocationContext: Successfully fetched current location ${currentLocation.id} for actor ${actorId}.`);
-                return { currentLocation: currentLocation, errorResult: null };
+                return {currentLocation: currentLocation, errorResult: null};
             }
         } catch (error) {
             const internalMsg = `Failed to get current location for actor ${actorId} using worldContext.getLocationOfEntity: ${error.message}`;
             const userMsg = 'Internal error: Could not determine your current location.';
             this.#logger.error(`CommandProcessor.#_fetchLocationContext: ${internalMsg}`, error);
             await this.#dispatchSystemError(userMsg, internalMsg, error);
-            return { currentLocation: null, errorResult: this.#_createFailureResult(userMsg, internalMsg) };
+            return {currentLocation: null, errorResult: this.#_createFailureResult(userMsg, internalMsg)};
         }
     }
 
@@ -410,7 +410,7 @@ class CommandProcessor {
                     if (eventName === 'textUI:display_message') { // Example: Only allow specific events through this shim
                         this.#logger.debug(`CommandProcessor (eventBus Shim in #_buildActionContext): Dispatching '${eventName}' via ValidatedEventDispatcher.`);
                         // Ensure the payload includes eventName for schema validation if dispatchValidated relies on it
-                        const validatedPayload = { ...payload, eventName: eventName };
+                        const validatedPayload = {...payload, eventName: eventName};
                         return this.#validatedEventDispatcher.dispatchValidated(eventName, validatedPayload);
                     } else {
                         this.#logger.warn(`CommandProcessor (eventBus Shim in #_buildActionContext): Received unsupported event dispatch attempt for '${eventName}'. Ignoring.`);
@@ -437,35 +437,52 @@ class CommandProcessor {
      * @private
      * @async
      */
+    /**
+     * @description Orchestrates the target resolution process for the given action using the target resolution service.
+     * It handles various outcomes of resolution, including successful resolution, ambiguities, or failures.
+     * @param {ActionDefinition} actionDefinition - The definition of the action being attempted.
+     * @param {ActionContext} actionContext - The context for the action, containing actor, location, etc.
+     * @returns {Promise<TargetOutcome>} A promise resolving to an object containing the resolutionResult
+     * (even on some failures, for context) and an errorResult if resolution failed in a way that should halt processing.
+     * @private
+     * @async
+     */
     async #_resolveTarget(actionDefinition, actionContext) {
         this.#logger.debug(`CommandProcessor.#_resolveTarget: Attempting to resolve target for action '${actionDefinition.id}'...`);
         const resolutionResult = await this.#targetResolutionService.resolveActionTarget(actionDefinition, actionContext);
-        this.#logger.debug(`CommandProcessor.#_resolveTarget: Target resolution complete. Status: ${resolutionResult.status}, Type: ${resolutionResult.targetType}, TargetID: ${resolutionResult.targetId}`);
+        const status = resolutionResult.status; // Cache status for readability
+        this.#logger.debug(`CommandProcessor.#_resolveTarget: Target resolution complete. Status: ${status}, Type: ${resolutionResult.targetType}, TargetID: ${resolutionResult.targetId}`);
 
-        const successfulStatuses = [
-            ResolutionStatus.FOUND_UNIQUE,
-            ResolutionStatus.NONE, // Action requires no target (e.g., "look" around)
-            ResolutionStatus.SELF   // Action targets the actor itself
-        ];
+        let isSuccessfulResolution = false;
 
-        if (!successfulStatuses.includes(resolutionResult.status)) {
+        if (status === ResolutionStatus.FOUND_UNIQUE || status === ResolutionStatus.SELF) {
+            isSuccessfulResolution = true;
+        } else if (status === ResolutionStatus.NONE && actionDefinition.target_domain === 'none') {
+            // Consider ResolutionStatus.NONE as success if the action's target_domain is 'none',
+            // indicating no specific target is expected or required for this type of action.
+            isSuccessfulResolution = true;
+        }
+        // Other statuses (e.g., AMBIGUOUS, NOT_FOUND, INVALID_TARGET_TYPE, ERROR)
+        // are implicitly considered failures if not caught by the conditions above.
+
+        if (!isSuccessfulResolution) {
             // Handle statuses like AMBIGUOUS, NOT_FOUND, INVALID_TARGET_TYPE, ERROR
-            const internalMsg = `Target resolution failed for action '${actionDefinition.id}' by actor ${actionContext.actingEntity.id}. Status: ${resolutionResult.status}. Resolver Error: ${resolutionResult.error || 'None provided by resolver.'}`;
-            // User-facing error should come from the resolutionResult if available
+            const internalMsg = `Target resolution failed for action '${actionDefinition.id}' by actor ${actionContext.actingEntity.id}. Status: ${status}. Resolver Error: ${resolutionResult.error || 'None provided by resolver.'}`;
+            // User-facing error should come from the resolutionResult if available, otherwise generate a generic one.
             const userError = resolutionResult.error
                 ? `Could not resolve target: ${resolutionResult.error}`
-                : `Could not complete action: target is unclear or invalid (Status: ${resolutionResult.status}).`;
+                : `Could not complete action: target is unclear or invalid (Status: ${status}).`;
 
             this.#logger.warn(`CommandProcessor.#_resolveTarget: ${internalMsg}`);
-            // It's important to return the resolutionResult itself for potential further inspection by the caller or event listeners, even on failure.
+            // It's important to return the resolutionResult itself for potential further inspection, even on failure.
             return {
                 resolutionResult: resolutionResult,
                 errorResult: this.#_createFailureResult(userError, internalMsg)
             };
         }
 
-        this.#logger.debug(`CommandProcessor.#_resolveTarget: Target resolution successful (Status: ${resolutionResult.status}, Type: ${resolutionResult.targetType}, TargetID: ${resolutionResult.targetId}).`);
-        return { resolutionResult: resolutionResult, errorResult: null };
+        this.#logger.debug(`CommandProcessor.#_resolveTarget: Target resolution successful (Status: ${status}, Type: ${resolutionResult.targetType}, TargetID: ${resolutionResult.targetId}).`);
+        return {resolutionResult: resolutionResult, errorResult: null};
     }
 
     /**
@@ -502,7 +519,7 @@ class CommandProcessor {
 
         if (dispatchSuccess) {
             this.#logger.info(`CommandProcessor.#_dispatchActionAttempt: Dispatched core:attempt_action successfully for command "${originalCommandString}" by actor ${actorId}.`);
-            return { success: true, errorResult: null };
+            return {success: true, errorResult: null};
         } else {
             // This implies an issue with the SafeEventDispatcher or the event schema/handler setup.
             const internalMsg = `CRITICAL: Failed to dispatch core:attempt_action event for actor ${actorId}, command "${originalCommandString}". SafeEventDispatcher reported failure. This may indicate a problem with event listeners or the event bus itself.`;
@@ -603,7 +620,7 @@ class CommandProcessor {
                 this.#logger.info(`CommandProcessor: Successfully processed and dispatched action for command "${trimmedCommand}" by actor ${actorId}.`);
                 // Successful dispatch means the command was valid up to this point.
                 // error and internalError are null as per CommandResult for full success.
-                return { success: true, turnEnded: false, error: null, internalError: null };
+                return {success: true, turnEnded: false, error: null, internalError: null};
             } else {
                 // errorResult is guaranteed by #_dispatchActionAttempt's contract if success is false
                 this.#logger.warn(`CommandProcessor: Failed to dispatch action for command "${trimmedCommand}" (actor ${actorId}). Returning error result from dispatch attempt.`);

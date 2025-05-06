@@ -63,7 +63,6 @@ jest.mock("../../../../services/prerequisiteEvaluationService.js", () => ({ __es
 jest.mock("../../../../validation/domainContextCompatibilityChecker.js", () => ({ __esModule: true, DomainContextCompatibilityChecker: jest.fn() }));
 jest.mock("../../../../services/actionValidationService.js", () => ({ __esModule: true, ActionValidationService: jest.fn().mockImplementation(() => mockActionValidationServiceInstance)}));
 jest.mock("../../../../services/payloadValueResolverService.js", () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockPayloadValueResolverServiceInstance)}));
-jest.mock("../../../../actions/actionExecutor.js", () => ({ __esModule: true, default: jest.fn() }));
 jest.mock("../../../../core/commandParser.js", () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockCommandParserInstance)}));
 jest.mock('../../../../logic/jsonLogicEvaluationService.js', () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockJsonLogicServiceInstance)}));
 jest.mock('../../../../core/worldContext.js', () => ({
@@ -85,7 +84,6 @@ import {PrerequisiteEvaluationService} from "../../../../services/prerequisiteEv
 import {DomainContextCompatibilityChecker} from "../../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../../services/actionValidationService.js";
 import PayloadValueResolverService from "../../../../services/payloadValueResolverService.js";
-import ActionExecutor from "../../../../actions/actionExecutor.js";
 import CommandParser from "../../../../core/commandParser.js";
 import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../../../core/worldContext.js';
@@ -259,7 +257,6 @@ describe('registerDomainServices', () => {
         DomainContextCompatibilityChecker.mockClear();
         ActionValidationService.mockClear();
         PayloadValueResolverService.mockClear();
-        ActionExecutor.mockClear();
         CommandParser.mockClear();
         JsonLogicEvaluationService.mockClear();
         WorldContext.mockClear();

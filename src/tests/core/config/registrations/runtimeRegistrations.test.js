@@ -39,7 +39,6 @@ import {tokens} from '../../../../core/config/tokens.js';
 // import TurnHandlerResolver from '../../../../core/services/turnHandlerResolver.js'; // Now mocked
 // Import concrete classes for domain services (if needed, but mostly mocked)
 import CommandProcessor from '../../../../core/commandProcessor.js';
-import ActionExecutor from '../../../../actions/actionExecutor.js';
 import CommandParser from '../../../../core/commandParser.js';
 import WorldContext from '../../../../core/worldContext.js';
 import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js'; // Original for type info if needed
@@ -52,7 +51,6 @@ jest.mock('../../../../core/setup/inputSetupService.js');
 jest.mock('../../../../core/turnManager.js');
 jest.mock('../../../../core/handlers/playerTurnHandler.js');
 jest.mock('../../../../core/commandProcessor.js');
-jest.mock('../../../../actions/actionExecutor.js');
 jest.mock('../../../../core/commandParser.js');
 jest.mock('../../../../core/worldContext.js');
 jest.mock('../../../../core/turnOrder/turnOrderService.js'); // Mocking TurnOrderService
@@ -61,19 +59,17 @@ jest.mock('../../../../systems/actionDiscoverySystem.js'); // Mocking ActionDisc
 jest.mock('../../../../core/services/turnHandlerResolver.js');
 
 
-
 // --- Import AFTER mocking ---
 import InputSetupService from '../../../../core/setup/inputSetupService.js';
 import TurnManager from '../../../../core/turnManager.js';
 import PlayerTurnHandler from '../../../../core/handlers/playerTurnHandler.js';
 // Import mocked versions for type checks if needed elsewhere
 import CommandProcessorMock from '../../../../core/commandProcessor.js';
-import ActionExecutorMock from '../../../../actions/actionExecutor.js';
 import CommandParserMock from '../../../../core/commandParser.js';
 import GameStateManagerMock from '../../../../core/worldContext.js';
-import { TurnOrderService as TurnOrderServiceMock } from '../../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService as TurnOrderServiceMock} from '../../../../core/turnOrder/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
-import { ActionDiscoverySystem as ActionDiscoverySystemMock } from '../../../../systems/actionDiscoverySystem.js';
+import {ActionDiscoverySystem as ActionDiscoverySystemMock} from '../../../../systems/actionDiscoverySystem.js';
 import TurnHandlerResolverMock from '../../../../core/services/turnHandlerResolver.js';
 // REMOVED: GameLoop import not needed
 // import GameLoop from '../../../../core/gameLoop.js';
@@ -101,15 +97,15 @@ const createMockTurnHandlerResolverObject = () => ({
 });
 
 // Simple object mocks for other domain services needed by factories but not the focus
-const mockActionValidationService = {validateAction: jest.fn(), isValid: jest.fn(()=>true)}; // Add mock isValid
+const mockActionValidationService = {validateAction: jest.fn(), isValid: jest.fn(() => true)}; // Add mock isValid
 const mockConditionEvaluationService = {evaluateCondition: jest.fn()};
 const mockItemTargetResolverService = {resolveTarget: jest.fn()};
-const mockTargetResolutionService = { resolveTargets: jest.fn() };
-const mockPayloadValueResolverService = { resolveValue: jest.fn() };
-const mockPrerequisiteEvaluationService = { evaluatePrerequisites: jest.fn() };
-const mockDomainContextCompatibilityChecker = { check: jest.fn() };
-const mockJsonLogicEvaluationService = { evaluate: jest.fn() };
-const mockActionValidationContextBuilder = { buildContext: jest.fn() };
+const mockTargetResolutionService = {resolveTargets: jest.fn()};
+const mockPayloadValueResolverService = {resolveValue: jest.fn()};
+const mockPrerequisiteEvaluationService = {evaluatePrerequisites: jest.fn()};
+const mockDomainContextCompatibilityChecker = {check: jest.fn()};
+const mockJsonLogicEvaluationService = {evaluate: jest.fn()};
+const mockActionValidationContextBuilder = {buildContext: jest.fn()};
 // REMOVED: mockTurnOrderServiceObject - we now use the imported mock TurnOrderServiceMock
 
 // --- Mock Custom DI Container ---
@@ -135,7 +131,7 @@ const createMockContainer = () => {
                 const registeredTokens = Array.from(registrations.keys()).map(String).join(', ');
                 throw new Error(`Mock Resolve Error: Token not registered: ${String(token)}. Registered tokens are: [${registeredTokens}]`);
             }
-            const { factoryOrValue, options } = registration;
+            const {factoryOrValue, options} = registration;
 
             // --- Handle Singleton Factory FIRST ---
             // Explicitly check for singletonFactory and assume it needs the container.
@@ -215,7 +211,7 @@ const createMockContainer = () => {
                     // Assume transient factories might take container or not. Pass it for flexibility.
                     try {
                         return factoryOrValue(container);
-                    } catch(e) {
+                    } catch (e) {
                         console.error(`Mock container: Error executing transient factory for ${String(token)}: ${e.message}\n${e.stack}`);
                         throw e;
                     }
@@ -268,7 +264,6 @@ describe('registerRuntime', () => {
         // Use the Jest-mocked versions directly where available
         mockContainer.register(tokens.IWorldContext, GameStateManagerMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ICommandParser, CommandParserMock, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.IActionExecutor, ActionExecutorMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ICommandProcessor, CommandProcessorMock, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ITurnOrderService, TurnOrderServiceMock, {lifecycle: 'singleton'});
         // Use the imported alias ActionDiscoverySystemMock which now points to the correct mock
@@ -319,7 +314,6 @@ describe('registerRuntime', () => {
         TurnManager.mockClear();
         PlayerTurnHandler.mockClear();
         CommandProcessorMock.mockClear();
-        ActionExecutorMock.mockClear();
         CommandParserMock.mockClear();
         GameStateManagerMock.mockClear();
         TurnOrderServiceMock.mockClear(); // Should work now
