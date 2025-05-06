@@ -1,268 +1,110 @@
-// src/services/targetResolutionService.js
-'use strict';
+import {ITargetResolutionService} from "../core/interfaces/ITargetResolutionService.js";
 
-/* -------------------------------------------------------- */
-/*  Necessary typedef imports for editor IntelliSense only  */
-/* -------------------------------------------------------- */
 /**
- * @typedef {object} ActionDefinition
- * @property {string} id
- * @property {string} [name]
- * @property {'none' | 'self' | 'inventory' | 'equipment' | 'environment' | 'direction'} target_domain
- * @property {string[]} [actor_required_components]
- * @property {string[]} [actor_forbidden_components]
- * @property {string[]} [target_required_components]
- * @property {string[]} [target_forbidden_components]
- * @property {object[]} [prerequisites]
- * @property {string} template
- * @property {{eventName:string,payload:Object.<string,string>}} [dispatch_event]
+ * @description Service responsible for resolving the target of an action based on player input,
+ * action definitions, and the current game state.
+ * @implements {ITargetResolutionService}
  */
+class TargetResolutionService extends ITargetResolutionService {
+    /** @type {IEntityManager} */ #entityManager;
+    /** @type {IWorldContext} */ #worldContext;
+    /** @type {IGameDataRepository} */ #gameDataRepository;
+    /** @type {ILogger} */ #logger;
 
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../entities/entity.js').default} Entity */
-
-/* -------------------------------------------------------- */
-/*  Imports                                                 */
-/* -------------------------------------------------------- */
-import {getEntityIdsForScopes} from './entityScopeService.js';
-import {findTarget} from '../utils/targetFinder.js';
-import {resolveTargetConnection} from './connectionResolver.js';
-
-/* -------------------------------------------------------- */
-/*  ResolutionStatus enum                                   */
-/* -------------------------------------------------------- */
-export const ResolutionStatus = Object.freeze({
-    FOUND_UNIQUE: 'FOUND_UNIQUE',
-    NOT_FOUND: 'NOT_FOUND',
-    AMBIGUOUS: 'AMBIGUOUS',
-    SELF: 'SELF',
-});
-
-/* -------------------------------------------------------- */
-/*  TargetResolutionService                                 */
-
-/* -------------------------------------------------------- */
-class TargetResolutionService {
-    constructor() {
-        console.log('TargetResolutionService initialized.');
+    /**
+     * @description Validates a dependency instance, checking for its existence and required methods.
+     * Logs an error and throws if validation fails. This method is intended for internal use
+     * during constructor setup.
+     * @param {any} dependency - The dependency instance to validate.
+     * @param {string} dependencyName - The name of the dependency (for logging and error messages).
+     * @param {string[]} [requiredMethods=[]] - An array of method names that must exist on the dependency.
+     * @private
+     * @throws {Error} If the dependency is missing or does not have all required methods.
+     */
+    #_validateDependency(dependency, dependencyName, requiredMethods = []) {
+        if (!dependency) {
+            const errorMsg = `TargetResolutionService Constructor: Missing required dependency: ${dependencyName}.`;
+            // this.#logger will be available here as it's validated first.
+            // The 'this.#logger !== dependency' check is a safeguard.
+            if (this.#logger && this.#logger !== dependency) {
+                this.#logger.error(errorMsg);
+            }
+            throw new Error(errorMsg);
+        }
+        for (const method of requiredMethods) {
+            if (typeof dependency[method] !== 'function') {
+                const errorMsg = `TargetResolutionService Constructor: Invalid or missing method '${method}' on dependency '${dependencyName}'.`;
+                if (this.#logger && this.#logger !== dependency) {
+                    this.#logger.error(errorMsg);
+                }
+                throw new Error(errorMsg);
+            }
+        }
     }
 
     /**
-     * Resolves the concrete target of an action.
-     *
-     * @param {ActionDefinition} actionDefinition
-     * @param {ActionContext}    context
-     * @returns {Promise<import('./targetResolutionService.js').TargetResolutionResult>}
+     * @description Constructor for TargetResolutionService. It injects and validates all required dependencies.
+     * The logger is validated first so it can be used for reporting issues with other dependencies.
+     * @param {TargetResolutionServiceOptions} options - Configuration object containing all necessary service dependencies.
+     * @throws {Error} If the logger dependency is invalid or any other critical dependency is missing or malformed.
      */
-    async resolveActionTarget(actionDefinition, context) {
-        /* --------------------------------------------
-         * Accept both `actingEntity` and legacy `playerEntity`
-         * ------------------------------------------ */
-        const actingEntity = context?.actingEntity ?? context?.playerEntity;
+    constructor(options) {
+        super(); // Call super if extending a class with a constructor, though ITargetResolutionService is an interface here.
+                 // For pure JSDoc interfaces, this isn't strictly necessary but doesn't harm.
+        const {
+            entityManager,
+            worldContext,
+            gameDataRepository,
+            logger
+        } = options || {};
 
-        if (
-            !actionDefinition ||
-            !context ||
-            !actingEntity ||
-            !context.entityManager ||
-            !context.parsedCommand
-        ) {
-            console.error('TargetResolutionService: invalid actionDefinition or context.');
-            return {
-                status: ResolutionStatus.NOT_FOUND,
-                targetType: null,
-                targetId: null,
-                targetEntity: null,
-                targetConnectionEntity: null,
-            };
+        // 1. Validate Logger separately and first
+        if (!logger ||
+            typeof logger.info !== 'function' ||
+            typeof logger.error !== 'function' ||
+            typeof logger.debug !== 'function' ||
+            typeof logger.warn !== 'function') {
+            const errorMsg = 'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Requires methods: info, error, debug, warn.';
+            console.error(errorMsg); // Use console.error as a fallback
+            throw new Error(errorMsg);
+        }
+        this.#logger = logger;
+
+        // 2. Validate other dependencies
+        try {
+            // Assuming common method names for these interfaces based on CommandProcessor usage
+            this.#_validateDependency(entityManager, 'entityManager', ['getEntityInstance']);
+            this.#_validateDependency(worldContext, 'worldContext', ['getLocationOfEntity', 'getEntitiesInLocation']);
+            this.#_validateDependency(gameDataRepository, 'gameDataRepository', ['getActionDefinition', 'getItemDefinition', 'getNpcDefinition']);
+        } catch (error) {
+            this.#logger.error(`TargetResolutionService Constructor: Dependency validation failed. ${error.message}`);
+            throw error;
         }
 
-        const {target_domain} = actionDefinition;
-        const {entityManager, parsedCommand} = context;
+        // 3. Assign validated dependencies
+        this.#entityManager = entityManager;
+        this.#worldContext = worldContext;
+        this.#gameDataRepository = gameDataRepository;
 
-        /* =========================================================
-         *  domain: none
-         * =======================================================*/
-        if (target_domain === 'none') {
-            return {
-                status: ResolutionStatus.FOUND_UNIQUE,
-                targetType: 'none',
-                targetId: null,
-                targetEntity: null,
-                targetConnectionEntity: null,
-            };
-        }
+        this.#logger.info("TargetResolutionService: Instance created and dependencies validated.");
+    }
 
-        /* =========================================================
-         *  domain: self
-         * =======================================================*/
-        if (target_domain === 'self') {
-            return {
-                status: ResolutionStatus.FOUND_UNIQUE,
-                targetType: 'self',
-                targetId: actingEntity.id,
-                targetEntity: actingEntity,
-                targetConnectionEntity: null,
-            };
-        }
-
-        /* =========================================================
-         *  domain: direction
-         * =======================================================*/
-        if (target_domain === 'direction') {
-            const rawDir = parsedCommand.directObjectPhrase ?? '';
-            const dirName = rawDir.trim();
-            if (!dirName) {
-                return {
-                    status: ResolutionStatus.NOT_FOUND,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                };
-            }
-
-            try {
-                const connEntity = resolveTargetConnection(context, dirName, actionDefinition.name || actionDefinition.id);
-                if (connEntity === null) {
-                    return {
-                        status: ResolutionStatus.NOT_FOUND,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                    };
-                }
-
-                return {
-                    status: ResolutionStatus.FOUND_UNIQUE,
-                    targetType: 'direction',
-                    targetId: connEntity.id,
-                    targetEntity: null,
-                    targetConnectionEntity: connEntity,
-                };
-            } catch (err) {
-                console.error('TargetResolutionService (direction): unexpected error', err);
-                return {
-                    status: ResolutionStatus.NOT_FOUND,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                };
-            }
-        }
-
-        /* =========================================================
-         *  entity-based domains
-         * =======================================================*/
-        const entityDomains = [
-            'inventory',
-            'equipment',
-            'environment',
-            'location_items',
-            'nearby_including_blockers',
-        ];
-
-        if (entityDomains.includes(target_domain)) {
-            const rawName = parsedCommand.directObjectPhrase ?? '';
-            const targetName = rawName.trim();
-            if (!targetName) {
-                return {
-                    status: ResolutionStatus.NOT_FOUND,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                };
-            }
-
-            /* 1. collect candidate IDs */
-            const candidateIds = getEntityIdsForScopes([target_domain], {
-                ...context,
-                playerEntity: actingEntity,
-            });
-
-            if (candidateIds.size === 0) {
-                return {
-                    status: ResolutionStatus.NOT_FOUND,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                };
-            }
-
-            const candidates = Array.from(candidateIds)
-                .map(id => entityManager.getEntityInstance(id))
-                .filter(Boolean);
-
-            if (candidates.length === 0) {
-                return {
-                    status: ResolutionStatus.NOT_FOUND,
-                    targetType: null,
-                    targetId: null,
-                    targetEntity: null,
-                    targetConnectionEntity: null,
-                };
-            }
-
-            /* 2. fuzzy-match name */
-            const result = findTarget(targetName, candidates);
-
-            switch (result.status) {
-                case 'NOT_FOUND':
-                    return {
-                        status: ResolutionStatus.NOT_FOUND,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                    };
-
-                case 'FOUND_AMBIGUOUS':
-                    return {
-                        status: ResolutionStatus.AMBIGUOUS,
-                        targetType: 'entity',
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                    };
-
-                case 'FOUND_UNIQUE': {
-                    const match = result.matches[0];
-                    return {
-                        status: ResolutionStatus.FOUND_UNIQUE,
-                        targetType: 'entity',
-                        targetId: match.id,
-                        targetEntity: match,
-                        targetConnectionEntity: null,
-                    };
-                }
-
-                default:
-                    // should never happen, but stay defensive
-                    console.error(`TargetResolutionService: unexpected findTarget status '${result.status}'`);
-                    return {
-                        status: ResolutionStatus.NOT_FOUND,
-                        targetType: null,
-                        targetId: null,
-                        targetEntity: null,
-                        targetConnectionEntity: null,
-                    };
-            }
-        }
-
-        /* =========================================================
-         *  unhandled domain
-         * =======================================================*/
-        console.warn(`TargetResolutionService: unhandled domain '${target_domain}'.`);
+    /**
+     * Resolves the target for a given action based on the action definition and context.
+     * This is a placeholder implementation.
+     * @param {ActionDefinition} actionDefinition - The definition of the action being performed.
+     * @param {ActionContext} actionContext - The context in which the action is being performed.
+     * @returns {Promise<TargetResolutionResult>} A promise that resolves to the target resolution result.
+     * @async
+     * @override
+     */
+    async resolveActionTarget(actionDefinition, actionContext) {
+        this.#logger.debug(`TargetResolutionService.resolveActionTarget called for action: ${actionDefinition.id}, actor: ${actionContext.actingEntity.id}`);
+        // Placeholder implementation
         return {
             status: ResolutionStatus.NOT_FOUND,
-            targetType: null,
-            targetId: null,
-            targetEntity: null,
-            targetConnectionEntity: null,
+            targetType: 'none',
+            targetId: null
         };
     }
 }

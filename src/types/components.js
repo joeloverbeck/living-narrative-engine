@@ -10,6 +10,7 @@ export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position'; // Define constant for clarity
 export const CONNECTIONS_COMPONENT_TYPE_ID = 'component:connections';
 export const PASSAGE_DETAILS_COMPONENT_TYPE_ID = 'component:passage_details';
+export const EXITS_COMPONENT_TYPE_ID = 'core:exits';
 export const OPENABLE_COMPONENT_ID = 'component:openable';
 export const LOCKABLE_COMPONENT_ID = 'component:lockable';
 export const INVENTORY_COMPONENT_ID = 'component:inventory';
