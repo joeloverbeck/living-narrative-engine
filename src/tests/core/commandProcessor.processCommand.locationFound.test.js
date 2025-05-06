@@ -1,4 +1,4 @@
-// src/tests/core/commandProcessor.processCommand.locationException.test.js
+// src/tests/core/commandProcessor.processCommand.locationFound.test.js
 
 import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
 import CommandProcessor from '../../core/commandProcessor.js'; // Adjust path as needed
@@ -16,6 +16,7 @@ import CommandProcessor from '../../core/commandProcessor.js'; // Adjust path as
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 /** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 
 
 // --- Mock Dependencies ---
@@ -37,11 +38,11 @@ jest.mock('../../services/targetResolutionService.js', () => ({
         return mockResolutionStatus; // Accessed via getter
     }
 }));
-// Removed { virtual: true }
+// Removed { virtual: true } as the module exists. Add back if necessary for other reasons.
 
 
 // --- Test Suite ---
-describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (Branch 5.1)', () => {
+describe('CommandProcessor.processCommand() [Success Path Continues] Location Found (Branch 5.4)', () => {
     /** @type {ICommandParser} */ let mockCommandParser;
     /** @type {ITargetResolutionService} */ let mockTargetResolutionService;
     /** @type {ILogger} */ let mockLogger;
@@ -53,18 +54,15 @@ describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (
     /** @type {CommandProcessor} */ let commandProcessor;
 
     const mockActor = { id: 'player1' };
-    const command = "look"; // Command string
+    const command = "look"; // Command string, could be "look item" too
     const actionId = 'core:look';
-    const userFacingError = 'Internal error: Could not determine your current location.';
-    const locationError = new Error('Database connection failed');
-    const internalErrorMsg = `Failed to get current location for actor ${mockActor.id} using worldContext.getLocationOfEntity: ${locationError.message}`;
-    const systemErrorContextMsg = `CommandProcessor System Error Context: ${internalErrorMsg}. Original Error: ${locationError.message}`;
-
+    const mockLocation = { id: 'room1', name: 'A Room', description: 'A plain room.' }; // Sample location object
+    const resolvedTargetId = 'item1'; // Example target ID from resolution mock
 
     /** @type {ParsedCommand} */
     const mockParsedResult = {
         actionId: actionId,
-        directObjectPhrase: null,
+        directObjectPhrase: null, // For "look" alone
         preposition: null,
         indirectObjectPhrase: null,
         originalInput: command,
@@ -75,20 +73,19 @@ describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (
     const mockActionDef = {
         id: actionId,
         commandVerb: 'look',
-        target_domain: 'location', // Requires location context
+        target_domain: 'location', // Requires location, or an item/feature within it
+        target_type: 'feature', // Example, could be varied
+        syntax: ['look', 'look <dobj>'],
         preconditions: [],
         effects: [],
         description: '',
-        target_type: 'none',
-        syntax: ['look'],
     };
 
-
-    const expectedFailureResult = {
-        success: false,
+    const expectedSuccessResult = {
+        success: true,
         turnEnded: false,
-        error: userFacingError,
-        internalError: internalErrorMsg
+        error: null,
+        internalError: null
     };
 
     beforeEach(async () => {
@@ -97,7 +94,14 @@ describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (
         mockCommandParser = {
             parse: jest.fn().mockReturnValue(mockParsedResult)
         };
-        mockTargetResolutionService = { resolveActionTarget: jest.fn() };
+        mockTargetResolutionService = {
+            resolveActionTarget: jest.fn().mockResolvedValue({
+                status: mockResolutionStatus.FOUND_UNIQUE, // Mock successful resolution
+                targetType: 'entity', // Example type
+                targetId: resolvedTargetId, // Example ID
+                error: null
+            })
+        };
         mockLogger = {
             error: jest.fn(),
             warn: jest.fn(),
@@ -105,13 +109,13 @@ describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (
             debug: jest.fn(),
         };
         mockSafeEventDispatcher = {
-            dispatchSafely: jest.fn().mockResolvedValue(true),
+            dispatchSafely: jest.fn().mockImplementation(async (eventName, payload) => {
+                return eventName === 'core:attempt_action'; // Return true only for the expected event
+            }),
         };
         mockValidatedEventDispatcher = { dispatchValidated: jest.fn() };
         mockWorldContext = {
-            getLocationOfEntity: jest.fn().mockImplementation(() => {
-                throw locationError;
-            })
+            getLocationOfEntity: jest.fn().mockReturnValue(mockLocation) // Return the valid location object
         };
         mockEntityManager = { getEntityInstance: jest.fn() };
         mockGameDataRepository = {
@@ -128,69 +132,78 @@ describe('CommandProcessor.processCommand() [Failure] Location Fetch Exception (
             entityManager: mockEntityManager,
             gameDataRepository: mockGameDataRepository,
         });
+        // Adding a slight delay to ensure any async operations in constructor complete
         await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     afterEach(() => {
-        // jest.restoreAllMocks();
+        // jest.restoreAllMocks(); // Consider this if you want to restore original implementations
     });
 
-    it('[CPROC-TICKET-5.1] should handle exception during location fetch', async () => {
+    it('[CPROC-TICKET-5.4] should proceed correctly when location is found', async () => {
+        // Act
         const result = await commandProcessor.processCommand(mockActor, command);
 
-        expect(result).toEqual(expectedFailureResult);
+        // Assert: Check the returned result object
+        expect(result).toEqual(expectedSuccessResult);
 
+        // Assert: Calls to initial services
         expect(mockCommandParser.parse).toHaveBeenCalledTimes(1);
         expect(mockCommandParser.parse).toHaveBeenCalledWith(command);
-
         expect(mockGameDataRepository.getActionDefinition).toHaveBeenCalledTimes(1);
         expect(mockGameDataRepository.getActionDefinition).toHaveBeenCalledWith(actionId);
-
         expect(mockWorldContext.getLocationOfEntity).toHaveBeenCalledTimes(1);
         expect(mockWorldContext.getLocationOfEntity).toHaveBeenCalledWith(mockActor.id);
 
-        expect(mockLogger.error).toHaveBeenCalledTimes(2);
+        // Assert: logger.debug for successfully fetching location
+        const expectedDebugMsg = `CommandProcessor.#_fetchLocationContext: Successfully fetched current location ${mockLocation.id} for actor ${mockActor.id}.`;
+        expect(mockLogger.debug).toHaveBeenCalledWith(expectedDebugMsg);
 
-        const expectedFetchLocationContextErrorMsg = `CommandProcessor.#_fetchLocationContext: ${internalErrorMsg}`;
-        const errorCall1 = mockLogger.error.mock.calls.find(call => call[0] === expectedFetchLocationContextErrorMsg);
-        expect(errorCall1).toBeDefined();
-        if (errorCall1) { // Guard for safety, though it should be defined
-            expect(errorCall1[0]).toBe(expectedFetchLocationContextErrorMsg);
-            expect(errorCall1[1]).toBe(locationError);
-        }
+        // Assert: targetResolutionService.resolveActionTarget called
+        expect(mockTargetResolutionService.resolveActionTarget).toHaveBeenCalledTimes(1);
+        const actionContextArg = mockTargetResolutionService.resolveActionTarget.mock.calls[0][1];
+        expect(actionContextArg).toBeDefined();
+        expect(actionContextArg.currentLocation).toBe(mockLocation); // Crucial check
+        expect(actionContextArg.actingEntity).toBe(mockActor);
+        expect(actionContextArg.parsedCommand).toBe(mockParsedResult);
 
-
-        const errorCall2 = mockLogger.error.mock.calls.find(call => call[0] === systemErrorContextMsg);
-        expect(errorCall2).toBeDefined();
-        if (errorCall2) {
-            expect(errorCall2[1]).toBe(locationError);
-        }
-
+        // Assert: safeEventDispatcher.dispatchSafely called for core:attempt_action
         expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
         expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(
-            'core:system_error_occurred',
+            'core:attempt_action',
             expect.objectContaining({
-                eventName: 'core:system_error_occurred',
-                message: userFacingError,
-                type: 'error',
-                details: internalErrorMsg
+                eventName: 'core:attempt_action',
+                actorId: mockActor.id,
+                actionId: actionId,
+                targetId: resolvedTargetId, // Based on FOUND_UNIQUE resolution mock
+                originalInput: command,
             })
         );
 
-        expect(mockTargetResolutionService.resolveActionTarget).not.toHaveBeenCalled();
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-
-        const processingInfoLog = mockLogger.info.mock.calls.find(
-            callArgs => typeof callArgs[0] === 'string' && callArgs[0].startsWith(`CommandProcessor: Processing command "${command}" for actor ${mockActor.id}`)
+        // Assert: logger.error NOT called for location issues
+        const relevantErrorCalls = mockLogger.error.mock.calls.filter(
+            call => call[0].startsWith('CommandProcessor:') || call[0].startsWith('System Error Context:')
         );
-        expect(processingInfoLog).toBeDefined();
+        expect(relevantErrorCalls.length).toBe(0);
 
-        expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_parseCommand: Attempting to parse: "${command}" for actor ${mockActor.id}`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_parseCommand: Parsing complete. Result: ${JSON.stringify(mockParsedResult)}`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_parseCommand: Parsing successful for "${command}", action ID: ${actionId}.`);
-        expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_fetchActionDefinition: Attempting to fetch ActionDefinition for actionId '${actionId}'.`);
+        // Assert: safeEventDispatcher.dispatchSafely NOT called for error events
+        mockSafeEventDispatcher.dispatchSafely.mock.calls.forEach(call => {
+            const eventName = call[0];
+            if (eventName === 'core:attempt_action') return; // Skip the expected call
+            expect(eventName).not.toBe('core:system_error_occurred');
+            expect(eventName).not.toBe('core:command_parse_failed');
+        });
+
+        // Assert: General logs expected in success path
+        expect(mockLogger.info).toHaveBeenCalledWith(`CommandProcessor: Processing command "${command}" for actor ${mockActor.id}`);
         expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_fetchActionDefinition: Found ActionDefinition for '${actionId}'.`);
-        // The following debug log is NOT expected in THIS error path, so it is removed.
-        // expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_fetchLocationContext: Actor ${mockActor.id} has no current location, but action '${mockActionDef.id}' (domain: '${mockActionDef.target_domain}') allows this. Proceeding without location context.`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`CommandProcessor.#_buildActionContext: ActionContext built successfully.`);
+
+        // Corrected log expectations for #_dispatchActionAttempt
+        expect(mockLogger.info).toHaveBeenCalledWith(`CommandProcessor.#_dispatchActionAttempt: Command parse and target resolution successful for "${command}". Dispatching core:attempt_action.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`CommandProcessor.#_dispatchActionAttempt: Dispatched core:attempt_action successfully for command "${command}" by actor ${mockActor.id}.`);
+
+        // This log occurs in processCommand after successful dispatch.
+        expect(mockLogger.info).toHaveBeenCalledWith(`CommandProcessor: Successfully processed and dispatched action for command "${command}" by actor ${mockActor.id}.`);
     });
 });

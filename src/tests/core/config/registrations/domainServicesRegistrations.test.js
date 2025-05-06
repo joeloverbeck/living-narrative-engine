@@ -1,6 +1,4 @@
 // src/tests/core/config/registrations/domainServicesRegistrations.test.js
-// ****** CORRECTED FILE ******
-
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
@@ -9,14 +7,18 @@
 /** @typedef {import('../../../../core/eventBus.js').default} EventBus */
 /** @typedef {import('../../../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../../../services/targetResolutionService.js').default} TargetResolutionService */
-/** @typedef {import('../../../../services/actionValidationService.js').default} ActionValidationService */
+/** @typedef {import('../../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Use concrete class for mock
 /** @typedef {import('../../../../services/payloadValueResolverService.js').default} PayloadValueResolverService */
 /** @typedef {import('../../../../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../../../core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED
 /** @typedef {import('../../../../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../../../core/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../../../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../../core/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('../../../../core/services/playerPromptService.js').default} PlayerPromptService */
+/** @typedef {import('../../../../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../../../core/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -28,71 +30,53 @@ import {registerDomainServices} from '../../../../core/config/registrations/doma
 // --- Dependencies ---
 import {tokens} from '../../../../core/config/tokens.js';
 
-// --- REMOVED top-level const mock... = jest.fn() declarations ---
-// const mockConditionEvaluationService = jest.fn(); // REMOVED
-// ... and so on for all others ...
+// --- MOCK INSTANCES needed for assertions or as return values from mock constructors ---
+const mockTargetResolutionServiceInstance = { resolveActionTarget: jest.fn() };
+const mockWorldContextInstance = { getLocationOfEntity: jest.fn() };
+const mockCommandParserInstance = { parse: jest.fn() };
+const mockActionDiscoverySystemInstance = { getValidActions: jest.fn() };
+const mockPromptOutputPortInstance = { prompt: jest.fn() };
+const mockActionValidationServiceInstance = { validateAction: jest.fn() };
+const mockPayloadValueResolverServiceInstance = { resolveValue: jest.fn() };
+const mockJsonLogicServiceInstance = {};
 
 // --- MOCK the Modules Directly Inline ---
-jest.mock('../../../../services/conditionEvaluationService.js', () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../services/itemTargetResolver.js", () => ({
-    __esModule: true,
-    ItemTargetResolverService: jest.fn() // Create mock inline
-}));
+jest.mock('../../../../services/conditionEvaluationService.js', () => ({ __esModule: true, default: jest.fn() }));
+jest.mock("../../../../services/itemTargetResolver.js", () => ({ __esModule: true, ItemTargetResolverService: jest.fn() }));
 jest.mock("../../../../services/targetResolutionService.js", () => ({
     __esModule: true,
-    default: jest.fn() // Create mock inline
+    default: jest.fn().mockImplementation(() => {
+        return mockTargetResolutionServiceInstance;
+    }),
+    ResolutionStatus: {
+        FOUND_UNIQUE: 'FOUND_UNIQUE',
+        NONE: 'NONE',
+        SELF: 'SELF',
+        AMBIGUOUS: 'AMBIGUOUS',
+        NOT_FOUND: 'NOT_FOUND',
+        INVALID_DOMAIN: 'INVALID_DOMAIN',
+        FAILED: 'FAILED',
+    }
 }));
-jest.mock("../../../../services/actionValidationContextBuilder.js", () => ({
-    __esModule: true,
-    ActionValidationContextBuilder: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../services/prerequisiteEvaluationService.js", () => ({
-    __esModule: true,
-    PrerequisiteEvaluationService: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../validation/domainContextCompatibilityChecker.js", () => ({
-    __esModule: true,
-    DomainContextCompatibilityChecker: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../services/actionValidationService.js", () => ({
-    __esModule: true,
-    ActionValidationService: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../services/payloadValueResolverService.js", () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../actions/actionExecutor.js", () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
-jest.mock("../../../../core/commandParser.js", () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
-jest.mock('../../../../logic/jsonLogicEvaluationService.js', () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
+jest.mock("../../../../services/actionValidationContextBuilder.js", () => ({ __esModule: true, ActionValidationContextBuilder: jest.fn() }));
+jest.mock("../../../../services/prerequisiteEvaluationService.js", () => ({ __esModule: true, PrerequisiteEvaluationService: jest.fn() }));
+jest.mock("../../../../validation/domainContextCompatibilityChecker.js", () => ({ __esModule: true, DomainContextCompatibilityChecker: jest.fn() }));
+jest.mock("../../../../services/actionValidationService.js", () => ({ __esModule: true, ActionValidationService: jest.fn().mockImplementation(() => mockActionValidationServiceInstance)}));
+jest.mock("../../../../services/payloadValueResolverService.js", () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockPayloadValueResolverServiceInstance)}));
+jest.mock("../../../../actions/actionExecutor.js", () => ({ __esModule: true, default: jest.fn() }));
+jest.mock("../../../../core/commandParser.js", () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockCommandParserInstance)}));
+jest.mock('../../../../logic/jsonLogicEvaluationService.js', () => ({ __esModule: true, default: jest.fn().mockImplementation(() => mockJsonLogicServiceInstance)}));
 jest.mock('../../../../core/worldContext.js', () => ({
     __esModule: true,
-    default: jest.fn() // Create mock inline
+    default: jest.fn().mockImplementation(() => {
+        return mockWorldContextInstance;
+    })
 }));
-jest.mock('../../../../core/commandProcessor.js', () => ({
-    __esModule: true,
-    default: jest.fn() // Create mock inline
-}));
-jest.mock('../../../../core/turnOrder/turnOrderService.js', () => ({
-    __esModule: true,
-    TurnOrderService: jest.fn() // Create mock inline
-}));
-
+jest.mock('../../../../core/commandProcessor.js', () => ({ __esModule: true, default: jest.fn() }));
+jest.mock('../../../../core/turnOrder/turnOrderService.js', () => ({ __esModule: true, TurnOrderService: jest.fn() }));
+jest.mock('../../../../core/services/playerPromptService.js', () => ({ __esModule: true, default: jest.fn() }));
 
 // --- Import AFTER mocking ---
-// These imports now point to the mocks created inline above
 import ConditionEvaluationService from '../../../../services/conditionEvaluationService.js';
 import {ItemTargetResolverService} from "../../../../services/itemTargetResolver.js";
 import TargetResolutionService from "../../../../services/targetResolutionService.js";
@@ -107,131 +91,139 @@ import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationSer
 import WorldContext from '../../../../core/worldContext.js';
 import CommandProcessor from '../../../../core/commandProcessor.js';
 import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js';
-
+import PlayerPromptService from '../../../../core/services/playerPromptService.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---
-// These are for dependencies NOT mocked via jest.mock above
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-const mockEntityManager = {getComponent: jest.fn(), hasComponent: jest.fn(), getEntity: jest.fn()};
+const mockEntityManager = {getComponent: jest.fn(), hasComponent: jest.fn(), getEntity: jest.fn(), getEntityInstance: jest.fn()};
 const mockValidatedEventDispatcher = {dispatchValidated: jest.fn(), subscribe: jest.fn()};
+const mockSafeEventDispatcher = { dispatchSafely: jest.fn() }; // <<< ADDED
 const mockGameDataRepository = {getActionDefinition: jest.fn(), getRule: jest.fn()};
 const mockEventBus = {dispatch: jest.fn(), subscribe: jest.fn()};
-// Create an *instance* of the mocked JsonLogic service if needed by other mocks/code
-// Note: JsonLogicEvaluationService imported above now refers to the jest.fn() mock constructor
-const mockJsonLogicServiceInstance = new JsonLogicEvaluationService();
 
 
-// --- *** USE THE REFINED MOCK CONTAINER from uiRegistrations.test.js *** ---
 const createMockContainer = () => {
     const registrations = new Map();
     const instances = new Map();
-    let containerInstance; // For self-reference within factories/resolvers
+    let containerInstance;
 
-    // --- Simplified Register Spy ---
     const registerSpy = jest.fn((token, factoryOrValueOrClass, options = {}) => {
+        const tokenString = String(token);
         if (!token) {
-            console.error('[Mock Register ERROR] Falsy token received unexpectedly!', {
-                token,
-                factoryOrValueOrClass,
-                options
-            });
+            console.error('[Mock Register ERROR] Falsy token received!', { token, factoryOrValueOrClass, options });
             throw new Error('Mock Register Error: Token is required.');
         }
         registrations.set(token, {
-            factoryOrValue: factoryOrValueOrClass,
+            registration: factoryOrValueOrClass,
             options: options
         });
-        if (options?.lifecycle?.startsWith('singleton') && instances.has(token)) {
+        const lifecycle = options?.lifecycle || 'singleton';
+        if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory') && instances.has(token)) {
             instances.delete(token);
         }
     });
 
-    // --- Adapted Resolve Spy ---
     const resolveSpy = jest.fn((token) => {
         const tokenString = String(token);
-        if (instances.has(token)) return instances.get(token); // Check cache first
+        const lifecycleFromRegistration = registrations.get(token)?.options?.lifecycle;
+        const isSingleton = lifecycleFromRegistration === 'singleton' || lifecycleFromRegistration === 'singletonFactory';
 
-        const registration = registrations.get(token);
-        if (registration) {
-            const {factoryOrValue, options} = registration;
-            const lifecycle = options?.lifecycle || 'transient';
-            let instance;
-
-            const isClassForSingle = typeof factoryOrValue === 'function' && options?.dependencies && options.dependencies.length > 0 && options?.lifecycle === 'singleton';
-            const isFactoryFunction = typeof factoryOrValue === 'function' && !isClassForSingle;
-
-            if (isClassForSingle) { // Handle 'single' registration (Class + dependencies)
-                const ClassConstructor = factoryOrValue;
-                const deps = options.dependencies;
-                const resolvedContainer = containerInstance;
-                const dependenciesMap = {};
-                const targetClassName = ClassConstructor.name || '[AnonymousClass]';
-                deps.forEach((depToken) => {
-                    let propName = String(depToken);
-                    if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) propName = propName.substring(1);
-                    propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-                    try {
-                        dependenciesMap[propName] = resolvedContainer.resolve(depToken);
-                    } catch (e) {
-                        console.error(`[Mock Resolve Factory for ${tokenString}] FAILED dependency: ${String(depToken)} for prop "${propName}"`, e);
-                        throw e;
-                    }
-                });
-                try {
-                    instance = new ClassConstructor(dependenciesMap); // Inject map
-                } catch (constructorError) {
-                    console.error(`[Mock Resolve Factory for ${tokenString}] Constructor error for "${targetClassName}"`, constructorError);
-                    throw constructorError;
-                }
-            } else if (isFactoryFunction) { // Handle 'factory' registration
-                try {
-                    instance = factoryOrValue(containerInstance); // Execute factory
-                } catch (factoryError) {
-                    console.error(`[Mock Resolve] Error executing factory for ${tokenString}:`, factoryError);
-                    throw factoryError;
-                }
-            } else { // Handle 'instance' registration
-                instance = factoryOrValue; // Return direct value
-            }
-
-            // Cache if singleton
-            if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory') && instance !== undefined) {
-                instances.set(token, instance);
-            }
-            return instance;
+        if (isSingleton && instances.has(token)) {
+            return instances.get(token);
         }
 
-        // Fallbacks for core mocks if not registered by test setup
-        if (token === tokens.ILogger) return mockLogger;
-        if (token === tokens.EventBus) return mockEventBus;
-        if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
-        if (token === tokens.EntityManager) return mockEntityManager;
-        if (token === tokens.GameDataRepository) return mockGameDataRepository;
-        // Return the instance created from the mocked constructor
-        if (token === tokens.JsonLogicEvaluationService) return mockJsonLogicServiceInstance;
+        const registrationData = registrations.get(token);
+        if (!registrationData) {
+            if (token === tokens.ILogger) return mockLogger;
+            if (token === tokens.EventBus) return mockEventBus;
+            if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
+            if (token === tokens.ISafeEventDispatcher) return mockSafeEventDispatcher; // <<< ADDED FALLBACK
+            if (token === tokens.EntityManager) return mockEntityManager;
+            if (token === tokens.GameDataRepository) return mockGameDataRepository;
+            if (token === tokens.ICommandParser) return mockCommandParserInstance;
+            if (token === tokens.IActionDiscoverySystem) return mockActionDiscoverySystemInstance;
+            if (token === tokens.IPromptOutputPort) return mockPromptOutputPortInstance;
 
-        // Throw if token truly not found
-        const registeredTokens = Array.from(registrations.keys()).map(String).join(', ');
-        throw new Error(`Mock Resolve Error: Token not registered or explicitly mocked: ${String(token)}. Registered: [${registeredTokens}]`);
+            const registeredTokens = Array.from(registrations.keys()).map(String).join(', ');
+            console.error(`[Mock Resolve Error] Token not registered or explicitly mocked via fallback: ${tokenString}. Registered: [${registeredTokens}]`);
+            throw new Error(`Mock Resolve Error: Token not registered or explicitly mocked: ${tokenString}. Registered: [${registeredTokens}]`);
+        }
+
+        const { registration: factoryOrValueOrClass, options } = registrationData;
+        const lifecycle = options?.lifecycle || 'singleton';
+        let instance;
+
+        const isClassRegistration = typeof factoryOrValueOrClass === 'function'
+            && options?.hasOwnProperty('dependencies');
+        const isFactoryFunction = typeof factoryOrValueOrClass === 'function' && !isClassRegistration;
+
+        if (isClassRegistration) {
+            const ClassConstructor = factoryOrValueOrClass;
+            const deps = Array.isArray(options.dependencies) ? options.dependencies : [];
+            const resolvedContainer = containerInstance;
+            const dependenciesMap = {};
+            const targetClassName = ClassConstructor.name || '[AnonymousMockClass]';
+
+            deps.forEach((depToken) => {
+                let propName = String(depToken);
+                if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) propName = propName.substring(1);
+                propName = propName.charAt(0).toLowerCase() + propName.slice(1);
+                try {
+                    dependenciesMap[propName] = resolvedContainer.resolve(depToken);
+                } catch (e) {
+                    console.error(`[Mock Resolve - Class Dep Error] Failed to resolve dependency "${String(depToken)}" (for prop "${propName}") needed by "${targetClassName}" (${tokenString})`, e);
+                    throw new Error(`Failed dependency resolution for "${targetClassName}": ${e.message}`, { cause: e });
+                }
+            });
+            try {
+                if (ClassConstructor.prototype && ClassConstructor.prototype.constructor === ClassConstructor) {
+                    instance = new ClassConstructor(dependenciesMap);
+                } else {
+                    instance = ClassConstructor(dependenciesMap);
+                }
+            } catch (constructorError) {
+                console.error(`[Mock Resolve - Class Instantiation Error] Constructor error for mocked "${targetClassName}" (${tokenString})`, constructorError);
+                throw new Error(`Error constructing mock for ${targetClassName}: ${constructorError.message}`, { cause: constructorError });
+            }
+        } else if (isFactoryFunction) {
+            try {
+                instance = factoryOrValueOrClass(containerInstance);
+            } catch (factoryError) {
+                console.error(`[Mock Resolve - Factory Execution Error] Error executing factory for ${tokenString}:`, factoryError);
+                throw factoryError;
+            }
+        } else {
+            instance = factoryOrValueOrClass;
+        }
+
+        if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory') && instance !== undefined) {
+            instances.set(token, instance);
+        }
+        return instance;
     });
 
-    // --- Set up container self-reference ---
     containerInstance = {
         _registrations: registrations,
         _instances: instances,
         register: registerSpy,
         resolve: resolveSpy,
-        resolveAll: jest.fn((tag) => { // Basic resolveAll mock
+        resolveByTag: jest.fn((tag) => {
             const resolved = [];
-            registrations.forEach((reg, token) => {
-                if (reg.options?.tags?.includes(tag)) {
+            registrations.forEach((regData, token) => {
+                if (regData.options?.tags?.includes(tag)) {
                     try {
                         resolved.push(containerInstance.resolve(token));
-                    } catch (e) { /* ignore */
+                    } catch (e) {
+                        console.warn(`[Mock resolveByTag] Failed to resolve tagged instance ${String(token)} for tag "${tag}"`, e);
                     }
                 }
             });
             return resolved;
+        }),
+        disposeSingletons: jest.fn(() => instances.clear()),
+        reset: jest.fn(() => {
+            registrations.clear();
+            instances.clear();
         })
     };
     return containerInstance;
@@ -243,57 +235,22 @@ describe('registerDomainServices', () => {
     let mockContainer;
 
     beforeEach(() => {
-        // Clear mocks defined via jest.mock *AND* regular jest.fn mocks
-        jest.clearAllMocks(); // Clears call history etc. for mocks from jest.mock
-
+        jest.clearAllMocks();
         mockContainer = createMockContainer();
 
-        // Pre-register MOCKED core/external dependencies required by domain services
-        // These are instances/values
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
+        // mockContainer.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher, {lifecycle: 'singleton'}); // Not strictly needed due to fallback
         mockContainer.register(tokens.GameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicServiceInstance, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ICommandParser, mockCommandParserInstance, { lifecycle: 'singleton' });
+        mockContainer.register(tokens.IActionDiscoverySystem, mockActionDiscoverySystemInstance, { lifecycle: 'singleton' });
+        mockContainer.register(tokens.IPromptOutputPort, mockPromptOutputPortInstance, { lifecycle: 'singleton' });
 
-        // Pre-register services that are dependencies *within* the bundle
-        // Register the *mocked constructors* (which are now jest.fn())
-        // The mock resolver will handle calling `new` on these if needed.
-        mockContainer.register(tokens.TargetResolutionService, TargetResolutionService, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.DomainContextCompatibilityChecker, DomainContextCompatibilityChecker, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.PrerequisiteEvaluationService, PrerequisiteEvaluationService, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.PayloadValueResolverService, PayloadValueResolverService, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.ActionValidationService, ActionValidationService, {
-            lifecycle: 'singleton',
-            dependencies: []
-        });
-        mockContainer.register(tokens.IWorldContext, WorldContext, {lifecycle: 'singleton', dependencies: []});
-        mockContainer.register(tokens.ICommandParser, CommandParser, {lifecycle: 'singleton', dependencies: []});
-
-
-        // Clear call counts on the mock container methods *after* pre-registration
         mockContainer.register.mockClear();
         mockContainer.resolve.mockClear();
 
-        // --- Clear Mocks Using Imported Variables ---
-        // Clear the inline mocks created via jest.mock factories
         ConditionEvaluationService.mockClear();
         ItemTargetResolverService.mockClear();
         TargetResolutionService.mockClear();
@@ -308,13 +265,22 @@ describe('registerDomainServices', () => {
         WorldContext.mockClear();
         CommandProcessor.mockClear();
         TurnOrderService.mockClear();
-        // Also clear the non-jest.mock mocks
+        PlayerPromptService.mockClear();
+
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockValidatedEventDispatcher).forEach(fn => fn.mockClear?.());
+        Object.values(mockSafeEventDispatcher).forEach(fn => fn.mockClear?.()); // <<< ADDED CLEAR
         Object.values(mockGameDataRepository).forEach(fn => fn.mockClear?.());
         Object.values(mockEventBus).forEach(fn => fn.mockClear?.());
-
+        Object.values(mockJsonLogicServiceInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockWorldContextInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockCommandParserInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockTargetResolutionServiceInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockActionValidationServiceInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockPayloadValueResolverServiceInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockActionDiscoverySystemInstance).forEach(fn => fn.mockClear?.());
+        Object.values(mockPromptOutputPortInstance).forEach(fn => fn.mockClear?.());
     });
 
     it('should register domain services without throwing errors', () => {
@@ -322,62 +288,20 @@ describe('registerDomainServices', () => {
             registerDomainServices(mockContainer);
         }).not.toThrow();
 
-        // Assert: Check registrations - expecting Class constructors for .single
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ConditionEvaluationService, ConditionEvaluationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ItemTargetResolverService, ItemTargetResolverService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.TargetResolutionService, TargetResolutionService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PrerequisiteEvaluationService, PrerequisiteEvaluationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.DomainContextCompatibilityChecker, DomainContextCompatibilityChecker, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationService, ActionValidationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PayloadValueResolverService, PayloadValueResolverService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.IActionExecutor, ActionExecutor, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ConditionEvaluationService, ConditionEvaluationService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ItemTargetResolverService, ItemTargetResolverService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.TargetResolutionService, TargetResolutionService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PrerequisiteEvaluationService, PrerequisiteEvaluationService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.DomainContextCompatibilityChecker, DomainContextCompatibilityChecker, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationService, ActionValidationService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PayloadValueResolverService, PayloadValueResolverService, expect.objectContaining({ lifecycle: 'singleton', dependencies: expect.any(Array) }));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.IWorldContext, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ICommandParser, expect.any(Function), expect.objectContaining({lifecycle: 'singleton'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ICommandProcessor, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ITurnOrderService, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
-    });
-
-    it('resolving ActionExecutor does not throw and returns instance', () => {
-        registerDomainServices(mockContainer);
-        let resolvedService;
-        expect(() => {
-            resolvedService = mockContainer.resolve(tokens.IActionExecutor);
-        }).not.toThrow();
-        expect(resolvedService).toBeDefined();
-        // Check that the MOCK ActionExecutor constructor (jest.fn()) was called
-        expect(ActionExecutor).toHaveBeenCalledTimes(1);
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PlayerPromptService, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
     });
 
     it('resolving CommandProcessor does not throw and returns instance', () => {
@@ -386,9 +310,19 @@ describe('registerDomainServices', () => {
         expect(() => {
             resolvedService = mockContainer.resolve(tokens.ICommandProcessor);
         }).not.toThrow();
+
         expect(resolvedService).toBeDefined();
-        // Check that the MOCK CommandProcessor constructor (jest.fn()) was called by the factory
         expect(CommandProcessor).toHaveBeenCalledTimes(1);
+        expect(CommandProcessor).toHaveBeenCalledWith(expect.objectContaining({
+            commandParser: mockCommandParserInstance,
+            targetResolutionService: mockTargetResolutionServiceInstance,
+            logger: mockLogger,
+            validatedEventDispatcher: mockValidatedEventDispatcher,
+            safeEventDispatcher: mockSafeEventDispatcher, // <<< ADDED ASSERTION
+            worldContext: mockWorldContextInstance,
+            entityManager: mockEntityManager,
+            gameDataRepository: mockGameDataRepository
+        }));
     });
 
     it('resolving TurnOrderService does not throw and returns instance', () => {
@@ -397,9 +331,30 @@ describe('registerDomainServices', () => {
         expect(() => {
             resolvedService = mockContainer.resolve(tokens.ITurnOrderService);
         }).not.toThrow();
+
         expect(resolvedService).toBeDefined();
-        // Check that the MOCK TurnOrderService constructor (jest.fn()) was called by the factory
         expect(TurnOrderService).toHaveBeenCalledTimes(1);
+        expect(TurnOrderService).toHaveBeenCalledWith(expect.objectContaining({
+            logger: mockLogger
+        }));
     });
 
+    it('resolving PlayerPromptService does not throw and returns instance', () => {
+        registerDomainServices(mockContainer);
+        let resolvedService;
+        expect(() => {
+            resolvedService = mockContainer.resolve(tokens.PlayerPromptService);
+        }).not.toThrow();
+
+        expect(resolvedService).toBeDefined();
+        expect(PlayerPromptService).toHaveBeenCalledTimes(1);
+        expect(PlayerPromptService).toHaveBeenCalledWith(expect.objectContaining({
+            logger: mockLogger,
+            actionDiscoverySystem: mockActionDiscoverySystemInstance,
+            promptOutputPort: mockPromptOutputPortInstance,
+            worldContext: mockWorldContextInstance,
+            entityManager: mockEntityManager,
+            gameDataRepository: mockGameDataRepository
+        }));
+    });
 });

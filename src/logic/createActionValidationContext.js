@@ -70,7 +70,7 @@ export function createActionValidationContext(
   // +++ TICKET 6: Create the Action Attempt Pseudo Event +++
   /** @type {ActionAttemptPseudoEvent} */
   const actionAttemptEvent = {
-    eventType: 'action:attempt',
+    eventType: 'core:attempt_action',
     actionId: actionDefinition.id,
     actorId: actorEntity.id,
     targetContext: targetContext, // Include the target context directly

@@ -3,23 +3,6 @@
 exports[`registerCoreSystems should match snapshot for registration calls 1`] = `
 [
   [
-    "GameRuleSystem",
-    [Function],
-    {
-      "dependencies": [
-        "EventBus",
-        "IWorldContext",
-        "IActionExecutor",
-        "EntityManager",
-        "GameDataRepository",
-      ],
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-      ],
-    },
-  ],
-  [
     "EquipmentEffectSystem",
     [Function],
     {

@@ -28,7 +28,7 @@ const mockCommandInputPort = {
 // <<< END ADDED Mock >>>
 const mockPlayerPromptService = {prompt: jest.fn()};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
-const mockSafeEventDispatcher = {dispatchSafely: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(),  subscribe: jest.fn()};
 
 
 // --- Test Suite ---

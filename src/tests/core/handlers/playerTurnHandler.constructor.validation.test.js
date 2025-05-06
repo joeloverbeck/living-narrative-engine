@@ -37,11 +37,9 @@ const createValidDeps = () => ({
     turnEndPort: {
         notifyTurnEnded: jest.fn(),
     },
-    // <<< ADDED Missing Dependency >>>
     commandInputPort: {
-        onCommand: jest.fn(), // Add the required method
+        onCommand: jest.fn(),
     },
-    // <<< END ADDED Dependency >>>
     playerPromptService: {
         prompt: jest.fn(),
     },
@@ -50,6 +48,7 @@ const createValidDeps = () => ({
     },
     safeEventDispatcher: {
         dispatchSafely: jest.fn(),
+        subscribe: jest.fn(),
     },
 });
 
@@ -210,7 +209,7 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
         });
     });
 
-    // <<< ADDED Validation Tests for CommandInputPort >>>
+    // Test CommandInputPort
     describe('CommandInputPort Validation', () => {
         it('should throw if commandInputPort is null', () => {
             const deps = {...validDeps, commandInputPort: null};
@@ -226,7 +225,6 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
             );
         });
     });
-    // <<< END ADDED Validation Tests >>>
 
     // Test Player Prompt Service
     describe('PlayerPromptService Validation', () => {
@@ -269,12 +267,29 @@ describe('PlayerTurnHandler: Constructor Validation', () => {
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
         });
 
-        it('should throw if safeEventDispatcher is invalid (missing dispatchSafely method)', () => {
-            const deps = {...validDeps, safeEventDispatcher: {}};
+        it('should throw if safeEventDispatcher is invalid (missing dispatchSafely and subscribe methods)', () => {
+            const deps = {...validDeps, safeEventDispatcher: {}}; // Missing both methods
             expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
             // Verify logger.error was called (if logger is valid)
             expect(validDeps.logger.error).toHaveBeenCalledWith(
-                expect.stringContaining('Invalid or missing safeEventDispatcher (requires dispatchSafely method)')
+                // <<< CORRECTED String Expectation >>>
+                expect.stringContaining('Invalid or missing safeEventDispatcher (requires dispatchSafely and subscribe methods)')
+            );
+        });
+
+        it('should throw if safeEventDispatcher is missing only dispatchSafely method', () => {
+            const deps = {...validDeps, safeEventDispatcher: { subscribe: jest.fn() }};
+            expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
+            expect(validDeps.logger.error).toHaveBeenCalledWith(
+                expect.stringContaining('Invalid or missing safeEventDispatcher (requires dispatchSafely and subscribe methods)')
+            );
+        });
+
+        it('should throw if safeEventDispatcher is missing only subscribe method', () => {
+            const deps = {...validDeps, safeEventDispatcher: { dispatchSafely: jest.fn() }};
+            expect(() => new PlayerTurnHandler(deps)).toThrow(/Invalid or missing safeEventDispatcher/i);
+            expect(validDeps.logger.error).toHaveBeenCalledWith(
+                expect.stringContaining('Invalid or missing safeEventDispatcher (requires dispatchSafely and subscribe methods)')
             );
         });
     });

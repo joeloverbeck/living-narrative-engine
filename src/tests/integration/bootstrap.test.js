@@ -1,5 +1,4 @@
 // Filename: src/tests/integration/bootstrap.test.js
-// ****** CORRECTED FILE ******
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
@@ -143,7 +142,6 @@ describe('Application Bootstrap Integration Test', () => {
         // Optional: Check if a few specific initializable tokens were resolved (implicitly by initializeAll)
         // This relies on initializeAll not throwing and the services being singletons.
         // Resolve them *after* initializeAll has run.
-        expect(() => container.resolve(tokens.GameRuleSystem)).not.toThrow();
         // This resolution was previously failing due to the DomRenderer dependency issue
         expect(() => container.resolve(tokens.SystemLogicInterpreter)).not.toThrow();
         // Add more checks for key initializable systems if desired

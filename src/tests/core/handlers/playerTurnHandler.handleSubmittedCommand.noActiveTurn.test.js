@@ -46,6 +46,7 @@ const mockCommandOutcomeInterpreter = {
 };
 const mockSafeEventDispatcher = {
     dispatchSafely: jest.fn(),
+    subscribe: jest.fn(),      // <<< CORRECTED: Added subscribe mock method
 };
 
 // --- Test Suite ---

@@ -1,6 +1,8 @@
 // src/core/services/gameDataRepository.js
 // ────────────────────────────────────────────────────────────────────────────────
 
+import {IGameDataRepository} from "../interfaces/IGameDataRepository";
+
 /**
  * Lightweight façade over whatever `IDataRegistry` implementation you are using.
  * The class does **not** cache anything internally: every getter reflects the
@@ -17,7 +19,7 @@
  * @typedef {import('../../types/entityDefinition.js').EntityDefinition} EntityDefinition
  */
 
-export class GameDataRepository {
+export class GameDataRepository extends IGameDataRepository {
     /** @type {IDataRegistry}  */ #registry;
     /** @type {ILogger}        */ #logger;
 
@@ -26,6 +28,7 @@ export class GameDataRepository {
      * @param {ILogger}       logger
      */
     constructor(registry, logger) {
+        super();
         // --- Validation ---
         // Validate Logger first
         if (!logger?.info || !logger?.warn || !logger?.error || !logger?.debug) {

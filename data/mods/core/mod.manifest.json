@@ -11,7 +11,8 @@
       "actor.component.json",
       "current_actor.component.json",
       "position.component.json",
-      "name.component.json"
+      "name.component.json",
+      "exits.component.json"
     ],
     "characters": [
     ],
@@ -36,7 +37,8 @@
       "action_executed.event.json",
       "action_failed.event.json",
       "system_error_occurred.event.json",
-      "submit_command.event.json"
+      "submit_command.event.json",
+      "attempt_action.event.json"
     ],
     "operations": [
     ]

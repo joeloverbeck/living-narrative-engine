@@ -24,7 +24,7 @@ const mockPromptOutputPort = {prompt: jest.fn()};
 const mockTurnEndPort = {notifyTurnEnded: jest.fn()};
 const mockPlayerPromptService = {prompt: jest.fn()};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
-const mockSafeEventDispatcher = {dispatchSafely: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(),  subscribe: jest.fn()};
 
 // <<< ADDED: Mock for CommandInputPort >>>
 const mockUnsubscribe = jest.fn(); // Mock the unsubscribe function

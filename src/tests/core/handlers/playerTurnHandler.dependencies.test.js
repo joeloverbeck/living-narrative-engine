@@ -40,11 +40,9 @@ const createMockTurnEndPort = () => ({
     notifyTurnEnded: jest.fn(), // The crucial method
 });
 
-// <<< ADDED Mock for the new dependency >>>
 const createMockCommandInputPort = () => ({
     onCommand: jest.fn(), // The crucial method checked in the constructor
 });
-// <<< END ADDED Mock >>>
 
 const createMockPlayerPromptService = () => ({
     prompt: jest.fn(), // The crucial method
@@ -56,6 +54,7 @@ const createMockCommandOutcomeInterpreter = () => ({
 
 const createMockSafeEventDispatcher = () => ({
     dispatchSafely: jest.fn(), // The crucial method
+    subscribe: jest.fn(),      // <<< CORRECTED: Added subscribe mock method
 });
 
 // --- Test Suite ---
@@ -68,7 +67,7 @@ describe('PlayerTurnHandler', () => {
     let mockGameDataRepository;
     let mockPromptOutputPort;
     let mockTurnEndPort;
-    let mockCommandInputPort; // <<< ADDED variable declaration >>>
+    let mockCommandInputPort;
     let mockPlayerPromptService;
     let mockCommandOutcomeInterpreter;
     let mockSafeEventDispatcher;
@@ -84,10 +83,10 @@ describe('PlayerTurnHandler', () => {
         mockGameDataRepository = createMockGameDataRepository();
         mockPromptOutputPort = createMockPromptOutputPort();
         mockTurnEndPort = createMockTurnEndPort();
-        mockCommandInputPort = createMockCommandInputPort(); // <<< ADDED instantiation >>>
+        mockCommandInputPort = createMockCommandInputPort();
         mockPlayerPromptService = createMockPlayerPromptService();
         mockCommandOutcomeInterpreter = createMockCommandOutcomeInterpreter();
-        mockSafeEventDispatcher = createMockSafeEventDispatcher();
+        mockSafeEventDispatcher = createMockSafeEventDispatcher(); // Will now include subscribe
 
         // Create a baseline set of valid dependencies
         validDependencies = {
@@ -99,22 +98,14 @@ describe('PlayerTurnHandler', () => {
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
-            commandInputPort: mockCommandInputPort, // <<< ADDED dependency here >>>
+            commandInputPort: mockCommandInputPort,
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
         };
-
-        // Clear console mocks if necessary (if you want to test console output specifically)
-        // jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
-    // afterEach(() => {
-    //     jest.restoreAllMocks(); // Restore console mocks if used
-    // });
-
     it('should instantiate successfully with all valid dependencies', () => {
-        // This test should now pass because commandInputPort is included
         expect(() => new PlayerTurnHandler(validDependencies)).not.toThrow();
         expect(mockLogger.debug).toHaveBeenCalledWith('PlayerTurnHandler initialized successfully with all dependencies.');
     });
@@ -123,7 +114,6 @@ describe('PlayerTurnHandler', () => {
 
     it('should throw if logger is missing or invalid', () => {
         const invalidDeps = {...validDependencies, logger: null};
-        // The constructor uses console.error before throwing if logger itself is bad
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing logger dependency.');
 
@@ -136,10 +126,9 @@ describe('PlayerTurnHandler', () => {
         const invalidDeps = {...validDependencies, actionDiscoverySystem: null};
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing actionDiscoverySystem.');
-        // Check if the logger was called *before* the throw (using the provided mockLogger)
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing actionDiscoverySystem (requires getValidActions).');
 
-        const invalidDeps2 = {...validDependencies, actionDiscoverySystem: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, actionDiscoverySystem: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing actionDiscoverySystem.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing actionDiscoverySystem (requires getValidActions).');
@@ -151,7 +140,7 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing commandProcessor.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandProcessor (requires processCommand).');
 
-        const invalidDeps2 = {...validDependencies, commandProcessor: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, commandProcessor: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing commandProcessor.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandProcessor (requires processCommand).');
@@ -163,7 +152,7 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing worldContext (requires getLocationOfEntity).');
 
-        const invalidDeps2 = {...validDependencies, worldContext: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, worldContext: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing worldContext.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing worldContext (requires getLocationOfEntity).');
@@ -175,7 +164,7 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing entityManager.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing entityManager (requires getEntityInstance).');
 
-        const invalidDeps2 = {...validDependencies, entityManager: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, entityManager: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing entityManager.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing entityManager (requires getEntityInstance).');
@@ -187,7 +176,7 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing gameDataRepository.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing gameDataRepository (requires getActionDefinition).');
 
-        const invalidDeps2 = {...validDependencies, gameDataRepository: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, gameDataRepository: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing gameDataRepository.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing gameDataRepository (requires getActionDefinition).');
@@ -199,7 +188,7 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing promptOutputPort.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing promptOutputPort (requires prompt method).');
 
-        const invalidDeps2 = {...validDependencies, promptOutputPort: {}}; // Missing 'prompt' method
+        const invalidDeps2 = {...validDependencies, promptOutputPort: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing promptOutputPort.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing promptOutputPort (requires prompt method).');
@@ -211,35 +200,31 @@ describe('PlayerTurnHandler', () => {
             .toThrow('PlayerTurnHandler: Invalid or missing turnEndPort.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing turnEndPort (requires notifyTurnEnded method).');
 
-        const invalidDeps2 = {...validDependencies, turnEndPort: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, turnEndPort: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing turnEndPort.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing turnEndPort (requires notifyTurnEnded method).');
     });
 
-    // <<< ADDED Test for the new dependency >>>
     it('should throw if commandInputPort is missing or invalid', () => {
         const invalidDeps = {...validDependencies, commandInputPort: null};
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing commandInputPort.');
-        // Check the logger call which happens before throwing
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandInputPort (requires onCommand method).');
 
-        const invalidDeps2 = {...validDependencies, commandInputPort: {}}; // Missing 'onCommand' method
+        const invalidDeps2 = {...validDependencies, commandInputPort: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing commandInputPort.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandInputPort (requires onCommand method).');
     });
-    // <<< END ADDED Test >>>
 
     it('should throw if playerPromptService is missing or invalid', () => {
         const invalidDeps = {...validDependencies, playerPromptService: null};
-        // This test should now throw the correct error
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing playerPromptService.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing playerPromptService (requires prompt method).');
 
-        const invalidDeps2 = {...validDependencies, playerPromptService: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, playerPromptService: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing playerPromptService.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing playerPromptService (requires prompt method).');
@@ -247,28 +232,42 @@ describe('PlayerTurnHandler', () => {
 
     it('should throw if commandOutcomeInterpreter is missing or invalid', () => {
         const invalidDeps = {...validDependencies, commandOutcomeInterpreter: null};
-        // This test should now throw the correct error
         expect(() => new PlayerTurnHandler(invalidDeps))
             .toThrow('PlayerTurnHandler: Invalid or missing commandOutcomeInterpreter.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandOutcomeInterpreter (requires interpret method).');
 
-        const invalidDeps2 = {...validDependencies, commandOutcomeInterpreter: {}}; // Missing method
+        const invalidDeps2 = {...validDependencies, commandOutcomeInterpreter: {}};
         expect(() => new PlayerTurnHandler(invalidDeps2))
             .toThrow('PlayerTurnHandler: Invalid or missing commandOutcomeInterpreter.');
         expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing commandOutcomeInterpreter (requires interpret method).');
     });
 
     it('should throw if safeEventDispatcher is missing or invalid', () => {
-        const invalidDeps = {...validDependencies, safeEventDispatcher: null};
-        // This test should now throw the correct error
-        expect(() => new PlayerTurnHandler(invalidDeps))
-            .toThrow('PlayerTurnHandler: Invalid or missing safeEventDispatcher.');
-        expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing safeEventDispatcher (requires dispatchSafely method).');
+        const expectedLoggedErrorMessage = 'PlayerTurnHandler Constructor: Invalid or missing safeEventDispatcher (requires dispatchSafely and subscribe methods).'; // <<< CORRECTED
+        const expectedThrownErrorMessage = 'PlayerTurnHandler: Invalid or missing safeEventDispatcher.';
 
-        const invalidDeps2 = {...validDependencies, safeEventDispatcher: {}}; // Missing method
+        const invalidDeps = {...validDependencies, safeEventDispatcher: null};
+        expect(() => new PlayerTurnHandler(invalidDeps))
+            .toThrow(expectedThrownErrorMessage);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage);
+
+        // Test with missing 'dispatchSafely' but 'subscribe' present
+        const invalidDeps2 = {...validDependencies, safeEventDispatcher: { subscribe: jest.fn() }};
         expect(() => new PlayerTurnHandler(invalidDeps2))
-            .toThrow('PlayerTurnHandler: Invalid or missing safeEventDispatcher.');
-        expect(mockLogger.error).toHaveBeenCalledWith('PlayerTurnHandler Constructor: Invalid or missing safeEventDispatcher (requires dispatchSafely method).');
+            .toThrow(expectedThrownErrorMessage);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage);
+
+        // Test with 'dispatchSafely' present but missing 'subscribe'
+        const invalidDeps3 = {...validDependencies, safeEventDispatcher: { dispatchSafely: jest.fn() }};
+        expect(() => new PlayerTurnHandler(invalidDeps3))
+            .toThrow(expectedThrownErrorMessage);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage);
+
+        // Test with an empty object
+        const invalidDeps4 = {...validDependencies, safeEventDispatcher: {}};
+        expect(() => new PlayerTurnHandler(invalidDeps4))
+            .toThrow(expectedThrownErrorMessage);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage);
     });
 
 });

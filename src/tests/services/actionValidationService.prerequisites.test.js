@@ -139,7 +139,7 @@ describe('Unit Test: createActionValidationContext', () => {
       // Check the structure of the new 'event' property
       expect(context.event).not.toBeNull();
       expect(context.event).toEqual({
-        eventType: 'action:attempt',
+        eventType: 'core:attempt_action',
         actionId: mockActionDefinition.id,
         actorId: mockActorEntity.id,
         targetContext: mockTargetContext,

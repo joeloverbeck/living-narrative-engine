@@ -1,0 +1,32 @@
+{
+  "id": "core:exits",
+  "description": "Signifies the possible exits from a location entity. Each exit defines a direction, a target location, and an optional entity that might block the path.",
+  "dataSchema": {
+    "type": "array",
+    "description": "An array of possible exits from this location. May be empty (e.g., a supernatural trap with no exits until one is programmatically added).",
+    "items": {
+      "type": "object",
+      "required": [
+        "direction",
+        "target"
+      ],
+      "properties": {
+        "direction": {
+          "type": "string",
+          "description": "A user-facing string identifying the exit (e.g., 'north', 'enter the cellar', 'towards the glowing portal'). This is typically used in player commands or displayed as an option."
+        },
+        "target": {
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+          "description": "The unique namespaced ID of the entity (usually another location) that this exit leads to."
+        },
+        "blocker": {
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
+          "default": null,
+          "description": "Optional namespaced ID of an entity (e.g., a door, rubble, a magical barrier) that may be blocking this exit. Null or absent means no specific entity is blocking this path."
+        }
+      },
+      "additionalProperties": false
+    },
+    "default": []
+  }
+}

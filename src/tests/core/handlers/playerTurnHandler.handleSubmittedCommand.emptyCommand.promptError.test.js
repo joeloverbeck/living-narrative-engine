@@ -35,12 +35,10 @@ const mockPromptOutputPort = {
 const mockTurnEndPort = {
     notifyTurnEnded: jest.fn(),
 };
-// <<< ADDED Mock for CommandInputPort >>>
 const mockUnsubscribeFn = jest.fn();
 const mockCommandInputPort = {
     onCommand: jest.fn(() => mockUnsubscribeFn), // Needed for startTurn
 };
-// <<< END ADDED Mock >>>
 const mockPlayerPromptService = {
     prompt: jest.fn(),
 };
@@ -49,6 +47,7 @@ const mockCommandOutcomeInterpreter = {
 };
 const mockSafeEventDispatcher = {
     dispatchSafely: jest.fn(),
+    subscribe: jest.fn(),
 };
 
 // --- Test Suite ---
@@ -62,7 +61,6 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
     beforeEach(() => {
         // Reset all mocks before each test run
         jest.clearAllMocks();
-        // <<< Reset added mocks >>>
         mockUnsubscribeFn.mockClear();
         mockCommandInputPort.onCommand.mockClear();
 
@@ -84,7 +82,7 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
-            commandInputPort: mockCommandInputPort, // <<< ADDED Dependency
+            commandInputPort: mockCommandInputPort,
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
@@ -92,12 +90,9 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
     });
 
     afterEach(() => {
-        // Attempt cleanup, though the error path should handle it
         try {
-            // Call destroy, which handles cleanup internally
             handler?.destroy();
         } catch (e) {
-            // Log unexpected synchronous errors during destroy setup
             // console.warn("Unexpected error during afterEach cleanup:", e);
         }
         handler = null;
@@ -105,31 +100,22 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
 
     it('should notify TurnEndPort of failure and log error when re-prompt fails', async () => {
         // --- Setup ---
-        // Mocks configured in beforeEach
-        // 1. Start a turn - awaits the initial prompt setup
         await handler.startTurn(mockActor);
-
-        // 2. Allow the initial prompt call within startTurn to complete
         await new Promise(process.nextTick); // Yield control briefly
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Verify initial prompt
 
         // Reset mocks specifically for this test's actions
-        mockPlayerPromptService.prompt.mockClear(); // Clear the initial call count
+        mockPlayerPromptService.prompt.mockClear();
         mockTurnEndPort.notifyTurnEnded.mockClear();
         mockLogger.error.mockClear();
-        mockLogger.warn.mockClear(); // Clear setup warnings if any
+        mockLogger.warn.mockClear();
         mockLogger.info.mockClear();
         mockLogger.debug.mockClear();
-        mockUnsubscribeFn.mockClear(); // Clear unsubscribe calls from potential setup/destroy
+        mockUnsubscribeFn.mockClear();
 
 
         // --- Steps ---
-        const emptyCommandString = ''; // Use empty string directly
-
-        // Call the method under test (_handleSubmittedCommand)
-        // This call itself should resolve void because the error is handled internally
-        // by calling #_promptPlayerForAction -> _handleTurnEnd.
-        // <<< UPDATED: Pass string directly >>>
+        const emptyCommandString = '';
         const handleCommandCall = handler._handleSubmittedCommand(emptyCommandString);
         await expect(handleCommandCall).resolves.toBeUndefined();
 
@@ -137,11 +123,10 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         // --- Assertions ---
 
         // 1. Prompt Calls:
-        // Should be called only ONCE within this test section (the failed re-prompt)
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor); // Re-prompt attempt
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor);
 
-        // 2. Turn End Port Call: (Triggered by _handleTurnEnd in #_promptPlayerForAction catch)
+        // 2. Turn End Port Call:
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(mockActor.id, false); // Failure
 
@@ -149,17 +134,14 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         expect(mockCommandProcessor.processCommand).not.toHaveBeenCalled();
 
         // 4. Logging:
-        // Check the warning for the empty command itself was logged by _handleSubmittedCommand.
         expect(mockLogger.warn).toHaveBeenCalledWith(
             `${className}: Received empty command string. Re-prompting actor ${mockActor.id}.`
         );
-        // The error originates from #_promptPlayerForAction's catch block when the re-prompt fails.
-        expect(mockLogger.error).toHaveBeenCalledTimes(1); // Should only be the prompt error
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
             `${className}: PlayerPromptService threw an error during prompt for actor ${mockActor.id}: ${mockError.message}`, // Exact log message
             mockError
         );
-        // Check the logs from _handleTurnEnd which is called by the catch block in #_promptPlayerForAction
         expect(mockLogger.info).toHaveBeenCalledWith(
             `${className}: Signalling FAILED turn end for ${mockActor.id} due to prompt error.`
         );
@@ -169,16 +151,18 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         expect(mockLogger.warn).toHaveBeenCalledWith( // The failure reason log in _handleTurnEnd
             `${className}: Turn for ${mockActor.id} ended with failure. Reason: ${mockError.message}`
         );
-        // Should be 2 warnings total (empty command + turn failure reason)
         expect(mockLogger.warn).toHaveBeenCalledTimes(2);
 
 
         // 5. State Cleanup Logging & Unsubscribe:
-        // Verify logs from _handleTurnEnd -> #_unsubscribeFromCommands / #_cleanupTurnState
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Unsubscribe called by _handleTurnEnd
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Unsubscribing from command input.`) // Check unsubscribe log
-        );
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+
+        // --- MODIFIED ASSERTION ---
+        // Check for the exact debug log message from #_unsubscribeFromCommands
+        const expectedUnsubscribeLog = `${className}: Unsubscribing from command input for actor ${mockActor.id}.`;
+        expect(mockLogger.debug).toHaveBeenCalledWith(expectedUnsubscribeLog);
+        // --- END MODIFIED ASSERTION ---
+
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`Notifying TurnEndPort for actor ${mockActor.id}, success=false.`)
         );
@@ -194,7 +178,6 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`_handleTurnEnd sequence completed for ${mockActor.id}.`)
         );
-        // Check the debug log from the empty command's catch block in _handleSubmittedCommand
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`Caught re-thrown error from failed re-prompt in empty command case. Error: ${mockError.message}`)
         );

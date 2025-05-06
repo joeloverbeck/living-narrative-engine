@@ -32,20 +32,19 @@ beforeEach(() => {
 describe('SafeEventDispatcher', () => {
     it('should throw an error if logger dependency is missing or invalid', () => {
         expect(() => new SafeEventDispatcher({ validatedEventDispatcher: mockVed, logger: null }))
-            .toThrow('SafeEventDispatcher: Invalid or missing logger dependency');
+            .toThrow('SafeEventDispatcher: Invalid or missing logger dependency (requires error, debug, info methods).'); // CORRECTED
         expect(() => new SafeEventDispatcher({ validatedEventDispatcher: mockVed, logger: {} }))
-            .toThrow('SafeEventDispatcher: Invalid or missing logger dependency');
+            .toThrow('SafeEventDispatcher: Invalid or missing logger dependency (requires error, debug, info methods).'); // CORRECTED
     });
 
     it('should throw an error if validatedEventDispatcher dependency is missing or invalid', () => {
+        const expectedErrorMessage = 'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatchValidated, subscribe, and unsubscribe methods).';
         expect(() => new SafeEventDispatcher({ validatedEventDispatcher: null, logger: mockLogger }))
-            .toThrow('SafeEventDispatcher: Invalid or missing validatedEventDispatcher dependency');
+            .toThrow(expectedErrorMessage); // CORRECTED
         expect(() => new SafeEventDispatcher({ validatedEventDispatcher: {}, logger: mockLogger }))
-            .toThrow('SafeEventDispatcher: Invalid or missing validatedEventDispatcher dependency');
+            .toThrow(expectedErrorMessage); // CORRECTED
         // Ensure logger was used for the error message if VED validation fails
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatchValidated method).'
-        );
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage); // CORRECTED
     });
 
     it('should successfully instantiate with valid dependencies', () => {

@@ -49,6 +49,7 @@ const mockCommandOutcomeInterpreter = {
 };
 const mockSafeEventDispatcher = {
     dispatchSafely: jest.fn(),
+    subscribe: jest.fn(),      // <<< CORRECTED: Added subscribe mock method
 };
 
 // --- Test Suite ---
@@ -153,7 +154,9 @@ describe('PlayerTurnHandler: #_processValidatedCommand - Unknown Directive Path'
         // 5. Logging:
         // Check the specific error log from the 'default' case in #_processValidatedCommand
         expect(mockLogger.error).toHaveBeenCalledWith(
-            `${className}: Received unknown directive '${invalidDirective}'. Forcing turn failure.`
+            // --- MODIFIED LINE ---
+            `${className}: Received unknown directive '${invalidDirective}' for actor ${mockActor.id} after successful command. Forcing turn failure.`
+            // --- END MODIFIED LINE ---
         );
         // Check the failure warning log from _handleTurnEnd
         expect(mockLogger.warn).toHaveBeenCalledWith(

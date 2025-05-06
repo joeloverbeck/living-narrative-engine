@@ -1,15 +1,17 @@
 // src/actions/actionTypes.js
 
 // Ensure necessary imports for type hinting (won't be executed at runtime)
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../core/interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */ // <<< CHANGED (path adjusted)
+/** @typedef {import('../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */       // <<< CHANGED (path adjusted)
 /** @typedef {import('../entities/entity.js').default} Entity */
-// Added EventBus based on its use in ActionContext
-/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../core/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
 // --- ADDED Import for ActionTargetContext ---
 /** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
 /** @typedef {import('../models/ActionDefinition.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
+/** @typedef {import('../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext
+/** @typedef {import('../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext
 
 
 /**
@@ -31,19 +33,21 @@
 
 
 /**
- * The context object provided to action operationHandlers. It contains the structured
- * command input (`parsedCommand`) and all necessary game state references
+ * The context object provided to action operationHandlers and target resolvers.
+ * It contains the structured command input (`parsedCommand`) and all necessary game state references
  * and dependencies (acting entity, location, managers, event dispatcher) required
  * for the handler to perform its work. Handlers should rely *solely* on this context.
  *
  * @typedef {object} ActionContext
- * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action. // <<< MODIFIED: Renamed from playerEntity & Updated Description (SUBTASK-TURN-ORDER-001.8.2)
- * @property {Entity} currentLocation - The entity instance representing the acting entity's current location.
- * @property {ParsedCommand} [parsedCommand] - The structured output from the command parser, containing the identified action, objects, preposition, and original input. Optional for contexts like discovery.
- * @property {GameDataRepository} gameDataRepository - Provides access to loaded game definition data via the data registry.
- * @property {EntityManager} entityManager - The manager for creating and tracking entity instances.
- * @property {(eventName: string, eventData: object) => void} dispatch - Function to dispatch game events (via EventBus).
- * @property {EventBus} eventBus - The event bus instance for dispatching events.
+ * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action.
+ * @property {Entity | null} currentLocation - The entity instance representing the acting entity's current location. Can be null.
+ * @property {ParsedCommand} [parsedCommand] - The structured output from the command parser. Optional for contexts like discovery or target resolution where full command might not be parsed yet.
+ * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data. // <<< CHANGED
+ * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances. // <<< CHANGED
+ * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch, typically for 'textUI:display_message'.
+ * @property {IValidatedEventDispatcher} validatedEventDispatcher - For dispatching validated events.
+ * @property {ILogger} logger - The logger instance.
+ * @property {IWorldContext} worldContext - Provides access to world state information.
  * // Add other relevant state here if needed in the future (e.g., gameTime, weather)
  */
 
@@ -83,7 +87,7 @@
  * an event dispatched on the EventBus, but an informational object.
  *
  * @typedef {object} ActionAttemptPseudoEvent
- * @property {'action:attempt'} eventType - Discriminator indicating the nature of this object.
+ * @property {'core:attempt_action'} eventType - Discriminator indicating the nature of this object.
  * @property {string} actionId - The ID of the action being attempted (e.g., 'core:move').
  * @property {string} actorId - The ID of the entity attempting the action.
  * @property {ActionTargetContext} targetContext - The resolved target context for this specific attempt.

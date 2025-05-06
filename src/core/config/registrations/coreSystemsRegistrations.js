@@ -33,7 +33,6 @@
 
 
 // --- System Imports ---
-import GameRuleSystem from '../../../systems/gameRuleSystem.js';
 import EquipmentEffectSystem from '../../../systems/equipmentEffectSystem.js';
 import EquipmentSlotSystem from '../../../systems/equipmentSlotSystem.js';
 import InventorySystem from '../../../systems/inventorySystem.js';
@@ -80,12 +79,6 @@ export function registerCoreSystems(container) {
     let registrationCount = 0; // Initialize counter
 
     // --- Systems (Tagged as Initializable only) ---
-    registrar.tagged(INITIALIZABLE).single(tokens.GameRuleSystem, GameRuleSystem, [
-        tokens.EventBus, tokens.IWorldContext, tokens.IActionExecutor, tokens.EntityManager, tokens.GameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.GameRuleSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentEffectSystem, EquipmentEffectSystem, [
         tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
     ]);

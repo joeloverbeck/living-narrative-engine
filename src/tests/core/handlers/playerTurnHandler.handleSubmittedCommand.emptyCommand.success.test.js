@@ -43,6 +43,7 @@ const mockCommandOutcomeInterpreter = {
 };
 const mockSafeEventDispatcher = {
     dispatchSafely: jest.fn(),
+    subscribe: jest.fn(),      // <<< CORRECTED: Added subscribe mock method
 };
 
 // <<< ADDED: Mock for CommandInputPort and its unsubscribe function >>>

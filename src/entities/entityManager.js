@@ -2,6 +2,7 @@
 
 import Entity from './entity.js';
 import {POSITION_COMPONENT_ID} from "../types/components.js";
+import {IEntityManager} from "../core/interfaces/IEntityManager";
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -19,7 +20,7 @@ import {POSITION_COMPONENT_ID} from "../types/components.js";
  * This class operates purely on component data (plain objects) and their type IDs,
  * remaining agnostic to specific component logic or classes.
  */
-class EntityManager {
+class EntityManager extends IEntityManager {
     /**
      * @private
      * @type {IDataRegistry}
@@ -63,6 +64,7 @@ class EntityManager {
      * @throws {Error} If any required dependency is not provided or invalid.
      */
     constructor(registry, validator, logger, spatialIndexManager) {
+        super();
         // AC: Constructor accepts IDataRegistry, ISchemaValidator, ILogger, ISpatialIndexManager.
         if (!registry || typeof registry.getEntityDefinition !== 'function') { // Check specific method needed
             throw new Error('EntityManager requires a valid IDataRegistry instance with getEntityDefinition.');

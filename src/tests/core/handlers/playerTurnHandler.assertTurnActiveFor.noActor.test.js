@@ -24,7 +24,7 @@ const mockPromptOutputPort = {prompt: jest.fn()};
 const mockTurnEndPort = {notifyTurnEnded: jest.fn()};
 const mockPlayerPromptService = {prompt: jest.fn()};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
-const mockSafeEventDispatcher = {dispatchSafely: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(),  subscribe: jest.fn()};
 
 // <<< ADDED: Mock for CommandInputPort >>>
 const mockUnsubscribe = jest.fn(); // Mock the unsubscribe function
@@ -85,11 +85,11 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
 
     // <<< UPDATED Test Description >>>
     it('should log warning (from _handleTurnEnd guard) and do nothing else when called while no turn is active', async () => { // Updated description
-        // Define the message embedded within the warning log
-        const expectedAssertionErrorMessage = `${className}: Assertion Failed - Turn is not active. Expected actor '${testActorId}' but no turn is in progress.`;
-        // Define the full warning log message expected from _handleTurnEnd's catch block
-        // <<< UPDATED expectedWarningMessage to include status derived from input args (null error = success) >>>
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but assertion failed. Turn may have already ended or belongs to another handler/actor. Aborting end sequence. Error: ${expectedAssertionErrorMessage}`;
+        // Define the full warning log message expected from _handleTurnEnd's guard block
+        // when no actor is active.
+        // Status is 'success' because the error argument to _handleTurnEnd is null.
+        // 'current actor is null' because #currentActor is null in this test's setup.
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but current actor is null or does not match. Turn may have already ended or belongs to different handler context. Attempting cleanup for waiting mechanisms if ${testActorId} was the one being awaited.`;
 
 
         // --- Steps ---
