@@ -42,7 +42,6 @@ import MovementSystem from '../../../systems/movementSystem.js';
 import WorldPresenceSystem from '../../../systems/worldPresenceSystem.js';
 import ItemUsageSystem from '../../../systems/itemUsageSystem.js';
 import {NotificationUISystem} from '../../../systems/notificationUISystem.js';
-import MoveCoordinatorSystem from '../../../systems/moveCoordinatorSystem.js';
 import OpenableSystem from '../../../systems/openableSystem.js';
 import HealthSystem from '../../../systems/healthSystem.js';
 import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
@@ -112,16 +111,6 @@ export function registerCoreSystems(container) {
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.MovementSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.MoveCoordinatorSystem, MoveCoordinatorSystem, [
-        tokens.EventBus,
-        tokens.EntityManager,
-        tokens.BlockerSystem, // Depends on another system registered here
-        tokens.MovementSystem  // Depends on another system registered here
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.MoveCoordinatorSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
 
     // --- Systems with Shutdown() (Tagged with both INITIALIZABLE and SHUTDOWNABLE) ---
     const initializableAndShutdownable = [...INITIALIZABLE, ...SHUTDOWNABLE];

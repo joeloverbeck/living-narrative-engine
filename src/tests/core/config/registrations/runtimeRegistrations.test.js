@@ -280,7 +280,6 @@ describe('registerRuntime', () => {
         mockContainer.register(tokens.ConditionEvaluationService, mockConditionEvaluationService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ItemTargetResolverService, mockItemTargetResolverService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.TargetResolutionService, mockTargetResolutionService, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.PayloadValueResolverService, mockPayloadValueResolverService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.PrerequisiteEvaluationService, mockPrerequisiteEvaluationService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.DomainContextCompatibilityChecker, mockDomainContextCompatibilityChecker, {lifecycle: 'singleton'});
         mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicEvaluationService, {lifecycle: 'singleton'});

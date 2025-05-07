@@ -187,7 +187,6 @@ export const tokens = Object.freeze({
     PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
-    PayloadValueResolverService: 'PayloadValueResolverService',
     TurnHandlerResolver: 'TurnHandlerResolver',
     PlayerTurnHandler: 'PlayerTurnHandler',
     AITurnHandler: 'AITurnHandler',

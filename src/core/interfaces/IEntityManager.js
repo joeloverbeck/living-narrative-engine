@@ -1,4 +1,5 @@
 // src/core/interfaces/IEntityManager.js
+
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 /**
@@ -80,5 +81,15 @@ export class IEntityManager {
      */
     removeComponent(entityId, componentTypeId) {
         throw new Error('IEntityManager.removeComponent not implemented.');
+    }
+
+    /**
+     * Retrieves all entity IDs present in a specific location.
+     * This is often used by services like TargetResolutionService to find entities in the environment.
+     * @param {string} locationId - The unique ID of the location entity.
+     * @returns {Set<string>} A Set of entity IDs in the specified location. Returns an empty Set if the location is not found or has no entities.
+     */
+    getEntitiesInLocation(locationId) {
+        throw new Error('IEntityManager.getEntitiesInLocation not implemented.');
     }
 }

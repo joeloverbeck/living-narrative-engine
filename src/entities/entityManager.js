@@ -96,6 +96,7 @@ class EntityManager extends IEntityManager {
      * Retrieves the *pre-validated* definition from IDataRegistry, instantiates the Entity,
      * copies the component *data* (plain objects) from the definition to the entity instance,
      * and updates the spatial index if a valid position component is present.
+     * Component data is deep-cloned to ensure instance independence.
      *
      * @param {string} entityId - The unique ID of the entity definition to instantiate (also used as the instance ID).
      * @param {boolean} [forceNew=false] - If true, always creates a new instance even if one exists in activeEntities.
@@ -136,12 +137,11 @@ class EntityManager extends IEntityManager {
             // AC: Populate entity's components Map by copying data (no class instantiation)
             for (const [componentTypeId, componentData] of Object.entries(entityDefinition.components)) {
                 // Data is assumed pre-validated.
-                // Directly add the data object to the entity.
-                // Consider cloning here if entityDefinition data might be mutated elsewhere, though typically registry data is treated as immutable.
-                // const clonedData = JSON.parse(JSON.stringify(componentData)); // Optional deep clone
-                entity.addComponent(componentTypeId, componentData); // Use entity's method
+                // Deep clone component data to ensure this entity instance has its own independent copy.
+                const clonedData = JSON.parse(JSON.stringify(componentData));
+                entity.addComponent(componentTypeId, clonedData); // Use entity's method with cloned data
             }
-            this.#logger.debug(`EntityManager.createEntityInstance: Populated components for entity ${entityId} from definition.`);
+            this.#logger.debug(`EntityManager.createEntityInstance: Populated components for entity ${entityId} from definition (with cloning).`);
 
             // AC: Handle forceNew and activeEntities map
             // Add to active entities map *before* adding to spatial index
@@ -183,6 +183,7 @@ class EntityManager extends IEntityManager {
      * Dynamically adds a component data object to an existing entity.
      * Validates the component data against its schema before adding.
      * Updates the spatial index if the position component is added or modified.
+     * Component data is deep-cloned before being added to the entity.
      *
      * @param {string} entityId - The ID of the entity to modify.
      * @param {string} componentTypeId - The unique string ID of the component type to add (e.g., "core:health").
@@ -219,7 +220,7 @@ class EntityManager extends IEntityManager {
             this.#logger.debug(`EntityManager.addComponent: Old location for entity ${entityId} was ${oldLocationId ?? 'null/undefined'}.`);
         }
 
-        // AC: Call entity's addComponent method (consider cloning)
+        // AC: Call entity's addComponent method (with cloning)
         try {
             // Simple deep clone for plain objects to prevent external mutation issues
             const clonedData = JSON.parse(JSON.stringify(componentData));

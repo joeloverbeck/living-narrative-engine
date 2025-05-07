@@ -1,4 +1,4 @@
-// src/tests/integration/sequentialActionExecutionError.integration.test.js
+// src/tests/integration/sequentialActionsExecutionError.test.js
 /* eslint-disable max-lines */
 /**
  * Integration Test — Sub-Ticket 4 (TICKET-12.4)
@@ -169,7 +169,7 @@ describe('Sequential Action Execution – Error Path', () => {
         expect(failingHandlerMock).toHaveBeenCalledTimes(1);
 
         /* ✔️ Error logged with contextual message + error object */
-        expect(logger.error).toHaveBeenCalledTimes(2);
+        expect(logger.error).toHaveBeenCalledTimes(1);
 
         // --- FIX: Update the expected string to include the 'Rule' context ---
         expect(logger.error).toHaveBeenCalledWith(

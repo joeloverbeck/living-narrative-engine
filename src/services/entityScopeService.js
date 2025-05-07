@@ -1,10 +1,9 @@
 // src/services/entityScopeService.js
 
 import {
-    CONNECTIONS_COMPONENT_TYPE_ID,
     EQUIPMENT_COMPONENT_ID,
     INVENTORY_COMPONENT_ID,
-    ITEM_COMPONENT_ID, PASSAGE_DETAILS_COMPONENT_TYPE_ID,
+    ITEM_COMPONENT_ID,
     EXITS_COMPONENT_ID
 } from '../types/components.js'; // Used by _handleLocation via SpatialIndex
 
@@ -40,12 +39,13 @@ function _handleInventory(context) {
     const inventoryData = playerEntity.getComponentData(INVENTORY_COMPONENT_ID);
 
     // Correct: Access data property directly and validate structure
+    // Assumes the inventory component data has an 'items' array.
     if (!inventoryData || !Array.isArray(inventoryData.items)) {
-        console.warn(`entityScopeService._handleInventory: Inventory data for player ${playerEntity.id} (component "${INVENTORY_COMPONENT_ID}") is missing or malformed.`);
+        console.warn(`entityScopeService._handleInventory: Inventory data for player ${playerEntity.id} (component "${INVENTORY_COMPONENT_ID}") is missing, malformed, or does not contain an 'items' array.`);
         return new Set();
     }
     // Correct: Use the items array from the data
-    return new Set(inventoryData.items);
+    return new Set(inventoryData.items.filter(id => typeof id === 'string' && id)); // Ensure only valid string IDs
 }
 
 /**
@@ -110,7 +110,7 @@ function _handleEquipment(context) {
         // Iterate over the values (item IDs) in the slots object
         Object.values(equipmentData.slots).forEach(itemId => {
             // Add the ID if it's truthy (i.e., not null, undefined, empty string)
-            if (itemId) {
+            if (itemId && typeof itemId === 'string') { // Ensure it's a string ID
                 equippedIds.add(itemId);
             }
         });
@@ -136,8 +136,8 @@ function _handleLocationItems(context) {
         return new Set();
     }
 
-    // 1. Get IDs in location
-    const locationIds = _handleLocation(context); // Assumes _handleLocation works
+    // 1. Get IDs in location (this already excludes the player)
+    const locationIds = _handleLocation(context);
     const itemIds = new Set();
 
     // 2. Iterate
@@ -150,10 +150,9 @@ function _handleLocationItems(context) {
             // 5. Add ID if it's an item
             itemIds.add(id);
         } else if (!entity) {
-            // Handle dangling IDs (as your test checks)
+            // Handle dangling IDs
             console.warn(`entityScopeService._handleLocationItems: Entity ID ${id} from location scope not found in entityManager when checking for component ${ITEM_COMPONENT_ID}.`);
         }
-        // No 'else' needed here - if it's not an item, we just don't add it.
     }
     return itemIds;
 }
@@ -170,7 +169,7 @@ function _handleLocationNonItems(context) {
         console.error('entityScopeService._handleLocationNonItems: entityManager is missing in context.');
         return new Set();
     }
-    const locationIds = _handleLocation(context);
+    const locationIds = _handleLocation(context); // This already excludes the player
     const nonItemIds = new Set();
 
     for (const id of locationIds) {
@@ -192,17 +191,16 @@ function _handleLocationNonItems(context) {
  */
 function _handleNearby(context) {
     const inventoryIds = _handleInventory(context);
-    const locationIds = _handleLocation(context);
+    const locationIds = _handleLocation(context); // Excludes player
     return new Set([...inventoryIds, ...locationIds]);
 }
 
 /** @private */
 function _handleNearbyIncludingBlockers(context) {
-    const aggregatedIds = _handleNearby(context); // inventory + location
+    const aggregatedIds = _handleNearby(context); // inventory + location (player excluded from location part)
     const {currentLocation, entityManager} = context;
     if (!entityManager || !currentLocation) return aggregatedIds;
 
-    // NEW LOGIC — iterate exits array and collect blocker IDs
     const exits = currentLocation.getComponentData(EXITS_COMPONENT_ID);
     if (Array.isArray(exits)) {
         for (const ex of exits) {
@@ -217,7 +215,7 @@ function _handleNearbyIncludingBlockers(context) {
         }
     } else {
         console.warn(
-            `_handleNearbyIncludingBlockers: location '${currentLocation.id}' missing core:exits component data`
+            `_handleNearbyIncludingBlockers: location '${currentLocation.id}' missing core:exits component data or it's not an array`
         );
     }
 
@@ -250,19 +248,23 @@ function _handleSelf(context) {
 const scopeHandlers = {
     // Original Scope Keys
     'inventory': _handleInventory,
-    'location': _handleLocation,
+    'location': _handleLocation, // Entities in current location, excluding the player
     'equipment': _handleEquipment,
-    'location_items': _handleLocationItems,
-    'location_non_items': _handleLocationNonItems,
-    'nearby': _handleNearby,
-    'nearby_including_blockers': _handleNearbyIncludingBlockers,
+    'location_items': _handleLocationItems, // Items in current location, excluding player
+    'location_non_items': _handleLocationNonItems, // Non-items in current location, excluding player
+    'nearby': _handleNearby, // Inventory + Location (player excluded from location part)
+    'nearby_including_blockers': _handleNearbyIncludingBlockers, // Nearby + Exit Blockers
 
     // Mappings for TargetDomain values
     'self': _handleSelf,                     // Maps 'self' domain to the new handler
-    'environment': _handleNearbyIncludingBlockers, // Maps 'environment' domain to nearby+blockers logic
+    'environment': _handleLocation,          // CRITICAL CHANGE FOR TargetResolutionService:
+                                             // 'environment' domain for target resolution will now use '_handleLocation',
+                                             // which means entities in the current room, excluding the actor.
+                                             // This is a more focused interpretation than 'nearby_including_blockers'.
+                                             // If 'nearby_including_blockers' is truly desired for some use of 'environment'
+                                             // scope, a new distinct scope name should be used or the caller must be specific.
 
     // Domains 'direction' and 'none' are not expected to resolve to entity IDs here.
-    // The calling service (Action Discovery) should handle these cases before calling this function for entity resolution.
 };
 
 // --- Public Aggregator Function ---
@@ -276,6 +278,7 @@ const scopeHandlers = {
  *
  * @param {string | string[] | TargetDomain | TargetDomain[]} scopes - A single scope/domain name or an array of scope/domain names.
  * @param {ActionContext} context - The action context containing player, location, entityManager, etc.
+ * Note: `playerEntity` corresponds to `actingEntity`, `currentLocation` to the actor's location.
  * @returns {Set<EntityId>} A single set containing unique entity IDs gathered from all valid requested scopes/domains.
  */
 function getEntityIdsForScopes(scopes, context) {
@@ -283,9 +286,13 @@ function getEntityIdsForScopes(scopes, context) {
     const aggregatedIds = new Set();
 
     if (!context || !context.entityManager) {
-        console.error('getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.', {context});
+        console.error('getEntityIdsForScopes: Invalid or incomplete context provided (entityManager is crucial). Cannot proceed.', {context});
         return aggregatedIds;
     }
+    // Ensure playerEntity and currentLocation are available in the context if scopes require them.
+    // Some scopes like 'self', 'inventory', 'equipment' require playerEntity.
+    // Some scopes like 'location', 'environment' require currentLocation and playerEntity (for exclusion).
+    // The handlers themselves check for these, but a general check might be useful.
 
     for (const scopeName of requestedScopes) {
         const handler = scopeHandlers[scopeName];

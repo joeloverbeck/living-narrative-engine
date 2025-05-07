@@ -220,24 +220,6 @@ describe('SystemLogicInterpreter - Integration Test - Placeholder Resolution', (
             expectedExecutionContext // Use the adjusted expectation
         );
 
-        // 3. (Optional) Check logs for successful resolution confirmation
-        const resolvedParamsLog = mockLogger.loggedMessages.find(log =>
-            log.level === 'debug' &&
-            log.message.includes('Resolved parameters for MOCK_PROCESS_DATA')
-        );
-        expect(resolvedParamsLog).toBeDefined();
-        // Check the logged parameters contain the resolved array (adjust based on actual log format if needed)
-        // Assuming args[0] is the JSON string or object containing resolved params
-        try {
-            // Handle cases where args[0] might be the message and args[1] the object/string
-            const loggedDataArg = resolvedParamsLog.args.length > 1 ? resolvedParamsLog.args[1] : resolvedParamsLog.args[0];
-            const loggedDataString = typeof loggedDataArg === 'string' ? loggedDataArg : JSON.stringify(loggedDataArg);
-            expect(loggedDataString).toContain(JSON.stringify(MOCK_TRIGGER_EVENT_PAYLOAD_ARRAY));
-        } catch (e) {
-            console.error("Failed to assert log content. Log object:", resolvedParamsLog);
-            throw e; // Re-throw after logging context
-        }
-
 
         // 4. Verify no warnings about unresolved placeholders for this specific path
         const unresolvedWarning = mockLogger.loggedMessages.find(log =>

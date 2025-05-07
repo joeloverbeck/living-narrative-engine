@@ -24,7 +24,7 @@ const mockPromptOutputPort = {prompt: jest.fn()};
 const mockTurnEndPort = {notifyTurnEnded: jest.fn()};
 const mockPlayerPromptService = {prompt: jest.fn()};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
-const mockSafeEventDispatcher = {dispatchSafely: jest.fn(),  subscribe: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(), subscribe: jest.fn()};
 
 // <<< ADDED: Mock for CommandInputPort >>>
 const mockUnsubscribe = jest.fn(); // Mock the unsubscribe function
@@ -88,8 +88,8 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
         // Define the full warning log message expected from _handleTurnEnd's guard block
         // when no actor is active.
         // Status is 'success' because the error argument to _handleTurnEnd is null.
-        // 'current actor is null' because #currentActor is null in this test's setup.
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but current actor is null or does not match. Turn may have already ended or belongs to different handler context. Attempting cleanup for waiting mechanisms if ${testActorId} was the one being awaited.`;
+        // 'current active actor (undefined)' because #currentActor is null and #awaitingTurnEndForActorId is null.
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but this actor is not the current active actor (undefined) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`;
 
 
         // --- Steps ---

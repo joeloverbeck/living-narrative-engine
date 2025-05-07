@@ -25,12 +25,8 @@ class OperationInterpreter {
     }
 
     execute(operation, executionContext) {
-        // <<< --- ADDED LOG --- >>>
-        this.#logger.info(`*** OperationInterpreter executing: ${operation?.type || 'INVALID_OP'} ***`);
         if (!operation || typeof operation.type !== 'string' || !operation.type.trim()) {
             this.#logger.error('OperationInterpreter received invalid operation object (missing or invalid type). Skipping execution.', {operation});
-            // <<< --- ADDED LOG --- >>>
-            this.#logger.error(`*** OperationInterpreter SKIPPING invalid operation: ${JSON.stringify(operation)} ***`);
             return;
         }
 
@@ -41,36 +37,21 @@ class OperationInterpreter {
             let resolvedParameters;
             try {
                 resolvedParameters = resolvePlaceholders(operation.parameters, executionContext, this.#logger);
-                // --- ADD THIS LOG ---
-                this.#logger.debug(`Resolved parameters for ${opType}:`, JSON.stringify(resolvedParameters));
-                // --- END ADD THIS LOG ---
             } catch (interpolationError) {
                 this.#logger.error(`Error resolving placeholders for operation type "${opType}". Skipping handler invocation.`, interpolationError);
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.error(`*** OperationInterpreter placeholder ERROR for: ${opType}`, interpolationError);
                 return; // Stop if placeholders fail
             }
 
             try {
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.info(`*** OperationInterpreter calling handler for: ${opType} ***`);
                 this.#logger.debug(`Executing handler for operation type "${opType}"...`);
                 handler(resolvedParameters, executionContext); // Call the actual handler
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.debug(`Handler execution finished successfully for type "${opType}".`);
             } catch (handlerError) {
                 this.#logger.debug(`Handler for operation type "${opType}" threw an error. Rethrowing...`);
-                // <<< --- ADDED LOG --- >>>
-                this.#logger.error(`*** OperationInterpreter handler ERROR for: ${opType}`, handlerError);
                 throw handlerError; // Rethrow
             }
         } else {
             this.#logger.error(`---> HANDLER NOT FOUND for operation type: "${opType}". Skipping execution.`);
-            // <<< --- ADDED LOG --- >>>
-            console.warn(`*** OperationInterpreter HANDLER NOT FOUND for: ${opType} ***`);
         }
-        // <<< --- ADDED LOG --- >>>
-        this.#logger.info(`*** OperationInterpreter finished execute for: ${opType} ***`);
     }
 }
 

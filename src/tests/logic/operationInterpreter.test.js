@@ -177,7 +177,6 @@ describe('OperationInterpreter', () => {
         expect(mockLogHandler).toHaveBeenCalledWith(resolvedLogParameters, mockExecutionContext);
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "LOG"...');
-        expect(mockLogger.debug).toHaveBeenCalledWith('Handler execution finished successfully for type "LOG".');
     });
 
     // NOTE: This test is likely failing because resolution isn't working.
@@ -206,7 +205,6 @@ describe('OperationInterpreter', () => {
         expect(mockSetVariableHandler).toHaveBeenCalledWith(resolvedSetVariableParameters, mockExecutionContext);
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "SET_VARIABLE"...');
-        expect(mockLogger.debug).toHaveBeenCalledWith('Handler execution finished successfully for type "SET_VARIABLE".');
     });
     // --- END NEW Test: SET_VARIABLE ---
 
@@ -224,7 +222,6 @@ describe('OperationInterpreter', () => {
         expect(mockQuerySystemDataHandler).toHaveBeenCalledWith(resolvedQuerySystemDataParameters, mockExecutionContext);
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "QUERY_SYSTEM_DATA"...');
-        expect(mockLogger.debug).toHaveBeenCalledWith('Handler execution finished successfully for type "QUERY_SYSTEM_DATA".');
     });
     // --- END NEW Test: QUERY_SYSTEM_DATA ---
 

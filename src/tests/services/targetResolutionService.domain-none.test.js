@@ -1,8 +1,9 @@
-// src/services/targetResolutionService.domain-none.test.js
+// src/tests/services/targetResolutionService.domain-none.test.js
 
 import {describe, test, expect, beforeEach, jest} from '@jest/globals';
 import {TargetResolutionService} from '../../services/targetResolutionService.js'; // Adjusted path
-import {ResolutionStatus} from '../../types/resolutionStatus.js'; // Adjusted path
+import {ResolutionStatus} from '../../types/resolutionStatus.js';
+import {getEntityIdsForScopes} from "../../services/entityScopeService"; // Adjusted path
 // Entity might not be strictly needed for 'none' domain, but good to have for consistency if other tests are added to this file.
 // import Entity from '../entities/entity.js'; // Adjusted path
 
@@ -47,6 +48,7 @@ describe('TargetResolutionService - Domain \'none\'', () => {
             worldContext: mockWorldContext,
             gameDataRepository: mockGameDataRepository,
             logger: mockLogger,
+            getEntityIdsForScopes: getEntityIdsForScopes
         };
         service = new TargetResolutionService(options);
         // Clear any calls from constructor right after instantiation for cleaner test assertions

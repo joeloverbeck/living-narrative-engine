@@ -6,6 +6,7 @@ import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
 // --- Module to Test ---
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler.js'; // Adjusted path
 import TurnDirective from '../../../core/constants/turnDirectives.js'; // Adjusted path
+import {TURN_ENDED_ID} from '../../../core/constants/eventIds.js'; // Import event ID
 
 // --- Mock Dependencies ---
 // (Mocks remain the same)
@@ -24,7 +25,7 @@ const mockPromptOutputPort = {prompt: jest.fn()};
 const mockTurnEndPort = {notifyTurnEnded: jest.fn()};
 const mockPlayerPromptService = {prompt: jest.fn()};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn()};
-const mockSafeEventDispatcher = {dispatchSafely: jest.fn(),  subscribe: jest.fn()};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(), subscribe: jest.fn()};
 
 // <<< ADDED: Mock for CommandInputPort >>>
 const mockUnsubscribe = jest.fn(); // Mock the unsubscribe function
@@ -35,48 +36,37 @@ const mockCommandInputPort = {
 
 
 // --- Test Suite ---
-describe('PlayerTurnHandler: #_processValidatedCommand - RE_PROMPT Prompt Failure Path', () => {
+// UPDATED Description: Test what happens when command is successful and interpreter suggests RE_PROMPT
+describe('PlayerTurnHandler: #_processValidatedCommand - Successful Command with RE_PROMPT Directive from Interpreter', () => {
     /** @type {PlayerTurnHandler} */
     let handler;
-    // <<< REMOVED turnPromise variable >>>
-    // let turnPromise;
 
     // --- Test Data ---
-    const mockActor = {id: 'player-1', name: 'FailPromptActor'};
-    const mockPromptError = new Error('Prompt service failed on re-prompt');
-    // Command result indicates success but turn does not end, leading to interpreter choosing RE_PROMPT
+    const mockActor = {id: 'player-1', name: 'WaitingActor'};
+    // const mockPromptError = new Error('Prompt service failed on re-prompt'); // No longer used in this version
     const mockCommandResult = {
-        success: true,
+        success: true, // Key: command processing itself was successful
         turnEnded: false,
         message: 'Looked around.',
-        actionResult: {actionId: 'look'} // Example action result
+        actionResult: {actionId: 'look'}
     };
 
     beforeEach(() => {
-        // Reset all mocks before each test run
         jest.clearAllMocks();
-        // <<< Reset added mock too >>>
         mockUnsubscribe.mockClear();
         mockCommandInputPort.onCommand.mockClear();
 
+        // PlayerPromptService: Succeeds on first call (startTurn)
+        // The second mock for failure is removed as it won't be called in this flow.
+        mockPlayerPromptService.prompt.mockResolvedValueOnce(undefined);
 
-        // --- Mock Configuration ---
-        // PlayerPromptService: Succeeds on first call (startTurn), fails on second (re-prompt)
-        mockPlayerPromptService.prompt
-            .mockResolvedValueOnce(undefined) // For initial startTurn prompt
-            .mockRejectedValueOnce(mockPromptError); // For the re-prompt call
-
-        // Command processor returns a result that triggers RE_PROMPT via the interpreter
         mockCommandProcessor.processCommand.mockResolvedValue(mockCommandResult);
-
-        // Interpreter indicates a re-prompt is needed
         mockCommandOutcomeInterpreter.interpret.mockResolvedValue(TurnDirective.RE_PROMPT);
-
-        // Turn end notification should succeed even on turn failure
         mockTurnEndPort.notifyTurnEnded.mockResolvedValue();
+        // Mock for #waitForTurnEndEvent's subscription
+        mockSafeEventDispatcher.subscribe.mockReturnValue(jest.fn()); // Return a dummy unsubscribe function
 
-        // --- Handler Instantiation ---
-        // <<< UPDATED: Added commandInputPort >>>
+
         handler = new PlayerTurnHandler({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystem,
@@ -86,115 +76,87 @@ describe('PlayerTurnHandler: #_processValidatedCommand - RE_PROMPT Prompt Failur
             gameDataRepository: mockGameDataRepository,
             promptOutputPort: mockPromptOutputPort,
             turnEndPort: mockTurnEndPort,
-            commandInputPort: mockCommandInputPort, // <<< ADDED Dependency
+            commandInputPort: mockCommandInputPort,
             playerPromptService: mockPlayerPromptService,
             commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
             safeEventDispatcher: mockSafeEventDispatcher,
         });
     });
 
-    afterEach(async () => { // Make async
-        // Ensure graceful cleanup
+    afterEach(async () => {
         if (handler) {
             try {
-                // <<< Call destroy without await if it's not async >>>
-                // await handler.destroy();
-                handler.destroy(); // Assuming destroy is synchronous based on provided code
+                handler.destroy();
             } catch (e) {
-                // console.warn("Suppressed error during afterEach cleanup:", e);
+                // Suppress
             } finally {
                 handler = null;
-                // <<< REMOVED turnPromise reset >>>
-                // turnPromise = null;
             }
         }
     });
 
-    // <<< UPDATED Test Description >>>
-    it('should process command, interpret RE_PROMPT, fail on re-prompt, log error, and notify TurnEndPort of failure', async () => {
-        // --- Setup ---
-        // Mocks configured in beforeEach
-
-        // Start the turn and wait for initiation
-        // <<< UPDATED: Call startTurn >>>
+    // UPDATED Test Description
+    it('should process command, interpret RE_PROMPT, and then wait for TURN_ENDED_ID event instead of re-prompting', async () => {
         await handler.startTurn(mockActor);
-
-        // Allow the initial async prompt call within startTurn to complete
-        // <<< UPDATED: Use nextTick >>>
         await new Promise(process.nextTick);
 
-        // Verify initial prompt call happened (sanity check)
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Initial prompt
         expect(mockPlayerPromptService.prompt).toHaveBeenNthCalledWith(1, mockActor);
 
-        // --- Steps ---
-        // 1. Define valid command data that leads to RE_PROMPT
-        const commandString = 'look'; // The specific command string doesn't matter as much as the mocks' behavior
+        // Clear mocks called during startTurn to focus on command handling phase
+        mockLogger.info.mockClear();
+        mockLogger.debug.mockClear();
+        mockPlayerPromptService.prompt.mockClear(); // Clear the startTurn call
 
-        // 2. Call the internal method under test indirectly via command submission.
-        //    _handleSubmittedCommand calls #_processValidatedCommand -> RE_PROMPT -> #_promptPlayerForAction (which fails).
-        //    The error from the failed prompt is caught within #_promptPlayerForAction,
-        //    which triggers _handleTurnEnd.
-        //    _handleSubmittedCommand should resolve void as the error is handled internally.
-        // <<< Simulate command submission by calling the handler directly >>>
-        // Find the handler function passed to onCommand
+        const commandString = 'look';
         const commandHandler = mockCommandInputPort.onCommand.mock.calls[0][0];
-        await commandHandler(commandString); // Invoke the handler with the command
+        await commandHandler(commandString);
 
+        // --- Assertions for new behavior ---
 
-        // <<< REMOVED: Awaiting turnPromise rejection >>>
-        // await expect(turnPromise).rejects.toThrow(mockPromptError);
-
-        // --- Assertions ---
-
-        // 0. Command Subscription Check: (Verify startTurn subscribed)
-        expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
-
-        // 1. Processor Call:
         expect(mockCommandProcessor.processCommand).toHaveBeenCalledTimes(1);
-        expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(mockActor, commandString); // Use the actual command string
+        expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(mockActor, commandString);
 
-        // 2. Interpreter Call:
         expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledTimes(1);
         expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledWith(mockCommandResult, mockActor.id);
 
         // 3. Prompt Calls:
-        //    Should be called twice: once initially (in setup), once for the failed re-prompt attempt.
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(2);
-        expect(mockPlayerPromptService.prompt).toHaveBeenNthCalledWith(1, mockActor); // Initial prompt (from setup)
-        expect(mockPlayerPromptService.prompt).toHaveBeenNthCalledWith(2, mockActor); // Re-prompt attempt (failed)
+        //    Should NOT be called again after the initial one in startTurn.
+        expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled(); // No second call
 
         // 4. Turn End Port Call:
-        // <<< UPDATED: Key assertion for failure >>>
-        //    Should be called exactly once, indicating failure, triggered by the catch block in #_promptPlayerForAction.
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(mockActor.id, false); // false indicates failure
+        //    Should NOT be called directly in this flow path. The system is now WAITING.
+        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
 
-        // 5. Promise Rejection:
-        //    No longer applicable. Failure confirmed via notifyTurnEnded.
-
-        // 6. Logging:
-        //    Check the error log from #_promptPlayerForAction's catch block.
-        expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`PlayerPromptService threw an error during prompt for actor ${mockActor.id}: ${mockPromptError.message}`),
-            mockPromptError
-        );
-        // Check the info log from #_promptPlayerForAction's catch block signalling the turn end
+        // 5. Logging:
+        //    Error logs related to re-prompt failure should NOT be present.
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        //    Info logs should reflect the new path
         expect(mockLogger.info).toHaveBeenCalledWith(
-            expect.stringContaining(`Signalling FAILED turn end for ${mockActor.id} due to prompt error.`)
+            expect.stringContaining(`CommandProcessor SUCCEEDED for "${commandString}" by ${mockActor.id}`)
         );
-        // Check the warning log from _handleTurnEnd confirming the failure reason
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(`Turn for ${mockActor.id} ended with failure. Reason: ${mockPromptError.message}`)
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            expect.stringContaining(`CommandOutcomeInterpreter processed. Received directive: '${TurnDirective.RE_PROMPT}' for actor ${mockActor.id}`)
         );
-        // Ensure ONLY ONE error log related to the expected flow (prompt failure)
-        const errorCalls = mockLogger.error.mock.calls;
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            expect.stringContaining(`Proceeding to wait for '${TURN_ENDED_ID}' event from Rules Interpreter for actor ${mockActor.id}`)
+        );
 
-        // 7. Internal State:
-        // Verified implicitly by notifyTurnEnded call and logging.
+        // 6. Event Subscription for Turn End:
+        //    Check that #waitForTurnEndEvent was called, which subscribes.
+        expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
+        expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, expect.any(Function));
 
-        // 8. Unsubscription Check: (Verify turn end unsubscribed)
-        expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+        // Debug log for subscribing to TURN_ENDED_ID
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining(`Subscribing to '${TURN_ENDED_ID}' for actor ${mockActor.id} and waiting.`)
+        );
+
+
+        // 7. Unsubscription Check:
+        //    #commandUnsubscribeFn is NOT called in this path until the turn actually ends or is destroyed.
+        //    The original onCommand handler (commandHandler) completes, but doesn't trigger turn end itself.
+        expect(mockUnsubscribe).not.toHaveBeenCalled(); // Original command subscription remains active while waiting
     });
 });
 

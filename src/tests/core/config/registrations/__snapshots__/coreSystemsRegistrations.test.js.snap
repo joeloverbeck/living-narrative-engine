@@ -94,22 +94,6 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
-    "MoveCoordinatorSystem",
-    [Function],
-    {
-      "dependencies": [
-        "EventBus",
-        "EntityManager",
-        undefined,
-        "MovementSystem",
-      ],
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-      ],
-    },
-  ],
-  [
     "CombatSystem",
     [Function],
     {

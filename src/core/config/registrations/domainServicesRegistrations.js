@@ -4,18 +4,21 @@ import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
 import {ItemTargetResolverService} from "../../../services/itemTargetResolver.js";
-import {TargetResolutionService} from "../../../services/targetResolutionService.js"; // Corrected import if class name was changed, assuming it's this.
+import {TargetResolutionService} from "../../../services/targetResolutionService.js";
 import {ActionValidationContextBuilder} from "../../../services/actionValidationContextBuilder.js";
 import {PrerequisiteEvaluationService} from "../../../services/prerequisiteEvaluationService.js";
 import {DomainContextCompatibilityChecker} from "../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../services/actionValidationService.js";
-import PayloadValueResolverService from "../../../services/payloadValueResolverService.js";
 import CommandParser from "../../commandParser.js";
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../worldContext.js';
 import {TurnOrderService} from "../../turnOrder/turnOrderService.js";
 import CommandProcessor from "../../commandProcessor.js";
 import PlayerPromptService from '../../services/playerPromptService.js';
+
+// Import getEntityIdsForScopes directly
+import { getEntityIdsForScopes } from '../../../services/entityScopeService.js';
+
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
@@ -29,10 +32,11 @@ import PlayerPromptService from '../../services/playerPromptService.js';
 /** @typedef {import('../../../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */ // Path to the interface
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../../services/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
+
 
 // --- Concrete type imports for DI resolution, if needed for casting ---
 /** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 
 
@@ -51,14 +55,15 @@ export function registerDomainServices(container) {
     r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
         [tokens.EntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
 
-    // --- CORRECTED: Register TargetResolutionService ---
+    // Register TargetResolutionService with getEntityIdsForScopes
     r.singletonFactory(tokens.TargetResolutionService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.TargetResolutionService)}...`);
         const dependencies = {
             entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.EntityManager)),
             worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
             gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
-            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            getEntityIdsForScopes: getEntityIdsForScopes // Pass the imported function directly
         };
 
         for (const [key, value] of Object.entries(dependencies)) {
@@ -67,12 +72,18 @@ export function registerDomainServices(container) {
                 log.error(errorMsg);
                 throw new Error(`Missing dependency "${key}" for ${String(tokens.TargetResolutionService)}`);
             }
+            // Special check for getEntityIdsForScopes as it's a function
+            if (key === 'getEntityIdsForScopes' && typeof value !== 'function') {
+                const errorMsg = `Domain-services Registration: Factory for ${String(tokens.TargetResolutionService)} FAILED, dependency "${key}" is not a function.`;
+                log.error(errorMsg);
+                throw new Error(`Dependency "${key}" for ${String(tokens.TargetResolutionService)} must be a function.`);
+            }
         }
         log.debug(`Domain-services Registration: Dependencies for ${String(tokens.TargetResolutionService)} resolved, creating instance.`);
         return new TargetResolutionService(dependencies);
     });
     log.debug(`Domain-services Registration: Registered ${String(tokens.TargetResolutionService)} factory.`);
-    // --- END CORRECTION ---
+
 
     r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [tokens.ILogger]);
     r.single(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder,
@@ -82,7 +93,6 @@ export function registerDomainServices(container) {
     r.single(tokens.DomainContextCompatibilityChecker, DomainContextCompatibilityChecker, [tokens.ILogger]);
     r.single(tokens.ActionValidationService, ActionValidationService,
         [tokens.EntityManager, tokens.ILogger, tokens.DomainContextCompatibilityChecker, tokens.PrerequisiteEvaluationService]);
-    r.single(tokens.PayloadValueResolverService, PayloadValueResolverService, [tokens.ILogger]);
 
     r.singletonFactory(tokens.IWorldContext, c => new WorldContext(
         /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
@@ -127,7 +137,7 @@ export function registerDomainServices(container) {
         };
         if (!dependencies.logger) {
             const errorMsg = `Domain-services Registration: Factory for ${String(tokens.ITurnOrderService)} FAILED to resolve dependency "logger".`;
-            log.error(errorMsg);
+            log.error(errorMsg); // Use the log instance obtained at the start of the function.
             throw new Error(`Missing dependency "logger" for ${String(tokens.ITurnOrderService)}`);
         }
         return new TurnOrderService(dependencies);

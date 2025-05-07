@@ -101,11 +101,11 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
     it('should notify TurnEndPort of failure and log error when re-prompt fails', async () => {
         // --- Setup ---
         await handler.startTurn(mockActor);
-        await new Promise(process.nextTick); // Yield control briefly
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Verify initial prompt
+        // await new Promise(process.nextTick); // Usually not needed if startTurn is fully awaited and mocks resolve.
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Verify initial prompt from startTurn
 
-        // Reset mocks specifically for this test's actions
-        mockPlayerPromptService.prompt.mockClear();
+        // Reset/clear mocks for logs and critical functions to isolate assertions to _handleSubmittedCommand
+        mockPlayerPromptService.prompt.mockClear(); // Clear calls from startTurn
         mockTurnEndPort.notifyTurnEnded.mockClear();
         mockLogger.error.mockClear();
         mockLogger.warn.mockClear();
@@ -116,72 +116,93 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
 
         // --- Steps ---
         const emptyCommandString = '';
-        const handleCommandCall = handler._handleSubmittedCommand(emptyCommandString);
-        await expect(handleCommandCall).resolves.toBeUndefined();
+        // _handleSubmittedCommand should internally handle the error and resolve.
+        await handler._handleSubmittedCommand(emptyCommandString);
 
 
         // --- Assertions ---
 
         // 1. Prompt Calls:
+        // Expect re-prompt attempt within _handleSubmittedCommand -> #_promptPlayerForAction
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor);
 
         // 2. Turn End Port Call:
+        // Called by _handleTurnEnd, which is triggered by the error in #_promptPlayerForAction
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(mockActor.id, false); // Failure
 
         // 3. No Processor Call:
         expect(mockCommandProcessor.processCommand).not.toHaveBeenCalled();
 
-        // 4. Logging:
+        // 4. Logging (Warn, Error, Info):
+        // Log from _handleSubmittedCommand for empty string
         expect(mockLogger.warn).toHaveBeenCalledWith(
             `${className}: Received empty command string. Re-prompting actor ${mockActor.id}.`
         );
+        // Log from #_promptPlayerForAction's catch block (error during prompt)
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-            `${className}: PlayerPromptService threw an error during prompt for actor ${mockActor.id}: ${mockError.message}`, // Exact log message
+            `${className}: PlayerPromptService threw an error during prompt for actor ${mockActor.id}: ${mockError.message}`,
             mockError
         );
+        // Log from #_promptPlayerForAction's catch block (signalling turn end)
         expect(mockLogger.info).toHaveBeenCalledWith(
             `${className}: Signalling FAILED turn end for ${mockActor.id} due to prompt error.`
         );
+        // Log from _handleTurnEnd (ending turn status)
         expect(mockLogger.info).toHaveBeenCalledWith(
             `${className}: Ending turn for actor ${mockActor.id} (status: failure).`
         );
-        expect(mockLogger.warn).toHaveBeenCalledWith( // The failure reason log in _handleTurnEnd
+        // Log from _handleTurnEnd (failure reason)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
             `${className}: Turn for ${mockActor.id} ended with failure. Reason: ${mockError.message}`
         );
-        expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+        expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Total warn calls
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Total info calls after clear
 
 
-        // 5. State Cleanup Logging & Unsubscribe:
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+        // 5. State Cleanup Logging & Unsubscribe (Debug Logs):
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Called from _handleTurnEnd
 
-        // --- MODIFIED ASSERTION ---
-        // Check for the exact debug log message from #_unsubscribeFromCommands
-        const expectedUnsubscribeLog = `${className}: Unsubscribing from command input for actor ${mockActor.id}.`;
+        // Debug logs expected AFTER mocks were cleared:
+        // Order:
+        // 1. _handleSubmittedCommand: "Received submitted command..."
+        // 2. #_promptPlayerForAction: "Delegating prompt logic..."
+        // 3. _handleTurnEnd -> #_unsubscribeFromCommands: "Unsubscribing from command input for actor context..."
+        // 4. _handleTurnEnd: "Notifying TurnEndPort..."
+        // 5. _handleTurnEnd: "TurnEndPort notified successfully..."
+        // 6. _handleTurnEnd -> #_cleanupTurnState: "Cleaning up primary active turn state..."
+        // 7. _handleTurnEnd -> #_cleanupTurnState: "Active turn state (currentActor) reset..."
+        // 8. _handleTurnEnd: "_handleTurnEnd sequence completed..."
+        // 9. _handleSubmittedCommand (catch block for #_promptPlayerForAction): "Caught re-thrown error..."
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(`${className}: Received submitted command via subscription: "${emptyCommandString}"`);
+        expect(mockLogger.debug).toHaveBeenCalledWith(`${className}: Delegating prompt logic for actor ${mockActor.id} to PlayerPromptService.`);
+
+        const expectedUnsubscribeLog = `${className}: Unsubscribing from command input for actor context '${mockActor.id}'.`;
         expect(mockLogger.debug).toHaveBeenCalledWith(expectedUnsubscribeLog);
-        // --- END MODIFIED ASSERTION ---
+
+        // --- CORRECTED Log Expectation for Notifying TurnEndPort ---
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `Notifying TurnEndPort for actor ${mockActor.id}, success=false.` // Removed ${className}: prefix
+        );
+        // --- END CORRECTION ---
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Notifying TurnEndPort for actor ${mockActor.id}, success=false.`)
+            `${className}: Cleaning up primary active turn state for actor ${mockActor.id}.`
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`TurnEndPort notified successfully for ${mockActor.id}.`)
+            `${className}: Active turn state (currentActor) reset for ${mockActor.id}.`
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Cleaning up active turn state for actor ${mockActor.id}.`)
+            `${className}: _handleTurnEnd sequence completed for ${mockActor.id}.`
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Active turn state reset for ${mockActor.id}.`)
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`_handleTurnEnd sequence completed for ${mockActor.id}.`)
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`Caught re-thrown error from failed re-prompt in empty command case. Error: ${mockError.message}`)
+            `${className}: Caught re-thrown error from failed re-prompt in empty command case. Error: ${mockError.message}`
         );
 
+        expect(mockLogger.debug).toHaveBeenCalledTimes(9); // Total debug calls after clear
     });
 });
 // --- FILE END ---

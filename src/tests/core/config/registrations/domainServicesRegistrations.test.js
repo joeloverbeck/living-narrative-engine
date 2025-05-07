@@ -86,10 +86,6 @@ jest.mock("../../../../services/actionValidationService.js", () => ({
     __esModule: true,
     ActionValidationService: jest.fn().mockImplementation(() => mockActionValidationServiceInstance)
 }));
-jest.mock("../../../../services/payloadValueResolverService.js", () => ({
-    __esModule: true,
-    default: jest.fn().mockImplementation(() => mockPayloadValueResolverServiceInstance)
-}));
 jest.mock("../../../../core/commandParser.js", () => ({
     __esModule: true,
     default: jest.fn().mockImplementation(() => mockCommandParserInstance)
@@ -119,7 +115,6 @@ import {ActionValidationContextBuilder} from "../../../../services/actionValidat
 import {PrerequisiteEvaluationService} from "../../../../services/prerequisiteEvaluationService.js";
 import {DomainContextCompatibilityChecker} from "../../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../../services/actionValidationService.js";
-import PayloadValueResolverService from "../../../../services/payloadValueResolverService.js";
 import CommandParser from "../../../../core/commandParser.js";
 import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../../../core/worldContext.js';
@@ -331,7 +326,6 @@ describe('registerDomainServices', () => {
         PrerequisiteEvaluationService.mockClear();
         DomainContextCompatibilityChecker.mockClear();
         ActionValidationService.mockClear();
-        PayloadValueResolverService.mockClear();
         CommandParser.mockClear();
         JsonLogicEvaluationService.mockClear();
         WorldContext.mockClear();
@@ -393,10 +387,6 @@ describe('registerDomainServices', () => {
             dependencies: expect.any(Array)
         }));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.ActionValidationService, ActionValidationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: expect.any(Array)
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.PayloadValueResolverService, PayloadValueResolverService, expect.objectContaining({
             lifecycle: 'singleton',
             dependencies: expect.any(Array)
         }));

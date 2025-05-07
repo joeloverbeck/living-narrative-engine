@@ -1,7 +1,7 @@
 // src/core/commandProcessor.js
 
 // --- Static Imports ---
-import {ResolutionStatus} from '../services/targetResolutionService.js';
+import ResolutionStatus from '../types/resolutionStatus.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -649,7 +649,7 @@ class CommandProcessor {
      * @async
      */
     async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
-        this.#logger.debug(`CommandProcessor.#dispatchWithErrorHandling: Attempting to dispatch '${loggingContextName}' event ('${eventName}') via SafeEventDispatcher.`);
+            this.#logger.debug(`CommandProcessor.#dispatchWithErrorHandling: Attempting to dispatch '${loggingContextName}' event ('${eventName}') via SafeEventDispatcher.`);
         try {
             const success = await this.#safeEventDispatcher.dispatchSafely(eventName, payload);
 

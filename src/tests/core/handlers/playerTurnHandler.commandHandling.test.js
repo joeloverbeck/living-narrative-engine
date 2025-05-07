@@ -9,24 +9,29 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler';
 import TurnDirective from '../../../core/constants/turnDirectives';
 import Entity from '../../../entities/entity'; // Assuming Entity class exists
-import { TURN_ENDED_ID } from '../../../core/constants/eventIds'; // <<< ADDED: Import TURN_ENDED_ID
+import {TURN_ENDED_ID} from '../../../core/constants/eventIds'; // <<< ADDED: Import TURN_ENDED_ID
 
 // --- Mock Dependencies ---
 // (Mocks remain the same)
-const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), };
-const mockActionDiscoverySystem = { getValidActions: jest.fn(), };
-const mockCommandProcessor = { processCommand: jest.fn(), };
-const mockWorldContext = { getLocationOfEntity: jest.fn(), };
-const mockEntityManager = { getEntityInstance: jest.fn(), };
-const mockGameDataRepository = { getActionDefinition: jest.fn(), };
-const mockPromptOutputPort = { prompt: jest.fn(), };
-const mockTurnEndPort = { notifyTurnEnded: jest.fn(), };
-const mockPlayerPromptService = { prompt: jest.fn(), };
-const mockCommandOutcomeInterpreter = { interpret: jest.fn(), };
-const mockSafeEventDispatcher = { dispatchSafely: jest.fn(), subscribe: jest.fn(), };
+const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),};
+const mockActionDiscoverySystem = {getValidActions: jest.fn(),};
+const mockCommandProcessor = {processCommand: jest.fn(),};
+const mockWorldContext = {getLocationOfEntity: jest.fn(),};
+const mockEntityManager = {getEntityInstance: jest.fn(),};
+const mockGameDataRepository = {getActionDefinition: jest.fn(),};
+const mockPromptOutputPort = {prompt: jest.fn(),};
+const mockTurnEndPort = {notifyTurnEnded: jest.fn(),};
+const mockPlayerPromptService = {prompt: jest.fn(),};
+const mockCommandOutcomeInterpreter = {interpret: jest.fn(),};
+const mockSafeEventDispatcher = {dispatchSafely: jest.fn(), subscribe: jest.fn(),};
 let commandListenerCallback = null;
 const mockUnsubscribeFn = jest.fn();
-const mockCommandInputPort = { onCommand: jest.fn((listener) => { commandListenerCallback = listener; return mockUnsubscribeFn; }), };
+const mockCommandInputPort = {
+    onCommand: jest.fn((listener) => {
+        commandListenerCallback = listener;
+        return mockUnsubscribeFn;
+    }),
+};
 const mockTurnEndedUnsubscribeFn = jest.fn(); // Separate mock for turn ended unsubscribe
 
 
@@ -76,7 +81,8 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
                 handler.destroy();
                 // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
                 await new Promise(process.nextTick);
-            } catch(e) { /* ignore */ }
+            } catch (e) { /* ignore */
+            }
             handler = null;
         }
         player = null;
@@ -137,7 +143,7 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
         expect(turnEndedEventCallback).toBeDefined();
 
         if (turnEndedEventCallback) {
-            turnEndedEventCallback({ entityId: player.id, success: true });
+            turnEndedEventCallback({entityId: player.id, success: true});
         }
 
         // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
@@ -154,29 +160,6 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, true);
         expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
         expect(mockTurnEndedUnsubscribeFn).toHaveBeenCalledTimes(1);
-    });
-
-    test('Command processing leading to RE_PROMPT should re-prompt and NOT unsubscribe', async () => {
-        const command = 'look';
-        const commandResult = {success: true, turnEnded: false, actionResult: {actionId: 'core:look'}};
-        mockCommandProcessor.processCommand.mockResolvedValue(commandResult);
-        mockCommandOutcomeInterpreter.interpret.mockResolvedValue(TurnDirective.RE_PROMPT);
-
-        await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Complete startTurn
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
-
-        await commandListenerCallback(command);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Complete command handling
-
-        expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(player, command);
-        expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledWith(commandResult, player.id);
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(2);
-        expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
-        expect(mockUnsubscribeFn).not.toHaveBeenCalled();
-        expect(mockTurnEndedUnsubscribeFn).not.toHaveBeenCalled();
     });
 
     test('Command processing failure (DIRECT PROCESSOR FAILURE) should notify TurnEndPort (failure) and unsubscribe', async () => {
@@ -295,7 +278,7 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
         expect(turnEndedEventCallback).toBeDefined();
 
         if (turnEndedEventCallback) {
-            turnEndedEventCallback({ entityId: player.id, success: true });
+            turnEndedEventCallback({entityId: player.id, success: true});
         }
 
         // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
