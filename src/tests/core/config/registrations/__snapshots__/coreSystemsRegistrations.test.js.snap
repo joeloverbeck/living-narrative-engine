@@ -80,20 +80,6 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
-    "BlockerSystem",
-    [Function],
-    {
-      "dependencies": [
-        "EventBus",
-        "EntityManager",
-      ],
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-      ],
-    },
-  ],
-  [
     "MovementSystem",
     [Function],
     {
@@ -114,7 +100,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       "dependencies": [
         "EventBus",
         "EntityManager",
-        "BlockerSystem",
+        undefined,
         "MovementSystem",
       ],
       "lifecycle": "singleton",

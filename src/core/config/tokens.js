@@ -234,7 +234,6 @@ export const tokens = Object.freeze({
     DeathSystem: 'DeathSystem',
     WorldPresenceSystem: 'WorldPresenceSystem',
     ItemUsageSystem: 'ItemUsageSystem',
-    BlockerSystem: 'BlockerSystem',
     MovementSystem: 'MovementSystem',
     MoveCoordinatorSystem: 'MoveCoordinatorSystem',
     QuestSystem: 'QuestSystem',

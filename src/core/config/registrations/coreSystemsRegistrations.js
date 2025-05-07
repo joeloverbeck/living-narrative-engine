@@ -42,7 +42,6 @@ import MovementSystem from '../../../systems/movementSystem.js';
 import WorldPresenceSystem from '../../../systems/worldPresenceSystem.js';
 import ItemUsageSystem from '../../../systems/itemUsageSystem.js';
 import {NotificationUISystem} from '../../../systems/notificationUISystem.js';
-import BlockerSystem from '../../../systems/blockerSystem.js';
 import MoveCoordinatorSystem from '../../../systems/moveCoordinatorSystem.js';
 import OpenableSystem from '../../../systems/openableSystem.js';
 import HealthSystem from '../../../systems/healthSystem.js';
@@ -107,12 +106,6 @@ export function registerCoreSystems(container) {
         tokens.EventBus, tokens.EntityManager, tokens.ConditionEvaluationService, tokens.ItemTargetResolverService, tokens.GameDataRepository
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.ItemUsageSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.BlockerSystem, BlockerSystem, [
-        tokens.EventBus, tokens.EntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.BlockerSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.MovementSystem, MovementSystem, [
