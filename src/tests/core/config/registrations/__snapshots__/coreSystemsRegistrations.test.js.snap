@@ -141,21 +141,6 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     },
   ],
   [
-    "PerceptionSystem",
-    [Function],
-    {
-      "dependencies": [
-        "EventBus",
-        "EntityManager",
-      ],
-      "lifecycle": "singleton",
-      "tags": [
-        "initializableSystem",
-        "shutdownable",
-      ],
-    },
-  ],
-  [
     "NotificationUISystem",
     [Function],
     {
