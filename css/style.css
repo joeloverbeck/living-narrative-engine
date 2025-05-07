@@ -1,518 +1,785 @@
 /* css/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap');
 
-/* --- Theme Variables --- */
-/* These variables define the core look and feel and are intended for easy theming (Phase 4) */
 :root {
-    /* -- Colors -- */
-    --color-text-default: #333; /* Default body text */
-    --color-text-heading: #333; /* Primary headings (like h1) */
-    --color-text-secondary: #666; /* Less important text (like exits) */
-    --color-text-command: #000080; /* User input echo */
-    --color-text-error: #dc3545; /* Error messages */
-    --color-text-warning: #856404; /* Warning messages */
-    --color-text-info: var(--color-text-default); /* Info messages (can use default) */
-    --color-text-location: var(--color-text-default); /* Location block text */
-    --color-text-button: #fff; /* Text for action buttons */
+    /* "Clean Modern Codex" Theme */
 
-    --color-background-page: #fff; /* Overall page background */
-    --color-background-output: #f8f9fa; /* Main game output area */
-    --color-background-input: #fff; /* Background for input field */
-    --color-background-error: #f8d7da; /* Background for error messages */
-    --color-background-warning: #fff3cd; /* Background for warning messages */
-    --color-background-location: #e9ecef; /* Background for location blocks */
-    --color-background-pre: #eee; /* Background for <pre> blocks (if used) */
-    --color-background-success: var(--color-background-combat-hit, #d4edda); /* Reuse combat hit or define */
-    --color-background-button: #007bff; /* Primary action button background */
-    --color-background-button-hover: #0056b3; /* Hover state for action button */
-    --color-background-button-active: #004085; /* Active state for action button */
+    /* Colors */
+    --primary-text-color: #343a40; /* Dark Grey (WCAG AA on light BGs: 10.68:1) */
+    --secondary-text-color: #6c757d; /* Medium Grey (WCAG AA on light BGs: 4.56:1) */
+    --primary-bg-color: #f8f9fa; /* Very Light Grey / Off-white (Page background) */
+    --secondary-bg-color: #e9ecef; /* Light Grey (Headers, footers, UI chrome) */
+
+    --accent-color-primary: #007bff; /* Clear Blue - general accent */
+    --accent-color-focus-ring: rgba(0, 123, 255, 0.35); /* For focus box-shadow */
+    --accent-color-secondary: #adb5bd; /* Lighter Grey (Subtle accents, borders) */
+
+    --panel-bg-color: #FFFFFF; /* White (For content panels) */
+    --panel-border-color: #dee2e6; /* Light Grey (Subtle panel borders) */
+
+    --input-bg-color: #FFFFFF;
+    --input-text-color: var(--primary-text-color);
+    --input-border-color: #ced4da; /* Standard input border */
+    --input-placeholder-color: var(--secondary-text-color); /* Contrast: 4.56:1 on #FFF - OK */
+
+    /* A11Y: Adjusted button colors for contrast */
+    --button-bg-color: #005cbf; /* Darker Blue for 4.5:1 contrast with white text */
+    --button-text-color: #FFFFFF;
+    --button-hover-bg-color: #004c9e; /* Even Darker Blue for hover, white text contrast: 5.79:1 */
+    --button-disabled-bg-color: #cce5ff;
+    --button-disabled-text-color: #86b7fe; /* Contrast on disabled bg: 1.57:1. WCAG doesn't strictly require for disabled, but noted. */
 
 
-    --color-border-default: #ced4da; /* Default borders (input, output area) */
-    --color-border-error: #f5c6cb; /* Border for error messages (match bg) */
-    --color-border-warning: #ffeeba; /* Border for warning messages (match bg) */
-    --color-border-location: #adb5bd; /* Border for location blocks */
-    --color-border-button: #007bff; /* Action button border (match background) */
-    --color-border-button-hover: #0056b3; /* Hover border */
-    --color-border-button-active: #004085; /* Active border */
+    /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
+    --error-text-color: #721c24; /* Dark Red (Bootstrap alert style, 4.58:1 on #f8d7da, >7:1 on #FFF) */
+    --error-bg-color: #f8d7da; /* Light Red background for error messages/areas */
+    --success-text-color: #155724; /* Dark Green (Bootstrap alert style, 6.95:1 on #FFF) */
+    --info-text-color: #0c5460; /* Dark Teal/Blue (Bootstrap alert style, 6.85:1 on #FFF) */
+    --echo-text-color: var(--secondary-text-color); /* Muted grey for command echoes (4.56:1 on #FFF) - OK */
 
-    --color-accent-error: #dc3545; /* Accent border (e.g., left border on errors) */
-    --color-accent-warning: #ffc107; /* Accent border for warnings */
-    --color-accent-location: #6c757d; /* Accent border for location blocks */
-    --color-accent-success: var(--color-accent-combat-hit, #28a745); /* Reuse combat hit or define */
-    --color-accent-quest: #4a90e2; /* A distinct medium blue for quest start */
-    --color-accent-reward: var(--color-accent-success); /* Use success accent for rewards too */
+    /* Fonts */
+    --font-narrative: 'Merriweather', serif;
+    --font-ui: 'Open Sans', sans-serif;
+    --font-monospace: 'Roboto Mono', monospace; /* For code or fixed-width needs */
 
-    /* -- Combat Colors -- */
-    --color-text-combat: #495057; /* General combat action text */
-    --color-text-combat-hit: #155724; /* Player hit success (Dark Green) */
-    --color-text-combat-crit: #721c24; /* Significant outcome (death/crit) (Dark Red) */
+    --font-size-base: 16px;
+    --font-size-small: 0.875rem; /* 14px */
+    --font-size-large: 1.125rem; /* 18px */
+    --font-size-h1: 2rem; /* 32px */
+    --font-size-h2: 1.75rem; /* 28px */
+    --font-size-h3: 1.5rem; /* 24px */
 
-    --color-background-combat: transparent; /* Default: no special background */
-    --color-background-combat-hit: #d4edda; /* Subtle green background for hits (Light Green) */
-    --color-background-combat-crit: #f8d7da; /* Subtle red/pink background for crits/death (Light Red/Pink) */
+    /* Spacing */
+    --spacing-unit: 8px;
+    --spacing-xs: calc(0.5 * var(--spacing-unit)); /* 4px */
+    --spacing-sm: var(--spacing-unit); /* 8px */
+    --spacing-md: calc(1.5 * var(--spacing-unit)); /* 12px */
+    --spacing-lg: calc(2 * var(--spacing-unit)); /* 16px */
+    --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
 
-    --color-accent-combat: #6c757d; /* Subtle accent for general combat (Grey) */
-    --color-accent-combat-hit: #28a745; /* Green accent for hits (Bright Green) */
-    --color-accent-combat-crit: #dc3545; /* Red accent for crits/death (Bright Red) */
+    /* Borders */
+    --border-radius-xs: 2px; /* NEW */
+    --border-radius-sm: 4px;
+    --border-radius-md: 6px;
+    --border-width: 1px;
+    --border-color-subtle: var(--panel-border-color); /* Alias for clarity */
 
-    --color-text-success: var(--color-text-combat-hit, #155724); /* Reuse combat hit or define */
-    --color-text-quest: var(--color-text-command, #000080); /* Use command blue or define custom */
-
-    /* -- Typography -- */
-    --font-family-base: sans-serif; /* Base font stack */
-    --font-size-base: 1rem; /* Base font size (16px default) */
-    --font-size-small: 0.875rem; /* Slightly smaller font for buttons */
-    --line-height-base: 1.5; /* Base line height */
-
-    /* -- Spacing & Sizing -- */
-    --padding-small: 0.25rem; /* 4px */
-    --padding-medium: 0.5rem; /* 8px */
-    --padding-large: 1rem; /* 16px */
-
-    --margin-small: 0.25rem; /* 4px */
-    --margin-medium: 0.5rem; /* 8px */
-    --margin-large: 1rem; /* 16px */
-
-    /* -- Borders & Radius -- */
-    --border-radius-small: 0.2rem; /* ~3px */
-    --border-radius-medium: 0.25rem; /* ~4px */
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* --- Base Styles --- */
+/* Basic Global Styling */
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: var(--font-family-base);
+    font-family: var(--font-ui);
+    color: var(--primary-text-color);
+    background-color: var(--primary-bg-color);
     font-size: var(--font-size-base);
-    line-height: var(--line-height-base);
-    color: var(--color-text-default);
-    background-color: var(--color-background-page);
+    line-height: 1.6;
+    margin: 0;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    margin: 0;
-}
-
-h1 {
-    color: var(--color-text-heading);
-    text-align: center;
-    margin: var(--margin-medium) 0; /* Use variables */
-    padding: 0 var(--padding-medium); /* Add some horizontal padding */
-    flex-shrink: 0;
-    font-size: 1.75rem; /* Slightly larger */
-}
-
-/* --- Layout Containers --- */
-#game-container {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    padding: 0 var(--padding-medium) var(--padding-medium); /* Adjust padding */
     overflow: hidden;
 }
 
-#output {
-    background-color: var(--color-background-output);
-    border: 1px solid var(--color-border-default);
-    padding: var(--padding-medium); /* Use variable */
-    border-radius: var(--border-radius-medium);
-    flex-grow: 1;
-    overflow-y: auto; /* Keep scroll */
-    margin-bottom: var(--margin-medium); /* Use variable */
-    /* Improve scrollbar appearance slightly (non-standard, best effort) */
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border-default) var(--color-background-output);
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-ui);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-text-color);
+    font-weight: 600;
 }
 
-#output::-webkit-scrollbar {
-    width: 8px;
+h1 {
+    font-size: var(--font-size-h1);
 }
 
-#output::-webkit-scrollbar-track {
-    background: var(--color-background-output);
+h2 {
+    font-size: var(--font-size-h2);
 }
 
-#output::-webkit-scrollbar-thumb {
-    background-color: var(--color-border-default);
-    border-radius: var(--border-radius-medium);
-    border: 2px solid var(--color-background-output); /* Creates padding around thumb */
+h3 {
+    font-size: var(--font-size-h3);
+}
+
+/* Links */
+a {
+    color: var(--accent-color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: var(--button-hover-bg-color); /* Darker blue on hover */
+}
+
+a:active { /* NEW */
+    color: var(--button-hover-bg-color);
+    opacity: 0.8;
 }
 
 
-#input-container {
+/* Visually Hidden Class for Labels */
+.visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap; /* Prevent line breaks */
+}
+
+
+/* --- A11Y: Focus Visibility --- */
+/* General Focus Styles using :focus-visible */
+:focus-visible {
+    outline: 2px solid var(--accent-color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--accent-color-focus-ring);
+}
+
+/* Remove outline if a custom box-shadow is the primary indicator, but ensure it's clear */
+#command-input:focus-visible,
+button:focus-visible,
+.button-like:focus-visible,
+a:focus-visible,
+.clickable-list-item:focus-visible { /* ADDED .clickable-list-item */
+    outline: none; /* Rely on box-shadow defined below or specific styles */
+}
+
+/* Specific Focus for Command Input (already good, ensuring it uses :focus-visible) */
+#command-input:focus-visible { /* Changed from :focus to :focus-visible */
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring); /* Original shadow was fine */
+}
+
+/* Ensure :focus is also styled if :focus-visible is not supported by an older browser, though it's widely supported */
+#command-input:focus {
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+}
+
+
+/* Specific Focus for Buttons */
+button:focus-visible, .button-like:focus-visible {
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring),
+    0 0 0 0.30rem var(--panel-bg-color); /* Inner contrast ring */
+}
+
+/* Specific Focus for Links (REFINED) */
+a:focus-visible {
+    /* outline: none; is applied from the group selector */
+    background-color: rgba(0, 123, 255, 0.15); /* Increased alpha for visibility */
+    color: var(--button-hover-bg-color); /* Consistent with hover for focused interactive links */
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    border-radius: var(--border-radius-xs);
+    padding: 1px 3px; /* Minimal padding for inline elements */
+    margin: -1px -3px; /* Counteract padding */
+}
+
+
+/* Top Bar Styling */
+#title-element {
+    font-size: var(--font-size-h1);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--secondary-bg-color);
+    color: var(--primary-text-color);
+    text-align: center;
     flex-shrink: 0;
-}
-
-#command-input {
-    width: 100%;
-    padding: var(--padding-medium); /* Use variable */
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--border-radius-small);
-    box-sizing: border-box; /* Keep this */
-    font-size: inherit; /* Inherit from body */
-    line-height: inherit;
-    background-color: var(--color-background-input);
-    color: var(--color-text-default);
-}
-
-#command-input:disabled {
-    background-color: #e9ecef; /* Slightly greyed out when disabled */
-    cursor: not-allowed;
-}
-
-/* --- Message Styling --- */
-.message {
-    margin-bottom: var(--margin-medium); /* More space between messages */
-    padding: var(--padding-medium); /* More padding within messages */
-    border-radius: var(--border-radius-small);
-    border: 1px solid transparent; /* Base border */
-    border-left-width: 4px; /* Standard left accent */
-}
-
-/* Default/Info Message */
-.message-info {
-    color: var(--color-text-info);
-    border-left-color: var(--color-border-default); /* Subtle left border */
-    /* No specific background needed, uses #output background */
-}
-
-/* Command Echo */
-.message-command {
-    color: var(--color-text-command);
-    font-style: italic;
-    border-left-color: var(--color-text-command);
-    background-color: rgba(0, 0, 128, 0.05); /* Very subtle background */
-}
-
-/* Error Message */
-.message-error {
-    color: var(--color-text-error);
-    background-color: var(--color-background-error);
-    border-color: var(--color-border-error); /* Match background border */
-    border-left-color: var(--color-accent-error); /* Strong accent */
-    font-weight: bold;
-}
-
-/* Warning Message */
-.message-warning {
-    color: var(--color-text-warning);
-    background-color: var(--color-background-warning);
-    border-color: var(--color-border-warning); /* Match background border */
-    border-left-color: var(--color-accent-warning); /* Strong accent */
-}
-
-/* Location Block Message */
-.message-location {
-    color: var(--color-text-location);
-    background-color: var(--color-background-location);
-    border-color: var(--color-border-location); /* Match background border */
-    border-left-color: var(--color-accent-location); /* Accent */
-}
-
-/* Remove default margins from elements inside a location block */
-.message-location > *:first-child {
+    border-bottom: var(--border-width) solid var(--panel-border-color);
     margin-top: 0;
+    margin-bottom: 0;
+    font-weight: 700;
 }
 
-.message-location > *:last-child {
+/* Main Application Layout Container */
+#app-layout-container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+    background-color: var(--primary-bg-color);
+}
+
+/* Common styling for all panes */
+.panel {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    border: var(--border-width) solid var(--panel-border-color);
+    background-color: var(--panel-bg-color);
+    box-shadow: var(--shadow-sm);
+}
+
+#app-layout-container > .panel + .panel {
+    border-left-width: 0;
+}
+
+#app-layout-container > .panel:first-child {
+    border-left-width: var(--border-width);
+}
+
+#app-layout-container > .panel:last-child {
+    border-right-width: var(--border-width);
+}
+
+/* Consistent Paragraph Spacing within Panels (NEW) */
+.panel p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.panel p:last-child {
     margin-bottom: 0;
 }
 
 
-/* --- Location Element Styling --- */
-/* Styles for dynamically generated elements within a .message-location block */
-.location__name {
-    font-size: 1.25rem; /* Make name stand out */
-    font-weight: bold;
-    color: var(--color-text-heading);
-    margin-bottom: var(--margin-small);
+/* Left Pane Styling */
+#left-pane {
+    flex: 0 0 25%;
+    max-width: 320px;
+    min-width: 280px;
 }
 
-.location__description {
-    margin-bottom: var(--margin-medium); /* Space before exits/other elements */
-}
-
-.location__exits {
-    color: var(--color-text-secondary); /* Use secondary color */
-    font-size: 0.9rem; /* Slightly smaller */
-}
-
-.location__items {
-    color: var(--color-text-secondary);
-    font-style: italic; /* Make items stand out a bit */
-    margin-bottom: var(--margin-small);
-}
-
-.location__entities {
-    color: var(--color-text-secondary);
-    font-weight: bold; /* Make NPCs/entities bold */
-    margin-bottom: var(--margin-small);
-}
-
-
-/* General Combat Action (e.g., swing) */
-.message-combat {
-    color: var(--color-text-combat);
-    background-color: var(--color-background-combat); /* Often transparent */
-    border-left-color: var(--color-accent-combat);
-    /* Optional: Slightly different font style if desired */
-    /* font-style: italic; */
-}
-
-/* Combat Hit (Player successful hit) */
-.message-combat_hit {
-    color: var(--color-text-combat-hit); /* Dark Green Text */
-    background-color: var(--color-background-combat-hit); /* Light Green Background */
-    border-color: #c3e6cb; /* Border matching background */
-    border-left-color: var(--color-accent-combat-hit); /* Bright Green Left Accent */
-    font-weight: bold; /* Make hits stand out */
-}
-
-/* Combat Critical / Death */
-.message-combat_critical {
-    color: var(--color-text-combat-crit);
-    background-color: var(--color-background-combat-crit);
-    border-color: #f5c6cb; /* Border matching background */
-    border-left-color: var(--color-accent-combat-crit);
-    font-weight: bold; /* Make significant outcomes stand out */
-}
-
-/* Example for future combat info (like remaining HP) */
-/*
-.message-combat-info {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    border-left-color: var(--color-accent-combat);
-}
-*/
-
-/* --- Inventory Panel Styles --- */
-.inventory-panel {
-    position: absolute; /* Or fixed, depending on desired behavior */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px; /* Example width */
-    max-height: 80vh; /* Example max height */
-    background-color: var(--color-background-output, #f8f9fa); /* Use theme variable */
-    border: 1px solid var(--color-border-default, #ced4da);
-    border-radius: var(--border-radius-medium, 0.25rem);
-    padding: var(--padding-medium, 0.5rem);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10; /* Ensure it's above game output */
+/* Center Pane Styling */
+#center-pane {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent content spill */
 }
 
-.inventory-panel.hidden {
-    display: none;
+/* Output Division within Center Pane (for messages) */
+#center-pane #outputDiv {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: var(--panel-bg-color);
+    padding: var(--spacing-md);
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-md); /* Keep margin if input bar is directly after for visual separation if center pane doesn't fill space, but it's flex grow. */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.inventory-panel h3 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: var(--margin-medium, 0.5rem);
-    color: var(--color-text-heading, #333);
-    flex-shrink: 0;
-}
-
-#inventory-list {
-    list-style: none;
+/* Message List Styling */
+#center-pane #message-list {
+    list-style-type: none;
     padding: 0;
     margin: 0;
-    overflow-y: auto; /* Allow scrolling for long lists */
-    flex-grow: 1; /* Take available space */
-    margin-bottom: var(--margin-medium, 0.5rem);
 }
 
-.inventory-item {
+#center-pane #message-list li {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: var(--border-width) solid var(--border-color-subtle);
+    color: var(--primary-text-color); /* Default text color for messages */
+    font-family: var(--font-narrative);
+    line-height: 1.7;
+}
+
+#center-pane #message-list li:last-child {
+    border-bottom: none;
+}
+
+/* Specific Message Type Styling - Uses new contrast-checked colors */
+#center-pane #message-list li.message-echo {
+    color: var(--echo-text-color);
+    font-style: italic;
+}
+
+#center-pane #message-list li.message-info {
+    color: var(--info-text-color);
+}
+
+#center-pane #message-list li.message-error {
+    color: var(--error-text-color);
+    font-weight: 600;
+}
+
+#center-pane #message-list li.message-success {
+    color: var(--success-text-color);
+}
+
+/* Right Pane Styling */
+#right-pane {
+    flex: 0 0 25%;
+    max-width: 300px;
+    min-width: 260px;
+}
+
+/* Bottom Input Bar Styling */
+#bottom-input-bar {
     display: flex;
     align-items: center;
-    padding: var(--padding-small, 0.25rem) var(--padding-medium, 0.5rem);
-    margin-bottom: var(--margin-small, 0.25rem);
-    cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: var(--border-radius-small, 0.2rem);
-    background-color: var(--color-background-page, #fff); /* Slightly different background */
-    /* Make space for button */
-    justify-content: space-between; /* Pushes button to the right */
-}
-
-.inventory-item:hover {
-    background-color: var(--color-background-location, #e9ecef); /* Subtle hover */
-}
-
-.inventory-item.selected {
-    border-color: var(--color-accent-location, #6c757d); /* Highlight selected */
-    font-weight: bold;
-}
-
-
-.inventory-item-icon,
-.inventory-item-icon-placeholder {
-    width: 24px; /* Adjust size as needed */
-    height: 24px;
-    margin-right: var(--margin-medium, 0.5rem);
-    object-fit: contain; /* Prevent image distortion */
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--secondary-bg-color);
+    color: var(--primary-text-color);
     flex-shrink: 0;
-    display: inline-flex; /* For placeholder alignment */
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem; /* Emoji size */
+    border-top: var(--border-width) solid var(--panel-border-color);
 }
 
-.inventory-item-name {
+/* Container for the command input field */
+#input-container {
     flex-grow: 1;
-    color: var(--color-text-default, #333);
+    margin-right: var(--spacing-md);
 }
 
-.inventory-item-drop-button {
-    padding: var(--padding-small) var(--padding-medium);
-    font-size: 0.8rem; /* Make it smaller than main buttons */
-    line-height: 1; /* Adjust line height */
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--border-radius-small);
-    background-color: #eee; /* Slightly different background */
-    color: var(--color-text-secondary);
+/* Command Input Field */
+#command-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: var(--border-width) solid var(--input-border-color);
+    border-radius: var(--border-radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#command-input::placeholder {
+    color: var(--input-placeholder-color);
+    opacity: 0.8;
+}
+
+/* Quick Status Display Area */
+#quick-status-display {
+    white-space: nowrap;
+    align-self: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-small);
+    color: var(--secondary-text-color);
+    background-color: var(--panel-bg-color);
+}
+
+/* Styling for widgets within panes */
+#location-info-container,
+#character-status-widget,
+#actions-widget,
+#inventory-widget {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-md);
+    background-color: var(--panel-bg-color);
+}
+
+/* Ensure last widget in a panel doesn't have excessive bottom margin if panel has padding */
+.panel > div[id$="-widget"]:last-child,
+.panel > div[id$="-container"]:last-child {
+    margin-bottom: 0;
+}
+
+
+#location-info-container h2, /* This is for #location-name-display */
+#character-status-widget h3,
+#actions-widget h3,
+#inventory-widget h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+    color: var(--primary-text-color);
+    font-weight: 600;
+    border-bottom: var(--border-width) solid var(--border-color-subtle);
+    padding-bottom: var(--spacing-sm);
+}
+
+#location-name-display { /* Specific h2 for location name */
+    font-family: var(--font-ui);
+    font-size: var(--font-size-h2);
+    color: var(--primary-text-color);
+    border-bottom: none; /* Override general widget title border */
+    padding-bottom: 0; /* Override general widget title padding */
+    margin-bottom: var(--spacing-md); /* Space before description */
+}
+
+#location-description-display { /* This is a <p> tag */
+    font-family: var(--font-narrative);
+    color: var(--primary-text-color); /* Main description text a bit more prominent */
+    line-height: 1.7;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Styling for lists within location info (exits, items, entities) (REFINED/NEW) */
+#location-exits-display ul,
+#location-items-display ul,
+#location-entities-display ul {
+    list-style-type: none; /* Changed from disc/square for cleaner look, can be reverted if preferred */
+    padding-left: 0; /* No indent if no bullets */
+    /* If using list-style-type: disc; or similar, use: padding-left: var(--spacing-lg); */
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+#location-exits-display li,
+#location-items-display li,
+#location-entities-display li {
+    font-family: var(--font-narrative);
+    color: var(--secondary-text-color);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-xs);
+    padding: var(--spacing-xs) 0; /* Minimal vertical padding for readability */
+}
+
+/* Styling for clickable list items (e.g., exits, items in lists) (NEW) */
+.clickable-list-item {
     cursor: pointer;
-    flex-shrink: 0; /* Prevent button from shrinking */
-    margin-left: auto; /* Helps push it right if justify-content isn't enough */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Add some padding for better click target */
+    margin: 0 calc(-1 * var(--spacing-sm)); /* Counteract padding to align with non-clickable text if needed */
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.15s ease-out, color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
-.inventory-item-drop-button:hover {
-    background-color: #ddd;
-    border-color: #bbb;
+.clickable-list-item:hover {
+    background-color: var(--secondary-bg-color);
+    color: var(--accent-color-primary);
 }
 
-.inventory-item-empty {
-    color: var(--color-text-secondary, #666);
-    font-style: italic;
+.clickable-list-item:focus-visible { /* outline: none; is handled by the general group selector */
+    background-color: var(--accent-color-focus-ring);
+    color: var(--primary-text-color); /* Ensure good contrast on focus bg */
+    box-shadow: inset 0 0 0 2px var(--accent-color-primary); /* Inner ring for subtle focus */
+}
+
+/* End of Location list specific styling */
+
+
+/* General Button Styling */
+button, .button-like {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
     text-align: center;
-    padding: var(--padding-medium, 0.5rem);
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out;
+    display: inline-block;
+    margin: var(--spacing-xs);
 }
 
-.inventory-panel button {
-    padding: var(--padding-small) var(--padding-medium);
-    margin-top: var(--margin-medium);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--border-radius-small);
-    background-color: var(--color-background-input);
-    cursor: pointer;
-    align-self: center; /* Center the button */
-    flex-shrink: 0;
+button:hover, .button-like:hover {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
-.inventory-panel button:hover {
-    background-color: #eee; /* Simple hover effect */
+button:active, .button-like:active {
+    transform: translateY(0px);
+    background-color: var(--button-hover-bg-color); /* Keep hover color or slightly darker */
+    box-shadow: var(--shadow-sm); /* Slightly less shadow than hover */
 }
 
-/* Quest Started Message */
-.message-quest {
-    /* Inherits padding, margin, etc. from .message */
-    color: var(--color-text-quest); /* Use the defined quest text color (e.g., blue) */
-    border-left-color: var(--color-accent-quest); /* Use the distinct quest accent blue */
-    /* Optional: Add a very subtle background if desired */
-    /* background-color: rgba(74, 144, 226, 0.05); */
-    /* Optional: Make it stand out slightly */
-    /* font-style: italic; */
+button:disabled, .button-like:disabled {
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-text-color);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-/* Quest Completed Message */
-.message-quest_complete {
-    color: var(--color-text-success); /* Dark green text */
-    background-color: var(--color-background-success); /* Light green background */
-    border-color: #c3e6cb; /* Border matching background (adjust if success bg changes) */
-    border-left-color: var(--color-accent-success); /* Strong green accent */
-    font-weight: bold; /* Emphasize completion */
-}
-
-/* Quest Failed Message */
-.message-quest_fail {
-    /* Use the same styling as errors for strong negative feedback */
-    color: var(--color-text-error);
-    background-color: var(--color-background-error);
-    border-color: var(--color-border-error); /* Match background border */
-    border-left-color: var(--color-accent-error); /* Strong red accent */
-    font-weight: bold; /* Emphasize failure */
-}
-
-/* Reward Message (XP, Items, Currency) */
-.message-reward {
-    color: var(--color-text-success); /* Use success text color for positive feedback */
-    border-left-color: var(--color-accent-reward); /* Use success/reward accent color (green) */
-    /* Keep background transparent to be less prominent than quest completion */
-    /* Optional: If you want rewards to be less prominent than completion */
-    /* font-size: 0.95rem; */
-}
-
-/* --- Add Success Message Style (General Purpose) --- */
-/* You already handle 'action:take_succeeded' with type 'success' */
-/* Let's ensure there's a style for it, similar to quest_complete */
-.message-success {
-    color: var(--color-text-success);
-    background-color: var(--color-background-success);
-    border-color: #c3e6cb; /* Match background */
-    border-left-color: var(--color-accent-success);
-    /* font-weight: bold; */ /* Optional: Make success bold too? Or keep normal */
-}
-
-/* --- Action Button Styles (FEAT-UI-ACTIONS-01) --- */
+/* Action buttons specifically */
 #action-buttons {
-    /* AC4: Container Styling */
-    display: flex; /* Enable flex layout */
-    flex-wrap: wrap; /* Allow buttons to wrap to next line */
-    gap: var(--margin-small); /* Space between buttons (e.g., 4px) */
-    margin-bottom: var(--margin-medium); /* Space below container, above input (e.g., 8px) */
-    min-height: 2rem; /* Prevent collapsing when empty, reserves some space */
-    padding: var(--padding-small) 0; /* Optional: Add some vertical padding */
+    /* Container for buttons if any specific layout is needed */
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
 }
 
-.action-button {
-    /* AC5: Button Styling */
-    padding: var(--padding-small) var(--padding-medium); /* e.g., 4px 8px */
-    font-size: var(--font-size-small); /* e.g., 0.875rem */
-    color: var(--color-text-button); /* e.g., white */
-    background-color: var(--color-background-button); /* e.g., blue */
-    border: 1px solid var(--color-border-button); /* e.g., blue */
-    border-radius: var(--border-radius-small); /* e.g., 3px */
-    cursor: pointer;
+#action-buttons button {
+    width: 100%; /* Full width of container */
+    margin: var(--spacing-xs) 0; /* Remove horizontal margin, control vertical spacing */
+    /* width: calc(100% - calc(2 * var(--spacing-xs))); REMOVED as margin is now 0 for horizontal */
+    /* margin-bottom: var(--spacing-sm); Use consistent margin from above */
+}
+
+#action-buttons button:last-child {
+    margin-bottom: 0;
+}
+
+
+/* Styling for the global error output div */
+#error-output.error {
+    padding: var(--spacing-md);
+    background-color: var(--error-bg-color);
+    color: var(--error-text-color);
+    border: var(--border-width) solid var(--error-text-color);
+    border-radius: var(--border-radius-sm);
     text-align: center;
-    /* Prevent buttons from shrinking too much if text is long */
-    flex-shrink: 0;
-    /* Optional: Basic transition for hover/active states */
-    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    margin: var(--spacing-md) auto; /* Centered if it's outside main layout flow */
+    display: none; /* Initially hidden */
+    max-width: 800px;
 }
 
-.action-button:hover {
-    /* AC5: Hover state */
-    background-color: var(--color-background-button-hover); /* Darker blue */
-    border-color: var(--color-border-button-hover);
+#error-output.error:not(:empty) {
+    display: block;
 }
 
-.action-button:active {
-    /* AC5: Active state */
-    background-color: var(--color-background-button-active); /* Even darker blue */
-    border-color: var(--color-border-button-active);
+/* Scrollbar Styling (Webkit browsers) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
 }
 
-/* --- Utility Styles --- */
-/* For general errors outside game loop (e.g., init failure) */
-#error-output {
-    color: var(--color-text-error);
-    font-weight: bold;
-    padding: var(--padding-medium);
-    text-align: center;
+::-webkit-scrollbar-track {
+    background: var(--secondary-bg-color);
+    border-radius: var(--border-radius-sm); /* Match thumb radius */
 }
 
-/* Preformatted text styling (if needed later) */
-pre {
-    background-color: var(--color-background-pre);
-    border: 1px solid var(--color-border-default);
-    padding: var(--padding-medium);
-    border-radius: var(--border-radius-medium);
-    white-space: pre-wrap; /* Keep */
-    word-wrap: break-word; /* Keep */
-    max-height: 300px; /* Keep */
-    overflow-y: auto; /* Keep */
-    font-size: 0.9rem; /* Slightly smaller for code/debug */
-    color: var(--color-text-default);
+::-webkit-scrollbar-thumb {
+    background: var(--accent-color-secondary);
+    border-radius: var(--border-radius-sm);
+    border: 2px solid var(--secondary-bg-color); /* Creates a nice padding effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color-primary);
+}
+
+/* Scrollbar Styling (Firefox) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color-secondary) var(--secondary-bg-color);
+}
+
+
+/* --- Responsive Adjustments --- */
+
+/* Tablet Layout */
+@media (max-width: 1024px) {
+    :root {
+        --font-size-base: 15px;
+        --font-size-h1: 1.9rem;
+        --font-size-h2: 1.65rem;
+        --font-size-h3: 1.4rem;
+        --spacing-lg: 14px;
+        --spacing-md: 10px;
+        --spacing-sm: 7px;
+    }
+
+    body {
+        font-size: var(--font-size-base);
+    }
+
+    h1, #title-element {
+        font-size: var(--font-size-h1);
+    }
+
+    h2, #location-name-display {
+        font-size: var(--font-size-h2);
+    }
+
+    h3 {
+        font-size: var(--font-size-h3);
+    }
+
+    .panel {
+        padding: var(--spacing-md);
+    }
+
+    #title-element {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    #bottom-input-bar {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    #command-input {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    #app-layout-container {
+        flex-wrap: wrap;
+    }
+
+    #left-pane {
+        flex: 1 1 30%; /* Was 0 0 25% */
+        order: 1;
+        min-width: 220px;
+        max-width: none; /* Allow it to grow more */
+    }
+
+    #center-pane {
+        flex: 1 1 70%; /* Was 1 1 auto */
+        order: 2;
+        min-width: 280px; /* Ensure it has enough space */
+    }
+
+    #right-pane {
+        flex: 1 1 100%; /* Full width on its own row */
+        order: 3;
+        max-width: 100%;
+        min-width: initial; /* Reset min-width */
+        margin-top: var(--spacing-lg); /* Space when it wraps below */
+        border-left-width: var(--border-width); /* Add back left border as it's now starting a 'row' */
+    }
+}
+
+
+/* Mobile Layout */
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 14px;
+        --font-size-h1: 1.7rem;
+        --font-size-h2: 1.5rem;
+        --font-size-h3: 1.25rem;
+        --spacing-lg: 12px;
+        --spacing-md: 8px;
+        --spacing-sm: 6px;
+        --spacing-xs: 4px;
+    }
+
+    body {
+        font-size: var(--font-size-base);
+        overflow-y: auto; /* Allow body to scroll */
+        height: auto; /* Adjust height for scrollable content */
+    }
+
+    h1, #title-element {
+        font-size: var(--font-size-h1);
+    }
+
+    h2, #location-name-display {
+        font-size: var(--font-size-h2);
+    }
+
+    h3 {
+        font-size: var(--font-size-h3);
+    }
+
+    #app-layout-container {
+        flex-direction: column;
+        flex-wrap: nowrap; /* Ensure they stack and don't try to wrap */
+        height: auto;
+        /* Removed border-left/right from container itself if they existed */
+    }
+
+    #left-pane, #center-pane, #right-pane {
+        flex: 1 0 auto; /* Allow shrinking but prefer basis size */
+        width: 100%;
+        max-width: 100%;
+        min-width: 100% !important; /* Force full width */
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 0; /* Remove top margin from tablet mode for right-pane */
+        box-shadow: none; /* Simpler look on mobile, borders are enough */
+        border-left-width: var(--border-width); /* Consistent side borders */
+        border-right-width: var(--border-width);
+        border-top-width: 0; /* Base for stacked items */
+        border-bottom-width: var(--border-width); /* All panels get a bottom border */
+    }
+
+    #left-pane {
+        order: 1;
+    }
+
+    #center-pane {
+        order: 2;
+    }
+
+    #right-pane {
+        order: 3;
+    }
+
+    #app-layout-container > .panel:first-child { /* e.g. #left-pane */
+        border-top-width: var(--border-width); /* First panel gets a top border */
+    }
+
+    #app-layout-container > .panel:last-child { /* e.g. #right-pane */
+        /* All panels get bottom border by default now, remove specific override if footer is distinct */
+        /* If #bottom-input-bar has a top border, this can be 0 for cleaner join */
+        border-bottom-width: var(--border-width); /* Ensuring last panel also has bottom border before footer */
+    }
+
+    /* If the footer has a strong top border, this can be set to 0 for the last panel in app-layout-container */
+    /* #app-layout-container > #right-pane { border-bottom-width: 0; } */
+    /* Kept original logic commented if preferred */
+    .panel {
+        padding: var(--spacing-sm);
+    }
+
+    #center-pane #outputDiv {
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm); /* Reduce margin on mobile */
+    }
+
+    #center-pane #message-list li {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    #bottom-input-bar {
+        flex-direction: column;
+        align-items: stretch; /* Make children take full width */
+        padding: var(--spacing-sm);
+    }
+
+    #input-container {
+        margin-right: 0;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    #command-input {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    #quick-status-display {
+        text-align: center;
+        margin-top: var(--spacing-sm);
+        width: 100%; /* Full width for better centering/layout */
+    }
+
+    #action-buttons button {
+        width: 100%; /* Already set, but good to confirm */
+    }
+}
+
+/* Very Small Screens */
+@media (max-width: 480px) {
+    :root {
+        --font-size-base: 13px;
+        --font-size-small: 0.85rem;
+        --font-size-h1: 1.5rem;
+        --font-size-h2: 1.3rem;
+        --font-size-h3: 1.15rem;
+        --spacing-sm: 5px;
+        --spacing-xs: 3px;
+    }
+
+    /* Inherit body, h1-h3 font size changes from root */
+    .panel {
+        padding: var(--spacing-sm);
+    }
+
+    #center-pane #outputDiv {
+        padding: var(--spacing-sm);
+    }
+
+    #center-pane #message-list li {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    #bottom-input-bar {
+        padding: var(--spacing-xs); /* Further reduced padding */
+    }
+
+    #input-container {
+        margin-bottom: var(--spacing-xs); /* Further reduced margin */
+    }
+
+    #command-input {
+        padding: var(--spacing-sm); /* Keep reasonable padding for touch */
+    }
+
+    #quick-status-display {
+        font-size: var(--font-size-small);
+        padding: var(--spacing-xs);
+    }
 }

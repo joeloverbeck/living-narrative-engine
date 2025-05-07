@@ -78,15 +78,24 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // --- 2. Register Individual Renderers / Controllers / Services ---
 
     // UiMessageRenderer (Handles messages/echoes)
+    // Container is outputDiv, which is correct as per ticket. UiMessageRenderer handles finding #message-list inside.
     registrar.single(tokens.UiMessageRenderer, UiMessageRenderer, [
         tokens.ILogger,
         tokens.IDocumentContext,
         tokens.IValidatedEventDispatcher,
         tokens.DomElementFactory
+        // Note: UiMessageRenderer constructor doesn't take containerElement, but uses outputDiv from IDocumentContext/token.
+        // The default outputDiv token is used by its internal logic if specific element not passed.
+        // If its constructor changes to expect `containerElement`, this would need outputDiv explicitly.
+        // For now, assuming its internal logic correctly uses the resolved outputDiv from the container
+        // when its methods (like addMessage) are called, or that it queries for its root if needed.
+        // The provided snippet for UiMessageRenderer's registration in the old code did not pass containerElement.
+        // The ticket states: "Its containerElement is currently outputDiv... This should remain functional..."
     ]);
     logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
 
     // TitleRenderer (Manages H1 title)
+    // Uses titleElement token which points to h1#title-element. Correct as per ticket.
     registrar.singletonFactory(tokens.TitleRenderer, c => new TitleRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -96,6 +105,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
 
     // InputStateController (Manages input enabled/disabled state)
+    // Uses inputElement token which points to #command-input. Correct as per ticket.
     registrar.singletonFactory(tokens.InputStateController, c => new InputStateController({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -105,33 +115,43 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
     // LocationRenderer (Renders location details)
-    registrar.singletonFactory(tokens.LocationRenderer, c => new LocationRenderer({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        domElementFactory: c.resolve(tokens.DomElementFactory),
-        containerElement: c.resolve(tokens.outputDiv) // Inject outputDiv as the container
-    }));
-    logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer}.`);
-
-    // InventoryPanel (Manages inventory UI)
-    registrar.singletonFactory(tokens.InventoryPanel, c => {
+    // MODIFIED: Target element is now #location-info-container
+    registrar.singletonFactory(tokens.LocationRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
-        const inventoryContainer = docContext.query('#game-container');
-        if (!inventoryContainer) {
-            logger.warn(`UI Registrations: Could not find '#game-container' element for InventoryPanel. Panel might not attach correctly.`);
+        const locationContainer = docContext.query('#location-info-container'); // NEW TARGET
+        if (!locationContainer) {
+            logger.warn(`UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`);
         }
-        return new InventoryPanel({
-            logger: c.resolve(tokens.ILogger),
+        return new LocationRenderer({
+            logger: c.resolve(tokens.ILogger), // Use resolved logger
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            containerElement: inventoryContainer
+            containerElement: locationContainer // PASS THE NEW CONTAINER
+        });
+    });
+    logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer}.`);
+
+    // InventoryPanel (Manages inventory UI)
+    // MODIFIED: Target element is now #inventory-widget
+    registrar.singletonFactory(tokens.InventoryPanel, c => {
+        const docContext = c.resolve(tokens.IDocumentContext);
+        const inventoryWidgetContainer = docContext.query('#inventory-widget'); // NEW TARGET
+        if (!inventoryWidgetContainer) {
+            logger.warn(`UI Registrations: Could not find '#inventory-widget' element for InventoryPanel. Panel might not attach correctly.`);
+        }
+        return new InventoryPanel({
+            logger: c.resolve(tokens.ILogger), // Use resolved logger
+            documentContext: docContext,
+            validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+            domElementFactory: c.resolve(tokens.DomElementFactory),
+            containerElement: inventoryWidgetContainer // PASS THE NEW CONTAINER
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
 
     // ActionButtonsRenderer (Renders action buttons)
+    // VERIFIED: Target element is #action-buttons. This was already correct.
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         const buttonsContainer = docContext.query('#action-buttons');
@@ -139,7 +159,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             logger.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
         }
         return new ActionButtonsRenderer({
-            logger: c.resolve(tokens.ILogger),
+            logger: c.resolve(tokens.ILogger), // Use resolved logger
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),

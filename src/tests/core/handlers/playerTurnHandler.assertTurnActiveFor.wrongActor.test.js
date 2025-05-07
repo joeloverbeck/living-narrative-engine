@@ -128,7 +128,7 @@ describe('PlayerTurnHandler: #_assertTurnActiveFor - Failure: Wrong Actor (Teste
 
     it('should log warning (from _handleTurnEnd guard) and attempt unsubscribe when _handleTurnEnd is called with the wrong actor ID', async () => {
         // --- UPDATED Expected Warning Message ---
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${wrongActorId} (status: success), but this actor is not the current active actor (${actualActorId}) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`;
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${wrongActorId} (internal status: success), but this actor is not the current active actor (${actualActorId}) nor explicitly awaited by this handler instance anymore. Minimal cleanup attempted.`;
 
 
         // --- Steps ---

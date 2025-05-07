@@ -84,6 +84,9 @@ class PlayerTurnHandler extends ITurnHandler {
     #isAwaitingTurnEndEvent = false;
     /** @type {string | null} */
     #awaitingTurnEndForActorId = null;
+    /** @type {boolean} */
+    #isDestroyed = false; // Flag for idempotency
+    #isTerminatingNormally = false; // New flag
 
 
     /**
@@ -198,6 +201,8 @@ class PlayerTurnHandler extends ITurnHandler {
         const actorId = actor?.id || 'UNKNOWN';
         const className = this.constructor.name;
         this.#logger.info(`${className}: Starting turn initiation for actor ${actorId}.`);
+        this.#isDestroyed = false; // Reset destroyed flag if handler is reused (though typically new instance per turn)
+
 
         if (!actor || !actor.id) {
             this.#logger.error(`${className}: Attempted to start turn for an invalid actor.`);
@@ -218,19 +223,24 @@ class PlayerTurnHandler extends ITurnHandler {
             const commandHandler = this._handleSubmittedCommand.bind(this);
             this.#commandUnsubscribeFn = this.#commandInputPort.onCommand(commandHandler);
             if (!this.#commandUnsubscribeFn) {
+                // This error will be caught by the catch block below
                 throw new Error('CommandInputPort.onCommand did not return a valid unsubscribe function.');
             }
             this.#logger.debug(`${className}: Command subscription successful for ${actorId}.`);
 
-            await this.#_promptPlayerForAction(actor);
+            await this.#_promptPlayerForAction(actor); // This will re-throw if prompt fails
             this.#logger.debug(`${className}: Initial prompt sequence initiated for ${actorId}. Waiting for command submission.`);
 
         } catch (initError) {
+            // This catch block handles errors from #_promptPlayerForAction or the onCommand setup
             this.#logger.error(`${className}: Critical error during turn initiation for ${actor.id}: ${initError.message}`, initError);
+
             const promptErrorMessageCheck = `${className}: PlayerPromptService threw an error during prompt`;
             if (!initError?.message?.includes(promptErrorMessageCheck)) {
                 this.#clearTurnEndWaitingMechanisms();
-                await this._handleTurnEnd(actor.id, initError);
+                if (this.#currentActor && this.#currentActor.id === actor.id) {
+                    await this._handleTurnEnd(actor.id, initError);
+                }
             }
             throw initError;
         }
@@ -250,9 +260,11 @@ class PlayerTurnHandler extends ITurnHandler {
 
         if (!trimmedCommand) {
             this.#logger.warn(`${className}: Received empty command string. Re-prompting actor ${actorId}.`);
-            await this.#_promptPlayerForAction(currentActorAtStart).catch(error => {
-                this.#logger.debug(`${className}: Caught re-thrown error from failed re-prompt in empty command case. Error: ${error.message}`);
-            });
+            if (this.#currentActor && this.#currentActor.id === actorId) {
+                await this.#_promptPlayerForAction(currentActorAtStart).catch(error => {
+                    this.#logger.debug(`${className}: Caught re-thrown error from failed re-prompt in empty command case (this is expected if prompt fails): ${error.message}`);
+                });
+            }
             return;
         }
 
@@ -263,7 +275,7 @@ class PlayerTurnHandler extends ITurnHandler {
         } catch (error) {
             const promptErrorOriginCheck = `${className}: PlayerPromptService threw an error during prompt for actor ${actorId}`;
             if (error?.message?.startsWith(promptErrorOriginCheck)) {
-                this.#logger.debug(`${className}: Prompt error already handled by #_promptPlayerForAction. Ignoring in _handleSubmittedCommand catch block. Error: ${error.message}`);
+                this.#logger.debug(`${className}: Prompt error (re-thrown) encountered during _handleSubmittedCommand for ${actorId}. This should have been handled by startTurn's catch. Error: ${error.message}`);
             } else if (error.message.includes('Turn is not active')) {
                 this.#logger.warn(`${className}: Turn state changed during processing. Aborting processing of command "${trimmedCommand}". Error: ${error.message}`);
             } else {
@@ -291,48 +303,67 @@ class PlayerTurnHandler extends ITurnHandler {
         try {
             this.#logger.info(`${className}: Delegating command "${commandString}" for ${actorId} to ICommandProcessor...`);
             cmdProcResult = await this.#commandProcessor.processCommand(actor, commandString);
-            this.#_assertTurnActiveFor(actorId); // Re-assert turn active after async command processing
+
+            if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                this.#logger.info(`${className}: Turn for ${actorId} was concluded by event handling during or immediately after command processing. Aborting further steps in #_processValidatedCommand for command "${commandString}".`);
+                return;
+            }
+
             this.#logger.info(`${className}: CommandProcessor raw result for ${actorId}: ${JSON.stringify(cmdProcResult)}`);
 
             if (!cmdProcResult.success) {
                 this.#logger.warn(`${className}: CommandProcessor FAILED for "${commandString}" by ${actorId}. Error: ${cmdProcResult.error || 'N/A'}.`);
+                const failureError = cmdProcResult.error ? (cmdProcResult.error instanceof Error ? cmdProcResult.error : new Error(String(cmdProcResult.error))) : new Error(`Command processing failed for "${commandString}".`);
 
-                // If CommandProcessor itself indicates the turn is definitively over with this failure
                 if (cmdProcResult.turnEnded === true) {
                     this.#logger.info(`${className}: CommandProcessor FAILED and indicated turn has ended for ${actorId}. Bypassing CommandOutcomeInterpreter.`);
-                    const failureError = cmdProcResult.error ? (cmdProcResult.error instanceof Error ? cmdProcResult.error : new Error(String(cmdProcResult.error))) : new Error(`Command processing failed and explicitly ended turn for command "${commandString}".`);
-                    await this._handleTurnEnd(actorId, failureError);
+                    if (this.#currentActor && this.#currentActor.id === actorId) {
+                        await this._handleTurnEnd(actorId, failureError);
+                    }
                 } else {
-                    // Command processor failed, but didn't end turn, so ask interpreter.
-                    this.#logger.info(`${className}: CommandProcessor FAILED for "${commandString}" by ${actorId}. Error: ${cmdProcResult.error || 'N/A'}. Interpreting this failure with CommandOutcomeInterpreter.`);
+                    this.#logger.info(`${className}: CommandProcessor FAILED for "${commandString}" by ${actorId}. Interpreting this failure with CommandOutcomeInterpreter.`);
                     const directiveForFailure = await this.#commandOutcomeInterpreter.interpret(cmdProcResult, actor.id);
-                    this.#_assertTurnActiveFor(actorId); // Re-assert after interpreter
+                    if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                        this.#logger.warn(`${className}: Turn for ${actorId} concluded during/after CommandOutcomeInterpreter (failure path). Aborting.`);
+                        return;
+                    }
                     this.#logger.info(`${className}: Directive for CommandProcessor failure: '${directiveForFailure}' for actor ${actorId}.`);
 
                     switch (directiveForFailure) {
                         case TurnDirective.RE_PROMPT:
                             this.#logger.info(`${className}: Directive is RE_PROMPT for ${actorId} due to CommandProcessor failure. Re-prompting.`);
-                            await this.#_promptPlayerForAction(actor); // Player gets another chance this turn
+                            if (this.#currentActor && this.#currentActor.id === actorId) {
+                                await this.#_promptPlayerForAction(actor);
+                            }
                             break;
                         case TurnDirective.END_TURN_FAILURE:
-                        default: // Includes END_TURN_SUCCESS (unlikely here) or unknown directives
+                        default:
                             this.#logger.info(`${className}: Directive is to end turn ('${directiveForFailure}') for ${actorId} due to CommandProcessor failure (or unknown directive).`);
                             const interpretedFailureError = cmdProcResult.error ? (cmdProcResult.error instanceof Error ? cmdProcResult.error : new Error(String(cmdProcResult.error))) : new Error(`Turn ended by CommandOutcomeInterpreter directive '${directiveForFailure}' after command processing failed for "${commandString}".`);
-                            await this._handleTurnEnd(actorId, interpretedFailureError);
+                            if (this.#currentActor && this.#currentActor.id === actorId) {
+                                await this._handleTurnEnd(actorId, interpretedFailureError);
+                            }
                             break;
                     }
                 }
-                return; // Processing of this command submission ends here.
+                return;
             }
 
-            // Case 2: CommandProcessor SUCCEEDED (core:attempt_action was dispatched successfully).
             this.#logger.info(`${className}: CommandProcessor SUCCEEDED for "${commandString}" by ${actorId}. core:attempt_action was dispatched.`);
+
+            if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                this.#logger.info(`${className}: Turn for ${actorId} was concluded by rule processing immediately after successful core:attempt_action dispatch. Not proceeding to CommandOutcomeInterpreter or #waitForTurnEndEvent.`);
+                return;
+            }
 
             let directiveFromInterpreter = null;
             if (this.#commandOutcomeInterpreter) {
                 this.#logger.info(`${className}: Calling CommandOutcomeInterpreter based on CommandProcessor's success (actor: ${actorId}).`);
                 directiveFromInterpreter = await this.#commandOutcomeInterpreter.interpret(cmdProcResult, actor.id);
-                this.#_assertTurnActiveFor(actorId);
+                if (!this.#currentActor || this.#currentActor.id !== actorId) {
+                    this.#logger.warn(`${className}: Turn for ${actorId} concluded during/after CommandOutcomeInterpreter (success path). Aborting further steps.`);
+                    return;
+                }
                 this.#logger.info(`${className}: CommandOutcomeInterpreter processed. Received directive: '${directiveFromInterpreter}' for actor ${actorId}.`);
             } else {
                 this.#logger.warn(`${className}: No CommandOutcomeInterpreter available after successful command processing for ${actorId}. Assuming default flow to wait for turn end event.`);
@@ -340,29 +371,47 @@ class PlayerTurnHandler extends ITurnHandler {
 
             if (directiveFromInterpreter && !Object.values(TurnDirective).includes(directiveFromInterpreter)) {
                 const unknownDirectiveError = new Error(`Received unexpected directive: ${directiveFromInterpreter}`);
-                this.#logger.error(
-                    `${className}: Received unknown directive '${directiveFromInterpreter}' for actor ${actorId} after successful command. Forcing turn failure.`
-                );
+                this.#logger.error(`${className}: Received unknown directive '${directiveFromInterpreter}' for actor ${actorId} after successful command. Forcing turn failure.`);
                 await this.#safeEventDispatcher.dispatchSafely('core:system_error_occurred', {
                     eventName: 'core:system_error_occurred',
                     message: `Handler received unknown directive '${directiveFromInterpreter}' for actor ${actorId}.`,
                     type: 'error',
                     details: unknownDirectiveError.message
                 });
-                await this._handleTurnEnd(actorId, unknownDirectiveError);
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this._handleTurnEnd(actorId, unknownDirectiveError);
+                }
                 return;
             }
 
-            this.#logger.info(`${className}: Proceeding to wait for '${TURN_ENDED_ID}' event from Rules Interpreter for actor ${actorId}.`);
-            await this.#waitForTurnEndEvent(actor);
+            if (directiveFromInterpreter === TurnDirective.RE_PROMPT) {
+                this.#logger.info(`${className}: Directive RE_PROMPT received for ${actorId}. Prompting again.`);
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this.#_promptPlayerForAction(actor);
+                }
+            } else if (directiveFromInterpreter === TurnDirective.END_TURN_FAILURE || directiveFromInterpreter === TurnDirective.END_TURN_SUCCESS) {
+                this.#logger.info(`${className}: Directive to end turn ('${directiveFromInterpreter}') received for ${actorId}.`);
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this._handleTurnEnd(actorId, directiveFromInterpreter === TurnDirective.END_TURN_FAILURE ? new Error("Turn ended by interpreter directive.") : null);
+                }
+            } else {
+                this.#logger.info(`${className}: Proceeding to wait for '${TURN_ENDED_ID}' event from Rules Interpreter for actor ${actorId}.`);
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this.#waitForTurnEndEvent(actor);
+                } else {
+                    this.#logger.warn(`${className}: Actor ${actorId} no longer current before explicitly calling #waitForTurnEndEvent. Turn likely handled by rule.`);
+                }
+            }
 
         } catch (error) {
+            const stillCurrentOnError = this.#currentActor && this.#currentActor.id === actorId;
+
             if (error.message.includes('Turn is not active')) {
                 this.#logger.warn(`${className}: Turn state changed during processing of command "${commandString}". Aborting. Error: ${error.message}`);
             } else {
                 const promptErrorOriginCheck = `${className}: PlayerPromptService threw an error during prompt for actor ${actorId}`;
                 if (error?.message?.startsWith(promptErrorOriginCheck)) {
-                    this.#logger.debug(`${className}: Error from failed prompt handled by #_promptPlayerForAction. Propagating up from #_processValidatedCommand for command "${commandString}".`);
+                    this.#logger.debug(`${className}: Error from prompt (re-thrown) reached #_processValidatedCommand catch block for command "${commandString}". No further action here as startTurn should handle.`);
                     throw error;
                 } else {
                     this.#logger.error(`${className}: Error during #_processValidatedCommand flow for ${actorId} command "${commandString}": ${error.message}`, error);
@@ -374,11 +423,8 @@ class PlayerTurnHandler extends ITurnHandler {
                             details: error.message
                         });
                     }
-                    if (this.#currentActor?.id === actorId) {
-                        // Check if cmdProcResult exists before trying to access its properties.
-                        // If commandProcessor.processCommand threw, cmdProcResult would be null.
+                    if (stillCurrentOnError) {
                         const isCmdProcSuccess = cmdProcResult ? cmdProcResult.success : false;
-
                         if (!this.#isAwaitingTurnEndEvent || isCmdProcSuccess) {
                             if (!(error.message.startsWith("Received unexpected directive:"))) {
                                 this.#logger.info(`${className}: Signalling FAILED turn end for ${actorId} due to error in #_processValidatedCommand for "${commandString}".`);
@@ -395,8 +441,13 @@ class PlayerTurnHandler extends ITurnHandler {
         const actorId = actor.id;
         const className = this.constructor.name;
 
+        if (!this.#currentActor || this.#currentActor.id !== actorId) {
+            this.#logger.warn(`${className}: #waitForTurnEndEvent called for ${actorId}, but it's not the current actor. Ignoring.`);
+            return;
+        }
+
         if (this.#isAwaitingTurnEndEvent) {
-            this.#logger.warn(`${className}: #waitForTurnEndEvent called for ${actorId} while already awaiting. Clearing previous wait mechanisms first.`);
+            this.#logger.warn(`${className}: #waitForTurnEndEvent called for ${actorId} while already awaiting for ${this.#awaitingTurnEndForActorId}. Clearing previous wait mechanisms first.`);
             this.#clearTurnEndWaitingMechanisms();
         }
 
@@ -407,12 +458,22 @@ class PlayerTurnHandler extends ITurnHandler {
         /** @param {SystemEventPayloads[typeof TURN_ENDED_ID]} payload */
         const turnEndedListener = (payload) => {
             if (this.#isAwaitingTurnEndEvent && payload.entityId === this.#awaitingTurnEndForActorId) {
-                this.#logger.info(`${className}: Received target '${TURN_ENDED_ID}' event for current actor ${this.#awaitingTurnEndForActorId}. Success from event: ${payload.success}.`);
-                const errorForTurnEnd = payload.success ? null : new Error(`Turn explicitly ended by rule with failure status for actor ${this.#awaitingTurnEndForActorId}. Message: ${payload.message || 'No message.'}`);
-                this._handleTurnEnd(this.#awaitingTurnEndForActorId, errorForTurnEnd)
-                    .catch(err => this.#logger.error(`${className}: Error in _handleTurnEnd after receiving '${TURN_ENDED_ID}' event: ${err.message}`, err));
+                this.#logger.info(`${className}: Received target '${TURN_ENDED_ID}' event for current actor ${this.#awaitingTurnEndForActorId}. Message from event: ${payload.message || 'N/A'}.`);
+                const errorForTurnEnd = null;
+                if (this.#currentActor && this.#currentActor.id === this.#awaitingTurnEndForActorId) {
+                    this._handleTurnEnd(this.#awaitingTurnEndForActorId, errorForTurnEnd)
+                        .catch(err => this.#logger.error(`${className}: Error in _handleTurnEnd after receiving '${TURN_ENDED_ID}' event: ${err.message}`, err));
+                } else {
+                    this.#logger.warn(`${className}: Received '${TURN_ENDED_ID}' for awaited actor ${this.#awaitingTurnEndForActorId}, but it's no longer the #currentActor (${this.#currentActor?.id}). Cleaning up listener but not processing turn end again.`);
+                    this.#clearTurnEndWaitingMechanisms();
+                }
             } else if (this.#isAwaitingTurnEndEvent) {
                 this.#logger.debug(`${className}: Received '${TURN_ENDED_ID}' for ${payload.entityId} while waiting for ${this.#awaitingTurnEndForActorId}. Ignoring this event.`);
+            } else {
+                this.#logger.debug(`${className}: Received '${TURN_ENDED_ID}' for ${payload.entityId}, but not actively awaiting or for a different actor. Unsubscribing if this is a stale listener.`);
+                if (this.#turnEndedSubscription && payload.entityId !== this.#awaitingTurnEndForActorId) {
+                    this.#clearTurnEndWaitingMechanisms();
+                }
             }
         };
 
@@ -423,14 +484,22 @@ class PlayerTurnHandler extends ITurnHandler {
             this.#isAwaitingTurnEndEvent = false;
             this.#awaitingTurnEndForActorId = null;
             const subscriptionError = new Error("Internal error: Failed to set up turn end event listener.");
-            throw subscriptionError;
+            if (this.#currentActor && this.#currentActor.id === actorId) {
+                await this._handleTurnEnd(actorId, subscriptionError);
+            }
         }
     }
 
     async #_promptPlayerForAction(actor) {
         const className = this.constructor.name;
         const actorId = actor?.id || 'INVALID_ACTOR';
+
+        if (!this.#currentActor || this.#currentActor.id !== actorId) {
+            this.#logger.warn(`${className}: #_promptPlayerForAction called for ${actorId}, but it's not the current actor. Ignoring prompt.`);
+            return;
+        }
         this.#_assertTurnActiveFor(actorId);
+
         this.#logger.debug(`${className}: Delegating prompt logic for actor ${actorId} to PlayerPromptService.`);
         try {
             await this.#playerPromptService.prompt(actor);
@@ -452,38 +521,37 @@ class PlayerTurnHandler extends ITurnHandler {
         const className = this.constructor.name;
         const isSuccess = (error === null || error === undefined);
         const endingStatus = isSuccess ? 'success' : 'failure';
-        const actorContextForLog = this.#currentActor?.id || this.#awaitingTurnEndForActorId || actorId;
 
         if (!this.#currentActor || this.#currentActor.id !== actorId) {
             if (this.#isAwaitingTurnEndEvent && this.#awaitingTurnEndForActorId === actorId) {
-                this.#logger.warn(`${className}: _handleTurnEnd called for ${actorId} (status: ${endingStatus}) which was awaited, but is not the current primary actor (${this.#currentActor?.id}). Clearing wait mechanisms for ${actorId}.`);
+                this.#logger.warn(`${className}: _handleTurnEnd called for ${actorId} (internal status: ${endingStatus}) which was awaited, but #currentActor is different (${this.#currentActor?.id}). Clearing wait mechanisms for ${actorId}.`);
                 this.#clearTurnEndWaitingMechanisms();
             } else {
-                this.#logger.warn(`${className}: _handleTurnEnd called for ${actorId} (status: ${endingStatus}), but this actor is not the current active actor (${this.#currentActor?.id}) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`);
+                this.#logger.warn(`${className}: _handleTurnEnd called for ${actorId} (internal status: ${endingStatus}), but this actor is not the current active actor (${this.#currentActor?.id}) nor explicitly awaited by this handler instance anymore. Minimal cleanup attempted.`);
             }
-            this.#_unsubscribeFromCommands();
+            this.#_unsubscribeFromCommands(); // Ensure commands are unsubscribed even if actor isn't current
             return;
         }
 
-        this.#logger.info(`${className}: Ending turn for actor ${actorId} (status: ${endingStatus}).`);
+        this.#logger.info(`${className}: Ending turn for actor ${actorId} (internal handler status: ${endingStatus}).`);
         if (!isSuccess) {
             const reasonMsg = error instanceof Error ? error.message : String(error);
-            this.#logger.warn(`${className}: Turn for ${actorId} ended with failure. Reason: ${reasonMsg}`);
+            this.#logger.warn(`${className}: Turn for ${actorId} ended with handler failure. Reason: ${reasonMsg}`);
         }
 
         this.#clearTurnEndWaitingMechanisms();
         this.#_unsubscribeFromCommands();
 
         try {
-            this.#logger.debug(`Notifying TurnEndPort for actor ${actorId}, success=${isSuccess}.`);
+            this.#logger.debug(`Notifying TurnEndPort for actor ${actorId}, port's success param=${isSuccess}.`);
             await this.#turnEndPort.notifyTurnEnded(actorId, isSuccess);
             this.#logger.debug(`TurnEndPort notified successfully for ${actorId}.`);
         } catch (notifyError) {
             this.#logger.error(`${className}: CRITICAL - Error notifying TurnEndPort for ${actorId}: ${notifyError.message}. State might be inconsistent.`, notifyError);
         }
 
-        this.#_cleanupTurnState(actorId);
-        this.#logger.debug(`${className}: _handleTurnEnd sequence completed for ${actorContextForLog}.`);
+        this.#_cleanupTurnState(actorId); // This will null #currentActor
+        this.#logger.debug(`${className}: _handleTurnEnd sequence completed for ${actorId}.`);
     }
 
     #_assertTurnActiveFor(actorId) {
@@ -519,6 +587,8 @@ class PlayerTurnHandler extends ITurnHandler {
             this.#logger.debug(`${className}: Active turn state (currentActor) reset for ${actorId}.`);
         } else if (this.#currentActor) {
             this.#logger.warn(`${className}: #_cleanupTurnState called for ${actorId}, but current active actor is ${this.#currentActor.id}. No primary actor state cleanup performed for ${actorId} in this call.`);
+        } else {
+            this.#logger.debug(`${className}: #_cleanupTurnState called for ${actorId}, but no #currentActor was set. State likely already cleared.`);
         }
     }
 
@@ -542,38 +612,58 @@ class PlayerTurnHandler extends ITurnHandler {
         this.#awaitingTurnEndForActorId = null;
     }
 
-    destroy() {
+    /**
+     * @public
+     * @description Signals to the handler that it is being terminated as part of a normal
+     * turn completion sequence, rather than an unexpected abort.
+     * This allows destroy() to skip redundant failsafe turn end notifications.
+     */
+    signalNormalApparentTermination() {
         const className = this.constructor.name;
-        this.#logger.info(`${className}: Destroying handler...`);
-        const actorIdForCleanup = this.#currentActor?.id || this.#awaitingTurnEndForActorId;
+        this.#logger.debug(`${className}: Signaled for normal apparent termination for actor: ${this.#currentActor?.id || this.#awaitingTurnEndForActorId || 'N/A'}.`);
+        this.#isTerminatingNormally = true;
+    }
+
+    destroy( /* removed options, using method call instead */) {
+        const className = this.constructor.name;
+        const actorIdForCleanupLog = this.#currentActor?.id || this.#awaitingTurnEndForActorId;
+
+        if (this.#isDestroyed) {
+            this.#logger.debug(`${className}: Already destroyed. Skipping redundant destruction logic for context: ${actorIdForCleanupLog || 'N/A'}.`);
+            return;
+        }
+        this.#isDestroyed = true;
+
+        this.#logger.info(`${className}: Destroying handler (context: ${actorIdForCleanupLog || 'N/A'}). Terminating normally: ${this.#isTerminatingNormally}`);
 
         this.#clearTurnEndWaitingMechanisms();
         this.#_unsubscribeFromCommands();
 
-        if (actorIdForCleanup) {
-            // Adjusted log message for test #3
-            this.#logger.warn(`${className}: Destroying handler. If turn for ${actorIdForCleanup} was active or awaited, forcing turn end (failure).`);
-            const destructionError = new Error(`${className} destroyed during turn processing or while awaiting turn end for actor ${actorIdForCleanup}.`);
-            this.#turnEndPort.notifyTurnEnded(actorIdForCleanup, false)
-                .catch(notifyErr => {
-                    this.#logger.error(`${className}: Error notifying TurnEndPort during destroy for ${actorIdForCleanup}: ${notifyErr.message}`, notifyErr);
-                })
-                .finally(() => {
-                    if (this.#currentActor && this.#currentActor.id === actorIdForCleanup) {
-                        this.#currentActor = null;
-                        this.#logger.debug(`${className}: #currentActor cleared for ${actorIdForCleanup} during destroy.`);
-                    }
-                });
-        } else {
-            if (this.#currentActor) {
-                this.#logger.debug(`${className}: No specific awaited actor, but #currentActor (${this.#currentActor.id}) was set. Clearing #currentActor during destroy.`);
-                this.#currentActor = null;
+        const activeActorAtStartOfDestroy = this.#currentActor;
+
+        if (activeActorAtStartOfDestroy) {
+            const currentActorId = activeActorAtStartOfDestroy.id;
+
+            // Only call notifyTurnEnded if it's NOT a normal apparent termination
+            // AND the handler itself didn't already process its end.
+            if (!this.#isTerminatingNormally) {
+                this.#logger.warn(`${className}: Destroying handler. Turn for ${currentActorId} was active/awaited (abnormal termination or external destroy). Forcing turn end (failure) via TurnEndPort.`);
+                this.#turnEndPort.notifyTurnEnded(currentActorId, false)
+                    .catch(notifyErr => {
+                        this.#logger.error(`${className}: Error notifying TurnEndPort during destroy for ${currentActorId}: ${notifyErr.message}`, notifyErr);
+                    });
             } else {
-                // Adjusted log message for test #4
-                this.#logger.debug(`${className}: No active turn or await context found during destruction. State cleared.`);
+                this.#logger.debug(`${className}: Destroying handler for ${currentActorId} after normal apparent termination. Failsafe notifyTurnEnded via TurnEndPort skipped.`);
             }
+            this.#currentActor = null;
+            this.#logger.debug(`${className}: #currentActor (in PlayerTurnHandler) cleared for ${currentActorId} during destroy.`);
+        } else if (actorIdForCleanupLog) {
+            this.#logger.debug(`${className}: Handler for actor ${actorIdForCleanupLog} destroyed. #currentActor (in PlayerTurnHandler) was already null, or only #awaitingTurnEndForActorId was set.`);
+        } else {
+            this.#logger.debug(`${className}: Handler destroyed. No specific actor context was active or awaited at time of destruction. State cleared.`);
         }
-        this.#logger.info(`${className}: Destruction sequence for handler completed.`);
+        this.#logger.info(`${className}: Destruction sequence for handler completed for context: ${actorIdForCleanupLog || 'N/A'}.`);
+        this.#isTerminatingNormally = false; // Reset for potential reuse, though unlikely for same instance
     }
 }
 

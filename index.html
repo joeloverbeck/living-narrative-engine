@@ -3,23 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adventure Game Platform - MVP Test</title>
+    <title>Adventure Game Platform - Storyteller's Desk</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <h1 id="title-element">Adventure Game</h1>
-<div id="game-container">
-    <div id="outputDiv">
-        <ul id="message-list"></ul>
-    </div>
-    <div id="action-buttons"></div>
+
+<div id="app-layout-container">
+    <aside id="left-pane" class="panel">
+        <div id="location-info-container" role="region" aria-labelledby="location-name-display" aria-live="polite"
+             aria-atomic="true">
+            <h2 id="location-name-display"></h2>
+            <p id="location-description-display"></p>
+            <div id="location-exits-display"></div>
+            <div id="location-items-display"></div>
+            <div id="location-entities-display"></div>
+        </div>
+        <div id="character-status-widget" role="region" aria-labelledby="character-status-heading" aria-live="polite">
+            <h3 id="character-status-heading">Status</h3>
+            <p>Health: <span id="player-health">N/A</span></p>
+        </div>
+    </aside>
+
+    <main id="center-pane" class="panel" role="main" aria-label="Main content area">
+        <div id="outputDiv">
+            <ul id="message-list" aria-live="polite"></ul>
+        </div>
+    </main>
+
+    <aside id="right-pane" class="panel">
+        <div id="actions-widget" role="region" aria-labelledby="actions-heading">
+            <h3 id="actions-heading">Actions</h3>
+            <div id="action-buttons">
+            </div>
+        </div>
+        <div id="inventory-widget" role="region" aria-label="Inventory">
+        </div>
+    </aside>
+</div>
+
+<footer id="bottom-input-bar">
     <div id="input-container">
+        <label for="command-input" class="visually-hidden">Enter command</label>
         <input type="text" id="command-input" placeholder="Loading..." disabled>
     </div>
-</div>
-<div id="error-output" class="error"></div>
+    <div id="quick-status-display" role="status" aria-live="polite">
+    </div>
+</footer>
 
+<div id="error-output" class="error" role="alert" aria-live="assertive"></div>
 <script src="bundle.js"></script>
-
 </body>
 </html>

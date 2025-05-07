@@ -1,5 +1,5 @@
 // src/core/turnManager.js
-// --- FILE START (Corrected) ---
+// --- FILE START (Corrected section) ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('./interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
@@ -7,14 +7,14 @@
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('./interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
-/** @typedef {import('./interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */ // <<< Added for type hint
-/** @typedef {import('../types/eventTypes.js').SystemEventPayloads} SystemEventPayloads */ // <<< Added for event payload type
+/** @typedef {import('./interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
+/** @typedef {import('../types/eventTypes.js').SystemEventPayloads} SystemEventPayloads */
 
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 
 // Import the necessary component ID constants
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../types/components.js';
-import {TURN_ENDED_ID} from "./constants/eventIds.js";
+import {TURN_ENDED_ID} from "./constants/eventIds.js"; // Assuming TURN_ENDED_ID is 'core:turn_ended'
 
 /**
  * @class TurnManager
@@ -40,9 +40,9 @@ class TurnManager {
     #isRunning = false;
     /** @type {Entity | null} */
     #currentActor = null;
-    /** @type {ITurnHandler | null} */ // Keep track of the current handler for potential cleanup/checks
+    /** @type {ITurnHandler | null} */
     #currentHandler = null;
-    /** @type { (() => void) | null } */ // Store the unsubscribe function
+    /** @type { (() => void) | null } */
     #turnEndedUnsubscribe = null;
 
 
@@ -60,7 +60,6 @@ class TurnManager {
         const {turnOrderService, entityManager, logger, dispatcher, turnHandlerResolver} = options || {};
         const className = this.constructor.name;
 
-        // --- Dependency Validations (Ensure dispatcher has subscribe) ---
         if (!turnOrderService || typeof turnOrderService.clearCurrentRound !== 'function') {
             const errorMsg = `${className} requires a valid ITurnOrderService instance.`;
             console.error(errorMsg);
@@ -76,19 +75,16 @@ class TurnManager {
             console.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // <<< Updated check for dispatcher >>>
         if (!dispatcher || typeof dispatcher.dispatchValidated !== 'function' || typeof dispatcher.subscribe !== 'function') {
             const errorMsg = `${className} requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).`;
-            (logger || console).error(errorMsg); // Use logger if available
+            (logger || console).error(errorMsg);
             throw new Error(errorMsg);
         }
-        // <<< End updated check >>>
         if (!turnHandlerResolver || typeof turnHandlerResolver.resolveHandler !== 'function') {
             const errorMsg = `${className} requires a valid ITurnHandlerResolver instance (with resolveHandler method).`;
             (logger || console).error(errorMsg);
             throw new Error(errorMsg);
         }
-        // --- End Dependency Validations ---
 
         this.#turnOrderService = turnOrderService;
         this.#entityManager = entityManager;
@@ -99,7 +95,7 @@ class TurnManager {
         this.#isRunning = false;
         this.#currentActor = null;
         this.#currentHandler = null;
-        this.#turnEndedUnsubscribe = null; // Initialize unsubscribe callback store
+        this.#turnEndedUnsubscribe = null;
 
         this.#logger.info('TurnManager initialized successfully.');
     }
@@ -117,11 +113,7 @@ class TurnManager {
         this.#isRunning = true;
         this.#logger.info('Turn Manager started.');
 
-        // <<< Subscribe to the Turn Ended event (Ticket #7) >>>
-        this.#subscribeToTurnEnd();
-
-        // TODO: Dispatch a 'core:game_started' or 'core:round_started' event here or in TurnOrderService?
-        // Initiate the first turn
+        this.#subscribeToTurnEnd(); // Subscribe when manager starts
         await this.advanceTurn();
     }
 
@@ -136,31 +128,26 @@ class TurnManager {
             return;
         }
         this.#isRunning = false;
+        this.#unsubscribeFromTurnEnd(); // Unsubscribe when manager stops
 
-        // <<< Unsubscribe from Turn Ended event (Ticket #7) >>>
-        this.#unsubscribeFromTurnEnd();
-
-        // Destroy the current handler if one exists
         if (this.#currentHandler && typeof this.#currentHandler.destroy === 'function') {
             try {
                 this.#logger.debug(`Calling destroy() on current handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for actor ${this.#currentActor?.id || 'N/A'}`);
-                await Promise.resolve(this.#currentHandler.destroy()); // Handle sync or async destroy
+                await Promise.resolve(this.#currentHandler.destroy());
             } catch (destroyError) {
                 this.#logger.error(`Error calling destroy() on current handler during stop: ${destroyError.message}`, destroyError);
             }
         }
 
-        this.#currentActor = null; // Clear current actor on stop
-        this.#currentHandler = null; // Clear current handler
+        this.#currentActor = null;
+        this.#currentHandler = null;
 
         try {
             await this.#turnOrderService.clearCurrentRound();
             this.#logger.debug('Turn order service current round cleared.');
-            // TODO: Dispatch a 'core:game_ended' or 'core:round_ended' event here?
         } catch (error) {
             this.#logger.error('Error calling turnOrderService.clearCurrentRound() during stop:', error);
         }
-
         this.#logger.info('Turn Manager stopped.');
     }
 
@@ -178,28 +165,24 @@ class TurnManager {
      * `core:turn_ended` event before proceeding.
      * Handles system-level errors by dispatching 'core:system_error_occurred'.
      * @async
-     * @private - Should only be called internally or by the turn ended event handler.
+     * @private
      * @returns {Promise<void>} A promise that resolves when the next turn has been *initiated*.
      */
     async advanceTurn() {
-        // This property is private, accessing via _TurnManager_isRunning is a convention/workaround for tests sometimes.
-        // Using the public getter or internal #isRunning is preferred.
-        // const isRunning = this._TurnManager_isRunning ?? true; // Example access from test - not ideal
         if (!this.#isRunning) {
             this.#logger.debug('TurnManager.advanceTurn() called while manager is not running. Returning.');
             return;
         }
 
         this.#logger.debug('TurnManager.advanceTurn() initiating...');
-        // Clear previous actor/handler *before* getting the next one
+        // Clear previous actor/handler at the beginning of advancing to a new turn
         this.#currentActor = null;
-        this.#currentHandler = null; // Ensures we resolve a fresh handler
+        this.#currentHandler = null;
 
         try {
             const isQueueEmpty = await this.#turnOrderService.isEmpty();
 
             if (isQueueEmpty) {
-                // --- Start New Round Logic ---
                 this.#logger.info('Turn queue is empty. Attempting to start a new round.');
                 const allEntities = Array.from(this.#entityManager.activeEntities.values());
                 const actors = allEntities.filter(e => e.hasComponent(ACTOR_COMPONENT_ID));
@@ -214,18 +197,15 @@ class TurnManager {
 
                 const actorIds = actors.map(a => a.id);
                 this.#logger.info(`Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`);
-                const strategy = 'round-robin'; // TODO: Make strategy configurable
+                const strategy = 'round-robin';
 
                 await this.#turnOrderService.startNewRound(actors, strategy);
                 this.#logger.info(`Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`);
-                // TODO: Dispatch 'core:round_started'?
                 this.#logger.debug('New round started, recursively calling advanceTurn() to process the first turn.');
-                await this.advanceTurn(); // Recursively call to get the first actor of the new round
+                await this.advanceTurn(); // Recursive call to process the first turn of the new round
                 return;
-                // --- End Start New Round Logic ---
 
             } else {
-                // --- Get Next Actor ---
                 this.#logger.debug('Queue not empty, retrieving next entity.');
                 const nextEntity = await this.#turnOrderService.getNextEntity();
 
@@ -237,8 +217,7 @@ class TurnManager {
                     return;
                 }
 
-                // --- Set Current Actor & Dispatch Turn Started ---
-                this.#currentActor = nextEntity; // <<< SET current actor
+                this.#currentActor = nextEntity; // Set the new current actor
                 const actorId = this.#currentActor.id;
                 const isPlayer = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID);
                 const entityType = isPlayer ? 'player' : 'ai';
@@ -251,63 +230,48 @@ class TurnManager {
                     });
                 } catch (dispatchError) {
                     this.#logger.error(`Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`, dispatchError);
-                    // Decide how to proceed - maybe stop the game? For now, log and attempt to continue.
                 }
 
-                // --- Resolve and Initiate Turn Handler ---
                 this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
                 const handler = await this.#turnHandlerResolver.resolveHandler(this.#currentActor);
-                this.#currentHandler = handler; // <<< STORE current handler
+                this.#currentHandler = handler; // Set the new current handler
 
                 if (!handler) {
                     this.#logger.warn(`Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`);
-                    // TODO: Dispatch a 'core:turn_skipped' event?
-                    // Don't set currentActor/Handler to null here, advanceTurn loop start does that.
-                    // Directly call advanceTurn again to skip to the next.
-                    await Promise.resolve(); // Microtask delay
-                    await this.advanceTurn();
+                    // No need to explicitly call advanceTurn() again here, as the current one will complete,
+                    // and if this was the last actor, the next call to advanceTurn would start a new round or stop.
+                    // However, to ensure the flow continues if this happens mid-round:
+                    setTimeout(() => this.advanceTurn(), 0); // Schedule next advancement
                     return;
                 }
 
                 const handlerName = handler.constructor?.name || 'resolved handler';
                 this.#logger.debug(`Calling startTurn on ${handlerName} for entity ${actorId}`);
 
-                // <<< MODIFIED: Call startTurn, do NOT await completion (Ticket #7) >>>
-                // Fire-and-forget the initiation. Completion is handled by the event listener.
+                // TurnManager is now WAITING for '${TURN_ENDED_ID}' event, subscription is active.
                 handler.startTurn(this.#currentActor).catch(startTurnError => {
-                    // Catch errors *during the initiation phase* of startTurn.
                     const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
                     this.#logger.error(errorMsg, startTurnError);
-
-                    // --- Pass the ORIGINAL error object to dispatch helper ---
-                    this.#dispatchSystemError(`Error initiating turn for ${actorId}.`, startTurnError) // Pass Error obj
+                    this.#dispatchSystemError(`Error initiating turn for ${actorId}.`, startTurnError)
                         .catch(e => this.#logger.error(`Failed to dispatch system error after startTurn failure: ${e.message}`));
-                    // --- End correction ---
 
-                    // If startTurn initiation fails critically, advance turn manually
+                    // If startTurn fails, we need to ensure the turn still advances.
+                    // Check if the actor for whom startTurn failed is still the one we expect.
                     if (this.#currentActor?.id === actorId) {
                         this.#logger.warn(`Manually advancing turn after startTurn initiation failure for ${actorId}.`);
-                        setTimeout(() => this.advanceTurn(), 0); // Use setTimeout
+                        // Simulate a turn end to trigger cleanup and advanceTurn
+                        this.#handleTurnEndedEvent({payload: {entityId: actorId, success: false}}); // Or a more direct advance
                     } else {
-                        this.#logger.warn(`startTurn initiation failed for ${actorId}, but current actor changed before manual advance could occur. No advance triggered.`);
+                        this.#logger.warn(`startTurn initiation failed for ${actorId}, but current actor changed before manual advance could occur. No advance triggered by this error handler.`);
                     }
                 });
-
                 this.#logger.debug(`Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`);
-                // --- The Turn Manager now passively waits for the event ---
             }
         } catch (error) {
-            // Catch errors from TurnOrderService, EntityManager, Handler Resolution etc. (before handler startTurn)
             const errorMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${error.message}`;
             this.#logger.error(errorMsg, error);
-
-            // Pass the original error object; #dispatchSystemError will extract message
-            await this.#dispatchSystemError(
-                'System Error during turn advancement. Stopping game.',
-                error // Pass the original Error object
-            );
-
-            await this.stop(); // Stop the game on critical advancement errors
+            await this.#dispatchSystemError('System Error during turn advancement. Stopping game.', error);
+            await this.stop();
         }
     }
 
@@ -322,19 +286,21 @@ class TurnManager {
         }
         try {
             this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
-            // Type assertion for the payload based on assumed event structure
-            /** @param {SystemEventPayloads[TURN_ENDED_ID]} payload */
-            const handler = (payload) => {
-                this.#handleTurnEndedEvent(payload);
+            /**
+             * Handles the incoming event from the dispatcher.
+             * @param {{ type: typeof TURN_ENDED_ID, payload: SystemEventPayloads[typeof TURN_ENDED_ID] }} event - The full event object.
+             */
+            const handler = (event) => { // Parameter 'event' is the full event object
+                this.#handleTurnEndedEvent(event); // Pass the full event object
             };
             this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(TURN_ENDED_ID, handler);
-            if (typeof this.#turnEndedUnsubscribe !== 'function') { // More robust check
-                this.#turnEndedUnsubscribe = null; // Reset if invalid
+            if (typeof this.#turnEndedUnsubscribe !== 'function') {
+                this.#turnEndedUnsubscribe = null;
                 throw new Error("Subscription function did not return an unsubscribe callback.");
             }
         } catch (error) {
             this.#logger.error(`CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail. Error: ${error.message}`, error);
-            this.#dispatchSystemError(`Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`, error) // Pass error obj
+            this.#dispatchSystemError(`Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`, error)
                 .catch(e => this.#logger.error(`Failed to dispatch system error after subscription failure: ${e.message}`));
             this.stop().catch(e => this.#logger.error(`Error stopping manager after subscription failure: ${e.message}`));
         }
@@ -362,43 +328,51 @@ class TurnManager {
     /**
      * Handles the received TURN_ENDED_ID event.
      * Checks if it matches the current actor and advances the turn if so.
-     * @param {SystemEventPayloads[TURN_ENDED_ID]} payload - The event payload. Expected: { entityId: string, success: boolean }
+     * @param {{ type?: typeof TURN_ENDED_ID, payload: SystemEventPayloads[typeof TURN_ENDED_ID] }} event - The full event object or a simulated payload.
      * @private
      */
-    #handleTurnEndedEvent(payload) {
+    #handleTurnEndedEvent(event) {
         if (!this.#isRunning) {
             this.#logger.debug(`Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`);
             return;
         }
 
-        const endedActorId = payload?.entityId;
-        const successStatus = payload?.success; // true for success, false for failure
-
-        this.#logger.debug(`Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus}. Current actor: ${this.#currentActor?.id || 'None'}`);
-
-        if (!this.#currentActor) {
-            this.#logger.warn(`Received '${TURN_ENDED_ID}' for ${endedActorId}, but there is no current actor set in TurnManager. Ignoring.`);
+        const payload = event?.payload;
+        if (!payload) {
+            this.#logger.warn(`Received '${TURN_ENDED_ID}' event but it has no payload. Ignoring. Event:`, event);
             return;
         }
 
-        if (this.#currentActor.id === endedActorId) {
-            this.#logger.info(`Turn for current actor ${endedActorId} confirmed ended (Success: ${successStatus}). Advancing turn...`);
+        const endedActorId = payload.entityId;
+        const successStatus = payload.success;
 
-            // Destroy the handler for the completed turn *before* advancing
-            if (this.#currentHandler && typeof this.#currentHandler.destroy === 'function') {
-                this.#logger.debug(`Calling destroy() on handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`);
-                Promise.resolve(this.#currentHandler.destroy()) // Fire-and-forget destroy
+        this.#logger.debug(`Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus ?? 'N/A'}. Current actor: ${this.#currentActor?.id || 'None'}`);
+
+        if (!this.#currentActor || this.#currentActor.id !== endedActorId) {
+            // This log will now primarily catch genuinely unexpected/out-of-order core:turn_ended events.
+            // The one from PlayerTurnHandler.destroy's failsafe should be prevented by the change above.
+            this.#logger.warn(`Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but current active actor is ${this.#currentActor?.id || 'None'}. This event will be IGNORED by TurnManager's primary turn cycling logic.`);
+            return;
+        }
+
+        this.#logger.info(`Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus ?? 'N/A'}). Advancing turn...`);
+
+        const handlerToDestroy = this.#currentHandler;
+
+        this.#currentActor = null;
+        this.#currentHandler = null;
+
+        if (handlerToDestroy) {
+            if (typeof handlerToDestroy.signalNormalApparentTermination === 'function') {
+                handlerToDestroy.signalNormalApparentTermination();
+            }
+            if (typeof handlerToDestroy.destroy === 'function') {
+                this.#logger.debug(`Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`);
+                Promise.resolve(handlerToDestroy.destroy())
                     .catch(destroyError => this.#logger.error(`Error destroying handler for ${endedActorId} after turn end: ${destroyError.message}`, destroyError));
             }
-            this.#currentHandler = null; // Clear handler reference
-
-            // Advance the turn asynchronously using setTimeout to yield execution.
-            setTimeout(() => this.advanceTurn(), 0);
-
-        } else {
-            this.#logger.warn(`Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but expected end for current actor ${this.#currentActor.id}. Ignoring event.`);
-            // Consider adding timeout logic if turns stall.
         }
+        setTimeout(() => this.advanceTurn(), 0);
     }
 
     /**
@@ -409,13 +383,13 @@ class TurnManager {
      * @private
      */
     async #dispatchSystemError(message, detailsOrError) {
-        // Extract message if an Error object is passed, otherwise use the string directly.
         const detailString = detailsOrError instanceof Error ? detailsOrError.message : String(detailsOrError);
         try {
             await this.#dispatcher.dispatchValidated('core:system_error_occurred', {
+                // eventName: 'core:system_error_occurred', // VED might need eventName in payload
                 message: message,
                 type: 'error',
-                details: detailString // Contains error.message or the original string
+                details: detailString
             });
         } catch (dispatchError) {
             this.#logger.error(`Failed to dispatch core:system_error_occurred: ${dispatchError.message}`, dispatchError);
@@ -424,4 +398,5 @@ class TurnManager {
 }
 
 export default TurnManager;
+
 // --- FILE END ---

@@ -163,7 +163,7 @@ describe('PlayerTurnHandler: #_processValidatedCommand - Unknown Directive Path'
         );
         // Check the failure warning log from _handleTurnEnd
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            `${className}: Turn for ${mockActor.id} ended with failure. Reason: ${expectedInternalError.message}`
+            `${className}: Turn for ${mockActor.id} ended with handler failure. Reason: ${expectedInternalError.message}`
         );
 
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
@@ -177,7 +177,9 @@ describe('PlayerTurnHandler: #_processValidatedCommand - Unknown Directive Path'
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${className}: Calling CommandOutcomeInterpreter based on CommandProcessor's success (actor: ${mockActor.id}).`));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${className}: CommandOutcomeInterpreter processed. Received directive: '${invalidDirective}' for actor ${mockActor.id}.`));
         // This info log is from _handleTurnEnd
-        expect(mockLogger.info).toHaveBeenCalledWith(`${className}: Ending turn for actor ${mockActor.id} (status: failure).`);
+        // --- CORRECTED LINE ---
+        expect(mockLogger.info).toHaveBeenCalledWith(`${className}: Ending turn for actor ${mockActor.id} (internal handler status: failure).`);
+        // --- END CORRECTED LINE ---
         expect(mockLogger.info).toHaveBeenCalledTimes(7); // Count of info logs after clearing
 
 
@@ -185,32 +187,29 @@ describe('PlayerTurnHandler: #_processValidatedCommand - Unknown Directive Path'
         // These debug logs occur within _handleSubmittedCommand -> #_processValidatedCommand -> _handleTurnEnd
         // Order of debug logs after clearing:
         // 1. #_processValidatedCommand: `Processing validated command`
-        // (Potentially `#clearTurnEndWaitingMechanisms` - if it logs)
+        // (No log from #clearTurnEndWaitingMechanisms at start of #_processValidatedCommand or _handleTurnEnd as conditions not met)
         // 2. _handleTurnEnd -> #_unsubscribeFromCommands: `Unsubscribing from command input`
-        // 3. _handleTurnEnd: `Notifying TurnEndPort`
+        // 3. _handleTurnEnd: `Notifying TurnEndPort` (with success param)
         // 4. _handleTurnEnd: `TurnEndPort notified successfully`
-        // 5. _handleTurnEnd -> #_cleanupTurnState: `Cleaning up primary active turn state` (THE ONE THAT FAILED)
+        // 5. _handleTurnEnd -> #_cleanupTurnState: `Cleaning up primary active turn state`
         // 6. _handleTurnEnd -> #_cleanupTurnState: `Active turn state (currentActor) reset`
         // 7. _handleTurnEnd: `_handleTurnEnd sequence completed`
 
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${className}: Processing validated command "${commandString}" for ${mockActor.id}.`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${className}: Unsubscribing from command input for actor context '${mockActor.id}'.`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Notifying TurnEndPort for actor ${mockActor.id}, success=false.`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Notifying TurnEndPort for actor ${mockActor.id}, port's success param=false.`)); // Corrected from "success=false" to "port's success param=false" to match actual log
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`TurnEndPort notified successfully for ${mockActor.id}.`));
-
-        // --- CORRECTED LINE ---
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`Cleaning up primary active turn state for actor ${mockActor.id}.`)
         );
-        // --- END CORRECTED LINE ---
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${className}: Active turn state (currentActor) reset for ${mockActor.id}.`));
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining(`_handleTurnEnd sequence completed for ${mockActor.id}.`)
         );
-        // If #clearTurnEndWaitingMechanisms logs something when not awaiting, that would be another one.
-        // Assuming it doesn't for now, or that the stringContaining is specific enough.
-        // Count of specific debug logs expected after clearing:
-        const expectedDebugCallCount = 8; // Based on the list above
+
+        // --- CORRECTED LINE ---
+        const expectedDebugCallCount = 8; // Based on the revised list above
+        // --- END CORRECTED LINE ---
         expect(mockLogger.debug).toHaveBeenCalledTimes(expectedDebugCallCount);
 
 

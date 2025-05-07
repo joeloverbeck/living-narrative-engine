@@ -117,6 +117,8 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         // --- Steps ---
         const emptyCommandString = '';
         // _handleSubmittedCommand should internally handle the error and resolve.
+        // The error from #_promptPlayerForAction is caught, and _handleTurnEnd is called.
+        // #_promptPlayerForAction re-throws, and _handleSubmittedCommand's .catch() for it logs a debug message.
         await handler._handleSubmittedCommand(emptyCommandString);
 
 
@@ -152,11 +154,11 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         );
         // Log from _handleTurnEnd (ending turn status)
         expect(mockLogger.info).toHaveBeenCalledWith(
-            `${className}: Ending turn for actor ${mockActor.id} (status: failure).`
+            `${className}: Ending turn for actor ${mockActor.id} (internal handler status: failure).`
         );
         // Log from _handleTurnEnd (failure reason)
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            `${className}: Turn for ${mockActor.id} ended with failure. Reason: ${mockError.message}`
+            `${className}: Turn for ${mockActor.id} ended with handler failure. Reason: ${mockError.message}`
         );
         expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Total warn calls
         expect(mockLogger.info).toHaveBeenCalledTimes(2); // Total info calls after clear
@@ -185,9 +187,13 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
 
         // --- CORRECTED Log Expectation for Notifying TurnEndPort ---
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            `Notifying TurnEndPort for actor ${mockActor.id}, success=false.` // Removed ${className}: prefix
+            `Notifying TurnEndPort for actor ${mockActor.id}, port's success param=false.` // Corrected to match actual log
         );
         // --- END CORRECTION ---
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            `TurnEndPort notified successfully for ${mockActor.id}.` // Added this missing expectation
+        );
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
             `${className}: Cleaning up primary active turn state for actor ${mockActor.id}.`
@@ -198,9 +204,11 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command, Re-Prompt 
         expect(mockLogger.debug).toHaveBeenCalledWith(
             `${className}: _handleTurnEnd sequence completed for ${mockActor.id}.`
         );
+        // --- CORRECTED Log Expectation for caught re-thrown error ---
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            `${className}: Caught re-thrown error from failed re-prompt in empty command case. Error: ${mockError.message}`
+            `${className}: Caught re-thrown error from failed re-prompt in empty command case (this is expected if prompt fails): ${mockError.message}`
         );
+        // --- END CORRECTION ---
 
         expect(mockLogger.debug).toHaveBeenCalledTimes(9); // Total debug calls after clear
     });

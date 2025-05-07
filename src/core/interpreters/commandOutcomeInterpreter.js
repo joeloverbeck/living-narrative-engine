@@ -11,14 +11,22 @@
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /**
+ * Represents an individual message within an action result.
+ * @typedef {object} ActionResultMessage
+ * @property {string} text - The message content.
+ * @property {string} [type] - The type or category of the message (e.g., 'info', 'error').
+ */
+/**
  * Represents the result of processing a command.
  * Assumed properties based on PlayerTurnHandler usage and ticket context:
  * @typedef {object} CommandResult
  * @property {boolean} success - Whether the command action executed successfully.
  * @property {boolean} turnEnded - Whether the action taken signifies the end of the actor's turn.
- * @property {object} [actionResult] - Optional object containing results from the action itself (e.g., action ID, specific outcomes). Might be null or undefined.
+ * @property {object} [actionResult] - Optional object containing results from the action itself.
+ * @property {string} [actionResult.actionId] - The ID of the action that was executed.
+ * @property {ActionResultMessage[]} [actionResult.messages] - Optional array of messages from the action.
  * @property {Error|string|null} [error] - Error object or message if success is false. Might be null or undefined.
- * @property {string} [message] - An optional user-facing message related to the outcome.
+ * @property {string} [message] - An optional user-facing message related to the outcome (often a summary).
  */
 // --- Constant Imports ---
 import TurnDirective from '../constants/turnDirectives.js';
@@ -43,8 +51,8 @@ class CommandOutcomeInterpreter {
      * @param {ILogger} dependencies.logger - Logger instance for internal logging.
      * @throws {Error} If required dependencies are missing or invalid.
      */
-    constructor({ dispatcher, logger }) {
-        if (!logger || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function') {
+    constructor({dispatcher, logger}) {
+        if (!logger || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function' || typeof logger.info !== 'function') {
             // Cannot use logger here if it's invalid
             console.error('CommandOutcomeInterpreter Constructor: Invalid or missing logger dependency.');
             throw new Error('CommandOutcomeInterpreter: Invalid or missing ILogger dependency.');
@@ -76,86 +84,121 @@ class CommandOutcomeInterpreter {
             this.#logger.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // --- *** CORRECTION 1: Make error message more predictable *** ---
         if (!result || typeof result.success !== 'boolean' || typeof result.turnEnded !== 'boolean') {
             const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult structure for actor ${actorId}. Missing 'success' or 'turnEnded'.`;
             const fullErrorMsg = `${baseErrorMsg} Result: ${JSON.stringify(result)}`;
             this.#logger.error(fullErrorMsg);
-            // Dispatch system error *if possible* before throwing
             await this.#dispatcher.dispatchSafely('core:system_error_occurred', {
-                message: baseErrorMsg, // Use the base message for the event
+                message: baseErrorMsg,
                 type: 'error',
                 details: `Actor ${actorId}, Result: ${JSON.stringify(result)}`
             });
-            // Throw the error with the *base* message for easier testing
             throw new Error(baseErrorMsg);
         }
-        // --- *** END CORRECTION 1 *** ---
 
         this.#logger.debug(`CommandOutcomeInterpreter: Interpreting result for actor ${actorId}. Success=${result.success}, TurnEnded=${result.turnEnded}`);
 
-        // --- Determine Event and Payload ---
         let eventName = '';
         let eventPayload = {};
-        let directive = TurnDirective.RE_PROMPT; // Default assumption
+        let directive = TurnDirective.RE_PROMPT;
 
         if (result.success) {
-            // --- Success Path ---
             eventName = 'core:action_executed';
+
+            let finalActionId = "core:unknown_executed_action";
+            if (result.actionResult && typeof result.actionResult.actionId === 'string' && result.actionResult.actionId.trim() !== '') {
+                finalActionId = result.actionResult.actionId;
+            } else if (result.actionResult && result.actionResult.actionId !== undefined && result.actionResult.actionId !== null) {
+                this.#logger.warn(`CommandOutcomeInterpreter: actor ${actorId}: actionResult.actionId was present but not a valid non-empty string (${JSON.stringify(result.actionResult.actionId)}). Using default actionId '${finalActionId}'.`);
+            } else {
+                this.#logger.debug(`CommandOutcomeInterpreter: actor ${actorId}: actionResult or actionResult.actionId not found, null, or invalid. Using default actionId '${finalActionId}'.`);
+            }
+
+            // --- FIX for core:action_executed payload.result validation ---
+            const resultField = {
+                success: true, // Per action-result.schema.json, this is required
+                messages: []   // Per action-result.schema.json, this is optional (default: [])
+            };
+
+            // Populate messages according to action-result.schema.json
+            // Prioritize messages from actionResult if they exist and are valid
+            if (result.actionResult && Array.isArray(result.actionResult.messages)) {
+                result.actionResult.messages.forEach(msg => {
+                    if (msg && typeof msg.text === 'string') {
+                        resultField.messages.push({
+                            text: msg.text,
+                            type: typeof msg.type === 'string' ? msg.type : 'info' // Ensure type, default if missing/invalid
+                        });
+                    } else {
+                        this.#logger.warn(`CommandOutcomeInterpreter: actor ${actorId}: Invalid message structure in actionResult.messages. Message: ${JSON.stringify(msg)}`);
+                    }
+                });
+            }
+            // If no messages from actionResult, use the top-level result.message if available
+            if (resultField.messages.length === 0 && result.message) {
+                resultField.messages.push({text: String(result.message), type: 'info'});
+            }
+            // If still no messages and a default is desired (optional, as schema allows empty messages array):
+            // if (resultField.messages.length === 0) {
+            //     resultField.messages.push({ text: 'Action completed successfully.', type: 'info' });
+            // }
+
             eventPayload = {
                 actorId: actorId,
-                actionId: result.actionResult?.actionId || null,
-                outcome: result.message || 'Action completed successfully.',
-                details: result.actionResult || {},
+                actionId: finalActionId,
+                result: resultField // This 'result' object must conform to action-result.schema.json
             };
+            // --- END FIX ---
 
             if (result.turnEnded) {
                 directive = TurnDirective.END_TURN_SUCCESS;
-                this.#logger.debug(`Actor ${actorId}: Success, turn ended.`);
+                this.#logger.info(`Actor ${actorId}: Success, turn ended.`);
             } else {
                 directive = TurnDirective.RE_PROMPT;
-                this.#logger.debug(`Actor ${actorId}: Success, turn continues (re-prompt).`);
+                this.#logger.info(`Actor ${actorId}: Success, turn continues (re-prompt).`);
             }
 
         } else {
-            // --- Failure Path ---
+            // --- Failure Path (core:action_failed) ---
             eventName = 'core:action_failed';
 
-            // --- *** CORRECTION 2: Prioritize error sources for errorMessage *** ---
-            let derivedErrorMessage = 'Unknown action failure.'; // Default
+            let derivedErrorMessage = 'Unknown action failure.';
             if (result.error instanceof Error) {
                 derivedErrorMessage = result.error.message;
-            } else if (result.message) { // Prioritize message if error is not an Error object
+            } else if (result.message) {
                 derivedErrorMessage = result.message;
-            } else if (result.error) { // Use error string as fallback if message is missing
+            } else if (result.error) {
                 derivedErrorMessage = String(result.error);
             }
-            // --- *** END CORRECTION 2 *** ---
 
+            // The schema for core:action_failed#payload is not provided,
+            // but we'll keep this structure consistent with previous versions.
+            // It typically includes actorId, actionId (optional), errorMessage, and details.
             eventPayload = {
                 actorId: actorId,
+                actionId: result.actionResult?.actionId || "core:unknown_failed_action",
                 errorMessage: derivedErrorMessage,
-                details: result.error, // Still include raw error for details
+                // 'details' here for core:action_failed can hold the raw actionResult or error info.
+                // This is distinct from the 'result' field of 'core:action_executed'.
+                details: result.actionResult || {errorInfo: result.error},
             };
 
             if (result.turnEnded) {
                 directive = TurnDirective.END_TURN_FAILURE;
-                this.#logger.debug(`Actor ${actorId}: Failure, turn ended.`);
+                this.#logger.info(`Actor ${actorId}: Failure, turn ended.`);
             } else {
                 directive = TurnDirective.RE_PROMPT;
-                this.#logger.debug(`Actor ${actorId}: Failure, turn continues (re-prompt).`);
+                this.#logger.info(`Actor ${actorId}: Failure, turn continues (re-prompt).`);
             }
         }
 
-        // --- Dispatch Event Safely ---
-        this.#logger.debug(`CommandOutcomeInterpreter: Dispatching event '${eventName}' for actor ${actorId}.`);
+        this.#logger.debug(`CommandOutcomeInterpreter: Dispatching event '${eventName}' for actor ${actorId}. Payload: ${JSON.stringify(eventPayload)}`);
         const dispatchSuccess = await this.#dispatcher.dispatchSafely(eventName, eventPayload);
 
         if (!dispatchSuccess) {
             this.#logger.warn(`CommandOutcomeInterpreter: SafeEventDispatcher reported failure dispatching '${eventName}' for actor ${actorId}. Downstream handlers may not have received the event, but proceeding with directive '${directive}'.`);
         }
 
-        // --- Return Directive ---
         this.#logger.debug(`CommandOutcomeInterpreter: Returning directive '${directive}' for actor ${actorId}.`);
         return directive;
     }

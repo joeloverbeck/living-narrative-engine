@@ -225,7 +225,7 @@ describe('PlayerTurnHandler: _handleSubmittedCommand - Empty Command Handling', 
         );
         // Check the failure warning log from _handleTurnEnd (called by #_promptPlayerForAction)
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(`Turn for ${mockActor.id} ended with failure. Reason: ${rePromptError.message}`)
+            expect.stringContaining(`Turn for ${mockActor.id} ended with handler failure. Reason: ${rePromptError.message}`)
         );
         // Check total warning count (should be 2: empty command + turn failure reason)
         expect(mockLogger.warn).toHaveBeenCalledTimes(2);

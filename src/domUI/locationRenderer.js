@@ -1,36 +1,41 @@
 // src/domUI/locationRenderer.js
 import {RendererBase} from './rendererBase.js';
-import DomElementFactory from './domElementFactory.js';
+// DomElementFactory is not explicitly used in the new version of render directly,
+// but it is used by the helper methods, so the import might be kept if helpers are complex.
+// For this refactor, we'll ensure it's available and used in helpers.
+// import DomElementFactory from './domElementFactory.js'; // Keep if helpers use it extensively
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('./domElementFactory').default} DomElementFactory // Correctly typed import
  */
 
 /**
  * Represents the data structure for displaying a location.
- * Based on the structure used in the old DomRenderer#renderLocation and event payload.
  * @typedef {object} LocationDisplayPayload
  * @property {string} name - The name of the location.
  * @property {string} description - The textual description of the location.
- * @property {Array<{description: string}>} exits - List of exits from the location.
- * @property {Array<{id: string, name: string}>} [items] - Optional list of items present in the location. (Assuming ID might be useful later).
- * @property {Array<{id: string, name: string}>} [entities] - Optional list of entities (NPCs, etc.) present. (Assuming ID might be useful later).
+ * @property {Array<{description: string, id?: string}>} exits - List of exits from the location. (id might be added for future use as per #302)
+ * @property {Array<{id: string, name: string}>} [items] - Optional list of items present in the location.
+ * @property {Array<{id: string, name: string}>} [entities] - Optional list of entities (NPCs, etc.) present.
  */
 
 /**
  * Renders the details of the current game location (name, description, exits, items, entities)
- * into a designated container element. Subscribes to 'event:display_location' via VED.
+ * into designated child elements within '#location-info-container'.
+ * Subscribes to 'event:display_location' via VED.
  */
 export class LocationRenderer extends RendererBase {
     /**
-     * The DOM element where location details are rendered.
+     * The main container element for location info, expected to be '#location-info-container'.
+     * This is used as the root to query for sub-elements.
      * @private
      * @type {HTMLElement}
      */
-    #containerElement;
+    #baseContainerElement; // This will be #location-info-container
 
     /**
      * Factory for creating DOM elements programmatically.
@@ -46,6 +51,19 @@ export class LocationRenderer extends RendererBase {
      */
     #subscriptions = [];
 
+    // IDs of the target sub-elements
+    /** @private @const @type {string} */
+    static #NAME_DISPLAY_ID = 'location-name-display';
+    /** @private @const @type {string} */
+    static #DESCRIPTION_DISPLAY_ID = 'location-description-display';
+    /** @private @const @type {string} */
+    static #EXITS_DISPLAY_ID = 'location-exits-display';
+    /** @private @const @type {string} */
+    static #ITEMS_DISPLAY_ID = 'location-items-display';
+    /** @private @const @type {string} */
+    static #ENTITIES_DISPLAY_ID = 'location-entities-display';
+
+
     /**
      * Creates an instance of LocationRenderer.
      *
@@ -54,7 +72,7 @@ export class LocationRenderer extends RendererBase {
      * @param {IDocumentContext} deps.documentContext - The document context.
      * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
      * @param {DomElementFactory} deps.domElementFactory - Factory for creating DOM elements.
-     * @param {HTMLElement | null} deps.containerElement - The container element to render location details into.
+     * @param {HTMLElement | null} deps.containerElement - The container element ('#location-info-container') to render location details into.
      * @throws {Error} If dependencies are invalid, especially containerElement or domElementFactory.
      */
     constructor({
@@ -62,11 +80,10 @@ export class LocationRenderer extends RendererBase {
                     documentContext,
                     validatedEventDispatcher,
                     domElementFactory,
-                    containerElement
+                    containerElement // This should be #location-info-container
                 }) {
         super({logger, documentContext, validatedEventDispatcher});
 
-        // --- Validate specific dependencies ---
         if (!domElementFactory || typeof domElementFactory.create !== 'function') {
             const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid.`;
             this.logger.error(errMsg);
@@ -75,14 +92,14 @@ export class LocationRenderer extends RendererBase {
         this.#domElementFactory = domElementFactory;
 
         if (!containerElement || containerElement.nodeType !== 1) {
-            const errMsg = `${this._logPrefix} 'containerElement' dependency is missing or not a valid DOM element.`;
+            // Renaming to #baseContainerElement to clarify its role as the parent of the specific display areas.
+            const errMsg = `${this._logPrefix} 'containerElement' (expected '#location-info-container') dependency is missing or not a valid DOM element.`;
             this.logger.error(errMsg);
             throw new Error(errMsg);
         }
-        this.#containerElement = containerElement;
-        this.logger.debug(`${this._logPrefix} Attached to container element:`, containerElement);
+        this.#baseContainerElement = containerElement;
+        this.logger.debug(`${this._logPrefix} Attached to base container element:`, this.#baseContainerElement);
 
-        // Subscribe to events that trigger location rendering
         this.#subscribeToEvents();
     }
 
@@ -92,16 +109,11 @@ export class LocationRenderer extends RendererBase {
      */
     #subscribeToEvents() {
         const ved = this.validatedEventDispatcher;
-
         this.#subscriptions.push(
-            // Listen for the event that carries location data
             ved.subscribe('event:display_location', this.#handleDisplayLocation.bind(this))
         );
-
         this.logger.debug(`${this._logPrefix} Subscribed to VED event 'event:display_location'.`);
     }
-
-    // --- Private Event Handler ---
 
     /**
      * Handles the 'event:display_location' event from VED.
@@ -113,129 +125,140 @@ export class LocationRenderer extends RendererBase {
     #handleDisplayLocation(payload, eventType) {
         this.logger.debug(`${this._logPrefix} Received '${eventType}' event. Payload:`, payload);
 
-        // Basic payload validation (more robust validation should ideally use schemas)
         if (
             payload &&
             typeof payload.name === 'string' &&
             typeof payload.description === 'string' &&
             Array.isArray(payload.exits) &&
-            (!payload.items || Array.isArray(payload.items)) && // items are optional but must be array if present
-            (!payload.entities || Array.isArray(payload.entities)) // entities are optional but must be array if present
+            (!payload.items || Array.isArray(payload.items)) &&
+            (!payload.entities || Array.isArray(payload.entities))
         ) {
-            // Type assertion for clarity after validation
             const locationData = /** @type {LocationDisplayPayload} */ (payload);
             this.render(locationData);
         } else {
             this.logger.error(`${this._logPrefix} Received invalid or incomplete payload for '${eventType}'. Cannot render location. Payload:`, payload);
-            // Optionally clear the container or display an error message
-            this.#clearContainer();
-            // Use factory to create error message - adhering to "no HTML strings" rule
-            const errorMsg = this.#domElementFactory.p('error-message', 'Error: Could not display location details.');
-            if (errorMsg) {
-                this.#containerElement.appendChild(errorMsg);
-            }
-        }
-    }
-
-    // --- Private Helpers ---
-
-    /**
-     * Clears the content of the container element.
-     * @private
-     */
-    #clearContainer() {
-        if (this.#containerElement) {
-            // More robust clearing than innerHTML = ''
-            while (this.#containerElement.firstChild) {
-                this.#containerElement.removeChild(this.#containerElement.firstChild);
-            }
+            this.#clearAllDisplaysOnError();
         }
     }
 
     /**
-     * Creates and appends a paragraph element for a list of named items (Items or Entities).
+     * Clears all specific display areas in case of a major error or invalid payload.
      * @private
-     * @param {string} label - e.g., "Items here:"
-     * @param {Array<{name: string}> | undefined} items - The list of items/entities.
-     * @param {string} className - CSS class for the paragraph.
      */
-    #renderNamedList(label, items, className) {
-        if (items && items.length > 0) {
-            // Use map to safely access name, provide fallback
-            const itemNames = items
-                .map(item => (item && item.name) || 'unnamed item')
-                .join(', ');
-            const p = this.#domElementFactory.p(className, `${label} ${itemNames}`);
-            if (p) {
-                this.#containerElement.appendChild(p);
-            } else {
-                this.logger.warn(`${this._logPrefix} Failed to create paragraph for ${label}.`);
-            }
-        }
-    }
-
-    /**
-     * Creates and appends elements for displaying exits.
-     * Uses spans within a paragraph for better structure and potential styling.
-     * @private
-     * @param {Array<{description: string}>} exits - The list of exits.
-     * @param {string} className - CSS class for the main paragraph container.
-     */
-    #renderExits(exits, className) {
-        const p = this.#domElementFactory.p(className);
-        if (!p) {
-            this.logger.warn(`${this._logPrefix} Failed to create paragraph for exits.`);
-            return;
-        }
-
-        const labelSpan = this.#domElementFactory.span(undefined, 'Exits:');
-        if (labelSpan) {
-            p.appendChild(labelSpan);
-        }
-
-        if (exits && exits.length > 0) {
-            exits.forEach((exit) => {
-                const br = this.#domElementFactory.create('br'); // Create <br> using factory
-                // Use map to safely access description, provide fallback
-                const exitDesc = (exit && exit.description) || 'an exit';
-                const exitSpan = this.#domElementFactory.span('location__exit-detail', `  ${exitDesc}`);
-
-                if (br) { // Add line break before each exit description
-                    p.appendChild(br);
+    #clearAllDisplaysOnError() {
+        const idsToClear = [
+            LocationRenderer.#NAME_DISPLAY_ID,
+            LocationRenderer.#DESCRIPTION_DISPLAY_ID,
+            LocationRenderer.#EXITS_DISPLAY_ID,
+            LocationRenderer.#ITEMS_DISPLAY_ID,
+            LocationRenderer.#ENTITIES_DISPLAY_ID
+        ];
+        let errorLogged = false;
+        for (const id of idsToClear) {
+            try {
+                const element = this.documentContext.query(`#${id}`);
+                if (element) {
+                    this._clearElementContent(element);
+                    const pError = this.#domElementFactory.p('error-message', '(Error displaying this section)');
+                    if (pError) element.appendChild(pError);
+                } else if (!errorLogged) {
+                    // Log only once if a general query issue is suspected
+                    this.logger.warn(`${this._logPrefix} Could not find element #${id} to clear on error.`);
+                    errorLogged = true; // Avoid flooding logs if many are missing
                 }
-                if (exitSpan) {
-                    p.appendChild(exitSpan);
+            } catch (e) {
+                this.logger.error(`${this._logPrefix} Error while clearing element #${id}:`, e);
+            }
+        }
+    }
+
+
+    // --- Private Helper Methods ---
+
+    /**
+     * Clears the content of a given HTML element.
+     * @private
+     * @param {HTMLElement} element - The element to clear.
+     */
+    _clearElementContent(element) {
+        if (element) {
+            // More robust clearing than innerHTML = ''
+            while (element.firstChild) {
+                element.removeChild(element.firstChild);
+            }
+        }
+    }
+
+    /**
+     * Renders a list of items (exits, items, entities) into a target element.
+     * Creates a title for the list and then either a list of items or an "empty" message.
+     * @private
+     * @param {Array<object> | undefined} dataArray - The array of data objects to render.
+     * @param {HTMLElement} targetElement - The DOM element to render into.
+     * @param {string} title - The title for this section (e.g., "Exits", "Items").
+     * @param {string} itemTextProperty - The property name on each data object that contains the text to display (e.g., 'description', 'name').
+     * @param {string} emptyText - Text to display if dataArray is empty (e.g., "(None)").
+     * @param {string} itemClassName - Optional CSS class for each list item element.
+     */
+    _renderList(dataArray, targetElement, title, itemTextProperty, emptyText, itemClassName = 'list-item') {
+        this._clearElementContent(targetElement);
+
+        // Create and append title (e.g., <h4>Exits:</h4>)
+        // Using H4 for semantic structure below H2 for location name.
+        const titleEl = this.#domElementFactory.create('h4');
+        if (titleEl) {
+            titleEl.textContent = `${title}:`;
+            targetElement.appendChild(titleEl);
+        } else {
+            this.logger.warn(`${this._logPrefix} Failed to create title element for ${title}.`);
+        }
+
+        if (!dataArray || dataArray.length === 0) {
+            const pEmpty = this.#domElementFactory.p('empty-list-message', emptyText);
+            if (pEmpty) {
+                targetElement.appendChild(pEmpty);
+            } else {
+                this.logger.warn(`${this._logPrefix} Failed to create empty message for ${title}.`);
+                targetElement.appendChild(this.documentContext.document.createTextNode(emptyText)); // Fallback
+            }
+        } else {
+            const ul = this.#domElementFactory.ul(undefined, 'location-detail-list'); // class for the <ul>
+            if (!ul) {
+                this.logger.error(`${this._logPrefix} Failed to create UL element for ${title}.`);
+                // Fallback to just appending text if UL creation fails
+                dataArray.forEach(item => {
+                    const text = item[itemTextProperty] || 'Unnamed';
+                    const pItem = this.#domElementFactory.p(itemClassName, text);
+                    if (pItem) targetElement.appendChild(pItem);
+                });
+                return;
+            }
+
+            dataArray.forEach(item => {
+                const text = item[itemTextProperty] || `(Invalid ${itemTextProperty})`;
+                const li = this.#domElementFactory.li(itemClassName, text);
+                if (li) {
+                    // For exits, Ticket #302 will add clickability here.
+                    // For now, just text.
+                    ul.appendChild(li);
                 } else {
-                    this.logger.warn(`${this._logPrefix} Failed to create span for exit: ${exitDesc}`);
+                    this.logger.warn(`${this._logPrefix} Failed to create LI element for item in ${title}.`);
                 }
             });
-        } else {
-            // Handle the "None" case explicitly
-            const br = this.#domElementFactory.create('br');
-            const noneSpan = this.#domElementFactory.span('location__exit-detail', '  None');
-            if (br) p.appendChild(br);
-            if (noneSpan) {
-                p.appendChild(noneSpan);
-            } else {
-                this.logger.warn(`${this._logPrefix} Failed to create span for 'None' exit.`);
-            }
+            targetElement.appendChild(ul);
         }
-        this.#containerElement.appendChild(p);
     }
-
 
     // --- Public API ---
 
     /**
-     * Renders the location details into the designated container element.
-     * Clears previous content and builds the new view using DomElementFactory.
-     * Conforms to the "No HTML strings" rule.
+     * Renders the location details into their designated sub-elements within '#location-info-container'.
      *
      * @param {LocationDisplayPayload} locationDto - The location data to render.
      */
     render(locationDto) {
-        if (!this.#containerElement) {
-            this.logger.error(`${this._logPrefix} Cannot render location, containerElement is not set.`);
+        if (!this.#baseContainerElement) {
+            this.logger.error(`${this._logPrefix} Cannot render location, baseContainerElement is not set.`);
             return;
         }
         if (!this.#domElementFactory) {
@@ -243,45 +266,77 @@ export class LocationRenderer extends RendererBase {
             return;
         }
         if (!locationDto) {
-            // Handle potentially null/undefined DTO more gracefully
-            this.logger.warn(`${this._logPrefix} Received null or undefined location DTO. Clearing location display.`);
-            this.#clearContainer();
-            const emptyMsg = this.#domElementFactory.p('location__empty', 'No location information available.');
-            if (emptyMsg) {
-                this.#containerElement.appendChild(emptyMsg);
-            }
-            return; // Stop execution if DTO is invalid
+            this.logger.warn(`${this._logPrefix} Received null or undefined location DTO. Clearing location display sections.`);
+            this.#clearAllDisplaysOnError();
+            return;
         }
 
-        this.logger.debug(`${this._logPrefix} Rendering location: "${locationDto.name}"`);
+        this.logger.debug(`${this._logPrefix} Rendering location: "${locationDto.name}" into specific sub-elements.`);
 
-        // 1. Clear existing content
-        this.#clearContainer();
+        // Get references to the target sub-elements
+        const nameDisplay = this.documentContext.query(`#${LocationRenderer.#NAME_DISPLAY_ID}`);
+        const descriptionDisplay = this.documentContext.query(`#${LocationRenderer.#DESCRIPTION_DISPLAY_ID}`);
+        const exitsDisplay = this.documentContext.query(`#${LocationRenderer.#EXITS_DISPLAY_ID}`);
+        const itemsDisplay = this.documentContext.query(`#${LocationRenderer.#ITEMS_DISPLAY_ID}`);
+        const entitiesDisplay = this.documentContext.query(`#${LocationRenderer.#ENTITIES_DISPLAY_ID}`);
 
-        // 2. Create and append elements using DomElementFactory
-        // CSS classes are derived from the old renderer's structure.
-        // Ideally, these would come from a central ui-classes enum/object.
-        const nameEl = this.#domElementFactory.h3('location__name', locationDto.name || 'Unnamed Location');
-        const descEl = this.#domElementFactory.p('location__description', locationDto.description || 'You see nothing remarkable.');
+        // --- Render Location Name ---
+        if (nameDisplay) {
+            this._clearElementContent(nameDisplay); // Clear first
+            nameDisplay.textContent = locationDto.name || 'Unnamed Location';
+        } else {
+            this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#NAME_DISPLAY_ID} not found.`);
+        }
 
-        // Append core elements, checking if creation succeeded
-        if (nameEl) this.#containerElement.appendChild(nameEl);
-        else this.logger.warn(`${this._logPrefix} Failed to create location name element.`);
+        // --- Render Location Description ---
+        if (descriptionDisplay) {
+            this._clearElementContent(descriptionDisplay); // Clear first
+            // Per ticket: "Assume textContent for safety unless specified"
+            descriptionDisplay.textContent = locationDto.description || 'You see nothing remarkable.';
+        } else {
+            this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#DESCRIPTION_DISPLAY_ID} not found.`);
+        }
 
-        if (descEl) this.#containerElement.appendChild(descEl);
-        else this.logger.warn(`${this._logPrefix} Failed to create location description element.`);
+        // --- Render Exits ---
+        if (exitsDisplay) {
+            this._renderList(
+                locationDto.exits,
+                exitsDisplay,
+                'Exits',
+                'description',
+                '(None)'
+            );
+        } else {
+            this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#EXITS_DISPLAY_ID} not found.`);
+        }
 
+        // --- Render Items ---
+        if (itemsDisplay) {
+            this._renderList(
+                locationDto.items,
+                itemsDisplay,
+                'Items',
+                'name',
+                '(None seen)'
+            );
+        } else {
+            this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#ITEMS_DISPLAY_ID} not found.`);
+        }
 
-        // 3. Render Items list (if any) using the helper
-        this.#renderNamedList('Items here:', locationDto.items, 'location__items');
+        // --- Render Entities ---
+        if (entitiesDisplay) {
+            this._renderList(
+                locationDto.entities,
+                entitiesDisplay,
+                'Entities',
+                'name',
+                '(None seen)'
+            );
+        } else {
+            this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#ENTITIES_DISPLAY_ID} not found.`);
+        }
 
-        // 4. Render Entities list (if any) using the helper
-        this.#renderNamedList('Others here:', locationDto.entities, 'location__entities');
-
-        // 5. Render Exits using the helper
-        this.#renderExits(locationDto.exits, 'location__exits');
-
-        this.logger.info(`${this._logPrefix} Location "${locationDto.name}" rendered successfully.`);
+        this.logger.info(`${this._logPrefix} Location "${locationDto.name}" rendered into sub-elements successfully.`);
     }
 
     /**
@@ -290,12 +345,11 @@ export class LocationRenderer extends RendererBase {
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
         this.#subscriptions.forEach(sub => {
-            // Check if sub exists and has an unsubscribe method before calling
             if (sub && typeof sub.unsubscribe === 'function') {
                 sub.unsubscribe();
             }
         });
-        this.#subscriptions = []; // Clear the array after unsubscribing
-        super.dispose(); // Call base class dispose for logging
+        this.#subscriptions = [];
+        super.dispose();
     }
 }

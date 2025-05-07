@@ -1,0 +1,37 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "handle_wait",
+  "comment": "Handles the 'core:wait' action by displaying a message that the actor waited and then ending the actor's turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "core:wait"
+    ]
+  },
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch a message to the UI indicating that the entity has waited.",
+      "parameters": {
+        "eventType": "textUI:display_message",
+        "payload": {
+          "message": "{event.payload.actorId} waits.",
+          "type": "info"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch an event to indicate that the entity's turn has ended.",
+      "parameters": {
+        "eventType": "core:turn_ended",
+        "payload": {
+          "entityId": "{event.payload.actorId}"
+        }
+      }
+    }
+  ]
+}

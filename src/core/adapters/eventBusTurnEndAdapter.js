@@ -1,21 +1,24 @@
 // src/core/adapters/eventBusTurnEndAdapter.js
+// --- FILE START ---
 
 import {ITurnEndPort} from '../ports/ITurnEndPort.js';
 import {TURN_ENDED_ID} from "../constants/eventIds.js";
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
 
 export default class EventBusTurnEndAdapter extends ITurnEndPort {
     /** @type {ISafeDispatcher|IValidatedDispatcher} */ #dispatcher;
     /** @type {boolean} */                               #isSafe;
-    /** @type {Console|import('../interfaces/coreServices.js').ILogger} */ #log;
+    /** @type {Console|ILogger} */ #log;
 
     /**
      * @param {{
-     *   safeEventDispatcher?:      ISafeDispatcher,
-     *   validatedEventDispatcher?: IValidatedDispatcher,
-     *   logger?:                   Console|import('../interfaces/coreServices.js').ILogger
+     * safeEventDispatcher?:      ISafeDispatcher,
+     * validatedEventDispatcher?: IValidatedDispatcher,
+     * logger?:                   Console|ILogger
      * }} deps
      */
     constructor({safeEventDispatcher, validatedEventDispatcher, logger = console}) {
@@ -28,7 +31,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
             this.#dispatcher = validatedEventDispatcher;
             this.#isSafe = false;
             // 👇 restore the warning the tests look for
-            console.warn(
+            (logger || console).warn( // Use provided logger if available
                 'EventBusTurnEndAdapter: ISafeEventDispatcher not provided or invalid, ' +
                 'falling back to IValidatedEventDispatcher. Dispatch errors may not be caught gracefully by the adapter.'
             );
@@ -43,34 +46,49 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
 
     /**
      * Canonical method used by PlayerTurnHandler / TurnManager.
+     * The 'success' parameter is part of the ITurnEndPort interface contract
+     * but will not be included in the core:turn_ended event payload itself.
+     * @param {string} entityId
+     * @param {boolean} success - Indicates the outcome of the turn from the notifier's perspective.
      */
     async notifyTurnEnded(entityId, success) {
         if (!entityId || typeof entityId !== 'string') {
-            throw new Error('entityId must be a non-empty string');
+            const errMsg = 'EventBusTurnEndAdapter: entityId must be a non-empty string';
+            this.#log.error(errMsg);
+            throw new Error(errMsg);
         }
 
-        const payload = {entityId, success: !!success};
+        // Log the intended success status for debugging, even if not in the event.
+        this.#log.debug(`EventBusTurnEndAdapter: Received notifyTurnEnded for ${entityId} with success=${success}. Dispatching ${TURN_ENDED_ID} with entityId only.`);
+
+        // Payload for core:turn_ended only contains entityId as per clarification.
+        const payload = {entityId};
 
         try {
             if (this.#isSafe) {
                 await this.#dispatcher.dispatchSafely(TURN_ENDED_ID, payload);
             } else {
-                await this.#dispatcher.dispatchValidated(TURN_ENDED_ID, payload);
+                // Type assertion for IValidatedDispatcher if #isSafe is false
+                await /** @type {IValidatedDispatcher} */ (this.#dispatcher).dispatchValidated(TURN_ENDED_ID, payload);
             }
+            this.#log.debug(`EventBusTurnEndAdapter: Successfully dispatched ${TURN_ENDED_ID} for ${entityId}.`);
         } catch (err) {
-            this.#log.error("Error dispatching TURN_ENDED_ID via VED", err);
-            throw err;
+            this.#log.error(`EventBusTurnEndAdapter: Error dispatching ${TURN_ENDED_ID} for ${entityId}. Error: ${err.message}`, err);
+            throw err; // Re-throw to allow caller to handle
         }
     }
 
     /**
      * ⚠️ Legacy shim so the old unit-tests that call `turnEnded()` still pass.
      * Calls `notifyTurnEnded(id, true)` so existing behavioural assertions remain valid.
+     * @param {string} entityId
      */
     async turnEnded(entityId) {
+        this.#log.debug(`EventBusTurnEndAdapter: Legacy turnEnded called for ${entityId}. Assuming success=true.`);
         return this.notifyTurnEnded(entityId, true);
     }
 }
 
 /* make it importable both ways */
 export {EventBusTurnEndAdapter};
+// --- FILE END ---

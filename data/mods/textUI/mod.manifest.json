@@ -22,7 +22,8 @@
       "player_turn_prompt.rule.json",
       "command_echo.rule.json",
       "submit_command.rule.json",
-      "command_parse_failed.rule.json"
+      "command_parse_failed.rule.json",
+      "wait.rule.json"
     ],
     "events": [
       "set_title.event.json",

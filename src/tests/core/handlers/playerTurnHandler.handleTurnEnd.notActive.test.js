@@ -92,7 +92,8 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure Cases', () => { 
     it('should log warning (from _handleTurnEnd guard) and attempt unsubscribe when called with no active turn', async () => {
         const testActorId = 'some-actor-id';
         // --- UPDATED EXPECTED WARNING for no active/awaited actor ---
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but this actor is not the current active actor (undefined) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`;
+        // Corrected to match the actual log output from playerTurnHandler.js
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (internal status: success), but this actor is not the current active actor (undefined) nor explicitly awaited by this handler instance anymore. Minimal cleanup attempted.`;
 
         // --- Steps ---
         // Handler state: no current actor (#currentActor is null by default after construction).
@@ -132,7 +133,8 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure Cases', () => { 
     it('should log warning (from _handleTurnEnd guard) and attempt unsubscribe when called with the wrong actor ID', async () => {
         const wrongActorId = 'wrong-actor-id';
         // --- UPDATED EXPECTED WARNING for wrong actor ---
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${wrongActorId} (status: success), but this actor is not the current active actor (${actor1.id}) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`;
+        // Corrected to match the actual log output from playerTurnHandler.js
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${wrongActorId} (internal status: success), but this actor is not the current active actor (${actor1.id}) nor explicitly awaited by this handler instance anymore. Minimal cleanup attempted.`;
 
         // --- Setup ---
         // Start a turn for actor1 to set #currentActor and the private #commandUnsubscribeFn

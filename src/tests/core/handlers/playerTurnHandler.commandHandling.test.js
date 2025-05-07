@@ -1,18 +1,17 @@
 // src/tests/core/handlers/playerTurnHandler.commandHandling.test.js
+// --- FILE START ---
 
 /**
  * @fileoverview Tests for PlayerTurnHandler command handling and subscription lifecycle.
  */
-// *** REMOVED: jest.useFakeTimers(); ***
 
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler';
 import TurnDirective from '../../../core/constants/turnDirectives';
-import Entity from '../../../entities/entity'; // Assuming Entity class exists
-import {TURN_ENDED_ID} from '../../../core/constants/eventIds'; // <<< ADDED: Import TURN_ENDED_ID
+import Entity from '../../../entities/entity';
+import {TURN_ENDED_ID} from '../../../core/constants/eventIds';
 
 // --- Mock Dependencies ---
-// (Mocks remain the same)
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),};
 const mockActionDiscoverySystem = {getValidActions: jest.fn(),};
 const mockCommandProcessor = {processCommand: jest.fn(),};
@@ -25,15 +24,15 @@ const mockPlayerPromptService = {prompt: jest.fn(),};
 const mockCommandOutcomeInterpreter = {interpret: jest.fn(),};
 const mockSafeEventDispatcher = {dispatchSafely: jest.fn(), subscribe: jest.fn(),};
 let commandListenerCallback = null;
-const mockUnsubscribeFn = jest.fn();
+const mockUnsubscribeFn = jest.fn(); // For command input
+const mockTurnEndedUnsubscribeFn = jest.fn(); // For TURN_ENDED_ID event
+
 const mockCommandInputPort = {
     onCommand: jest.fn((listener) => {
         commandListenerCallback = listener;
         return mockUnsubscribeFn;
     }),
 };
-const mockTurnEndedUnsubscribeFn = jest.fn(); // Separate mock for turn ended unsubscribe
-
 
 // --- Helper ---
 const createMockPlayer = (id = 'player-1') => new Entity(id, ['player', 'actor']);
@@ -51,13 +50,17 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
 
         mockPlayerPromptService.prompt.mockResolvedValue(undefined);
         mockTurnEndPort.notifyTurnEnded.mockResolvedValue(undefined);
-        mockUnsubscribeFn.mockClear();
-        mockTurnEndedUnsubscribeFn.mockClear(); // Clear this mock too
+        mockSafeEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
+            if (eventId === TURN_ENDED_ID) {
+                // Store the callback if needed by a specific test that simulates event firing
+                // but reset it for each test or ensure test logic is self-contained.
+            }
+            return mockTurnEndedUnsubscribeFn; // Return the specific mock for turn ended
+        });
         mockCommandInputPort.onCommand.mockImplementation((listener) => {
             commandListenerCallback = listener;
             return mockUnsubscribeFn;
-        });
-        mockSafeEventDispatcher.subscribe.mockReset();
+        }); // Ensure this is reset if modified by a test
 
         handler = new PlayerTurnHandler({
             logger: mockLogger,
@@ -79,7 +82,6 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
         if (handler) {
             try {
                 handler.destroy();
-                // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
                 await new Promise(process.nextTick);
             } catch (e) { /* ignore */
             }
@@ -92,8 +94,7 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
 
     test('startTurn should subscribe to commands via CommandInputPort', async () => {
         await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Allow async ops in startTurn
+        await new Promise(process.nextTick);
 
         expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
         expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(expect.any(Function));
@@ -103,132 +104,123 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
     });
 
     test('startTurn should throw if CommandInputPort fails to return unsubscribe function', async () => {
-        mockCommandInputPort.onCommand.mockReturnValueOnce(null);
+        mockCommandInputPort.onCommand.mockReturnValueOnce(null); // Simulate failure
 
-        const expectedError = 'CommandInputPort.onCommand did not return a valid unsubscribe function.';
-        await expect(handler.startTurn(player)).rejects.toThrow(expectedError);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Allow potential cleanup microtasks
+        const expectedErrorMsg = 'CommandInputPort.onCommand did not return a valid unsubscribe function.';
+        await expect(handler.startTurn(player)).rejects.toThrow(expectedErrorMsg);
+        await new Promise(process.nextTick); // Allow microtasks like _handleTurnEnd
 
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${className}: Critical error during turn initiation for ${player.id}`), expect.any(Error));
-        expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled();
+        // Check that critical error is logged and turn end is notified
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`${className}: Critical error during turn initiation for ${player.id}: ${expectedErrorMsg}`),
+            expect.any(Error)
+        );
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
+        // The error passed to _handleTurnEnd will be the one from the throw.
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false);
+        expect(mockPlayerPromptService.prompt).not.toHaveBeenCalled(); // Prompt shouldn't be called if subscription fails first
     });
+
 
     test('Successful command processing (END_TURN_SUCCESS) should notify TurnEndPort and unsubscribe', async () => {
         const command = 'wait';
-        const commandResult = {success: true, turnEnded: true, actionResult: {actionId: 'core:wait'}, message: 'Done.'};
+        const commandResult = {success: true, turnEnded: false}; // turnEnded: false from CommandProcessor is typical for success
         mockCommandProcessor.processCommand.mockResolvedValue(commandResult);
         mockCommandOutcomeInterpreter.interpret.mockResolvedValue(TurnDirective.END_TURN_SUCCESS);
 
-        let turnEndedEventCallback;
-        mockSafeEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-            if (eventId === TURN_ENDED_ID) {
-                turnEndedEventCallback = callback;
-            }
-            return mockTurnEndedUnsubscribeFn;
-        });
-
         await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
         await new Promise(process.nextTick);
         expect(commandListenerCallback).toBeInstanceOf(Function);
 
         await commandListenerCallback(command);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Allow _handleSubmittedCommand -> #waitForTurnEndEvent setup
-
-        expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, expect.any(Function));
-        expect(turnEndedEventCallback).toBeDefined();
-
-        if (turnEndedEventCallback) {
-            turnEndedEventCallback({entityId: player.id, success: true});
-        }
-
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        // Using two ticks might give nested promises a better chance to resolve
-        await new Promise(process.nextTick);
-        await new Promise(process.nextTick);
+        await new Promise(process.nextTick); // Allow _handleSubmittedCommand to run
+        await new Promise(process.nextTick); // Allow _handleTurnEnd microtasks
 
         // Assertions
         expect(mockCommandProcessor.processCommand).toHaveBeenCalledTimes(1);
         expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(player, command);
         expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledTimes(1);
         expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledWith(commandResult, player.id);
+
+        // Since END_TURN_SUCCESS directive leads to direct _handleTurnEnd,
+        // we should NOT expect subscription to TURN_ENDED_ID.
+        expect(mockSafeEventDispatcher.subscribe).not.toHaveBeenCalledWith(TURN_ENDED_ID, expect.any(Function));
+
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, true);
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndedUnsubscribeFn).toHaveBeenCalledTimes(1);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, true); // true because END_TURN_SUCCESS
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Command input unsubscribed
+        expect(mockTurnEndedUnsubscribeFn).not.toHaveBeenCalled(); // No event subscription to unsubscribe from
     });
 
     test('Command processing failure (DIRECT PROCESSOR FAILURE) should notify TurnEndPort (failure) and unsubscribe', async () => {
         const command = 'attack non_existent';
         const error = new Error("Target not found");
-        const commandResult = {success: false, turnEnded: true, error: error};
+        // CommandProcessor itself indicates turn should end due to this failure
+        const commandResult = {success: false, turnEnded: true, error: error.message, internalError: error.message};
         mockCommandProcessor.processCommand.mockResolvedValue(commandResult);
 
         await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
         await new Promise(process.nextTick);
+        expect(commandListenerCallback).toBeInstanceOf(Function);
 
         await commandListenerCallback(command);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
+        await new Promise(process.nextTick);
         await new Promise(process.nextTick);
 
+
         expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(player, command);
-        expect(mockCommandOutcomeInterpreter.interpret).not.toHaveBeenCalled();
+        expect(mockCommandOutcomeInterpreter.interpret).not.toHaveBeenCalled(); // Bypassed
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false);
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false); // Failure
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Command input unsubscribed
     });
 
 
     test('Submitting an empty command should re-prompt and not unsubscribe', async () => {
         await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
         await new Promise(process.nextTick);
-        mockPlayerPromptService.prompt.mockClear();
+        mockPlayerPromptService.prompt.mockClear(); // Clear initial prompt call from startTurn
 
-        await commandListenerCallback("  ");
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
+        await commandListenerCallback("  "); // Submit empty command
         await new Promise(process.nextTick);
 
         expect(mockCommandProcessor.processCommand).not.toHaveBeenCalled();
         expect(mockCommandOutcomeInterpreter.interpret).not.toHaveBeenCalled();
-        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
+        expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1); // Re-prompted
         expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
-        expect(mockUnsubscribeFn).not.toHaveBeenCalled();
+        expect(mockUnsubscribeFn).not.toHaveBeenCalled(); // Still subscribed
     });
 
     test('destroy() called mid-turn should force turn end (failure), notify, and unsubscribe', async () => {
-        await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
+        await handler.startTurn(player); // Turn is now active for 'player'
         await new Promise(process.nextTick);
         expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
+        expect(commandListenerCallback).toBeInstanceOf(Function); // Ensure listener is set
 
         handler.destroy();
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick);
+        await new Promise(process.nextTick); // Allow destroy to complete
 
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false);
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false); // false for failure
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Command input unsubscribed
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(`Destroying handler. If turn for ${player.id} was active or awaited, forcing turn end (failure).`)
+            // Test the specific log message for this scenario
+            `${className}: Destroying handler. If turn for ${player.id} was active or awaited, forcing turn end (failure).`
         );
     });
 
+
     test('destroy() called when no turn is active should not notify or error', async () => {
+        // Handler is created, but startTurn is not called.
         handler.destroy();
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
         await new Promise(process.nextTick);
 
         expect(mockTurnEndPort.notifyTurnEnded).not.toHaveBeenCalled();
-        expect(mockUnsubscribeFn).not.toHaveBeenCalled();
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Destroying handler while turn for'));
+        expect(mockUnsubscribeFn).not.toHaveBeenCalled(); // No command listener was set
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('forcing turn end'));
+        // Check for the specific debug log when no context is active
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining(`No active turn or await context found during destruction. State cleared.`)
+            `${className}: Handler destroyed. No specific actor context was active or awaited at time of destruction. State cleared.`
         );
     });
 
@@ -236,65 +228,63 @@ describe('PlayerTurnHandler - Command Handling & Subscription', () => {
         const promptError = new Error("Display service unavailable");
         mockPlayerPromptService.prompt.mockRejectedValueOnce(promptError);
 
-        await expect(handler.startTurn(player)).rejects.toThrow(promptError.message);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick);
+        // Expect startTurn to reject because #_promptPlayerForAction re-throws
+        await expect(handler.startTurn(player)).rejects.toThrow(promptError);
+        await new Promise(process.nextTick); // Allow microtasks from _handleTurnEnd
 
         expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false);
-        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${className}: PlayerPromptService threw an error during prompt`), promptError);
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${className}: Critical error during turn initiation`), promptError);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, false); // False due to error
+        expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Command input unsubscribed
+
+        // Check logs from both #_promptPlayerForAction and startTurn's catch block
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            // UPDATED: Include the word "actor" in the expected string
+            expect.stringContaining(`${className}: PlayerPromptService threw an error during prompt for actor ${player.id}: ${promptError.message}`),
+            promptError
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`${className}: Critical error during turn initiation for ${player.id}: ${promptError.message}`),
+            promptError
+        );
     });
+
 
     test('Unsubscribe function error should be logged but not crash _handleTurnEnd', async () => {
         const command = 'wait';
-        const commandResult = {success: true, turnEnded: true};
+        const commandResult = {success: true, turnEnded: false};
         mockCommandProcessor.processCommand.mockResolvedValue(commandResult);
         mockCommandOutcomeInterpreter.interpret.mockResolvedValue(TurnDirective.END_TURN_SUCCESS);
+
         const unsubError = new Error("Command unsubscribe failed");
-        mockUnsubscribeFn.mockImplementation(() => {
+        mockUnsubscribeFn.mockImplementation(() => { // This is for commandInputPort.onCommand's unsubscribe
             throw unsubError;
         });
 
-        let turnEndedEventCallback;
-        const mockTurnEndedUnsubscribe = jest.fn();
-        mockSafeEventDispatcher.subscribe.mockImplementation((eventId, callback) => {
-            if (eventId === TURN_ENDED_ID) {
-                turnEndedEventCallback = callback;
-            }
-            return mockTurnEndedUnsubscribe;
-        });
-
         await handler.startTurn(player);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
         await new Promise(process.nextTick);
+        expect(commandListenerCallback).toBeInstanceOf(Function);
 
+        // This will lead to END_TURN_SUCCESS -> _handleTurnEnd -> _unsubscribeFromCommands
         await commandListenerCallback(command);
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick); // Allow #waitForTurnEndEvent setup
-
-        expect(turnEndedEventCallback).toBeDefined();
-
-        if (turnEndedEventCallback) {
-            turnEndedEventCallback({entityId: player.id, success: true});
-        }
-
-        // *** REVERTED: Use process.nextTick instead of runAllMicrotasks ***
-        await new Promise(process.nextTick);
-        await new Promise(process.nextTick);
+        await new Promise(process.nextTick); // For _handleSubmittedCommand
+        await new Promise(process.nextTick); // For _handleTurnEnd and its async calls
 
         // Assertions
+        expect(mockSafeEventDispatcher.subscribe).not.toHaveBeenCalledWith(TURN_ENDED_ID, expect.any(Function)); // No TURN_ENDED_ID sub
+        expect(mockTurnEndedUnsubscribeFn).not.toHaveBeenCalled(); // So no unsub from it either
+
         expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledTimes(1);
-        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, true);
+        expect(mockTurnEndPort.notifyTurnEnded).toHaveBeenCalledWith(player.id, true); // Turn ended "successfully" per directive
+
         expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // Attempted (and threw)
-        expect(mockTurnEndedUnsubscribe).toHaveBeenCalledTimes(1); // Turn ended unsubscribe called
+
+        expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only one error expected
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining('Error calling command unsubscribe function'),
+            expect.stringContaining(`${className}: Error calling command unsubscribe function: ${unsubError.message}`),
             unsubError
         );
-        expect(mockLogger.error).toHaveBeenCalledTimes(1);
     });
 
 });
+// --- FILE END ---

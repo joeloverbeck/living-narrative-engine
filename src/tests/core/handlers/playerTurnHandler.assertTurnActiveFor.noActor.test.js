@@ -89,7 +89,7 @@ describe('PlayerTurnHandler: _handleTurnEnd - Assertion Failure: No Actor Active
         // when no actor is active.
         // Status is 'success' because the error argument to _handleTurnEnd is null.
         // 'current active actor (undefined)' because #currentActor is null and #awaitingTurnEndForActorId is null.
-        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (status: success), but this actor is not the current active actor (undefined) nor explicitly awaited. Turn may have already ended or belongs to a different context. Minimal cleanup attempted.`;
+        const expectedWarningMessage = `${className}: _handleTurnEnd called for ${testActorId} (internal status: success), but this actor is not the current active actor (undefined) nor explicitly awaited by this handler instance anymore. Minimal cleanup attempted.`;
 
 
         // --- Steps ---

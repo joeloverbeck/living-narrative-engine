@@ -1,4 +1,3 @@
-// src/domUI/inventoryPanel.js
 import {RendererBase} from './rendererBase.js';
 import DomElementFactory from './domElementFactory.js';
 
@@ -28,10 +27,13 @@ import DomElementFactory from './domElementFactory.js';
 /**
  * Manages the inventory UI panel, including its visibility and content.
  * Subscribes to VED events to update the inventory display and handle toggling.
+ * The panel is appended to a container element (expected to be '#inventory-widget')
+ * and manages its own visibility within that container using a 'hidden' class.
  */
 export class InventoryPanel extends RendererBase {
     /**
-     * The main container element for the inventory panel.
+     * The main container element for the inventory panel's UI (e.g., <div id="inventory-panel">).
+     * This element is appended into this.#containerElement.
      * @private
      * @type {HTMLElement | null}
      */
@@ -52,11 +54,12 @@ export class InventoryPanel extends RendererBase {
     #domElementFactory;
 
     /**
-     * The container element into which the inventory panel is appended.
+     * The parent DOM element into which the inventory panel (#panelElement) is appended.
+     * This is expected to be '#inventory-widget' provided via DI.
      * @private
      * @type {HTMLElement}
      */
-    #containerElement;
+    #containerElement; // This will be #inventory-widget
 
     /**
      * Tracks the current visibility state of the panel.
@@ -72,6 +75,10 @@ export class InventoryPanel extends RendererBase {
      */
     #subscriptions = [];
 
+    /** @private @type {string} */
+    #panelHeadingId = 'inventory-panel-heading';
+
+
     /**
      * Creates an instance of InventoryPanel.
      *
@@ -80,15 +87,18 @@ export class InventoryPanel extends RendererBase {
      * @param {IDocumentContext} deps.documentContext - The document context.
      * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
      * @param {DomElementFactory} deps.domElementFactory - Factory for creating DOM elements.
-     * @param {HTMLElement | null} deps.containerElement - The parent element to append the inventory panel to (e.g., '#game-container').
-     * @throws {Error} If dependencies are invalid, especially containerElement or domElementFactory.
+     * @param {HTMLElement} deps.containerElement - The parent element to append the inventory panel to.
+     * As per Ticket #204, this is expected to be '#inventory-widget'
+     * and provided via DI.
+     * @throws {Error} If dependencies are invalid, especially a missing or non-HTMLElement containerElement,
+     * or an invalid domElementFactory.
      */
     constructor({
                     logger,
                     documentContext,
                     validatedEventDispatcher,
                     domElementFactory,
-                    containerElement
+                    containerElement // Expected to be #inventory-widget
                 }) {
         super({logger, documentContext, validatedEventDispatcher});
 
@@ -100,71 +110,74 @@ export class InventoryPanel extends RendererBase {
         }
         this.#domElementFactory = domElementFactory;
 
-        if (!containerElement || containerElement.nodeType !== 1) {
-            // Attempt to find default container if none provided, log warning
-            const defaultContainer = this.documentContext.query('#game-container');
-            if (defaultContainer && defaultContainer.nodeType === 1) {
-                this.logger.warn(`${this._logPrefix} 'containerElement' was invalid or missing. Found and using '#game-container' as fallback.`);
-                containerElement = /** @type {HTMLElement} */ (defaultContainer);
-            } else {
-                const errMsg = `${this._logPrefix} 'containerElement' dependency is missing or not a valid DOM element, and fallback '#game-container' not found. Cannot append panel.`;
-                this.logger.error(errMsg, {receivedElement: containerElement});
-                throw new Error(errMsg);
-            }
+        if (!containerElement || !(containerElement instanceof HTMLElement)) {
+            const errMsg = `${this._logPrefix} 'containerElement' dependency (expected to be #inventory-widget) is missing or not a valid HTMLElement. Panel cannot be initialized.`;
+            this.logger.error(errMsg, {receivedElement: containerElement});
+            throw new Error(errMsg);
         }
-        // Ensure it's an HTMLElement type after validation/fallback
-        this.#containerElement = /** @type {HTMLElement} */ (containerElement);
+        this.#containerElement = containerElement;
 
 
         // --- Initialize Panel ---
-        this.#createPanelStructure(); // Creates elements, initially hidden
+        this.#createPanelStructure();
         this.#subscribeToEvents();
 
-        this.logger.info(`${this._logPrefix} Initialized. Panel is initially hidden.`);
+        this.logger.info(`${this._logPrefix} Initialized. Panel structure created within '#${this.#containerElement.id || 'UnknownContainer'}'. Panel is initially hidden.`);
     }
 
     /**
-     * Creates the basic DOM structure for the inventory panel and appends it
-     * to the container element. The panel is created with a 'hidden' class.
+     * Creates the basic DOM structure for the inventory panel (this.#panelElement)
+     * and appends it to the this.#containerElement (which is #inventory-widget).
+     * The panel is created with a 'hidden' class by default.
      * @private
      */
     #createPanelStructure() {
         const factory = this.#domElementFactory;
 
-        this.#panelElement = factory.div(['inventory-panel', 'hidden']); // Start hidden (Acceptance Criteria)
+        this.#panelElement = factory.div(['inventory-panel', 'hidden']);
         if (!this.#panelElement) {
-            this.logger.error(`${this._logPrefix} Failed to create main panel element.`);
+            this.logger.error(`${this._logPrefix} Failed to create main panel element (#inventory-panel).`);
             return;
         }
-        this.#panelElement.id = 'inventory-panel'; // Assign ID
+        this.#panelElement.id = 'inventory-panel';
+        this.#panelElement.setAttribute('role', 'region');
+        // aria-labelledby will be set after header is created
 
         const header = factory.h3('inventory-panel__header', 'Inventory');
+        if (header) {
+            header.id = this.#panelHeadingId;
+            this.#panelElement.setAttribute('aria-labelledby', this.#panelHeadingId);
+        } else {
+            this.logger.warn(`${this._logPrefix} Failed to create inventory panel header. aria-labelledby will not be set.`);
+            // Fallback: provide a generic aria-label if header fails
+            this.#panelElement.setAttribute('aria-label', 'Inventory Panel');
+        }
+
+
         this.#listElement = factory.ul('inventory-panel__list');
         if (this.#listElement) {
-            this.#listElement.id = 'inventory-list'; // Assign ID
+            this.#listElement.id = 'inventory-list';
         } else {
             this.logger.error(`${this._logPrefix} Failed to create inventory list (UL) element.`);
         }
 
         const closeButton = factory.button('Close', 'inventory-panel__close-button');
         if (closeButton) {
-            closeButton.onclick = () => this.toggle(false); // Force hide on click
+            closeButton.setAttribute('aria-label', 'Close inventory panel');
+            closeButton.onclick = () => this.toggle(false);
         } else {
             this.logger.warn(`${this._logPrefix} Failed to create close button.`);
         }
 
-        // Append elements safely
         if (header) this.#panelElement.appendChild(header);
         if (this.#listElement) this.#panelElement.appendChild(this.#listElement);
         if (closeButton) this.#panelElement.appendChild(closeButton);
 
-        // Append the panel to the designated container
         try {
             this.#containerElement.appendChild(this.#panelElement);
-            this.logger.debug(`${this._logPrefix} Panel structure created and appended to container.`);
+            this.logger.debug(`${this._logPrefix} Panel structure (#inventory-panel) created and appended to container (#${this.#containerElement.id}).`);
         } catch (error) {
-            this.logger.error(`${this._logPrefix} Failed to append inventory panel to container element:`, error);
-            // Reset panel element if appending failed, so other methods don't assume it exists
+            this.logger.error(`${this._logPrefix} Failed to append inventory panel (#inventory-panel) to container element (#${this.#containerElement.id}):`, error);
             this.#panelElement = null;
             this.#listElement = null;
         }
@@ -183,16 +196,12 @@ export class InventoryPanel extends RendererBase {
         this.#subscriptions.push(
             ved.subscribe('event:toggle_inventory', this.#handleToggleInventory.bind(this))
         );
-        // Note: 'ui:request_inventory_render' is dispatched by the toggle method
 
         this.logger.debug(`${this._logPrefix} Subscribed to VED events 'event:render_inventory', 'event:toggle_inventory'.`);
     }
 
-    // --- Private Event Handlers ---
-
     /**
      * Handles the 'event:render_inventory' event from VED.
-     * Validates the payload and calls the private update helper.
      * @private
      * @param {InventoryRenderPayload | object} payload - Expected payload.
      * @param {string} eventType - The name of the triggered event.
@@ -205,13 +214,12 @@ export class InventoryPanel extends RendererBase {
             return;
         }
 
-        // Basic payload validation
         if (payload && Array.isArray(payload.items)) {
             const itemsData = /** @type {ItemUIData[]} */ (payload.items);
             this.#updateList(itemsData);
         } else {
             this.logger.warn(`${this._logPrefix} Received invalid payload for '${eventType}'. Displaying error. Payload:`, payload);
-            this.#listElement.innerHTML = ''; // Clear previous content
+            this.#listElement.innerHTML = '';
             const errorLi = this.#domElementFactory.li('inventory-panel__item inventory-panel__item--error', 'Error loading inventory.');
             if (errorLi) {
                 this.#listElement.appendChild(errorLi);
@@ -221,31 +229,27 @@ export class InventoryPanel extends RendererBase {
 
     /**
      * Handles the 'event:toggle_inventory' event from VED.
-     * Calls the public toggle method without forcing a specific state.
      * @private
      */
     #handleToggleInventory() {
         this.logger.debug(`${this._logPrefix} Received 'event:toggle_inventory'. Calling toggle().`);
-        this.toggle(); // Let toggle() determine the new state
+        this.toggle();
     }
 
 
-    // --- Private Update Helpers ---
-
     /**
-     * Clears and rebuilds the inventory list display based on the provided item data.
-     * Attaches necessary event listeners to items (e.g., drop buttons).
+     * Clears and rebuilds the inventory list display.
      * @private
      * @param {ItemUIData[]} itemsData - Array of items to display.
      */
     #updateList(itemsData) {
         if (!this.#listElement || !this.#domElementFactory) {
-            this.logger.error(`${this._logPrefix} Cannot update inventory list, element or factory is missing.`);
+            this.logger.error(`${this._logPrefix} Cannot update inventory list, UL element or DOM factory is missing.`);
             return;
         }
 
         const factory = this.#domElementFactory;
-        this.#listElement.innerHTML = ''; // Clear existing items
+        this.#listElement.innerHTML = '';
 
         if (!itemsData || itemsData.length === 0) {
             const emptyLi = factory.li('inventory-panel__item inventory-panel__item--empty', '(Empty)');
@@ -257,72 +261,56 @@ export class InventoryPanel extends RendererBase {
         }
 
         itemsData.forEach(item => {
-            // Validate essential item data
             if (!item || typeof item.id !== 'string' || typeof item.name !== 'string') {
                 this.logger.warn(`${this._logPrefix} Skipping invalid item data during render:`, item);
                 return;
             }
 
             const li = factory.li('inventory-panel__item');
-            if (!li) return; // Skip if li creation failed
+            if (!li) return;
 
-            li.dataset.itemId = item.id; // Store item ID for potential future use
+            li.dataset.itemId = item.id;
 
-            // Icon
             if (item.icon) {
-                const img = factory.img(item.icon, item.name, 'inventory-panel__item-icon');
-                if (img) li.appendChild(img);
+                const img = factory.img(item.icon, '', 'inventory-panel__item-icon'); // Alt text is empty as name is adjacent
+                if (img) {
+                    img.setAttribute('aria-hidden', 'true'); // Decorative if name is present
+                    li.appendChild(img);
+                }
             } else {
                 const iconPlaceholder = factory.span('inventory-panel__item-icon inventory-panel__item-icon--placeholder', '📦');
-                if (iconPlaceholder) li.appendChild(iconPlaceholder);
+                if (iconPlaceholder) {
+                    iconPlaceholder.setAttribute('aria-hidden', 'true');
+                    li.appendChild(iconPlaceholder);
+                }
             }
 
-            // Name
             const nameSpan = factory.span('inventory-panel__item-name', item.name || '(Unnamed Item)');
             if (nameSpan) li.appendChild(nameSpan);
 
-            // Drop Button
             const dropButton = factory.button('Drop', 'inventory-panel__item-drop-button');
             if (dropButton) {
-                dropButton.dataset.itemName = item.name || ''; // Store name for command
+                dropButton.dataset.itemName = item.name || '';
                 dropButton.setAttribute('title', `Drop ${item.name || 'item'}`);
+                dropButton.setAttribute('aria-label', `Drop ${item.name || 'item'}`); // More explicit label
                 dropButton.addEventListener('click', async (event) => {
-                    event.stopPropagation(); // Prevent li click handler if any
+                    event.stopPropagation();
                     const clickedButton = /** @type {HTMLButtonElement} */ (event.target);
                     const itemName = clickedButton.dataset.itemName;
 
                     if (!itemName) {
-                        this.logger.error(`${this._logPrefix} Drop button clicked, but missing item name from dataset.`, {itemId: item.id});
+                        this.logger.error(`${this._logPrefix} Drop button clicked, but missing item name.`, {itemId: item.id});
                         return;
                     }
 
                     const commandString = `drop ${itemName}`;
                     const dispatched = await this.#dispatchSubmitCommand(commandString);
-                    if (dispatched) {
-                        this.logger.debug(`${this._logPrefix} Drop command dispatched successfully.`);
-                        // Only toggle if the panel is currently visible
-                        if (this.#isVisible) {
-                            this.toggle(false); // Close inventory on successful drop command dispatch
-                        }
-                    } else {
-                        this.logger.warn(`${this._logPrefix} Drop command dispatch failed or was prevented.`);
-                        // Optionally provide user feedback here if dispatch fails
+                    if (dispatched && this.#isVisible) {
+                        this.toggle(false);
                     }
                 });
                 li.appendChild(dropButton);
             }
-
-            // Optional: Add click listener to LI for item selection/details
-            // li.addEventListener('click', () => {
-            //     const currentSelected = this.#listElement?.querySelector('.selected');
-            //     if (currentSelected) {
-            //         currentSelected.classList.remove('selected');
-            //     }
-            //     li.classList.add('selected');
-            //     this.logger.debug(`${this._logPrefix} Selected item: ${item.name} (ID: ${item.id})`);
-            //     // Potentially dispatch an event here: ui:inventory_item_selected { itemId: item.id }
-            // });
-
             this.#listElement.appendChild(li);
         });
 
@@ -330,10 +318,10 @@ export class InventoryPanel extends RendererBase {
     }
 
     /**
-     * Helper to dispatch a 'core:submit_command' event via VED.
+     * Helper to dispatch a 'core:submit_command' event.
      * @private
      * @param {string} commandString - The command text to submit.
-     * @returns {Promise<boolean>} True if the event was successfully dispatched, false otherwise.
+     * @returns {Promise<boolean>} True if dispatched.
      */
     async #dispatchSubmitCommand(commandString) {
         this.logger.debug(`${this._logPrefix} Attempting to dispatch 'core:submit_command' for: "${commandString}"`);
@@ -346,87 +334,73 @@ export class InventoryPanel extends RendererBase {
                 this.logger.info(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" dispatched successfully.`);
                 return true;
             } else {
-                this.logger.warn(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" was NOT dispatched (validation failed or prevented).`);
+                this.logger.warn(`${this._logPrefix} Event 'core:submit_command' for "${commandString}" was NOT dispatched.`);
                 return false;
             }
         } catch (error) {
-            this.logger.error(`${this._logPrefix} Error occurred during dispatch of 'core:submit_command' for "${commandString}":`, error);
+            this.logger.error(`${this._logPrefix} Error dispatching 'core:submit_command' for "${commandString}":`, error);
             return false;
         }
     }
 
 
-    // --- Public API ---
-
     /**
      * Toggles the visibility of the inventory panel.
-     * If showing the panel, it dispatches 'ui:request_inventory_render'
-     * to request fresh data before displaying.
-     *
-     * @param {boolean} [forceState] - Optional. If true, forces the panel to show.
-     * If false, forces the panel to hide.
-     * If undefined, toggles the current state.
+     * @param {boolean} [forceState] - Optional. True to show, false to hide.
      */
     toggle(forceState) {
         if (!this.#panelElement) {
-            this.logger.warn(`${this._logPrefix} Cannot toggle inventory, panel element does not exist (might have failed during creation/appending).`);
+            this.logger.warn(`${this._logPrefix} Cannot toggle inventory, panel element does not exist.`);
             return;
         }
 
         const shouldBeVisible = forceState === undefined ? !this.#isVisible : Boolean(forceState);
 
         if (shouldBeVisible === this.#isVisible) {
-            this.logger.debug(`${this._logPrefix} Toggle called but visibility state (${shouldBeVisible}) already matches.`);
-            // If forcing visible and it's already visible, refresh data just in case
-            if (shouldBeVisible) {
-                this.logger.debug(`${this._logPrefix} Panel already visible, requesting inventory refresh.`);
-                // Use non-async dispatch for UI events if appropriate
+            if (shouldBeVisible) { // If already visible and asked to be visible, refresh data
+                this.logger.debug(`${this._logPrefix} Panel #inventory-panel already visible, requesting inventory refresh.`);
                 this.validatedEventDispatcher.dispatchValidated('ui:request_inventory_render', {});
             }
-            return; // No change needed
+            return;
         }
 
-
         if (shouldBeVisible) {
-            this.logger.debug(`${this._logPrefix} Toggling inventory panel to visible.`);
-            // Request update *before* showing to avoid flicker with old data
-            // Use non-async dispatch for UI events if appropriate
+            this.logger.debug(`${this._logPrefix} Toggling #inventory-panel to visible.`);
             this.validatedEventDispatcher.dispatchValidated('ui:request_inventory_render', {});
             this.#panelElement.classList.remove('hidden');
+            this.#panelElement.removeAttribute('aria-hidden');
             this.#isVisible = true;
+            // Focus management: consider moving focus into the panel, e.g., to the close button or first item.
+            const closeButton = this.#panelElement.querySelector('.inventory-panel__close-button');
+            closeButton?.focus();
         } else {
-            this.logger.debug(`${this._logPrefix} Toggling inventory panel to hidden.`);
+            this.logger.debug(`${this._logPrefix} Toggling #inventory-panel to hidden.`);
             this.#panelElement.classList.add('hidden');
+            this.#panelElement.setAttribute('aria-hidden', 'true');
             this.#isVisible = false;
+            // Focus management: consider returning focus to the element that opened the panel.
         }
     }
 
     /**
-     * Dispose method for cleanup. Unsubscribes from all VED events.
-     * Optionally removes the panel from the DOM.
+     * Dispose method for cleanup.
      */
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
-            }
-        });
+        this.#subscriptions.forEach(sub => sub?.unsubscribe());
         this.#subscriptions = [];
 
-        // Optional: Remove the panel element from the DOM during dispose
         if (this.#panelElement && this.#panelElement.parentNode === this.#containerElement) {
             try {
                 this.#containerElement.removeChild(this.#panelElement);
-                this.logger.debug(`${this._logPrefix} Removed panel element from DOM.`);
+                this.logger.debug(`${this._logPrefix} Removed #inventory-panel from DOM.`);
             } catch (error) {
-                this.logger.warn(`${this._logPrefix} Error removing panel element during dispose:`, error);
+                this.logger.warn(`${this._logPrefix} Error removing #inventory-panel during dispose:`, error);
             }
         }
         this.#panelElement = null;
         this.#listElement = null;
-        // this.#containerElement = null; // Avoid nulling injected dependencies unless strictly necessary
 
-        super.dispose(); // Call base class dispose for logging
+        super.dispose();
     }
 }
