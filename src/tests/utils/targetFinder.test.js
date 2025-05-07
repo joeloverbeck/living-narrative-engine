@@ -4,7 +4,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 // --- Keep the import for use OUTSIDE of jest.mock (e.g., in createNamedEntity) ---
 // Ensure this path is correct and the constant is exported properly
-import {NAME_COMPONENT_TYPE_ID} from '../../types/components.js';
+import {NAME_COMPONENT_ID} from '../../types/components.js';
 
 // --- Mock Dependencies USING jest.requireActual INSIDE the factory ---
 
@@ -74,7 +74,7 @@ const createNamedEntity = (id, nameValue) => {
   if (nameValue !== undefined) {
     // Using the top-level import here is okay because this function
     // is defined *after* imports are processed and outside jest.mock factories.
-    const typeId = NAME_COMPONENT_TYPE_ID;
+    const typeId = NAME_COMPONENT_ID;
     const data = {value: nameValue};
     entity.addComponent(typeId, data);
   }

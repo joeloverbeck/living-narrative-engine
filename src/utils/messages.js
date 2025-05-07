@@ -1,7 +1,7 @@
 // src/utils/messages.js
 
 // --- TICKET 4.4 REFACTOR: Import correct component IDs ---
-import {NAME_COMPONENT_TYPE_ID, DESCRIPTION_COMPONENT_ID} from '../types/components.js'; // Adjust path if needed
+import {NAME_COMPONENT_ID, DESCRIPTION_COMPONENT_ID} from '../types/components.js'; // Adjust path if needed
 // --- END TICKET 4.4 REFACTOR ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -23,7 +23,7 @@ export const getDisplayName = (entity, fallback = 'unknown entity') => {
     return entity?.id || fallback;
   }
   // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
-  const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
+  const nameComponentData = entity.getComponentData(NAME_COMPONENT_ID);
   // AC: Default values or fallback logic are handled appropriately if components are missing.
   // Assumes the name component data structure is { value: "Entity Name" }
   return nameComponentData?.value ?? entity.id ?? fallback;

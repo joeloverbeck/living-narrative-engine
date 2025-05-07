@@ -1,3 +1,5 @@
+// src/types/resolutionStatus.js
+
 export const ResolutionStatus = Object.freeze({
     FOUND_UNIQUE: 'FOUND_UNIQUE',
     SELF: 'SELF',

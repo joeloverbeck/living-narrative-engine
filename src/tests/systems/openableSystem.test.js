@@ -10,7 +10,7 @@ import Entity from '../../entities/entity.js';
 // --- Component Type IDs (Assuming they are defined and exported like this) ---
 // If these are not available via export, define them as const strings here for the test
 import {
-  NAME_COMPONENT_TYPE_ID,    // e.g., 'core:name'
+  NAME_COMPONENT_ID,    // e.g., 'core:name'
   OPENABLE_COMPONENT_ID, // e.g., 'core:openable'
   LOCKABLE_COMPONENT_ID  // e.g., 'core:lockable'
 } from '../../types/components.js';
@@ -151,7 +151,7 @@ describe('OpenableSystem', () => {
       const targetEntity = new Entity(TARGET_ID);
 
       // Add component DATA using TYPE IDs
-      targetEntity.addComponent(NAME_COMPONENT_TYPE_ID, nameData);
+      targetEntity.addComponent(NAME_COMPONENT_ID, nameData);
       targetEntity.addComponent(OPENABLE_COMPONENT_ID, openableData);
       targetEntity.addComponent(LOCKABLE_COMPONENT_ID, lockableData);
 
@@ -186,7 +186,7 @@ describe('OpenableSystem', () => {
       const nameData = {value: TARGET_NAME};
 
       const targetEntity = new Entity(TARGET_ID);
-      targetEntity.addComponent(NAME_COMPONENT_TYPE_ID, nameData);
+      targetEntity.addComponent(NAME_COMPONENT_ID, nameData);
       targetEntity.addComponent(OPENABLE_COMPONENT_ID, openableData);
       // No LockableComponent added
 
@@ -220,7 +220,7 @@ describe('OpenableSystem', () => {
       const nameData = {value: TARGET_NAME};
 
       const targetEntity = new Entity(TARGET_ID);
-      targetEntity.addComponent(NAME_COMPONENT_TYPE_ID, nameData);
+      targetEntity.addComponent(NAME_COMPONENT_ID, nameData);
       targetEntity.addComponent(OPENABLE_COMPONENT_ID, openableData);
 
       mockEntityManager.getEntityInstance.mockReturnValue(targetEntity);
@@ -254,7 +254,7 @@ describe('OpenableSystem', () => {
       const lockableData = {isLocked: true}; // Locked!
 
       const targetEntity = new Entity(TARGET_ID);
-      targetEntity.addComponent(NAME_COMPONENT_TYPE_ID, nameData);
+      targetEntity.addComponent(NAME_COMPONENT_ID, nameData);
       targetEntity.addComponent(OPENABLE_COMPONENT_ID, openableData);
       targetEntity.addComponent(LOCKABLE_COMPONENT_ID, lockableData);
 
@@ -287,7 +287,7 @@ describe('OpenableSystem', () => {
       const nameData = {value: TARGET_NAME};
 
       const targetEntity = new Entity(TARGET_ID);
-      targetEntity.addComponent(NAME_COMPONENT_TYPE_ID, nameData);
+      targetEntity.addComponent(NAME_COMPONENT_ID, nameData);
       // No OpenableComponent added
 
       mockEntityManager.getEntityInstance.mockReturnValue(targetEntity);

@@ -1,7 +1,7 @@
 // src/types/components.js
 
 export const DEFINITION_REF_COMPONENT_ID = 'component:definition-ref';
-export const NAME_COMPONENT_TYPE_ID = 'component:name';
+export const NAME_COMPONENT_ID = 'core:name';
 export const DESCRIPTION_COMPONENT_ID = 'component:description';
 export const ITEM_COMPONENT_ID = 'component:item';
 export const PLAYER_COMPONENT_ID = 'core:player';
@@ -10,10 +10,8 @@ export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position'; // Define constant for clarity
 export const CONNECTIONS_COMPONENT_TYPE_ID = 'component:connections';
 export const PASSAGE_DETAILS_COMPONENT_TYPE_ID = 'component:passage_details';
-export const EXITS_COMPONENT_TYPE_ID = 'core:exits';
+export const EXITS_COMPONENT_ID = 'core:exits';
 export const OPENABLE_COMPONENT_ID = 'component:openable';
 export const LOCKABLE_COMPONENT_ID = 'component:lockable';
-export const INVENTORY_COMPONENT_ID = 'component:inventory';
-export const EQUIPMENT_COMPONENT_ID = 'component:equipment';
-export const EQUIPPABLE_COMPONENT_ID = 'component:equippable';
-export const HEALTH_COMPONENT_ID = 'component:health';
+export const EQUIPMENT_COMPONENT_ID = 'core:equipment';
+export const INVENTORY_COMPONENT_ID = 'core:inventory';

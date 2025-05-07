@@ -1,3 +1,5 @@
+// src/core/interfaces/ITargetResolutionService.js
+
 /**
  * @interface
  */

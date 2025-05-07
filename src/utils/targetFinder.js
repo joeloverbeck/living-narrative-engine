@@ -2,7 +2,7 @@
 
 // Ensure this import path is correct and NAME_COMPONENT_TYPE_ID is defined
 // (likely as 'core:name' based on your mocks)
-import {NAME_COMPONENT_TYPE_ID} from '../types/components.js';
+import {NAME_COMPONENT_ID} from '../types/components.js';
 
 /**
  * @typedef {import('../../src/entities/entity.js').default} Entity
@@ -53,7 +53,7 @@ export function findTarget(targetString, searchScope, options = {}) {
 
     // Attempt to retrieve the NameComponent data using the correct method and Type ID.
     // Make sure NAME_COMPONENT_TYPE_ID is correctly imported and has the value 'core:name'.
-    const nameComponentData = entity.getComponentData(NAME_COMPONENT_TYPE_ID);
+    const nameComponentData = entity.getComponentData(NAME_COMPONENT_ID);
 
     // Check if the component data exists, if its value property is a string, and if it matches.
     return nameComponentData && // Ensure the component data was found

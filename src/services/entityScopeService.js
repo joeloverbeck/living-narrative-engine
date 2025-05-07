@@ -5,7 +5,7 @@ import {
     EQUIPMENT_COMPONENT_ID,
     INVENTORY_COMPONENT_ID,
     ITEM_COMPONENT_ID, PASSAGE_DETAILS_COMPONENT_TYPE_ID,
-    EXITS_COMPONENT_TYPE_ID
+    EXITS_COMPONENT_ID
 } from '../types/components.js'; // Used by _handleLocation via SpatialIndex
 
 // --- JSDoc Type Imports ---
@@ -203,7 +203,7 @@ function _handleNearbyIncludingBlockers(context) {
     if (!entityManager || !currentLocation) return aggregatedIds;
 
     // NEW LOGIC — iterate exits array and collect blocker IDs
-    const exits = currentLocation.getComponentData(EXITS_COMPONENT_TYPE_ID);
+    const exits = currentLocation.getComponentData(EXITS_COMPONENT_ID);
     if (Array.isArray(exits)) {
         for (const ex of exits) {
             if (ex?.blocker && typeof ex.blocker === 'string') {

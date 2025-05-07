@@ -3,8 +3,8 @@
 // Replaces the legacy connectionResolver.
 // Resolves exits stored directly on the location’s `core:exits` component.
 
-import {EXITS_COMPONENT_TYPE_ID} from '../types/components.js';
-import {NAME_COMPONENT_TYPE_ID} from '../types/components.js';
+import {EXITS_COMPONENT_ID} from '../types/components.js';
+import {NAME_COMPONENT_ID} from '../types/components.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
@@ -35,7 +35,7 @@ function findPotentialExitMatches(context, rawPhrase, logger) {
         return results;
     }
 
-    const exitsData = currentLocation.getComponentData(EXITS_COMPONENT_TYPE_ID);
+    const exitsData = currentLocation.getComponentData(EXITS_COMPONENT_ID);
     if (!Array.isArray(exitsData)) {
         logger.warn(
             `exitResolver: location '${currentLocation.id}' lacks core:exits data`
@@ -73,10 +73,10 @@ function findPotentialExitMatches(context, rawPhrase, logger) {
 
         // 2. name / alias match against target location OR blocker entity
         const targetName = targetLoc
-            ? targetLoc.getComponentData(NAME_COMPONENT_TYPE_ID)?.value?.toLowerCase()
+            ? targetLoc.getComponentData(NAME_COMPONENT_ID)?.value?.toLowerCase()
             : null;
         const blockerName = blockerEnt
-            ? blockerEnt.getComponentData(NAME_COMPONENT_TYPE_ID)?.value?.toLowerCase()
+            ? blockerEnt.getComponentData(NAME_COMPONENT_ID)?.value?.toLowerCase()
             : null;
 
         if (

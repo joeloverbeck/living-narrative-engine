@@ -4,7 +4,7 @@
 import {
     INVENTORY_COMPONENT_ID,
     ITEM_COMPONENT_ID,
-    NAME_COMPONENT_TYPE_ID
+    NAME_COMPONENT_ID
     // Note: A constant for 'component:description' is not defined in src/types/components.js
     // Using a string literal for now, but ideally should be defined.
 } from '../types/components.js';
@@ -270,7 +270,7 @@ class InventorySystem {
 
         for (const itemId of itemIds) {
             // Fetch name data for each item using EntityManager
-            const nameData = this.#entityManager.getComponentData(itemId, NAME_COMPONENT_TYPE_ID); //
+            const nameData = this.#entityManager.getComponentData(itemId, NAME_COMPONENT_ID); //
             const itemName = nameData?.value ?? '(Unknown Item)'; // Access the 'value' property
             const icon = null; // Placeholder
 

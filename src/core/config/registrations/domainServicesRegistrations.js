@@ -4,7 +4,7 @@ import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
 import {ItemTargetResolverService} from "../../../services/itemTargetResolver.js";
-import TargetResolutionService from "../../../services/targetResolutionService.js";
+import {TargetResolutionService} from "../../../services/targetResolutionService.js"; // Corrected import if class name was changed, assuming it's this.
 import {ActionValidationContextBuilder} from "../../../services/actionValidationContextBuilder.js";
 import {PrerequisiteEvaluationService} from "../../../services/prerequisiteEvaluationService.js";
 import {DomainContextCompatibilityChecker} from "../../../validation/domainContextCompatibilityChecker.js";
@@ -20,19 +20,20 @@ import PlayerPromptService from '../../services/playerPromptService.js';
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */ // <<< UPDATED FOR CONSISTENCY
+/** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // <<< UPDATED FOR CONSISTENCY
-/** @typedef {import('../../../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */ // Path to the interface
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 
 // --- Concrete type imports for DI resolution, if needed for casting ---
-/** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Kept for casting clarity if needed
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */ // Kept for casting clarity if needed
+/** @typedef {import('../../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+
+/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 
 
 /**
@@ -46,11 +47,33 @@ export function registerDomainServices(container) {
     const log = container.resolve(tokens.ILogger);
     log.debug('Domain-services Registration: starting…');
 
-    // ... (other registrations remain the same) ...
     r.single(tokens.ConditionEvaluationService, ConditionEvaluationService, [tokens.EntityManager]);
     r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
         [tokens.EntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
-    r.single(tokens.TargetResolutionService, TargetResolutionService, []);
+
+    // --- CORRECTED: Register TargetResolutionService ---
+    r.singletonFactory(tokens.TargetResolutionService, (c) => {
+        log.debug(`Domain-services Registration: Factory creating ${String(tokens.TargetResolutionService)}...`);
+        const dependencies = {
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.EntityManager)),
+            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+            gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+        };
+
+        for (const [key, value] of Object.entries(dependencies)) {
+            if (!value) {
+                const errorMsg = `Domain-services Registration: Factory for ${String(tokens.TargetResolutionService)} FAILED to resolve dependency "${key}".`;
+                log.error(errorMsg);
+                throw new Error(`Missing dependency "${key}" for ${String(tokens.TargetResolutionService)}`);
+            }
+        }
+        log.debug(`Domain-services Registration: Dependencies for ${String(tokens.TargetResolutionService)} resolved, creating instance.`);
+        return new TargetResolutionService(dependencies);
+    });
+    log.debug(`Domain-services Registration: Registered ${String(tokens.TargetResolutionService)} factory.`);
+    // --- END CORRECTION ---
+
     r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [tokens.ILogger]);
     r.single(tokens.ActionValidationContextBuilder, ActionValidationContextBuilder,
         [tokens.EntityManager, tokens.ILogger]);
@@ -62,24 +85,19 @@ export function registerDomainServices(container) {
     r.single(tokens.PayloadValueResolverService, PayloadValueResolverService, [tokens.ILogger]);
 
     r.singletonFactory(tokens.IWorldContext, c => new WorldContext(
-        /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)), // Concrete EntityManager needed by WorldContext constructor
+        /** @type {EntityManager} */ (c.resolve(tokens.EntityManager)),
         /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     ));
     log.debug(`Domain Services Registration: Registered ${String(tokens.IWorldContext)}.`);
 
     container.register(tokens.ICommandParser, c => {
-        const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository)); // Concrete GameDataRepository needed by CommandParser constructor
+        const gameDataRepoInstance = /** @type {GameDataRepository} */ (c.resolve(tokens.GameDataRepository));
         return new CommandParser(gameDataRepoInstance);
     }, {lifecycle: 'singleton'});
     log.debug(`Domain-services Registration: Registered ${String(tokens.ICommandParser)}.`);
 
-    // --- Register CommandProcessor against its Interface Token using factory ---
     r.singletonFactory(tokens.ICommandProcessor, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.ICommandProcessor)}...`);
-
-        // CommandProcessor constructor now expects IEntityManager and IGameDataRepository
-        // The DI container will resolve concrete EntityManager and GameDataRepository,
-        // which implement these interfaces.
         const commandProcessorDeps = {
             commandParser: /** @type {ICommandParser} */ (c.resolve(tokens.ICommandParser)),
             targetResolutionService: /** @type {ITargetResolutionService} */ (c.resolve(tokens.TargetResolutionService)),
@@ -87,8 +105,8 @@ export function registerDomainServices(container) {
             validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
             safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
             worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
-            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.EntityManager)), // Resolves concrete EntityManager, cast to IEntityManager
-            gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.GameDataRepository)), // Resolves concrete GameDataRepository, cast to IGameDataRepository
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.EntityManager)),
+            gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.GameDataRepository)),
         };
 
         for (const [key, value] of Object.entries(commandProcessorDeps)) {
@@ -123,8 +141,6 @@ export function registerDomainServices(container) {
             actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (c.resolve(tokens.IActionDiscoverySystem)),
             promptOutputPort: /** @type {IPromptOutputPort} */ (c.resolve(tokens.IPromptOutputPort)),
             worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
-            // PlayerPromptService constructor might still expect concrete types or interfaces.
-            // Assuming it expects interfaces or compatible concrete types for now.
             entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.EntityManager)),
             gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.GameDataRepository))
         };
