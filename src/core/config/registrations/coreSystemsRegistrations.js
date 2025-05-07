@@ -47,7 +47,6 @@ import OpenableSystem from '../../../systems/openableSystem.js';
 import HealthSystem from '../../../systems/healthSystem.js';
 import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
 import LockSystem from '../../../systems/lockSystem.js';
-import PerceptionSystem from '../../../systems/perceptionSystem.js';
 import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js'; // Concrete Class Import
 import TurnManager from '../../turnManager.js';
 
@@ -138,12 +137,6 @@ export function registerCoreSystems(container) {
         tokens.EventBus, tokens.EntityManager
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.WorldPresenceSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.PerceptionSystem, PerceptionSystem, [
-        tokens.EventBus, tokens.EntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.PerceptionSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.NotificationUISystem, NotificationUISystem, [

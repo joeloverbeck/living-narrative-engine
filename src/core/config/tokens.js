@@ -238,7 +238,6 @@ export const tokens = Object.freeze({
     MoveCoordinatorSystem: 'MoveCoordinatorSystem',
     QuestSystem: 'QuestSystem',
     QuestStartTriggerSystem: 'QuestStartTriggerSystem',
-    PerceptionSystem: 'PerceptionSystem',
     NotificationUISystem: 'NotificationUISystem',
     OpenableSystem: 'OpenableSystem',
     HealthSystem: 'HealthSystem',
