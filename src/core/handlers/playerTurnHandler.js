@@ -173,18 +173,23 @@ class PlayerTurnHandler extends ITurnHandler {
 
 
     async startTurn(actor) {
-        const actorId = actor?.id || 'UNKNOWN';
+        const actorIdForLog = actor?.id ?? 'UNKNOWN'; // Use actor.id directly if available, otherwise 'UNKNOWN'
         const className = this.constructor.name;
-        this.#logger.info(`${className}: Starting turn initiation for actor ${actorId}.`);
+        this.#logger.info(`${className}: Starting turn initiation for actor ${actorIdForLog}.`);
         this.#isDestroyed = false;
         this.#isTerminatingNormally = false;
 
-        if (!actor || !actor.id) {
+        // Corrected validation for actor and actor.id
+        if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
             this.#logger.error(`${className}: Attempted to start turn for an invalid or null actor.`);
             throw new Error(`${className}: Actor must be a valid entity.`);
         }
+        // actor.id is now guaranteed to be a non-empty string if we pass the above check
+        const actorId = actor.id;
+
+
         if (this.#currentActor) {
-            const errorMsg = `${className}: Attempted to start a new turn for ${actor.id} while turn for ${this.#currentActor.id} is already in progress.`;
+            const errorMsg = `${className}: Attempted to start a new turn for ${actorId} while turn for ${this.#currentActor.id} is already in progress.`;
             this.#logger.error(errorMsg);
             throw new Error(errorMsg);
         }
@@ -208,19 +213,19 @@ class PlayerTurnHandler extends ITurnHandler {
             this.#logger.debug(`${className}: Initial prompt sequence initiated for ${actorId}.`);
 
         } catch (initError) {
-            this.#logger.error(`${className}: Critical error during turn initiation for ${actor.id}: ${initError.message}`, initError);
+            this.#logger.error(`${className}: Critical error during turn initiation for ${actorId}: ${initError.message}`, initError);
             const promptErrorMessageCheck = `${className}: PlayerPromptService threw an error during prompt`;
 
             if (!initError?.message?.includes(promptErrorMessageCheck)) {
-                this.#logger.info(`${className}: Error during turn initiation for ${actor.id} (not from PlayerPromptService). Proceeding to handle turn end.`);
-                if (this.#currentActor && this.#currentActor.id === actor.id) {
-                    await this._handleTurnEnd(actor.id, initError);
+                this.#logger.info(`${className}: Error during turn initiation for ${actorId} (not from PlayerPromptService). Proceeding to handle turn end.`);
+                if (this.#currentActor && this.#currentActor.id === actorId) {
+                    await this._handleTurnEnd(actorId, initError);
                 } else {
-                    this.#logger.warn(`${className}: In startTurn catch for ${actor.id}, current actor is ${this.#currentActor?.id || 'none'}. Turn end not invoked by startTurn. Performing minimal cleanup.`);
-                    this._resetTurnStateAndResources(actor.id || 'startTurn_initError_noCurrentActor');
+                    this.#logger.warn(`${className}: In startTurn catch for ${actorId}, current actor is ${this.#currentActor?.id || 'none'}. Turn end not invoked by startTurn. Performing minimal cleanup.`);
+                    this._resetTurnStateAndResources(actorId || 'startTurn_initError_noCurrentActor');
                 }
             } else {
-                this.#logger.debug(`${className}: Error during turn initiation for ${actor.id} (from PlayerPromptService). _handleTurnEnd already called by _promptPlayerForAction.`);
+                this.#logger.debug(`${className}: Error during turn initiation for ${actorId} (from PlayerPromptService). _handleTurnEnd already called by _promptPlayerForAction.`);
             }
             throw initError;
         }
@@ -570,7 +575,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
     async _promptPlayerForAction(actor) {
         const className = this.constructor.name;
-        const actorId = actor?.id || 'INVALID_ACTOR';
+        const actorId = actor?.id || 'INVALID_ACTOR'; // Should be valid string if startTurn validation passed
 
         if (!this.#currentActor || this.#currentActor.id !== actorId) {
             this.#logger.warn(`${className}: _promptPlayerForAction: Skipping prompt for actor ${actorId}. Actor is not current (current actor: ${this.#currentActor?.id || 'none'}).`);
