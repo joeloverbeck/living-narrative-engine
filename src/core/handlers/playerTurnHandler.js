@@ -8,12 +8,9 @@ import TurnDirective from '../constants/turnDirectives.js';
 import {TURN_ENDED_ID} from '../constants/eventIds.js';
 
 // --- Type Imports for JSDoc ---
-/** @typedef {import('../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+// IWorldContext, IEntityManager, IGameDataRepository, IPromptOutputPort, ICommandInputPort removed as they are no longer direct dependencies
 /** @typedef {import('../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -22,9 +19,7 @@ import {TURN_ENDED_ID} from '../constants/eventIds.js';
 /** @typedef {{ command: string }} CommandSubmitEventData */
 /** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */
 /** @typedef {import('../../actions/actionTypes.js').ActionDefinitionMinimal} ActionDefinitionMinimal */
-/** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
-/** @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../ports/commonTypes.js').UnsubscribeFn} UnsubscribeFn */
 /** @typedef {import('../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
 
@@ -50,24 +45,15 @@ class PlayerTurnHandler extends ITurnHandler {
     #logger;
     /** @type {ICommandProcessor} */
     #commandProcessor;
-    /** @type {IWorldContext} */
-    #worldContext;
-    /** @type {IEntityManager} */
-    #entityManager;
-    /** @type {IGameDataRepository} */
-    #gameDataRepository;
-    /** @type {IPromptOutputPort} */
-    #promptOutputPort;
+    // #worldContext, #entityManager, #gameDataRepository, #promptOutputPort, #commandInputPort removed
     /** @type {ITurnEndPort} */
     #turnEndPort;
-    /** @type {ICommandInputPort} */
-    #commandInputPort; // Still needed for SubscriptionLifecycleManager if passed through here
     /** @type {IPlayerPromptService} */
     #playerPromptService;
     /** @type {ICommandOutcomeInterpreter} */
     #commandOutcomeInterpreter;
     /** @type {ISafeEventDispatcher} */
-    #safeEventDispatcher; // Still needed for SubscriptionLifecycleManager if passed through here
+    #safeEventDispatcher;
     /** @type {SubscriptionLifecycleManager} */
     #subscriptionManager;
     /** @type {Entity | null} */
@@ -88,30 +74,25 @@ class PlayerTurnHandler extends ITurnHandler {
      * @param {object} dependencies - Dependencies.
      * @param {ILogger} dependencies.logger
      * @param {ICommandProcessor} dependencies.commandProcessor
-     * @param {IWorldContext} dependencies.worldContext
-     * @param {IEntityManager} dependencies.entityManager
-     * @param {IGameDataRepository} dependencies.gameDataRepository
-     * @param {IPromptOutputPort} dependencies.promptOutputPort
      * @param {ITurnEndPort} dependencies.turnEndPort
-     * @param {ICommandInputPort} dependencies.commandInputPort
      * @param {IPlayerPromptService} dependencies.playerPromptService
      * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter
      * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
-     * @param {SubscriptionLifecycleManager} dependencies.subscriptionLifecycleManager // <<< ADDED
+     * @param {SubscriptionLifecycleManager} dependencies.subscriptionLifecycleManager
      */
     constructor({
                     logger,
                     commandProcessor,
-                    worldContext,
-                    entityManager,
-                    gameDataRepository,
-                    promptOutputPort,
+                    // worldContext, // REMOVED
+                    // entityManager, // REMOVED
+                    // gameDataRepository, // REMOVED
+                    // promptOutputPort, // REMOVED
                     turnEndPort,
-                    commandInputPort, // Kept, as SubscriptionLifecycleManager might need it (though it resolves its own)
+                    // commandInputPort, // REMOVED
                     playerPromptService,
                     commandOutcomeInterpreter,
-                    safeEventDispatcher, // Kept, as SubscriptionLifecycleManager might need it (though it resolves its own)
-                    subscriptionLifecycleManager, // <<< ADDED
+                    safeEventDispatcher,
+                    subscriptionLifecycleManager,
                 }) {
         super();
         const className = this.constructor.name;
@@ -128,42 +109,13 @@ class PlayerTurnHandler extends ITurnHandler {
         }
         this.#commandProcessor = commandProcessor;
 
-        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing worldContext (requires getLocationOfEntity).`);
-            throw new Error(`${className}: Invalid or missing worldContext.`);
-        }
-        this.#worldContext = worldContext;
-
-        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing entityManager (requires getEntityInstance method from IEntityManager).`);
-            throw new Error(`${className}: Invalid or missing entityManager.`);
-        }
-        this.#entityManager = entityManager;
-
-        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing gameDataRepository (requires getActionDefinition method from IGameDataRepository).`);
-            throw new Error(`${className}: Invalid or missing gameDataRepository.`);
-        }
-        this.#gameDataRepository = gameDataRepository;
-
-        if (!promptOutputPort || typeof promptOutputPort.prompt !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing promptOutputPort (requires prompt method).`);
-            throw new Error(`${className}: Invalid or missing promptOutputPort.`);
-        }
-        this.#promptOutputPort = promptOutputPort;
+        // Validations for worldContext, entityManager, gameDataRepository, promptOutputPort, commandInputPort REMOVED
 
         if (!turnEndPort || typeof turnEndPort.notifyTurnEnded !== 'function') {
             this.#logger.error(`${className} Constructor: Invalid or missing turnEndPort (requires notifyTurnEnded method).`);
             throw new Error(`${className}: Invalid or missing turnEndPort.`);
         }
         this.#turnEndPort = turnEndPort;
-
-        // These are direct dependencies for PlayerTurnHandler itself, even if SubscriptionLifecycleManager also uses them.
-        if (!commandInputPort || typeof commandInputPort.onCommand !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing commandInputPort (requires onCommand method).`);
-            throw new Error(`${className}: Invalid or missing commandInputPort.`);
-        }
-        this.#commandInputPort = commandInputPort;
 
         if (!playerPromptService || typeof playerPromptService.prompt !== 'function') {
             this.#logger.error(`${className} Constructor: Invalid or missing playerPromptService (requires prompt method from IPlayerPromptService).`);
@@ -177,20 +129,22 @@ class PlayerTurnHandler extends ITurnHandler {
         }
         this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
 
+        // Note: The validation for safeEventDispatcher.subscribe is kept as it's part of ISafeEventDispatcher's general contract,
+        // even if PlayerTurnHandler itself might only directly use dispatchSafely.
+        // SubscriptionLifecycleManager, which PlayerTurnHandler uses, does rely on subscribe.
         if (!safeEventDispatcher || typeof safeEventDispatcher.dispatchSafely !== 'function' || typeof safeEventDispatcher.subscribe !== 'function') {
             this.#logger.error(`${className} Constructor: Invalid or missing safeEventDispatcher (requires dispatchSafely and subscribe methods).`);
             throw new Error(`${className}: Invalid or missing safeEventDispatcher.`);
         }
         this.#safeEventDispatcher = safeEventDispatcher;
 
-        // Validate and assign injected SubscriptionLifecycleManager
         if (!subscriptionLifecycleManager || typeof subscriptionLifecycleManager.subscribeToCommandInput !== 'function' || typeof subscriptionLifecycleManager.unsubscribeAll !== 'function') {
             this.#logger.error(`${className} Constructor: Invalid or missing subscriptionLifecycleManager dependency.`);
             throw new Error(`${className}: Invalid or missing subscriptionLifecycleManager dependency.`);
         }
         this.#subscriptionManager = subscriptionLifecycleManager;
 
-        this.#logger.debug(`${className} initialized successfully with all dependencies, including injected SubscriptionLifecycleManager.`);
+        this.#logger.debug(`${className} initialized successfully with core dependencies.`);
     }
 
     /**

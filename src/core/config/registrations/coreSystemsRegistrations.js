@@ -181,13 +181,8 @@ export function registerCoreSystems(container) {
         new PlayerTurnHandler({ // Instantiates the concrete class
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
             commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
-            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
-            gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)),
-            promptOutputPort: /** @type {IPromptOutputPort} */ (c.resolve(tokens.IPromptOutputPort)),
             turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
             playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
-            commandInputPort: /** @type {ICommandInputPort} */ (c.resolve(tokens.ICommandInputPort)),
             commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
             safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
             subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)) // <<< ADDED

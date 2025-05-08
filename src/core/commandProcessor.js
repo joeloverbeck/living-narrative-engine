@@ -649,7 +649,7 @@ class CommandProcessor {
      * @async
      */
     async #dispatchWithErrorHandling(eventName, payload, loggingContextName) {
-            this.#logger.debug(`CommandProcessor.#dispatchWithErrorHandling: Attempting to dispatch '${loggingContextName}' event ('${eventName}') via SafeEventDispatcher.`);
+        this.#logger.debug(`CommandProcessor.#dispatchWithErrorHandling: Attempting to dispatch '${loggingContextName}' event ('${eventName}') via SafeEventDispatcher.`);
         try {
             const success = await this.#safeEventDispatcher.dispatchSafely(eventName, payload);
 
