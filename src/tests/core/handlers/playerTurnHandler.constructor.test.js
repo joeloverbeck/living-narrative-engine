@@ -1,4 +1,4 @@
-// __tests__/PlayerTurnHandler.constructor.test.js
+// src/tests/core/handlers/playerTurnHandler.constructor.test.js
 // --- FILE START ---
 import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler.js';
 import {afterEach, beforeEach, describe, expect, it, jest, test} from "@jest/globals"; // Adjust path as necessary
