@@ -20,7 +20,7 @@ import {registerInfrastructure} from './registrations/infrastructureRegistration
 import {registerUI} from './registrations/uiRegistrations.js';
 import {registerDomainServices} from './registrations/domainServicesRegistrations.js';
 import {registerCoreSystems} from './registrations/coreSystemsRegistrations.js';
-import {registerInterpreters} from './registrations/interpreterRegistrations.js'; // <<< Keep import
+import {registerInterpreters} from './registrations/interpreterRegistrations.js';
 import {registerInitializers} from './registrations/initializerRegistrations.js';
 import {registerRuntime} from './registrations/runtimeRegistrations.js';
 import {registerOrchestration} from './registrations/orchestrationRegistrations.js';
@@ -57,7 +57,7 @@ export function configureContainer(
     // --- Registration Order ---
     // 1. Loaders & Core Infrastructure (Data access, basic services)
     registerLoaders(container);
-    registerInfrastructure(container); // Registers EventDispatchers, Registries etc.
+    registerInfrastructure(container); // Registers EventDispatchers, Registries etc. (Assumed to register GameDataRepository under IGameDataRepository)
 
     // 2. UI Layer (Depends on Infrastructure like EventDispatchers)
     registerUI(container, {outputDiv, inputElement, titleElement, document: window.document});
@@ -65,13 +65,13 @@ export function configureContainer(
     // 3. Domain Logic Services (Business rules, core calculations)
     registerDomainServices(container); // Registers CommandProcessor, PlayerPromptService etc.
 
-    // 4. Logic Interpretation Layer (Depends on Domain Services, Infrastructure) // <<< MOVED UP
+    // 4. Logic Interpretation Layer (Depends on Domain Services, Infrastructure)
     registerInterpreters(container); // Registers CommandOutcomeInterpreter, OperationInterpreter etc.
 
     // 5. Port Adapters (Depends on Infrastructure, Domain Services)
     registerAdapters(container); // Registers ICommandInputPort, IPromptOutputPort, ITurnEndPort implementations
 
-    // 6. Core Systems & Gameplay Bundles (Depends on Interpreters, Adapters, Domain Services) // <<< ORDER CHANGED
+    // 6. Core Systems & Gameplay Bundles (Depends on Interpreters, Adapters, Domain Services)
     registerCoreSystems(container); // Registers TurnManager, Player/AI Turn Handlers etc.
 
     // 7. Initializers (Depend on registered systems/services)
@@ -86,18 +86,20 @@ export function configureContainer(
     logger.info('Container Config: all core bundles registered.');
 
     // --- Populate Registries (Post-Registration Steps) ---
-    // (Keep this section as it was)
     // --- Populate SystemServiceRegistry ---
     try {
         logger.debug('Container Config: Populating SystemServiceRegistry...');
         const systemServiceRegistry = /** @type {SystemServiceRegistry} */ (
             container.resolve(tokens.SystemServiceRegistry)
         );
+        // VVVVVV MODIFIED LINE VVVVVV
+        // Resolve using the interface token, as this seems to be how GameDataRepository is registered.
         const gameDataRepoForSSR = /** @type {GameDataRepository} */ (
-            container.resolve(tokens.GameDataRepository)
+            container.resolve(tokens.IGameDataRepository)
         );
-        const serviceKey = 'GameDataRepository';
-        logger.debug(`Container Config: Registering service '${serviceKey}' in SystemServiceRegistry...`);
+        // ^^^^^^ MODIFIED LINE ^^^^^^
+        const serviceKey = 'GameDataRepository'; // The key for SystemServiceRegistry can remain the concrete name
+        logger.debug(`Container Config: Registering service '${serviceKey}' (resolved via IGameDataRepository) in SystemServiceRegistry...`);
         systemServiceRegistry.registerService(serviceKey, gameDataRepoForSSR);
         logger.info(`Container Config: Service '${serviceKey}' successfully registered in SystemServiceRegistry.`);
     } catch (error) {
@@ -111,11 +113,14 @@ export function configureContainer(
         const systemDataRegistry = /** @type {SystemDataRegistry} */ (
             container.resolve(tokens.SystemDataRegistry)
         );
+        // VVVVVV MODIFIED LINE VVVVVV
+        // Resolve using the interface token here as well for consistency.
         const gameDataRepo = /** @type {GameDataRepository} */ (
-            container.resolve(tokens.GameDataRepository)
+            container.resolve(tokens.IGameDataRepository)
         );
-        const dataSourceKey = 'GameDataRepository';
-        logger.debug(`Container Config: Registering data source '${dataSourceKey}' in SystemDataRegistry...`);
+        // ^^^^^^ MODIFIED LINE ^^^^^^
+        const dataSourceKey = 'GameDataRepository'; // The key for SystemDataRegistry can remain the concrete name
+        logger.debug(`Container Config: Registering data source '${dataSourceKey}' (resolved via IGameDataRepository) in SystemDataRegistry...`);
         systemDataRegistry.registerSource(dataSourceKey, gameDataRepo);
         logger.info(`Container Config: Data source '${dataSourceKey}' successfully registered in SystemDataRegistry.`);
     } catch (error) {

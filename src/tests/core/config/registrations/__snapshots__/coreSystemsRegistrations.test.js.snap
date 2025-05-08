@@ -8,8 +8,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -23,8 +23,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -38,8 +38,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
         "IWorldContext",
       ],
       "lifecycle": "singleton",
@@ -54,7 +54,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -68,10 +68,10 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
         "ConditionEvaluationService",
         "ItemTargetResolverService",
-        "GameDataRepository",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -85,7 +85,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -99,8 +99,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -115,7 +115,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -130,7 +130,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "GameDataRepository",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -145,7 +145,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -160,8 +160,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -176,8 +176,8 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
-        "GameDataRepository",
+        "IEntityManager",
+        "IGameDataRepository",
       ],
       "lifecycle": "singleton",
       "tags": [
@@ -192,7 +192,7 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
     {
       "dependencies": [
         "EventBus",
-        "EntityManager",
+        "IEntityManager",
       ],
       "lifecycle": "singleton",
       "tags": [

@@ -1,9 +1,13 @@
 // src/core/services/gameDataRepository.js
 // ────────────────────────────────────────────────────────────────────────────────
 
-import {IGameDataRepository} from "../interfaces/IGameDataRepository";
+import { IGameDataRepository } from "../interfaces/IGameDataRepository.js";
 
 /**
+ * @class GameDataRepository
+ * @extends {IGameDataRepository}
+ * @implements {IGameDataRepository} // Explicitly documents that it fulfills the IGameDataRepository contract.
+ * @description
  * Lightweight façade over whatever `IDataRegistry` implementation you are using.
  * The class does **not** cache anything internally: every getter reflects the
  * current contents of the registry so that late-loaded content (e.g. in tests or
@@ -18,7 +22,6 @@ import {IGameDataRepository} from "../interfaces/IGameDataRepository";
  * @typedef {import('../../types/eventDefinition.js').EventDefinition} EventDefinition
  * @typedef {import('../../types/entityDefinition.js').EntityDefinition} EntityDefinition
  */
-
 export class GameDataRepository extends IGameDataRepository {
     /** @type {IDataRegistry}  */ #registry;
     /** @type {ILogger}        */ #logger;

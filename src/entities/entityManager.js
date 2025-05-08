@@ -2,7 +2,8 @@
 
 import Entity from './entity.js';
 import {POSITION_COMPONENT_ID} from "../types/components.js";
-import {IEntityManager} from "../core/interfaces/IEntityManager";
+// Corrected import path for IEntityManager
+import { IEntityManager } from "../core/interfaces/IEntityManager.js";
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -19,6 +20,7 @@ import {IEntityManager} from "../core/interfaces/IEntityManager";
  * and ensures the ISpatialIndexManager is updated accordingly.
  * This class operates purely on component data (plain objects) and their type IDs,
  * remaining agnostic to specific component logic or classes.
+ * @implements {IEntityManager}
  */
 class EntityManager extends IEntityManager {
     /**

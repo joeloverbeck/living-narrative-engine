@@ -1,4 +1,6 @@
 // src/tests/core/config/containerConfig.test.js
+// ****** MODIFIED FILE ******
+
 import AppContainer from '../../../core/config/appContainer.js'; // Adjust path as needed
 import {configureContainer} from '../../../core/config/containerConfig.js'; // Adjust path
 import {tokens} from '../../../core/config/tokens.js'; // Adjust path
@@ -38,7 +40,10 @@ describe('Dependency Injection Container Configuration', () => {
 
     // Test 1: Verify CommandOutcomeInterpreter can be resolved
     it('should resolve CommandOutcomeInterpreter successfully', () => {
-        const instance = container.resolve(tokens.CommandOutcomeInterpreter);
+        // VVVVVV MODIFIED LINE VVVVVV
+        // Resolve using the interface token, as this seems to be how CommandOutcomeInterpreter is registered.
+        const instance = container.resolve(tokens.ICommandOutcomeInterpreter);
+        // ^^^^^^ MODIFIED LINE ^^^^^^
         expect(instance).toBeInstanceOf(CommandOutcomeInterpreter);
         expect(typeof instance.interpret).toBe('function');   // public API check
     });

@@ -1,4 +1,6 @@
 // src/core/config/registrations/initializerRegistrations.js
+// ****** MODIFIED FILE ******
+
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import WorldInitializer from '../../initializers/worldInitializer.js';
@@ -17,11 +19,15 @@ export function registerInitializers(container) {
         tokens.WorldInitializer,
         (c) => {
             const dependencies = {
-                entityManager: c.resolve(tokens.EntityManager),
+                // VVVVVV MODIFIED LINE VVVVVV
+                entityManager: c.resolve(tokens.IEntityManager), // Use interface token
+                // ^^^^^^ MODIFIED LINE ^^^^^^
                 worldContext: c.resolve(tokens.IWorldContext),
-                gameDataRepository: c.resolve(tokens.GameDataRepository),
-                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher), // <<< ADDED Ticket 15
-                logger: c.resolve(tokens.ILogger) // <<< ADDED (assuming it needs logger too)
+                // VVVVVV MODIFIED LINE VVVVVV
+                gameDataRepository: c.resolve(tokens.IGameDataRepository), // Use interface token
+                // ^^^^^^ MODIFIED LINE ^^^^^^
+                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+                logger: c.resolve(tokens.ILogger)
             };
             return new WorldInitializer(dependencies);
         }
@@ -37,12 +43,12 @@ export function registerInitializers(container) {
             const dependencies = {
                 resolver: c, // Pass the container (AppContainer) as the resolver
                 logger: c.resolve(tokens.ILogger),
-                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher), // <<< ADDED Ticket 15
+                validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
                 initializationTag: INITIALIZABLE[0] // Pass the tag string
             };
             // AC1: Passes container (IServiceResolver), logger (ILogger), VED, and tag (string).
             // AC2: Passes the correct tag string.
-            return new SystemInitializer(dependencies); // <<< UPDATED LINE
+            return new SystemInitializer(dependencies);
         }
     );
     log.debug(`Initializer Registration: Registered ${tokens.SystemInitializer} (with VED dependency).`);

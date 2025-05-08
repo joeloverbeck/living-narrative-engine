@@ -14,7 +14,8 @@
 
 // --- Import Custom Error ---
 // Assuming PromptError is defined in a shared errors location
-import { PromptError } from '../errors/promptError.js'; // Adjust path as necessary
+import { PromptError } from '../errors/promptError.js';
+import { IPlayerPromptService } from '../interfaces/IPlayerPromptService.js'; // Adjusted path and added .js extension
 
 /**
  * @typedef {object} PlayerPromptServiceDependencies
@@ -28,10 +29,12 @@ import { PromptError } from '../errors/promptError.js'; // Adjust path as necess
 
 /**
  * @class PlayerPromptService
+ * @extends IPlayerPromptService
  * @description Service responsible for determining available player actions and triggering the prompt
  * mechanism via the appropriate output port. Includes error handling.
+ * Implements the IPlayerPromptService interface.
  */
-class PlayerPromptService {
+class PlayerPromptService extends IPlayerPromptService {
     /** @type {ILogger} */
     #logger;
     /** @type {IActionDiscoverySystem} */
@@ -60,7 +63,7 @@ class PlayerPromptService {
                     entityManager,
                     gameDataRepository,
                 }) {
-
+        super(); // Call to super is important when extending
         // Validate logger first, as it's used for logging other validation errors.
         if (!logger || typeof logger.error !== 'function' || typeof logger.info !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') {
             console.error('PlayerPromptService Constructor: Invalid or missing ILogger dependency.');

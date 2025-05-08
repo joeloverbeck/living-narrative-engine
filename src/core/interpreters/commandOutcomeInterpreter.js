@@ -10,6 +10,8 @@
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */ // JSDoc type import
+
 /**
  * Represents an individual message within an action result.
  * @typedef {object} ActionResultMessage
@@ -30,14 +32,18 @@
  */
 // --- Constant Imports ---
 import TurnDirective from '../constants/turnDirectives.js';
+// --- Interface Imports ---
+import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 
 /**
  * @class CommandOutcomeInterpreter
+ * @extends {ICommandOutcomeInterpreter}
+ * @implements {ICommandOutcomeInterpreterType}
  * @description Interprets the result of a command, dispatches corresponding
  * core events (action executed/failed), and determines the next turn directive
  * (end turn successfully, end turn on failure, or re-prompt).
  */
-class CommandOutcomeInterpreter {
+class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     /** @private @readonly @type {ISafeEventDispatcher} */
     #dispatcher;
     /** @private @readonly @type {ILogger} */
@@ -52,6 +58,8 @@ class CommandOutcomeInterpreter {
      * @throws {Error} If required dependencies are missing or invalid.
      */
     constructor({dispatcher, logger}) {
+        super(); // Call the constructor of ICommandOutcomeInterpreter
+
         if (!logger || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function' || typeof logger.info !== 'function') {
             // Cannot use logger here if it's invalid
             console.error('CommandOutcomeInterpreter Constructor: Invalid or missing logger dependency.');
@@ -89,6 +97,7 @@ class CommandOutcomeInterpreter {
             const fullErrorMsg = `${baseErrorMsg} Result: ${JSON.stringify(result)}`;
             this.#logger.error(fullErrorMsg);
             await this.#dispatcher.dispatchSafely('core:system_error_occurred', {
+                eventName: 'core:system_error_occurred', // Added eventName to payload
                 message: baseErrorMsg,
                 type: 'error',
                 details: `Actor ${actorId}, Result: ${JSON.stringify(result)}`

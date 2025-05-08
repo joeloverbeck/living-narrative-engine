@@ -11,25 +11,27 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../../interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED
-/** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */ // Assuming EventBus type definition exists
-/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Corrected typedef name
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
-/** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */ // Corrected path & default export
-/** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */ // Assuming type definition exists
-/** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */ // Assuming type definition exists
-/** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */ // Assuming type definition exists
+/** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */
+/** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */
+/** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */ // <<< ADDED
-/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */ // <<< ADDED
-/** @typedef {import('../../services/playerPromptService.js').default} PlayerPromptService */ // <<< ADDED
-/** @typedef {import('../../interpreters/commandOutcomeInterpreter.js').default} CommandOutcomeInterpreter */ // <<< ADDED
-/** @typedef {import('../../handlers/playerTurnHandler.js').default} PlayerTurnHandler */ // Added for resolver dependency
-/** @typedef {import('../../handlers/aiTurnHandler.js').default} AITurnHandler */ // Added for resolver dependency
-/** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */ // Added for TurnManager dependency
+/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../../handlers/aiTurnHandler.js').default} AITurnHandler */
+/** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+/** @typedef {import('../../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
+/** @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
+/** @typedef {import('../../interfaces/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
+/** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */ // <<< ADDED FOR PlayerTurnHandler
 
 
 // --- System Imports ---
@@ -50,9 +52,9 @@ import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turnManager.js';
 
 // --- Handler & Resolver Imports ---
-import PlayerTurnHandler from '../../handlers/playerTurnHandler.js';
-import AITurnHandler from '../../handlers/aiTurnHandler.js';
-import TurnHandlerResolver from '../../services/turnHandlerResolver.js';
+import PlayerTurnHandler from '../../handlers/playerTurnHandler.js'; // Concrete class
+import AITurnHandler from '../../handlers/aiTurnHandler.js'; // Concrete class
+import TurnHandlerResolver from '../../services/turnHandlerResolver.js'; // Concrete class
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -77,37 +79,37 @@ export function registerCoreSystems(container) {
 
     // --- Systems (Tagged as Initializable only) ---
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentEffectSystem, EquipmentEffectSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentEffectSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentSlotSystem, EquipmentSlotSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentSlotSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.InventorySystem, InventorySystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository, tokens.IWorldContext
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository, tokens.IWorldContext // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.InventorySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.DeathSystem, DeathSystem, [
-        tokens.EventBus, tokens.EntityManager
+        tokens.EventBus, tokens.IEntityManager // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.DeathSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.ItemUsageSystem, ItemUsageSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.ConditionEvaluationService, tokens.ItemTargetResolverService, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.ConditionEvaluationService, tokens.ItemTargetResolverService, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.ItemUsageSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).single(tokens.MovementSystem, MovementSystem, [
-        tokens.EventBus, tokens.EntityManager
+        tokens.EventBus, tokens.IEntityManager // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.MovementSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
@@ -117,43 +119,43 @@ export function registerCoreSystems(container) {
     const tagsString = initializableAndShutdownable.join(', '); // For logging
 
     registrar.tagged(initializableAndShutdownable).single(tokens.CombatSystem, CombatSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.CombatSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.WorldPresenceSystem, WorldPresenceSystem, [
-        tokens.EventBus, tokens.EntityManager
+        tokens.EventBus, tokens.IEntityManager // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.WorldPresenceSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.NotificationUISystem, NotificationUISystem, [
-        tokens.EventBus, tokens.GameDataRepository
+        tokens.EventBus, tokens.IGameDataRepository // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.NotificationUISystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.OpenableSystem, OpenableSystem, [
-        tokens.EventBus, tokens.EntityManager
+        tokens.EventBus, tokens.IEntityManager // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.OpenableSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.HealthSystem, HealthSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.HealthSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.StatusEffectSystem, StatusEffectSystem, [
-        tokens.EventBus, tokens.EntityManager, tokens.GameDataRepository
+        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository // Use Interfaces
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.StatusEffectSystem)} tagged with ${tagsString}.`);
     registrationCount++;
 
     registrar.tagged(initializableAndShutdownable).single(tokens.LockSystem, LockSystem, [
-        tokens.EventBus, tokens.EntityManager
+        tokens.EventBus, tokens.IEntityManager // Use Interface
     ]);
     logger.debug(`Core Systems Registration: Registered ${String(tokens.LockSystem)} tagged with ${tagsString}.`);
     registrationCount++;
@@ -162,8 +164,8 @@ export function registerCoreSystems(container) {
     // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory ---
     // Tagged INITIALIZABLE. Add SHUTDOWNABLE if it gets a shutdown() method.
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({
-        gameDataRepository: c.resolve(tokens.GameDataRepository),
-        entityManager: c.resolve(tokens.EntityManager),
+        gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)), // Use Interface
+        entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),           // Use Interface
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand, // Direct function reference
@@ -172,39 +174,37 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
-
-    // --- VVVVVV CORRECTED REGISTRATION BLOCK VVVVVV ---
     // Register PlayerTurnHandler (Singleton due to event subscription & destroy() method)
     // Tagged SHUTDOWNABLE because it needs cleanup via destroy().
     // Use singletonFactory to handle the object constructor parameter correctly.
     registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) =>
-        new PlayerTurnHandler({
-            logger: c.resolve(tokens.ILogger),
-            actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
-            commandProcessor: c.resolve(tokens.ICommandProcessor),
-            worldContext: c.resolve(tokens.IWorldContext),
-            entityManager: c.resolve(tokens.EntityManager),
-            gameDataRepository: c.resolve(tokens.GameDataRepository),
-            promptOutputPort: c.resolve(tokens.IPromptOutputPort),
-            turnEndPort: c.resolve(tokens.ITurnEndPort),
-            playerPromptService: c.resolve(tokens.PlayerPromptService),
-            commandInputPort: c.resolve(tokens.ICommandInputPort),
-            commandOutcomeInterpreter: c.resolve(tokens.CommandOutcomeInterpreter),
-            safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher)
+        new PlayerTurnHandler({ // Instantiates the concrete class
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
+            worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
+            gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)),
+            promptOutputPort: /** @type {IPromptOutputPort} */ (c.resolve(tokens.IPromptOutputPort)),
+            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
+            playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
+            commandInputPort: /** @type {ICommandInputPort} */ (c.resolve(tokens.ICommandInputPort)),
+            commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
+            safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
+            subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)) // <<< ADDED
         })
     );
-    logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler}.`);
+    logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler} with injected SubscriptionLifecycleManager.`);
     registrationCount++;
 
     // Register AITurnHandler (Singleton appropriate, constructor takes object)
     // Not tagged SHUTDOWNABLE as it currently has no destroy() method.
-    registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
-        logger: c.resolve(tokens.ILogger),
-        commandProcessor: c.resolve(tokens.ICommandProcessor),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoverySystem),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        worldContext: c.resolve(tokens.IWorldContext),
-        turnEndPort: c.resolve(tokens.ITurnEndPort)      // <-- this was missing
+    registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({ // Instantiates the concrete class
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
+        actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (c.resolve(tokens.IActionDiscoverySystem)),
+        validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
+        worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+        turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort))
     }));
     logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
     registrationCount++;
@@ -212,24 +212,25 @@ export function registerCoreSystems(container) {
 
     // Register TurnHandlerResolver (Singleton is appropriate)
     // No specific tags needed unless it requires init/shutdown hooks later.
-    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
-        logger: c.resolve(tokens.ILogger),
-        playerTurnHandler: c.resolve(tokens.PlayerTurnHandler),
-        aiTurnHandler: c.resolve(tokens.AITurnHandler)
+    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({ // Instantiates the concrete class
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        playerTurnHandler: /** @type {PlayerTurnHandler} */ (c.resolve(tokens.PlayerTurnHandler)), // Resolves concrete PlayerTurnHandler
+        aiTurnHandler: /** @type {AITurnHandler} */ (c.resolve(tokens.AITurnHandler))         // Resolves concrete AITurnHandler
     }));
+    logger.debug(`Core Systems Registration: Registered ${tokens.TurnHandlerResolver}.`);
     registrationCount++;
 
 
     // --- Register TurnManager AFTER its dependencies ---
     // Tagged as INITIALIZABLE
-    /** @type {ITurnManager} */ // Add type hint for clarity
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
-        turnOrderService: c.resolve(tokens.ITurnOrderService),
-        entityManager: c.resolve(tokens.EntityManager),
-        logger: c.resolve(tokens.ILogger),
-        dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver)
+        turnOrderService: /** @type {ITurnOrderService} */ (c.resolve(tokens.ITurnOrderService)),
+        entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)), // Use Interface
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        dispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
+        turnHandlerResolver: /** @type {TurnHandlerResolver} */ (c.resolve(tokens.TurnHandlerResolver)) // Resolves concrete TurnHandlerResolver
     }));
+    logger.debug(`Core Systems Registration: Registered ${tokens.ITurnManager}.`);
     registrationCount++;
 
     // Final log message using the incremented counter

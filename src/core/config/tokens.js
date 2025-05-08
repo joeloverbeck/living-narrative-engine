@@ -52,9 +52,9 @@
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
  *
- * --- Core Services & Managers (Implementations) ---
- * @property {DiToken} GameDataRepository - Token for accessing registered game data.
- * @property {DiToken} EntityManager - Token for managing game entities and components.
+ * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
+ * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
+ * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
  * @property {DiToken} ConditionEvaluationService - Token for evaluating conditions.
  * @property {DiToken} ItemTargetResolverService - Token for resolving item targets.
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
@@ -69,8 +69,9 @@
  * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
  * @property {DiToken} SystemDataRegistry - Token for the registry mapping system IDs to data sources.
- * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting.
- * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes. // <<< ADDED (Ticket 5.3)
+ * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
+ * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
+ * @property {DiToken} SubscriptionLifecycleManager - Token for managing subscription lifecycles (implementation).
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -86,6 +87,10 @@
  * @property {DiToken} ICommandInputPort - Token for the command input port interface.
  * @property {DiToken} IPromptOutputPort - Token for the prompt output port interface.
  * @property {DiToken} ITurnEndPort - Token for the turn end port interface.
+ * @property {DiToken} IPlayerPromptService - Token for the player prompt service interface.
+ * @property {DiToken} ICommandOutcomeInterpreter - Token for the command outcome interpreter interface.
+ * @property {DiToken} IEntityManager - Token for the entity manager interface.
+ * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
  *
  * --- Quest Services ---
  * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
@@ -176,9 +181,9 @@ export const tokens = Object.freeze({
     GameConfigLoader: 'GameConfigLoader',
     ModManifestLoader: 'ModManifestLoader',
 
-    // Core Services & Managers (Implementations)
-    GameDataRepository: 'GameDataRepository',
-    EntityManager: 'EntityManager',
+    // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
+    GameDataRepository: 'GameDataRepository', // Concrete class token
+    EntityManager: 'EntityManager',           // Concrete class token
     ConditionEvaluationService: 'ConditionEvaluationService',
     ItemTargetResolverService: 'ItemTargetResolverService',
     TargetResolutionService: 'TargetResolutionService',
@@ -192,8 +197,9 @@ export const tokens = Object.freeze({
     AITurnHandler: 'AITurnHandler',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
-    PlayerPromptService: 'PlayerPromptService',
-    CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
+    PlayerPromptService: 'PlayerPromptService',         // Concrete class token
+    CommandOutcomeInterpreter: 'CommandOutcomeInterpreter', // Concrete class token
+    SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -209,6 +215,11 @@ export const tokens = Object.freeze({
     ICommandInputPort: 'ICommandInputPort',
     IPromptOutputPort: 'IPromptOutputPort',
     ITurnEndPort: 'ITurnEndPort',
+    IPlayerPromptService: 'IPlayerPromptService',             // Interface token
+    ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter', // Interface token
+    IEntityManager: 'IEntityManager',                         // Interface token
+    IGameDataRepository: 'IGameDataRepository',             // Interface token
+
 
     // Quest Services
     QuestPrerequisiteService: 'QuestPrerequisiteService',

@@ -4,8 +4,8 @@
 import EventBus from '../../eventBus.js';
 import SpatialIndexManager from '../../spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
-import {GameDataRepository} from '../../services/gameDataRepository.js';
-import EntityManager from '../../../entities/entityManager.js';
+import {GameDataRepository} from '../../services/gameDataRepository.js'; // Concrete class
+import EntityManager from '../../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../../services/validatedEventDispatcher.js'; // Concrete Class Import
 import {SafeEventDispatcher} from '../../utils/safeEventDispatcher.js';
 import {tokens} from '../tokens.js';
@@ -28,8 +28,10 @@ import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
  * @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher // For WorldLoader & Self
- * @typedef {import('../../utils/safeEventDispatcher.js').default} SafeEventDispatcher // >>> ADDED <<<
+ * @typedef {import('../../utils/safeEventDispatcher.js').default} SafeEventDispatcher
  * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher // For SafeEventDispatcher
+ * @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository
+ * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  */
 
 export function registerInfrastructure(container) {
@@ -62,46 +64,47 @@ export function registerInfrastructure(container) {
             configuration: c.resolve(tokens.IConfiguration),
             gameConfigLoader: c.resolve(tokens.GameConfigLoader),
             modManifestLoader: c.resolve(tokens.ModManifestLoader),
-            validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher) // <<< Use interface token
+            validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher)
         };
         // Pass the single dependency object to the constructor
         return new WorldLoader(dependencies);
     }, {lifecycle: 'singleton'});
     log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader} (with VED dependency).`);
 
-    container.register(tokens.GameDataRepository,
-        c => new GameDataRepository(
+    // Register GameDataRepository against IGameDataRepository token
+    container.register(tokens.IGameDataRepository, // <<< MODIFIED TOKEN
+        c => new GameDataRepository( // Instantiates the concrete class
             /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
             /** @type {ILogger} */ (c.resolve(tokens.ILogger))
         ),
         {lifecycle: 'singleton'}
     );
-    log.debug(`Infrastructure Registration: Registered ${tokens.GameDataRepository}.`);
+    log.debug(`Infrastructure Registration: Registered ${tokens.IGameDataRepository}.`); // <<< MODIFIED TOKEN
 
 
-    container.register(tokens.EntityManager, c => new EntityManager(
-        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-        /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
-    ), {lifecycle: 'singleton'});
-    log.debug(`Infrastructure Registration: Registered ${tokens.EntityManager}.`);
+    // Register EntityManager against IEntityManager token
+    container.register(tokens.IEntityManager, // <<< MODIFIED TOKEN
+        c => new EntityManager( // Instantiates the concrete class
+            /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+            /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
+            /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
+        ), {lifecycle: 'singleton'}
+    );
+    log.debug(`Infrastructure Registration: Registered ${tokens.IEntityManager}.`); // <<< MODIFIED TOKEN
 
 
-    // --- Register ValidatedEventDispatcher against its Interface Token --- // MODIFIED
+    // --- Register ValidatedEventDispatcher against its Interface Token ---
     container.register(tokens.IValidatedEventDispatcher, c => new ValidatedEventDispatcher({
         eventBus: c.resolve(tokens.EventBus),
-        gameDataRepository: c.resolve(tokens.GameDataRepository),
+        gameDataRepository: c.resolve(tokens.IGameDataRepository), // Use IGameDataRepository
         schemaValidator: /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     }), {lifecycle: 'singleton'});
     log.debug(`Infrastructure Registration: Registered ${tokens.IValidatedEventDispatcher}.`);
 
 
-    // >>> Register SafeEventDispatcher <<<
-    // Depends on IValidatedEventDispatcher and ILogger. Registered against ISafeEventDispatcher token.
-    // NOTE: Assumes SafeEventDispatcher exists at src/core/utils/safeEventDispatcher.js
-    // and its constructor takes an object { validatedEventDispatcher, logger }.
+    // Register SafeEventDispatcher
     r.singletonFactory(tokens.ISafeEventDispatcher, c => new SafeEventDispatcher({
         validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))

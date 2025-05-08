@@ -3,14 +3,20 @@
 
 /**
  * @fileoverview Registers the logic interpretation layer services:
- * OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CommandOutcomeInterpreter, and their handlers. // <<< Updated description
+ * OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CommandOutcomeInterpreter, and their handlers.
  */
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */ // Corrected path
-/** @typedef {import('../../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */ // Corrected path
-/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // For handlers
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // For handlers
+/** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */ // For SystemLogicInterpreter
+/** @typedef {import('../../../logic/jsonLogicEvaluationService.js').JsonLogicEvaluationService} JsonLogicEvaluationService */ // For SystemLogicInterpreter
+/** @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
+
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -21,7 +27,7 @@ import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 import OperationRegistry from '../../../logic/operationRegistry.js';
 import OperationInterpreter from '../../../logic/operationInterpreter.js';
 import SystemLogicInterpreter from '../../../logic/systemLogicInterpreter.js';
-import CommandOutcomeInterpreter from '../../interpreters/commandOutcomeInterpreter.js'; // <<< ADDED IMPORT
+import CommandOutcomeInterpreter from '../../interpreters/commandOutcomeInterpreter.js'; // Concrete class
 
 // --- Handler Imports ---
 import DispatchEventHandler from '../../../logic/operationHandlers/dispatchEventHandler.js';
@@ -36,7 +42,7 @@ import QuerySystemDataHandler from '../../../logic/operationHandlers/querySystem
 
 /**
  * Registers the OperationRegistry, OperationInterpreter, SystemLogicInterpreter,
- * CommandOutcomeInterpreter, and all associated Operation Handlers. // <<< Updated description
+ * CommandOutcomeInterpreter, and all associated Operation Handlers.
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -47,13 +53,12 @@ export function registerInterpreters(container) {
     const logger = container.resolve(tokens.ILogger);
     logger.info('Interpreter Registrations: Starting...');
 
-    // --- Register CommandOutcomeInterpreter FIRST (needed by PlayerTurnHandler, registered later) --- // <<< ADDED BLOCK
-    registrar.singletonFactory(tokens.CommandOutcomeInterpreter, c => new CommandOutcomeInterpreter({
+    // --- Register CommandOutcomeInterpreter against ICommandOutcomeInterpreter token ---
+    registrar.singletonFactory(tokens.ICommandOutcomeInterpreter, c => new CommandOutcomeInterpreter({ // <<< MODIFIED TOKEN
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.ISafeEventDispatcher) // Uses ISafeEventDispatcher
     }));
-    logger.debug('Interpreter Registrations: Registered CommandOutcomeInterpreter.');
-    // --- END ADDED BLOCK ---
+    logger.debug(`Interpreter Registrations: Registered ${tokens.ICommandOutcomeInterpreter}.`); // <<< MODIFIED TOKEN
 
 
     // --- Register Operation Handlers ---
@@ -69,25 +74,25 @@ export function registerInterpreters(container) {
     logger.debug('Interpreter Registrations: Registered LogHandler.');
 
     registrar.singletonFactory(tokens.ModifyComponentHandler, c => new ModifyComponentHandler({
-        entityManager: c.resolve(tokens.EntityManager),
+        entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered ModifyComponentHandler.');
 
     registrar.singletonFactory(tokens.AddComponentHandler, c => new AddComponentHandler({
-        entityManager: c.resolve(tokens.EntityManager),
+        entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered AddComponentHandler.');
 
     registrar.singletonFactory(tokens.RemoveComponentHandler, c => new RemoveComponentHandler({
-        entityManager: c.resolve(tokens.EntityManager),
+        entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered RemoveComponentHandler.');
 
     registrar.singletonFactory(tokens.QueryComponentHandler, c => new QueryComponentHandler({
-        entityManager: c.resolve(tokens.EntityManager),
+        entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
         logger: c.resolve(tokens.ILogger)
     }));
     logger.debug('Interpreter Registrations: Registered QueryComponentHandler.');
@@ -114,15 +119,15 @@ export function registerInterpreters(container) {
             const handlerInstance = c.resolve(token);
             // Added a more descriptive error if resolution fails
             if (!handlerInstance) {
-                internalLogger.error(`Interpreter Registrations: Failed to resolve handler token "${token.description || token.toString()}" required by OperationRegistry.`);
+                internalLogger.error(`Interpreter Registrations: Failed to resolve handler token "${String(token)}" required by OperationRegistry.`);
                 return (params, context) => {
-                    internalLogger.error(`Operation handler for token "${token.description || token.toString()}" was not resolved. Operation skipped.`);
+                    internalLogger.error(`Operation handler for token "${String(token)}" was not resolved. Operation skipped.`);
                 };
             }
             if (typeof handlerInstance.execute !== 'function') {
-                internalLogger.error(`Interpreter Registrations: Resolved instance for token "${token.description || token.toString()}" does not have an 'execute' method.`);
+                internalLogger.error(`Interpreter Registrations: Resolved instance for token "${String(token)}" does not have an 'execute' method.`);
                 return (params, context) => {
-                    internalLogger.error(`Operation handler for token "${token.description || token.toString()}" is invalid (missing execute). Operation skipped.`);
+                    internalLogger.error(`Operation handler for token "${String(token)}" is invalid (missing execute). Operation skipped.`);
                 };
             }
             return handlerInstance.execute.bind(handlerInstance);
@@ -158,7 +163,7 @@ export function registerInterpreters(container) {
             eventBus: c.resolve(tokens.EventBus),
             dataRegistry: c.resolve(tokens.IDataRegistry),
             jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
-            entityManager: c.resolve(tokens.EntityManager),
+            entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
             operationInterpreter: c.resolve(tokens.OperationInterpreter)
         });
     });

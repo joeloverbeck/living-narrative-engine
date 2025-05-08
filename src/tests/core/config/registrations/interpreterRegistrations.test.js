@@ -1,5 +1,5 @@
 // src/tests/core/config/registrations/interpreterRegistrations.test.js
-// ****** CORRECTED FILE (Updated tags assertion) ******
+// ****** CORRECTED FILE ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -7,7 +7,8 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../../../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
-/** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */ // Concrete EntityManager for mock
+/** @typedef {import('../../../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // Interface for resolving
 /** @typedef {import('../../../../logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../../../logic/operationRegistry.js').default} OperationRegistry */
 /** @typedef {import('../../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -20,7 +21,7 @@ import {describe, beforeEach, it, expect, jest} from '@jest/globals';
 import {registerInterpreters} from '../../../../core/config/registrations/interpreterRegistrations.js';
 
 // --- Dependencies ---
-import {tokens} from '../../../../core/config/tokens.js'; // Now Corrected
+import {tokens} from '../../../../core/config/tokens.js';
 
 // --- Mock Modules ---
 jest.mock('../../../../logic/operationRegistry.js');
@@ -62,6 +63,9 @@ const mockEntityManager = {
 };
 const mockvalidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
 const mockSystemDataRegistry = {query: jest.fn(), registerSource: jest.fn()};
+// If ICommandOutcomeInterpreter gets resolved and ISafeEventDispatcher is needed:
+// const mockSafeEventDispatcher = { dispatch: jest.fn() };
+
 
 // --- Mock DI Container ---
 const createMockContainer = () => {
@@ -143,9 +147,19 @@ describe('registerInterpreters', () => {
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IDataRegistry, mockDataRegistry, {lifecycle: 'singleton'});
         mockContainer.register(tokens.JsonLogicEvaluationService, mockJsonLogicService, {lifecycle: 'singleton'});
+
+        // Register both the concrete EntityManager (if anything uses it directly) AND the IEntityManager interface
         mockContainer.register(tokens.EntityManager, mockEntityManager, {lifecycle: 'singleton'});
+        // ***** THIS IS THE PRIMARY FIX *****
+        mockContainer.register(tokens.IEntityManager, mockEntityManager, {lifecycle: 'singleton'});
+        // ***********************************
+
         mockContainer.register(tokens.IValidatedEventDispatcher, mockvalidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {lifecycle: 'singleton'});
+
+        // If ICommandOutcomeInterpreter depends on ISafeEventDispatcher and is resolved in tests:
+        // mockContainer.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher, {lifecycle: 'singleton'});
+
 
         // Clear implementation mocks
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
@@ -155,6 +169,8 @@ describe('registerInterpreters', () => {
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
         Object.values(mockvalidatedEventDispatcher).forEach(fn => fn.mockClear?.());
         Object.values(mockSystemDataRegistry).forEach(fn => fn.mockClear?.());
+        // if (mockSafeEventDispatcher) Object.values(mockSafeEventDispatcher).forEach(fn => fn.mockClear?.());
+
 
         // Clear constructor mocks defined via jest.mock() for USED handlers/interpreters
         OperationRegistry.mockClear?.();
@@ -194,10 +210,10 @@ describe('registerInterpreters', () => {
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.OperationInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
         expect(mockContainer.register).toHaveBeenCalledWith(tokens.SystemLogicInterpreter, expect.any(Function), expect.objectContaining({
             lifecycle: 'singletonFactory',
-            // ***** CORRECTED LINE BELOW *****
-            tags: expect.arrayContaining(['initializableSystem', 'shutdownable'])
-            // ***** CORRECTED LINE ABOVE *****
+            tags: expect.arrayContaining(['initializableSystem', 'shutdownable']) // Corrected assertion from your provided file
         }));
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ICommandOutcomeInterpreter, expect.any(Function), expect.objectContaining({lifecycle: 'singletonFactory'}));
+
 
         // Explicitly check that removed handlers are NOT registered
         expect(mockContainer.register).not.toHaveBeenCalledWith(tokens.ModifyDomElementHandler, expect.any(Function), expect.anything());
@@ -217,7 +233,7 @@ describe('registerInterpreters', () => {
             eventBus: mockEventBus,
             dataRegistry: mockDataRegistry,
             jsonLogicEvaluationService: mockJsonLogicService,
-            entityManager: mockEntityManager,
+            entityManager: mockEntityManager, // Should be the mockEntityManager via IEntityManager
             operationInterpreter: expect.anything()
         }));
     });
@@ -267,17 +283,17 @@ describe('registerInterpreters', () => {
         const r1 = mockContainer.resolve(tokens.OperationRegistry);
         const r2 = mockContainer.resolve(tokens.OperationRegistry);
         expect(r1).toBe(r2);
-        expect(OperationRegistry).toHaveBeenCalledTimes(1);
+        expect(OperationRegistry).toHaveBeenCalledTimes(1); // Factory called once
 
         const i1 = mockContainer.resolve(tokens.OperationInterpreter);
         const i2 = mockContainer.resolve(tokens.OperationInterpreter);
         expect(i1).toBe(i2);
-        expect(OperationInterpreter).toHaveBeenCalledTimes(1);
+        expect(OperationInterpreter).toHaveBeenCalledTimes(1); // Factory called once
 
         const s1 = mockContainer.resolve(tokens.SystemLogicInterpreter);
         const s2 = mockContainer.resolve(tokens.SystemLogicInterpreter);
         expect(s1).toBe(s2);
-        expect(SystemLogicInterpreter).toHaveBeenCalledTimes(1);
+        expect(SystemLogicInterpreter).toHaveBeenCalledTimes(1); // Factory called once
     });
 
     it('resolving SetVariableHandler does not throw', () => {

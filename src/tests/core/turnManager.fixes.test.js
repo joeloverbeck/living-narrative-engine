@@ -124,9 +124,9 @@ describe('TurnManager', () => {
             const initialAdvanceTurnCallCount = mockTurnOrderService.getNextEntity.mock.calls.length;
             const turnEndedEvent = {type: TURN_ENDED_ID, payload: {entityId: 'actor1', success: true}};
             mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent);
-            expect(mockLogger.info).toHaveBeenCalledWith(`Turn for current actor actor1 confirmed ended (Success: true). Advancing turn...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Turn for current actor actor1 confirmed ended (Internal Status from Event: Success=true). Advancing turn...`);
             jest.runAllTimers();
-            await Promise.resolve();
+            await Promise.resolve(); // Ensure all microtasks complete, including those from advanceTurn
             expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(initialAdvanceTurnCallCount + 1);
         });
 
@@ -134,9 +134,9 @@ describe('TurnManager', () => {
             const initialAdvanceTurnCallCount = mockTurnOrderService.getNextEntity.mock.calls.length;
             const turnEndedEvent = {type: TURN_ENDED_ID, payload: {entityId: 'actor1'}};
             mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent);
-            expect(mockLogger.info).toHaveBeenCalledWith(`Turn for current actor actor1 confirmed ended (Success: N/A). Advancing turn...`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`Turn for current actor actor1 confirmed ended (Internal Status from Event: Success=N/A). Advancing turn...`);
             jest.runAllTimers();
-            await Promise.resolve();
+            await Promise.resolve(); // Ensure all microtasks complete
             expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(initialAdvanceTurnCallCount + 1);
         });
 
@@ -144,9 +144,9 @@ describe('TurnManager', () => {
             const initialAdvanceTurnCallCount = mockTurnOrderService.getNextEntity.mock.calls.length;
             const turnEndedEvent = {type: TURN_ENDED_ID, payload: {entityId: 'someOtherActor', success: true}};
             mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`Received '${TURN_ENDED_ID}' for entity someOtherActor, but expected end for current actor actor1. Ignoring event.`);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Received '${TURN_ENDED_ID}' for entity someOtherActor, but current active actor is actor1. This event will be IGNORED by TurnManager's primary turn cycling logic.`);
             jest.runAllTimers();
-            await Promise.resolve();
+            await Promise.resolve(); // Ensure all microtasks complete
             expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(initialAdvanceTurnCallCount);
         });
 
@@ -156,39 +156,52 @@ describe('TurnManager', () => {
             mockDispatcher._triggerEvent(TURN_ENDED_ID, malformedEvent);
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Received '${TURN_ENDED_ID}' event but it has no payload. Ignoring. Event:`), malformedEvent);
             jest.runAllTimers();
-            await Promise.resolve();
+            await Promise.resolve(); // Ensure all microtasks complete
             expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(initialAdvanceTurnCallCount);
         });
 
         it('should log a warning and not advance if core:turn_ended event payload has no entityId', async () => {
             const initialAdvanceTurnCallCount = mockTurnOrderService.getNextEntity.mock.calls.length;
-            const malformedPayloadEvent = {type: TURN_ENDED_ID, payload: {success: true}};
+            const malformedPayloadEvent = {type: TURN_ENDED_ID, payload: {success: true}}; // entityId is undefined
             mockDispatcher._triggerEvent(TURN_ENDED_ID, malformedPayloadEvent);
+            // The debug log is fine as is.
             expect(mockLogger.debug).toHaveBeenCalledWith(`Received '${TURN_ENDED_ID}' event for entity undefined. Success: true. Current actor: ${mockActor1.id || 'None'}`);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`Received '${TURN_ENDED_ID}' for entity undefined, but expected end for current actor actor1. Ignoring event.`);
+            // Correct the expected warning message:
+            expect(mockLogger.warn).toHaveBeenCalledWith(`Received '${TURN_ENDED_ID}' for entity undefined, but current active actor is actor1. This event will be IGNORED by TurnManager's primary turn cycling logic.`);
             jest.runAllTimers();
-            await Promise.resolve();
+            await Promise.resolve(); // Ensure all microtasks complete
             expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(initialAdvanceTurnCallCount);
         });
 
         it('should not process core:turn_ended by advancing turn if manager is not running', async () => {
-            await turnManager.stop();
-            mockLogger.debug.mockClear();
+            await turnManager.stop(); // Stop the manager
+            // Clear mocks that might have been called during start or before stop
             mockLogger.info.mockClear();
-            const getNextEntityCallCountBeforeEvent = mockTurnOrderService.getNextEntity.mock.calls.length;
+            mockLogger.debug.mockClear(); // Also clear debug if it might be relevant
+            mockTurnOrderService.getNextEntity.mockClear(); // Clear call counts
+
+            const getNextEntityCallCountBeforeEvent = mockTurnOrderService.getNextEntity.mock.calls.length; // Should be 0
+
             const turnEndedEvent = {type: TURN_ENDED_ID, payload: {entityId: 'actor1', success: true}};
-            mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent);
+            mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent); // This calls #handleTurnEndedEvent
+
+            // Check that the "Advancing turn..." log specifically does NOT happen
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Advancing turn...'));
+            // Ensure advanceTurn was not called
             expect(mockTurnOrderService.getNextEntity.mock.calls.length).toBe(getNextEntityCallCountBeforeEvent);
         });
 
         it('should call destroy on the resolved currentHandler when turn ends successfully', async () => {
-            expect(mockResolvedHandler.destroy).not.toHaveBeenCalled();
+            expect(mockResolvedHandler.destroy).not.toHaveBeenCalled(); // Ensure not called yet
             const turnEndedEvent = {type: TURN_ENDED_ID, payload: {entityId: 'actor1', success: true}};
-            mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent);
+            mockDispatcher._triggerEvent(TURN_ENDED_ID, turnEndedEvent); // This triggers #handleTurnEndedEvent
+
+            // The destroy call is asynchronous (Promise.resolve) within #handleTurnEndedEvent's setTimeout block.
+            // We need to ensure timers and promises resolve.
+            jest.runAllTimers(); // Flushes the setTimeout in #handleTurnEndedEvent
+            await Promise.resolve(); // Flushes microtasks queue, including the Promise.resolve around destroy
+
             expect(mockResolvedHandler.destroy).toHaveBeenCalledTimes(1);
-            jest.runAllTimers();
-            await Promise.resolve();
         });
     });
 
