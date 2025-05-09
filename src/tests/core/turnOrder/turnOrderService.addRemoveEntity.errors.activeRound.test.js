@@ -9,13 +9,13 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js';
-import {SimpleRoundRobinQueue} from '../../../core/turnOrder/queues/simpleRoundRobinQueue.js';
-import {InitiativePriorityQueue} from '../../../core/turnOrder/queues/initiativePriorityQueue.js';
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js';
+import {SimpleRoundRobinQueue} from '../../../core/turns/order/queues/simpleRoundRobinQueue.js';
+import {InitiativePriorityQueue} from '../../../core/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules completely
-jest.mock('../../../core/turnOrder/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../core/turnOrder/queues/initiativePriorityQueue.js');
+jest.mock('../../../core/turns/order/queues/simpleRoundRobinQueue.js');
+jest.mock('../../../core/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({

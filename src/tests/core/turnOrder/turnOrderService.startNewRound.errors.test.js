@@ -8,16 +8,16 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js';
 // We don't strictly *need* the queue mocks for errors thrown *before*
 // instantiation, but it's good practice to have them minimally mocked
 // in case logic changes or for the unsupported strategy case.
-import {SimpleRoundRobinQueue} from '../../../core/turnOrder/queues/simpleRoundRobinQueue.js';
-import {InitiativePriorityQueue} from '../../../core/turnOrder/queues/initiativePriorityQueue.js';
+import {SimpleRoundRobinQueue} from '../../../core/turns/order/queues/simpleRoundRobinQueue.js';
+import {InitiativePriorityQueue} from '../../../core/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
-jest.mock('../../../core/turnOrder/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../core/turnOrder/queues/initiativePriorityQueue.js');
+jest.mock('../../../core/turns/order/queues/simpleRoundRobinQueue.js');
+jest.mock('../../../core/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({

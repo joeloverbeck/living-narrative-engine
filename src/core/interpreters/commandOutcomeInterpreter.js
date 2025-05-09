@@ -31,7 +31,7 @@
  * @property {string} [message] - An optional user-facing message related to the outcome (often a summary).
  */
 // --- Constant Imports ---
-import TurnDirective from '../constants/turnDirectives.js';
+import TurnDirective from '../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 

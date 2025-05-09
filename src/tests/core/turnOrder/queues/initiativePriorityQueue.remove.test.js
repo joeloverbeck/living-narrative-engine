@@ -6,7 +6,7 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {InitiativePriorityQueue} from '../../../../core/turnOrder/queues/initiativePriorityQueue.js'; // Adjust path as needed
+import {InitiativePriorityQueue} from '../../../../core/turns/order/queues/initiativePriorityQueue.js'; // Adjust path as needed
 
 // Mock Entity type for testing
 /** @typedef {{ id: string; name?: string; }} Entity */ // Simplified mock type

@@ -3,7 +3,7 @@
 
 /**
  * @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler
- * @typedef {import('../../entities/entity.js').default} Entity
+ * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
  */

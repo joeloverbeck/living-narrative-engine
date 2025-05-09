@@ -7,7 +7,7 @@ import {tokens} from '../../../core/config/tokens.js'; // Adjust path
 
 // --- Import the classes we want to check ---
 import CommandOutcomeInterpreter from '../../../core/interpreters/commandOutcomeInterpreter.js'; // Adjust path
-import PlayerTurnHandler from '../../../core/handlers/playerTurnHandler.js'; // Adjust path
+import PlayerTurnHandler from '../../../core/turns/handlers/playerTurnHandler.js'; // Adjust path
 import TurnManager from '../../../core/turnManager.js';
 import {afterEach, beforeEach, describe, expect, it} from "@jest/globals"; // Adjust path
 

@@ -8,13 +8,13 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js';
-import {SimpleRoundRobinQueue} from '../../../core/turnOrder/queues/simpleRoundRobinQueue.js';
-import {InitiativePriorityQueue} from '../../../core/turnOrder/queues/initiativePriorityQueue.js';
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js';
+import {SimpleRoundRobinQueue} from '../../../core/turns/order/queues/simpleRoundRobinQueue.js';
+import {InitiativePriorityQueue} from '../../../core/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the Queue modules
-jest.mock('../../../core/turnOrder/queues/simpleRoundRobinQueue.js');
-jest.mock('../../../core/turnOrder/queues/initiativePriorityQueue.js');
+jest.mock('../../../core/turns/order/queues/simpleRoundRobinQueue.js');
+jest.mock('../../../core/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({
@@ -65,7 +65,7 @@ describe('TurnOrderService', () => {
             };
             // Ensure the mock function returns the created mock instance
             // Type assertion needed as mockImplementation signature is broad
-            return /** @type {import('../../../core/turnOrder/queues/simpleRoundRobinQueue.js').SimpleRoundRobinQueue} */ (mockSimpleQueueInstance);
+            return /** @type {import('../../../core/turns/order/queues/simpleRoundRobinQueue.js').SimpleRoundRobinQueue} */ (mockSimpleQueueInstance);
         });
 
         InitiativePriorityQueue.mockImplementation(() => {
@@ -81,7 +81,7 @@ describe('TurnOrderService', () => {
             };
             // Ensure the mock function returns the created mock instance
             // Type assertion needed as mockImplementation signature is broad
-            return /** @type {import('../../../core/turnOrder/queues/initiativePriorityQueue.js').InitiativePriorityQueue} */ (mockInitiativeQueueInstance);
+            return /** @type {import('../../../core/turns/order/queues/initiativePriorityQueue.js').InitiativePriorityQueue} */ (mockInitiativeQueueInstance);
         });
     });
 

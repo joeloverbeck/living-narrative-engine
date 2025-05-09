@@ -96,7 +96,7 @@ jest.mock('../../../../core/worldContext.js', () => ({
     })
 }));
 jest.mock('../../../../core/commandProcessor.js', () => ({__esModule: true, default: jest.fn()}));
-jest.mock('../../../../core/turnOrder/turnOrderService.js', () => ({__esModule: true, TurnOrderService: jest.fn()}));
+jest.mock('../../../../core/turns/order/turnOrderService.js', () => ({__esModule: true, TurnOrderService: jest.fn()}));
 // PlayerPromptService is now instantiated by its factory, so we mock its constructor.
 // The factory for IPlayerPromptService will `new PlayerPromptService(...)`.
 jest.mock('../../../../core/services/playerPromptService.js', () => ({
@@ -119,7 +119,7 @@ import CommandParser from "../../../../core/commandParser.js";
 import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../../../core/worldContext.js';
 import CommandProcessor from '../../../../core/commandProcessor.js';
-import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js';
 import PlayerPromptService from '../../../../core/services/playerPromptService.js'; // This is the mocked constructor
 
 // --- Mock Implementations (Core & External Dependencies) ---

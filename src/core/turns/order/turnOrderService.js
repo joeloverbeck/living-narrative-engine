@@ -5,15 +5,15 @@
  * the sequence of entity turns within a round.
  */
 
-import {ITurnOrderService} from '../interfaces/ITurnOrderService.js';
-import {ITurnOrderQueue} from '../interfaces/ITurnOrderQueue.js';
+import {ITurnOrderService} from '../../interfaces/ITurnOrderService.js';
+import {ITurnOrderQueue} from '../../interfaces/ITurnOrderQueue.js';
 import {SimpleRoundRobinQueue} from './queues/simpleRoundRobinQueue.js'; // Added import
 import {InitiativePriorityQueue} from './queues/initiativePriorityQueue.js'; // Added import
 
 // --- Type Imports ---
-/** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */
-/** @typedef {import('../interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Assuming ILogger path
+/** @typedef {import('../../interfaces/ITurnOrderQueue.js').Entity} Entity */
+/** @typedef {import('../../interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */ // Assuming ILogger path
 
 /**
  * @class TurnOrderService

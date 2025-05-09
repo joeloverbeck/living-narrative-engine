@@ -5,7 +5,7 @@
  */
 
 import {describe, it, expect, beforeEach} from '@jest/globals';
-import {SimpleRoundRobinQueue} from '../../../../core/turnOrder/queues/simpleRoundRobinQueue.js'; // Adjust path as needed
+import {SimpleRoundRobinQueue} from '../../../../core/turns/order/queues/simpleRoundRobinQueue.js'; // Adjust path as needed
 
 // Mock Entity type for testing
 /** @typedef {import('../../interfaces/ITurnOrderQueue.js').Entity} Entity */

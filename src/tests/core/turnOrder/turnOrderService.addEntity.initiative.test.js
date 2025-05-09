@@ -8,13 +8,13 @@
  */
 
 import {describe, it, expect, beforeEach, jest, afterEach} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js';
 // Import the actual module so Jest can track it and we can refer to its name
-import {InitiativePriorityQueue} from '../../../core/turnOrder/queues/initiativePriorityQueue.js';
+import {InitiativePriorityQueue} from '../../../core/turns/order/queues/initiativePriorityQueue.js';
 
 // Mock the InitiativePriorityQueue module using its path
 // This should be done *before* the describe block or at the top level
-jest.mock('../../../core/turnOrder/queues/initiativePriorityQueue.js');
+jest.mock('../../../core/turns/order/queues/initiativePriorityQueue.js');
 
 // Mock ILogger interface
 const createMockLogger = () => ({

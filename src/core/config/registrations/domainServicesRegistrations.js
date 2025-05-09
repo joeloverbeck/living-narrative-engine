@@ -13,7 +13,7 @@ import {ActionValidationService} from "../../../services/actionValidationService
 import CommandParser from "../../commandParser.js";
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../worldContext.js';
-import {TurnOrderService} from "../../turnOrder/turnOrderService.js";
+import {TurnOrderService} from "../../turns/order/turnOrderService.js";
 import CommandProcessor from "../../commandProcessor.js";
 import PlayerPromptService from '../../services/playerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js'; // <<< ADDED IMPORT

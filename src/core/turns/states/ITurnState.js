@@ -3,11 +3,11 @@
 
 /**
  * @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler
- * @typedef {import('../../entities/entity.js').default} Entity
- * @typedef {import('../commandProcessor.js').CommandResult} CommandResult
+ * @typedef {import('../../../entities/entity.js').default} Entity
+ * @typedef {import('../../commandProcessor.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirective
- * @typedef {import('../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
- * @typedef {import('../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
+ * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
+ * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
  */
 
 /**

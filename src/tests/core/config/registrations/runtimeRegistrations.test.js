@@ -18,7 +18,7 @@
 /** @typedef {import('../../../../core/turnManager.js').default} TurnManager */
 /** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../../core/services/turnHandlerResolver.js').default} TurnHandlerResolver */
-/** @typedef {import('../../../../core/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../../../../core/turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
 /** @typedef {import('../../../../core/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {any} AppContainer */
 
@@ -41,7 +41,7 @@ import {tokens} from '../../../../core/config/tokens.js';
 import CommandProcessor from '../../../../core/commandProcessor.js';
 import CommandParser from '../../../../core/commandParser.js';
 import WorldContext from '../../../../core/worldContext.js';
-import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js'; // Original for type info if needed
+import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js'; // Original for type info if needed
 
 
 // --- MOCK the Modules (Classes being registered/depended upon) ---
@@ -49,11 +49,11 @@ import {TurnOrderService} from '../../../../core/turnOrder/turnOrderService.js';
 // jest.mock('../../../../core/gameLoop.js');
 jest.mock('../../../../core/setup/inputSetupService.js');
 jest.mock('../../../../core/turnManager.js');
-jest.mock('../../../../core/handlers/playerTurnHandler.js');
+jest.mock('../../../../core/turns/handlers/playerTurnHandler.js');
 jest.mock('../../../../core/commandProcessor.js');
 jest.mock('../../../../core/commandParser.js');
 jest.mock('../../../../core/worldContext.js');
-jest.mock('../../../../core/turnOrder/turnOrderService.js'); // Mocking TurnOrderService
+jest.mock('../../../../core/turns/order/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
 jest.mock('../../../../systems/actionDiscoverySystem.js'); // Mocking ActionDiscoverySystem
 jest.mock('../../../../core/services/turnHandlerResolver.js');
@@ -62,12 +62,12 @@ jest.mock('../../../../core/services/turnHandlerResolver.js');
 // --- Import AFTER mocking ---
 import InputSetupService from '../../../../core/setup/inputSetupService.js';
 import TurnManager from '../../../../core/turnManager.js';
-import PlayerTurnHandler from '../../../../core/handlers/playerTurnHandler.js';
+import PlayerTurnHandler from '../../../../core/turns/handlers/playerTurnHandler.js';
 // Import mocked versions for type checks if needed elsewhere
 import CommandProcessorMock from '../../../../core/commandProcessor.js';
 import CommandParserMock from '../../../../core/commandParser.js';
 import GameStateManagerMock from '../../../../core/worldContext.js';
-import {TurnOrderService as TurnOrderServiceMock} from '../../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService as TurnOrderServiceMock} from '../../../../core/turns/order/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
 import {ActionDiscoverySystem as ActionDiscoverySystemMock} from '../../../../systems/actionDiscoverySystem.js';
 import TurnHandlerResolverMock from '../../../../core/services/turnHandlerResolver.js';

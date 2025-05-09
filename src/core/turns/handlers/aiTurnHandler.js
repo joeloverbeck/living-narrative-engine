@@ -2,17 +2,17 @@
 // ****** CORRECTED FILE ******
 
 // --- Interface Imports ---
-import {ITurnHandler} from '../interfaces/ITurnHandler.js';
+import {ITurnHandler} from '../../interfaces/ITurnHandler.js';
 
 // --- Type Imports for JSDoc ---
-/** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */
-/** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */ // <<< Added Import
+/** @typedef {import('../../../entities/entity.js').default} Entity */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../../commandProcessor.js').CommandResult} CommandResult */
+/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */ // <<< Added Import
 
 /**
  * @class AITurnHandler

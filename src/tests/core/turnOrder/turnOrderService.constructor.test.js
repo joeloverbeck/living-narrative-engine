@@ -6,7 +6,7 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js'; // Adjust path as needed
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js'; // Adjust path as needed
 // Assuming ILogger interface definition (or use a simplified mock structure)
 // For testing, we don't need the actual interface, just an object matching the expected structure.
 

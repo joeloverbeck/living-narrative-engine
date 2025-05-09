@@ -73,7 +73,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
             throw new Error("EventBusPromptAdapter.prompt: availableActions must be an array.");
         }
 
-        /** @type {import('../handlers/playerTurnHandler.js').PlayerTurnPromptPayload} */
+        /** @type {import('../turns/handlers/playerTurnHandler.js').PlayerTurnPromptPayload} */
         const payload = {
             entityId,
             availableActions,

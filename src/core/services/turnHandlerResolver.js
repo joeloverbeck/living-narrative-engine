@@ -11,8 +11,8 @@ import {tokens} from '../config/tokens.js'; // Added tokens for potential future
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler */ // Assuming PlayerTurnHandler is default export
-/** @typedef {import('../handlers/aiTurnHandler.js').default} AITurnHandler */ // Assuming AITurnHandler is default export
+/** @typedef {import('../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */ // Assuming PlayerTurnHandler is default export
+/** @typedef {import('../turns/handlers/aiTurnHandler.js').default} AITurnHandler */ // Assuming AITurnHandler is default export
 
 /**
  * @class TurnHandlerResolver

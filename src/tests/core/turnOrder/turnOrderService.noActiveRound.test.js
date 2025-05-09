@@ -8,7 +8,7 @@
  */
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import {TurnOrderService} from '../../../core/turnOrder/turnOrderService.js';
+import {TurnOrderService} from '../../../core/turns/order/turnOrderService.js';
 
 // Mock ILogger interface
 const createMockLogger = () => ({

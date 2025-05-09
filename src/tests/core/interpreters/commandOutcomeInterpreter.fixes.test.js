@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import CommandOutcomeInterpreter from '../../../core/interpreters/commandOutcomeInterpreter.js';
-import TurnDirective from '../../../core/constants/turnDirectives.js';
+import TurnDirective from '../../../core/turns/constants/turnDirectives.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // Mocks

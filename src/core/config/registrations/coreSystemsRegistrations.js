@@ -23,8 +23,8 @@
 /** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
-/** @typedef {import('../../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
-/** @typedef {import('../../handlers/aiTurnHandler.js').default} AITurnHandler */
+/** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler */
 /** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
@@ -52,8 +52,8 @@ import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turnManager.js';
 
 // --- Handler & Resolver Imports ---
-import PlayerTurnHandler from '../../handlers/playerTurnHandler.js'; // Concrete class
-import AITurnHandler from '../../handlers/aiTurnHandler.js'; // Concrete class
+import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js'; // Concrete class
+import AITurnHandler from '../../turns/handlers/aiTurnHandler.js'; // Concrete class
 import TurnHandlerResolver from '../../services/turnHandlerResolver.js'; // Concrete class
 
 // --- DI & Helper Imports ---

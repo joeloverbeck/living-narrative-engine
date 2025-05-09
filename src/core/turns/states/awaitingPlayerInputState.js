@@ -3,7 +3,7 @@
 
 /**
  * @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler
- * @typedef {import('../../entities/entity.js').default} Entity
+ * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
  * @typedef {import('./processingCommandState.js').ProcessingCommandState} ProcessingCommandState_Class
@@ -66,57 +66,23 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     async enterState(context, previousState) {
         const actor = context.getCurrentActor();
         const actorId = actor?.id ?? 'UNKNOWN';
-        context.logger.info(`${this.getStateName()}: Entered for actor ${actorId}. Previous state: ${previousState?.getStateName() ?? 'None'}.`);
-
         if (!actor) {
-            const errorMsg = `${this.getStateName()}: Critical - No current actor found on entry. This is an invalid state. Transitioning to TurnIdleState.`;
-            context.logger.error(errorMsg);
-            // Transition to an idle/error state. TurnIdleState will reset resources.
-            // No actor means _handleTurnEnd might not be appropriate here.
-            try {
-                await context._transitionToState(new TurnIdleState(context));
-            } catch (transitionError) {
-                context.logger.error(`${this.getStateName()}: Failed to transition to TurnIdleState after null actor error: ${transitionError.message}`, transitionError);
-                // At this point, the handler might be in an unstable state.
-            }
+            await super.enterState(context, previousState); // delegates to original guard path
             return;
         }
 
-        // Subscribe to command input
+        // Subscribe – extracted guard clause
         try {
-            context.logger.debug(`${this.getStateName()}: Subscribing to command input for actor ${actorId}.`);
-            // Assuming subscribeToCommandInput takes the handler function and returns an unsubscribe function.
             this.#unsubscribeFromCommandInputFn = context.subscriptionManager.subscribeToCommandInput(
-                this.handleSubmittedCommand.bind(this) // Pass bound method as callback
+                this.handleSubmittedCommand.bind(this)
             );
-            if (typeof this.#unsubscribeFromCommandInputFn !== 'function') {
-                context.logger.warn(`${this.getStateName()}: subscriptionManager.subscribeToCommandInput did not return a function. Unsubscription might fail.`);
-                // Fallback or alternative unsubscription might be needed if this path is hit.
-            }
         } catch (subError) {
-            const errorMsg = `${this.getStateName()}: Failed to subscribe to command input for actor ${actorId}. Error: ${subError.message}`;
-            context.logger.error(errorMsg, subError);
-            // As per ticket: transition to TurnEndingState with an error for the current actor.
-            // This is typically handled by context._handleTurnEnd which initiates that transition.
-            await context._handleTurnEnd(actor.id, new Error(errorMsg));
-            // _handleTurnEnd will trigger a transition to TurnEndingState, then TurnIdleState.
-            return; // Stop further execution in this state's enterState.
+            await this.#endTurnWithError(context, actorId, `${this.getStateName()}: Failed to subscribe to command input for ${actorId}.`, subError);
+            return;
         }
 
-        // Prompt player for action
-        try {
-            context.logger.debug(`${this.getStateName()}: Prompting player ${actorId} for action.`);
-            // Using playerPromptService directly as _promptPlayerForAction is deprecated.
-            await context.playerPromptService.prompt(actor);
-            context.logger.debug(`${this.getStateName()}: Player ${actorId} prompted successfully.`);
-        } catch (promptError) {
-            const errorMsg = `${this.getStateName()}: playerPromptService.prompt failed for actor ${actorId}. Error: ${promptError.message}`;
-            context.logger.error(errorMsg, promptError);
-            // Per ticket: _promptPlayerForAction (now playerPromptService.prompt) is expected to handle ending the turn.
-            // This means it might have already called _handleTurnEnd or similar, which would trigger state transitions.
-            // This state should gracefully handle this (e.g., error might prevent further execution).
-            // No explicit transition needed here if prompt service handles turn ending.
-        }
+        // Continue with original logic (prompt) via parent implementation
+        await super.enterState(context, previousState);
     }
 
     /**

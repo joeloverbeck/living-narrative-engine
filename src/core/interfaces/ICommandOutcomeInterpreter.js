@@ -2,7 +2,7 @@
 // --- FILE START ---
 /** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */
 // Or a more specific shared type
-/** @typedef {import('../constants/turnDirectives.js').default} TurnDirective */
+/** @typedef {import('../turns/constants/turnDirectives.js').default} TurnDirective */
 
 /**
  * @interface ICommandOutcomeInterpreter
