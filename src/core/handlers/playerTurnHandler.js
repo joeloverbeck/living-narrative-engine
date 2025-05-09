@@ -44,9 +44,7 @@ import {TurnIdleState} from '../turnStates/TurnIdleState.js'; // PTH-STATE-003
  * for handling event subscriptions related to player input and turn completion.
  * The handler guides the turn through various states: prompting the player,
  * receiving and processing commands, interpreting their outcomes, and finally
- * signaling turn completion. It employs internal strategy methods to manage
- * different scenarios arising from command processing and outcome interpretation,
- * such as re-prompting the player or ending the turn.
+ * signaling turn completion.
  * This version incorporates a state pattern for managing the turn lifecycle. // PTH-STATE-003
  */
 class PlayerTurnHandler extends ITurnHandler {
@@ -263,7 +261,7 @@ class PlayerTurnHandler extends ITurnHandler {
      * @returns {Promise<void>} A promise that resolves when the transition is complete.
      * @throws {Error} Propagates errors from state `exitState` or `enterState` methods.
      */
-    async #_transitionToState(newState) {
+    async _transitionToState(newState) {
         if (this.#isDestroyed) {
             this.#logger.warn(`${this.constructor.name}: #_transitionToState called on a destroyed handler. Transition to ${newState.getStateName()} aborted.`);
             return;
@@ -298,6 +296,9 @@ class PlayerTurnHandler extends ITurnHandler {
                 this.#logger.debug(`${this.constructor.name}: enterState on ${newStateName} completed.`);
             } catch (error) {
                 this.#logger.error(`${this.constructor.name}: Error during enterState of ${newStateName} (transitioned from ${previousStateName}): ${error.message}`, error);
+                // If enterState fails, we might be in an inconsistent state.
+                // Depending on the error, we might want to attempt to transition to a safe state (e.g., TurnIdleState).
+                // For now, re-throwing to indicate the transition failed.
                 throw error;
             }
         } else {
@@ -311,7 +312,7 @@ class PlayerTurnHandler extends ITurnHandler {
 
     /**
      * Resets turn-specific flags and subscriptions. Does NOT change the current state.
-     * State transitions (e.g., to an Idle state) must be handled via #_transitionToState by the calling logic.
+     * State transitions (e.g., to an Idle state) must be handled via _transitionToState by the calling logic.
      * @private
      * @param {string} actorIdContextForLog - The actor ID for logging context, defaults to 'N/A'.
      */
@@ -336,22 +337,54 @@ class PlayerTurnHandler extends ITurnHandler {
 
     /**
      * Initiates the turn for a given player actor by delegating to the current state.
+     * This method serves as the entry point for starting a turn. It first performs
+     * essential pre-condition checks, such as ensuring the handler itself is not destroyed.
+     * It then delegates the core turn initiation logic to the `startTurn` method
+     * of its current state object ({@link ITurnState}).
+     *
+     * The promise returned by this method resolves when the initial phase of turn
+     * setup by the state is complete (e.g., transition to an input-awaiting state
+     * and initial player prompt), or rejects if a critical error occurs during this
+     * delegation or initial state processing. This promise does not represent the
+     * completion of the entire turn, which is signaled externally.
+     *
      * @async
+     * @override
      * @param {Entity} actor - The player entity whose turn is to be started.
-     * @returns {Promise<void>}
-     * @throws {Error} Propagates errors from the current state's startTurn method.
+     * @returns {Promise<void>} A promise that resolves upon successful delegation and
+     * initial handling by the current state, or rejects on failure.
+     * @throws {Error} If the handler is destroyed, or if the current state's `startTurn`
+     * method throws an unrecoverable error.
      */
     async startTurn(actor) {
+        const actorIdForLog = actor?.id ?? 'UNKNOWN_ACTOR';
+        this.#logger.info(`${this.constructor.name}: Received request to start turn for actor ${actorIdForLog}. Delegating to current state: ${this.#currentState.getStateName()}`);
+
         if (this.#isDestroyed) {
-            this.#logger.warn(`${this.constructor.name}: startTurn called on a destroyed handler for actor ${actor?.id ?? 'UNKNOWN'}. Ignoring.`);
-            return Promise.resolve(); // Or reject, based on desired strictness for calls on destroyed handler.
+            const errorMessage = `${this.constructor.name}: startTurn called on a destroyed handler for actor ${actorIdForLog}. Operation aborted.`;
+            this.#logger.error(errorMessage);
+            throw new Error(errorMessage);
         }
-        this.#logger.info(`${this.constructor.name}: startTurn called for actor ${actor?.id ?? 'UNKNOWN'}. Delegating to current state: ${this.#currentState.getStateName()}`);
+
+        // Other top-level pre-condition checks (e.g. if a turn is already in progress)
+        // are now primarily handled by the logic within specific states (e.g., TurnIdleState
+        // will proceed, other states like AwaitingPlayerInputState will typically log an error
+        // or be a no-op for a startTurn call).
 
         try {
-            return await this.#currentState.startTurn(this, actor);
+            // The delegation to the state's startTurn method.
+            // ITurnState.startTurn is expected to return Promise<void>.
+            await this.#currentState.startTurn(this, actor);
         } catch (error) {
-            this.#logger.error(`${this.constructor.name}: Error during startTurn delegation to state ${this.#currentState.getStateName()} for actor ${actor?.id ?? 'UNKNOWN'}: ${error.message}`, error);
+            // This catch block handles errors thrown directly by the state's startTurn
+            // or if a state transition initiated by startTurn fails critically.
+            // States themselves should handle most operational errors and may trigger
+            // _handleTurnEnd (which in turn manages state transitions, e.g., to TurnEndingState).
+            this.#logger.error(`${this.constructor.name}: Error during startTurn delegation to state ${this.#currentState.getStateName()} for actor ${actorIdForLog}: ${error.message}`, error);
+            // Re-throw the error to signal failure to the caller.
+            // More sophisticated error handling (e.g., attempting to force a reset to TurnIdleState)
+            // could be added here if necessary, but often it's better if states manage their recovery
+            // or signal unrecoverable errors.
             throw error;
         }
     }
@@ -360,7 +393,7 @@ class PlayerTurnHandler extends ITurnHandler {
      * Handles a command string submitted by the player by delegating to the current state.
      * This method is typically the entry point for command input after initial subscription.
      * @async
-     * @private Lifecycle method, may become public if subscriptions call it directly. For now, private.
+     * @private Lifecycle method, primarily called by subscription callbacks set up by states.
      * @param {string} commandString - The command string submitted by the player.
      * @returns {Promise<void>}
      * @throws {Error} Propagates errors from the current state's handleSubmittedCommand method.
@@ -368,12 +401,12 @@ class PlayerTurnHandler extends ITurnHandler {
     async _handleSubmittedCommand(commandString) {
         if (this.#isDestroyed) {
             this.#logger.warn(`${this.constructor.name}: _handleSubmittedCommand called on a destroyed handler for command "${commandString}". Ignoring.`);
-            return Promise.resolve();
+            return; // Return void promise
         }
         this.#logger.info(`${this.constructor.name}: _handleSubmittedCommand received command "${commandString}". Delegating to current state: ${this.#currentState.getStateName()}`);
 
         try {
-            return await this.#currentState.handleSubmittedCommand(this, commandString);
+            await this.#currentState.handleSubmittedCommand(this, commandString);
         } catch (error) {
             this.#logger.error(`${this.constructor.name}: Error during _handleSubmittedCommand delegation to state ${this.#currentState.getStateName()} for command "${commandString}": ${error.message}`, error);
             throw error;
@@ -387,41 +420,39 @@ class PlayerTurnHandler extends ITurnHandler {
     async _handleEmptyCommand(actor) {
         const className = this.constructor.name;
         this.#logger.warn(`${className}: _handleEmptyCommand called directly on PlayerTurnHandler. This logic should be in an active state (e.g., AwaitingPlayerInputState). Actor: ${actor?.id}. (Old logic)`);
-        // Delegate to current state if it has a specific handler, or log warning.
-        if (this.#currentState && typeof this.#currentState.handleSubmittedCommand === 'function') {
-            // Assuming empty command is still a "submitted command"
-            // return this.#currentState.handleSubmittedCommand(this, ""); // Or a specific method if states define one for empty.
-        }
+        // In state pattern, AwaitingPlayerInputState.handleSubmittedCommand would handle empty strings.
     }
 
     async _handleCommandProcessorSuccess(actor, cmdProcResult, commandString) {
         const className = this.constructor.name;
         this.#logger.warn(`${className}: _handleCommandProcessorSuccess called directly. Logic should be in ProcessingCommandState. Actor: ${actor?.id}. (Old logic)`);
+        // In state pattern, ProcessingCommandState would handle this.
     }
 
     async _handleCommandProcessorFailure(actor, cmdProcResult, commandString) {
         const className = this.constructor.name;
         this.#logger.warn(`${className}: _handleCommandProcessorFailure called directly. Logic should be in ProcessingCommandState. Actor: ${actor?.id}. (Old logic)`);
+        // In state pattern, ProcessingCommandState would handle this.
     }
 
     async _executeRepromptStrategy(actor) {
         const className = this.constructor.name;
-        this.#logger.warn(`${className}: _executeRepromptStrategy called directly. This is a state-driven action. Actor: ${actor?.id}. (Old logic)`);
+        this.#logger.warn(`${className}: _executeRepromptStrategy called directly. This is a state-driven action (e.g., by ProcessingCommandState transitioning to AwaitingPlayerInputState). Actor: ${actor?.id}. (Old logic)`);
     }
 
     async _executeEndTurnFailureStrategy(actor, initialErrorOrInfo, directive, commandString) {
         const className = this.constructor.name;
-        this.#logger.warn(`${className}: _executeEndTurnFailureStrategy called directly. This is a state-driven action. Actor: ${actor?.id}. (Old logic)`);
+        this.#logger.warn(`${className}: _executeEndTurnFailureStrategy called directly. This is a state-driven action (e.g., by ProcessingCommandState transitioning to TurnEndingState). Actor: ${actor?.id}. (Old logic)`);
     }
 
     async _executeEndTurnSuccessStrategy(actor) {
         const className = this.constructor.name;
-        this.#logger.warn(`${className}: _executeEndTurnSuccessStrategy called directly. This is a state-driven action. Actor: ${actor?.id}. (Old logic)`);
+        this.#logger.warn(`${className}: _executeEndTurnSuccessStrategy called directly. This is a state-driven action (e.g., by ProcessingCommandState transitioning to TurnEndingState). Actor: ${actor?.id}. (Old logic)`);
     }
 
     async _executeWaitForTurnEndEventStrategy(actor) {
         const className = this.constructor.name;
-        this.#logger.warn(`${className}: _executeWaitForTurnEndEventStrategy called directly. This is a state-driven action (e.g., by AwaitingExternalTurnEndState). Actor: ${actor?.id}. (Old logic)`);
+        this.#logger.warn(`${className}: _executeWaitForTurnEndEventStrategy called directly. This is a state-driven action (e.g., by ProcessingCommandState transitioning to AwaitingExternalTurnEndState). Actor: ${actor?.id}. (Old logic)`);
     }
 
     async #_processValidatedCommand(actor, commandString) {
@@ -437,6 +468,7 @@ class PlayerTurnHandler extends ITurnHandler {
     async _promptPlayerForAction(actor) {
         const className = this.constructor.name;
         this.#logger.warn(`${className}: _promptPlayerForAction called directly on PlayerTurnHandler. States should use 'this.context.playerPromptService.prompt()'. Actor: ${actor?.id}. (Old logic)`);
+        // In state pattern, AwaitingPlayerInputState.enterState calls playerPromptService.prompt().
     }
 
     /**
@@ -467,7 +499,7 @@ class PlayerTurnHandler extends ITurnHandler {
             return;
         }
 
-        this.#isTerminatingNormally = true;
+        this.#isTerminatingNormally = true; // Mark that termination is being handled.
         this.#logger.info(`${className}: Finalizing turn processing for ${actorId} (status: ${endingStatus}).`);
 
         if (!isSuccess) {
@@ -521,21 +553,25 @@ class PlayerTurnHandler extends ITurnHandler {
     }
 
     #clearTurnEndWaitingMechanisms() {
-        // This logic is now primarily responsibility of AwaitingExternalTurnEndState.
-        // Kept for now if any old code paths call it.
+        // This logic is now primarily responsibility of AwaitingExternalTurnEndState and _resetTurnStateAndResources.
         const className = this.constructor.name;
-        this.#logger.debug(`${className}.#clearTurnEndWaitingMechanisms called. (Old logic - AwaitingExternalTurnEndState will manage its own subscriptions)`);
+        this.#logger.debug(`${className}.#clearTurnEndWaitingMechanisms called. (Old logic - AwaitingExternalTurnEndState will manage its own subscriptions or _resetTurnStateAndResources clears all)`);
 
-        if (this.#isAwaitingTurnEndEvent) {
-            this.#subscriptionManager.unsubscribeFromTurnEnded();
-        }
+        // Unsubscribe specific turn ended subscription if one was made by AwaitingExternalTurnEndState
+        // This implies SubscriptionLifecycleManager needs a more targeted unsubscribe or states manage their own unsubscribe functions.
+        // The current #subscriptionManager.unsubscribeFromTurnEnded() is somewhat generic.
+        // For now, this specific method is largely superseded by state exit logic / _resetTurnStateAndResources.
+
+        // if (this.#isAwaitingTurnEndEvent) {
+        //     this.#subscriptionManager.unsubscribeFromTurnEnded(); // This might be too broad if it's a generic method.
+        // }
         this.#isAwaitingTurnEndEvent = false;
         this.#awaitingTurnEndForActorId = null;
     }
 
     signalNormalApparentTermination() {
         const className = this.constructor.name;
-        this.#logger.debug(`${className}: signalNormalApparentTermination called. Setting #isTerminatingNormally=true. (Old logic - relevance TBD with states)`);
+        this.#logger.debug(`${className}: signalNormalApparentTermination called. Setting #isTerminatingNormally=true. (Old logic - this flag is now set within _handleTurnEnd)`);
         this.#isTerminatingNormally = true;
     }
 
@@ -556,32 +592,44 @@ class PlayerTurnHandler extends ITurnHandler {
         this.#logger.info(`${className}: Destroying handler instance. Actor context: ${initialCurrentActorIdForLog}, Current state: ${currentStateAtDestroyStart}.`);
         this.#isDestroyed = true;
 
+        // Call destroy on the current state, if it exists and has the method.
+        // The state's destroy method is responsible for any state-specific cleanup
+        // and potentially for finalizing the turn if it's active.
         if (this.#currentState && typeof this.#currentState.destroy === 'function') {
             this.#logger.debug(`${className}: Calling destroy() on current state: ${currentStateAtDestroyStart}.`);
-            this.#currentState.destroy(this)
-                .catch(err => { // Handle potential promise rejection from state's async destroy
+            // State's destroy method is async, but we don't await it here in the main destroy flow
+            // to prevent destroy() from becoming async itself if not strictly necessary.
+            // Errors in state.destroy() should be logged by the state or by this catch.
+            Promise.resolve(this.#currentState.destroy(this))
+                .catch(err => {
                     this.#logger.error(`${className}: Error during state ${currentStateAtDestroyStart} destroy() call: ${err.message}`, err);
                 });
         }
 
+        // Failsafe: If a turn was active and not marked as terminating normally
+        // (e.g., if state.destroy() didn't call _handleTurnEnd), notify turn end port.
         if (this.#currentActor && !this.#isTerminatingNormally) {
-            this.#logger.warn(`${className}: Destroying during active turn for ${this.#currentActor.id} (not normally terminated via #isTerminatingNormally flag). Failsafe: notifying TurnEndPort of failure.`);
+            this.#logger.warn(`${className}: Destroying during active turn for ${this.#currentActor.id} that was not marked as normally terminated. Failsafe: notifying TurnEndPort of failure.`);
+            // Not awaiting here to keep destroy() synchronous.
             this.#turnEndPort.notifyTurnEnded(this.#currentActor.id, false)
                 .catch(notifyErr => {
                     this.#logger.error(`${className}: Error in failsafe TurnEndPort notification for ${this.#currentActor.id} during destroy: ${notifyErr.message}`, notifyErr);
                 });
         } else if (this.#currentActor) {
-            this.#logger.debug(`${className}: Destroying for ${this.#currentActor.id} (was normally terminated or no explicit abnormality). Failsafe TurnEndPort notification skipped.`);
+            this.#logger.debug(`${className}: Destroying for ${this.#currentActor.id}. Turn was either normally terminated or state's destroy handled it. Failsafe TurnEndPort notification skipped.`);
         } else {
             this.#logger.debug(`${className}: Destroying handler (no #currentActor at PTH level). No failsafe notification needed.`);
         }
 
         const actorIdForResetLog = this.#currentActor?.id || 'destroy_context_N/A';
         this.#logger.debug(`${className}: Calling _resetTurnStateAndResources (flags, subscriptions) during destroy (actor context: ${actorIdForResetLog}).`);
-        this._resetTurnStateAndResources(actorIdForResetLog);
+        this._resetTurnStateAndResources(actorIdForResetLog); // Clears #currentActor, subscriptions etc.
 
-        const finalStateLogName = this.#currentState?.getStateName() ?? 'None_before_final_set';
-        this.#currentState = new TurnIdleState(this); // Force to an inert, known state.
+        // Force state to a safe, inert state.
+        const finalStateLogName = this.#currentState?.getStateName() ?? 'None_before_final_set'; // Log previous state name
+        this.#currentState = new TurnIdleState(this); // Explicitly set to TurnIdleState.
+        // Note: We do not call enterState for this new TurnIdleState during destroy,
+        // as the handler is being dismantled, not starting normal operation.
         this.#logger.info(`${className}: Destruction completed. Handler is destroyed. State forced to ${this.#currentState.getStateName()} (was ${finalStateLogName}). Current PTH actor: ${this.#currentActor?.id || 'null'}.`);
     }
 
@@ -650,7 +698,7 @@ class PlayerTurnHandler extends ITurnHandler {
             }
             this.#logger.debug(`${this.constructor.name}._TEST_TRANSITION_TO_STATE: Test call to transition to ${newState.getStateName()}`);
             try {
-                await this.#_transitionToState(newState);
+                await this._transitionToState(newState);
             } catch (e) {
                 this.#logger.error(`${this.constructor.name}._TEST_TRANSITION_TO_STATE: Error during test transition: ${e.message}`, e);
             }
