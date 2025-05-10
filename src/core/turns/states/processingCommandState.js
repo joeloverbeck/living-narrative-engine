@@ -1,297 +1,298 @@
-// ===========================================================================
-//  src/core/turnStates/processingCommandState.js
-// ===========================================================================
-/* eslint-disable max-lines */
-
-/**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
- * @typedef {import('../../../entities/entity.js').default} Entity
- * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
- * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../commandProcessor.js').CommandResult} CommandResult
- */
-
 import {AbstractTurnState} from './abstractTurnState.js';
 import {TurnIdleState} from './turnIdleState.js';
-// States for transitions are imported but not directly used for ITurnContext here
-// import {AwaitingPlayerInputState} from './awaitingPlayerInputState.js';
-// import {AwaitingExternalTurnEndState} from './awaitingExternalTurnEndState.js';
-// import {TurnEndingState} from './turnEndingState.js';
-
-
-// Constants & strategy resolver
 import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
-import {SYSTEM_ERROR_OCCURRED_ID} from '../../constants/eventIds.js';
+import {SYSTEM_ERROR_OCCURRED_ID} from '../../constants/eventIds.js'; // Assuming eventIds are in a constants file
 
+/**
+ * @description State responsible for processing a submitted command string.
+ * It uses ICommandProcessor, interprets the outcome with ICommandOutcomeInterpreter,
+ * and then delegates to an appropriate ITurnDirectiveStrategy.
+ * All operations are performed exclusively through the ITurnContext interface.
+ */
 export class ProcessingCommandState extends AbstractTurnState {
-    /** @type {string} */ #commandString;
+    /**
+     * @type {string}
+     * @private
+     */
+    _commandString;
 
     /**
-     * @param {BaseTurnHandler} handler
-     * @param {string} commandString
+     * @type {boolean}
+     * @private
+     */
+    _isProcessing = false;
+
+    /**
+     * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler The turn handler.
+     * @param {string} commandString The command string to process.
      */
     constructor(handler, commandString) {
-        super(handler); // AbstractTurnState constructor expects BaseTurnHandler
-        const turnCtx = this._getTurnContext(); // For logger access during construction if needed
-        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
-
-        if (typeof commandString !== 'string' || commandString.trim() === '') {
-            const msg = `${this.constructor.name}: commandString must be a non-empty string.`;
-            logger.error(msg);
-            throw new Error(msg);
-        }
-        this.#commandString = commandString;
+        super(handler);
+        this._commandString = commandString;
+        this._isProcessing = false;
     }
 
-    /** @returns {string} */
-    getStateName() {
-        return 'ProcessingCommandState';
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    //  State life-cycle – enter
-    // ────────────────────────────────────────────────────────────────────
     /**
      * @override
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnState_Interface} [previousState]
+     * @async
+     * @param {string} [previousStateId=null]
+     * @returns {Promise<void>}
      */
-    async enterState(handler, previousState) {
-        await super.enterState(handler, previousState); // Logs entry using this._getTurnContext()
+    async enterState(previousStateId = null) {
+        this._isProcessing = true;
+        const turnCtx = this._getTurnContext();
 
-        const turnCtx = this._getTurnContext(); // Must exist
-        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
-
-        if (!turnCtx) {
-            logger.error(`${this.getStateName()}: Critical - ITurnContext not available on entry. Transitioning to Idle.`);
-            handler._resetTurnStateAndResources(`critical-entry-no-context-${this.getStateName()}`);
-            await handler._transitionToState(new TurnIdleState(handler));
+        if (!turnCtx || !turnCtx.isValid()) {
+            const logger = turnCtx?.getLogger() ?? console; // Fallback logger
+            logger.warn('ProcessingCommandState: Invalid turn context on enter. Attempting to reset and idle.');
+            if (turnCtx && typeof turnCtx.endTurn === 'function') {
+                await turnCtx.endTurn(new Error('Invalid context during command processing initiation.'));
+            } else {
+                // Fallback if context is too broken to even end turn
+                this._handler._resetTurnStateAndResources(); // Potentially problematic if _handler doesn't have this directly
+                this._handler._transitionToState(new TurnIdleState(this._handler)); // or via a context request if available
+            }
+            this._isProcessing = false;
             return;
         }
+
+        const logger = turnCtx.getLogger();
+        logger.debug(`Entering ProcessingCommandState with command: "${this._commandString}" for actor: ${turnCtx.getActor()?.getId()}`);
 
         const actor = turnCtx.getActor();
-        const actorId = actor?.id ?? 'UNKNOWN_ACTOR';
-
         if (!actor) {
-            logger.error(`${this.getStateName()}: No current actor in ITurnContext. Transitioning to TurnIdleState.`);
-            // No actorId to pass to _handleTurnEnd, so endTurn on context is not ideal here.
-            // Reset resources and transition to Idle directly.
-            handler._resetTurnStateAndResources(`no-actor-in-context-${this.getStateName()}`);
-            await handler._transitionToState(new TurnIdleState(handler));
+            logger.error('ProcessingCommandState: No actor found in turn context. Ending turn.');
+            await this.#handleProcessingException(turnCtx, new Error('No actor present at the start of command processing.'));
+            this._isProcessing = false;
             return;
         }
 
-        // Defensive: Ensure not dangling on an old TURN_ENDED wait.
-        // The original code called context._clearTurnEndWaitingMechanisms?.();
-        // This was PlayerTurnHandler specific. If this state needs to ensure such flags are
-        // cleared, that mechanism would need to be on ITurnContext or BaseTurnHandler.
-        // For now, assuming ITurnContext.isAwaitingExternalEvent() and ITurnContext.endTurn() manage this.
-        if (turnCtx.isAwaitingExternalEvent()) {
-            logger.warn(`${this.getStateName()}: Entered while ITurnContext is still awaiting an external event for actor ${actorId}. This might be unexpected. Proceeding with command processing.`);
-            // Consider if turnCtx.endTurn() should be called to clear the previous wait state implicitly.
-            // For now, let's assume the new command processing supersedes.
-        }
-
-        // Kick off async pipeline
-        this._processCommandInternal(handler, turnCtx) // Pass handler for transitions, turnCtx for ops
-            .catch(err => this.#handleProcessingException(handler, turnCtx, actorId, err, 'pipeline'));
+        // Asynchronously process the command without blocking enterState
+        this._processCommandInternal(turnCtx, actor, this._commandString)
+            .catch(error => {
+                // This catch is a safety net. #handleProcessingException should ideally be called within _processCommandInternal
+                const currentTurnCtx = this._getTurnContext(); // Re-fetch context
+                this.#handleProcessingException(currentTurnCtx ?? turnCtx, error);
+            })
+            .finally(() => {
+                this._isProcessing = false;
+            });
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  Centralised error helper
-    // ────────────────────────────────────────────────────────────────────
     /**
-     * @private
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnContext | null} turnCtxForErrorLogging - Can be null if error happens before context is fully stable
-     * @param {string} actorId
-     * @param {Error} error
-     * @param {string} [origin='']
+     * @override
+     * @async
+     * @returns {Promise<void>}
      */
-    async #handleProcessingException(handler, turnCtxForErrorLogging, actorId, error, origin = '') {
-        const logger = turnCtxForErrorLogging ? turnCtxForErrorLogging.getLogger() : handler.getLogger();
-        const originTxt = origin ? ` (${origin})` : '';
-        logger.error(`${this.getStateName()}: Error for actor ${actorId}${originTxt} – ${error.message}`, error);
+    async exitState() {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx?.getLogger() ?? console;
+        logger.debug(`Exiting ProcessingCommandState for actor: ${turnCtx?.getActor()?.getId()}`);
+        // If processing was somehow interrupted and exitState is called, ensure turn ends.
+        if (this._isProcessing && turnCtx && turnCtx.isValid()) {
+            logger.warn('ProcessingCommandState: Exiting while still marked as processing. Attempting to end turn.');
+            await turnCtx.endTurn(new Error('ProcessingCommandState exited prematurely.'));
+        }
+        this._isProcessing = false;
+    }
+
+    /**
+     * @override
+     * @async
+     * @returns {Promise<void>}
+     */
+    async destroy() {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx?.getLogger() ?? console;
+        logger.debug(`Destroying ProcessingCommandState for actor: ${turnCtx?.getActor()?.getId()}`);
+
+        if (this._isProcessing && turnCtx && turnCtx.isValid()) {
+            logger.warn('ProcessingCommandState: Destroyed during active processing. Ending turn.');
+            await turnCtx.endTurn(new Error('Command processing was destroyed mid-operation.'));
+        }
+        this._isProcessing = false;
+        // Pass the handler to the superclass's destroy method
+        if (super.destroy) { // Check if super.destroy exists
+            await super.destroy(this._handler); // Pass this._handler
+        }
+    }
+
+    /**
+     * @returns {import('../interfaces/ITurnContext.js').ITurnContext | null}
+     * @protected
+     */
+    _getTurnContext() {
+        // Assuming BaseTurnHandler provides getTurnContext()
+        return this._handler.getTurnContext();
+    }
+
+    /**
+     * Orchestrates the command processing pipeline.
+     * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx The turn context.
+     * @param {import('../../actors/actor.js').Actor} actor The current actor.
+     * @param {string} commandString The command to process.
+     * @returns {Promise<void>}
+     * @private
+     */
+    async _processCommandInternal(turnCtx, actor, commandString) {
+        const logger = turnCtx.getLogger();
+        logger.info(`Processing command "${commandString}" for actor ${actor.getId()}`);
 
         try {
-            // Use safeEventDispatcher from turnCtx if available, else from handler (if it has one, unlikely for Base)
-            const eventDispatcher = turnCtxForErrorLogging?.getSafeEventDispatcher();
-            if (eventDispatcher) {
-                await eventDispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
-                    message: error.message,
-                    error,
-                    actorId: actorId, // Add actorId to event
-                });
-            } else {
-                logger.warn(`${this.getStateName()}: SafeEventDispatcher not available via ITurnContext to dispatch SYSTEM_ERROR_OCCURRED.`);
+            // 1. Validate context and actor (re-check after potential await in enterState if any)
+            let currentTurnCtx = this._getTurnContext();
+            if (!currentTurnCtx || !currentTurnCtx.isValid() || currentTurnCtx.getActor()?.getId() !== actor.getId()) {
+                logger.warn(`ProcessingCommandState: Turn context invalidated or actor changed mid-processing for ${actor.getId()}. Original turn will be ended.`);
+                if (turnCtx && turnCtx.isValid() && typeof turnCtx.endTurn === 'function') { // Original context
+                    await turnCtx.endTurn(new Error('Actor context became invalid during command processing.'));
+                }
+                // If currentTurnCtx is what changed, the new actor's turn (if any) is not our concern here.
+                return;
             }
-        } catch (dispatchErr) {
-            logger.warn(`${this.getStateName()}: Failed dispatching SYSTEM_ERROR_OCCURRED – ${dispatchErr.message}`, dispatchErr);
+            // Use the most current context from here
+            turnCtx = currentTurnCtx;
+
+
+            // 2. Get Command Processor
+            const commandProcessor = turnCtx.getCommandProcessor();
+            if (!commandProcessor) {
+                throw new Error('ICommandProcessor not available from ITurnContext.');
+            }
+
+            // 3. Process Command
+            const processingResult = await commandProcessor.process(turnCtx, actor, commandString);
+
+            // 4. Re-validate context and actor after await
+            currentTurnCtx = this._getTurnContext();
+            if (!currentTurnCtx || !currentTurnCtx.isValid() || currentTurnCtx.getActor()?.getId() !== actor.getId()) {
+                logger.warn(`ProcessingCommandState: Turn context invalidated or actor changed post-command-processing for ${actor.getId()}. Original turn ending.`);
+                if (turnCtx && turnCtx.isValid() && typeof turnCtx.endTurn === 'function') { // Original context at the start of this method
+                    await turnCtx.endTurn(new Error('Actor context became invalid after command processing.'));
+                }
+                return;
+            }
+            turnCtx = currentTurnCtx; // Use the latest
+
+            // 5. Get Command Outcome Interpreter
+            const outcomeInterpreter = turnCtx.getCommandOutcomeInterpreter();
+            if (!outcomeInterpreter) {
+                throw new Error('ICommandOutcomeInterpreter not available from ITurnContext.');
+            }
+
+            // 6. Interpret Outcome
+            const directiveType = outcomeInterpreter.interpret(processingResult);
+            logger.debug(`Command processing for "${commandString}" resulted in directive: ${directiveType}`);
+
+            // 7. Resolve and Execute Strategy
+            const strategy = TurnDirectiveStrategyResolver.resolveStrategy(directiveType);
+            if (!strategy) {
+                throw new Error(`No ITurnDirectiveStrategy found for directive: ${directiveType}`);
+            }
+
+            if (processingResult.success) {
+                await this._handleProcessorSuccess(turnCtx, actor, directiveType, strategy, processingResult);
+            } else {
+                await this._handleProcessorFailure(turnCtx, actor, directiveType, strategy, processingResult);
+            }
+
+        } catch (error) {
+            // Ensure we use the context that was active when the error is caught,
+            // or the initial context if re-fetch fails.
+            const errorHandlingCtx = this._getTurnContext() || turnCtx;
+            await this.#handleProcessingException(errorHandlingCtx, error);
+        }
+    }
+
+    /**
+     * Handles successful command processing outcomes by executing the resolved strategy.
+     * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx
+     * @param {import('../../actors/actor.js').Actor} actor
+     * @param {string} directiveType
+     * @param {import('../strategies/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} strategy
+     * @param {object} cmdProcResult The result from ICommandProcessor.
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async _handleProcessorSuccess(turnCtx, actor, directiveType, strategy, cmdProcResult) {
+        const logger = turnCtx.getLogger();
+        logger.debug(`Handling successful command processing. Strategy: ${strategy.constructor.name}, Directive: ${directiveType}`);
+        await strategy.execute(turnCtx, actor, directiveType, cmdProcResult);
+    }
+
+    /**
+     * Handles failed command processing outcomes by executing the resolved strategy.
+     * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx
+     * @param {import('../../actors/actor.js').Actor} actor
+     * @param {string} directiveType
+     * @param {import('../strategies/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} strategy
+     * @param {object} cmdProcResult The result from ICommandProcessor.
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async _handleProcessorFailure(turnCtx, actor, directiveType, strategy, cmdProcResult) {
+        const logger = turnCtx.getLogger();
+        logger.warn(`Handling failed command processing. Strategy: ${strategy.constructor.name}, Directive: ${directiveType}, Error: ${cmdProcResult.error}`);
+        await strategy.execute(turnCtx, actor, directiveType, cmdProcResult);
+    }
+
+    /**
+     * Handles exceptions that occur during command processing.
+     * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx The turn context.
+     * @param {Error} error The error that occurred.
+     * @returns {Promise<void>}
+     * @private
+     */
+    async #handleProcessingException(turnCtx, error) {
+        // Validate turnCtx *before* using it, especially if it was re-fetched.
+        if (!turnCtx || typeof turnCtx.getLogger !== 'function' || typeof turnCtx.getSafeEventDispatcher !== 'function' || typeof turnCtx.endTurn !== 'function') {
+            console.error('ProcessingCommandState: Critical error - Invalid turn context during exception handling. Cannot dispatch event or end turn properly.', error);
+            // Attempt a more primitive cleanup if handler is available and has the method
+            if (this._handler && typeof this._handler._resetTurnStateAndResources === 'function') {
+                this._handler._resetTurnStateAndResources();
+                this._handler._transitionToState(new TurnIdleState(this._handler));
+            }
+            this._isProcessing = false; // Ensure state is reset
+            return;
         }
 
-        // End the turn via ITurnContext if available, otherwise via handler's _handleTurnEnd
-        if (turnCtxForErrorLogging) {
-            turnCtxForErrorLogging.endTurn(error);
+        const logger = turnCtx.getLogger();
+        logger.error(`Error during command processing: ${error.message}`, error);
+
+        const eventDispatcher = turnCtx.getSafeEventDispatcher();
+        if (eventDispatcher) {
+            try {
+                await eventDispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
+                    error: error,
+                    message: `System error during command processing for actor ${turnCtx.getActor()?.getId()}: ${error.message}`,
+                    actorId: turnCtx.getActor()?.getId(),
+                    turnState: this.constructor.name,
+                });
+            } catch (dispatchError) {
+                logger.error(`Failed to dispatch system error event: ${dispatchError.message}`, dispatchError);
+            }
         } else {
-            // This is a fallback if context was lost or not established
-            await handler._handleTurnEnd(actorId, error);
+            logger.warn('ProcessingCommandState: ISafeEventDispatcher not available from ITurnContext. Cannot dispatch SYSTEM_ERROR_OCCURRED_ID.');
         }
+
+        // End the turn
+        if (turnCtx.isValid()) { // Check validity before ending
+            await turnCtx.endTurn(error);
+        } else {
+            logger.warn('ProcessingCommandState: Turn context became invalid before explicit turn end in exception handler.');
+            // Fallback if context is too broken but was minimally valid at start of this method
+            if (this._handler && typeof this._handler._resetTurnStateAndResources === 'function') {
+                this._handler._resetTurnStateAndResources();
+                this._handler._transitionToState(new TurnIdleState(this._handler));
+            }
+        }
+        this._isProcessing = false; // Ensure state is reset
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  Main orchestration
-    // ────────────────────────────────────────────────────────────────────
-    /**
-     * @private
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnContext} turnCtx - Assumed to be valid and passed in.
-     */
-    async _processCommandInternal(handler, turnCtx) {
-        const actor = turnCtx.getActor(); // Actor from ITurnContext
-        // Actor should be guaranteed by enterState checks. If not, it's a critical flow error.
-        if (!actor) {
-            // This case should ideally not be reached if enterState is robust.
-            const errMsg = "Critical: _processCommandInternal called without a valid actor in ITurnContext.";
-            turnCtx.getLogger().error(errMsg);
-            await this.#handleProcessingException(handler, turnCtx, 'UNKNOWN_ACTOR_PROCESS_INTERNAL', new Error(errMsg), 'actorValidation');
-            return;
-        }
-        const actorId = actor.id;
-
-        let cmdProcResult;
-        try {
-            const commandProcessor = turnCtx.getCommandProcessor(); // From ITurnContext
-            cmdProcResult = await commandProcessor.processCommand(actor, this.#commandString);
-        } catch (procErr) {
-            await this.#handleProcessingException(handler, turnCtx, actorId, procErr, 'processCommand');
-            return;
-        }
-
-        // Guard: actor/context mismatch (e.g. if turn ended asynchronously during processing)
-        // Re-fetch current context from handler, as it might have changed due to an async operation or error.
-        const freshTurnCtx = handler.getTurnContext();
-        if (!freshTurnCtx || freshTurnCtx.getActor()?.id !== actorId) {
-            const freshActorId = freshTurnCtx?.getActor()?.id ?? 'NONE';
-            const mismatchError = new Error(`Turn invalidated during processing. Original actor: ${actorId}, current context actor: ${freshActorId}.`);
-            // Log with original context's logger if available, else new context's or handler's.
-            const loggerForMismatch = turnCtx.getLogger() || freshTurnCtx?.getLogger() || handler.getLogger();
-            loggerForMismatch.warn(mismatchError.message);
-            // End the turn for the actorId we started with, using the original turnCtx if it seems most relevant,
-            // or freshTurnCtx if it's the only one. This is tricky.
-            // Safest is to use the handler's direct _handleTurnEnd
-            await handler._handleTurnEnd(actorId, mismatchError);
-            return;
-        }
-        // From here, use freshTurnCtx as it's the most current.
-        const currentTurnCtx = freshTurnCtx;
-
-        const handlerFn = cmdProcResult.success ? this._handleProcessorSuccess : this._handleProcessorFailure;
-        try {
-            // Pass handler for transitions, currentTurnCtx for operations
-            await handlerFn.call(this, handler, currentTurnCtx, currentTurnCtx.getActor(), cmdProcResult, this.#commandString);
-        } catch (err) {
-            await this.#handleProcessingException(handler, currentTurnCtx, actorId, err, 'postProcess');
-        }
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    //  Success path – strategy driven
-    // ────────────────────────────────────────────────────────────────────
-    /**
-     * @private
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnContext} turnCtx
-     * @param {Entity} actor
-     * @param {CommandResult} cmdProcResult
-     * @param {string} commandString
-     */
-    async _handleProcessorSuccess(handler, turnCtx, actor, cmdProcResult, commandString) {
-        const outcomeInterpreter = turnCtx.getCommandOutcomeInterpreter(); // From ITurnContext
-        const directive = await outcomeInterpreter.interpret(actor, cmdProcResult, commandString);
-
-        // TurnDirectiveStrategyResolver is static, doesn't need context.
-        // Strategy's execute method will need ITurnContext.
-        const dirType = (directive && typeof directive === 'object') ? directive.type : directive;
-        const strategy = TurnDirectiveStrategyResolver.resolveStrategy(dirType);
-
-        // Execute strategy: pass ITurnContext
-        await strategy.execute(turnCtx, actor, dirType, cmdProcResult);
-        turnCtx.getLogger().debug(`${this.getStateName()}: ${strategy.constructor.name} executed for actor ${actor.id} using ITurnContext.`);
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    //  Failure path – mirrors success logic
-    // ────────────────────────────────────────────────────────────────────
-    /**
-     * @private
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnContext} turnCtx
-     * @param {Entity} actor
-     * @param {CommandResult} cmdProcResult
-     * @param {string} commandString
-     */
-    async _handleProcessorFailure(handler, turnCtx, actor, cmdProcResult, commandString) {
-        if (cmdProcResult.turnEnded === true) { // Legacy behavior check
-            const err = cmdProcResult.error instanceof Error
-                ? cmdProcResult.error
-                : new Error(cmdProcResult.message || `Command failed for ${actor.id}.`);
-            turnCtx.getLogger().warn(`${this.getStateName()}: CommandProcessor indicated turn ended for ${actor.id}. Ending turn via context.`);
-            turnCtx.endTurn(err); // End turn via ITurnContext
-            return; // Strategy execution is skipped
-        }
-
-        const outcomeInterpreter = turnCtx.getCommandOutcomeInterpreter(); // From ITurnContext
-        const directive = await outcomeInterpreter.interpret(actor, cmdProcResult, commandString);
-
-        const dirType = (directive && typeof directive === 'object') ? directive.type : directive;
-        const strategy = TurnDirectiveStrategyResolver.resolveStrategy(dirType);
-
-        // Execute strategy: pass ITurnContext
-        await strategy.execute(turnCtx, actor, dirType, cmdProcResult);
-        turnCtx.getLogger().debug(`${this.getStateName()}: ${strategy.constructor.name} executed for actor ${actor.id} (failure path) using ITurnContext.`);
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    //  State life-cycle – exit & destroy
-    // ────────────────────────────────────────────────────────────────────
     /**
      * @override
-     * @param {BaseTurnHandler} handler
-     * @param {ITurnState_Interface} [nextState]
+     * @returns {string}
      */
-    async exitState(handler, nextState) {
-        // AbstractTurnState.exitState uses this._getTurnContext() for actorId in log.
-        await super.exitState(handler, nextState);
+    get id() {
+        return 'ProcessingCommand';
     }
-
-    /**
-     * @override
-     * @param {BaseTurnHandler} handler
-     */
-    async destroy(handler) {
-        const turnCtx = this._getTurnContext(); // Get context before it might be cleared
-        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
-        const actorId = turnCtx?.getActor()?.id ?? 'N/A_destroy';
-
-        logger.warn(`${this.getStateName()}: Handler destroyed while processing command "${this.#commandString}" for ${actorId}.`);
-
-        if (turnCtx && turnCtx.getActor()) { // Check if a turn was actively being processed
-            logger.debug(`${this.getStateName()}: Notifying turn end for ${actorId} due to destruction via ITurnContext.`);
-            turnCtx.endTurn(new Error(`Handler destroyed during command processing for ${actorId}.`));
-        } else {
-            logger.warn(`${this.getStateName()}: Handler destroyed, but no active ITurnContext/actor. No specific turn to end.`);
-        }
-        await super.destroy(handler); // Logs from AbstractTurnState
-        logger.debug(`${this.getStateName()}: Destroy handling for ${actorId} complete.`);
-    }
-
-    // Disallowed external calls (rely on AbstractTurnState defaults)
-    // async startTurn(handler, actorEntity) { return super.startTurn(handler, actorEntity); }
-    // async handleSubmittedCommand(handler, cmdString, actorEntity) { return super.handleSubmittedCommand(handler, cmdString, actorEntity); }
-    // async handleTurnEndedEvent(handler, payload) { return super.handleTurnEndedEvent(handler, payload); }
-    // async processCommandResult(handler, actor, cmdProcResult, commandString) { /* This state's purpose */ }
-    // async handleDirective(handler, actor, directive, cmdProcResult) { /* This state's purpose */ }
 }
-
-/* eslint-enable max-lines */

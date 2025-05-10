@@ -390,7 +390,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
             expect(stateDestroySpy).toHaveBeenCalledTimes(1);
             // CORRECTED LINE BELOW (REMOVED expect.stringContaining WRAPPER)
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: BaseTurnHandler destroyed while awaiting input for ${dummyActor.id}.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while awaiting input for ${dummyActor.id}.`);
 
             expect(handler._handleTurnEnd).toHaveBeenCalledTimes(1);
             expect(handler._handleTurnEnd).toHaveBeenCalledWith(dummyActor.id, expect.any(Error), true);
