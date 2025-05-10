@@ -239,6 +239,9 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(handler.onEnterState).toHaveBeenCalledWith(expect.any(AwaitingPlayerInputState), expect.any(TurnIdleState));
         });
 
+        // ─────────────────────────────────────────────────────────────────
+        // START OF CORRECTED TEST CASE
+        // ─────────────────────────────────────────────────────────────────
         test('TurnIdleState.startTurn should throw (and handler recover) if ITurnContext is missing', async () => {
             const dummyInitialStateForMisconfigured = createDummyInitialState('DummyForMisconfiguredTest');
             const misconfiguredHandler = new MinimalTestHandler({
@@ -246,7 +249,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
                 initialConcreteState: dummyInitialStateForMisconfigured,
                 servicesForContext: mockServices,
                 isAwaitingExternalEventProviderForContext: mockIsAwaitingExternalEventProvider,
-                onSetAwaitingExternalEventCallbackProviderForContext: mockOnSetAwaitingExternalEventCallback, // Added
+                onSetAwaitingExternalEventCallbackProviderForContext: mockOnSetAwaitingExternalEventCallback,
             });
             misconfiguredHandler._currentState = new TurnIdleState(misconfiguredHandler);
             jest.spyOn(misconfiguredHandler, 'onEnterState').mockImplementation(async () => {
@@ -259,19 +262,33 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             mockLogger.warn.mockClear();
             mockLogger.debug.mockClear();
 
+            // Simulate that the concrete handler's startTurn failed to set the context
             misconfiguredHandler._setCurrentTurnContextInternal(null);
+            // SetCurrentActorInternal is usually called before context creation in a typical handler.startTurn
+            // This ensures actorIdForLog in TurnIdleState is correctly populated for the error message.
             misconfiguredHandler._setCurrentActorInternal(dummyActor);
 
-            const turnIdleState = new TurnIdleState(misconfiguredHandler);
+            const turnIdleState = new TurnIdleState(misconfiguredHandler); // Or use misconfiguredHandler._getInternalState();
 
-            await expect(turnIdleState.startTurn(misconfiguredHandler, dummyActor)).rejects.toThrow("TurnIdleState: ITurnContext not available on the handler after handler.startTurn() was called. This indicates an issue in the concrete handler's startTurn implementation.");
+            const expectedErrorMessage = `TurnIdleState: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${dummyActor.id}.`;
 
-            await jest.advanceTimersByTimeAsync(0);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("TurnIdleState: ITurnContext not available on the handler after handler.startTurn() was called. This indicates an issue in the concrete handler's startTurn implementation."));
+            await expect(turnIdleState.startTurn(misconfiguredHandler, dummyActor)).rejects.toThrow(expectedErrorMessage);
+
+            await jest.advanceTimersByTimeAsync(0); // Allow any pending microtasks/timers to complete
+
+            // Verify logger was called with the exact error message
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage);
+
+            // Verify handler recovery (transitions back to Idle)
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: TurnIdleState \u2192 TurnIdleState`));
+            expect(misconfiguredHandler._getInternalState()).toBeInstanceOf(TurnIdleState); // Check final state
 
+            // Restore original method if necessary (though in this test, it's more about observing behavior)
             misconfiguredHandler._setCurrentTurnContextInternal = originalSetContextInternal;
         });
+        // ─────────────────────────────────────────────────────────────────
+        // END OF CORRECTED TEST CASE
+        // ─────────────────────────────────────────────────────────────────
 
         test('TurnIdleState.startTurn should throw (and handler recover) if actor in context mismatches', async () => {
             const wrongActor = createMockActor('wrong-actor');
