@@ -3,7 +3,7 @@
 //  Unit Tests for ITurnContext Interface Structure
 // ──────────────────────────────────────────────────────────────────────────────
 
-import {describe, test, expect, jest} from '@jest/globals';
+import {describe, test, expect, jest, beforeEach} from '@jest/globals';
 import {ITurnContext} from '../../../../core/turns/interfaces/ITurnContext.js';
 
 // ──────────────────────────────────────────────────────────────────────────────

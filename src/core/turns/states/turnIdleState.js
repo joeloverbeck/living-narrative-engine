@@ -1,4 +1,4 @@
-// src/core/turnStates/TurnIdleState.js
+// src/core/turnStates/turnIdleState.js
 // --- FILE START ---
 
 /**
@@ -6,11 +6,11 @@
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
+ * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 
 import {AbstractTurnState} from './abstractTurnState.js';
 // The AwaitingPlayerInputState is required for the transition in startTurn.
-// Its actual implementation will be part of a different ticket (e.g., PTH-STATE-005).
 import {AwaitingPlayerInputState} from './awaitingPlayerInputState.js';
 
 
@@ -27,10 +27,10 @@ import {AwaitingPlayerInputState} from './awaitingPlayerInputState.js';
 export class TurnIdleState extends AbstractTurnState {
     /**
      * Creates an instance of TurnIdleState.
-     * @param {PlayerTurnHandler} context - The PlayerTurnHandler instance that manages this state.
+     * @param {PlayerTurnHandler} handlerContext - The PlayerTurnHandler instance that manages this state.
      */
-    constructor(context) {
-        super(context);
+    constructor(handlerContext) {
+        super(handlerContext);
     }
 
     /**
@@ -45,29 +45,33 @@ export class TurnIdleState extends AbstractTurnState {
     /**
      * Called when the {@link PlayerTurnHandler} transitions into this state.
      * Logs entry and ensures the handler is in a clean, idle state by resetting
-     * turn-specific resources and clearing the current actor.
+     * turn-specific resources (which includes clearing the ITurnContext on the handler)
+     * and clearing the current actor on the handler.
      * @override
      * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
+     * @param {PlayerTurnHandler} handlerContext - The {@link PlayerTurnHandler} instance.
      * @param {ITurnState_Interface} [previousState] - The state from which the transition occurred.
      * @returns {Promise<void>}
      */
-    async enterState(context, previousState) {
+    async enterState(handlerContext, previousState) {
         const previousStateName = previousState?.getStateName() ?? 'None';
-        context.logger.info(`${this.getStateName()}: Entered. Previous state: ${previousStateName}.`);
+        const logger = handlerContext.getLogger(); // Use the handler's main logger
 
-        context.logger.debug(`${this.getStateName()}: Ensuring clean state by calling context._resetTurnStateAndResources().`);
-        // _resetTurnStateAndResources clears subscriptions, resets currentActor to null,
-        // and other turn-specific flags like #isAwaitingTurnEndEvent, #isTerminatingNormally.
-        context._resetTurnStateAndResources(`enterState-${this.getStateName()}`);
+        logger.info(`${this.getStateName()}: Entered. Previous state: ${previousStateName}.`);
 
-        // Explicitly setting currentActor to null as per ticket, though _resetTurnStateAndResources should also do this.
-        // This ensures the requirement is met even if _resetTurnStateAndResources changes.
-        if (context.getCurrentActor() !== null) {
-            context.logger.debug(`${this.getStateName()}: Explicitly setting currentActor to null.`);
-            context.setCurrentActor(null);
+        logger.debug(`${this.getStateName()}: Ensuring clean state by calling handlerContext._resetTurnStateAndResources().`);
+        // _resetTurnStateAndResources clears subscriptions, resets currentActor on handler to null,
+        // nullifies ITurnContext on handler, and other turn-specific flags.
+        handlerContext._resetTurnStateAndResources(`enterState-${this.getStateName()}`);
+
+        // Explicitly setting currentActor on handler to null.
+        // BaseTurnHandler._resetTurnStateAndResources calls _setCurrentActorInternal(null).
+        // This is redundant if _resetTurnStateAndResources is comprehensive but kept for explicitness if needed by specific PlayerTurnHandler logic.
+        if (handlerContext.getCurrentActor() !== null) {
+            logger.debug(`${this.getStateName()}: Explicitly setting currentActor on handler to null via _setCurrentActorInternal.`);
+            handlerContext._setCurrentActorInternal(null); // Corrected to use protected method
         }
-        context.logger.debug(`${this.getStateName()}: Entry complete. Handler is now idle.`);
+        logger.debug(`${this.getStateName()}: Entry complete. Handler is now idle.`);
     }
 
     /**
@@ -75,146 +79,144 @@ export class TurnIdleState extends AbstractTurnState {
      * Logs exit from this state.
      * @override
      * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
+     * @param {PlayerTurnHandler} handlerContext - The {@link PlayerTurnHandler} instance.
      * @param {ITurnState_Interface} [nextState] - The state to which the handler is transitioning.
      * @returns {Promise<void>}
      */
-    async exitState(context, nextState) {
+    async exitState(handlerContext, nextState) {
         const nextStateName = nextState?.getStateName() ?? 'None';
-        context.logger.info(`${this.getStateName()}: Exiting. Transitioning to ${nextStateName}.`);
-        // No further specific exit logic for idle state beyond logging.
+        // At this point, if transitioning to a state that uses TurnContext,
+        // the TurnContext should have been created by handler's startTurn method.
+        const turnCtx = this._getTurnContext(); // Uses this._handlerContext which is set by AbstractTurnState constructor
+        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger(); // Fallback to handler's logger
+
+        logger.info(`${this.getStateName()}: Exiting. Transitioning to ${nextStateName}.`);
+        await super.exitState(handlerContext, nextState); // Call super for consistent logging from AbstractTurnState if it provides any
     }
 
     /**
      * Initiates a new turn for the specified actor.
-     * This method validates the actor, sets them as the current actor in the context,
-     * ensures the handler is ready for a new turn (by resetting relevant flags),
-     * and transitions the handler to the {@link AwaitingPlayerInputState}.
+     * This method relies on the handler's `startTurn` (e.g. PlayerTurnHandler.startTurn) having already
+     * created and set up the {@link ITurnContext}. This state's `startTurn` primarily
+     * validates that a turn context is now available for the actor and then
+     * transitions the handler to the {@link AwaitingPlayerInputState}.
      * @override
      * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
-     * @param {Entity} actor - The player entity whose turn is to be started.
+     * @param {PlayerTurnHandler} handlerContext - The {@link PlayerTurnHandler} instance.
+     * @param {Entity} actorEntity - The player entity whose turn is to be started.
      * @returns {Promise<void>}
-     * @throws {Error} If the actor is invalid or if the transition to the new state fails.
+     * @throws {Error} If the actor is invalid, ITurnContext is not set, or transition fails.
      */
-    async startTurn(context, actor) {
-        context.logger.info(`${this.getStateName()}: Received startTurn for actor ${actor?.id ?? 'UNKNOWN'}.`);
+    async startTurn(handlerContext, actorEntity) {
+        const turnCtx = this._getTurnContext(); // This uses this._handlerContext.getTurnContext()
+        // Logger for this method's operations. If turnCtx exists, use its logger, otherwise handler's.
+        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger();
 
-        if (!actor || typeof actor.id === 'undefined') {
-            const errorMsg = `${this.getStateName()}: startTurn called with invalid actor. Actor is required.`;
-            context.logger.error(errorMsg);
+        logger.info(`${this.getStateName()}: Received startTurn for actor ${actorEntity?.id ?? 'UNKNOWN'}.`);
+
+        if (!actorEntity || typeof actorEntity.id === 'undefined') {
+            const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity. Actor is required.`;
+            logger.error(errorMsg);
+            throw new Error(errorMsg); // This error should be caught by the caller (e.g., handler's startTurn)
+        }
+
+        if (!turnCtx) {
+            const errorMsg = `${this.getStateName()}: startTurn called, but ITurnContext is not available on the handler. This indicates an issue in the handler's startTurn implementation.`;
+            logger.error(errorMsg);
+            // Attempt to reset to a clean state if possible, though this is a critical failure.
+            // This logic assumes handlerContext has _setCurrentActorInternal and _transitionToState.
+            if (typeof handlerContext._setCurrentActorInternal === 'function') {
+                handlerContext._setCurrentActorInternal(null);
+            }
+            await handlerContext._transitionToState(new TurnIdleState(handlerContext)); // Re-enter idle
             throw new Error(errorMsg);
         }
 
-        // Set the current actor in the context
-        context.setCurrentActor(actor);
-        context.logger.debug(`${this.getStateName()}: Set currentActor to ${actor.id}.`);
+        const contextActor = turnCtx.getActor();
+        if (!contextActor || contextActor.id !== actorEntity.id) {
+            const errorMsg = `${this.getStateName()}: Actor in TurnContext ('${contextActor?.id}') does not match actor provided to startTurn ('${actorEntity.id}').`;
+            logger.error(errorMsg);
+            if (typeof handlerContext._setCurrentActorInternal === 'function') {
+                handlerContext._setCurrentActorInternal(null); // Corrected method
+            }
+            await handlerContext._transitionToState(new TurnIdleState(handlerContext)); // Re-enter idle
+            throw new Error(errorMsg);
+        }
 
-        // Note: Per ticket "Clears any residual turn end waiting mechanisms" & "Resets flags like context.#isDestroyed = false and context.#isTerminatingNormally = false."
-        // - context._resetTurnStateAndResources() called in this.enterState() should have already handled
-        //   clearing turn end waiting mechanisms and resetting #isTerminatingNormally to false.
-        // - context.#isDestroyed is managed by PlayerTurnHandler.destroy() and checked by PlayerTurnHandler.startTurn() before delegation.
-        //   If this method is running, #isDestroyed is implicitly false.
-
-        context.logger.debug(`${this.getStateName()}: Preparing to transition to AwaitingPlayerInputState for actor ${actor.id}.`);
+        logger.debug(`${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Preparing to transition to AwaitingPlayerInputState.`);
         try {
-            // The PlayerTurnHandler needs to expose `_transitionToState` or similar
-            // for states to call. This assumes `_transitionToState` is available on context.
-            await context._transitionToState(new AwaitingPlayerInputState(context));
-            context.logger.info(`${this.getStateName()}: Successfully transitioned to AwaitingPlayerInputState for actor ${actor.id}.`);
+            await handlerContext._transitionToState(new AwaitingPlayerInputState(handlerContext));
+            logger.info(`${this.getStateName()}: Successfully transitioned to AwaitingPlayerInputState for actor ${contextActor.id}.`);
         } catch (error) {
-            context.logger.error(`${this.getStateName()}: Failed to transition to AwaitingPlayerInputState for actor ${actor.id}. Error: ${error.message}`, error);
-            // Rollback setCurrentActor if transition fails? Or rely on higher-level error handling.
-            // For now, ensure state is reset if transition critically fails.
-            context.setCurrentActor(null); // Clear actor if transition failed to prevent inconsistent state
-            throw error; // Re-throw the error
+            logger.error(`${this.getStateName()}: Failed to transition to AwaitingPlayerInputState for actor ${contextActor.id}. Error: ${error.message}`, error);
+            if (typeof handlerContext._setCurrentActorInternal === 'function') {
+                handlerContext._setCurrentActorInternal(null); // Clear actor if transition failed
+            }
+            if (handlerContext._resetTurnStateAndResources) {
+                handlerContext._resetTurnStateAndResources(`failure-in-idle-startTurn-transition`);
+            }
+            await handlerContext._transitionToState(new TurnIdleState(handlerContext));
+            throw error;
         }
     }
 
     /**
      * Handles command submissions. This method should not be called when the handler is idle.
-     * Inherits behavior from {@link AbstractTurnState} which logs a warning and throws an error.
      * @override
-     * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
-     * @param {string} commandString - The command string submitted.
-     * @returns {Promise<void>}
-     * @throws {Error} Indicating the operation is not valid in the current state.
      */
-    async handleSubmittedCommand(context, commandString) {
-        const message = `${this.getStateName()}: Command ('${commandString}') submitted but no turn is active. This should not happen.`;
-        context.logger.warn(message);
-        return super.handleSubmittedCommand(context, commandString); // Throws error
+    async handleSubmittedCommand(handlerContext, commandString) {
+        const logger = handlerContext.getLogger();
+        const message = `${this.getStateName()}: Command ('${commandString}') submitted but no turn is active.`;
+        logger.warn(message); // Corrected from direct access to _getTurnContext()?.getLogger()
+        return super.handleSubmittedCommand(handlerContext, commandString); // Throws error
     }
 
     /**
      * Handles turn ended events. This method should not be called when the handler is idle.
-     * Inherits behavior from {@link AbstractTurnState} which logs a warning.
      * @override
-     * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
-     * @param {object} payload - The event payload.
-     * @returns {Promise<void>}
      */
-    async handleTurnEndedEvent(context, payload) {
-        const message = `${this.getStateName()}: handleTurnEndedEvent called but no turn is active. Actor in payload: ${payload?.entityId}. This should not happen.`;
-        context.logger.warn(message);
-        return super.handleTurnEndedEvent(context, payload); // Default does not throw, just warns.
+    async handleTurnEndedEvent(handlerContext, payload) {
+        const logger = handlerContext.getLogger();
+        const message = `${this.getStateName()}: handleTurnEndedEvent called but no turn is active. Actor in payload: ${payload?.entityId}.`;
+        logger.warn(message);
+        return super.handleTurnEndedEvent(handlerContext, payload); // Base implementation logs warning
     }
 
     /**
      * Handles processing of command results. Not applicable for idle state.
-     * Inherits behavior from {@link AbstractTurnState} which logs an error and throws.
      * @override
-     * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
-     * @param {Entity} actor - The actor.
-     * @param {object} cmdProcResult - The command processing result.
-     * @param {string} commandString - The original command.
-     * @returns {Promise<void>}
-     * @throws {Error} Indicating the operation is not valid in the current state.
      */
-    async processCommandResult(context, actor, cmdProcResult, commandString) {
-        const message = `${this.getStateName()}: processCommandResult called but no turn is active/processing. Actor: ${actor?.id}. This should not happen.`;
-        context.logger.warn(message);
-        return super.processCommandResult(context, actor, cmdProcResult, commandString); // Throws error
+    async processCommandResult(handlerContext, actor, cmdProcResult, commandString) {
+        const logger = handlerContext.getLogger();
+        const message = `${this.getStateName()}: processCommandResult called but no turn is active/processing. Actor: ${actor?.id}.`;
+        logger.warn(message);
+        return super.processCommandResult(handlerContext, actor, cmdProcResult, commandString); // Throws error
     }
 
     /**
      * Handles turn directives. Not applicable for idle state.
-     * Inherits behavior from {@link AbstractTurnState} which logs an error and throws.
      * @override
-     * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance.
-     * @param {Entity} actor - The actor.
-     * @param {string} directive - The turn directive.
-     * @param {object} [cmdProcResult] - The command processing result, if any.
-     * @returns {Promise<void>}
-     * @throws {Error} Indicating the operation is not valid in the current state.
      */
-    async handleDirective(context, actor, directive, cmdProcResult) {
-        const message = `${this.getStateName()}: handleDirective called but no turn is active/processing. Actor: ${actor?.id}, Directive: ${directive}. This should not happen.`;
-        context.logger.warn(message);
-        return super.handleDirective(context, actor, directive, cmdProcResult); // Throws error
+    async handleDirective(handlerContext, actor, directive, cmdProcResult) {
+        const logger = handlerContext.getLogger();
+        const message = `${this.getStateName()}: handleDirective called but no turn is active/processing. Actor: ${actor?.id}, Directive: ${directive}.`;
+        logger.warn(message);
+        return super.handleDirective(handlerContext, actor, directive, cmdProcResult); // Throws error
     }
 
     /**
-     * Handles the destruction of the {@link PlayerTurnHandler} context while in this state.
-     * Logs the event and ensures resources are reset.
+     * Handles the destruction of the handler context while in this state.
      * @override
-     * @async
-     * @param {PlayerTurnHandler} context - The {@link PlayerTurnHandler} instance being destroyed.
-     * @returns {Promise<void>}
      */
-    async destroy(context) {
-        context.logger.info(`${this.getStateName()}: PlayerTurnHandler is being destroyed while in idle state.`);
-        // Ensure resources are reset, although if it's idle, they should already be.
-        // This is a good safeguard.
-        context.logger.debug(`${this.getStateName()}: Calling _resetTurnStateAndResources during destroy to ensure clean state.`);
-        context._resetTurnStateAndResources(`destroy-${this.getStateName()}`);
-        // The PlayerTurnHandler's destroy() method is responsible for setting its own #isDestroyed flag.
-        // This state method just handles any state-specific cleanup. For Idle, it's mostly ensuring reset.
-        context.logger.debug(`${this.getStateName()}: Destroy handling complete.`);
+    async destroy(handlerContext) {
+        const logger = handlerContext.getLogger(); // Use handler's main logger
+        logger.info(`${this.getStateName()}: PlayerTurnHandler is being destroyed while in idle state.`);
+        logger.debug(`${this.getStateName()}: Calling _resetTurnStateAndResources during destroy to ensure clean state.`);
+        if (typeof handlerContext._resetTurnStateAndResources === 'function') {
+            handlerContext._resetTurnStateAndResources(`destroy-${this.getStateName()}`);
+        }
+        logger.debug(`${this.getStateName()}: Destroy handling complete.`);
+        // No call to super.destroy() here as per original state file, assuming BaseTurnHandler's destroy manages overall flow.
     }
 }
 

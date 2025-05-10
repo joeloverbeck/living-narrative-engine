@@ -1,6 +1,5 @@
-// src/core/interfaces/ITurnManager.js
-
 /** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('./ITurnHandler.js').ITurnHandler} ITurnHandler */
 
 // --- ITurnManager ---
 /**
@@ -43,6 +42,16 @@ export class ITurnManager {
      */
     getCurrentActor() {
         throw new Error('ITurnManager.getCurrentActor method not implemented.');
+    }
+
+    /**
+     * Retrieves the turn handler instance that is currently managing the active turn.
+     * @function getActiveTurnHandler
+     * @returns {ITurnHandler | null} The currently active turn handler, or `null` if no
+     * turn is active or no handler is currently assigned.
+     */
+    getActiveTurnHandler() {
+        throw new Error('ITurnManager.getActiveTurnHandler method not implemented.');
     }
 
     /**

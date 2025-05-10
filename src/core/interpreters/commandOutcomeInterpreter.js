@@ -1,5 +1,5 @@
 // src/core/interpreters/commandOutcomeInterpreter.js
-// --- FILE START ---
+// ****** MODIFIED FILE ******
 
 /**
  * @fileoverview Implements the CommandOutcomeInterpreter class responsible for
@@ -10,7 +10,10 @@
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */ // JSDoc type import
+/** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */
+/** @typedef {import('../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */ // <<< ADDED IMPORT
+/** @typedef {import('../../entities/entity.js').default} Entity */
+
 
 /**
  * Represents an individual message within an action result.
@@ -33,7 +36,7 @@
 // --- Constant Imports ---
 import TurnDirective from '../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
-import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
+import {ICommandOutcomeInterpreter} from '../interfaces/ICommandOutcomeInterpreter.js';
 
 /**
  * @class CommandOutcomeInterpreter
@@ -61,7 +64,6 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         super(); // Call the constructor of ICommandOutcomeInterpreter
 
         if (!logger || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.debug !== 'function' || typeof logger.info !== 'function') {
-            // Cannot use logger here if it's invalid
             console.error('CommandOutcomeInterpreter Constructor: Invalid or missing logger dependency.');
             throw new Error('CommandOutcomeInterpreter: Invalid or missing ILogger dependency.');
         }
@@ -81,23 +83,45 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
      *
      * @async
      * @param {CommandResult} result - The result object from ICommandProcessor.processCommand.
-     * @param {string} actorId - The unique ID of the entity whose command result is being interpreted.
+     * @param {ITurnContext} turnContext - The context of the current turn.
      * @returns {Promise<string>} A promise resolving to a TurnDirective enum value (string).
-     * @throws {Error} If actorId is invalid or result object is fundamentally malformed (missing success/turnEnded).
+     * @throws {Error} If turnContext is invalid, actor cannot be retrieved, or result object is fundamentally malformed.
      */
-    async interpret(result, actorId) {
+    async interpret(result, turnContext) {
         // --- Input Validation ---
-        if (!actorId || typeof actorId !== 'string') {
-            const errorMsg = `CommandOutcomeInterpreter: Invalid actorId provided (${actorId}).`;
+        if (!turnContext || typeof turnContext.getActor !== 'function') {
+            const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
             this.#logger.error(errorMsg);
+            // Attempt to dispatch a system error even with faulty context if possible
+            await this.#dispatcher.dispatchSafely('core:system_error_occurred', {
+                eventName: 'core:system_error_occurred',
+                message: 'Invalid turn context received by CommandOutcomeInterpreter.',
+                type: 'error',
+                details: 'turnContext was null or not a valid ITurnContext object.'
+            });
             throw new Error(errorMsg);
         }
+
+        const actor = /** @type {Entity | null} */ (turnContext.getActor());
+        if (!actor || !actor.id) {
+            const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
+            this.#logger.error(errorMsg, {actor});
+            await this.#dispatcher.dispatchSafely('core:system_error_occurred', {
+                eventName: 'core:system_error_occurred',
+                message: 'Invalid actor in turn context for CommandOutcomeInterpreter.',
+                type: 'error',
+                details: `Actor object was ${JSON.stringify(actor)}.`
+            });
+            throw new Error(errorMsg);
+        }
+        const actorId = actor.id;
+
         if (!result || typeof result.success !== 'boolean' || typeof result.turnEnded !== 'boolean') {
             const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult structure for actor ${actorId}. Missing 'success' or 'turnEnded'.`;
             const fullErrorMsg = `${baseErrorMsg} Result: ${JSON.stringify(result)}`;
             this.#logger.error(fullErrorMsg);
             await this.#dispatcher.dispatchSafely('core:system_error_occurred', {
-                eventName: 'core:system_error_occurred', // Added eventName to payload
+                eventName: 'core:system_error_occurred',
                 message: baseErrorMsg,
                 type: 'error',
                 details: `Actor ${actorId}, Result: ${JSON.stringify(result)}`
@@ -123,41 +147,32 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
                 this.#logger.debug(`CommandOutcomeInterpreter: actor ${actorId}: actionResult or actionResult.actionId not found, null, or invalid. Using default actionId '${finalActionId}'.`);
             }
 
-            // --- FIX for core:action_executed payload.result validation ---
             const resultField = {
-                success: true, // Per action-result.schema.json, this is required
-                messages: []   // Per action-result.schema.json, this is optional (default: [])
+                success: true,
+                messages: []
             };
 
-            // Populate messages according to action-result.schema.json
-            // Prioritize messages from actionResult if they exist and are valid
             if (result.actionResult && Array.isArray(result.actionResult.messages)) {
                 result.actionResult.messages.forEach(msg => {
                     if (msg && typeof msg.text === 'string') {
                         resultField.messages.push({
                             text: msg.text,
-                            type: typeof msg.type === 'string' ? msg.type : 'info' // Ensure type, default if missing/invalid
+                            type: typeof msg.type === 'string' ? msg.type : 'info'
                         });
                     } else {
                         this.#logger.warn(`CommandOutcomeInterpreter: actor ${actorId}: Invalid message structure in actionResult.messages. Message: ${JSON.stringify(msg)}`);
                     }
                 });
             }
-            // If no messages from actionResult, use the top-level result.message if available
             if (resultField.messages.length === 0 && result.message) {
                 resultField.messages.push({text: String(result.message), type: 'info'});
             }
-            // If still no messages and a default is desired (optional, as schema allows empty messages array):
-            // if (resultField.messages.length === 0) {
-            //     resultField.messages.push({ text: 'Action completed successfully.', type: 'info' });
-            // }
 
             eventPayload = {
                 actorId: actorId,
                 actionId: finalActionId,
-                result: resultField // This 'result' object must conform to action-result.schema.json
+                result: resultField
             };
-            // --- END FIX ---
 
             if (result.turnEnded) {
                 directive = TurnDirective.END_TURN_SUCCESS;
@@ -168,9 +183,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
             }
 
         } else {
-            // --- Failure Path (core:action_failed) ---
             eventName = 'core:action_failed';
-
             let derivedErrorMessage = 'Unknown action failure.';
             if (result.error instanceof Error) {
                 derivedErrorMessage = result.error.message;
@@ -180,15 +193,10 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
                 derivedErrorMessage = String(result.error);
             }
 
-            // The schema for core:action_failed#payload is not provided,
-            // but we'll keep this structure consistent with previous versions.
-            // It typically includes actorId, actionId (optional), errorMessage, and details.
             eventPayload = {
                 actorId: actorId,
                 actionId: result.actionResult?.actionId || "core:unknown_failed_action",
                 errorMessage: derivedErrorMessage,
-                // 'details' here for core:action_failed can hold the raw actionResult or error info.
-                // This is distinct from the 'result' field of 'core:action_executed'.
                 details: result.actionResult || {errorInfo: result.error},
             };
 

@@ -1,307 +1,191 @@
-// src/core/handlers/aiTurnHandler.js
-// ****** CORRECTED FILE ******
+// src/core/turns/handlers/aiTurnHandler.js
+// ──────────────────────────────────────────────────────────────────────────────
+//  AITurnHandler Stub Class
+// ──────────────────────────────────────────────────────────────────────────────
 
-// --- Interface Imports ---
-import {ITurnHandler} from '../../interfaces/ITurnHandler.js';
+/**
+ * @typedef {import('../../../entities/entity.js').default} Entity
+ */
+/**
+ * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
+ */
+/**
+ * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
+ */
+/**
+ * @typedef {import('../context/TurnContext.js').TurnContextServices} TurnContextServices
+ */
+/**
+ * @typedef {import('../context/TurnContext.js').TurnContext} ConcreteTurnContext
+ */
 
-// --- Type Imports for JSDoc ---
-/** @typedef {import('../../../entities/entity.js').default} Entity */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../commandProcessor.js').CommandResult} CommandResult */
-/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */ // <<< Added Import
+
+import {BaseTurnHandler} from './baseTurnHandler.js';
+import {TurnIdleState} from '../states/turnIdleState.js';
+import {TurnContext} from '../context/TurnContext.js'; // For creating its own TurnContext
+
+// TODO: Import AI-specific services if/when needed, e.g., an AIService or LLMConnector
+// TODO: Import AIPlayerStrategy when it's defined
 
 /**
  * @class AITurnHandler
- * @extends ITurnHandler
- * @implements {ITurnHandler}
- * @description Handles the turn logic for AI-controlled entities. Determines an action,
- * processes it via CommandProcessor, signals turn completion via ITurnEndPort, and
- * dispatches semantic events: 'core:ai_turn_processing_started', 'core:ai_turn_processing_ended'.
+ * @extends BaseTurnHandler
+ * @description
+ * Handles turns for AI-controlled actors. This is currently a stub implementation
+ * to demonstrate the extensibility of BaseTurnHandler.
+ * Future implementations will include logic for AI decision-making (e.g., via LLMs or other algorithms).
  */
-class AITurnHandler extends ITurnHandler {
-    /** @type {ILogger} */ #logger;
-    /** @type {ICommandProcessor} */ #commandProcessor;
-    /** @type {IValidatedEventDispatcher} */ #validatedEventDispatcher; // Still useful for AI specific events
-    /** @type {IActionDiscoverySystem | undefined} */ #actionDiscoverySystem; // Optional
-    /** @type {IWorldContext} */ #worldContext;
-    /** @type {ITurnEndPort} */ #turnEndPort; // <<< Added Dependency
+export class AITurnHandler extends BaseTurnHandler {
+
+    // AI-specific dependencies would go here, e.g.:
+    // #aiDecisionService;
+    // #gameQueryService; // For AI to understand world state
 
     /**
      * Creates an instance of AITurnHandler.
-     * @param {object} options - The options object.
-     * @param {ILogger} options.logger - The logger instance.
-     * @param {ICommandProcessor} options.commandProcessor - The command processor instance.
-     * @param {IValidatedEventDispatcher} options.validatedEventDispatcher - For AI-specific events.
-     * @param {IWorldContext} options.worldContext - The world context instance.
-     * @param {ITurnEndPort} options.turnEndPort - Port to signal turn completion. // <<< Added Param
-     * @param {IActionDiscoverySystem} [options.actionDiscoverySystem] - (Optional) The action discovery system.
-     * @throws {Error} If essential dependencies are missing or invalid.
+     * @param {object} deps
+     * @param {ILogger} deps.logger - The logger service.
+     * // TODO: Add AI-specific dependencies like an AIService, GameWorld interface, etc.
+     * @param {object} [deps.gameWorldAccess] - Placeholder for game world access.
+     * @param {import('../../ports/ITurnEndPort.js').ITurnEndPort} deps.turnEndPort - Port to notify on turn end.
      */
     constructor({
-                    logger, commandProcessor, validatedEventDispatcher,
-                    worldContext, turnEndPort, actionDiscoverySystem // <<< Added turnEndPort
+                    logger,
+                    gameWorldAccess = {}, // Example, AI will need this
+                    turnEndPort // Example, AI will need this
+                    // ... other AI specific dependencies
                 }) {
-        super();
-        const className = this.constructor.name;
-        // Validate Logger first
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
-            // Use console.error ONLY if logger is unavailable for proper logging
-            console.error(`${className} Constructor: Invalid or missing logger provided.`);
-            throw new Error(`${className} requires a valid logger instance.`);
-        }
-        this.#logger = logger;
+        super({logger, initialConcreteState: new TurnIdleState(self)});
+        // `self` refers to the AITurnHandler instance.
 
-        // Validate other required dependencies
-        if (!commandProcessor || typeof commandProcessor.processCommand !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing commandProcessor.`);
-            throw new Error(`${className} requires a valid commandProcessor instance.`);
-        }
-        if (!validatedEventDispatcher || typeof validatedEventDispatcher.dispatchValidated !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing validatedEventDispatcher.`);
-            throw new Error(`${className} requires a valid validatedEventDispatcher instance.`);
-        }
-        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing worldContext (requires getLocationOfEntity).`);
-            throw new Error(`${className} requires a valid worldContext instance.`);
-        }
-        // <<< Added Validation for TurnEndPort >>>
-        if (!turnEndPort || typeof turnEndPort.notifyTurnEnded !== 'function') {
-            this.#logger.error(`${className} Constructor: Invalid or missing turnEndPort (requires notifyTurnEnded method).`);
-            throw new Error(`${className}: Invalid or missing turnEndPort.`);
-        }
-        // <<< END Added Validation >>>
+        this._logger.debug(`${this.constructor.name} initialised.`);
 
-        // Validate optional dependency
-        // Ensure actionDiscoverySystem is treated as undefined if null or not an object before checking method
-        const isValidADS = actionDiscoverySystem && typeof actionDiscoverySystem === 'object' && typeof actionDiscoverySystem.getValidActions === 'function';
-        if (actionDiscoverySystem && !isValidADS) { // Only warn if it was provided but invalid
-            this.#logger.warn(`${className} Constructor: Provided actionDiscoverySystem is invalid (must be an object with getValidActions method). Storing undefined.`);
-            this.#actionDiscoverySystem = undefined;
-        } else if (isValidADS) {
-            this.#actionDiscoverySystem = actionDiscoverySystem;
-        } else {
-            this.#actionDiscoverySystem = undefined; // Explicitly undefined if not provided or null etc.
-        }
+        // Store AI-specific dependencies
+        // this.#gameWorldAccess = gameWorldAccess; // Example
+        // this.#turnEndPort = turnEndPort; // Example
 
-
-        this.#commandProcessor = commandProcessor;
-        this.#validatedEventDispatcher = validatedEventDispatcher;
-        this.#worldContext = worldContext;
-        this.#turnEndPort = turnEndPort; // <<< Added Assignment
-
-        this.#logger.info(`${className} initialized.`);
+        // TODO: Initialize AI services, AIPlayerStrategy, etc.
     }
 
     /**
-     * Initiates and handles the turn for an AI-controlled actor. Determines an action,
-     * processes it, and notifies the TurnEndPort upon completion or error.
-     * Dispatches 'core:ai_turn_processing_started' and 'core:ai_turn_processing_ended'.
-     * @param {Entity} actor - The AI-controlled entity taking its turn.
-     * @returns {Promise<void>} A promise that resolves when the turn initiation and processing attempt is complete.
-     * @throws {Error} If the actor is invalid. Critical processing errors are handled internally via TurnEndPort.
-     * @override // Overrides ITurnHandler.startTurn
-     */
-    async startTurn(actor) { // <<< Renamed from handleTurn
-        const actorId = actor?.id; // Safely access id
-        const className = this.constructor.name;
-
-        // --- Actor Validation ---
-        // Use instanceof Entity for more robust checking if Entity class is consistently used
-        if (!(actor instanceof Entity) || !actorId) {
-            const actorInfo = actor ? (actorId ?? typeof actor) : String(actor);
-            this.#logger.error(`${className}: Attempted to start turn for an invalid actor: ${actorInfo}`);
-            // If actor is invalid, we cannot notify completion properly. Throw early.
-            throw new Error(`${className}: Actor must be a valid entity instance.`);
-        }
-
-        this.#logger.info(`${className}: Starting AI turn processing for actor: ${actorId}`);
-
-        // --- Dispatch Start Event ---
-        // Pass actorId directly, ensuring it's valid from check above
-        await this.#dispatchSafely('core:ai_turn_processing_started', {entityId: actorId}, actorId, 'ai_turn_processing_started');
-
-        /** @type {CommandResult | null} */
-        let cmdResult = null;
-        let determinedCommandString = "wait"; // Default command
-        let turnSuccess = false; // Assume failure until proven otherwise
-
-        try {
-            // --- 1. AI Decision Making ---
-            this.#logger.debug(`${className}: Determining action for AI actor ${actorId}.`);
-            determinedCommandString = await this.#determineAIAction(actor);
-            this.#logger.debug(`${className}: AI actor ${actorId} determined command: "${determinedCommandString}"`);
-
-            // --- 2. Delegate command processing ---
-            this.#logger.debug(`${className}: Processing command '${determinedCommandString}' for actor ${actorId} via CommandProcessor.`);
-            cmdResult = await this.#commandProcessor.processCommand(actor, determinedCommandString);
-
-            // --- 3. Determine Turn Success ---
-            // Turn is successful IF AND ONLY IF:
-            // a) The command processor successfully parsed/initiated the command (cmdResult.success is true)
-            // b) The resulting action (if any) completed successfully (cmdResult.actionResult.success is true)
-            const processSuccess = cmdResult.success;
-            // Action success defaults to false if actionResult is null/undefined or lacks a success property
-            const actionOutcomeSuccess = cmdResult.actionResult?.success === true;
-            turnSuccess = processSuccess && actionOutcomeSuccess;
-
-            this.#logger.info(
-                `${className}: CommandProcessor result for AI ${actorId} (Cmd: "${determinedCommandString}"): ` +
-                `ProcessSuccess=${processSuccess}, ActionSuccess=${actionOutcomeSuccess}, TurnEndedByAction=${cmdResult.turnEnded ?? 'N/A'}. ` +
-                `=> Final Turn Success=${turnSuccess}`
-            );
-
-            if (!turnSuccess) {
-                const failureReason = !processSuccess ? `Processing failed (${cmdResult.error || cmdResult.message})` : `Action failed (${cmdResult.actionResult?.reason || 'Unknown reason'})`;
-                this.#logger.warn(`${className}: AI turn for ${actorId} concluded with failure. Reason: ${failureReason}. Result: ${JSON.stringify(cmdResult)}`);
-            }
-
-        } catch (error) {
-            // Catch critical errors *during* the decision or processing steps
-            this.#logger.error(`${className}: CRITICAL error during AI turn processing for actor ${actorId}: ${error.message}`, error);
-            // Ensure finally block runs to dispatch end events and notify port
-            turnSuccess = false; // Ensure turn is marked as failure
-            // Optionally add minimal cmdResult for logging/event dispatch if needed
-            cmdResult = cmdResult || {
-                success: false,
-                turnEnded: false,
-                actionResult: null,
-                error: 'Critical internal error',
-                internalError: error
-            };
-        } finally {
-            // --- 4. Post-Processing (Always Run) ---
-            this.#logger.info(`${className}: AI turn processing logic complete for actor: ${actorId}. Notifying TurnEndPort (Success: ${turnSuccess}) and dispatching end event.`);
-
-            // Dispatch AI specific end event (use result from try block, or minimal error result from catch)
-            const actionResultPayload = cmdResult?.actionResult ?? null; // Can be null
-            await this.#dispatchSafely('core:ai_turn_processing_ended', {
-                entityId: actorId,
-                actionResult: actionResultPayload
-            }, actorId, 'ai_turn_processing_ended');
-
-            // <<< Notify TurnEndPort (Crucial step) >>>
-            try {
-                await this.#turnEndPort.notifyTurnEnded(actorId, turnSuccess);
-                this.#logger.debug(`${className}: Notified TurnEndPort successfully for ${actorId} (Success: ${turnSuccess}).`);
-            } catch (notifyError) {
-                // This is a critical failure; the game loop might stall.
-                this.#logger.error(`${className}: CRITICAL - Failed to notify TurnEndPort for ${actorId} (Success: ${turnSuccess}): ${notifyError.message}. TurnManager may stall.`, notifyError);
-            }
-            // <<< END Notify >>>
-
-            // Responsibility of TurnManager (reacting to notifyTurnEnded) to dispatch TURN_ENDED_ID
-
-            this.#logger.info(`${className}: AI turn fully concluded for actor: ${actorId}.`);
-        }
-        // The method itself resolves once notification is attempted. Does not return success/failure status.
-    }
-
-    /**
-     * Determines the action command string for the AI actor.
-     * Uses ActionDiscoverySystem if available, otherwise falls back to 'wait'.
-     * @private
-     * @param {Entity} actor - The AI actor.
-     * @returns {Promise<string>} The command string the AI decided on.
-     */
-    async #determineAIAction(actor) {
-        const actorId = actor.id;
-        const className = this.constructor.name;
-
-        // Attempt to use ActionDiscoverySystem if it was provided and valid
-        if (this.#actionDiscoverySystem) {
-            try {
-                this.#logger.debug(`${className}: Attempting action discovery for AI ${actorId}.`);
-                const currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
-
-                if (!currentLocation) {
-                    this.#logger.warn(`${className}: AI ${actorId} could not determine current location via worldContext. Action discovery may be limited. Falling back.`);
-                    // Decide if fallback is appropriate or if discovery can proceed without location
-                }
-
-                // Build context for ActionDiscoverySystem (adapt as needed)
-                const context = {
-                    actingEntity: actor,
-                    currentLocation: currentLocation || null, // Pass null if not found
-                    worldContext: this.#worldContext,
-                    entityManager: null, // Placeholder - Inject if needed by specific ADS rules
-                    gameDataRepository: null, // Placeholder - Inject if needed
-                    logger: this.#logger, // Pass logger for potential use within actions/discovery
-                    dispatch: this.#validatedEventDispatcher.dispatchValidated.bind(this.#validatedEventDispatcher) // Allow discovery logic to dispatch events if necessary
-                };
-
-                const validActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
-                this.#logger.debug(`${className}: AI ${actorId} discovered ${validActions.length} valid actions.`);
-
-                if (validActions.length > 0) {
-                    // --- AI Decision Logic ---
-                    // Example: Prioritize 'wait', then take the first other action. Replace with more sophisticated logic.
-                    const waitAction = validActions.find(a => a.id === 'core:wait');
-                    const chosenActionInfo = waitAction || validActions[0]; // Simple fallback to first action
-
-                    // Use the 'command' property if provided, otherwise fallback to the action 'id' as the command
-                    const command = chosenActionInfo.command || chosenActionInfo.id;
-                    this.#logger.info(`${className}: AI ${actorId} chose action: '${command}' (from action ID: ${chosenActionInfo.id})`);
-                    return command;
-                    // --- End AI Decision Logic ---
-
-                } else {
-                    this.#logger.debug(`${className}: AI ${actorId} discovered no valid actions. Falling back.`);
-                }
-
-            } catch (err) {
-                this.#logger.error(`${className}: AI ${actorId} encountered an error during action discovery: ${err.message}. Falling back.`, err);
-                // Fall through to default action on error
-            }
-        } else {
-            this.#logger.debug(`${className}: No ActionDiscoverySystem available for AI ${actorId}.`);
-        }
-
-        // Default/fallback action if ADS is missing, fails, or returns no actions
-        this.#logger.debug(`${className}: AI ${actorId} falling back to 'wait' action.`);
-        return "wait";
-    }
-
-    /**
-     * Helper to safely dispatch events using the validated dispatcher, with improved logging.
-     * @private
-     * @param {string} eventName - The name of the event.
-     * @param {object} payload - The event payload (should include entityId).
-     * @param {string} actorId - The ID of the actor involved (for logging).
-     * @param {string} contextName - A descriptive name for the event context (for logging).
+     * @override
+     * Initiates a turn for the AI-controlled actor.
+     * @param {Entity} actor - The AI entity whose turn is to be started.
      * @returns {Promise<void>}
      */
-    async #dispatchSafely(eventName, payload, actorId, contextName) {
-        const className = this.constructor.name;
+    async startTurn(actor) {
+        super._assertHandlerActive();
+
+        if (!actor) {
+            this._logger.error(`${this.constructor.name}.startTurn: actor is required.`);
+            throw new Error(`${this.constructor.name}.startTurn: actor is required.`);
+        }
+
+        this._setCurrentActorInternal(actor);
+        this._logger.info(`${this.constructor.name}.startTurn for actor ${actor.id}.`);
+
+        // TODO: AI will need its own strategy for decision making
+        // const aiStrategy = new AIPlayerStrategy({ aiService: this.#aiDecisionService });
+
+        /** @type {TurnContextServices} */
+        const servicesForContext = {
+            // No playerPromptService for AI
+            // game: this.#gameWorldAccess, // AI needs game access
+            // commandProcessor: this.#commandProcessor, // AI might generate commands to be processed
+            // commandOutcomeInterpreter: this.#commandOutcomeInterpreter, // If AI uses same command flow
+            // safeEventDispatcher: this.#safeEventDispatcher,
+            // turnEndPort: this.#turnEndPort,
+            // AI specific services could be added here or accessed directly by AIStrategy
+        };
+
+        const newTurnContext = new TurnContext({
+            actor: actor,
+            logger: this._logger, // Or a child logger
+            services: servicesForContext,
+            onEndTurnCallback: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
+            // AI might not use the same external event provider as Player, or might have its own.
+            // For a stub, this can be a simple no-op or default.
+            isAwaitingExternalEventProvider: () => false,
+        });
+        this._setCurrentTurnContextInternal(newTurnContext);
+
+        this._logger.debug(`${this.constructor.name}: TurnContext created for AI actor ${actor.id}.`);
+
+        // Delegate to current state (TurnIdleState)
+        // The state will eventually call methods on this handler or its strategy
+        // to get the AI's action.
         try {
-            await this.#validatedEventDispatcher.dispatchValidated(eventName, payload);
-            this.#logger.debug(`${className}: Dispatched ${contextName} event successfully for actor ${actorId}.`);
-        } catch (dispatchError) {
-            // Log failure but don't let it stop the turn processing flow
-            this.#logger.error(`${className}: Failed to dispatch ${contextName} event for actor ${actorId}: ${dispatchError.message}`, dispatchError);
+            await this._currentState.startTurn(this, actor);
+            // For a stub, we might want to immediately log that the turn is not fully implemented
+            this._logger.warn(`${this.constructor.name}: AI turn processing logic is a STUB. Actor ${actor.id}'s turn may not proceed meaningfully.`);
+            // Optionally, end the turn immediately for the stub if no further action is taken by states.
+            // await this._handleTurnEnd(actor.id, new Error("AI turn not fully implemented."));
+        } catch (error) {
+            this._logger.error(`${this.constructor.name}: Error during AI startTurn for actor ${actor.id}: ${error.message}`, error);
+            await this._handleTurnEnd(actor.id, error);
         }
     }
 
     /**
-     * Gracefully shuts down the handler. Logs the action.
-     * (Currently no specific resources like timers or subscriptions to release).
-     * @public
-     * @override // Overrides ITurnHandler.destroy
+     * @override
+     * Handles cleanup if the AITurnHandler is destroyed.
+     * @returns {Promise<void>}
      */
-    destroy() {
-        const className = this.constructor.name;
-        this.#logger.info(`${className}: Destroying handler.`);
-        // --- Resource Cleanup (if any) ---
-        // e.g., clearTimeout(this.#someTimer);
-        // e.g., this.#eventBus.unsubscribe(this.#listener);
-        // Currently, no stateful resources managed directly by this handler instance require cleanup.
-        // Dependencies are managed externally.
-        // --- End Resource Cleanup ---
-        this.#logger.info(`${className}: Destruction complete.`);
+    async destroy() {
+        if (this._isDestroyed) {
+            this._logger.debug(`${this.constructor.name}.destroy() called but already destroyed.`);
+            return;
+        }
+        this._logger.info(`${this.constructor.name}.destroy() invoked (AI specific part).`);
+
+        // TODO: Add any AI-specific cleanup here (e.g., aborting ongoing LLM calls, releasing AI resources)
+        // For example:
+        // if (this.#aiDecisionService && typeof this.#aiDecisionService.abort === 'function') {
+        //     await this.#aiDecisionService.abort();
+        // }
+
+        const initialActorIdForDestroy = this.getCurrentActor()?.id || null;
+        if (initialActorIdForDestroy /* && !this.#isTerminatingNormally -- AI might not use this flag the same way */) {
+            this._logger.warn(`${this.constructor.name}.destroy: Turn for ${initialActorIdForDestroy} might have been active. Forcing _handleTurnEnd if needed.`);
+            await this._handleTurnEnd(
+                initialActorIdForDestroy,
+                new Error('AITurnHandler destroyed unexpectedly during an active turn.'),
+                true // fromDestroy flag
+            );
+        }
+
+        await super.destroy(); // Call base class destroy for common cleanup
+        this._logger.debug(`${this.constructor.name}.destroy() AI-specific handling complete.`);
     }
+
+
+    /**
+     * @override
+     * AI-specific resource reset, if any, beyond what BaseTurnHandler does.
+     * @param {string} [actorIdContextForLog='N/A']
+     */
+    _resetTurnStateAndResources(actorIdContextForLog = 'N/A') {
+        super._resetTurnStateAndResources(actorIdContextForLog);
+        this._logger.debug(`${this.constructor.name}: AI-specific resources reset for '${actorIdContextForLog}'. (Currently a stub - no AI specific resources to reset).`);
+        // TODO: Reset any AI-specific flags or states if necessary
+    }
+
+    // --- AI-Specific Lifecycle Hooks (Optional Overrides) ---
+    // /**
+    //  * @override
+    //  */
+    // async onEnterState(currentState, previousState) {
+    //     await super.onEnterState(currentState, previousState);
+    //     this._logger.debug(`${this.constructor.name} specific onEnterState: ${currentState.getStateName()}`);
+    // }
+
+    // /**
+    //  * @override
+    //  */
+    // async onExitState(currentState, nextState) {
+    //     await super.onExitState(currentState, nextState);
+    //     this._logger.debug(`${this.constructor.name} specific onExitState: ${currentState.getStateName()}`);
+    // }
 }
 
 export default AITurnHandler;

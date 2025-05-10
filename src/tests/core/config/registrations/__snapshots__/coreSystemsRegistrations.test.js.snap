@@ -245,5 +245,12 @@ exports[`registerCoreSystems should match snapshot for registration calls 1`] = 
       ],
     },
   ],
+  [
+    "ITurnContext",
+    [Function],
+    {
+      "lifecycle": "transient",
+    },
+  ],
 ]
 `;

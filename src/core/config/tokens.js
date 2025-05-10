@@ -212,6 +212,7 @@ export const tokens = Object.freeze({
     IInputHandler: 'IInputHandler', // May become obsolete
     ITurnOrderService: 'ITurnOrderService',
     ITurnManager: 'ITurnManager',
+    ITurnContext: 'ITurnContext',
     ICommandInputPort: 'ICommandInputPort',
     IPromptOutputPort: 'IPromptOutputPort',
     ITurnEndPort: 'ITurnEndPort',
