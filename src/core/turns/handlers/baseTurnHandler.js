@@ -15,14 +15,11 @@
 /**
  * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
  */
-/**
- * @typedef {import('../states/turnIdleState.js').TurnIdleState} TurnIdleState
- */
-/**
- * @typedef {import('../states/turnEndingState.js').TurnEndingState} TurnEndingState
- */
+// No longer directly instantiating concrete states like TurnIdleState from BaseTurnHandler constructor
+// The initial state will be passed in by the concrete handler (e.g., PlayerTurnHandler)
 
-// It's good practice to import concrete states if BaseTurnHandler will directly instantiate them.
+// Import concrete states for type checking in specific scenarios if needed,
+// but avoid direct instantiation if initial state comes from subclass.
 import {TurnIdleState as ConcreteTurnIdleState} from '../states/turnIdleState.js';
 import {TurnEndingState as ConcreteTurnEndingState} from '../states/turnEndingState.js';
 
@@ -33,11 +30,9 @@ import {TurnEndingState as ConcreteTurnEndingState} from '../states/turnEndingSt
  * @description
  * Abstract base class for all turn handlers (e.g., PlayerTurnHandler, AITurnHandler).
  * It provides the core machinery for managing turn lifecycles, state transitions,
- * and common resources. Subclasses are responsible for specific behaviors related
- * to the type of actor they handle (e.g., how input is gathered).
- *
- * This class orchestrates the turn using a state machine pattern, where ITurnState
- * instances define behavior for each phase of a turn.
+ * and common resources like the ITurnContext. Subclasses are responsible for
+ * specific behaviors related to the type of actor they handle and for providing
+ * the initial concrete state.
  */
 export class BaseTurnHandler {
     /**
@@ -57,8 +52,8 @@ export class BaseTurnHandler {
     _currentState;
 
     /**
-     * The current turn-specific context. This is created at the start of a turn
-     * and nullified when the turn ends or the handler is reset.
+     * The current turn-specific context. This is created at the start of a turn by
+     * the concrete handler (e.g., PlayerTurnHandler) and nullified when the turn ends or the handler is reset.
      * @protected
      * @type {ITurnContext | null}
      */
@@ -73,9 +68,8 @@ export class BaseTurnHandler {
 
     /**
      * The current actor whose turn is being processed by this handler instance.
-     * This is set at the beginning of a turn and cleared upon reset.
-     * It might be temporarily out of sync with `_currentTurnContext.getActor()`
-     * during context creation/destruction phases.
+     * This is set by the concrete handler at the beginning of a turn and cleared upon reset.
+     * It should ideally always be in sync with `_currentTurnContext.getActor()` when a turn is active.
      * @protected
      * @type {Entity | null}
      */
@@ -86,32 +80,47 @@ export class BaseTurnHandler {
      * Creates an instance of BaseTurnHandler.
      * @param {object} deps
      * @param {ILogger} deps.logger - The logger service.
-     * @param {ITurnState} deps.initialConcreteState - The initial state for the handler, typically TurnIdleState.
+     * @param {ITurnState} deps.initialConcreteState - The initial state instance for the handler,
+     * typically an instance of TurnIdleState created by the concrete handler. The state constructor
+     * should have received `this` (the concrete handler instance).
      * @throws {Error} If logger or initialConcreteState is not provided.
      */
     constructor({logger, initialConcreteState}) {
         if (!logger) {
+            // console.error used here as logger itself is missing.
+            console.error('BaseTurnHandler Constructor: logger is required.');
             throw new Error('BaseTurnHandler: logger is required.');
         }
         if (!initialConcreteState || typeof initialConcreteState.enterState !== 'function') {
-            const msg = 'BaseTurnHandler: initialConcreteState (implementing ITurnState) is required.';
-            // Log an error before throwing, only if logger is available (which it must be to reach here)
+            const msg = 'BaseTurnHandler: initialConcreteState (implementing ITurnState and constructed with handler instance) is required.';
             logger.error(msg);
             throw new Error(msg);
         }
 
         this._logger = logger;
-        this._currentState = initialConcreteState; // e.g., new TurnIdleState(this)
-        this._logger.debug(`${this.constructor.name} initialised \u2192 state ${this._currentState.getStateName()}`);
+        this._currentState = initialConcreteState; // e.g., new TurnIdleState(thisConcreteHandler)
+        // Initial log uses the base logger as context might not exist yet.
+        this._logger.debug(`${this.constructor.name} initialised. Initial state: ${this._currentState.getStateName()}`);
     }
 
     /**
-     * Retrieves the logger associated with this handler.
-     * Prefers the turn context's logger if available, otherwise falls back to the handler's own logger.
+     * Retrieves the logger. Prefers the turn context's logger if available and valid,
+     * otherwise falls back to the handler's own base logger.
      * @returns {ILogger} The logger instance.
      */
     getLogger() {
-        return this._currentTurnContext?.getLogger() ?? this._logger;
+        if (this._currentTurnContext) {
+            try {
+                const contextLogger = this._currentTurnContext.getLogger();
+                // Basic check to ensure getLogger() returned something sensible
+                if (contextLogger && typeof contextLogger.info === 'function') {
+                    return contextLogger;
+                }
+            } catch (e) {
+                this._logger.warn(`Error accessing logger from TurnContext: ${e.message}. Falling back to base logger.`);
+            }
+        }
+        return this._logger;
     }
 
     /**
@@ -124,35 +133,53 @@ export class BaseTurnHandler {
 
     /**
      * Retrieves the current actor whose turn is being processed.
-     * Prioritizes actor from TurnContext if available, otherwise falls back to handler's direct field.
+     * This method primarily defers to the `ITurnContext` if available,
+     * falling back to the handler's `_currentActor` field only if no context exists.
+     * During an active turn, `ITurnContext.getActor()` is the source of truth.
      * @returns {Entity | null} The current actor entity.
      */
     getCurrentActor() {
-        return this._currentTurnContext ? this._currentTurnContext.getActor() : this._currentActor;
+        if (this._currentTurnContext) {
+            try {
+                return this._currentTurnContext.getActor();
+            } catch (e) {
+                this.getLogger().warn(`Error accessing actor from TurnContext: ${e.message}. Falling back to _currentActor field.`);
+                // Fall through to return this._currentActor in case of context error
+            }
+        }
+        return this._currentActor;
     }
 
     /**
-     * Sets the current actor for the handler.
-     * Primarily used by subclasses or states during turn setup/reset.
+     * Sets the current actor for the handler. Called by concrete handlers.
+     * This should be called *before* `_setCurrentTurnContextInternal` if the context
+     * relies on `this._currentActor` during its own initialization (though TurnContext constructor takes actor directly).
      * @param {Entity | null} actor
      * @protected
      */
     _setCurrentActorInternal(actor) {
+        this.getLogger().debug(`${this.constructor.name}._setCurrentActorInternal: Setting current actor to ${actor?.id ?? 'null'}.`);
         this._currentActor = actor;
+        // Warn if context exists and is for a different actor.
         if (this._currentTurnContext && this._currentTurnContext.getActor()?.id !== actor?.id) {
-            this._logger.warn(`${this.constructor.name}._setCurrentActorInternal called with '${actor?.id}' while an active TurnContext exists for '${this._currentTurnContext.getActor()?.id}'. Context not updated directly by this method.`);
+            this.getLogger().warn(`${this.constructor.name}._setCurrentActorInternal: Handler's actor set to '${actor?.id ?? 'null'}' while an active TurnContext exists for '${this._currentTurnContext.getActor()?.id}'. Context not updated by this method.`);
         }
     }
 
     /**
-     * Sets the current turn context.
-     * Typically called by subclasses when a turn starts (new context created)
-     * or when it's reset (context set to null).
+     * Sets the current turn context. Called by concrete handlers.
      * @param {ITurnContext | null} turnContext
      * @protected
      */
     _setCurrentTurnContextInternal(turnContext) {
+        this.getLogger().debug(`${this.constructor.name}._setCurrentTurnContextInternal: Setting turn context to ${turnContext ? `object for actor ${turnContext.getActor()?.id}` : 'null'}.`);
         this._currentTurnContext = turnContext;
+        // If a new context is set, ensure _currentActor aligns with it.
+        if (turnContext) {
+            this._currentActor = turnContext.getActor();
+        } else {
+            // If context is cleared, _currentActor might also need clearing, handled by _resetTurnStateAndResources
+        }
     }
 
     // --- Core Turn Lifecycle Methods ---
@@ -161,56 +188,53 @@ export class BaseTurnHandler {
      * Transitions the handler to a new state.
      * Manages exiting the previous state and entering the new state.
      * Calls `onExitState` and `onEnterState` hooks.
+     * The `newState` should have been constructed with `this` (the concrete handler instance).
      * @param {ITurnState} newState - The state to transition to.
      * @protected
      * @async
      */
     async _transitionToState(newState) {
+        const logger = this.getLogger(); // Use current best logger
         if (!newState || typeof newState.enterState !== 'function' || typeof newState.exitState !== 'function') {
             const errorMsg = `${this.constructor.name}._transitionToState: newState must implement ITurnState. Received: ${newState}`;
-            this._logger.error(errorMsg);
+            logger.error(errorMsg);
             throw new Error(errorMsg);
         }
 
         const prevState = this._currentState;
-        if (prevState === newState && newState.getStateName() !== 'TurnIdleState') { // Allow re-transition to Idle for reset purposes
-            this._logger.debug(`${this.constructor.name}: Attempted to transition to the same state ${prevState.getStateName()}. Skipping.`);
+        // Allow re-transition to Idle for reset purposes, otherwise skip same-state transition.
+        if (prevState === newState && !(newState instanceof ConcreteTurnIdleState)) {
+            logger.debug(`${this.constructor.name}: Attempted to transition to the same state ${prevState.getStateName()}. Skipping.`);
             return;
         }
 
-        this._logger.debug(`${this.constructor.name}: ${prevState.getStateName()} \u2192 ${newState.getStateName()}`);
+        logger.debug(`${this.constructor.name}: State Transition: ${prevState.getStateName()} \u2192 ${newState.getStateName()}`);
 
         try {
-            // Call subclass hook before exiting previous state
-            await this.onExitState(prevState, newState);
+            await this.onExitState(prevState, newState); // Hook for subclasses
+            // Pass 'this' (the handler instance) to state methods. States expect their handler context.
             await prevState.exitState(this, newState);
         } catch (exitErr) {
-            this._logger.error(`${this.constructor.name}: Error during ${prevState.getStateName()}.exitState or onExitState hook \u2013 ${exitErr.message}`, exitErr);
-            // Potentially handle critical exit error, e.g., by forcing to Idle.
-            // For now, we allow the transition to the new state to proceed if exitState fails,
-            // as the new state might be a recovery state (like Idle).
+            logger.error(`${this.constructor.name}: Error during ${prevState.getStateName()}.exitState or onExitState hook \u2013 ${exitErr.message}`, exitErr);
+            // Potentially handle critical exit error. For now, proceed with transition.
         }
 
         this._currentState = newState;
 
         try {
-            // Call subclass hook before entering new state
-            await this.onEnterState(newState, prevState);
+            await this.onEnterState(newState, prevState); // Hook for subclasses
+            // Pass 'this' (the handler instance) to state methods.
             await newState.enterState(this, prevState);
         } catch (enterErr) {
-            this._logger.error(`${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook \u2013 ${enterErr.message}`, enterErr);
-            // If entering the new state fails, attempt to recover to a stable Idle state.
-            // This check prevents infinite loops if transitioning to Idle itself fails.
-            if (!(this._currentState instanceof ConcreteTurnIdleState)) { // _currentState is already newState here
-                this._logger.warn(`${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`);
-                if (this._currentTurnContext) {
-                    this._logger.warn(`${this.constructor.name}: Current TurnContext for ${this._currentTurnContext.getActor()?.id} will be reset during forced idle transition.`);
-                }
-                // Ensure resources are reset before attempting the forced transition to Idle.
-                this._resetTurnStateAndResources('error-entering-state-recovery');
+            logger.error(`${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook \u2013 ${enterErr.message}`, enterErr);
+            if (!(this._currentState instanceof ConcreteTurnIdleState)) {
+                logger.warn(`${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`);
+                const currentContextActorId = this._currentTurnContext?.getActor()?.id ?? 'N/A';
+                this._resetTurnStateAndResources(`error-entering-${newState.getStateName()}-for-${currentContextActorId}`);
+                // The new ConcreteTurnIdleState needs 'this' (the concrete handler instance).
                 await this._transitionToState(new ConcreteTurnIdleState(this));
             } else {
-                this._logger.error(`${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error. Handler might be unstable.`);
+                logger.error(`${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error. Handler might be unstable.`);
             }
         }
     }
@@ -227,88 +251,69 @@ export class BaseTurnHandler {
     }
 
     /**
-     * Handles the logical end of a turn, which typically involves transitioning
-     * to a `TurnEndingState`. This method is called by the `ITurnContext.endTurn()`
-     * implementation or by states when a turn concludes.
+     * Handles the logical end of a turn.
+     * This method is typically invoked via `ITurnContext.endTurn()`, which is a callback
+     * pointing to this method, bound by the concrete handler.
+     * It transitions to `TurnEndingState`.
      * @param {string} actorIdToEnd - The ID of the actor whose turn is ending.
      * @param {Error | null} [turnError=null] - An error if the turn ended abnormally.
-     * @param {boolean} [fromDestroy=false] - Flag indicating if this call originates from the handler's destroy process.
+     * @param {boolean} [fromDestroy=false] - Internal flag if called during handler's destroy process.
      * @protected
      * @async
      */
     async _handleTurnEnd(actorIdToEnd, turnError = null, fromDestroy = false) {
         this._assertHandlerActiveUnlessDestroying(fromDestroy);
+        const logger = this.getLogger();
 
         const contextActorId = this._currentTurnContext?.getActor()?.id;
-        // Use actorIdToEnd as the primary reference if provided, otherwise try context/current actor.
-        const effectiveActorIdForLog = actorIdToEnd || contextActorId || this._currentActor?.id || 'UNKNOWN_ACTOR_AT_END_LOG';
+        const effectiveActorIdForLog = actorIdToEnd || contextActorId || this._currentActor?.id || 'UNKNOWN_ACTOR_AT_END';
 
         if (actorIdToEnd && contextActorId && actorIdToEnd !== contextActorId) {
-            this._logger.warn(`${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', but TurnContext's current actor is '${contextActorId}'. Effective actor for ending will be based on actorIdToEnd ('${actorIdToEnd}').`);
+            logger.warn(`${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', but TurnContext is for '${contextActorId}'. Effective actor: '${effectiveActorIdForLog}'.`);
         }
 
         if (this._isDestroyed && !fromDestroy) {
-            this._logger.debug(`${this.constructor.name}._handleTurnEnd ignored for actor ${effectiveActorIdForLog} \u2013 handler destroyed.`);
+            logger.debug(`${this.constructor.name}._handleTurnEnd ignored for actor ${effectiveActorIdForLog} \u2013 handler destroyed.`);
             return;
         }
 
-        this._logger.debug(`${this.constructor.name}._handleTurnEnd initiated for actor ${effectiveActorIdForLog}. Error: ${turnError ? turnError.message : 'null'}`);
-        // The effectiveActorId for TurnEndingState should be the one whose turn is actually ending.
+        logger.debug(`${this.constructor.name}._handleTurnEnd initiated for actor ${effectiveActorIdForLog}. Error: ${turnError ? turnError.message : 'null'}`);
+
         const effectiveActorIdForState = actorIdToEnd || contextActorId || this._currentActor?.id;
         if (!effectiveActorIdForState) {
-            this._logger.warn(`${this.constructor.name}._handleTurnEnd: Could not determine a definitive actor ID for ending turn. Using 'UNKNOWN_ACTOR_FOR_STATE'. This might indicate a problem if a turn was expected to be active.`);
+            logger.warn(`${this.constructor.name}._handleTurnEnd: Could not determine actor ID for TurnEndingState. Using 'UNKNOWN_ACTOR_FOR_STATE'.`);
         }
-
+        // TurnEndingState constructor needs 'this' (the concrete handler instance).
         await this._transitionToState(new ConcreteTurnEndingState(this, effectiveActorIdForState || 'UNKNOWN_ACTOR_FOR_STATE', turnError));
     }
 
     /**
-     * Resets all per-turn state, transient data, and subscriptions.
-     * Nullifies the current `ITurnContext`.
-     * This method is the single point of truth for cleaning up after a turn.
-     * Invoked by:
-     * - `TurnIdleState.enterState()` (to ensure a clean slate)
-     * - `TurnEndingState.enterState()` (after notifying ports, before idling)
-     * - `BaseTurnHandler.destroy()` (as a final cleanup)
-     * @param {string} [actorIdContextForLog='N/A'] - Diagnostic context for logging.
+     * Resets all per-turn state, including nullifying the current `ITurnContext` and `_currentActor`.
+     * Invoked by states like `TurnIdleState`, `TurnEndingState`, or during handler destruction.
+     * Subclasses should call `super._resetTurnStateAndResources()` and then perform their specific cleanup.
+     * @param {string} [logContext='N/A'] - Diagnostic context for logging.
      * @protected
      */
-    _resetTurnStateAndResources(actorIdContextForLog = 'N/A') {
-        const logCtx = actorIdContextForLog ?? 'N/A_reset';
+    _resetTurnStateAndResources(logContext = 'N/A') {
+        const logger = this.getLogger(); // Get logger before context is cleared
         const contextActorId = this._currentTurnContext?.getActor()?.id;
-        this._logger.debug(
-            `${this.constructor.name}._resetTurnStateAndResources \u2192 actorCtx='${logCtx}'. Current context actor: ${contextActorId ?? 'None'}.`
+        logger.debug(
+            `${this.constructor.name}._resetTurnStateAndResources (context: '${logContext}'). Current context actor: ${contextActorId ?? 'None'}.`
         );
 
-        // 1. Nullify the current TurnContext instance
         if (this._currentTurnContext) {
-            this._logger.debug(`${this.constructor.name}: Clearing current TurnContext for actor ${contextActorId}.`);
-            this._setCurrentTurnContextInternal(null);
+            logger.debug(`${this.constructor.name}: Clearing current TurnContext for actor ${contextActorId ?? 'N/A'}.`);
+            this._setCurrentTurnContextInternal(null); // Clears _currentTurnContext
         }
 
-        // 2. Clear any handler-level "awaiting external turn-end" bookkeeping (subclasses might implement this)
-        // Example: this._clearAwaitingTurnEndFlags?.(); -> Subclass would implement _clearAwaitingTurnEndFlags
-
-        // 3. Reset handler's current actor
-        // Only reset if no new turn context is immediately going to be set,
-        // or if explicitly part of a full handler reset (like destroy).
-        // TurnIdleState.enterState is a good place for this to happen unconditionally.
-        if (logCtx.startsWith('destroy-') || logCtx.startsWith('enterState-TurnIdleState') || logCtx.startsWith('error-entering-state-recovery')) {
-            this._logger.debug(`${this.constructor.name}: Resetting current actor due to context: ${logCtx}.`);
-            this._setCurrentActorInternal(null);
+        if (this._currentActor) {
+            logger.debug(`${this.constructor.name}: Clearing current handler actor ${this._currentActor.id}.`);
+            this._setCurrentActorInternal(null); // Clears _currentActor
         }
 
-
-        // 4. Reset any other transient flags specific to the BaseTurnHandler or its direct responsibilities.
-        // (Subclasses are responsible for their own specific flags if not covered by TurnContext or general reset)
-
-        // NOTE: Subscription management is often tied to the specific handler (e.g., PlayerTurnHandler's #subscriptionManager).
-        // PlayerTurnHandler's _resetTurnStateAndResources will need to call super and then handle its specific subscriptions.
-        // Alternatively, BaseTurnHandler could manage a list of disposables, or subclasses override this method.
-        // For this iteration, we assume subclasses will extend this method.
-
-        this._logger.debug(
-            `${this.constructor.name}: Base per-turn state reset complete for '${logCtx}'. Subclasses may perform additional cleanup.`
+        // Subclasses will call super._resetTurnStateAndResources and then reset their own specific flags or resources.
+        logger.debug(
+            `${this.constructor.name}: Base per-turn state reset complete for '${logContext}'. Subclasses may perform additional cleanup.`
         );
     }
 
@@ -327,44 +332,39 @@ export class BaseTurnHandler {
     // --- Abstract or Overridable Lifecycle Hooks for Subclasses ---
 
     /**
-     * Protected hook called by `_transitionToState` before the new state's `enterState` method is called.
-     * Subclasses can override this to perform specific actions when the handler is about to enter a new state.
+     * Hook called by `_transitionToState` before the new state's `enterState`.
      * @param {ITurnState} currentState - The state being entered.
-     * @param {ITurnState} [previousState] - The state being exited.
+     * @param {ITurnState | undefined} [previousState] - The state being exited.
      * @returns {Promise<void>}
      * @protected
-     * @abstract
+     * @virtual
      */
     async onEnterState(currentState, previousState) {
-        // Default implementation is no-op. Subclasses should override if needed.
-        this._logger.debug(`${this.constructor.name}.onEnterState hook: Entering ${currentState.getStateName()} from ${previousState?.getStateName() ?? 'None'}`);
+        this.getLogger().debug(`${this.constructor.name}.onEnterState hook: Entering ${currentState.getStateName()} from ${previousState?.getStateName() ?? 'None'}`);
     }
 
     /**
-     * Protected hook called by `_transitionToState` before the previous state's `exitState` method is called.
-     * Subclasses can override this to perform specific actions when the handler is about to exit the current state.
+     * Hook called by `_transitionToState` before the previous state's `exitState`.
      * @param {ITurnState} currentState - The state being exited.
-     * @param {ITurnState} [nextState] - The state being transitioned to.
+     * @param {ITurnState | undefined} [nextState] - The state being transitioned to.
      * @returns {Promise<void>}
      * @protected
-     * @abstract
+     * @virtual
      */
     async onExitState(currentState, nextState) {
-        // Default implementation is no-op. Subclasses should override if needed.
-        this._logger.debug(`${this.constructor.name}.onExitState hook: Exiting ${currentState.getStateName()} to ${nextState?.getStateName() ?? 'None'}`);
+        this.getLogger().debug(`${this.constructor.name}.onExitState hook: Exiting ${currentState.getStateName()} to ${nextState?.getStateName() ?? 'None'}`);
     }
 
 
-    // --- Public API (from ITurnHandler or common handler logic) ---
+    // --- Public API (from a potential ITurnHandler interface or common handler logic) ---
 
     /**
      * Initiates a turn for the specified actor.
-     * This is an abstract method that concrete handlers MUST implement.
-     * It typically involves:
+     * Concrete handlers MUST implement this. It typically involves:
      * - Asserting handler is active.
-     * - Validating the actor.
-     * - Creating and setting up the `ITurnContext`.
-     * - Setting the handler's current actor.
+     * - Validating actor.
+     * - Creating and setting up `ITurnContext` via `_setCurrentTurnContextInternal`.
+     * - Setting `_currentActor` via `_setCurrentActorInternal`.
      * - Delegating to the current state's `startTurn` method (usually `TurnIdleState`).
      * @param {Entity} actor - The entity whose turn is to be started.
      * @returns {Promise<void>}
@@ -372,89 +372,58 @@ export class BaseTurnHandler {
      */
     async startTurn(actor) {
         this._assertHandlerActive();
+        // This is an abstract method, so direct implementation is in subclasses.
+        // Logging here can indicate if a subclass forgot to implement it.
+        this.getLogger().error("Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler.");
         throw new Error("Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler.");
     }
 
 
     /**
      * Destroys the handler, performing necessary cleanup.
-     * Calls the current state's `destroy` method if available, then resets resources
-     * and ensures a transition to `TurnIdleState`.
-     * Subclasses overriding this should typically call `super.destroy()` last.
+     * Subclasses overriding this should typically call `super.destroy()` LAST.
      * @returns {Promise<void>}
      */
     async destroy() {
+        const logger = this.getLogger(); // Get logger before any state changes.
         if (this._isDestroyed) {
-            this._logger.debug(`${this.constructor.name}.destroy() called but already destroyed.`);
+            logger.debug(`${this.constructor.name}.destroy() called but already destroyed.`);
             return;
         }
         this._isDestroyed = true; // Mark as destroyed early
-        this._logger.info(`${this.constructor.name}.destroy() invoked.`);
+        logger.info(`${this.constructor.name}.destroy() invoked.`);
 
-        // Allow current state to perform its specific cleanup, which might trigger turn end.
-        // This is crucial for states like AwaitingPlayerInputState to end the turn gracefully.
         if (this._currentState && typeof this._currentState.destroy === 'function') {
             try {
-                this._logger.debug(`${this.constructor.name}.destroy: Calling destroy on current state ${this._currentState.getStateName()}.`);
-                // Pass 'fromDestroy = true' to _handleTurnEnd if state.destroy() calls turnCtx.endTurn()
-                // The onEndTurnCallback defined in MinimalTestHandler.startTurn implicitly passes actor.id and error.
-                // _handleTurnEnd needs to know this is from a destroy context.
-                // This implies that the onEndTurnCallback might need to be aware of 'fromDestroy',
-                // or _handleTurnEnd needs a way to infer it when _isDestroyed is true.
-                // For now, state.destroy() will call _handleTurnEnd(actorId, error), and _handleTurnEnd
-                // will see _isDestroyed = true and use fromDestroy=true internally if it matters.
-                // Let's make _handleTurnEnd aware of fromDestroy implicitly via this._isDestroyed.
-                // The third parameter of _handleTurnEnd(actorIdToEnd, turnError, fromDestroy) is used for this.
-                // The onEndTurnCallback in MinimalTestHandler doesn't pass 'fromDestroy'.
-                // So, if AwaitingPlayerInputState.destroy calls turnCtx.endTurn(), that eventually calls _handleTurnEnd.
-                // We need to ensure _handleTurnEnd knows it's part of a destroy sequence.
-                // The _assertHandlerActiveUnlessDestroying(fromDestroy) check in _handleTurnEnd helps.
-                // Let's assume state.destroy() -> turnCtx.endTurn() -> _handleTurnEnd(actorId, error, true_if_destroy_is_passed_somehow)
-                // The call chain is: AwaitingPlayerInputState.destroy -> turnCtx.endTurn(err) -> onEndTurnCallback(err) [which is this._handleTurnEnd(actor.id, err)]
-                // So, _handleTurnEnd(actor.id, err) needs to be called with fromDestroy=true.
-                // The current onEndTurnCallback in MinimalTestHandler is: (error) => { this._handleTurnEnd(actor.id, error); };
-                // It doesn't pass fromDestroy.
-                // This means BaseTurnHandler._handleTurnEnd will use its default fromDestroy=false.
-                // However, _handleTurnEnd also checks this._isDestroyed.
-                // if (this._isDestroyed && !fromDestroy) { /* return */ }
-                // This is fine. _handleTurnEnd will proceed because fromDestroy is false, but _isDestroyed is true.
-                // It will then transition to TurnEndingState with fromDestroy=true effectively due to the handler context.
-                // The more explicit way is if state.destroy() called something like handler.endTurnFromDestroy().
-                // For now, let's rely on _handleTurnEnd's logic.
-
-                await this._currentState.destroy(this); // 'this' is the handler context
-                // If state.destroy() successfully transitioned to Idle (e.g. via endTurn), _currentState reflects that.
+                logger.debug(`${this.constructor.name}.destroy: Calling destroy on current state ${this._currentState.getStateName()}.`);
+                // The state's destroy method is passed 'this' (the concrete handler instance)
+                await this._currentState.destroy(this);
             } catch (stateDestroyError) {
-                this._logger.error(`${this.constructor.name}.destroy: Error during ${this._currentState.getStateName()}.destroy() \u2013 ${stateDestroyError.message}`, stateDestroyError);
-                // Continue with reset and forcing to Idle despite state.destroy() error.
+                logger.error(`${this.constructor.name}.destroy: Error during ${this._currentState.getStateName()}.destroy() \u2013 ${stateDestroyError.message}`, stateDestroyError);
             }
         }
 
-        // Final reset of base resources. This is important regardless of state.destroy behavior.
-        // It clears _currentTurnContext and _currentActor.
+        // Final reset of base resources. This clears _currentTurnContext and _currentActor.
         this._resetTurnStateAndResources(`destroy-${this.constructor.name}`);
 
-        // Ensure transition to TurnIdleState if not already there (e.g., if state.destroy didn't lead to Idle or failed)
         if (!(this._currentState instanceof ConcreteTurnIdleState)) {
-            this._logger.debug(`${this.constructor.name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`);
+            logger.debug(`${this.constructor.name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`);
             try {
-                // Pass `this` (the handler itself) to the state constructor
+                // Pass 'this' (the concrete handler instance) to the state constructor.
                 await this._transitionToState(new ConcreteTurnIdleState(this));
             } catch (e) {
-                this._logger.error(`${this.constructor.name}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`, e);
-                // Force set to a new Idle state instance directly if transition fails catastrophically
-                this._currentState = new ConcreteTurnIdleState(this);
-                this._logger.warn(`${this.constructor.name}.destroy: Forcibly set state to TurnIdleState due to transition error.`);
-
+                logger.error(`${this.constructor.name}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`, e);
+                // Forcibly set state if transition fails catastrophically during destroy.
+                this._currentState = new ConcreteTurnIdleState(this); // Pass 'this'
+                logger.warn(`${this.constructor.name}.destroy: Forcibly set state to TurnIdleState due to transition error.`);
             }
         } else {
-            this._logger.debug(`${this.constructor.name}.destroy: Already in TurnIdleState after state cleanup and reset.`);
+            logger.debug(`${this.constructor.name}.destroy: Already in TurnIdleState after state cleanup and reset.`);
         }
-        this._logger.debug(`${this.constructor.name}.destroy() complete.`);
+        logger.info(`${this.constructor.name}.destroy() complete.`);
     }
 
-
-    // --- Test-only hooks (optional, if needed by specific subclasses for testing) ---
+    // --- Test-only hooks ---
     /* istanbul ignore next */
     _TEST_GET_CURRENT_STATE_NAME() {
         return this._currentState?.getStateName() ?? 'NoState';

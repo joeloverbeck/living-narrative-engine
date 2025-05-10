@@ -58,16 +58,19 @@ const mockGameService = {
 class MinimalTestHandler extends BaseTurnHandler {
     #servicesForContext;
     #isAwaitingExternalEventProviderForContext;
+    #onSetAwaitingExternalEventCallbackProviderForContext; // Added
 
     constructor({
                     logger,
                     initialConcreteState,
                     servicesForContext,
                     isAwaitingExternalEventProviderForContext,
+                    onSetAwaitingExternalEventCallbackProviderForContext, // Added
                 }) {
         super({logger, initialConcreteState});
         this.#servicesForContext = servicesForContext;
         this.#isAwaitingExternalEventProviderForContext = isAwaitingExternalEventProviderForContext;
+        this.#onSetAwaitingExternalEventCallbackProviderForContext = onSetAwaitingExternalEventCallbackProviderForContext; // Added
     }
 
     async startTurn(actor) {
@@ -90,6 +93,8 @@ class MinimalTestHandler extends BaseTurnHandler {
             services: this.#servicesForContext,
             onEndTurnCallback: onEndTurnCallback,
             isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProviderForContext,
+            onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallbackProviderForContext, // Added
+            handlerInstance: this, // Added
         });
         this._setCurrentTurnContextInternal(newTurnContext);
         this.getLogger().debug(`${this.constructor.name}.startTurn: TurnContext created for actor ${actor.id}. Delegating to current state.`);
@@ -111,6 +116,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
     let dummyActor;
     let mockServices;
     let mockIsAwaitingExternalEventProvider;
+    let mockOnSetAwaitingExternalEventCallback; // Added
     let resetSpy;
     let stateDestroySpy;
 
@@ -142,6 +148,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
         dummyActor = createMockActor('smoke-test-actor-1');
         mockIsAwaitingExternalEventProvider = jest.fn().mockReturnValue(false);
+        mockOnSetAwaitingExternalEventCallback = jest.fn(); // Added
 
         mockServices = {
             playerPromptService: mockPlayerPromptService,
@@ -157,6 +164,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             initialConcreteState: dummyInitialState,
             servicesForContext: mockServices,
             isAwaitingExternalEventProviderForContext: mockIsAwaitingExternalEventProvider,
+            onSetAwaitingExternalEventCallbackProviderForContext: mockOnSetAwaitingExternalEventCallback, // Added
         });
         handler._currentState = new TurnIdleState(handler); // Start in a known concrete state
 
@@ -184,7 +192,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
         expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
         expect(handler._getInternalState().getStateName()).toBe('TurnIdleState');
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            `MinimalTestHandler initialised \u2192 state DummyInitStateForBeforeEach`
+            `MinimalTestHandler initialised. Initial state: DummyInitStateForBeforeEach`
         );
     });
 
@@ -209,8 +217,8 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(turnContext.getActor()).toBe(dummyActor);
             expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler.startTurn: TurnContext created for actor ${dummyActor.id}. Delegating to current state.`);
             expect(mockLogger.info).toHaveBeenCalledWith(`TurnIdleState: Received startTurn for actor ${dummyActor.id}.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`TurnIdleState: ITurnContext confirmed for actor ${dummyActor.id}. Preparing to transition to AwaitingPlayerInputState.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler: TurnIdleState \u2192 AwaitingPlayerInputState`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`TurnIdleState: ITurnContext confirmed for actor ${dummyActor.id}. Transitioning to AwaitingPlayerInputState.`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler: State Transition: TurnIdleState \u2192 AwaitingPlayerInputState`);
             expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`TurnIdleState: Exiting. Actor: ${dummyActor.id}. Transitioning to AwaitingPlayerInputState.`));
             expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Entered. Actor: ${dummyActor.id}. Previous state: TurnIdleState.`);
             expect(mockServices.subscriptionManager.subscribeToCommandInput).toHaveBeenCalledTimes(1);
@@ -237,7 +245,8 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
                 logger: mockLogger,
                 initialConcreteState: dummyInitialStateForMisconfigured,
                 servicesForContext: mockServices,
-                isAwaitingExternalEventProviderForContext: mockIsAwaitingExternalEventProvider
+                isAwaitingExternalEventProviderForContext: mockIsAwaitingExternalEventProvider,
+                onSetAwaitingExternalEventCallbackProviderForContext: mockOnSetAwaitingExternalEventCallback, // Added
             });
             misconfiguredHandler._currentState = new TurnIdleState(misconfiguredHandler);
             jest.spyOn(misconfiguredHandler, 'onEnterState').mockImplementation(async () => {
@@ -255,12 +264,11 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
             const turnIdleState = new TurnIdleState(misconfiguredHandler);
 
-            await expect(turnIdleState.startTurn(misconfiguredHandler, dummyActor)).rejects.toThrow('TurnIdleState: startTurn called, but ITurnContext is not available on the handler. This indicates an issue in the handler\'s startTurn implementation.');
+            await expect(turnIdleState.startTurn(misconfiguredHandler, dummyActor)).rejects.toThrow("TurnIdleState: ITurnContext not available on the handler after handler.startTurn() was called. This indicates an issue in the concrete handler's startTurn implementation.");
 
             await jest.advanceTimersByTimeAsync(0);
-
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('TurnIdleState: startTurn called, but ITurnContext is not available on the handler.'));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: TurnIdleState \u2192 TurnIdleState`));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("TurnIdleState: ITurnContext not available on the handler after handler.startTurn() was called. This indicates an issue in the concrete handler's startTurn implementation."));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: TurnIdleState \u2192 TurnIdleState`));
 
             misconfiguredHandler._setCurrentTurnContextInternal = originalSetContextInternal;
         });
@@ -273,7 +281,9 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
                 logger: mockLogger,
                 services: mockServices,
                 onEndTurnCallback: (err) => handler._handleTurnEnd(dummyActor.id, err, handler._isDestroyed),
-                isAwaitingExternalEventProvider: mockIsAwaitingExternalEventProvider
+                isAwaitingExternalEventProvider: mockIsAwaitingExternalEventProvider,
+                onSetAwaitingExternalEventCallback: mockOnSetAwaitingExternalEventCallback, // Added
+                handlerInstance: handler, // Added
             });
             handler._setCurrentTurnContextInternal(turnContextForDummy);
             handler._setCurrentActorInternal(dummyActor);
@@ -282,13 +292,11 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             mockLogger.debug.mockClear();
 
             const turnIdleStateInstance = handler._getInternalState();
-
-            await expect(turnIdleStateInstance.startTurn(handler, wrongActor)).rejects.toThrow(`TurnIdleState: Actor in TurnContext ('${dummyActor.id}') does not match actor provided to startTurn ('${wrongActor.id}').`);
+            await expect(turnIdleStateInstance.startTurn(handler, wrongActor)).rejects.toThrow(`TurnIdleState: Actor in ITurnContext ('${dummyActor.id}') does not match actor provided to state's startTurn ('${wrongActor.id}').`);
 
             await jest.advanceTimersByTimeAsync(0);
-
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Actor in TurnContext ('${dummyActor.id}') does not match actor provided to startTurn ('${wrongActor.id}').`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler: TurnIdleState \u2192 TurnIdleState`);
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`TurnIdleState: Actor in ITurnContext ('${dummyActor.id}') does not match actor provided to state's startTurn ('${wrongActor.id}').`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler: State Transition: TurnIdleState \u2192 TurnIdleState`);
         });
 
         test('AwaitingPlayerInputState.enterState handles subscription failure (BaseTurnHandler recovers)', async () => {
@@ -309,11 +317,10 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
 
             const errorCallsDuringTest = mockLogger.error.mock.calls;
-            // With TurnEndingState fixed, only the primary error from AwaitingPlayerInputState should be logged.
             expect(errorCallsDuringTest.length).toBe(1);
 
             if (errorCallsDuringTest.length > 0) {
-                expect(errorCallsDuringTest[0][0]).toBe(`AwaitingPlayerInputState: Failed to subscribe to command input or prompt player for actor ${dummyActor.id}.`);
+                expect(errorCallsDuringTest[0][0]).toBe(`AwaitingPlayerInputState: Failed to subscribe or prompt player ${dummyActor.id}.`);
                 expect(errorCallsDuringTest[0][1]).toBe(subscriptionError);
             }
 
@@ -322,24 +329,21 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
 
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                `MinimalTestHandler: AwaitingPlayerInputState \u2192 TurnEndingState`
+                `MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`
             );
 
             expect(resetSpy).toHaveBeenCalled();
 
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                `MinimalTestHandler: TurnEndingState \u2192 TurnIdleState`
+                `MinimalTestHandler: State Transition: TurnEndingState \u2192 TurnIdleState`
             );
 
             expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
             expect(handler._getInternalState().getStateName()).toBe('TurnIdleState');
 
-            // If TurnEndingState.enterState is now clean, this warning (about BaseTurnHandler forcing a transition due to *TurnEndingState* failing)
-            // should not occur.
             expect(mockLogger.warn).not.toHaveBeenCalledWith(
                 expect.stringContaining('Forcing transition to TurnIdleState due to error entering TurnEndingState')
             );
-            // Check generally that no warning about "Forcing transition..." occurred if not expected.
             expect(mockLogger.warn).not.toHaveBeenCalledWith(
                 expect.stringContaining('Forcing transition to TurnIdleState due to error entering')
             );
@@ -368,14 +372,15 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(mockLogger.info).toHaveBeenCalledWith(`MinimalTestHandler.destroy() invoked.`);
 
             expect(stateDestroySpy).toHaveBeenCalledTimes(1);
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: PlayerTurnHandler is being destroyed while awaiting input for actor ${dummyActor.id}.`));
+            // CORRECTED LINE BELOW (REMOVED expect.stringContaining WRAPPER)
+            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: BaseTurnHandler destroyed while awaiting input for ${dummyActor.id}.`);
 
             expect(handler._handleTurnEnd).toHaveBeenCalledTimes(1);
             expect(handler._handleTurnEnd).toHaveBeenCalledWith(dummyActor.id, expect.any(Error), true);
 
             expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler.destroy: Calling destroy on current state AwaitingPlayerInputState.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: AwaitingPlayerInputState \u2192 TurnEndingState`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: TurnEndingState \u2192 TurnIdleState`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: TurnEndingState \u2192 TurnIdleState`));
 
             expect(resetSpy).toHaveBeenCalledWith(expect.stringContaining(`destroy-MinimalTestHandler`));
             expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
@@ -388,18 +393,15 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
                 expect.stringContaining('MinimalTestHandler.destroy: Already in TurnIdleState after state cleanup and reset.')
             );
 
-            expect(mockLogger.debug).toHaveBeenCalledWith(`MinimalTestHandler.destroy() complete.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`MinimalTestHandler.destroy() complete.`);
 
-            // With TurnEndingState fixed, no errors should be logged by BaseTurnHandler during these transitions.
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
         test('calling destroy() multiple times should be idempotent', async () => {
-            // First destroy call (and its async processes)
             await handler.destroy();
             await jest.advanceTimersByTimeAsync(0);
 
-            // Clear mocks for the second call
             mockLogger.info.mockClear();
             mockLogger.debug.mockClear();
             mockLogger.error.mockClear();
@@ -410,7 +412,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
             const transitionSpy = jest.spyOn(handler, '_transitionToState');
 
-            // Second destroy call
             await handler.destroy();
             await jest.advanceTimersByTimeAsync(0);
 

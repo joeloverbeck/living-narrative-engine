@@ -2,19 +2,16 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../handlers/baseTurnHandler.js').default} BaseTurnHandler
+ * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
- * @typedef {import('./processingCommandState.js').ProcessingCommandState} ProcessingCommandState_Class
- * @typedef {import('./turnEndingState.js').TurnEndingState} TurnEndingState_Class
- * @typedef {import('./turnIdleState.js').TurnIdleState} TurnIdleState_Class
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 
 import {AbstractTurnState} from './abstractTurnState.js';
 import {ProcessingCommandState} from './processingCommandState.js';
-import {TurnEndingState} from './turnEndingState.js';
+import {TurnEndingState} from './turnEndingState.js'; // Not directly used here, but good for context
 import {TurnIdleState} from './turnIdleState.js';
 
 /**
@@ -22,105 +19,80 @@ import {TurnIdleState} from './turnIdleState.js';
  * @extends AbstractTurnState_Base
  * @implements {ITurnState_Interface}
  * @description
- * This state is active after `startTurn()` has successfully initialized the turn for an actor
- * and the system is waiting for the player to submit a command. The player has been prompted for action.
- * Its primary responsibilities are to subscribe to player command input, prompt the player,
- * and wait for a command to be submitted.
- * Note: The JSDoc `@param {PlayerTurnHandler}` in methods should be interpreted as `@param {BaseTurnHandler}`
- * as this state operates with the handler context provided by AbstractTurnState.
+ * Active when the system is waiting for a human player to submit a command.
+ * It subscribes to command input and prompts the player.
+ * All interactions with actor, services, logger, etc., are through ITurnContext.
  */
 export class AwaitingPlayerInputState extends AbstractTurnState {
-    /**
-     * Stores the function to unsubscribe from command input.
-     * @private
-     * @type {function | null}
-     */
+    /** @private @type {function | null} */
     #unsubscribeFromCommandInputFn = null;
 
     /**
-     * Creates an instance of AwaitingPlayerInputState.
-     * @param {BaseTurnHandler} handlerContext - The BaseTurnHandler instance that manages this state.
+     * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
      */
-    constructor(handlerContext) {
-        super(handlerContext);
+    constructor(handler) {
+        super(handler);
     }
 
-    /**
-     * Returns the unique identifier for this state.
-     * @override
-     * @returns {string} The state name "AwaitingPlayerInputState".
-     */
+    /** @override */
     getStateName() {
         return "AwaitingPlayerInputState";
     }
 
     /**
-     * Called when the {@link BaseTurnHandler} transitions into this state.
-     * - Calls super.enterState for consistent logging.
-     * - Ensures there's a current actor via TurnContext; if not, transitions to Idle.
-     * - Subscribes to command input via SubscriptionManager from TurnContext; if fails, ends turn with error.
      * @override
-     * @async
-     * @param {BaseTurnHandler} handlerContext - The {@link BaseTurnHandler} instance.
-     * @param {ITurnState_Interface} [previousState] - The state from which the transition occurred.
-     * @returns {Promise<void>}
+     * @param {BaseTurnHandler} handler
+     * @param {ITurnState_Interface} [previousState]
      */
-    async enterState(handlerContext, previousState) {
-        // AbstractTurnState.enterState uses this._getTurnContext() for actorId in log.
-        // It's called first to ensure logging consistency.
-        await super.enterState(handlerContext, previousState);
+    async enterState(handler, previousState) {
+        await super.enterState(handler, previousState); // Handles initial logging via this._getTurnContext()
 
-        const turnCtx = this._getTurnContext(); // Gets context from handler via this._handlerContext
-        // Logger for state-specific messages, prefers turnCtx's logger.
-        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger();
-        const actor = turnCtx?.getActor(); // Actor MUST come from TurnContext for this state
-        const actorId = actor?.id ?? 'UNKNOWN_ACTOR_ON_ENTRY';
+        const turnCtx = this._getTurnContext(); // Must exist at this point
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger(); // Prefer context's logger
 
-        if (!turnCtx || !actor) {
-            logger.error(`${this.getStateName()}: TurnContext or Actor not found on entry. Actor ID: ${actorId}. Transitioning to Idle.`);
-            if (typeof handlerContext._resetTurnStateAndResources === 'function') {
-                handlerContext._resetTurnStateAndResources(`critical-entry-failure-${this.getStateName()}`);
-            }
-            await handlerContext._transitionToState(new TurnIdleState(handlerContext));
+        if (!turnCtx) { // Should have been caught by super.enterState if actor was needed for log
+            logger.error(`${this.getStateName()}: Critical - ITurnContext not available on entry. Transitioning to Idle.`);
+            handler._resetTurnStateAndResources(`critical-entry-failure-${this.getStateName()}`);
+            await handler._transitionToState(new TurnIdleState(handler));
             return;
         }
 
-        // Subscribe
-        try {
-            // Get SubscriptionManager from TurnContext
-            const subMan = turnCtx.getSubscriptionManager();
-            this.#unsubscribeFromCommandInputFn = subMan.subscribeToCommandInput(
-                // Pass the handlerContext for the state method to operate on the correct handler instance
-                (cmdString) => this.handleSubmittedCommand(handlerContext, cmdString)
-            );
-            logger.debug(`${this.getStateName()}: Successfully subscribed to command input for actor ${actorId}.`);
-
-            // Optionally, prompt player for input here if not handled by an external mechanism
-            // const playerPromptService = turnCtx.getPlayerPromptService();
-            // await playerPromptService.prompt(actor, "Your command?");
-
-        } catch (subError) {
-            const errorMessage = `${this.getStateName()}: Failed to subscribe to command input or prompt player for actor ${actorId}.`;
-            logger.error(errorMessage, subError);
-            // Use turnCtx.endTurn() which calls the handler's _handleTurnEnd method.
-            turnCtx.endTurn(new Error(`${errorMessage} Details: ${subError.message}`));
+        const actor = turnCtx.getActor();
+        if (!actor) {
+            logger.error(`${this.getStateName()}: Critical - Actor not found in ITurnContext on entry. Transitioning to Idle.`);
+            handler._resetTurnStateAndResources(`critical-entry-no-actor-${this.getStateName()}`);
+            await handler._transitionToState(new TurnIdleState(handler));
             return;
+        }
+        const actorId = actor.id;
+
+        try {
+            const subMan = turnCtx.getSubscriptionManager(); // Get from ITurnContext
+            this.#unsubscribeFromCommandInputFn = subMan.subscribeToCommandInput(
+                (cmdString) => this.handleSubmittedCommand(handler, cmdString, actor) // Pass handler and verified actor
+            );
+            logger.debug(`${this.getStateName()}: Subscribed to command input for actor ${actorId}.`);
+
+            // Prompt player for input
+            const prompter = turnCtx.getPlayerPromptService(); // Get from ITurnContext
+            await prompter.prompt(actor, "Your command?"); // Or a more generic prompt message
+            logger.debug(`${this.getStateName()}: Player ${actorId} prompted for input.`);
+
+        } catch (error) {
+            const errorMessage = `${this.getStateName()}: Failed to subscribe or prompt player ${actorId}.`;
+            logger.error(errorMessage, error);
+            turnCtx.endTurn(new Error(`${errorMessage} Details: ${error.message}`)); // End turn via ITurnContext
         }
     }
 
     /**
-     * Called when the {@link BaseTurnHandler} transitions out of this state.
-     * - Unsubscribes from command input.
-     * - Calls super.exitState for consistent logging.
      * @override
-     * @async
-     * @param {BaseTurnHandler} handlerContext - The {@link BaseTurnHandler} instance.
-     * @param {ITurnState_Interface} [nextState] - The state to which the handler is transitioning.
-     * @returns {Promise<void>}
+     * @param {BaseTurnHandler} handler
+     * @param {ITurnState_Interface} [nextState]
      */
-    async exitState(handlerContext, nextState) {
+    async exitState(handler, nextState) {
         const turnCtx = this._getTurnContext();
-        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
 
         if (this.#unsubscribeFromCommandInputFn) {
             logger.debug(`${this.getStateName()}: Unsubscribing from command input.`);
@@ -131,133 +103,122 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
             }
             this.#unsubscribeFromCommandInputFn = null;
         } else {
-            // Only warn if we expected an unsubscribe function (e.g., not during initial error recovery before subscription)
-            if (nextState && nextState.getStateName() !== 'TurnIdleState' && nextState.getStateName() !== 'TurnEndingState') {
-                logger.warn(`${this.getStateName()}: No unsubscribe function was stored or it was already cleared upon exit.`);
+            // Avoid warning if exiting to Idle/Ending, as context might be clearing.
+            const nextStateName = nextState?.getStateName();
+            if (nextStateName && nextStateName !== 'TurnIdleState' && nextStateName !== 'TurnEndingState') {
+                logger.warn(`${this.getStateName()}: No unsubscribe function stored or already cleared upon exit.`);
             }
         }
-        // Call super.exitState last for consistent logging from AbstractTurnState.
-        await super.exitState(handlerContext, nextState);
+        await super.exitState(handler, nextState); // Handles logging via this._getTurnContext()
     }
 
     /**
-     * Handles a command string submitted by the player.
      * @override
-     * @async
-     * @param {BaseTurnHandler} handlerContext - The {@link BaseTurnHandler} instance.
-     * @param {string} commandString - The command string submitted by the player.
-     * @returns {Promise<void>}
+     * @param {BaseTurnHandler} handler
+     * @param {string} commandString
+     * @param {Entity} actorEntity - The entity that submitted the command (passed from subscription callback)
      */
-    async handleSubmittedCommand(handlerContext, commandString) {
+    async handleSubmittedCommand(handler, commandString, actorEntity) {
         const turnCtx = this._getTurnContext();
-        // If turnCtx is somehow lost, fallback, but this indicates a severe issue.
-        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger();
-        const actor = turnCtx?.getActor();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
 
-        if (!turnCtx || !actor) {
-            logger.error(`${this.getStateName()}: handleSubmittedCommand called but no TurnContext/actor. Command: "${commandString}". Attempting to transition to Idle.`);
-            if (typeof handlerContext._resetTurnStateAndResources === 'function') {
-                handlerContext._resetTurnStateAndResources(`critical-command-failure-${this.getStateName()}`);
-            }
-            await handlerContext._transitionToState(new TurnIdleState(handlerContext));
+        if (!turnCtx) {
+            logger.error(`${this.getStateName()}: handleSubmittedCommand called but no ITurnContext. Command: "${commandString}". Attempting to Idle.`);
+            handler._resetTurnStateAndResources(`critical-command-no-context-${this.getStateName()}`);
+            await handler._transitionToState(new TurnIdleState(handler));
             return;
         }
 
-        logger.info(`${this.getStateName()}: Received command "${commandString}" for actor ${actor.id}.`);
+        const contextActor = turnCtx.getActor();
+        if (!contextActor || contextActor.id !== actorEntity.id) {
+            logger.error(`${this.getStateName()}: Command received for ${actorEntity.id}, but current context actor is ${contextActor?.id}. Ending turn with error.`);
+            turnCtx.endTurn(new Error(`Command actor mismatch: expected ${contextActor?.id}, got ${actorEntity.id}`));
+            return;
+        }
+        const actorId = contextActor.id;
+
+        logger.info(`${this.getStateName()}: Received command "${commandString}" for actor ${actorId}.`);
 
         if (!commandString || commandString.trim() === "") {
-            logger.debug(`${this.getStateName()}: Empty command received for actor ${actor.id}. Re-prompting.`);
+            logger.debug(`${this.getStateName()}: Empty command received for ${actorId}. Re-prompting.`);
             try {
-                const prompter = turnCtx.getPlayerPromptService();
-                await prompter.prompt(actor); // Assuming prompt service is on TurnContext
+                const prompter = turnCtx.getPlayerPromptService(); // From ITurnContext
+                await prompter.prompt(contextActor); // Re-prompt current actor
             } catch (promptError) {
-                const errorMessage = `${this.getStateName()}: Failed to re-prompt actor ${actor.id} after empty command.`;
-                logger.error(errorMessage, promptError);
-                turnCtx.endTurn(new Error(`${errorMessage} Details: ${promptError.message}`));
+                const errorMsg = `${this.getStateName()}: Failed to re-prompt ${actorId}.`;
+                logger.error(errorMsg, promptError);
+                turnCtx.endTurn(new Error(`${errorMsg} Details: ${promptError.message}`));
             }
         } else {
-            logger.debug(`${this.getStateName()}: Valid command "${commandString}" for actor ${actor.id}. Transitioning to ProcessingCommandState.`);
+            logger.debug(`${this.getStateName()}: Valid command "${commandString}" for ${actorId}. Transitioning to ProcessingCommandState.`);
             try {
-                await handlerContext._transitionToState(new ProcessingCommandState(handlerContext, commandString));
+                // ProcessingCommandState constructor takes handler and commandString
+                await handler._transitionToState(new ProcessingCommandState(handler, commandString));
             } catch (transitionError) {
-                const errorMessage = `${this.getStateName()}: Failed to transition to ProcessingCommandState for actor ${actor.id}. Command: "${commandString}".`;
-                logger.error(errorMessage, transitionError);
-                turnCtx.endTurn(new Error(`${errorMessage} Details: ${transitionError.message}`));
+                const errorMsg = `${this.getStateName()}: Failed to transition to ProcessingCommandState for ${actorId}. Cmd: "${commandString}".`;
+                logger.error(errorMsg, transitionError);
+                turnCtx.endTurn(new Error(`${errorMsg} Details: ${transitionError.message}`));
             }
         }
     }
 
     /** @override */
-    async startTurn(handlerContext, actor) {
-        // This state should not typically handle startTurn again once entered.
-        // Delegate to super which throws an error.
-        return super.startTurn(handlerContext, actor);
-    }
-
-    /** @override */
-    async handleTurnEndedEvent(handlerContext, payload) {
+    async handleTurnEndedEvent(handler, payload) {
         const turnCtx = this._getTurnContext();
-        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger();
-        const currentActor = turnCtx?.getActor();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
 
+        if (!turnCtx) {
+            logger.warn(`${this.getStateName()}: handleTurnEndedEvent received but no ITurnContext active. Payload for: ${payload?.entityId}`);
+            await super.handleTurnEndedEvent(handler, payload); // Default warning
+            return;
+        }
+
+        const currentActor = turnCtx.getActor();
         if (currentActor && payload && payload.entityId === currentActor.id) {
-            logger.info(`${this.getStateName()}: core:turn_ended event received for current actor ${currentActor.id}. Ending turn.`);
+            logger.info(`${this.getStateName()}: core:turn_ended event received for current actor ${currentActor.id}. Ending turn via context.`);
             const errorForTurnEnd = payload.error ? (payload.error instanceof Error ? payload.error : new Error(String(payload.error))) : null;
-            // Use turnCtx.endTurn() to ensure the standard end-of-turn callback is invoked.
-            turnCtx.endTurn(errorForTurnEnd);
+            turnCtx.endTurn(errorForTurnEnd); // End turn via ITurnContext
         } else {
-            // Call super.handleTurnEndedEvent if the event is not for the current actor or for default logging.
-            await super.handleTurnEndedEvent(handlerContext, payload);
+            // Event is not for the current actor, or payload is malformed.
+            await super.handleTurnEndedEvent(handler, payload); // Default warning
         }
     }
 
     /** @override */
-    async processCommandResult(handlerContext, actor, cmdProcResult, commandString) {
-        // This state primarily awaits input, doesn't process results itself.
-        return super.processCommandResult(handlerContext, actor, cmdProcResult, commandString);
-    }
+    async destroy(handler) {
+        const turnCtx = this._getTurnContext(); // Get context before it's potentially cleared
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+        const actorId = turnCtx?.getActor()?.id ?? 'N/A_at_destroy';
 
-    /** @override */
-    async handleDirective(handlerContext, actor, directive, cmdProcResult) {
-        // This state primarily awaits input, doesn't handle directives itself.
-        return super.handleDirective(handlerContext, actor, directive, cmdProcResult);
-    }
+        logger.info(`${this.getStateName()}: BaseTurnHandler destroyed while awaiting input for ${actorId}.`);
 
-    /** @override */
-    async destroy(handlerContext) {
-        const turnCtx = this._getTurnContext(); // Get context before it might be cleared by super or exitState
-        const logger = turnCtx ? turnCtx.getLogger() : handlerContext.getLogger(); // Use turn's logger if available
-        const actor = turnCtx?.getActor();
-        const actorId = actor?.id ?? 'N/A_at_destroy';
-
-        logger.info(`${this.getStateName()}: PlayerTurnHandler is being destroyed while awaiting input for actor ${actorId}.`);
-
-        // Ensure cleanup like unsubscription. exitState is called by _transitionToState if handler moves to Idle.
-        // If destroy is called directly without a state transition, manually call necessary parts of exitState.
+        // Manually trigger cleanup normally done by exitState if still subscribed
         if (this.#unsubscribeFromCommandInputFn) {
-            logger.debug(`${this.getStateName()} (destroy): Manually unsubscribing from command input.`);
+            logger.debug(`${this.getStateName()} (destroy): Manually unsubscribing.`);
             try {
                 this.#unsubscribeFromCommandInputFn();
-            } catch (unsubError) {
-                logger.error(`${this.getStateName()} (destroy): Error during command input unsubscription: ${unsubError.message}`, unsubError);
+            } catch (unsubError) { /* Already logging in exitState, avoid double log */
             }
             this.#unsubscribeFromCommandInputFn = null;
         }
 
-        if (actor && turnCtx) { // Check turnCtx as well, as endTurn is a method on it.
-            const destroyError = new Error(`Turn handler destroyed while actor ${actorId} was in AwaitingPlayerInputState.`);
-            logger.debug(`${this.getStateName()}: Notifying turn end for actor ${actorId} due to destruction.`);
-            // Pass 'fromDestroy = true' to the handler's _handleTurnEnd if it accepts it
-            // For now, just end the turn via context. The handler's destroy will manage overall flow.
+        if (turnCtx) { // If a turn was active (context exists)
+            const destroyError = new Error(`Turn handler destroyed while actor ${actorId} was in ${this.getStateName()}.`);
+            logger.debug(`${this.getStateName()}: Notifying turn end for ${actorId} due to destruction via ITurnContext.`);
             turnCtx.endTurn(destroyError);
         } else {
-            logger.warn(`${this.getStateName()}: PlayerTurnHandler destroyed, but no current actor/TurnContext was active in this state. No specific turn to end via context.`);
+            logger.warn(`${this.getStateName()}: Handler destroyed, but no active ITurnContext. No specific turn to end.`);
         }
-        // AbstractTurnState.destroy() logs a debug message.
-        // The main cleanup is handled by BaseTurnHandler.destroy() which ensures transition to Idle and resource reset.
-        await super.destroy(handlerContext);
-        logger.debug(`${this.getStateName()}: Destroy handling complete for actor ${actorId}.`);
+        // BaseTurnHandler.destroy() handles further cleanup like transitioning to Idle.
+        await super.destroy(handler); // Logs from AbstractTurnState
+        logger.debug(`${this.getStateName()}: Destroy handling for ${actorId} complete.`);
     }
+
+    // These methods are not applicable for AwaitingPlayerInputState
+    // and will rely on AbstractTurnState's default behavior (log error and throw).
+    // async startTurn(handler, actorEntity) { return super.startTurn(handler, actorEntity); }
+    // async processCommandResult(handler, actor, cmdProcResult, commandString) { return super.processCommandResult(handler, actor, cmdProcResult, commandString); }
+    // async handleDirective(handler, actor, directive, cmdProcResult) { return super.handleDirective(handler, actor, directive, cmdProcResult); }
 }
 
 // --- FILE END ---

@@ -22,21 +22,40 @@
  * @description Callback function to signal the end of a turn.
  */
 /**
+ * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ */
+/**
  * @typedef {function(): boolean} IsAwaitingExternalEventProvider
  * @description Function that returns true if the turn is awaiting an external event.
+ */
+/**
+ * @typedef {function(boolean, string): void} OnSetAwaitingExternalEventCallback
  */
 /**
  * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  */
 /**
+ * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ */
+/**
+ * @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ */
+/**
+ * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ */
+/**
+ * @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
+ */
+
+/**
  * @typedef {object} TurnContextServices
  * @property {IPlayerPromptService} [playerPromptService]
  * @property {GameWorld | object} [game] // Replace 'object' with a specific minimal game interface if applicable
- * @property {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} [commandProcessor]
- * @property {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} [commandOutcomeInterpreter]
- * @property {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [safeEventDispatcher]
+ * @property {ICommandProcessor} [commandProcessor]
+ * @property {ICommandOutcomeInterpreter} [commandOutcomeInterpreter]
+ * @property {ISafeEventDispatcher} [safeEventDispatcher]
  * @property {SubscriptionLifecycleManager} [subscriptionManager]
- * @property {import('../../ports/ITurnEndPort.js').ITurnEndPort} [turnEndPort]
+ * @property {ITurnEndPort} [turnEndPort]
  * // Add other services as needed by ITurnContext methods
  */
 
@@ -62,6 +81,10 @@ export class TurnContext extends ITurnContext {
     #onEndTurnCallback;
     /** @type {IsAwaitingExternalEventProvider} */
     #isAwaitingExternalEventProvider;
+    /** @type {OnSetAwaitingExternalEventCallback} */
+    #onSetAwaitingExternalEventCallback; // Added
+    /** @type {BaseTurnHandler} */
+    #handlerInstance; // To facilitate state transitions
 
     /**
      * Creates an instance of TurnContext.
@@ -71,13 +94,17 @@ export class TurnContext extends ITurnContext {
      * @param {TurnContextServices} params.services - A bag of services accessible during the turn.
      * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
      * @param {IsAwaitingExternalEventProvider} params.isAwaitingExternalEventProvider - Function to check if awaiting an external event.
+     * @param {OnSetAwaitingExternalEventCallback} params.onSetAwaitingExternalEventCallback - Callback to inform handler to set its waiting flag.
+     * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
      */
     constructor({
                     actor,
                     logger,
                     services,
                     onEndTurnCallback,
-                    isAwaitingExternalEventProvider
+                    isAwaitingExternalEventProvider, // Keep this one
+                    onSetAwaitingExternalEventCallback, // Added
+                    handlerInstance // Added
                 }) {
         super();
 
@@ -96,39 +123,38 @@ export class TurnContext extends ITurnContext {
         if (typeof isAwaitingExternalEventProvider !== 'function') {
             throw new Error('TurnContext: isAwaitingExternalEventProvider function is required.');
         }
+        if (typeof onSetAwaitingExternalEventCallback !== 'function') { // Added check
+            throw new Error('TurnContext: onSetAwaitingExternalEventCallback function is required.');
+        }
+        if (!handlerInstance) { // Added check
+            throw new Error('TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.');
+        }
 
         this.#actor = actor;
         this.#logger = logger;
-        this.#services = services; // Intentionally not freezing services itself, caller manages its immutability.
+        this.#services = services;
         this.#onEndTurnCallback = onEndTurnCallback;
         this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
+        this.#onSetAwaitingExternalEventCallback = onSetAwaitingExternalEventCallback; // Store it
+        this.#handlerInstance = handlerInstance;
 
-        if (Object.freeze && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
-            Object.freeze(this);
-        }
+        // Freezing in production is a good practice but commented out for brevity during dev/example.
+        // if (Object.freeze && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
+        //     Object.freeze(this);
+        // }
     }
 
-    /**
-     * @override
-     * @returns {Entity}
-     */
+    /** @override */
     getActor() {
         return this.#actor;
     }
 
-    /**
-     * @override
-     * @returns {ILogger}
-     */
+    /** @override */
     getLogger() {
         return this.#logger;
     }
 
-    /**
-     * @override
-     * @returns {IPlayerPromptService}
-     * @throws {Error} If PlayerPromptService is not available.
-     */
+    /** @override */
     getPlayerPromptService() {
         if (!this.#services.playerPromptService) {
             this.#logger.error("TurnContext: PlayerPromptService not available in services bag.");
@@ -137,11 +163,7 @@ export class TurnContext extends ITurnContext {
         return this.#services.playerPromptService;
     }
 
-    /**
-     * @override
-     * @returns {GameWorld | object}
-     * @throws {Error} If Game service/world is not available.
-     */
+    /** @override */
     getGame() {
         if (!this.#services.game) {
             this.#logger.error("TurnContext: Game service/world not available in services bag.");
@@ -150,11 +172,34 @@ export class TurnContext extends ITurnContext {
         return this.#services.game;
     }
 
-    /**
-     * Retrieves the SubscriptionLifecycleManager from the services bag.
-     * @returns {SubscriptionLifecycleManager}
-     * @throws {Error} If SubscriptionManager is not available.
-     */
+    /** @override */
+    getCommandProcessor() {
+        if (!this.#services.commandProcessor) {
+            this.#logger.error("TurnContext: CommandProcessor not available in services bag.");
+            throw new Error("TurnContext: CommandProcessor not available in services bag.");
+        }
+        return this.#services.commandProcessor;
+    }
+
+    /** @override */
+    getCommandOutcomeInterpreter() {
+        if (!this.#services.commandOutcomeInterpreter) {
+            this.#logger.error("TurnContext: CommandOutcomeInterpreter not available in services bag.");
+            throw new Error("TurnContext: CommandOutcomeInterpreter not available in services bag.");
+        }
+        return this.#services.commandOutcomeInterpreter;
+    }
+
+    /** @override */
+    getSafeEventDispatcher() {
+        if (!this.#services.safeEventDispatcher) {
+            this.#logger.error("TurnContext: SafeEventDispatcher not available in services bag.");
+            throw new Error("TurnContext: SafeEventDispatcher not available in services bag.");
+        }
+        return this.#services.safeEventDispatcher;
+    }
+
+    /** @override */
     getSubscriptionManager() {
         if (!this.#services.subscriptionManager) {
             this.#logger.error("TurnContext: SubscriptionManager not available in services bag.");
@@ -163,11 +208,7 @@ export class TurnContext extends ITurnContext {
         return this.#services.subscriptionManager;
     }
 
-    /**
-     * Retrieves the TurnEndPort from the services bag.
-     * @returns {import('../../ports/ITurnEndPort.js').ITurnEndPort}
-     * @throws {Error} If TurnEndPort is not available.
-     */
+    /** @override */
     getTurnEndPort() {
         if (!this.#services.turnEndPort) {
             this.#logger.error("TurnContext: TurnEndPort not available in services bag.");
@@ -176,19 +217,12 @@ export class TurnContext extends ITurnContext {
         return this.#services.turnEndPort;
     }
 
-    /**
-     * @override
-     * @param {Error | null} [errorOrNull]
-     * @returns {void}
-     */
+    /** @override */
     endTurn(errorOrNull = null) {
         this.#onEndTurnCallback(errorOrNull);
     }
 
-    /**
-     * @override
-     * @returns {boolean}
-     */
+    /** @override */
     isAwaitingExternalEvent() {
         return this.#isAwaitingExternalEventProvider();
     }
@@ -198,18 +232,35 @@ export class TurnContext extends ITurnContext {
      * services, and lifecycle callbacks as the original context.
      * @param {Entity} newActor - The new actor for whom to create the context.
      * @returns {TurnContext} A new TurnContext instance.
+     * @deprecated This method might lead to state inconsistencies if services or callbacks are actor-specific.
+     * Prefer creating a new TurnContext with fresh, actor-appropriate dependencies.
      */
     cloneForActor(newActor) {
+        this.#logger.warn("TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies.");
         if (!newActor) {
             throw new Error('TurnContext.cloneForActor: newActor is required.');
         }
+        // Cloning handlerInstance by reference is correct here as it's the same handler.
         return new TurnContext({
             actor: newActor,
             logger: this.#logger,
-            services: this.#services, // Services bag is shared by reference
-            onEndTurnCallback: this.#onEndTurnCallback, // Callback is shared
-            isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider // Provider is shared
+            services: this.#services, // Services bag is shared by reference - potential issue
+            onEndTurnCallback: this.#onEndTurnCallback, // Callback is shared - potential issue
+            isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
+            onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallback, // Share callback
+            handlerInstance: this.#handlerInstance // Share handler instance
         });
+    }
+
+    /** @override */
+    async requestTransition(StateClass, constructorArgs = []) {
+        const NewStateInstance = new StateClass(this.#handlerInstance, ...constructorArgs);
+        await this.#handlerInstance._transitionToState(NewStateInstance);
+    }
+
+    /** @override */
+    setAwaitingExternalEvent(isAwaiting, actorId) {
+        this.#onSetAwaitingExternalEventCallback(isAwaiting, actorId);
     }
 }
 

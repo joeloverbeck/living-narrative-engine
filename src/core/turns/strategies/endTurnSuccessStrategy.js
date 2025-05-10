@@ -1,66 +1,42 @@
 // src/core/turns/strategies/endTurnSuccessStrategy.js
-
 // ────────────────────────────────────────────────────────────────
-//  EndTurnSuccessStrategy  – PTH-STRAT-003
+//  EndTurnSuccessStrategy
 // ────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../handlers/playerTurnHandler.js').default}  PlayerTurnHandler */
+/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../../entities/entity.js').default}       Entity */
-/** @typedef {import('../constants/turnDirectives.js').default} TurnDirective */
+/** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
 /** @typedef {import('../../commandProcessor.js').CommandResult}   CommandResult */
 
 import {ITurnDirectiveStrategy} from './ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 
-/**
- * Strategy for {@link TurnDirective.END_TURN_SUCCESS}.
- *
- * Its sole job is to tell the {@link PlayerTurnHandler} that the current
- * player turn finished successfully.
- */
 export default class EndTurnSuccessStrategy extends ITurnDirectiveStrategy {
-
     /** @override */
     async execute(
-        /** @type {PlayerTurnHandler} */ context,
-        /** @type {Entity}            */ actor,
-        /** @type {TurnDirective}     */ directive,
-        /** @type {CommandResult}    */ cmdProcResult = undefined   // eslint-disable-line no-unused-vars
+        /** @type {ITurnContext} */ turnContext,
+        /** @type {Entity}            */ actor, // Should match turnContext.getActor()
+        /** @type {TurnDirectiveEnum}     */ directive,
+        /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
     ) {
         const className = this.constructor.name;
-
-        // ------------------------------------------------------------------
-        //  Basic validation
-        // ------------------------------------------------------------------
-        if (!context || !actor) {
-            throw new Error(`${className}.execute – both context and actor are required.`);
-        }
+        const logger = turnContext.getLogger();
 
         if (directive !== TurnDirective.END_TURN_SUCCESS) {
-            context.logger.error(
-                `${className}: Received wrong directive (${directive}). Expected END_TURN_SUCCESS.`
-            );
-            throw new Error(`${className} invoked with incorrect directive.`);
+            const errorMsg = `${className}: Received wrong directive (${directive}). Expected END_TURN_SUCCESS.`;
+            logger.error(errorMsg);
+            throw new Error(errorMsg);
         }
 
-        // ------------------------------------------------------------------
-        //  Ensure we're acting on the expected actor
-        // ------------------------------------------------------------------
-        const currentActor = context.getCurrentActor();
-        if (!currentActor || currentActor.id !== actor.id) {
-            context.logger.warn(
-                `${className}: END_TURN_SUCCESS for actor ${actor.id}, ` +
-                `but current actor is ${currentActor?.id ?? 'NONE'}. Continuing – _handleTurnEnd will decide.`
-            );
-        } else {
-            context.logger.info(
-                `${className}: Executing END_TURN_SUCCESS for actor ${actor.id}.`
-            );
+        const contextActor = turnContext.getActor();
+        if (!contextActor || contextActor.id !== actor.id) {
+            const msg = `${className}: Actor mismatch for END_TURN_SUCCESS. Directive for ${actor.id}, context actor ${contextActor?.id ?? 'NONE'}.`;
+            logger.warn(msg + " Ending turn for context actor with error.");
+            turnContext.endTurn(new Error(msg)); // End context's turn with error
+            return;
         }
 
-        // ------------------------------------------------------------------
-        //  Delegate to the handler’s normal turn-end path
-        // ------------------------------------------------------------------
-        await context._handleTurnEnd(actor.id, null);
+        logger.info(`${className}: Executing END_TURN_SUCCESS for actor ${actor.id}.`);
+        turnContext.endTurn(null); // End turn via ITurnContext, null for success
     }
 }

@@ -1,76 +1,54 @@
 // src/core/turns/strategies/endTurnFailureStrategy.js
-
 // ────────────────────────────────────────────────────────────────
-//  EndTurnFailureStrategy  – PTH-STRAT-004
+//  EndTurnFailureStrategy
 // ────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../../entities/entity.js').default}       Entity */
-/** @typedef {import('../constants/turnDirectives.js').default}   TurnDirective */
+/** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
 /** @typedef {import('../../commandProcessor.js').CommandResult}   CommandResult */
 
 import {ITurnDirectiveStrategy} from './ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 
-/**
- * Handles {@link TurnDirective.END_TURN_FAILURE}.
- *
- * Its sole responsibility is to tell the {@link PlayerTurnHandler} that the
- * player’s turn has finished **because of an error**.  The strategy builds the
- * correct `Error` instance and delegates to `context._handleTurnEnd(...)`.
- */
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {
-
-    /* eslint-disable class-methods-use-this, no-unused-vars */
     /** @override */
     async execute(
-        /** @type {PlayerTurnHandler} */ context,
-        /** @type {Entity}            */ actor,
-        /** @type {TurnDirective}     */ directive,
-        /** @type {CommandResult}    */ cmdProcResult = undefined
+        /** @type {ITurnContext} */ turnContext,
+        /** @type {Entity}            */ actor, // Should match turnContext.getActor()
+        /** @type {TurnDirectiveEnum}     */ directive,
+        /** @type {CommandResult}    */ cmdProcResult
     ) {
         const className = this.constructor.name;
-
-        // ─── Guard-rails ───────────────────────────────────────────────
-        if (!context || !actor) {
-            throw new Error(`${className}.execute – both context and actor are required.`);
-        }
+        const logger = turnContext.getLogger();
 
         if (directive !== TurnDirective.END_TURN_FAILURE) {
-            context.logger.error(
-                `${className}: Wrong directive (${directive}). Expected END_TURN_FAILURE.`
-            );
-            throw new Error(`${className} invoked with incorrect directive.`);
+            const errorMsg = `${className}: Wrong directive (${directive}). Expected END_TURN_FAILURE.`;
+            logger.error(errorMsg);
+            throw new Error(errorMsg);
         }
 
-        const currentActor = context.getCurrentActor();
-        if (!currentActor || currentActor.id !== actor.id) {
-            const msg = `${className}: END_TURN_FAILURE for actor ${actor.id}, ` +
-                `but current turn actor is ${currentActor?.id ?? 'NONE'}.`;
-            context.logger.error(msg);
-            throw new Error(msg);           // hard “assert” per acceptance criteria
+        const contextActor = turnContext.getActor();
+        if (!contextActor || contextActor.id !== actor.id) {
+            const msg = `${className}: Actor mismatch for END_TURN_FAILURE. Directive for ${actor.id}, context actor ${contextActor?.id ?? 'NONE'}.`;
+            logger.error(msg + " Ending turn for context actor with a generic error.");
+            // End the current context's turn, but the error might not be from cmdProcResult if actors mismatch.
+            turnContext.endTurn(new Error(msg));
+            return;
         }
 
-        // ─── Build / normalise the Error object ───────────────────────
         let turnEndError;
-
         if (cmdProcResult?.error instanceof Error) {
             turnEndError = cmdProcResult.error;
         } else if (cmdProcResult?.error !== undefined && cmdProcResult?.error !== null) {
             turnEndError = new Error(String(cmdProcResult.error));
         } else {
             turnEndError = new Error(
-                `Turn ended by directive '${directive}' for actor ${actor.id}.`
+                `Turn for actor ${actor.id} ended by directive '${directive}' (failure).`
             );
         }
 
-        // ─── Delegate to the handler’s standard turn-end path ─────────
-        context.logger.info(
-            `${className}: Executing END_TURN_FAILURE for actor ${actor.id}.`
-        );
-
-        await context._handleTurnEnd(actor.id, turnEndError);
+        logger.info(`${className}: Executing END_TURN_FAILURE for actor ${actor.id}. Error: ${turnEndError.message}`);
+        turnContext.endTurn(turnEndError); // End turn via ITurnContext with the error
     }
-
-    /* eslint-enable class-methods-use-this, no-unused-vars */
 }

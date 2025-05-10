@@ -1,64 +1,52 @@
 // src/core/turns/strategies/repromptStrategy.js
-
 // ────────────────────────────────────────────────────────────────
-//  RepromptStrategy  – PTH-STRAT-002
+//  RepromptStrategy
 // ────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../../entities/entity.js').default}      Entity */
-/** @typedef {import('../constants/turnDirectives.js').default} TurnDirective */
+/** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
 /** @typedef {import('../../commandProcessor.js').CommandResult}  CommandResult */
 
 import {ITurnDirectiveStrategy} from './ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
-import {AwaitingPlayerInputState} from '../states/awaitingPlayerInputState.js';
+import {AwaitingPlayerInputState} from '../states/awaitingPlayerInputState.js'; // For transition
 
 /**
- * Handles {@link TurnDirective.RE_PROMPT} by re-entering AwaitingPlayerInputState,
- * which in turn re-prompts the current player for input.
+ * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingPlayerInputState.
  */
 export default class RepromptStrategy extends ITurnDirectiveStrategy {
 
     /** @override */
     async execute(
-        /** @type {PlayerTurnHandler}  */ context,
-        /** @type {Entity}            */ actor,
-        /** @type {TurnDirective}     */ directive,
-        /** @type {CommandResult}    */ cmdProcResult = undefined
+        /** @type {ITurnContext}  */ turnContext,
+        /** @type {Entity}            */ actor, // Should match turnContext.getActor()
+        /** @type {TurnDirectiveEnum}     */ directive,
+        /** @type {CommandResult}    */ cmdProcResult // eslint-disable-line no-unused-vars
     ) {
         const className = this.constructor.name;
-
-        // Basic sanity checks ------------------------------------------------
-        if (!context || !actor) {
-            throw new Error(`${className}.execute – context and actor are required.`);
-        }
+        const logger = turnContext.getLogger();
 
         if (directive !== TurnDirective.RE_PROMPT) {
-            context.logger.error(
-                `${className}: Received non-RE_PROMPT directive (${directive}). Aborting.`
-            );
-            throw new Error(`${className} invoked with wrong directive.`);
+            const errorMsg = `${className}: Received non-RE_PROMPT directive (${directive}). Aborting.`;
+            logger.error(errorMsg);
+            throw new Error(errorMsg);
         }
 
-        const currentActor = context.getCurrentActor();
-        if (!currentActor || currentActor.id !== actor.id) {
-            const msg = `${className}: Attempted re-prompt for actor ${actor.id}, `
-                + `but current turn actor is ${currentActor?.id ?? 'NONE'}.`;
-            context.logger.warn(msg);
-
-            // End the stray turn attempt – it’s safer than ignoring.
-            await context._handleTurnEnd(
-                actor.id,
-                new Error('RE_PROMPT issued for non-current actor.')
-            );
+        const contextActor = turnContext.getActor();
+        if (!contextActor || contextActor.id !== actor.id) {
+            const msg = `${className}: Actor mismatch. Directive for ${actor.id}, context actor is ${contextActor?.id ?? 'NONE'}.`;
+            logger.error(msg);
+            // End the turn for the context actor with an error.
+            turnContext.endTurn(new Error(msg));
             return;
         }
 
-        context.logger.info(
-            `${className}: Re-prompting actor ${actor.id}; transitioning to AwaitingPlayerInputState.`
+        logger.info(
+            `${className}: Re-prompting actor ${actor.id}; requesting transition to AwaitingPlayerInputState.`
         );
 
-        // AwaitingPlayerInputState.enterState() will perform the actual prompt.
-        await context._transitionToState(new AwaitingPlayerInputState(context));
+        // Request transition via ITurnContext
+        await turnContext.requestTransition(AwaitingPlayerInputState);
     }
 }

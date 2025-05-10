@@ -2,221 +2,230 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler
+ * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
+ * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
  * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
  */
 
 import {AbstractTurnState} from './abstractTurnState.js';
-import {TurnEndingState} from './turnEndingState.js';
+// TurnEndingState is not directly used for transitions here, but for context
+// import {TurnEndingState} from './turnEndingState.js';
 import {TurnIdleState} from './turnIdleState.js';
 
-// CONSTANT IMPORTS -----------------------------------------------------------
-import {TURN_ENDED_ID} from '../../constants/eventIds.js';
+import {TURN_ENDED_ID} from '../../constants/eventIds.js'; // Constant import
 
 /**
  * @class AwaitingExternalTurnEndState
  * @extends AbstractTurnState_Base
  * @implements {ITurnState_Interface}
- *
  * @description
- * Entered when a command has been processed and the outcome dictates that the
- * {@link PlayerTurnHandler} must wait for an external `core:turn_ended` event
- * before the player's turn can conclude.
+ * Entered when the system must wait for an external `core:turn_ended` event.
+ * Manages subscription to this event via ITurnContext.
  */
 export class AwaitingExternalTurnEndState extends AbstractTurnState {
-    /**
-     * Cached unsubscribe function returned by SubscriptionLifecycleManager.
-     * @type {function|undefined}
-     * @private
-     */
+    /** @private @type {function|undefined} */
     #unsubscribeTurnEndedFn;
 
     /**
-     * Returns the canonical name for this state.
-     * @override
+     * @param {BaseTurnHandler} handler
      */
+    constructor(handler) {
+        super(handler);
+    }
+
+    /** @override */
     getStateName() {
         return 'AwaitingExternalTurnEndState';
     }
 
-    // ---------------------------------------------------------------------
-    //  State-lifecycle hooks
-    // ---------------------------------------------------------------------
-
     /**
-     * {@inheritdoc}
+     * @override
+     * @param {BaseTurnHandler} handler
+     * @param {ITurnState_Interface} [previousState]
      */
-    async enterState(/** @type {PlayerTurnHandler} */ context, previousState) {
-        const actor = context.getCurrentActor();
-        const actorId = actor?.id ?? 'UNKNOWN_ACTOR';
-        context.logger.info(`${this.getStateName()}: Entered. Waiting for external turn end event for actor ${actorId}. Previous state: ${previousState?.getStateName() ?? 'None'}.`);
+    async enterState(handler, previousState) {
+        await super.enterState(handler, previousState); // Handles logging via this._getTurnContext()
 
-        // -----------------------------------------------------------------
-        //  Preconditions
-        // -----------------------------------------------------------------
-        if (!actor) {
-            const msg = `${this.getStateName()}: No current actor present on entry. Cannot wait for turn end.`;
-            context.logger.error(msg);
-            await context._transitionToState(new TurnIdleState(context));
+        const turnCtx = this._getTurnContext(); // Must exist
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+
+        if (!turnCtx) {
+            logger.error(`${this.getStateName()}: Critical - ITurnContext not available. Transitioning to Idle.`);
+            handler._resetTurnStateAndResources(`critical-entry-no-context-${this.getStateName()}`);
+            await handler._transitionToState(new TurnIdleState(handler));
             return;
         }
 
-        // If the handler already thinks it is awaiting a turn-ended event, clear that first.
-        if (typeof context._clearTurnEndWaitingMechanisms === 'function') {
-            context.logger.debug(`${this.getStateName()}: Clearing any residual turn-end waiting mechanisms.`);
-            context._clearTurnEndWaitingMechanisms();
-        } else {
-            context.logger.warn(`${this.getStateName()}: context._clearTurnEndWaitingMechanisms() is not available – potential stale subscription leak.`);
+        const actor = turnCtx.getActor();
+        if (!actor) {
+            logger.error(`${this.getStateName()}: No actor in ITurnContext. Transitioning to Idle.`);
+            turnCtx.endTurn(new Error("No actor in context for AwaitingExternalTurnEndState"));
+            return;
         }
+        const actorId = actor.id;
 
-        // -----------------------------------------------------------------
-        //  Mark intent in the context – NB: relies on PlayerTurnHandler exposing
-        //  non-private helpers, else this will no-op and be logged as a warning.
-        // -----------------------------------------------------------------
+        // Inform the handler (via TurnContext) that we are now awaiting an external event.
         try {
-            if (typeof context._markAwaitingTurnEnd === 'function') {
-                context._markAwaitingTurnEnd(true, actorId);
-            } else {
-                // Fallback logging – cannot touch #private fields.
-                context.logger.warn(`${this.getStateName()}: PlayerTurnHandler did not expose _markAwaitingTurnEnd; internal flags not updated.`);
-            }
+            turnCtx.setAwaitingExternalEvent(true, actorId);
+            logger.debug(`${this.getStateName()}: Successfully marked actor ${actorId} as awaiting external event via ITurnContext.`);
         } catch (flagErr) {
-            context.logger.warn(`${this.getStateName()}: Failed to set awaiting-turn-end flags on context: ${flagErr.message}`);
+            logger.error(`${this.getStateName()}: Failed to mark actor ${actorId} as awaiting external event via ITurnContext: ${flagErr.message}`, flagErr);
+            turnCtx.endTurn(flagErr); // End turn if critical setup fails
+            return;
         }
 
-        // -----------------------------------------------------------------
-        //  Subscribe to TURN_ENDED_ID
-        // -----------------------------------------------------------------
         try {
-            context.logger.debug(`${this.getStateName()}: Subscribing to TURN_ENDED_ID events.`);
-            this.#unsubscribeTurnEndedFn = context.subscriptionManager.subscribeToTurnEnded(
+            logger.debug(`${this.getStateName()}: Subscribing to ${TURN_ENDED_ID} events for actor ${actorId}.`);
+            const subMan = turnCtx.getSubscriptionManager(); // From ITurnContext
+            this.#unsubscribeTurnEndedFn = subMan.subscribeToTurnEnded(
                 /** @param {SystemEventPayloads[TURN_ENDED_ID_TYPE]} payload */
-                (payload) => this.handleTurnEndedEvent(context, payload)
+                (payload) => this.handleTurnEndedEvent(handler, payload) // Pass handler
             );
 
             if (typeof this.#unsubscribeTurnEndedFn !== 'function') {
-                context.logger.warn(`${this.getStateName()}: subscribeToTurnEnded did not return an unsubscribe function.`);
+                logger.warn(`${this.getStateName()}: subscribeToTurnEnded did not return an unsubscribe function for ${actorId}.`);
             }
         } catch (subErr) {
-            context.logger.error(`${this.getStateName()}: Failed subscribing for TURN_ENDED_ID. Error: ${subErr.message}`);
-            // Undo flag set so that exitState/destroy don't double-clean.
+            logger.error(`${this.getStateName()}: Failed subscribing for ${TURN_ENDED_ID} for ${actorId}. Error: ${subErr.message}`, subErr);
+            // Ensure flag is cleared if subscription fails
             try {
-                if (typeof context._markAwaitingTurnEnd === 'function') {
-                    context._markAwaitingTurnEnd(false);
-                }
-            } catch {/* ignore */
+                turnCtx.setAwaitingExternalEvent(false, actorId);
+            } catch (e) { /* ignore cleanup error */
             }
-            // Transition via normal turn-end handler path.
-            await context._handleTurnEnd(actorId, subErr);
+            turnCtx.endTurn(subErr); // End turn via ITurnContext
             return;
         }
-
-        context.logger.info(`${this.getStateName()}: Successfully subscribed – awaiting core:turn_ended for actor ${actorId}.`);
+        logger.info(`${this.getStateName()}: Successfully subscribed – awaiting ${TURN_ENDED_ID} for actor ${actorId}.`);
     }
 
     /**
-     * {@inheritdoc}
+     * @override
+     * @param {BaseTurnHandler} handler
+     * @param {ITurnState_Interface} [nextState]
      */
-    async exitState(/** @type {PlayerTurnHandler} */ context, nextState) {
-        const actorId = context.getCurrentActor()?.id ?? 'N/A';
-        context.logger.info(`${this.getStateName()}: Exiting for actor ${actorId}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`);
+    async exitState(handler, nextState) {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+        const actorId = turnCtx?.getActor()?.id ?? 'N/A';
 
-        // Unsubscribe and clear flags.
-        await this.#doClearWaitingMechanisms(context);
-    }
-
-    // ------------------------------------------------------------------
-    //  Event handlers & misc public ITurnState API
-    // ------------------------------------------------------------------
-
-    /**
-     * Handles an incoming core:turn_ended event.
-     *
-     * @param {PlayerTurnHandler} context
-     * @param {SystemEventPayloads[TURN_ENDED_ID_TYPE]} payload
-     */
-    async handleTurnEndedEvent(context, payload) {
-        const waitingActorId = context.getCurrentActor()?.id;
-        const payloadActorId = payload?.entityId;
-
-        // Guard – if no longer waiting just clean up and bail out.
-        if (!context.isAwaitingExternalTurnEnd?.()) {
-            await this.#doClearWaitingMechanisms(context); // inherited private method
-            return;
-        }
-
-        if (payloadActorId !== waitingActorId) {
-            context.logger.debug(`${this.getStateName()}: TURN_ENDED for ${payloadActorId} ignored; waiting for ${waitingActorId}.`);
-            return; // early exit – nothing for us to do.
-        }
-
-        context.logger.info(`${this.getStateName()}: Matched TURN_ENDED for actor ${payloadActorId}. Ending turn.`);
-        await context._handleTurnEnd(payloadActorId, payload?.error instanceof Error ? payload.error : null);
-    }
-
-    /**
-     * Commands should not arrive while waiting for external event.
-     */
-    async handleSubmittedCommand(context, commandString) {
-        const actorId = context.getCurrentActor()?.id ?? 'N/A';
-        const msg = `${this.getStateName()}: Unexpected command "${commandString}" received while awaiting external turn end for ${actorId}.`;
-        context.logger.error(msg);
-        await context._handleTurnEnd(actorId, new Error(msg));
-    }
-
-    // These are inapplicable – just delegate to AbstractTurnState default which warns/throws.
-    async startTurn(context, actor) {
-        return super.startTurn(context, actor);
-    }
-
-    async processCommandResult(context, actor, cmdProcResult, commandString) {
-        return super.processCommandResult(context, actor, cmdProcResult, commandString);
-    }
-
-    async handleDirective(context, actor, directive, cmdProcResult) {
-        return super.handleDirective(context, actor, directive, cmdProcResult);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    async destroy(/** @type {PlayerTurnHandler} */ context) {
-        const actorId = context.getCurrentActor()?.id ?? 'N/A_destroy';
-        context.logger.warn(`${this.getStateName()}: PlayerTurnHandler is being destroyed while awaiting external turn end for ${actorId}.`);
-
-        await this.#doClearWaitingMechanisms(context);
-
-        if (context.getCurrentActor()) {
-            await context._handleTurnEnd(actorId, new Error('Turn handler destroyed while awaiting external turn end event.'), true);
-        }
-    }
-
-    // ------------------------------------------------------------------
-    //  Internals
-    // ------------------------------------------------------------------
-
-    /**
-     * Clears subscription and resets flags via context helper, handling any errors internally.
-     * @private
-     */
-    async #doClearWaitingMechanisms(/** @type {PlayerTurnHandler} */ context) {
         if (this.#unsubscribeTurnEndedFn) {
+            logger.debug(`${this.getStateName()}: Unsubscribing from ${TURN_ENDED_ID} for actor ${actorId}.`);
             try {
                 this.#unsubscribeTurnEndedFn();
             } catch (err) {
-                context.logger.warn(`${this.getStateName()}: Error while unsubscribing from TURN_ENDED_ID: ${err.message}`);
+                logger.warn(`${this.getStateName()}: Error unsubscribing from ${TURN_ENDED_ID} for ${actorId}: ${err.message}`);
             }
             this.#unsubscribeTurnEndedFn = undefined;
         }
 
-        if (typeof context._clearTurnEndWaitingMechanisms === 'function') {
-            context._clearTurnEndWaitingMechanisms();
+        // Clear the awaiting flag when exiting this state, unless transitioning to another state that also waits (unlikely here)
+        // This is important if the turn ends for reasons other than the event itself (e.g. error, handler destroy)
+
+        if (turnCtx && turnCtx.isAwaitingExternalEvent()) { // Check if still marked as awaiting
+            try {
+                logger.debug(`${this.getStateName()}: Clearing awaiting external event flag for actor ${actorId} on exit via ITurnContext.`);
+                turnCtx.setAwaitingExternalEvent(false, actorId);
+            } catch (flagErr) {
+                logger.warn(`${this.getStateName()}: Failed to clear awaiting external event flag for ${actorId} on exit: ${flagErr.message}`);
+
+            }
+        }
+
+        await super.exitState(handler, nextState); // Handles logging
+    }
+
+    /**
+     * @override
+     * @param {BaseTurnHandler} handler
+     * @param {SystemEventPayloads[TURN_ENDED_ID_TYPE]} payload
+     */
+    async handleTurnEndedEvent(handler, payload) {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+
+        if (!turnCtx || !turnCtx.getActor()) {
+            logger.warn(`${this.getStateName()}: ${TURN_ENDED_ID} received, but no active ITurnContext/actor. Payload for ${payload?.entityId}. Ignoring.`);
+            await this.#doCleanupSubscription(logger); // Cleanup if somehow stuck here
+            return;
+        }
+
+        const waitingActorId = turnCtx.getActor().id;
+        const payloadActorId = payload?.entityId;
+
+        // Check if this state is still the active one and if the handler expects this event.
+        // The `turnCtx.isAwaitingExternalEvent()` check is crucial.
+        if (!turnCtx.isAwaitingExternalEvent()) {
+            logger.warn(`${this.getStateName()}: ${TURN_ENDED_ID} for ${payloadActorId} received, but ITurnContext (for ${waitingActorId}) is no longer awaiting an external event. May have been handled or timed out. Cleaning up subscription.`);
+            await this.#doCleanupSubscription(logger);
+            return;
+        }
+
+        if (payloadActorId !== waitingActorId) {
+            logger.debug(`${this.getStateName()}: ${TURN_ENDED_ID} for ${payloadActorId} ignored; current actor is ${waitingActorId}.`);
+            return;
+        }
+
+        logger.info(`${this.getStateName()}: Matched ${TURN_ENDED_ID} for actor ${payloadActorId}. Ending turn via ITurnContext.`);
+        const errorForTurnEnd = payload?.error instanceof Error ? payload.error : (payload?.error ? new Error(String(payload.error)) : null);
+        turnCtx.endTurn(errorForTurnEnd); // This will trigger the handler's _handleTurnEnd
+    }
+
+    /** @private */
+    async #doCleanupSubscription(logger) {
+        if (this.#unsubscribeTurnEndedFn) {
+            logger.debug(`${this.getStateName()}: #doCleanupSubscription - Unsubscribing from ${TURN_ENDED_ID}.`);
+            try {
+                this.#unsubscribeTurnEndedFn();
+            } catch (err) {
+                logger.warn(`${this.getStateName()}: #doCleanupSubscription - Error during unsubscription: ${err.message}`);
+            }
+            this.#unsubscribeTurnEndedFn = undefined;
         }
     }
+
+    /**
+     * @override
+     * @param {BaseTurnHandler} handler
+     * @param {string} commandString
+     * @param {Entity} actorEntity
+     */
+    async handleSubmittedCommand(handler, commandString, actorEntity) {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+        const actorId = turnCtx?.getActor()?.id ?? 'N/A';
+        const msg = `${this.getStateName()}: Unexpected command "${commandString}" from ${actorEntity?.id} received while awaiting external turn end for ${actorId}.`;
+        logger.error(msg);
+        if (turnCtx) {
+            turnCtx.endTurn(new Error(msg)); // End current turn with error
+        } else {
+            await handler._handleTurnEnd(actorId, new Error(msg)); // Fallback
+        }
+    }
+
+    /** @override */
+    async destroy(handler) {
+        const turnCtx = this._getTurnContext();
+        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+        const actorId = turnCtx?.getActor()?.id ?? 'N/A_destroy';
+
+        logger.warn(`${this.getStateName()}: Handler destroyed while awaiting external turn end for ${actorId}.`);
+        await this.#doCleanupSubscription(logger); // Ensure unsubscription
+
+        if (turnCtx && turnCtx.getActor()) {
+            logger.debug(`${this.getStateName()}: Notifying turn end for ${actorId} due to destruction via ITurnContext.`);
+            turnCtx.endTurn(new Error(`Handler destroyed while ${actorId} was in ${this.getStateName()}.`));
+        } else {
+            logger.warn(`${this.getStateName()}: Handler destroyed, but no active ITurnContext/actor. No specific turn to end.`);
+        }
+        await super.destroy(handler);
+    }
+
+    // Other methods like startTurn, processCommandResult, handleDirective
+    // rely on AbstractTurnState's default "not applicable" behavior.
 }
 
 // --- FILE END ---
