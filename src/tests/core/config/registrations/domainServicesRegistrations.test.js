@@ -11,10 +11,10 @@
 /** @typedef {import('../../../../services/payloadValueResolverService.js').default} PayloadValueResolverService */
 /** @typedef {import('../../../../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../../../core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('../../../../core/commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../../../core/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../../../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../../../core/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../../../core/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../../core/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
 /** @typedef {import('../../../../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
@@ -81,7 +81,7 @@ jest.mock("../../../../services/actionValidationService.js", () => ({
     __esModule: true,
     ActionValidationService: jest.fn().mockImplementation(() => mockActionValidationServiceInstance)
 }));
-jest.mock("../../../../core/commandParser.js", () => ({
+jest.mock("../../../../core/commands/commandParser.js", () => ({
     __esModule: true,
     default: jest.fn().mockImplementation(() => mockCommandParserInstance)
 }));
@@ -95,7 +95,7 @@ jest.mock('../../../../core/worldContext.js', () => ({
         return mockWorldContextInstance;
     })
 }));
-jest.mock('../../../../core/commandProcessor.js', () => ({__esModule: true, default: jest.fn()}));
+jest.mock('../../../../core/commands/commandProcessor.js', () => ({__esModule: true, default: jest.fn()}));
 jest.mock('../../../../core/turns/order/turnOrderService.js', () => ({__esModule: true, TurnOrderService: jest.fn()}));
 // PlayerPromptService is now instantiated by its factory, so we mock its constructor.
 // The factory for IPlayerPromptService will `new PlayerPromptService(...)`.
@@ -115,10 +115,10 @@ import {ActionValidationContextBuilder} from "../../../../services/actionValidat
 import {PrerequisiteEvaluationService} from "../../../../services/prerequisiteEvaluationService.js";
 import {DomainContextCompatibilityChecker} from "../../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../../services/actionValidationService.js";
-import CommandParser from "../../../../core/commandParser.js";
+import CommandParser from "../../../../core/commands/commandParser.js";
 import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../../../core/worldContext.js';
-import CommandProcessor from '../../../../core/commandProcessor.js';
+import CommandProcessor from '../../../../core/commands/commandProcessor.js';
 import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js';
 import PlayerPromptService from '../../../../core/services/playerPromptService.js'; // This is the mocked constructor
 

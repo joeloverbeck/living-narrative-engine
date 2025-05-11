@@ -5,7 +5,7 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../core/worldContext.js').default} GameStateManager */
 /** @typedef {import('../../../../core/interfaces/input.js').IInputHandler} IInputHandler */
-/** @typedef {import('../../../../core/commandParser.js').default} CommandParser */
+/** @typedef {import('../../../../core/commands/commandParser.js').default} CommandParser */
 /** @typedef {import('../../../../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('../../../../core/eventBus.js').default} EventBus */
 /** @typedef {import('../../../../entities/entityManager.js').default} EntityManager */
@@ -15,11 +15,11 @@
 // REMOVED: GameLoop typedef no longer needed in this test context
 // /** @typedef {import('../../../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../../../core/setup/inputSetupService.js').default} InputSetupService */
-/** @typedef {import('../../../../core/turnManager.js').default} TurnManager */
+/** @typedef {import('../../../../core/turns/turnManager.js').default} TurnManager */
 /** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../../core/services/turnHandlerResolver.js').default} TurnHandlerResolver */
 /** @typedef {import('../../../../core/turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
-/** @typedef {import('../../../../core/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../../../core/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -38,8 +38,8 @@ import {tokens} from '../../../../core/config/tokens.js';
 // import {ActionDiscoverySystem} from '../../../../systems/actionDiscoverySystem.js'; // Now mocked
 // import TurnHandlerResolver from '../../../../core/services/turnHandlerResolver.js'; // Now mocked
 // Import concrete classes for domain services (if needed, but mostly mocked)
-import CommandProcessor from '../../../../core/commandProcessor.js';
-import CommandParser from '../../../../core/commandParser.js';
+import CommandProcessor from '../../../../core/commands/commandProcessor.js';
+import CommandParser from '../../../../core/commands/commandParser.js';
 import WorldContext from '../../../../core/worldContext.js';
 import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js'; // Original for type info if needed
 
@@ -48,10 +48,10 @@ import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js
 // REMOVED: GameLoop mock - runtimeRegistrations no longer uses it
 // jest.mock('../../../../core/gameLoop.js');
 jest.mock('../../../../core/setup/inputSetupService.js');
-jest.mock('../../../../core/turnManager.js');
+jest.mock('../../../../core/turns/turnManager.js');
 jest.mock('../../../../core/turns/handlers/playerTurnHandler.js');
-jest.mock('../../../../core/commandProcessor.js');
-jest.mock('../../../../core/commandParser.js');
+jest.mock('../../../../core/commands/commandProcessor.js');
+jest.mock('../../../../core/commands/commandParser.js');
 jest.mock('../../../../core/worldContext.js');
 jest.mock('../../../../core/turns/order/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
@@ -61,11 +61,11 @@ jest.mock('../../../../core/services/turnHandlerResolver.js');
 
 // --- Import AFTER mocking ---
 import InputSetupService from '../../../../core/setup/inputSetupService.js';
-import TurnManager from '../../../../core/turnManager.js';
+import TurnManager from '../../../../core/turns/turnManager.js';
 import PlayerTurnHandler from '../../../../core/turns/handlers/playerTurnHandler.js';
 // Import mocked versions for type checks if needed elsewhere
-import CommandProcessorMock from '../../../../core/commandProcessor.js';
-import CommandParserMock from '../../../../core/commandParser.js';
+import CommandProcessorMock from '../../../../core/commands/commandProcessor.js';
+import CommandParserMock from '../../../../core/commands/commandParser.js';
 import GameStateManagerMock from '../../../../core/worldContext.js';
 import {TurnOrderService as TurnOrderServiceMock} from '../../../../core/turns/order/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---

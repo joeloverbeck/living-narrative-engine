@@ -20,7 +20,7 @@
 /** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
@@ -29,7 +29,7 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
-/** @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
+/** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../../interfaces/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
 /** @typedef {import('../../interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */ // For ITurnContext factory
@@ -50,7 +50,7 @@ import HealthSystem from '../../../systems/healthSystem.js';
 import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
 import LockSystem from '../../../systems/lockSystem.js';
 import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js'; // Concrete Class Import
-import TurnManager from '../../turnManager.js';
+import TurnManager from '../../turns/turnManager.js';
 
 // --- Handler & Resolver Imports ---
 import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js'; // Concrete class

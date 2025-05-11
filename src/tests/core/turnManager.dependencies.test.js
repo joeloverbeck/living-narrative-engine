@@ -1,7 +1,7 @@
 // src/tests/core/turnManager.dependencies.test.js
 // --- FILE START (Corrected) ---
 
-import TurnManager from '../../core/turnManager.js'; // Adjust path as needed
+import TurnManager from '../../core/turns/turnManager.js'; // Adjust path as needed
 import {beforeEach, describe, expect, it, jest} from '@jest/globals'; // Or equivalent import for your test runner
 
 // Mock dependencies (Define ONCE at the top)

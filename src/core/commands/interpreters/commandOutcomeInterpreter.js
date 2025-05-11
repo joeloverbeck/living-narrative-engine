@@ -8,11 +8,11 @@
  */
 
 // --- Interface/Type Imports for JSDoc ---
-/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */
-/** @typedef {import('../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */ // <<< ADDED IMPORT
-/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */ // <<< ADDED IMPORT
+/** @typedef {import('../../../entities/entity.js').default} Entity */
 
 
 /**
@@ -34,7 +34,7 @@
  * @property {string} [message] - An optional user-facing message related to the outcome (often a summary).
  */
 // --- Constant Imports ---
-import TurnDirective from '../turns/constants/turnDirectives.js';
+import TurnDirective from '../../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
 import {ICommandOutcomeInterpreter} from '../interfaces/ICommandOutcomeInterpreter.js';
 

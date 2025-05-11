@@ -15,7 +15,7 @@
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // For handlers
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */ // For SystemLogicInterpreter
 /** @typedef {import('../../../logic/jsonLogicEvaluationService.js').JsonLogicEvaluationService} JsonLogicEvaluationService */ // For SystemLogicInterpreter
-/** @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
+/** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 
 
 // --- DI & Helper Imports ---
@@ -27,7 +27,7 @@ import {INITIALIZABLE, SHUTDOWNABLE} from '../tags.js';
 import OperationRegistry from '../../../logic/operationRegistry.js';
 import OperationInterpreter from '../../../logic/operationInterpreter.js';
 import SystemLogicInterpreter from '../../../logic/systemLogicInterpreter.js';
-import CommandOutcomeInterpreter from '../../interpreters/commandOutcomeInterpreter.js'; // Concrete class
+import CommandOutcomeInterpreter from '../../commands/interpreters/commandOutcomeInterpreter.js'; // Concrete class
 
 // --- Handler Imports ---
 import DispatchEventHandler from '../../../logic/operationHandlers/dispatchEventHandler.js';

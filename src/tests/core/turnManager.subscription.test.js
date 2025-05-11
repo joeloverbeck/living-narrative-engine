@@ -1,5 +1,5 @@
 // src/tests/core/turnManager.subscription.test.js
-import TurnManager from '../../core/turnManager.js';
+import TurnManager from '../../core/turns/turnManager.js';
 import {TURN_ENDED_ID} from '../../core/constants/eventIds.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js'; // Added PLAYER_COMPONENT_ID
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";

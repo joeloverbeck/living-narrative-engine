@@ -2,14 +2,14 @@
 
 // *** [REFACTOR-014-SUB-11] Updated Type Import ***
 // Add GameDataRepository import
-/** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 
 // Import ParsedCommand definition for return type hinting
-/** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
+/** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
 // Assume ActionDefinition type exists from GameDataRepository types
 // Use the actual schema definition which includes 'commandVerb'
-/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 import {ICommandParser} from "./interfaces/ICommandParser.js";
 

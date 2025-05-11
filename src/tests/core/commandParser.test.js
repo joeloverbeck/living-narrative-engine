@@ -2,7 +2,7 @@
 
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import CommandParser from '../../core/commandParser.js'; // Class under test
+import CommandParser from '../../core/commands/commandParser.js'; // Class under test
 // Import the actual dependency for type hinting and mocking purposes
 import GameDataRepository from '../../core/services/gameDataRepository.js';
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */

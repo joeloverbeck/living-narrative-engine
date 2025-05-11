@@ -1,10 +1,10 @@
 // src/tests/core/commandProcessor.processCommand.dispatchActionSucceeded.test.js
 
 import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
-import CommandProcessor from '../../core/commandProcessor.js'; // Adjust path as needed
+import CommandProcessor from '../../core/commands/commandProcessor.js'; // Adjust path as needed
 
 // --- Type Imports for Mocks ---
-/** @typedef {import('../../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('../../core/commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../core/interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */

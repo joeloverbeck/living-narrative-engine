@@ -1,7 +1,7 @@
 // src/tests/core/turnManager.constructor.test.js
 // --- FILE START (Corrected) ---
 
-import TurnManager from '../../core/turnManager.js';
+import TurnManager from '../../core/turns/turnManager.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
 import {beforeEach, describe, expect, it, jest, test} from "@jest/globals"; // Use 'it' alias for test cases
 

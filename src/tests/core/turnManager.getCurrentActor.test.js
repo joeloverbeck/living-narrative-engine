@@ -1,7 +1,7 @@
 // src/tests/core/turnManager.getCurrentActor.test.js
 // --- FILE START (Entire file content, Corrected) ---
 
-import TurnManager from '../../core/turnManager.js';
+import TurnManager from '../../core/turns/turnManager.js';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
 import {afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
 

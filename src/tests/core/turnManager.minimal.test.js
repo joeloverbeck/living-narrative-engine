@@ -2,7 +2,7 @@
 // --- FILE START (Entire file content as requested) ---
 
 import {beforeEach, describe, expect, jest, test, afterEach} from '@jest/globals'; // Added afterEach
-import TurnManager from '../../core/turnManager.js';
+import TurnManager from '../../core/turns/turnManager.js';
 import {TURN_ENDED_ID} from "../../core/constants/eventIds.js";
 
 // Absolute minimal mocks (ensure they satisfy constructor checks)

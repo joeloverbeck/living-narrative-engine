@@ -4,7 +4,7 @@
 /**
  * @fileoverview TurnManager unit tests for start/stop functionality
  */
-import TurnManager from '../../core/turnManager'; // Adjust path as needed
+import TurnManager from '../../core/turns/turnManager.js'; // Adjust path as needed
 // Removed unused Entity import: import Entity from '../../entities/entity';
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';

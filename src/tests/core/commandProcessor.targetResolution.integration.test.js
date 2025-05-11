@@ -1,13 +1,13 @@
 // src/tests/core/commandProcessor.targetResolution.integration.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import CommandProcessor from '../../core/commandProcessor.js';
+import CommandProcessor from '../../core/commands/commandProcessor.js';
 import { TargetResolutionService } from '../../services/targetResolutionService.js';
 import ResolutionStatus from '../../types/resolutionStatus.js'; // CommandProcessor uses this
 import { getEntityIdsForScopes } from '../../services/entityScopeService.js'; // TRS dependency
 
 // --- Mock Imports for Types ---
-/** @typedef {import('../../core/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('../../core/commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */

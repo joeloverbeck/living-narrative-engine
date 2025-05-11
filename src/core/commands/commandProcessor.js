@@ -1,24 +1,24 @@
 // src/core/commandProcessor.js
 
 // --- Static Imports ---
-import ResolutionStatus from '../types/resolutionStatus.js';
+import ResolutionStatus from '../../types/resolutionStatus.js';
 
 // --- Type Imports ---
-/** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('./interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('./interfaces/ICommandParser.js').ICommandParser} ICommandParser */
-/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('./interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('./interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('./interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('./interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
-/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../services/targetResolutionService.js').default} TargetResolutionService */
-/** @typedef {import('../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
-/** @typedef {import('../services/targetResolutionService.js').TargetResolutionResult} TargetResolutionResult */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
+/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../services/targetResolutionService.js').default} TargetResolutionService */
+/** @typedef {import('../../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+/** @typedef {import('../../services/targetResolutionService.js').TargetResolutionResult} TargetResolutionResult */
 // Note: ResolutionStatus is now directly imported, so its JSDoc typedef here is for documentation clarity if still desired, but not for type functionality within this file.
 // /** @typedef {import('../services/targetResolutionService.js').ResolutionStatus} ResolutionStatus */
 

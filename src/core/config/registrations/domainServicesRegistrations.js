@@ -10,11 +10,11 @@ import {ActionValidationContextBuilder} from "../../../services/actionValidation
 import {PrerequisiteEvaluationService} from "../../../services/prerequisiteEvaluationService.js";
 import {DomainContextCompatibilityChecker} from "../../../validation/domainContextCompatibilityChecker.js";
 import {ActionValidationService} from "../../../services/actionValidationService.js";
-import CommandParser from "../../commandParser.js";
+import CommandParser from "../../commands/commandParser.js";
 import JsonLogicEvaluationService from '../../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../worldContext.js';
 import {TurnOrderService} from "../../turns/order/turnOrderService.js";
-import CommandProcessor from "../../commandProcessor.js";
+import CommandProcessor from "../../commands/commandProcessor.js";
 import PlayerPromptService from '../../services/playerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js'; // <<< ADDED IMPORT
 
@@ -26,7 +26,7 @@ import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
-/** @typedef {import('../../interfaces/ICommandParser.js').ICommandParser} ICommandParser */
+/** @typedef {import('../../commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */

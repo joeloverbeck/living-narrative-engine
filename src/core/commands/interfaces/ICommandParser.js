@@ -1,4 +1,4 @@
-/** @typedef {import('../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
+/** @typedef {import('../../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
 /**
  * @interface ICommandParser

@@ -6,7 +6,7 @@
  * // ^ States still need BaseTurnHandler for _transitionToState, passed via constructor.
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../entities/entity.js').default} Entity
- * @typedef {import('../../commandProcessor.js').CommandResult} CommandResult
+ * @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
  * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE

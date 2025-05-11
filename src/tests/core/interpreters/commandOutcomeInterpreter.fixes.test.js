@@ -1,7 +1,7 @@
 // src/tests/core/interpreters/commandOutcomeInterpreter.fixes.test.js
 // --- FILE START ---
 
-import CommandOutcomeInterpreter from '../../../core/interpreters/commandOutcomeInterpreter.js';
+import CommandOutcomeInterpreter from '../../../core/commands/interpreters/commandOutcomeInterpreter.js';
 import TurnDirective from '../../../core/turns/constants/turnDirectives.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
