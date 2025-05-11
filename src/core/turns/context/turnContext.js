@@ -46,6 +46,9 @@
 /**
  * @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  */
+/**
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
+ */
 
 /**
  * @typedef {object} TurnContextServices
@@ -77,12 +80,14 @@ export class TurnContext extends ITurnContext {
     #logger;
     /** @type {TurnContextServices} */
     #services;
+    /** @type {IActorTurnStrategy} */
+    #strategy; // Added field for the strategy
     /** @type {OnEndTurnCallback} */
     #onEndTurnCallback;
     /** @type {IsAwaitingExternalEventProvider} */
     #isAwaitingExternalEventProvider;
     /** @type {OnSetAwaitingExternalEventCallback} */
-    #onSetAwaitingExternalEventCallback; // Added
+    #onSetAwaitingExternalEventCallback;
     /** @type {BaseTurnHandler} */
     #handlerInstance; // To facilitate state transitions
 
@@ -92,6 +97,7 @@ export class TurnContext extends ITurnContext {
      * @param {Entity} params.actor - The current actor whose turn is being processed.
      * @param {ILogger} params.logger - The logger instance for turn-specific logging.
      * @param {TurnContextServices} params.services - A bag of services accessible during the turn.
+     * @param {IActorTurnStrategy} params.strategy - The turn strategy for the current actor.
      * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
      * @param {IsAwaitingExternalEventProvider} params.isAwaitingExternalEventProvider - Function to check if awaiting an external event.
      * @param {OnSetAwaitingExternalEventCallback} params.onSetAwaitingExternalEventCallback - Callback to inform handler to set its waiting flag.
@@ -101,10 +107,11 @@ export class TurnContext extends ITurnContext {
                     actor,
                     logger,
                     services,
+                    strategy, // Added strategy parameter
                     onEndTurnCallback,
-                    isAwaitingExternalEventProvider, // Keep this one
-                    onSetAwaitingExternalEventCallback, // Added
-                    handlerInstance // Added
+                    isAwaitingExternalEventProvider,
+                    onSetAwaitingExternalEventCallback,
+                    handlerInstance
                 }) {
         super();
 
@@ -117,31 +124,33 @@ export class TurnContext extends ITurnContext {
         if (!services) {
             throw new Error('TurnContext: services bag is required (can be an empty object).');
         }
+        if (!strategy) { // Added strategy validation
+            throw new Error('TurnContext: strategy (IActorTurnStrategy) is required.');
+        }
+        if (typeof strategy.decideAction !== 'function') { // Basic validation for strategy
+            throw new Error('TurnContext: provided strategy does not have a decideAction method.');
+        }
         if (typeof onEndTurnCallback !== 'function') {
             throw new Error('TurnContext: onEndTurnCallback function is required.');
         }
         if (typeof isAwaitingExternalEventProvider !== 'function') {
             throw new Error('TurnContext: isAwaitingExternalEventProvider function is required.');
         }
-        if (typeof onSetAwaitingExternalEventCallback !== 'function') { // Added check
+        if (typeof onSetAwaitingExternalEventCallback !== 'function') {
             throw new Error('TurnContext: onSetAwaitingExternalEventCallback function is required.');
         }
-        if (!handlerInstance) { // Added check
+        if (!handlerInstance) {
             throw new Error('TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.');
         }
 
         this.#actor = actor;
         this.#logger = logger;
         this.#services = services;
+        this.#strategy = strategy; // Store the strategy
         this.#onEndTurnCallback = onEndTurnCallback;
         this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
-        this.#onSetAwaitingExternalEventCallback = onSetAwaitingExternalEventCallback; // Store it
+        this.#onSetAwaitingExternalEventCallback = onSetAwaitingExternalEventCallback;
         this.#handlerInstance = handlerInstance;
-
-        // Freezing in production is a good practice but commented out for brevity during dev/example.
-        // if (Object.freeze && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
-        //     Object.freeze(this);
-        // }
     }
 
     /** @override */
@@ -229,10 +238,10 @@ export class TurnContext extends ITurnContext {
 
     /**
      * Creates a new TurnContext instance for a different actor, sharing the same logger,
-     * services, and lifecycle callbacks as the original context.
+     * services, strategy, and lifecycle callbacks as the original context.
      * @param {Entity} newActor - The new actor for whom to create the context.
      * @returns {TurnContext} A new TurnContext instance.
-     * @deprecated This method might lead to state inconsistencies if services or callbacks are actor-specific.
+     * @deprecated This method might lead to state inconsistencies if services, strategy or callbacks are actor-specific.
      * Prefer creating a new TurnContext with fresh, actor-appropriate dependencies.
      */
     cloneForActor(newActor) {
@@ -245,10 +254,11 @@ export class TurnContext extends ITurnContext {
             actor: newActor,
             logger: this.#logger,
             services: this.#services, // Services bag is shared by reference - potential issue
+            strategy: this.#strategy, // Strategy is shared by reference - potential issue
             onEndTurnCallback: this.#onEndTurnCallback, // Callback is shared - potential issue
             isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
-            onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallback, // Share callback
-            handlerInstance: this.#handlerInstance // Share handler instance
+            onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallback,
+            handlerInstance: this.#handlerInstance
         });
     }
 
@@ -261,6 +271,17 @@ export class TurnContext extends ITurnContext {
     /** @override */
     setAwaitingExternalEvent(isAwaiting, actorId) {
         this.#onSetAwaitingExternalEventCallback(isAwaiting, actorId);
+    }
+
+    /** @override */
+    getStrategy() {
+        if (!this.#strategy) {
+            // This case should ideally be prevented by constructor validation
+            const errorMsg = "TurnContext: IActorTurnStrategy instance was not provided or is missing.";
+            this.#logger.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+        return this.#strategy;
     }
 }
 

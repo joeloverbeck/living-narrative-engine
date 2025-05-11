@@ -9,10 +9,16 @@ import {BaseTurnHandler} from './baseTurnHandler.js';
 // ── Interface Imports ────────────────────────────────────────────────────────
 // ITurnHandler interface is conceptually implemented by extending BaseTurnHandler.
 // import {ITurnHandler} from '../../interfaces/ITurnHandler.js';
-import {ITurnContext} from '../interfaces/ITurnContext.js'; // For type casting if needed, though states get it.
+// ITurnContext is used by states, which get the context from this handler.
+// For type casting if needed, though states get it.
+import {ITurnContext} from '../interfaces/ITurnContext.js';
+
 
 // ── Class Imports ────────────────────────────────────────────────────────────
 import {TurnContext} from '../context/turnContext.js'; // Concrete TurnContext for instantiation
+// Import HumanPlayerStrategy for instantiation
+import {HumanPlayerStrategy} from '../strategies/humanPlayerStrategy.js';
+
 
 // ── State Imports ────────────────────────────────────────────────────────────
 import {TurnIdleState} from '../states/turnIdleState.js'; // Used for initial state
@@ -26,6 +32,7 @@ import {TurnIdleState} from '../states/turnIdleState.js'; // Used for initial st
 /** @typedef {import('../../../entities/entity.js').default} Entity */
 /** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
+/** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
 /** @typedef {import('../states/ITurnState.js').ITurnState} ITurnState */
@@ -41,7 +48,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
     /** @type {ITurnEndPort} */
     #turnEndPort;
     /** @type {IPlayerPromptService} */
-    #playerPromptService;
+    #playerPromptService; // Still injected, to be passed to TurnContext
     /** @type {ICommandOutcomeInterpreter} */
     #commandOutcomeInterpreter;
     /** @type {ISafeEventDispatcher} */
@@ -93,7 +100,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
 
         this.#commandProcessor = commandProcessor;
         this.#turnEndPort = turnEndPort;
-        this.#playerPromptService = playerPromptService;
+        this.#playerPromptService = playerPromptService; // Store for context creation
         this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
         this.#safeEventDispatcher = safeEventDispatcher;
         this.#subscriptionManager = subscriptionLifecycleManager;
@@ -108,6 +115,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
     /**
      * @override
      * Initiates a new player turn. Creates and sets the ITurnContext.
+     * This version instantiates HumanPlayerStrategy for the player actor and includes it
+     * in the ITurnContext. Direct prompting is removed from this handler.
      * @param {Entity} actor
      */
     async startTurn(actor) {
@@ -118,38 +127,47 @@ class PlayerTurnHandler extends BaseTurnHandler {
             throw new Error("PlayerTurnHandler.startTurn: actor is required.");
         }
 
+        // TODO: Add check: if (!actor.hasComponent(PLAYER_COMPONENT_ID)) { ...error... }
+        // For now, assume actor is a human player if passed to PlayerTurnHandler.
+
         this._setCurrentActorInternal(actor); // Set actor on handler
+
+        // Instantiate HumanPlayerStrategy for this player's turn.
+        // HumanPlayerStrategy itself doesn't take constructor deps in this version.
+        // It will get IPlayerPromptService from the TurnContext.
+        const humanPlayerStrategy = new HumanPlayerStrategy();
+        this._logger.debug(`${this.constructor.name}: Instantiated HumanPlayerStrategy for actor ${actor.id}.`);
 
         /** @type {TurnContextServices} */
         const servicesForContext = {
-            playerPromptService: this.#playerPromptService,
+            playerPromptService: this.#playerPromptService, // PTH makes PPS available in context
             game: this.#gameWorldAccess,
             commandProcessor: this.#commandProcessor,
             commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
             safeEventDispatcher: this.#safeEventDispatcher,
             subscriptionManager: this.#subscriptionManager,
             turnEndPort: this.#turnEndPort,
+            // The strategy instance is passed directly to TurnContext constructor below,
+            // not as part of the general 'services' bag.
         };
 
         const newTurnContext = new TurnContext({
             actor: actor,
-            // Use this.getLogger() to ensure consistent logger access (might be overridden or from context if logic changes)
-            // However, for context creation, the handler's direct logger is fine.
-            logger: this._logger,
+            logger: this._logger, // Or a child logger specific to this turn
             services: servicesForContext,
-            // Pass bound versions of the *handler's* methods to the context
+            strategy: humanPlayerStrategy, // Pass the strategy instance here
             onEndTurnCallback: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
             isAwaitingExternalEventProvider: this._getIsAwaitingExternalTurnEndFlag.bind(this),
-            onSetAwaitingExternalEventCallback: (isAwaiting, anActorId) => this._markAwaitingTurnEnd(isAwaiting, anActorId), // New callback
-            handlerInstance: this // Pass the handler instance itself
+            onSetAwaitingExternalEventCallback: (isAwaiting, anActorId) => this._markAwaitingTurnEnd(isAwaiting, anActorId),
+            handlerInstance: this
         });
         this._setCurrentTurnContextInternal(newTurnContext); // Set context on handler
 
-        this._logger.debug(`PlayerTurnHandler.startTurn: TurnContext created for actor ${actor.id}.`);
+        this._logger.debug(`PlayerTurnHandler.startTurn: TurnContext created for actor ${actor.id} with HumanPlayerStrategy.`);
 
         // Delegate to current state (which should be TurnIdleState).
         // The state will receive 'this' (PlayerTurnHandler instance) as its handler context.
-        // States will then use handler.getTurnContext() to get the ITurnContext.
+        // AwaitingPlayerInputState will then use `turnContext.getStrategy().decideAction(turnContext)`.
         await this._currentState.startTurn(this, actor);
     }
 
@@ -194,50 +212,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
             this._logger.debug(`${this.constructor.name}.destroy() called but already destroyed.`);
             return;
         }
-        // Initial log is in PlayerTurnHandler, super.destroy() will also log.
         this._logger.info(`${this.constructor.name}.destroy() invoked (Player specific part). Current state: ${this._currentState.getStateName()}`);
-
-        const initialActorIdForDestroy = this.getCurrentActor()?.id || null;
-
-        // Logic regarding #isTerminatingNormally and forcing _handleTurnEnd
-        // needs to be evaluated carefully in relation to BaseTurnHandler.destroy().
-        // BaseTurnHandler.destroy() calls state.destroy(), then _resetTurnStateAndResources, then transitions to Idle.
-        // If a turn was active, state.destroy() should ideally call turnCtx.endTurn(), which triggers _handleTurnEnd.
-
-        // Mark as destroyed early in BaseTurnHandler.destroy()
-        // super.destroy() will handle calling this._currentState.destroy(this)
-        // and then this._resetTurnStateAndResources and transition to idle.
-
-        // If PlayerTurnHandler needs to ensure #isTerminatingNormally influences _handleTurnEnd
-        // before super.destroy() takes over, that logic might need adjustment.
-        // For now, assuming super.destroy() covers the core sequence.
-        // If the active state's destroy method calls context.endTurn(),
-        // our _handleTurnEnd will be called. It uses actorId and error.
-        // The 'fromDestroy' flag in _handleTurnEnd is implicitly true if 'this._isDestroyed' is true.
-
-        // It's important that if a turn is active, it gets properly ended.
-        // The current structure: PlayerTurnHandler.destroy() -> calls super.destroy()
-        // super.destroy() -> calls this._currentState.destroy(this)
-        // state.destroy() -> (if active turn) calls this.getTurnContext().endTurn()
-        // endTurn() on context -> calls this._handleTurnEnd(actorId, error)
-        // this._handleTurnEnd -> transitions to TurnEndingState
-        // TurnEndingState -> calls this._resetTurnStateAndResources() and then transitions to TurnIdleState.
-        // This sequence seems robust.
-
-        // The original PlayerTurnHandler.destroy() had specific logic if !this.#isTerminatingNormally.
-        // This flag is set by TurnEndingState.enterState() via signalNormalApparentTermination().
-        // If super.destroy() correctly leads to TurnEndingState for an active turn, this flag will be set.
-        // If destroy is called abruptly, this flag might not be set, and the original logic was to force _handleTurnEnd.
-        // BaseTurnHandler.destroy already calls state.destroy(), which should lead to _handleTurnEnd.
-        // If the state's destroy doesn't, or if no actor was active, base.destroy will still call reset.
-
-        // This means the specific block for `if (initialActorIdForDestroy && !this.#isTerminatingNormally)`
-        // might be redundant if `super.destroy()` handles it properly through state.destroy().
-        // Let's rely on super.destroy() for now and simplify this override.
-        // We still need to call super.destroy().
-
         await super.destroy(); // This will call current state's destroy, reset resources, and go to Idle.
-
         this._logger.debug(`${this.constructor.name}.destroy() player-specific handling complete (delegated most to base).`);
     }
 
@@ -297,11 +273,13 @@ class PlayerTurnHandler extends BaseTurnHandler {
     // --- Public Getters for Player-Specific Services ---
     // These might be deprecated if no external system (other than states) uses them.
     // States should now primarily use ITurnContext to get services.
+    // For now, keeping them as they are used by the original code structure which the states hook into.
+    // These are no longer directly used by PlayerTurnHandler for core prompting.
 
     /** @returns {IPlayerPromptService} */
     get playerPromptService() {
         this._assertHandlerActive();
-        return this.#playerPromptService;
+        return this.#playerPromptService; // Still returned, but PTH doesn't call prompt() on it.
     }
 
     /** @returns {ICommandProcessor} */
@@ -360,11 +338,14 @@ class PlayerTurnHandler extends BaseTurnHandler {
     // --- Methods called by states on the handler instance ---
     // These methods are part of an implicit contract with its states.
     // The 'handlerContext' parameter in state methods refers to 'this' PlayerTurnHandler instance.
+    // The role of these methods changes: they primarily delegate to the current state.
 
     /**
-     * Handles a command string submitted by the player.
-     * Called by states (e.g., AwaitingPlayerInputState). The state itself receives ITurnContext.
-     * This method on the handler orchestrates state logic.
+     * Handles a command string that was somehow submitted.
+     * This method's primary role is now to delegate to the current state.
+     * In the new flow, AwaitingPlayerInputState should obtain an ITurnAction via strategy,
+     * and then transition to ProcessingCommandState. Direct command string submission
+     * to PlayerTurnHandler should become less common or routed through states.
      * @param {string} commandString - The command string.
      * @param {Entity} actorEntity - The actor submitting the command (usually from context via state).
      * @returns {Promise<void>}
@@ -373,25 +354,31 @@ class PlayerTurnHandler extends BaseTurnHandler {
         this._assertHandlerActive();
         const currentContext = this.getTurnContext(); // Get ITurnContext
         if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
-            this._logger.error(`${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`);
-            // Potentially end turn or throw error
+            const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
+            this._logger.error(errMsg);
             if (currentContext) currentContext.endTurn(new Error("Actor mismatch in handleSubmittedCommand"));
             else this._handleTurnEnd(actorEntity.id, new Error("No context in handleSubmittedCommand"));
             return;
         }
 
         if (!this._currentState || typeof this._currentState.handleSubmittedCommand !== 'function') {
-            this._logger.error(`${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`);
-            throw new Error(`Current state ${this._currentState?.getStateName()} cannot handle submitted commands.`);
+            const errMsg = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
+            this._logger.error(errMsg);
+            // If current state cannot handle it, this might be an error.
+            // Consider ending turn or throwing.
+            currentContext.endTurn(new Error(errMsg));
+            return;
         }
-        // The state's handleSubmittedCommand will use the ITurnContext it gets from this handler.
+        // Delegate to the current state.
         // The state was constructed with 'this' (PlayerTurnHandler).
+        // AwaitingPlayerInputState's handleSubmittedCommand is now more of a fallback,
+        // as its enterState should resolve the action via strategy.
         await this._currentState.handleSubmittedCommand(this, commandString, actorEntity);
     }
 
     /**
      * Handles the `core:turn_ended` system event.
-     * Called by states (e.g., AwaitingExternalTurnEndState).
+     * Delegates to the current state.
      * @param {object} payload - The event payload.
      * @returns {Promise<void>}
      */
@@ -399,16 +386,25 @@ class PlayerTurnHandler extends BaseTurnHandler {
         this._assertHandlerActive();
         const currentContext = this.getTurnContext(); // Get ITurnContext
         if (!currentContext) {
-            this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called but no ITurnContext is active.`);
-            // This is a problematic state, might need to reset or throw
+            this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called but no ITurnContext is active. Payload actor: ${payload?.entityId}`);
+            // If no context, and an event for a specific actor arrives, it's hard to handle.
+            // If payload.entityId matches _awaitingTurnEndForActorId, we *might* attempt to end it.
+            // However, without context, proper ending is difficult.
+            // This suggests an unstable state. Let the current state attempt to handle it if it can.
+            if (this._currentState && typeof this._currentState.handleTurnEndedEvent === 'function') {
+                await this._currentState.handleTurnEndedEvent(this, payload);
+            } else {
+                this._logger.error(`${this.constructor.name}: No current state or state cannot handle turn ended event during no-context scenario.`);
+            }
             return;
         }
 
         if (!this._currentState || typeof this._currentState.handleTurnEndedEvent !== 'function') {
             this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called, but current state ${this._currentState?.getStateName()} cannot handle it.`);
-            throw new Error(`Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`);
+            currentContext.endTurn(new Error(`Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`));
+            return;
         }
-        // The state was constructed with 'this' (PlayerTurnHandler).
+        // Delegate to the current state.
         await this._currentState.handleTurnEndedEvent(this, payload);
     }
 

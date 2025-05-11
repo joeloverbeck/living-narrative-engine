@@ -34,15 +34,17 @@
 /**
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
-
 /**
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
-
+/**
+ * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
+ */
 
 /**
- + * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
- + */
+ * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
+ */
+
 /**
  * @interface ITurnContext
  * @description
@@ -130,12 +132,12 @@ export class ITurnContext {
      * Retrieves the ITurnEndPort for signaling the end of a turn to external listeners.
      * @returns {ITurnEndPort} The turn end port instance.
      * @throws {Error} If the service is not available in the current context.
-     */
-    getTurnEndPort() {
-        throw new Error("Method 'getTurnEndPort()' must be implemented.");
-    }
+     }
+     getTurnEndPort() {
+     throw new Error("Method 'getTurnEndPort()' must be implemented.");
+     }
 
-    /**
+     /**
      * Signals that the current turn has completed.
      * @param {Error | null} [errorOrNull] - An optional error if the turn ended abnormally.
      * @returns {void}
@@ -177,14 +179,13 @@ export class ITurnContext {
         throw new Error("Method 'setAwaitingExternalEvent()' must be implemented.");
     }
 
-    // Specific transition helpers can be added for commonly used transitions by strategies if preferred over generic requestTransition
-    // Example:
-    // async requestTransitionToAwaitingInput() {
-    //     throw new Error("Method 'requestTransitionToAwaitingInput()' must be implemented.");
-    // }
-    // async requestTransitionToAwaitingExternalEvent() {
-    //     throw new Error("Method 'requestTransitionToAwaitingExternalEvent()' must be implemented.");
-    // }
-
-
+    /**
+     * Retrieves the current actor's turn strategy.
+     * This strategy is responsible for deciding the actor's action for the turn.
+     * @returns {IActorTurnStrategy} The actor's turn strategy instance.
+     * @throws {Error} If no strategy is available or provided during context construction.
+     */
+    getStrategy() {
+        throw new Error("Method 'getStrategy()' must be implemented.");
+    }
 }
