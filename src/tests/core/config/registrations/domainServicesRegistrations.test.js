@@ -16,7 +16,7 @@
 /** @typedef {import('../../../../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../../core/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
-/** @typedef {import('../../../../core/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
+/** @typedef {import('../../../../core/turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
 /** @typedef {import('../../../../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../../../core/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
@@ -99,7 +99,7 @@ jest.mock('../../../../core/commands/commandProcessor.js', () => ({__esModule: t
 jest.mock('../../../../core/turns/order/turnOrderService.js', () => ({__esModule: true, TurnOrderService: jest.fn()}));
 // PlayerPromptService is now instantiated by its factory, so we mock its constructor.
 // The factory for IPlayerPromptService will `new PlayerPromptService(...)`.
-jest.mock('../../../../core/services/playerPromptService.js', () => ({
+jest.mock('../../../../core/turns/services/playerPromptService.js', () => ({
     __esModule: true,
     default: jest.fn().mockImplementation(() => mockPlayerPromptServiceInstance)
 }));
@@ -120,7 +120,7 @@ import JsonLogicEvaluationService from '../../../../logic/jsonLogicEvaluationSer
 import WorldContext from '../../../../core/worldContext.js';
 import CommandProcessor from '../../../../core/commands/commandProcessor.js';
 import {TurnOrderService} from '../../../../core/turns/order/turnOrderService.js';
-import PlayerPromptService from '../../../../core/services/playerPromptService.js'; // This is the mocked constructor
+import PlayerPromptService from '../../../../core/turns/services/playerPromptService.js'; // This is the mocked constructor
 
 // --- Mock Implementations (Core & External Dependencies) ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};

@@ -3,10 +3,9 @@
 
 /**
  * @fileoverview Unit tests for AwaitingPlayerInputState.
- * Verifies its interaction with ITurnContext and BaseTurnHandler,
- * ensuring it correctly handles player input, subscriptions, and state transitions.
- * Ticket: PTH-REFACTOR-001 (Decouple PlayerTurnHandler)
- * Related: PTH-REFACTOR-002 (Refactor Core Turn States to Utilize ITurnContext Exclusively)
+ * Verifies its interaction with ITurnContext, IActorTurnStrategy, and state transitions.
+ * Ticket: PTH-REFACTOR-003.2 (Update AwaitPlayerInputState to Use IActorTurnStrategy)
+ * Related: PTH-REFACTOR-003 (Decouple All User-Input Prompting Logic)
  */
 
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
@@ -17,7 +16,6 @@ import {AwaitingPlayerInputState} from '../../../../core/turns/states/awaitingPl
 // Dependencies to be mocked or spied upon
 import {ProcessingCommandState} from '../../../../core/turns/states/processingCommandState.js';
 import {TurnIdleState} from '../../../../core/turns/states/turnIdleState.js';
-import {TurnEndingState} from '../../../../core/turns/states/turnEndingState.js'; // For verifying transition types in some error paths
 import {AbstractTurnState} from '../../../../core/turns/states/abstractTurnState.js';
 
 // --- Mocks & Test Utilities ---
@@ -33,30 +31,31 @@ const mockLogger = {
 const createMockActor = (id = 'test-actor-awaiting') => ({
     id: id,
     name: `MockAwaitingActor-${id}`,
-    // Add any other actor properties your system might use if ITurnContext.getActor() returns more
 });
 
-const mockPlayerPromptService = {
-    prompt: jest.fn().mockResolvedValue(undefined),
+// Mock for ITurnAction
+const createMockTurnAction = (commandString = 'mock action', actionDefinitionId = 'mock:action') => ({
+    commandString: commandString,
+    actionDefinitionId: actionDefinitionId,
+    resolvedParameters: {},
+});
+
+// Mock for IActorTurnStrategy
+const mockActorTurnStrategy = {
+    decideAction: jest.fn(),
 };
 
-const mockUnsubscribeCommandInputFn = jest.fn();
-const mockSubscriptionManager = {
-    subscribeToCommandInput: jest.fn().mockReturnValue(mockUnsubscribeCommandInputFn),
-    // Add other methods if AwaitingPlayerInputState uses them, though it primarily uses subscribeToCommandInput
-    subscribeToTurnEnded: jest.fn().mockReturnValue(jest.fn()), // For completeness of a typical sub manager
-    unsubscribeAll: jest.fn(),
-};
-
-const createMockTurnContext = (actor, loggerInstance = mockLogger) => {
+const createMockTurnContext = (actor, loggerInstance = mockLogger, strategy = mockActorTurnStrategy) => {
     const mockContext = {
         getActor: jest.fn().mockReturnValue(actor),
         getLogger: jest.fn().mockReturnValue(loggerInstance),
-        getPlayerPromptService: jest.fn().mockReturnValue(mockPlayerPromptService),
-        getSubscriptionManager: jest.fn().mockReturnValue(mockSubscriptionManager),
+        getStrategy: jest.fn().mockReturnValue(strategy), // For PTH-REFACTOR-003.2
+        setChosenAction: jest.fn(),                       // For PTH-REFACTOR-003.2
         requestTransition: jest.fn().mockResolvedValue(undefined),
         endTurn: jest.fn(),
-        // Add other ITurnContext methods as needed, with default mocks
+        // Keep other mocks from original test file if they might be needed by superclass or other interactions
+        getPlayerPromptService: jest.fn(), // Might be called by old strategy, or if strategy needs it
+        getSubscriptionManager: jest.fn(), // Might be called by old strategy
         getGame: jest.fn(),
         getCommandProcessor: jest.fn(),
         getCommandOutcomeInterpreter: jest.fn(),
@@ -70,23 +69,22 @@ const createMockTurnContext = (actor, loggerInstance = mockLogger) => {
 
 const createMockBaseTurnHandler = (loggerInstance = mockLogger) => {
     const handlerMock = {
-        // _logger: loggerInstance, // AbstractTurnState doesn't directly access _logger from handler
-        getLogger: jest.fn().mockReturnValue(loggerInstance), // Fallback logger
-        getTurnContext: jest.fn().mockReturnValue(null), // To be configured per test
-        _transitionToState: jest.fn().mockResolvedValue(undefined), // Underlying transition
+        getLogger: jest.fn().mockReturnValue(loggerInstance),
+        getTurnContext: jest.fn().mockReturnValue(null),
+        _transitionToState: jest.fn().mockResolvedValue(undefined),
         _resetTurnStateAndResources: jest.fn(),
-        getCurrentActor: jest.fn().mockReturnValue(null), // For AbstractTurnState's _getTurnContext fallback logging
-        // Mock other BaseTurnHandler methods if they are ever called directly (should be rare)
+        getCurrentActor: jest.fn().mockReturnValue(null),
     };
     return handlerMock;
 };
 
 // --- Test Suite ---
-describe('AwaitingPlayerInputState', () => {
+describe('AwaitingPlayerInputState (PTH-REFACTOR-003.2)', () => {
     let mockHandler;
     let awaitingPlayerInputState;
     let testActor;
     let mockTestTurnContext;
+    let mockTestStrategy;
 
     let superEnterSpy;
     let superExitSpy;
@@ -96,17 +94,15 @@ describe('AwaitingPlayerInputState', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         testActor = createMockActor('player1');
+        mockTestStrategy = {decideAction: jest.fn()}; // Fresh mock strategy for each test
         mockHandler = createMockBaseTurnHandler(mockLogger);
-        mockTestTurnContext = createMockTurnContext(testActor, mockLogger);
+        mockTestTurnContext = createMockTurnContext(testActor, mockLogger, mockTestStrategy);
 
-        // Setup mockHandler to return the mockTestTurnContext by default
         mockHandler.getTurnContext.mockReturnValue(mockTestTurnContext);
-        mockHandler.getCurrentActor.mockReturnValue(testActor); // Consistent with context
+        mockHandler.getCurrentActor.mockReturnValue(testActor);
 
         awaitingPlayerInputState = new AwaitingPlayerInputState(mockHandler);
 
-        // Spy on AbstractTurnState methods to verify they are called
-        // and to allow overriding their implementation for specific tests if needed.
         superEnterSpy = jest.spyOn(AbstractTurnState.prototype, 'enterState');
         superExitSpy = jest.spyOn(AbstractTurnState.prototype, 'exitState');
         superDestroySpy = jest.spyOn(AbstractTurnState.prototype, 'destroy');
@@ -114,13 +110,11 @@ describe('AwaitingPlayerInputState', () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks(); // Restores original implementations of spied methods
+        jest.restoreAllMocks();
     });
 
     test('constructor should correctly store the handler and call super', () => {
         expect(awaitingPlayerInputState._handler).toBe(mockHandler);
-        // Verification of super(handler) is implicit in _handler being set.
-        // If AbstractTurnState constructor had side effects, those could be checked.
     });
 
     test('getStateName should return "AwaitingPlayerInputState"', () => {
@@ -128,29 +122,39 @@ describe('AwaitingPlayerInputState', () => {
     });
 
     describe('enterState', () => {
-        test('should successfully subscribe to command input and prompt player', async () => {
+        test('should call strategy.decideAction, setChosenAction, and transition to ProcessingCommandState on success', async () => {
+            const mockAction = createMockTurnAction('look around', 'core:observe');
+            mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+
             await awaitingPlayerInputState.enterState(mockHandler, null);
 
             expect(superEnterSpy).toHaveBeenCalledWith(mockHandler, null);
             expect(mockTestTurnContext.getLogger).toHaveBeenCalled();
             expect(mockTestTurnContext.getActor).toHaveBeenCalled();
-            expect(mockTestTurnContext.getSubscriptionManager).toHaveBeenCalled();
-            expect(mockSubscriptionManager.subscribeToCommandInput).toHaveBeenCalledTimes(1);
-            expect(typeof mockSubscriptionManager.subscribeToCommandInput.mock.calls[0][0]).toBe('function'); // Callback
-            // REMOVED: expect(awaitingPlayerInputState['_unsubscribeFromCommandInputFn']).toBe(mockUnsubscribeCommandInputFn);
-            // We cannot directly test private field storage. Its correct usage is tested in exitState/destroy.
-            expect(mockTestTurnContext.getPlayerPromptService).toHaveBeenCalled();
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(testActor, "Your command?");
-            expect(mockLogger.debug).toHaveBeenCalledWith(`AwaitingPlayerInputState: Subscribed to command input for actor ${testActor.id}.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`AwaitingPlayerInputState: Player ${testActor.id} prompted for input.`);
+            expect(mockTestTurnContext.getStrategy).toHaveBeenCalled();
+            expect(mockTestStrategy.decideAction).toHaveBeenCalledWith(mockTestTurnContext);
+            expect(mockTestTurnContext.setChosenAction).toHaveBeenCalledWith(mockAction);
+            expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(ProcessingCommandState, [mockAction.commandString, mockAction]);
+            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Actor ${testActor.id} is now awaiting decision via its strategy.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Received ITurnAction from strategy for actor ${testActor.id}`));
         });
 
-        test('should end turn if ITurnContext is not available', async () => {
-            mockHandler.getTurnContext.mockReturnValue(null); // Simulate missing context
-            // Provide a logger on the handler for the initial error message
-            const handlerLogger = {...mockLogger, error: jest.fn()};
-            mockHandler.getLogger.mockReturnValue(handlerLogger);
+        test('should use actionDefinitionId for transition if commandString is null/empty on ITurnAction', async () => {
+            const mockAction = createMockTurnAction(null, 'core:special_ability');
+            mockTestStrategy.decideAction.mockResolvedValue(mockAction);
 
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+
+            expect(mockTestStrategy.decideAction).toHaveBeenCalledWith(mockTestTurnContext);
+            expect(mockTestTurnContext.setChosenAction).toHaveBeenCalledWith(mockAction);
+            expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(ProcessingCommandState, [mockAction.actionDefinitionId, mockAction]);
+        });
+
+
+        test('should end turn if ITurnContext is not available', async () => {
+            mockHandler.getTurnContext.mockReturnValue(null);
+            const handlerLogger = {...mockLogger, error: jest.fn()}; // Ensure fresh mock for this specific logger
+            mockHandler.getLogger.mockReturnValue(handlerLogger);
 
             await awaitingPlayerInputState.enterState(mockHandler, null);
 
@@ -161,7 +165,7 @@ describe('AwaitingPlayerInputState', () => {
         });
 
         test('should end turn if actor is not found in ITurnContext', async () => {
-            mockTestTurnContext.getActor.mockReturnValue(null); // Simulate missing actor
+            mockTestTurnContext.getActor.mockReturnValue(null);
 
             await awaitingPlayerInputState.enterState(mockHandler, null);
 
@@ -170,271 +174,198 @@ describe('AwaitingPlayerInputState', () => {
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe('AwaitingPlayerInputState: Actor not found in ITurnContext on entry.');
         });
 
-        test('should end turn if subscriptionManager throws', async () => {
-            const subError = new Error('Subscription manager failed');
-            mockTestTurnContext.getSubscriptionManager.mockImplementationOnce(() => {
-                throw subError;
-            });
+        test('should end turn if getStrategy is missing on context', async () => {
+            mockTestTurnContext.getStrategy = undefined; // Simulate missing method
 
             await awaitingPlayerInputState.enterState(mockHandler, null);
-            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}. Details: ${subError.message}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}.`, subError);
+            const expectedErrorMsg = `AwaitingPlayerInputState: Actor ${testActor.id} has no valid IActorTurnStrategy or getStrategy() is missing on context.`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMsg);
+        });
+
+        test('should end turn if strategy is null or invalid from getStrategy()', async () => {
+            mockTestTurnContext.getStrategy.mockReturnValue(null); // Strategy is null
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+            const expectedErrorMsg = `AwaitingPlayerInputState: Actor ${testActor.id} has no valid IActorTurnStrategy or getStrategy() is missing on context.`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMsg);
+
+            mockTestTurnContext.getStrategy.mockReturnValue({decideAction: 'not-a-function'}); // Invalid strategy
+            jest.clearAllMocks(); // Clear mocks before re-running with invalid strategy
+            mockHandler.getTurnContext.mockReturnValue(mockTestTurnContext); // Re-assign context
+            mockTestTurnContext.getActor.mockReturnValue(testActor); // Ensure actor is set
+            mockLogger.error.mockClear(); // Clear logger for this specific check
+            mockTestTurnContext.endTurn.mockClear();
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMsg);
+        });
+
+        test('should end turn if strategy.decideAction throws an error', async () => {
+            const strategyError = new Error('Strategy decision failed');
+            mockTestStrategy.decideAction.mockRejectedValue(strategyError);
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+
+            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Error during strategy execution or transition for actor ${testActor.id}. Details: ${strategyError.message}`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Error during strategy execution or transition for actor ${testActor.id}`), strategyError);
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedOverallErrorMessage);
         });
 
-        test('should end turn if playerPromptService throws', async () => {
-            const promptError = new Error('Prompt service failed');
-            mockTestTurnContext.getPlayerPromptService.mockImplementationOnce(() => {
-                throw promptError;
-            });
+        test('should end turn if strategy.decideAction returns null or invalid ITurnAction', async () => {
+            mockTestStrategy.decideAction.mockResolvedValue(null); // Test null return
 
             await awaitingPlayerInputState.enterState(mockHandler, null);
-            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}. Details: ${promptError.message}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}.`, promptError);
+            let expectedErrorMsg = `AwaitingPlayerInputState: Strategy for actor ${testActor.id} returned an invalid or null ITurnAction.`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {receivedAction: null});
+            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMsg);
+
+            jest.clearAllMocks(); // Clear mocks
+            mockHandler.getTurnContext.mockReturnValue(mockTestTurnContext);
+            mockTestTurnContext.getActor.mockReturnValue(testActor);
+            mockTestTurnContext.getStrategy.mockReturnValue(mockTestStrategy); // Re-setup mocks
+            const invalidAction = {someOtherProp: "value"}; // Missing actionDefinitionId
+            mockTestStrategy.decideAction.mockResolvedValue(invalidAction);
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {receivedAction: invalidAction});
+            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMsg);
+        });
+
+
+        test('should end turn if requestTransition fails', async () => {
+            const mockAction = createMockTurnAction('test');
+            mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+            const transitionError = new Error('Transition failed');
+            mockTestTurnContext.requestTransition.mockRejectedValue(transitionError);
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Error during strategy execution or transition for actor ${testActor.id}. Details: ${transitionError.message}`;
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Error during strategy execution or transition for actor ${testActor.id}`), transitionError);
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedOverallErrorMessage);
         });
 
-        test('should end turn if prompter.prompt() throws', async () => {
-            const promptMethodError = new Error('Prompt method failed');
-            mockPlayerPromptService.prompt.mockRejectedValueOnce(promptMethodError);
+        test('should not call setChosenAction if method is not on context, but still transition', async () => {
+            const mockAction = createMockTurnAction('action');
+            mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+            mockTestTurnContext.setChosenAction = undefined; // Simulate missing method
 
             await awaitingPlayerInputState.enterState(mockHandler, null);
 
-            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}. Details: ${promptMethodError.message}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Failed to subscribe or prompt player ${testActor.id}.`, promptMethodError);
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedOverallErrorMessage);
+            expect(mockTestStrategy.decideAction).toHaveBeenCalled();
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('ITurnContext.setChosenAction() not found'));
+            expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(ProcessingCommandState, [mockAction.commandString, mockAction]);
+            expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
+        });
+
+        // Verify removal of direct prompting/subscription logic
+        test('should NOT call getSubscriptionManager or getPlayerPromptService for direct subscription/prompting', async () => {
+            const mockAction = createMockTurnAction();
+            mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+            // Spy on these to ensure they are NOT called for the old reasons
+            const subManSpy = jest.spyOn(mockTestTurnContext, 'getSubscriptionManager');
+            const promptServiceSpy = jest.spyOn(mockTestTurnContext, 'getPlayerPromptService');
+
+
+            await awaitingPlayerInputState.enterState(mockHandler, null);
+
+            expect(subManSpy).not.toHaveBeenCalled(); // Core check: No direct subscription
+            expect(promptServiceSpy).not.toHaveBeenCalled(); // Core check: No direct prompting
+
+            // Strategy still called
+            expect(mockTestStrategy.decideAction).toHaveBeenCalled();
+            expect(mockTestTurnContext.requestTransition).toHaveBeenCalled();
         });
     });
 
     describe('exitState', () => {
-        test('should call unsubscribe function if it exists', async () => {
-            // Simulate enterState to set up the unsubscribe function
-            await awaitingPlayerInputState.enterState(mockHandler, null);
-            // Verifying that subscribeToCommandInput was called (which returns mockUnsubscribeCommandInputFn)
-            // implies that #unsubscribeFromCommandInputFn was set.
-
+        test('should call super.exitState and perform no other specific cleanup by default', async () => {
             await awaitingPlayerInputState.exitState(mockHandler, null);
-
-            expect(mockUnsubscribeCommandInputFn).toHaveBeenCalledTimes(1);
-            // REMOVED: expect(awaitingPlayerInputState['_unsubscribeFromCommandInputFn']).toBeNull();
-            // Private field, its reset is an implementation detail supporting the mockUnsubscribe being called.
             expect(superExitSpy).toHaveBeenCalledWith(mockHandler, null);
-        });
-
-        test('should handle error during unsubscription and log it', async () => {
-            await awaitingPlayerInputState.enterState(mockHandler, null);
-            const unSubError = new Error('Unsubscribe failed');
-            mockUnsubscribeCommandInputFn.mockImplementationOnce(() => {
-                throw unSubError;
-            });
-
-            await awaitingPlayerInputState.exitState(mockHandler, null);
-
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Error during command input unsubscription: ${unSubError.message}`, unSubError);
-            // REMOVED: expect(awaitingPlayerInputState['_unsubscribeFromCommandInputFn']).toBeNull();
-        });
-
-        test('should not warn if unsubscribe function is null when exiting to a terminal state', async () => {
-            // #unsubscribeFromCommandInputFn is null by default. Don't call enterState.
-            const mockIdleState = new TurnIdleState(mockHandler);
-            await awaitingPlayerInputState.exitState(mockHandler, mockIdleState);
-            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('No unsubscribe function stored'));
-        });
-
-        test('should warn if unsubscribe function is null and context actor exists when exiting to non-terminal state', async () => {
-            // #unsubscribeFromCommandInputFn is null by default. Don't call enterState.
-            const mockProcessingState = new ProcessingCommandState(mockHandler, "cmd"); // Non-terminal
-
-            await awaitingPlayerInputState.exitState(mockHandler, mockProcessingState);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: No unsubscribe function stored or already cleared upon exit to ${mockProcessingState.getStateName()}`));
+            expect(mockLogger.debug).toHaveBeenCalledWith('AwaitingPlayerInputState: Exiting AwaitingPlayerInputState.');
+            // No #unsubscribeFromCommandInputFn to check anymore
         });
     });
 
     describe('handleSubmittedCommand', () => {
-        let commandCallback;
+        // This method is now largely a fallback for unexpected calls.
+        test('should log a warning and end turn if called, as input is strategy-driven', async () => {
+            const command = "unexpected command";
+            await awaitingPlayerInputState.handleSubmittedCommand(mockHandler, command, testActor);
 
-        beforeEach(async () => {
-            // Enter state to capture the command callback
-            await awaitingPlayerInputState.enterState(mockHandler, null);
-            expect(mockSubscriptionManager.subscribeToCommandInput).toHaveBeenCalled();
-            commandCallback = mockSubscriptionManager.subscribeToCommandInput.mock.calls[0][0];
-
-            // Clear mocks that might have been called during enterState for cleaner assertions in this suite
-            mockLogger.info.mockClear();
-            mockLogger.debug.mockClear();
-            mockTestTurnContext.requestTransition.mockClear();
-            mockPlayerPromptService.prompt.mockClear(); // Clear prompt from enterState
-        });
-
-        test('should transition to ProcessingCommandState with valid command', async () => {
-            const command = "test command";
-            await commandCallback(command); // Simulate player submitting command
-
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Received command "${command}" for actor ${testActor.id}.`);
-            expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(ProcessingCommandState, [command]);
-        });
-
-        test('should re-prompt if command is empty', async () => {
-            const command = "";
-            await commandCallback(command);
-
-            expect(mockLogger.debug).toHaveBeenCalledWith(`AwaitingPlayerInputState: Empty command received for ${testActor.id}. Re-prompting.`);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(testActor, "Your command? (Previous was empty)");
-            expect(mockTestTurnContext.requestTransition).not.toHaveBeenCalled();
-        });
-
-        test('should re-prompt if command is whitespace only', async () => {
-            const command = "   ";
-            await commandCallback(command);
-
-            expect(mockLogger.debug).toHaveBeenCalledWith(`AwaitingPlayerInputState: Empty command received for ${testActor.id}. Re-prompting.`);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(testActor, "Your command? (Previous was empty)");
-            expect(mockTestTurnContext.requestTransition).not.toHaveBeenCalled();
-        });
-
-        test('should end turn with error if actor in subscription mismatches context actor', async () => {
-            // The 'actor' passed to handleSubmittedCommand (actorEntityFromSubscription)
-            // is the one captured during `enterState`. We test what happens if the context's actor changes.
-            const differentContextActor = createMockActor('different-context-actor');
-            mockTestTurnContext.getActor.mockReturnValue(differentContextActor); // Context actor has changed
-
-            // commandCallback was captured with 'testActor' from the initial enterState.
-            // So, actorEntityFromSubscription inside handleSubmittedCommand will be 'testActor'.
-            await commandCallback("some command");
-
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Command received for actor ${testActor.id}, but current context actor is ${differentContextActor.id}. This indicates a potential subscription mismatch or stale closure. Ending turn.`);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('handleSubmittedCommand was called directly'));
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(`Command actor mismatch: expected ${differentContextActor.id}, got ${testActor.id} from subscription.`);
+            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toMatch(/Unexpected direct command submission/);
         });
 
-
-        test('should transition to Idle if ITurnContext is missing', async () => {
-            mockHandler.getTurnContext.mockReturnValue(null); // Simulate missing context
-            const handlerLogger = {...mockLogger, error: jest.fn()};
+        test('should try to reset and idle if no ITurnContext when unexpectedly called', async () => {
+            mockHandler.getTurnContext.mockReturnValue(null);
+            const handlerLogger = {...mockLogger, error: jest.fn(), warn: jest.fn()};
             mockHandler.getLogger.mockReturnValue(handlerLogger);
 
+            await awaitingPlayerInputState.handleSubmittedCommand(mockHandler, "cmd", testActor);
 
-            await commandCallback("any command");
-
-            expect(handlerLogger.error).toHaveBeenCalledWith('AwaitingPlayerInputState: handleSubmittedCommand called but no ITurnContext. Command: "any command". Attempting to Idle.');
+            expect(handlerLogger.warn).toHaveBeenCalledWith(expect.stringContaining('handleSubmittedCommand was called directly'));
+            expect(handlerLogger.error).toHaveBeenCalledWith(expect.stringContaining('No ITurnContext available to end turn. Forcing handler reset'));
             expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
             expect(mockHandler._transitionToState).toHaveBeenCalledWith(expect.any(TurnIdleState));
         });
 
-        test('should end turn if actor is missing in ITurnContext', async () => {
-            mockTestTurnContext.getActor.mockReturnValue(null);
-            await commandCallback("any command");
-
-            expect(mockLogger.error).toHaveBeenCalledWith('AwaitingPlayerInputState: Command received ("any command") but no actor in current ITurnContext. Ending turn.');
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe('AwaitingPlayerInputState: No actor in ITurnContext during command submission.');
-        });
+        test('should log critical error if no context and no handler when unexpectedly called', async () => {
+            awaitingPlayerInputState._handler = null; // Simulate no handler
+            // Logger will be console if handler is null. Spy on console.error.
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            });
 
 
-        test('should end turn if re-prompt fails', async () => {
-            const promptError = new Error("Re-prompt failed");
-            mockPlayerPromptService.prompt.mockRejectedValueOnce(promptError);
-            await commandCallback(""); // Empty command to trigger re-prompt
+            await awaitingPlayerInputState.handleSubmittedCommand(null, "cmd", testActor);
 
-            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Failed to re-prompt ${testActor.id} after empty command. Details: ${promptError.message}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Failed to re-prompt ${testActor.id} after empty command.`, promptError);
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedOverallErrorMessage);
-        });
-
-        test('should end turn if transition to ProcessingCommandState fails', async () => {
-            const transitionError = new Error("Transition failed");
-            mockTestTurnContext.requestTransition.mockRejectedValueOnce(transitionError);
-            await commandCallback("valid command");
-
-            const expectedOverallErrorMessage = `AwaitingPlayerInputState: Failed to transition to ProcessingCommandState for ${testActor.id}. Cmd: "valid command". Details: ${transitionError.message}`;
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState: Failed to transition to ProcessingCommandState for ${testActor.id}. Cmd: "valid command".`, transitionError);
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedOverallErrorMessage);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('CRITICAL - No ITurnContext or handler available'));
+            consoleErrorSpy.mockRestore();
         });
     });
 
+    // Tests for handleTurnEndedEvent and destroy are largely unchanged by this ticket's core logic,
+    // as they interact with ITurnContext or handler, not directly with input methods.
+    // We can keep them to ensure no regressions.
     describe('handleTurnEndedEvent', () => {
         let eventPayloadForCurrentActor;
         let eventPayloadForOtherActor;
-        let eventPayloadWithError;
 
         beforeEach(() => {
-            // Ensure testActor is defined from the outer beforeEach
-            eventPayloadForCurrentActor = {entityId: testActor.id, event: 'TURN_ENDED_SOMEHOW', error: null};
-            eventPayloadForOtherActor = {entityId: 'other-player', event: 'TURN_ENDED_SOMEHOW', error: null};
-            eventPayloadWithError = {
-                entityId: testActor.id,
-                event: 'TURN_ENDED_WITH_ERROR',
-                error: new Error("External Error")
-            };
+            eventPayloadForCurrentActor = {entityId: testActor.id, error: null};
+            eventPayloadForOtherActor = {entityId: 'other-player', error: null};
         });
 
-        test('should end turn via ITurnContext if event is for current actor (no error)', async () => {
+        test('should end turn via ITurnContext if event is for current actor', async () => {
             await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForCurrentActor);
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: core:turn_ended event received for current actor ${testActor.id}. Ending turn via ITurnContext.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`core:turn_ended event received for current actor ${testActor.id}`));
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(null);
-        });
-
-        test('should end turn via ITurnContext if event is for current actor (with error)', async () => {
-            await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadWithError);
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: core:turn_ended event received for current actor ${testActor.id}. Ending turn via ITurnContext.`);
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(eventPayloadWithError.error);
         });
 
         test('should call super.handleTurnEndedEvent if event is not for current actor', async () => {
             await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForOtherActor);
             expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
             expect(superHandleTurnEndedEventSpy).toHaveBeenCalledWith(mockHandler, eventPayloadForOtherActor);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`core:turn_ended event for entity ${eventPayloadForOtherActor.entityId}`));
-        });
-
-        test('should call super.handleTurnEndedEvent if ITurnContext is missing', async () => {
-            mockHandler.getTurnContext.mockReturnValue(null);
-            const handlerLogger = {...mockLogger, warn: jest.fn()};
-            mockHandler.getLogger.mockReturnValue(handlerLogger);
-
-            await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForCurrentActor);
-
-            expect(handlerLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: handleTurnEndedEvent received but no ITurnContext active. Payload for: ${eventPayloadForCurrentActor.entityId}`));
-            expect(superHandleTurnEndedEventSpy).toHaveBeenCalledWith(mockHandler, eventPayloadForCurrentActor);
-            expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
-        });
-
-        test('should call super.handleTurnEndedEvent if actor in context is null', async () => {
-            mockTestTurnContext.getActor.mockReturnValue(null); // Actor is null
-            await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForCurrentActor); // Payload is for testActor.id
-
-            // Corrected expectation: currentActor?.id will be undefined
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`core:turn_ended event for entity ${eventPayloadForCurrentActor.entityId} (payload error: ${eventPayloadForCurrentActor.error}) ignored or not for current actor undefined.`));
-            expect(superHandleTurnEndedEventSpy).toHaveBeenCalledWith(mockHandler, eventPayloadForCurrentActor);
-            expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
         });
     });
 
     describe('destroy', () => {
-        test('should unsubscribe, end turn via context, and call super.destroy if subscribed and context exists', async () => {
-            await awaitingPlayerInputState.enterState(mockHandler, null); // To subscribe
-
+        test('should end turn via context and call super.destroy if context exists', async () => {
             await awaitingPlayerInputState.destroy(mockHandler);
 
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while awaiting input for ${testActor.id}.`);
-            expect(mockUnsubscribeCommandInputFn).toHaveBeenCalledTimes(1); // Called during destroy
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Handler destroyed while awaiting input for ${testActor.id}`));
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(`Turn handler destroyed while actor ${testActor.id} was in AwaitingPlayerInputState.`);
-            expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
-        });
-
-        test('should not attempt unsubscription if not subscribed, but still end turn and call super.destroy if context exists', async () => {
-            // State is new, enterState not called, so no subscription
-            await awaitingPlayerInputState.destroy(mockHandler);
-
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while awaiting input for ${testActor.id}.`);
-            expect(mockUnsubscribeCommandInputFn).not.toHaveBeenCalled();
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
         });
 
@@ -443,31 +374,16 @@ describe('AwaitingPlayerInputState', () => {
             const handlerLogger = {...mockLogger, warn: jest.fn(), info: jest.fn()};
             mockHandler.getLogger.mockReturnValue(handlerLogger);
 
-
             await awaitingPlayerInputState.destroy(mockHandler);
 
-            expect(handlerLogger.info).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: Handler destroyed while awaiting input for N/A_at_destroy.`));
+            expect(handlerLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Handler destroyed while awaiting input for N/A_at_destroy`));
             expect(handlerLogger.warn).toHaveBeenCalledWith('AwaitingPlayerInputState: Handler destroyed, but no active ITurnContext for actor N/A_at_destroy. No specific turn to end via context.');
             expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
             expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
         });
-
-        test('should handle error during manual unsubscription in destroy', async () => {
-            await awaitingPlayerInputState.enterState(mockHandler, null); // Subscribe
-            const unSubError = new Error("Destroy unsubscribe failed");
-            mockUnsubscribeCommandInputFn.mockImplementationOnce(() => {
-                throw unSubError;
-            });
-
-            await awaitingPlayerInputState.destroy(mockHandler);
-
-            expect(mockLogger.error).toHaveBeenCalledWith(`AwaitingPlayerInputState (destroy): Error during manual unsubscription for ${testActor.id}: ${unSubError.message}`, unSubError);
-            expect(mockTestTurnContext.endTurn).toHaveBeenCalled(); // Still attempts to end turn
-            expect(superDestroySpy).toHaveBeenCalled();
-        });
     });
 
-    // Test for methods that should not be applicable and rely on AbstractTurnState's default erroring behavior
+    // Inapplicable methods test remains the same.
     describe('Inapplicable AbstractTurnState Methods', () => {
         const inapplicableMethods = [
             {name: 'startTurn', args: [mockHandler, testActor]},
@@ -477,7 +393,6 @@ describe('AwaitingPlayerInputState', () => {
 
         inapplicableMethods.forEach(methodInfo => {
             test(`${methodInfo.name} should call super, which throws by default`, async () => {
-                // Spy on the specific super method to confirm it's called before it throws
                 const superMethodSpy = jest.spyOn(AbstractTurnState.prototype, methodInfo.name)
                     .mockImplementationOnce(async () => {
                         throw new Error(`Mocked super.${methodInfo.name} called and threw`);

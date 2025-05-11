@@ -9,7 +9,7 @@
  * @description Defines the interface for a logging service.
  */
 /**
- * @typedef {import('../../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService
+ * @typedef {import('../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService
  * @description Defines the interface for a service that handles player prompts.
  */
 /**

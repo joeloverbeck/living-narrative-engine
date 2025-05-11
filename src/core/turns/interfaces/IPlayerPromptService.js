@@ -1,6 +1,6 @@
 // src/core/interfaces/IPlayerPromptService.js
 // --- FILE START ---
-/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../entities/entity.js').default} Entity */
 
 /**
  * @interface IPlayerPromptService

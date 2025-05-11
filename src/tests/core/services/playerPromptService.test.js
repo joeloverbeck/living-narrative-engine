@@ -1,7 +1,7 @@
 // src/tests/core/services/playerPromptService.test.js
 // --- FILE START ---
 
-import PlayerPromptService from '../../../core/services/playerPromptService.js';
+import PlayerPromptService from '../../../core/turns/services/playerPromptService.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 import Entity from "../../../entities/entity.js"; // Import Entity for mock actor
 

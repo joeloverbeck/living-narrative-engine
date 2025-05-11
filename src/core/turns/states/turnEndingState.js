@@ -36,23 +36,24 @@ export class TurnEndingState extends AbstractTurnState {
      * @param {Error|null} [turnError=null] - Error if turn ended abnormally.
      */
     constructor(handler, actorToEndId, turnError = null) {
-        super(handler);
+        super(handler); // Calls AbstractTurnState constructor
+
+        // AbstractTurnState constructor already checks if handler is provided.
+        // So, this._handler is guaranteed to be set if super() didn't throw.
+        const constructorLogger = this._handler.getLogger(); // Use handler's logger directly
 
         if (!actorToEndId) {
-            const handlerLogger = handler.getLogger(); // Use handler's logger as actorId is missing
-            const errMsg = `${this.constructor.name} Constructor: actorToEndId must be provided.`; // Corrected typo
-            handlerLogger.error(errMsg);
+            const errMsg = `${this.constructor.name} Constructor: actorToEndId must be provided.`;
+            constructorLogger.error(errMsg);
             // Attempt to use current actor from handler as a fallback, though this indicates an issue.
-            this.#actorToEndId = handler.getCurrentActor()?.id || 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK';
-            handlerLogger.warn(`${this.constructor.name} Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'. Stack: ${new Error().stack}`);
+            this.#actorToEndId = this._handler.getCurrentActor()?.id || 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK';
+            constructorLogger.warn(`${this.constructor.name} Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'. Stack: ${new Error().stack}`);
         } else {
-            this.#actorToEndId = actorToEndId; // Correctly assign actorToEndId
+            this.#actorToEndId = actorToEndId;
         }
         this.#turnError = turnError || null;
 
-        // Use handler's logger for constructor logging as context might not be stable/relevant here.
-        const logger = handler.getLogger();
-        logger.debug(
+        constructorLogger.debug(
             `${this.getStateName()} constructed for target actor ${this.#actorToEndId}. Error: ${this.#turnError ? `"${this.#turnError.message}"` : 'null'}.`
         );
     }
@@ -68,30 +69,49 @@ export class TurnEndingState extends AbstractTurnState {
      * @param {ITurnState_Interface} [previousState] - The state from which the transition occurred.
      */
     async enterState(handler, previousState) {
-        // Note: `handler` parameter is the same as `this._handler`.
-        // `this._getTurnContext()` retrieves the context from `this._handler`.
-        const turnCtxForEndingTurn = this._getTurnContext();
+        // **** ADD DIAGNOSTIC LOGS AT THE VERY BEGINNING ****
+        let initialLogger = console; // Fallback logger
+        try {
+            // Use the handler passed to this method, which is the one from _transitionToState
+            initialLogger = handler.getLogger();
+            initialLogger.debug(`ENTERING TurnEndingState.enterState. Handler: ${handler?.constructor?.name}, PrevState: ${previousState?.getStateName()}`);
+        } catch (e) {
+            console.error("TurnEndingState.enterState: Error getting initial logger or initial log: " + e.message);
+        }
 
-        // Determine logger: Prefer context's logger if available, otherwise handler's logger.
+        // this._getTurnContext() uses this._handler, which was set in the constructor.
+        // The handler parameter here is the same instance.
+        const turnCtxForEndingTurn = this._getTurnContext();
+        // **** ADD DIAGNOSTIC FOR CONTEXT ****
+        initialLogger.debug(`TurnEndingState.enterState: turnCtxForEndingTurn is ${turnCtxForEndingTurn ? 'defined' : 'null/undefined'}. Actor in context: ${turnCtxForEndingTurn?.getActor()?.id ?? 'N/A'}`);
+
+        // Use the logger derived from the context if available, or the handler's logger
         const logger = turnCtxForEndingTurn ? turnCtxForEndingTurn.getLogger() : handler.getLogger();
 
-        // Log entry using AbstractTurnState's method, which will use _getTurnContext()
-        // and its logger if available, or handler's logger as fallback.
-        await super.enterState(handler, previousState);
+        try {
+            // Calls AbstractTurnState.enterState, which logs an INFO message
+            await super.enterState(handler, previousState);
+        } catch (e) {
+            // Log if super.enterState itself throws
+            logger.error(`TurnEndingState.enterState: ERROR during super.enterState: ${e.message}`, e);
+            throw e; // Re-throw to see if this is the unhandled point, or handle gracefully
+        }
 
         const isSuccess = (this.#turnError === null);
         const statusTxt = isSuccess ? 'SUCCESS' : 'FAILURE';
-        const contextActorId = turnCtxForEndingTurn?.getActor()?.id;
+        const contextActorIdFromCtx = turnCtxForEndingTurn?.getActor()?.id; // Renamed to avoid conflict
 
+        // This is an INFO log, will not appear in mockLogger.debug.mock.calls unless logger level is debug
         logger.info(
             `${this.getStateName()}: Entered for target actor ${this.#actorToEndId} (turn result: ${statusTxt}). ` +
-            `Context actor: ${contextActorId ?? 'None'}. Error: ${this.#turnError ? `"${this.#turnError.message}"` : 'null'}.`
+            `Context actor: ${contextActorIdFromCtx ?? 'None'}. Error: ${this.#turnError ? `"${this.#turnError.message}"` : 'null'}.`
         );
 
         // 1. Notify ITurnEndPort via ITurnContext
         //    Check if context is available and for the correct actor.
         if (turnCtxForEndingTurn && turnCtxForEndingTurn.getActor()?.id === this.#actorToEndId) {
             try {
+                logger.debug(`${this.getStateName()}: Attempting to get TurnEndPort for actor ${this.#actorToEndId}.`); // DIAGNOSTIC
                 const turnEndPort = turnCtxForEndingTurn.getTurnEndPort();
                 logger.debug(`${this.getStateName()}: Notifying TurnEndPort for actor ${this.#actorToEndId} (success: ${isSuccess}).`);
                 await turnEndPort.notifyTurnEnded(this.#actorToEndId, this.#turnError);
@@ -106,8 +126,8 @@ export class TurnEndingState extends AbstractTurnState {
         } else {
             const reason = !turnCtxForEndingTurn
                 ? "ITurnContext not available"
-                // Ensure contextActorId displays as 'None' if undefined in this log too for consistency
-                : `ITurnContext actor mismatch (context: ${contextActorId ?? 'None'}, target: ${this.#actorToEndId})`;
+                : `ITurnContext actor mismatch (context: ${contextActorIdFromCtx ?? 'None'}, target: ${this.#actorToEndId})`;
+            // This is a WARN log
             logger.warn(
                 `${this.getStateName()}: TurnEndPort not notified for actor ${this.#actorToEndId}. Reason: ${reason}.`
             );
@@ -116,28 +136,28 @@ export class TurnEndingState extends AbstractTurnState {
         // 2. Signal normal apparent termination if applicable
         //    This check is primarily for a concrete handler's (e.g., one managing player turns) destroy() logic.
         //    It should be called if the ending turn's actor matches the context actor.
-        if (contextActorId === this.#actorToEndId && typeof handler.signalNormalApparentTermination === 'function') {
+        if (contextActorIdFromCtx === this.#actorToEndId && typeof handler.signalNormalApparentTermination === 'function') {
             logger.debug(`${this.getStateName()}: Signaling normal apparent termination for handler (actor ${this.#actorToEndId}).`);
             handler.signalNormalApparentTermination();
         } else if (typeof handler.signalNormalApparentTermination === 'function') { // Method exists but conditions not met
             logger.debug(
                 `${this.getStateName()}: Normal apparent termination not signaled. ` +
-                `Context actor ('${contextActorId ?? 'None'}') vs target actor ('${this.#actorToEndId}') mismatch or no context actor.`
+                `Context actor ('${contextActorIdFromCtx ?? 'None'}') vs target actor ('${this.#actorToEndId}') mismatch or no context actor.`
             );
         }
 
+        // Diagnostic before reset and transition
+        logger.debug(`${this.getStateName()}: Proceeding to reset resources and transition to Idle.`);
 
         // 3. Reset handler's per-turn state and resources.
-        //    This is a protected method on BaseTurnHandler.
-        //    It will clear the ITurnContext and currentActor on the handler.
         logger.debug(`${this.getStateName()}: Calling _resetTurnStateAndResources for actor ${this.#actorToEndId}.`);
         handler._resetTurnStateAndResources(`enterState-${this.getStateName()}-actor-${this.#actorToEndId}`);
 
         // 4. Transition to TurnIdleState.
-        //    TurnIdleState constructor takes the handler instance.
         logger.debug(`${this.getStateName()}: Transitioning to TurnIdleState.`);
-        await handler._transitionToState(new TurnIdleState(handler));
+        await handler._transitionToState(new TurnIdleState(handler)); // TurnIdleState constructor takes the handler instance.
 
+        // This is an INFO log
         logger.info(`${this.getStateName()}: Processing for actor ${this.#actorToEndId} complete. Handler now in Idle state.`);
     }
 
@@ -149,7 +169,7 @@ export class TurnEndingState extends AbstractTurnState {
     async exitState(handler, nextState) {
         // By the time this is called, the context should have been cleared by _resetTurnStateAndResources
         // in enterState(). The logger from super.exitState will likely fallback to handler.getLogger().
-        const logger = handler.getLogger(); // Use handler's logger as context is gone
+        const logger = handler.getLogger(); // Use handler's logger as context is (expected to be) gone
         logger.debug(
             `${this.getStateName()}: Exiting for (intended) actor ${this.#actorToEndId}. ` +
             `Transitioning to ${nextState?.getStateName() ?? 'None'}. ITurnContext should be null.`
@@ -186,7 +206,7 @@ export class TurnEndingState extends AbstractTurnState {
             }
         }
         // Call super.destroy() for any generic cleanup in AbstractTurnState.
-        await super.destroy(handler);
+        await super.destroy(handler); // Ensures logging from AbstractTurnState
         logger.debug(`${this.getStateName()}: Destroy handling for actor ${this.#actorToEndId} finished.`);
     }
 
@@ -194,5 +214,3 @@ export class TurnEndingState extends AbstractTurnState {
     // are invalid for TurnEndingState. They will use AbstractTurnState's default
     // implementations, which log an error and throw, indicating they are not applicable.
 }
-
-// --- FILE END ---

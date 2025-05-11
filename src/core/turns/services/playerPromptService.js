@@ -2,19 +2,19 @@
 // --- FILE START ---
 
 // --- Interface/Type Imports for JSDoc ---
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
-/** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
-/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./gameDataRepository.js').default} GameDataRepository */
-/** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
+/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */
+/** @typedef {import('../../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../actions/actionTypes.js').ActionContext} ActionContext */
 
 // --- Import Custom Error ---
 // Assuming PromptError is defined in a shared errors location
-import { PromptError } from '../errors/promptError.js';
+import { PromptError } from '../../errors/promptError.js';
 import { IPlayerPromptService } from '../interfaces/IPlayerPromptService.js'; // Adjusted path and added .js extension
 
 /**
