@@ -404,13 +404,18 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             await handler.startTurn(dummyActor);
             await jest.advanceTimersByTimeAsync(0); // Ensure all promises in the chain resolve
 
+            // Corrected assertion to match AwaitingPlayerInputState's actual logging
             expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`AwaitingPlayerInputState: Error during strategy execution or transition for actor ${dummyActor.id}.`),
-                strategyError
+                // The message logged by AwaitingPlayerInputState.js when decideAction or requestTransition fails
+                `AwaitingPlayerInputState: Error during action decision, storage, or transition for actor ${dummyActor.id}: ${strategyError.message}`,
+                // AwaitingPlayerInputState.js logs an object { originalError: error } as the second param
+                {originalError: strategyError}
             );
             expect(handler._handleTurnEnd).toHaveBeenCalledTimes(1);
             const errorArgToHandleTurnEnd = handler._handleTurnEnd.mock.calls[0][1];
-            expect(errorArgToHandleTurnEnd.message).toContain(`Details: ${strategyError.message}`);
+            // The error passed to endTurn in AwaitingPlayerInputState.js also includes the strategyError.message
+            expect(errorArgToHandleTurnEnd.message).toContain(`Error during action decision, storage, or transition for actor ${dummyActor.id}: ${strategyError.message}`);
+
 
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: TurnIdleState \u2192 AwaitingPlayerInputState`));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`));
@@ -470,7 +475,11 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(handler._isDestroyed).toBe(true);
             expect(mockLogger.info).toHaveBeenCalledWith(`MinimalTestHandler.destroy() invoked.`);
             expect(stateDestroySpy).toHaveBeenCalledTimes(1); // AwaitingPlayerInputState.destroy() should be called
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: Handler destroyed while awaiting input for ${dummyActor.id}.`));
+
+            // Corrected assertion for the log message from AwaitingPlayerInputState.destroy()
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `AwaitingPlayerInputState: Handler destroyed while state was active for actor ${dummyActor.id}. Ending turn.`
+            );
 
             const expectedDestroyErrorMsg = `Turn handler destroyed while actor ${dummyActor.id} was in AwaitingPlayerInputState.`;
             expect(handler._handleTurnEnd).toHaveBeenCalledWith(dummyActor.id, expect.objectContaining({message: expectedDestroyErrorMsg}), true);
