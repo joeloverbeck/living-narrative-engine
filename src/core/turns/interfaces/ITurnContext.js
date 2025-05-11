@@ -46,6 +46,10 @@
  */
 
 /**
+ * @typedef {import('./IActorTurnStrategy.js').ITurnAction} ITurnAction
+ */
+
+/**
  * @interface ITurnContext
  * @description
  * Defines the contract for turn-specific data and services. This interface's
@@ -187,5 +191,31 @@ export class ITurnContext {
      */
     getStrategy() {
         throw new Error("Method 'getStrategy()' must be implemented.");
+    }
+
+    /**
+     * Sets the chosen action for the current turn.
+     * This is typically called by `AwaitingPlayerInputState` (or a similar state) after the
+     * actor's {@link IActorTurnStrategy#decideAction} method resolves with an {@link ITurnAction}.
+     * The stored action can then be retrieved by states like `ProcessingCommandState`.
+     *
+     * @param {ITurnAction} action - The action chosen by the actor.
+     * @returns {void}
+     * @throws {Error} If the provided action is invalid or if it's called at an inappropriate time.
+     */
+    setChosenAction(action) {
+        throw new Error("Method 'setChosenAction(action)' must be implemented.");
+    }
+
+    /**
+     * Retrieves the action that was chosen for the current turn.
+     * This is typically called by `ProcessingCommandState` (or a similar state) to get the
+     * {@link ITurnAction} that was previously set by `setChosenAction`.
+     *
+     * @returns {ITurnAction | null} The chosen action object, or `null` if no action
+     * has been set for the current turn yet.
+     */
+    getChosenAction() {
+        throw new Error("Method 'getChosenAction()' must be implemented.");
     }
 }

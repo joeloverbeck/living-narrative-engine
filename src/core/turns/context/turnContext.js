@@ -49,6 +49,9 @@
 /**
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  */
+/**
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
+ */
 
 /**
  * @typedef {object} TurnContextServices
@@ -81,7 +84,7 @@ export class TurnContext extends ITurnContext {
     /** @type {TurnContextServices} */
     #services;
     /** @type {IActorTurnStrategy} */
-    #strategy; // Added field for the strategy
+    #strategy;
     /** @type {OnEndTurnCallback} */
     #onEndTurnCallback;
     /** @type {IsAwaitingExternalEventProvider} */
@@ -90,6 +93,14 @@ export class TurnContext extends ITurnContext {
     #onSetAwaitingExternalEventCallback;
     /** @type {BaseTurnHandler} */
     #handlerInstance; // To facilitate state transitions
+
+    /**
+     * The action chosen by the actor for the current turn.
+     * Initialized to null and set via `setChosenAction`.
+     * @private
+     * @type {ITurnAction | null}
+     */
+    #chosenAction = null;
 
     /**
      * Creates an instance of TurnContext.
@@ -107,7 +118,7 @@ export class TurnContext extends ITurnContext {
                     actor,
                     logger,
                     services,
-                    strategy, // Added strategy parameter
+                    strategy,
                     onEndTurnCallback,
                     isAwaitingExternalEventProvider,
                     onSetAwaitingExternalEventCallback,
@@ -124,10 +135,10 @@ export class TurnContext extends ITurnContext {
         if (!services) {
             throw new Error('TurnContext: services bag is required (can be an empty object).');
         }
-        if (!strategy) { // Added strategy validation
+        if (!strategy) {
             throw new Error('TurnContext: strategy (IActorTurnStrategy) is required.');
         }
-        if (typeof strategy.decideAction !== 'function') { // Basic validation for strategy
+        if (typeof strategy.decideAction !== 'function') {
             throw new Error('TurnContext: provided strategy does not have a decideAction method.');
         }
         if (typeof onEndTurnCallback !== 'function') {
@@ -146,11 +157,12 @@ export class TurnContext extends ITurnContext {
         this.#actor = actor;
         this.#logger = logger;
         this.#services = services;
-        this.#strategy = strategy; // Store the strategy
+        this.#strategy = strategy;
         this.#onEndTurnCallback = onEndTurnCallback;
         this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
         this.#onSetAwaitingExternalEventCallback = onSetAwaitingExternalEventCallback;
         this.#handlerInstance = handlerInstance;
+        this.#chosenAction = null; // Explicitly initialize here, though default is null.
     }
 
     /** @override */
@@ -259,6 +271,7 @@ export class TurnContext extends ITurnContext {
             isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
             onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallback,
             handlerInstance: this.#handlerInstance
+            // Note: #chosenAction is NOT cloned; it's specific to the turn instance.
         });
     }
 
@@ -282,6 +295,57 @@ export class TurnContext extends ITurnContext {
             throw new Error(errorMsg);
         }
         return this.#strategy;
+    }
+
+    /**
+     * Stores the provided {@link ITurnAction} object.
+     * This method is typically called by `AwaitingPlayerInputState` after
+     * `IActorTurnStrategy.decideAction()` resolves.
+     * Logs (debug level) that the action is being set.
+     * @override
+     * @param {ITurnAction} action - The action chosen by the actor.
+     * @returns {void}
+     * @throws {Error} If the action is null or undefined.
+     */
+    setChosenAction(action) {
+        if (!action) {
+            const errorMsg = "TurnContext.setChosenAction: Provided action cannot be null or undefined.";
+            this.#logger.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+        // Basic validation of the action object's structure based on ITurnAction
+        if (typeof action.actionDefinitionId !== 'string' || !action.actionDefinitionId) {
+            const errorMsg = "TurnContext.setChosenAction: Provided action must have a valid 'actionDefinitionId' string.";
+            this.#logger.error(errorMsg, {receivedAction: action});
+            throw new Error(errorMsg);
+        }
+
+        this.#chosenAction = action;
+        this.#logger.debug(
+            `TurnContext: Chosen action set for actor ${this.#actor.id}: ` +
+            `ID='${action.actionDefinitionId}', Command='${action.commandString || 'N/A'}'`,
+            {actionDetails: action}
+        );
+    }
+
+    /**
+     * Returns the stored {@link ITurnAction} object or `null` if no action has been set.
+     * This method is called by `ProcessingCommandState` to retrieve the action.
+     * Logs (debug level) when the action is retrieved, including if it's null.
+     * @override
+     * @returns {ITurnAction | null} The stored action or null.
+     */
+    getChosenAction() {
+        if (this.#chosenAction) {
+            this.#logger.debug(
+                `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: ` +
+                `ID='${this.#chosenAction.actionDefinitionId}', Command='${this.#chosenAction.commandString || 'N/A'}'`,
+                {actionDetails: this.#chosenAction}
+            );
+        } else {
+            this.#logger.debug(`TurnContext: Retrieving chosen action for actor ${this.#actor.id}: No action has been set (is null).`);
+        }
+        return this.#chosenAction;
     }
 }
 

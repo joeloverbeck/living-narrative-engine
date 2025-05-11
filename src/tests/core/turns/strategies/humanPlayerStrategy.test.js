@@ -1,4 +1,4 @@
-// test/core/turns/strategies/humanPlayerStrategy.test.js
+// src/tests/core/turns/strategies/humanPlayerStrategy.test.js
 // --- FILE START ---
 
 import {HumanPlayerStrategy} from '../../../../core/turns/strategies/humanPlayerStrategy.js';
@@ -126,7 +126,7 @@ describe('HumanPlayerStrategy', () => {
             await expect(strategy.decideAction(null))
                 .rejects
                 .toThrow('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
-            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: ITurnContext itself is null or undefined.');
+            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
         });
 
         it('should throw if context.getLogger is not a function', async () => {
