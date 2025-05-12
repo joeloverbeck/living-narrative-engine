@@ -63,19 +63,27 @@ export class AITurnHandler extends BaseTurnHandler {
                     // aiService, // Example
                     // commandProcessor // Example
                 }) {
-        super({logger, initialConcreteState: new TurnIdleState(self || this)}); // 'self' or 'this' for the AITurnHandler instance
+        // 1. Call super() first
+        super({logger});
 
-        this._logger.debug(`${this.constructor.name} initialised.`);
-
-        // Validate and store AI-specific dependencies
+        // 2. 'this' is now available. Validate derived dependencies
         if (!gameWorldAccess) throw new Error('AITurnHandler: gameWorldAccess is required.');
         if (!turnEndPort) throw new Error('AITurnHandler: turnEndPort is required.');
         // if (!aiService) throw new Error('AITurnHandler: aiService is required.');
 
+        // 3. Assign derived dependencies
         this.#gameWorldAccess = gameWorldAccess;
         this.#turnEndPort = turnEndPort;
         // this.#aiService = aiService;
         // this.#commandProcessor = commandProcessor;
+
+        // 4. Create the initial state, passing 'this'
+        const initialState = new TurnIdleState(this);
+
+        // 5. Set the initial state
+        this._setInitialState(initialState);
+
+        this._logger.debug(`${this.constructor.name} initialised. Dependencies assigned. Initial state set.`);
     }
 
     /**

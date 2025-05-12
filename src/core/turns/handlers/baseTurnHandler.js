@@ -78,29 +78,27 @@ export class BaseTurnHandler {
 
     /**
      * Creates an instance of BaseTurnHandler.
+     * Initializes basic properties like the logger.
+     * The initial state must be set by the derived class constructor *after* calling super().
      * @param {object} deps
      * @param {ILogger} deps.logger - The logger service.
-     * @param {ITurnState} deps.initialConcreteState - The initial state instance for the handler,
-     * typically an instance of TurnIdleState created by the concrete handler. The state constructor
-     * should have received `this` (the concrete handler instance).
-     * @throws {Error} If logger or initialConcreteState is not provided.
+     * @throws {Error} If logger is not provided.
      */
-    constructor({logger, initialConcreteState}) {
+    constructor({logger}) { // REMOVED initialConcreteState from params
         if (!logger) {
-            // console.error used here as logger itself is missing.
             console.error('BaseTurnHandler Constructor: logger is required.');
             throw new Error('BaseTurnHandler: logger is required.');
         }
-        if (!initialConcreteState || typeof initialConcreteState.enterState !== 'function') {
-            const msg = 'BaseTurnHandler: initialConcreteState (implementing ITurnState and constructed with handler instance) is required.';
-            logger.error(msg);
-            throw new Error(msg);
-        }
-
         this._logger = logger;
-        this._currentState = initialConcreteState; // e.g., new TurnIdleState(thisConcreteHandler)
-        // Initial log uses the base logger as context might not exist yet.
-        this._logger.debug(`${this.constructor.name} initialised. Initial state: ${this._currentState.getStateName()}`);
+
+        // Initialize other base fields if necessary
+        this._currentTurnContext = null;
+        this._isDestroyed = false;
+        this._currentActor = null;
+        this._currentState = null; // Explicitly null initially
+
+        // REMOVED: Initialization log that used initialConcreteState. Can be added in derived class.
+        // this._logger.debug(`${this.constructor.name} initialised. Initial state will be set by derived class.`);
     }
 
     /**
@@ -421,6 +419,26 @@ export class BaseTurnHandler {
             logger.debug(`${this.constructor.name}.destroy: Already in TurnIdleState after state cleanup and reset.`);
         }
         logger.info(`${this.constructor.name}.destroy() complete.`);
+    }
+
+    /**
+     * Sets the initial state. Should be called by derived constructors after super().
+     * @param {ITurnState} initialState
+     * @protected
+     */
+    _setInitialState(initialState) {
+        if (!initialState || typeof initialState.enterState !== 'function') {
+            const msg = `${this.constructor.name}: Attempted to set invalid initial state.`;
+            this._logger.error(msg, {state: initialState});
+            throw new Error(msg);
+        }
+        if (this._currentState !== null) {
+            const msg = `${this.constructor.name}: Initial state has already been set. Cannot set again.`;
+            this._logger.error(msg);
+            throw new Error(msg);
+        }
+        this._currentState = initialState;
+        this._logger.debug(`${this.constructor.name} initial state set to: ${this._currentState.getStateName()}`);
     }
 
     // --- Test-only hooks ---

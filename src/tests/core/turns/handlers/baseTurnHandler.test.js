@@ -71,17 +71,22 @@ class MinimalTestHandler extends BaseTurnHandler {
 
     constructor({
                     logger,
-                    initialConcreteState,
-                    servicesForContext, // This contains various services
-                    strategyForContext, // Explicitly pass strategy for context
+                    // No initialConcreteState needed here anymore
+                    servicesForContext,
+                    strategyForContext,
                     isAwaitingExternalEventProviderForContext,
                     onSetAwaitingExternalEventCallbackProviderForContext,
                 }) {
-        super({logger, initialConcreteState});
+        super({logger}); // Call base constructor first
+        // Assign other dependencies...
         this.#servicesForContext = servicesForContext;
-        this.#strategyForContext = strategyForContext; // Store it
+        this.#strategyForContext = strategyForContext;
         this.#isAwaitingExternalEventProviderForContext = isAwaitingExternalEventProviderForContext;
         this.#onSetAwaitingExternalEventCallbackProviderForContext = onSetAwaitingExternalEventCallbackProviderForContext;
+
+        // Create and set the initial state AFTER super()
+        const initialState = new TurnIdleState(this);
+        this._setInitialState(initialState); // Use the protected setter
     }
 
     async startTurn(actor) {
@@ -177,39 +182,33 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
         }),
     });
 
-    const initializeHandler = (initialConcreteStateOverride = null) => {
-        const defaultDummyStateName = 'DummyInitStateForBeforeEach';
-        const dummyInitialState = initialConcreteStateOverride || createDummyInitialState(defaultDummyStateName);
+    const initializeHandler = () => {
+        // No need for dummyInitialState creation here anymore
 
         handler = new MinimalTestHandler({
             logger: mockLogger,
-            initialConcreteState: dummyInitialState,
-            servicesForContext: mockServices, // mockServices contains mockStrategy
-            strategyForContext: mockServices.mockStrategy, // Pass mockStrategy explicitly
+            // No initialConcreteState passed here
+            servicesForContext: mockServices,
+            strategyForContext: mockServices.mockStrategy,
             isAwaitingExternalEventProviderForContext: mockIsAwaitingExternalEventProvider,
             onSetAwaitingExternalEventCallbackProviderForContext: mockOnSetAwaitingExternalEventCallback,
         });
 
-        if (dummyInitialState && typeof dummyInitialState._getTurnContext === 'function') {
-            dummyInitialState._handler = handler;
-        }
+        // No need for handler linking or overwriting _currentState here
 
-        if (!initialConcreteStateOverride || dummyInitialState.getStateName() === defaultDummyStateName) {
-            handler._currentState = new TurnIdleState(handler);
-        }
-
-        if (handler.onEnterState.mockRestore) handler.onEnterState.mockRestore();
+        // Keep spies setup
+        if (handler.onEnterState?.mockRestore) handler.onEnterState.mockRestore();
         jest.spyOn(handler, 'onEnterState').mockImplementation(async () => {
         });
 
-        if (handler.onExitState.mockRestore) handler.onExitState.mockRestore();
+        if (handler.onExitState?.mockRestore) handler.onExitState.mockRestore();
         jest.spyOn(handler, 'onExitState').mockImplementation(async () => {
         });
 
-        if (handler._handleTurnEnd.mockRestore) handler._handleTurnEnd.mockRestore();
+        if (handler._handleTurnEnd?.mockRestore) handler._handleTurnEnd.mockRestore();
         jest.spyOn(handler, '_handleTurnEnd');
 
-        if (resetSpy && resetSpy.mockRestore) resetSpy.mockRestore();
+        if (resetSpy?.mockRestore) resetSpy.mockRestore();
         resetSpy = jest.spyOn(handler, '_resetTurnStateAndResources');
     };
 
@@ -258,12 +257,18 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
     });
 
     test('should initialize correctly and be in TurnIdleState', () => {
+        // Calls initializeHandler() via beforeEach
+
         expect(handler).toBeInstanceOf(MinimalTestHandler);
         expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
         expect(handler._getInternalState().getStateName()).toBe('TurnIdleState');
+
+        // --- UPDATED ASSERTION ---
+        // Expect the log message from _setInitialState called during MinimalTestHandler construction
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            `MinimalTestHandler initialised. Initial state: DummyInitStateForBeforeEach`
+            `MinimalTestHandler initial state set to: TurnIdleState`
         );
+        // --- END UPDATED ASSERTION ---
     });
 
     describe('startTurn()', () => {

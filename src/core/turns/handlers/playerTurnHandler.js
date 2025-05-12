@@ -88,9 +88,10 @@ class PlayerTurnHandler extends BaseTurnHandler {
                     subscriptionLifecycleManager,
                     gameWorldAccess = {}
                 }) {
-        // Pass logger and an instance of TurnIdleState constructed with 'this' PlayerTurnHandler instance.
-        super({logger, initialConcreteState: new TurnIdleState(self || this)}); // 'self' or 'this' should resolve to PlayerTurnHandler instance
+        // 1. Call super() first with only base dependencies (logger)
+        super({logger});
 
+        // 2. 'this' is now available. Validate derived dependencies.
         if (!commandProcessor) throw new Error('PlayerTurnHandler: commandProcessor is required');
         if (!turnEndPort) throw new Error('PlayerTurnHandler: turnEndPort is required');
         if (!playerPromptService) throw new Error('PlayerTurnHandler: playerPromptService is required');
@@ -98,16 +99,23 @@ class PlayerTurnHandler extends BaseTurnHandler {
         if (!safeEventDispatcher) throw new Error('PlayerTurnHandler: safeEventDispatcher is required');
         if (!subscriptionLifecycleManager) throw new Error('PlayerTurnHandler: subscriptionLifecycleManager is required');
 
+        // 3. Assign derived dependencies to fields
         this.#commandProcessor = commandProcessor;
         this.#turnEndPort = turnEndPort;
-        this.#playerPromptService = playerPromptService; // Store for context creation
+        this.#playerPromptService = playerPromptService;
         this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
         this.#safeEventDispatcher = safeEventDispatcher;
         this.#subscriptionManager = subscriptionLifecycleManager;
         this.#gameWorldAccess = gameWorldAccess;
 
+        // 4. Create the initial state, passing the now-valid 'this'
+        const initialState = new TurnIdleState(this);
+
+        // 5. Set the initial state using the protected method from BaseTurnHandler
+        this._setInitialState(initialState);
+
         // _logger is inherited from BaseTurnHandler and set in super()
-        this._logger.debug(`${this.constructor.name} player-specific dependencies initialised.`);
+        this._logger.debug(`${this.constructor.name} initialised. Dependencies assigned. Initial state set.`);
     }
 
     // --- Method Overrides from BaseTurnHandler (Abstract or for specific behavior) ---
