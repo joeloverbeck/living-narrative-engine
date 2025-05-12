@@ -1,9 +1,9 @@
 // src/tests/core/turnManager.advanceTurn.roundStart.test.js
-// --- FILE START (Entire file content as requested, with corrections) ---
+// --- FILE START (Entire file content with corrected assertions) ---
 
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
-import TurnManager from '../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID} from '../../types/components.js';
+import TurnManager from '../../../core/turns/turnManager.js';
+import {ACTOR_COMPONENT_ID} from '../../../types/components.js';
 
 // Mocks for dependencies
 const mockLogger = {
@@ -81,14 +81,15 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
             // Check if start() was successfully logged before stop was invoked.
             const started = mockLogger.info.mock.calls.some(call => call[0] === 'Turn Manager started.');
             mockLogger.debug(`Stop spy: Was manager started? ${started}`);
-            if (started) {
+            if (started && typeof turnEndedUnsubscribeMock === 'function') { // Ensure it's callable
                 mockLogger.debug('Stop spy: Calling turnEndedUnsubscribeMock');
                 turnEndedUnsubscribeMock();
             } else {
-                mockLogger.debug('Stop spy: Not calling turnEndedUnsubscribeMock (manager start log not found)');
+                mockLogger.debug('Stop spy: Not calling turnEndedUnsubscribeMock (manager start log not found or not callable)');
             }
             // Minimal stop actions for spy - the real stop is more complex
-            instance._TurnManager_isRunning = false; // Simulate stop effect if needed by other tests
+            // Accessing private field directly is bad practice, but necessary for test simulation if needed
+            // instance['#isRunning'] = false;
         });
 
         // Clear constructor/setup logs AFTER instantiation and spy setup
@@ -107,7 +108,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     // --- Test Cases ---
 
     test('advanceTurn() does nothing with a debug log if not running', async () => {
-        // Arrange: #isRunning is false by default
+        // Arrange: #isRunning is false by default after construction before start()
         // Act: Call advanceTurn directly
         await instance.advanceTurn();
 
@@ -131,20 +132,8 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
         mockTurnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty for the check inside advanceTurn
         const expectedErrorMsg = 'Cannot start a new round: No active entities with an Actor component found.';
 
-        // Mock the advanceTurn called by start() *just* to prevent interference IF NEEDED,
-        // but often better to let start call the real advanceTurn and track calls.
-        // Let's try letting start() call the real advanceTurn.
-        // advanceTurnSpy.mockImplementationOnce(async () => {
-        //     mockLogger.debug('advanceTurn called by start() - allowing real execution');
-        //     advanceTurnSpy.mockRestore(); // Restore for subsequent calls
-        //     await instance.advanceTurn();
-        //     advanceTurnSpy = jest.spyOn(instance, 'advanceTurn'); // Re-spy
-        // });
-
-
-        // Act (Part 1): Start the manager to set #isRunning = true. This WILL call advanceTurn itself.
-        // The test setup (no actors) means this first advanceTurn call will fail.
-        await instance.start(); // This calls advanceTurn once.
+        // Act: Start the manager, which will call advanceTurn once.
+        await instance.start(); // This calls advanceTurn.
 
         // Assert (on the results of the advanceTurn call triggered by start)
         expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Log from start()
@@ -154,7 +143,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
         // Check logs from the advanceTurn call triggered by start()
         expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() initiating...');
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Should be called now
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Attempting to start a new round.');
+        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Preparing for new round or stopping.'); // <<< Log 1
+        // --- CORRECTED ASSERTION ---
+        expect(mockLogger.info).toHaveBeenCalledWith('Attempting to start a new round.'); // <<< Log 2
+        // --- END CORRECTION ---
         expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged
 
         // Check dispatch and stop from the advanceTurn call
@@ -189,7 +181,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
         // Check logs from the advanceTurn call triggered by start()
         expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() initiating...');
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Attempting to start a new round.');
+        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Preparing for new round or stopping.'); // <<< Log 1
+        // --- CORRECTED ASSERTION ---
+        expect(mockLogger.info).toHaveBeenCalledWith('Attempting to start a new round.'); // <<< Log 2
+        // --- END CORRECTION ---
         expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
 
         // Check dispatch and stop from the advanceTurn call
@@ -221,12 +216,11 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
         mockTurnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty initially
         mockTurnOrderService.startNewRound.mockResolvedValueOnce(undefined); // Success
 
-        // The *second* call to advanceTurn (recursive) will find the queue NOT empty.
-        // Let's assume getNextEntity works for this test's purpose. We'll mock it to return actor1.
-        // We also need to resolve a handler for actor1 to prevent that path from erroring.
-        mockTurnOrderService.isEmpty.mockResolvedValueOnce(false); // For the second call
-        mockTurnOrderService.getNextEntity.mockResolvedValueOnce(actor1);
-        // Mock a basic handler - the test focus is round start, not turn execution
+        // Setup mocks for the *second* call to advanceTurn (recursive)
+        mockTurnOrderService.isEmpty.mockResolvedValueOnce(false); // For the second call, queue is NOT empty
+        mockTurnOrderService.getNextEntity.mockResolvedValueOnce(actor1); // It returns actor1
+
+        // Mock a basic handler for actor1 to prevent the recursive call path from erroring
         const mockHandler = {startTurn: jest.fn().mockResolvedValue(undefined), destroy: jest.fn()};
         mockTurnHandlerResolver.resolveHandler.mockResolvedValueOnce(mockHandler);
 
@@ -241,7 +235,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
         // --- Assertions for the FIRST advanceTurn call ---
         // It finds the queue empty...
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Attempting to start a new round.');
+        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Preparing for new round or stopping.'); // <<< Log 1
+        // --- CORRECTED ASSERTION ---
+        expect(mockLogger.info).toHaveBeenCalledWith('Attempting to start a new round.'); // <<< Log 2
+        // --- END CORRECTION ---
         // It finds actors... (Check presence and count)
         expect(mockLogger.info).toHaveBeenCalledWith(
             expect.stringMatching(/Found 2 actors to start the round: (actor1, actor2|actor2, actor1)/)
@@ -262,7 +259,8 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
 
         // --- Assertions for the SECOND advanceTurn call (the recursion) ---
-        // It finds the queue NOT empty... (isEmpty was mocked to return false for the second call)
+        expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(2); // First call true, second call false
+        // It finds the queue NOT empty...
         expect(mockLogger.debug).toHaveBeenCalledWith('Queue not empty, retrieving next entity.'); // Log from second call
         // It gets the next entity...
         expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
@@ -313,7 +311,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
         expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() initiating...');
         expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Called in the advanceTurn call
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Attempting to start a new round.');
+        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Preparing for new round or stopping.'); // <<< Log 1
+        // --- CORRECTED ASSERTION ---
+        expect(mockLogger.info).toHaveBeenCalledWith('Attempting to start a new round.'); // <<< Log 2
+        // --- END CORRECTION ---
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found 1 actors to start the round: ${actor1.id}`));
         expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1); // Attempted
 
@@ -328,7 +329,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
             {
                 message: 'System Error during turn advancement. Stopping game.',
                 type: 'error',
-                details: startRoundError.message // <<< CORRECTED: Expect the original error message
+                details: startRoundError.message
             }
         );
 

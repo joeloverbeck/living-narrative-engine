@@ -1,9 +1,9 @@
 // src/tests/core/turnManager.fixes.test.js
 // --- FILE START (Corrected) ---
 import {jest, describe, beforeEach, afterEach, it, expect} from '@jest/globals';
-import TurnManager from '../../core/turns/turnManager.js';
-import {TURN_ENDED_ID} from "../../core/constants/eventIds.js";
-import {ACTOR_COMPONENT_ID} from '../../types/components.js';
+import TurnManager from '../../../core/turns/turnManager.js';
+import {TURN_ENDED_ID} from "../../../core/constants/eventIds.js";
+import {ACTOR_COMPONENT_ID} from '../../../types/components.js';
 
 
 // Mock Entity structure

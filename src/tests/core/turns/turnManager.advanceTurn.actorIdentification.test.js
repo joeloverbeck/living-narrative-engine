@@ -2,9 +2,9 @@
 // --- FILE START (Corrected) ---
 
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
-import TurnManager from '../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
-import {TURN_ENDED_ID} from "../../core/constants/eventIds.js";
+import TurnManager from '../../../core/turns/turnManager.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../types/components.js';
+import {TURN_ENDED_ID} from "../../../core/constants/eventIds.js";
 
 // --- Mock Dependencies ---
 const mockLogger = {
