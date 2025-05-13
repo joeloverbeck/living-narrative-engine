@@ -11,7 +11,7 @@ import {tokens} from '../../core/config/tokens.js'; // Import tokens
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */ // Still needed for InitializationResult type
-/** @typedef {import('../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 
 // --- Test Suite ---
 describe('GameEngine start() - Successful Initialization via InitializationService', () => {

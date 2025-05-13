@@ -11,7 +11,7 @@ import {tokens} from '../../core/config/tokens.js'; // Import tokens
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */
-/** @typedef {import('../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED: Type import for ITurnManager
+/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED: Type import for ITurnManager
 // --- Refactoring Specific Imports ---
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
 /** @typedef {import('../../core/initializers/services/initializationService.js').InitializationResult} InitializationResult */

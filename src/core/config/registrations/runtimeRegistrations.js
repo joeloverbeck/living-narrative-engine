@@ -19,7 +19,7 @@ import InputSetupService from "../../setup/inputSetupService.js";
 /** @typedef {import('../../../interfaces/coreServices.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../../interfaces/coreServices.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../../interfaces/coreServices.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
+/** @typedef {import('../../turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
 
 /**
  * Registers runtime services like TurnManager and input setup.

@@ -158,7 +158,8 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             console.error('HumanPlayerStrategy Critical: Logger retrieved from context is invalid or incomplete (missing required methods like info, error, debug).');
             throw new Error(errorMsg);
         }
-        return loggerInstance.createChildLogger('HumanPlayerStrategy'); // Create a child logger
+        // FIXED: Return the logger instance directly instead of trying to create a child logger.
+        return loggerInstance;
     }
 
     /**

@@ -16,8 +16,8 @@
 // /** @typedef {import('../../../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../../../core/setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../../../core/turns/turnManager.js').default} TurnManager */
-/** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
-/** @typedef {import('../../../../core/services/turnHandlerResolver.js').default} TurnHandlerResolver */
+/** @typedef {import('../../../../core/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('../../../../core/turns/services/turnHandlerResolver.js').default} TurnHandlerResolver */
 /** @typedef {import('../../../../core/turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
 /** @typedef {import('../../../../core/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {any} AppContainer */
@@ -56,7 +56,7 @@ jest.mock('../../../../core/worldContext.js');
 jest.mock('../../../../core/turns/order/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
 jest.mock('../../../../systems/actionDiscoverySystem.js'); // Mocking ActionDiscoverySystem
-jest.mock('../../../../core/services/turnHandlerResolver.js');
+jest.mock('../../../../core/turns/services/turnHandlerResolver.js');
 
 
 // --- Import AFTER mocking ---
@@ -70,7 +70,7 @@ import GameStateManagerMock from '../../../../core/worldContext.js';
 import {TurnOrderService as TurnOrderServiceMock} from '../../../../core/turns/order/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
 import {ActionDiscoverySystem as ActionDiscoverySystemMock} from '../../../../systems/actionDiscoverySystem.js';
-import TurnHandlerResolverMock from '../../../../core/services/turnHandlerResolver.js';
+import TurnHandlerResolverMock from '../../../../core/turns/services/turnHandlerResolver.js';
 // REMOVED: GameLoop import not needed
 // import GameLoop from '../../../../core/gameLoop.js';
 

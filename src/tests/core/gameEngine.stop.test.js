@@ -15,7 +15,7 @@ import {tokens} from '../../core/config/tokens.js'; // <<< ADDED: Import tokens
 /** @typedef {import('../../core/shutdown/services/shutdownService.js').default} ShutdownService */
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED: TurnManager type
+/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED: TurnManager type
 
 // --- Test Suite ---
 describe('GameEngine stop()', () => {

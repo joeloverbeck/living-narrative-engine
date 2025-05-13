@@ -15,7 +15,7 @@
 /** @typedef {import('../../../../core/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../../../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../../core/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../../../../core/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('../../../../core/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../../core/turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
 /** @typedef {import('../../../../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../../../core/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */

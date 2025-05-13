@@ -2,15 +2,15 @@
 // --- FILE START ---
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('./interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
-/** @typedef {import('../interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
+/** @typedef {import('./interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
+/** @typedef {import('./interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
 /** @typedef {import('../types/eventTypes.js').SystemEventPayloads} SystemEventPayloads */
 
-/** @typedef {import('../interfaces/ITurnManager.js').ITurnManager} ITurnManagerInterface */
+/** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManagerInterface */
 
 // Import the necessary component ID constants
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';

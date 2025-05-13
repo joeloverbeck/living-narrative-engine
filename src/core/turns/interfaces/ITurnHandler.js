@@ -1,7 +1,7 @@
 // src/core/interfaces/ITurnHandler.js
 // --- FILE START (Entire file content as requested) ---
 
-/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../entities/entity.js').default} Entity */
 
 /**
  * @interface ITurnHandler

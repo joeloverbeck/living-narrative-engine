@@ -6,7 +6,7 @@
 /** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 // REMOVED: GameLoop import no longer needed
 // /** @typedef {import('../../gameLoop.js').default} GameLoop */
-/** @typedef {import('../../interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
+/** @typedef {import('../../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
 
 // --- Interface Definition (JSDoc) ---
 /**

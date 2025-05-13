@@ -10,7 +10,7 @@ import {tokens} from '../../core/config/tokens.js'; // <<< IMPORTED
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 // GameLoop type import is still useful for the mock object itself
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */
-/** @typedef {import('../../core/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
+/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
 // --- Refactoring Specific Imports ---
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
 /** @typedef {import('../../core/initializers/services/initializationService.js').InitializationResult} InitializationResult */ // Added for clarity

@@ -9,8 +9,8 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
+/** @typedef {import('../../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+/** @typedef {import('../../turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */
@@ -23,17 +23,17 @@
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
-/** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler */
-/** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler */
-/** @typedef {import('../../services/turnHandlerResolver.js').default} TurnHandlerResolver */
+/** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler_Concrete */ // Renamed for clarity
+/** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler_Concrete */       // Renamed for clarity
+/** @typedef {import('../../turns/services/turnHandlerResolver.js').default} TurnHandlerResolver */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../../interfaces/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
-/** @typedef {import('../../interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */ // For ITurnContext factory
-/** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */ // For ITurnContext factory return type
+/** @typedef {import('../../turns/interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
+/** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 
 // --- System Imports ---
 import EquipmentEffectSystem from '../../../systems/equipmentEffectSystem.js';
@@ -49,13 +49,13 @@ import OpenableSystem from '../../../systems/openableSystem.js';
 import HealthSystem from '../../../systems/healthSystem.js';
 import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
 import LockSystem from '../../../systems/lockSystem.js';
-import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js'; // Concrete Class Import
+import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turns/turnManager.js';
 
 // --- Handler & Resolver Imports ---
-import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js'; // Concrete class
-import AITurnHandler from '../../turns/handlers/aiTurnHandler.js'; // Concrete class
-import TurnHandlerResolver from '../../services/turnHandlerResolver.js'; // Concrete class
+import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js'; // Concrete class for factories
+import AITurnHandler from '../../turns/handlers/aiTurnHandler.js';       // Concrete class for factories
+import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -76,11 +76,11 @@ export function registerCoreSystems(container) {
     /** @type {ILogger} */
     const logger = container.resolve(tokens.ILogger);
 
-    let registrationCount = 0; // Initialize counter
+    let registrationCount = 0;
     logger.info('Core Systems Registration: Starting...');
 
-
     // --- Systems (Tagged as Initializable only) ---
+    // ... (all your existing system registrations remain unchanged here) ...
     registrar.tagged(INITIALIZABLE).single(tokens.EquipmentEffectSystem, EquipmentEffectSystem, [
         tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
     ]);
@@ -176,7 +176,20 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
+
     // --- Turn Handlers, Resolver, and Manager ---
+
+    // Note: The following registrations for PlayerTurnHandler and AITurnHandler
+    // as singletons might still be useful if other parts of your system need to
+    // resolve a specific, shared instance of these handlers for some reason
+    // (e.g., for configuration or direct access outside of the turn loop).
+    // However, the TurnHandlerResolver will now use its own factories to create
+    // *new* instances for each turn. If these tokens are *only* for the resolver,
+    // and the resolver now uses factories, these specific singleton registrations
+    // for the concrete handler types might become optional or could be removed
+    // if they cause confusion. For now, they are left to minimize breaking changes
+    // elsewhere, but the resolver below is changed.
+
     registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) =>
         new PlayerTurnHandler({
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
@@ -186,6 +199,7 @@ export function registerCoreSystems(container) {
             commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
             safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
             subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager))
+            // gameWorldAccess defaults to {} in PlayerTurnHandler constructor, so not explicitly passed here
         })
     );
     logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`);
@@ -193,21 +207,53 @@ export function registerCoreSystems(container) {
 
     registrar.singletonFactory(tokens.AITurnHandler, (c) => new AITurnHandler({
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-        actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (c.resolve(tokens.IActionDiscoverySystem)),
-        validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-        worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+        // Dependencies for AITurnHandler based on its constructor in aiTurnHandler.js:
+        gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)), // Assuming IWorldContext for gameWorldAccess
         turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort))
+        // Other dependencies like commandProcessor, actionDiscoverySystem, etc.,
+        // were in the original registration but are not in AITurnHandler's current constructor.
+        // Added them back based on original registration as they might be used by a fuller AI implementation.
+        // If AITurnHandler.js is updated to use them, uncomment. For now, matching its actual constructor:
+        // commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
+        // actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (c.resolve(tokens.IActionDiscoverySystem)),
+        // validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
     }));
     logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
     registrationCount++;
 
-    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => new TurnHandlerResolver({
-        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        playerTurnHandler: /** @type {PlayerTurnHandler} */ (c.resolve(tokens.PlayerTurnHandler)),
-        aiTurnHandler: /** @type {AITurnHandler} */ (c.resolve(tokens.AITurnHandler))
-    }));
-    logger.debug(`Core Systems Registration: Registered ${tokens.TurnHandlerResolver}.`);
+    // ****** MODIFIED SECTION START ******
+    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => {
+        // Define factory functions that will create NEW instances of handlers
+        const createPlayerHandlerFactory = () => new PlayerTurnHandler({
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
+            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
+            playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
+            commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
+            safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
+            subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
+            // PlayerTurnHandler's constructor has `gameWorldAccess = {}` as a default.
+            // If you want to inject a specific instance, resolve it here:
+            // gameWorldAccess: c.resolve(tokens.YourGameWorldAccessToken),
+        });
+
+        const createAiHandlerFactory = () => new AITurnHandler({
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            // AITurnHandler's constructor has `gameWorldAccess = {}` as a default.
+            // The original registration passed IWorldContext for this.
+            gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
+            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
+            // Add other dependencies here if AITurnHandler's constructor changes
+        });
+
+        return new TurnHandlerResolver({
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            createPlayerTurnHandler: createPlayerHandlerFactory,
+            createAiTurnHandler: createAiHandlerFactory
+        });
+    });
+    // ****** MODIFIED SECTION END ******
+    logger.debug(`Core Systems Registration: Registered ${tokens.TurnHandlerResolver} (with handler factories).`);
     registrationCount++;
 
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
@@ -215,17 +261,17 @@ export function registerCoreSystems(container) {
         entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
         dispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-        turnHandlerResolver: /** @type {TurnHandlerResolver} */ (c.resolve(tokens.TurnHandlerResolver))
+        turnHandlerResolver: /** @type {TurnHandlerResolver} */ (c.resolve(tokens.TurnHandlerResolver)) // Resolves the resolver configured with factories
     }));
     logger.debug(`Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
     // --- Provider for current ITurnContext (Transient) ---
-    // This factory is called every time ITurnContext is resolved.
+    // ... (this part remains unchanged) ...
     container.register(
         tokens.ITurnContext,
-        (c) => { // c is the AppContainer instance
-            const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger)); // Resolve logger for this factory
+        (c) => {
+            const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
             const turnManager = /** @type {ITurnManager | null} */ (c.resolve(tokens.ITurnManager));
 
             if (!turnManager) {
@@ -236,16 +282,13 @@ export function registerCoreSystems(container) {
             const activeHandler = turnManager.getActiveTurnHandler();
             if (activeHandler && typeof activeHandler.getTurnContext === 'function') {
                 const context = activeHandler.getTurnContext();
-                // localLogger.debug(`ITurnContext Factory: Resolved active context for actor: ${context?.getActor()?.id ?? 'N/A'}`);
                 return context;
             } else if (activeHandler) {
                 localLogger.warn(`ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`);
-            } else {
-                // localLogger.debug(`ITurnContext Factory: No active turn handler found. Returning null.`);
             }
             return null;
         },
-        {lifecycle: 'transient'} // Ensures this factory is called every time
+        {lifecycle: 'transient'}
     );
     logger.debug(`Core Systems Registration: Registered transient factory for ${tokens.ITurnContext}.`);
     registrationCount++;

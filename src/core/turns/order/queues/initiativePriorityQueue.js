@@ -7,12 +7,12 @@
  */
 
 import TinyQueue from 'tinyqueue';
-import {ITurnOrderQueue} from '../../../interfaces/ITurnOrderQueue.js';
+import {ITurnOrderQueue} from '../../interfaces/ITurnOrderQueue.js';
 
 // --- Type Imports ---
 /**
  * Represents an entity in the game. Expected to have at least an 'id' property.
- * @typedef {import('../../../interfaces/ITurnOrderQueue.js').Entity} Entity
+ * @typedef {import('../../interfaces/ITurnOrderQueue.js').Entity} Entity
  */
 
 /**

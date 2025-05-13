@@ -1,6 +1,6 @@
 // src/core/interfaces/ITurnHandlerResolver.js
 
-/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../entities/entity.js').default} Entity */
 /** @typedef {import('./ITurnHandler.js').ITurnHandler} ITurnHandler */
 
 // --- ITurnHandlerResolver ---

@@ -4,7 +4,7 @@
 /** @typedef {import('./config/appContainer.js').default} AppContainer */
 // GameLoop import removed as it's no longer directly referenced or returned
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED for start/stop
+/** @typedef {import('./turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED for start/stop
 // --- Refactoring: Import new services ---
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Keep for local resolution in start/stop
 /** @typedef {import('./initializers/services/initializationService.js').default} InitializationService */
