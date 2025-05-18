@@ -141,7 +141,7 @@ describe('ActionButtonsRenderer', () => {
         docContext = new DocumentContext(document);
 
         mockLogger = new ConsoleLogger();
-        mockVed = new ValidatedEventDispatcher({});
+        mockVed = new ValidatedEventDispatcher({}); // VED mock instance
 
         mockDomElementFactoryInstance = new DomElementFactory(docContext);
         if (!jest.isMockFunction(mockDomElementFactoryInstance.button)) {
@@ -154,7 +154,6 @@ describe('ActionButtonsRenderer', () => {
             mockDomElementFactoryInstance.create = jest.fn().mockImplementation(tagName => document.createElement(tagName));
         }
 
-        // Directly use document.getElementById for robust fetching in test setup
         actionButtonsContainer = document.getElementById('action-buttons');
 
         const sendButtonElemOriginal = document.getElementById('player-confirm-turn-button');
@@ -162,28 +161,25 @@ describe('ActionButtonsRenderer', () => {
         if (sendButtonElemOriginal && sendButtonElemOriginal.parentNode) {
             sendButtonElemOriginal.parentNode.replaceChild(mockSendButton, sendButtonElemOriginal);
         } else {
-            // This fallback should ideally not be hit if JSDOM structure is as defined
-            console.warn("Original send button not found or parent missing, appending to body.");
             document.body.appendChild(mockSendButton);
         }
 
 
         const commandInputElemOriginal = document.getElementById('command-input');
         commandInputElement = createMockElement(document, 'input', 'command-input');
-        // commandInputElement.type = 'text'; // Already set in createMockElement for input
         if (commandInputElemOriginal && commandInputElemOriginal.parentNode) {
             commandInputElemOriginal.parentNode.replaceChild(commandInputElement, commandInputElemOriginal);
         } else {
-            console.warn("Original command input not found or parent missing, appending to body.");
             document.body.appendChild(commandInputElement);
         }
 
         if (!actionButtonsContainer) {
-            // This error indicates a fundamental problem with JSDOM setup or element ID.
-            throw new Error("Test setup failed: #action-buttons container not found in JSDOM. Check JSDOM structure and element ID.");
+            throw new Error("Test setup failed: #action-buttons container not found in JSDOM.");
         }
 
-        mockVed.subscribe.mockReturnValue({unsubscribe: jest.fn()});
+        // MODIFIED: mockVed.subscribe should return a jest.fn() directly (the UnsubscribeFn)
+        // This is a default mock; specific tests (like dispose) will override this if needed.
+        mockVed.subscribe.mockReturnValue(jest.fn());
         mockVed.dispatchValidated.mockResolvedValue(true);
 
 
@@ -194,7 +190,7 @@ describe('ActionButtonsRenderer', () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        jest.restoreAllMocks(); // Restore all mocks
 
         delete global.document;
         delete global.window;
@@ -202,9 +198,9 @@ describe('ActionButtonsRenderer', () => {
         delete global.HTMLButtonElement;
         delete global.HTMLInputElement;
         if (dom && dom.window && dom.window.document && dom.window.document.body) {
-            dom.window.document.body.innerHTML = '';
+            dom.window.document.body.innerHTML = ''; // Clear body
         }
-        dom = null; // Aid GC
+        dom = null;
         document = null;
     });
 
@@ -225,13 +221,16 @@ describe('ActionButtonsRenderer', () => {
 
     describe('dispose()', () => {
         let rendererForDispose;
-        let mockSubscriptionForDispose;
+        // MODIFIED: This will now be the mock unsubscribe function itself
+        let mockUnsubscribeFunction;
 
         beforeEach(() => {
-            mockSubscriptionForDispose = {unsubscribe: jest.fn()};
-            mockVed.subscribe.mockReturnValue(mockSubscriptionForDispose);
+            // MODIFIED: mockVed.subscribe returns a jest.fn() which is our unsubscribe function
+            mockUnsubscribeFunction = jest.fn();
+            mockVed.subscribe.mockReturnValue(mockUnsubscribeFunction);
 
             rendererForDispose = createRenderer();
+            // Clear mocks for logger for each test in this describe block
             mockLogger.debug.mockClear();
             mockLogger.info.mockClear();
         });
@@ -241,7 +240,8 @@ describe('ActionButtonsRenderer', () => {
 
             rendererForDispose.dispose();
 
-            expect(mockSubscriptionForDispose.unsubscribe).toHaveBeenCalledTimes(1);
+            // MODIFIED: Expect the mock unsubscribe function itself to be called
+            expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Disposing subscriptions.`));
 
             expect(removeListenerFn).toHaveBeenCalledWith('click', expect.any(Function));
@@ -254,6 +254,9 @@ describe('ActionButtonsRenderer', () => {
 
             rendererForDispose.dispose();
 
+            // This expectation depends on RendererBase.dispose() logging '[ClassName] Disposing.'
+            // If RendererBase has a different prefix or log message, this might need adjustment.
+            // Assuming RendererBase also uses this._logPrefix format:
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Disposing.`));
             expect(baseDisposeSpy).toHaveBeenCalled();
 
@@ -264,20 +267,22 @@ describe('ActionButtonsRenderer', () => {
             const removeListenerFn = rendererForDispose.sendButtonElement.removeEventListener;
 
             rendererForDispose.dispose();
-            rendererForDispose.dispose();
+            rendererForDispose.dispose(); // Second call
 
-            expect(mockSubscriptionForDispose.unsubscribe).toHaveBeenCalledTimes(1);
+            // MODIFIED: Expect the mock unsubscribe function itself to be called only once
+            expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
             expect(removeListenerFn).toHaveBeenCalledTimes(1);
 
             expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} ActionButtonsRenderer disposed.`));
+            // Ensure the "disposed" info log is only called once
             const disposeLogCalls = mockLogger.info.mock.calls.filter(call => call[0].includes(`${CLASS_PREFIX} ActionButtonsRenderer disposed.`));
-            expect(disposeLogCalls.length).toBe(1); // This should now pass with the guard in ActionButtonsRenderer.dispose()
+            expect(disposeLogCalls.length).toBe(1);
         });
 
         it('should clear action buttons container and reset internal state', () => {
             if (!actionButtonsContainer) throw new Error("actionButtonsContainer is null in test body for 'should clear action buttons container'");
 
-            const dummyButton = document.createElement('button'); // Use the global document from beforeEach
+            const dummyButton = document.createElement('button');
             actionButtonsContainer.appendChild(dummyButton);
             rendererForDispose.availableActions = [{id: 'test:test', command: 'test'}];
 

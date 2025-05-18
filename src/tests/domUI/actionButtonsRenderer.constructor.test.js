@@ -112,7 +112,8 @@ describe('ActionButtonsRenderer', () => {
         });
 
         // VED spies (re-apply spies on the potentially new mock instance)
-        jest.spyOn(mockVed, 'subscribe').mockReturnValue({unsubscribe: jest.fn()});
+        // MODIFIED: mockVed.subscribe should return a jest.fn() directly (the UnsubscribeFn)
+        jest.spyOn(mockVed, 'subscribe').mockReturnValue(jest.fn());
         jest.spyOn(mockVed, 'dispatchValidated').mockResolvedValue(true);
         jest.spyOn(mockVed, 'unsubscribe'); // Spy on unsubscribe as well
 
@@ -194,9 +195,10 @@ describe('ActionButtonsRenderer', () => {
 
 
         it('should subscribe to VED event textUI:update_available_actions', () => {
-            createRenderer();
+            createRenderer(); // This will call the constructor
             expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
             expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:update_available_actions', expect.any(Function));
+            // This assertion should now pass
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Subscribed to VED event 'textUI:update_available_actions'."));
         });
     }); // End Constructor describe

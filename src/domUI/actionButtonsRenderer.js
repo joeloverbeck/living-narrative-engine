@@ -6,7 +6,9 @@ import {RendererBase} from './rendererBase.js';
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn // ADDED: For type clarity
+ // Remove or comment out IEventSubscription if it's causing confusion here and UnsubscribeFn is the correct contract
+ // @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
  * @typedef {import('../core/interfaces/CommonTypes').NamespacedId} NamespacedId
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  */
@@ -48,7 +50,7 @@ export class ActionButtonsRenderer extends RendererBase {
     #actionButtonsContainer;
     /** @private @type {DomElementFactoryType} */
     #domElementFactory;
-    /** @private @type {Array<IEventSubscription|undefined>} */
+    /** @private @type {Array<UnsubscribeFn|undefined>} */ // MODIFIED: Store UnsubscribeFn directly
     #subscriptions = [];
     /** @private @readonly */
     _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions';
@@ -140,12 +142,20 @@ export class ActionButtonsRenderer extends RendererBase {
             this.logger.error(`${this._logPrefix} ValidatedEventDispatcher not available or 'subscribe' method is missing. Cannot subscribe to events.`);
             return;
         }
-        const subscription = this.validatedEventDispatcher.subscribe(this._EVENT_TYPE_SUBSCRIBED, this.#handleUpdateActions.bind(this));
-        if (subscription && typeof subscription.unsubscribe === 'function') {
-            this.#subscriptions.push(subscription);
+
+        // 'unsubscribeCallback' will be the UnsubscribeFn returned by validatedEventDispatcher.subscribe
+        const unsubscribeCallback = this.validatedEventDispatcher.subscribe(
+            this._EVENT_TYPE_SUBSCRIBED,
+            this.#handleUpdateActions.bind(this)
+        );
+
+        // MODIFIED: Check if the returned value is a function
+        if (typeof unsubscribeCallback === 'function') {
+            this.#subscriptions.push(unsubscribeCallback); // Store the function directly
             this.logger.debug(`${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`);
         } else {
-            this.logger.error(`${this._logPrefix} Failed to subscribe to VED event '${this._EVENT_TYPE_SUBSCRIBED}' or subscription object is invalid.`);
+            // This path should ideally not be taken if validatedEventDispatcher.subscribe correctly returns a function
+            this.logger.error(`${this._logPrefix} Failed to subscribe to VED event '${this._EVENT_TYPE_SUBSCRIBED}'. Expected an unsubscribe function but received:`, unsubscribeCallback);
         }
     }
 
@@ -191,10 +201,7 @@ export class ActionButtonsRenderer extends RendererBase {
         if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
             this.sendButtonElement.disabled = true;
         }
-        // No debug log here if called from dispose, to avoid duplicate logs if dispose also logs.
-        // Or ensure this method is only called from render/constructor for its specific log.
-        // For now, keeping it as it might be relevant for render's debugging.
-        if (!this.#isDisposed) { // Only log if not part of a dispose operation that will log separately
+        if (!this.#isDisposed) {
             this.logger.debug(`${this._logPrefix} Action buttons container cleared, selected action reset, confirm button disabled.`);
         }
     }
@@ -252,7 +259,7 @@ export class ActionButtonsRenderer extends RendererBase {
 
             if (typeof button.addEventListener === 'function') {
                 button.addEventListener('click', () => {
-                    if (this.#isDisposed) return; // Do not process clicks if disposed
+                    if (this.#isDisposed) return;
                     const clickedActionObjectInListener = this.availableActions.find(a => a.id === actionId);
 
                     if (!clickedActionObjectInListener) {
@@ -327,7 +334,6 @@ export class ActionButtonsRenderer extends RendererBase {
         } else if (this.#speechInputElement) {
             this.logger.warn(`${this._logPrefix} Speech input element exists but its value is not a string. Proceeding without speech text.`, {speechInputElement: this.#speechInputElement});
         } else {
-            // Corrected log for when #speechInputElement is null/falsy, and changed to WARN
             this.logger.warn(`${this._logPrefix} No speech input element available. Proceeding without speech text.`, {speechInputElement: this.#speechInputElement});
         }
 
@@ -359,7 +365,6 @@ export class ActionButtonsRenderer extends RendererBase {
                 this.selectedAction = null;
                 if (typeof this.sendButtonElement.disabled === 'boolean') this.sendButtonElement.disabled = true;
             } else {
-                // Changed to ERROR to match test expectation
                 this.logger.error(`${this._logPrefix} Failed to dispatch '${this._PLAYER_TURN_SUBMITTED_EVENT_TYPE}' for action ID '${actionId}'. dispatchValidated returned false.`, {payload: eventPayload});
             }
         } catch (error) {
@@ -375,12 +380,13 @@ export class ActionButtonsRenderer extends RendererBase {
             return;
         }
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
+        this.#subscriptions.forEach(unsubscribeFunc => {
+            // MODIFIED: Call the unsubscribe function directly
+            if (typeof unsubscribeFunc === 'function') {
+                unsubscribeFunc();
             }
         });
-        this.#subscriptions = [];
+        this.#subscriptions = []; // Clear the array
 
         if (this.sendButtonElement && typeof this.sendButtonElement.removeEventListener === 'function' && this.#boundHandleSendAction) {
             this.sendButtonElement.removeEventListener('click', this.#boundHandleSendAction);
