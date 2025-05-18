@@ -93,24 +93,17 @@ export class InputStateController extends RendererBase {
      * @param {DisableInputEvent} event - The full event object ({ type, payload }).
      */
     #handleDisableInput(event) {
-        // *** FIX START ***
-        // Extract payload and type from the event object
         const payload = event.payload;
-        const eventType = event.type; // Use event.type for logging/warnings
+        const eventType = event.type;
 
-        // Default message if payload is missing or message is not a string
-        const defaultMessage = 'Input disabled.';
-        // Use optional chaining (?.) for safer access
+        const defaultMessage = 'Input disabled.'; // Behavior unchanged for disable
         const message = (payload && typeof payload.message === 'string') ? payload.message : defaultMessage;
 
-        // Log warning if the specific message wasn't found
         if (message === defaultMessage) {
-            // Log based on whether payload existed but lacked message, or payload was missing entirely
             if (!payload || typeof payload.message !== 'string') {
                 this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'message' string in payload, using default: "${defaultMessage}"`, {receivedEvent: event});
             }
         }
-        // *** FIX END ***
 
         this.setEnabled(false, message);
     }
@@ -121,23 +114,25 @@ export class InputStateController extends RendererBase {
      * @param {EnableInputEvent} event - The full event object ({ type, payload }).
      */
     #handleEnableInput(event) {
-        // *** FIX START ***
-        // Extract payload and type from the event object
         const payload = event.payload;
-        const eventType = event.type; // Use event.type for logging/warnings
+        const eventType = event.type;
 
         // Default placeholder if payload is missing or placeholder is not a string
-        const defaultPlaceholder = 'Enter command...';
-        // Use optional chaining (?.) for safer access
+        // Ticket 3.1: Changed default placeholder for speech input
+        const defaultPlaceholder = 'Enter speech (optional)...';
         const placeholder = (payload && typeof payload.placeholder === 'string') ? payload.placeholder : defaultPlaceholder;
 
-        // Log warning if the specific placeholder wasn't found
+        // Log warning if the specific placeholder wasn't found and the default was used.
+        // Ticket 3.1: Ensure log message correctly refers to "placeholder" (already does)
+        // and reflects the new default if it's used.
         if (placeholder === defaultPlaceholder) {
+            // This condition means we are using the defaultPlaceholder.
+            // We log a warning specifically if the reason for using the default
+            // is that the payload was missing or didn't contain a valid placeholder string.
             if (!payload || typeof payload.placeholder !== 'string') {
-                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default: "${defaultPlaceholder}"`, {receivedEvent: event});
+                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`, {receivedEvent: event});
             }
         }
-        // *** FIX END ***
 
         this.setEnabled(true, placeholder);
     }
@@ -152,16 +147,13 @@ export class InputStateController extends RendererBase {
      */
     setEnabled(enabled, placeholderText = '') {
         if (!this.#inputElement) {
-            // Should not happen if constructor validation passed
             this.logger.error(`${this._logPrefix} Cannot set input state, internal #inputElement reference is missing.`);
             return;
         }
 
-        // Ensure types are correct before assignment
-        const isDisabled = !Boolean(enabled); // Explicitly convert to boolean
-        const placeholder = String(placeholderText); // Explicitly convert to string
+        const isDisabled = !Boolean(enabled);
+        const placeholder = String(placeholderText);
 
-        // Only update DOM if the state actually changes
         if (this.#inputElement.disabled !== isDisabled) {
             this.#inputElement.disabled = isDisabled;
             this.logger.debug(`${this._logPrefix} Input ${isDisabled ? 'disabled' : 'enabled'}.`);
@@ -183,7 +175,7 @@ export class InputStateController extends RendererBase {
                 sub.unsubscribe();
             }
         });
-        this.#subscriptions = []; // Clear the array
-        super.dispose(); // Calls logger.debug in base class
+        this.#subscriptions = [];
+        super.dispose();
     }
 }
