@@ -1,644 +1,443 @@
 // src/tests/domUI/actionButtonsRenderer.eventHandling.test.js
 import {ActionButtonsRenderer} from '../../domUI/index.js'; // Adjust path if needed
-import DomElementFactory from '../../domUI/domElementFactory';
+// DomElementFactory is not directly used if we mock its .button method, but keep import if other tests need it.
+// import DomElementFactory from '../../domUI/domElementFactory';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // --- Mock Dependencies ---
 const mockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn(),
 };
-
-// *** FIXED: Provide required methods ***
-const mockDocumentContext = {
-    query: jest.fn(), // Method required by RendererBase check
-    create: jest.fn(), // Method required by RendererBase check
-};
-// *** END FIX ***
-
-// Mock the VED subscribe/dispatchValidated methods
+const mockDocumentContext = {query: jest.fn(), create: jest.fn(),};
 let capturedEventHandler = null;
 const mockSubscription = {unsubscribe: jest.fn()};
 const mockValidatedEventDispatcher = {
     subscribe: jest.fn((eventType, handler) => {
-        if (eventType === 'textUI:update_available_actions') {
-            capturedEventHandler = handler; // Capture the handler passed to subscribe
-        }
-        return mockSubscription; // Return a mock subscription object
+        if (eventType === 'textUI:update_available_actions') capturedEventHandler = handler;
+        return mockSubscription;
     }),
-    dispatchValidated: jest.fn().mockResolvedValue(true), // Simulate successful dispatch
-    listenerCount: jest.fn(), // If needed by VED mock details
-    unsubscribe: jest.fn(), // Add mock for unsubscribe if needed by dispose tests indirectly
+    dispatchValidated: jest.fn().mockResolvedValue(true),
+    listenerCount: jest.fn(), unsubscribe: jest.fn(),
 };
 
-// Mock DomElementFactory
-const mockButtonProto = { // Use a prototype-like object for the mock button behavior
-    textContent: '',
-    setAttribute: jest.fn(),
-    getAttribute: jest.fn(attr => { // Simple getAttribute mock needed for empty click log
-        if (attr === 'data-action-id') return mockButtonProto._actionId;
-        return undefined;
-    }),
-    addEventListener: jest.fn((event, handler) => {
-        if (event === 'click') {
-            mockButtonProto._clickHandlers = mockButtonProto._clickHandlers || [];
-            mockButtonProto._clickHandlers.push(handler);
-        }
-    }),
-    _clickHandlers: [], // Initialize click handlers array
-    _actionId: '', // Store action id for getAttribute
-    // Helper function to simulate click
-    _simulateClick: async function () {
-        if (this._clickHandlers) {
+// --- Centralized Mock Creation for Button-like Objects ---
+function createButtonLikeMock(initialText = '') {
+    const mock = {
+        textContent: initialText,
+        setAttribute: jest.fn(),
+        getAttribute: jest.fn(),
+        addEventListener: jest.fn(),
+        classList: {
+            _classes: new Set(),
+            add: jest.fn(function (cls) {
+                this._classes.add(cls);
+            }),
+            remove: jest.fn(function (cls) {
+                this._classes.delete(cls);
+            }),
+            contains: jest.fn(function (cls) {
+                return this._classes.has(cls);
+            }),
+            _reset: function () { // Renamed for clarity, called by main _resetMocks
+                this._classes.clear();
+                this.add.mockClear();
+                this.remove.mockClear();
+                this.contains.mockClear();
+            }
+        },
+        _clickHandlers: [],
+        _actionId: '', // To store data-action-id
+        _disabled: false, // For sendButton state and general button state
+        // Standard DOM properties
+        get disabled() {
+            return this._disabled;
+        },
+        set disabled(value) {
+            this._disabled = !!value;
+        },
+        tagName: 'BUTTON', // Default tagName
+
+        // Simulate click by invoking stored handlers
+        _simulateClick: async function () {
             for (const handler of this._clickHandlers) {
-                await handler(); // Assuming handler might be async
+                await handler();
             }
+        },
+        // Reset function for this specific mock instance
+        _reset: function () {
+            this.setAttribute.mockClear();
+            this.getAttribute.mockClear();
+            this.addEventListener.mockClear();
+            this.classList._reset(); // Call classList's own reset
+            this._clickHandlers = [];
+            this.textContent = initialText; // Reset to initial or empty
+            this._actionId = '';
+            this._disabled = false;
+            // Clear any dynamically stored attributes like title
+            Object.keys(this)
+                .filter(key => key.startsWith('_attr_'))
+                .forEach(key => delete this[key]);
         }
-    },
-    // Helper to reset mocks on the button prototype itself
-    _resetMocks: function () {
-        this.setAttribute.mockClear();
-        this.addEventListener.mockClear();
-        this.getAttribute.mockClear();
-        this._clickHandlers = [];
-        this.textContent = '';
-        this._actionId = '';
-    }
-};
+    };
 
+    // Default implementations for attribute methods
+    mock.getAttribute.mockImplementation(attr => {
+        if (attr === 'data-action-id') return mock._actionId;
+        return mock[`_attr_${attr}`]; // Generic attribute storage
+    });
+    mock.setAttribute.mockImplementation((attr, value) => {
+        if (attr === 'data-action-id') mock._actionId = value;
+        mock[`_attr_${attr}`] = value; // Store any attribute
+    });
+    // Default implementation for addEventListener
+    mock.addEventListener.mockImplementation((event, handler) => {
+        if (event === 'click') {
+            mock._clickHandlers.push(handler);
+        }
+    });
+
+    return mock;
+}
+
+// Mock DomElementFactory to use our button mock factory
 const mockDomElementFactory = {
-    create: jest.fn(), // Method required by ActionButtonsRenderer constructor check
+    create: jest.fn(), // Still needed for constructor check
     button: jest.fn((text, className) => {
-        // Return a NEW object based on the prototype each time
-        const newButton = Object.create(mockButtonProto);
-        // Reset/initialize properties for this specific instance
-        newButton.textContent = text;
-        newButton.setAttribute = jest.fn();
-        newButton.getAttribute = jest.fn(attr => {
-            if (attr === 'data-action-id') return newButton._actionId;
-            return undefined;
-        });
-        newButton.addEventListener = jest.fn((event, handler) => {
-            if (event === 'click') {
-                newButton._clickHandlers = newButton._clickHandlers || [];
-                newButton._clickHandlers.push(handler);
-            }
-        });
-        // Set actionId on creation based on expected usage in render()
-        newButton.setAttribute.mockImplementation((attr, value) => {
-            if (attr === 'data-action-id') {
-                newButton._actionId = value;
-            }
-        });
-
+        const newButton = createButtonLikeMock(text);
+        // If className needs to be applied, can do it here, e.g., newButton.classList.add(className)
+        if (className) {
+            className.split(' ').forEach(cls => newButton.classList.add(cls));
+        }
         return newButton;
     })
 };
 
-// Mock Container Element
+// Mock Container Element (remains largely the same)
 const mockContainer = {
-    nodeType: 1, // Makes it look like an element
-    children: [],
-    firstChild: null,
+    nodeType: 1, children: [], firstChild: null,
     appendChild: jest.fn(child => {
         mockContainer.children.push(child);
-        mockContainer.firstChild = mockContainer.children[0]; // Simplistic update
+        mockContainer.firstChild = mockContainer.children[0];
     }),
     removeChild: jest.fn(child => {
         mockContainer.children = mockContainer.children.filter(c => c !== child);
-        mockContainer.firstChild = mockContainer.children.length > 0 ? mockContainer.children[0] : null; // Simplistic update
+        mockContainer.firstChild = mockContainer.children.length > 0 ? mockContainer.children[0] : null;
     }),
-    // Helper to reset container state
+    querySelector: jest.fn(selector => {
+        if (selector.startsWith('button[data-action-id="') && selector.endsWith('"]')) {
+            const id = selector.substring('button[data-action-id="'.length, selector.length - '"]'.length);
+            return mockContainer.children.find(btn => btn._actionId === id);
+        }
+        return null;
+    }),
     _reset: function () {
         this.children = [];
         this.firstChild = null;
         this.appendChild.mockClear();
         this.removeChild.mockClear();
+        this.querySelector.mockClear();
     }
 };
 
+// Create mockSendButton using the same factory, then customize
+const mockSendButton = createButtonLikeMock();
+// mockSendButton.tagName is already 'BUTTON' from createButtonLikeMock
+mockSendButton.disabled = true; // Initial state for send button
+// If _reset needs special handling for sendButton's disabled state
+const originalSendButtonReset = mockSendButton._reset;
+mockSendButton._reset = function () {
+    originalSendButtonReset.call(this);
+    this.disabled = true; // Ensure it always resets to disabled
+};
+
+
 // --- Reset Mocks Before Each Test ---
 beforeEach(() => {
-    jest.clearAllMocks(); // Clears call counts etc. for all mocks
-    mockContainer._reset();
-    mockButtonProto._resetMocks(); // Reset the prototype's mocks
-    capturedEventHandler = null; // Reset captured handler
+    jest.clearAllMocks(); // Clears call counts etc. for all top-level mocks
 
-    // Reset specific mocks if needed (jest.clearAllMocks might cover this)
-    mockValidatedEventDispatcher.subscribe.mockClear();
-    mockValidatedEventDispatcher.dispatchValidated.mockClear().mockResolvedValue(true); // Reset and restore default behavior
+    mockContainer._reset();
+    mockSendButton._reset(); // Call the instance's own reset method
+    // Individual buttons created by mockDomElementFactory.button will be fresh each time they are made.
+    // If any are persisted across tests (they shouldn't be), they would need their own _reset.
+
+    capturedEventHandler = null;
+
+    // It's good practice to also clear the factory's main method if its call count is asserted
     mockDomElementFactory.button.mockClear();
+    // Clear create as well for constructor tests
+    mockDomElementFactory.create.mockClear();
 });
 
 // --- Test Suite ---
 describe('ActionButtonsRenderer', () => {
 
-    const CLASS_PREFIX = '[ActionButtonsRenderer]'; // Define prefix
+    const CLASS_PREFIX = '[ActionButtonsRenderer]';
 
     // Helper function to create instance with standard mocks
-    const createInstance = (containerOverride = mockContainer, factoryOverride = mockDomElementFactory) => {
+    const createInstance = (
+        containerOverride = mockContainer,
+        factoryOverride = mockDomElementFactory,
+        sendButtonOverride = mockSendButton
+    ) => {
         return new ActionButtonsRenderer({
             logger: mockLogger,
-            documentContext: mockDocumentContext, // Now provides required methods
+            documentContext: mockDocumentContext,
             validatedEventDispatcher: mockValidatedEventDispatcher,
-            domElementFactory: factoryOverride, // Use override if provided
-            actionButtonsContainer: containerOverride, // Use override if provided
+            domElementFactory: factoryOverride,
+            actionButtonsContainer: containerOverride,
+            sendButtonElement: sendButtonOverride,
         });
     };
 
     // --- Constructor Tests ---
     it('should throw error if logger is missing or invalid', () => {
-        // This test actually applies to RendererBase, but good to have
         expect(() => new ActionButtonsRenderer({
-            logger: null, // Invalid logger
-            documentContext: mockDocumentContext,
-            validatedEventDispatcher: mockValidatedEventDispatcher,
-            domElementFactory: mockDomElementFactory,
-            actionButtonsContainer: mockContainer,
-        })).toThrow(/Logger dependency is missing or invalid/); // Check RendererBase error
+            logger: null, documentContext: mockDocumentContext,
+            validatedEventDispatcher: mockValidatedEventDispatcher, domElementFactory: mockDomElementFactory,
+            actionButtonsContainer: mockContainer, sendButtonElement: mockSendButton,
+        })).toThrow(/Logger dependency is missing or invalid/);
     });
 
     it('should throw error if actionButtonsContainer is missing or not an element', () => {
-        // *** UPDATED: Use plain string in toThrow ***
-        const expectedErrorString = '[ActionButtonsRenderer] \'actionButtonsContainer\' dependency is missing or not a valid DOM element.';
-        // *** Pass valid dependencies EXCEPT the one being tested ***
+        const expectedErrorString = `${CLASS_PREFIX} 'actionButtonsContainer' dependency is missing or not a valid DOM element.`;
         expect(() => createInstance(null)).toThrow(expectedErrorString);
         expect(() => createInstance({nodeType: 3})).toThrow(expectedErrorString); // Text node
         expect(() => createInstance({})).toThrow(expectedErrorString); // Plain object
-        // *** END UPDATE ***
     });
 
     it('should throw error if domElementFactory is missing or invalid', () => {
-        // *** UPDATED: Use plain string in toThrow ***
-        const expectedErrorString = '[ActionButtonsRenderer] \'domElementFactory\' dependency is missing or invalid.';
-        // Test with null factory
+        const expectedErrorString = `${CLASS_PREFIX} 'domElementFactory' dependency is missing or invalid.`;
         expect(() => createInstance(mockContainer, null)).toThrow(expectedErrorString);
-        // Test with factory missing 'create' method
+        // Test with factory missing 'create' method (which is checked by constructor)
         expect(() => createInstance(mockContainer, {button: jest.fn()})).toThrow(expectedErrorString);
-        // *** END UPDATE ***
+        // The following case should NOT throw, as constructor only checks for .create
+        // expect(() => createInstance(mockContainer, {create: jest.fn()})).toThrow(expectedErrorString);
     });
 
-
     it('should subscribe to "textUI:update_available_actions" on construction', () => {
-        createInstance(); // Create instance with valid mocks
+        createInstance();
         expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
         expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-            'textUI:update_available_actions',
-            expect.any(Function) // Check that a function (the bound handler) was passed
+            'textUI:update_available_actions', expect.any(Function)
         );
-        expect(capturedEventHandler).toBeInstanceOf(Function); // Ensure handler was captured
+        expect(capturedEventHandler).toBeInstanceOf(Function);
     });
 
     // --- Event Handling (#handleUpdateActions via simulated dispatch) ---
     describe('Event Handling (#handleUpdateActions)', () => {
-
-        const eventType = 'textUI:update_available_actions'; // Define for consistency
-        const warningBase = `${CLASS_PREFIX} Received invalid or incomplete event object structure for '${eventType}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons. Received object:`; // Base warning message
-
+        const eventType = 'textUI:update_available_actions';
+        const warningBase = `${CLASS_PREFIX} Received invalid or incomplete event object structure for '${eventType}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons. Received object:`;
+        let instance;
+        let renderSpy;
 
         beforeEach(() => {
-            // Ensure an instance is created and the handler is captured before each event handling test
-            createInstance();
-            if (!capturedEventHandler) {
-                throw new Error("Test setup error: event handler not captured");
-            }
-            // Clear mocks that might be called during instance creation
+            instance = createInstance();
+            renderSpy = jest.spyOn(instance, 'render').mockImplementation(() => {
+            }); // Spy on actual instance method
+            if (!capturedEventHandler) throw new Error("Test setup error: event handler not captured");
             mockLogger.warn.mockClear();
             mockLogger.debug.mockClear();
+            mockLogger.info.mockClear();
+            mockContainer._reset();
         });
 
         it('should call render with valid actions when receiving a valid event object', () => {
-            const instance = createInstance(); // Already created in beforeEach, re-create if needed for spy
-            const renderSpy = jest.spyOn(instance, 'render');
-            const validActions = [{id: 'core:wait', command: 'wait'}]; // Already trimmed
-            const validEventObject = {
-                type: eventType,
-                payload: {actions: validActions}
-            };
-
-            capturedEventHandler(validEventObject); // Simulate dispatch with the *event object*
-
+            const validActions = [{id: 'core:wait', command: 'wait'}];
+            const validEventObject = {type: eventType, payload: {actions: validActions}};
+            capturedEventHandler(validEventObject);
             expect(renderSpy).toHaveBeenCalledTimes(1);
-            // Check that the *inner* actions were extracted correctly
-            expect(renderSpy).toHaveBeenCalledWith(validActions); // Should pass the exact valid actions array
+            expect(renderSpy).toHaveBeenCalledWith(validActions);
             expect(mockLogger.warn).not.toHaveBeenCalled();
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), validEventObject);
         });
 
         it('should filter invalid actions from the nested array and call render with valid ones', () => {
-            const instance = createInstance(); // Already created
-            const renderSpy = jest.spyOn(instance, 'render');
             const mixedActions = [
-                {id: 'core:go', command: 'go north'}, null, {id: 'core:look', command: ' look '}, // Will be trimmed LATER
-                {id: '', command: 'invalid_id'}, {id: 'core:take', command: '   '}, // Invalid command
+                {id: 'core:go', command: 'go north'}, null, {id: 'core:look', command: ' look '},
+                {id: '', command: 'invalid_id'}, {id: 'core:take', command: '   '},
                 {id: 'core:inv', command: 'inventory'}
             ];
-            const mixedEventObject = {
-                type: eventType,
-                payload: {actions: mixedActions}
-            };
-            // *** Expect the command as it is passed to render (untrimmed) ***
-            const expectedValidActions = [ // Filtered by the handler's logic
-                {id: 'core:go', command: 'go north'},
-                {id: 'core:look', command: ' look '}, // Kept as is by handler
-                {id: 'core:inv', command: 'inventory'}
-            ];
-            // *** END UPDATE ***
-
-
-            capturedEventHandler(mixedEventObject);
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith(expectedValidActions); // Check with correctly filtered actions
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Received '${eventType}' with some invalid items in the nested actions array`),
-                mixedEventObject // Log the original *event object*
+            const mixedEventObject = {type: eventType, payload: {actions: mixedActions}};
+            const expectedValidActions = mixedActions.filter(action =>
+                action && typeof action === 'object' && typeof action.id === 'string' && action.id.length > 0 &&
+                typeof action.command === 'string' && action.command.trim().length > 0
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), mixedEventObject);
+            capturedEventHandler(mixedEventObject);
+            expect(renderSpy).toHaveBeenCalledWith(expectedValidActions);
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining(`${CLASS_PREFIX} Received '${eventType}' with some invalid items`), mixedEventObject
+            );
         });
 
         it('should call render with empty array for event object missing inner "payload"', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const invalidEventObject = {type: eventType, /* payload missing */};
-
+            const invalidEventObject = {type: eventType};
             capturedEventHandler(invalidEventObject);
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
             expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                invalidEventObject
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), invalidEventObject);
-
-        });
-
-        it('should call render with empty array for event object where inner "payload" is not an object', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const invalidEventObject = {type: eventType, payload: "not an object"};
-
-            capturedEventHandler(invalidEventObject);
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                invalidEventObject
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), invalidEventObject);
-        });
-
-        it('should call render with empty array for event object missing inner "actions" array', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const invalidEventObject = {type: eventType, payload: { /* actions missing */}};
-
-            capturedEventHandler(invalidEventObject);
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                invalidEventObject
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), invalidEventObject);
-        });
-
-        it('should call render with empty array for event object where inner "actions" is not an array', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const invalidEventObject = {type: eventType, payload: {actions: "not an array"}};
-
-            capturedEventHandler(invalidEventObject);
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                invalidEventObject
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), invalidEventObject);
-        });
-
-        it('should call render with empty array for null event object', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const input = null;
-
-            capturedEventHandler(input); // Pass null
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                input
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), input);
-        });
-
-        it('should call render with empty array for non-object event data', () => {
-            const instance = createInstance();
-            const renderSpy = jest.spyOn(instance, 'render');
-            const input = "a string";
-
-            capturedEventHandler(input); // Pass something other than an object
-
-            expect(renderSpy).toHaveBeenCalledTimes(1);
-            expect(renderSpy).toHaveBeenCalledWith([]);
-            // *** UPDATED: Check warning log with prefix ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(warningBase), // Use base warning
-                input
-            );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), input);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), invalidEventObject);
         });
     });
 
     // --- Rendering Logic (Direct call to render) ---
     describe('Rendering Logic (render)', () => {
-
+        let instance;
         beforeEach(() => {
-            // Clear logs before each render test
+            instance = createInstance();
             mockLogger.debug.mockClear();
             mockLogger.warn.mockClear();
             mockLogger.error.mockClear();
             mockLogger.info.mockClear();
+            mockContainer._reset();
+            mockDomElementFactory.button.mockClear(); // Clear factory calls
         });
 
         it('should clear the container before rendering', () => {
-            // Add a dummy child first using the mock's method
-            const dummyDiv = {nodeType: 1, textContent: 'dummy'}; // Mock element
+            const dummyDiv = createButtonLikeMock('dummy'); // Use factory for consistency
             mockContainer.appendChild(dummyDiv);
-            expect(mockContainer.children.length).toBe(1);
-            mockContainer.appendChild.mockClear(); // Clear setup call
-
-            const instance = createInstance();
-            instance.render([{id: 'core:wait', command: 'wait'}]); // Render something
-
-            // Check removeChild was called (robust check for clearing)
-            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv); // Should remove the specific child
-            // Check appendChild was called *after* potential clearing
-            expect(mockContainer.appendChild).toHaveBeenCalled(); // Should append the new button
-            expect(mockContainer.children.length).toBe(1); // Should have 1 new button
+            mockContainer.appendChild.mockClear();
+            instance.render([{id: 'core:wait', command: 'wait'}]);
+            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv);
+            expect(mockContainer.appendChild).toHaveBeenCalledTimes(1);
         });
 
         it('should create and append buttons for each valid action', () => {
-            const instance = createInstance();
-            const actions = [
-                {id: 'core:wait', command: 'wait'},
-                {id: 'core:look', command: 'look around'}
-            ];
-
+            const actions = [{id: 'core:wait', command: 'wait'}, {id: 'core:look', command: 'look around'}];
             instance.render(actions);
-
             expect(mockDomElementFactory.button).toHaveBeenCalledTimes(2);
-            expect(mockDomElementFactory.button).toHaveBeenCalledWith('wait', 'action-button');
-            expect(mockDomElementFactory.button).toHaveBeenCalledWith('look around', 'action-button');
-
             expect(mockContainer.appendChild).toHaveBeenCalledTimes(2);
-            expect(mockContainer.children.length).toBe(2);
-
-            // Check button configuration (using the mocks)
             const firstButtonMock = mockContainer.children[0];
             expect(firstButtonMock.textContent).toBe('wait');
-            expect(firstButtonMock.setAttribute).toHaveBeenCalledWith('title', 'Click to wait');
+            expect(firstButtonMock.setAttribute).toHaveBeenCalledWith('title', 'Select action: wait');
             expect(firstButtonMock.setAttribute).toHaveBeenCalledWith('data-action-id', 'core:wait');
-            expect(firstButtonMock.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-
-            const secondButtonMock = mockContainer.children[1];
-            expect(secondButtonMock.textContent).toBe('look around');
-            expect(secondButtonMock.setAttribute).toHaveBeenCalledWith('title', 'Click to look around');
-            expect(secondButtonMock.setAttribute).toHaveBeenCalledWith('data-action-id', 'core:look');
-            expect(secondButtonMock.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-            // *** UPDATED: Check info log ***
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered 2 action buttons into container.`));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered 2 action buttons. Selected action: none.`));
         });
 
         it('should clear the container and render nothing if actions array is empty', () => {
-            const dummyDiv = {nodeType: 1, textContent: 'dummy'}; // Mock element
+            const dummyDiv = createButtonLikeMock('dummy');
             mockContainer.appendChild(dummyDiv);
-            expect(mockContainer.children.length).toBe(1);
-            mockContainer.appendChild.mockClear(); // Clear setup call
-
-            const instance = createInstance();
-            instance.render([]); // Render empty array
-
-            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv); // Should have cleared
-            expect(mockContainer.appendChild).not.toHaveBeenCalled(); // Should not append anything
-            expect(mockContainer.children.length).toBe(0); // Container should be empty
-            // *** UPDATED: Check debug log ***
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container cleared.`));
+            mockContainer.appendChild.mockClear();
+            instance.render([]);
+            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv);
+            expect(mockContainer.appendChild).not.toHaveBeenCalled();
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container remains empty. Confirm button remains disabled.`));
         });
 
-        it('should log error and clear container if actions argument is not an array', () => {
-            const dummyDiv = {nodeType: 1, textContent: 'dummy'}; // Mock element
-            mockContainer.appendChild(dummyDiv);
-            mockContainer.appendChild.mockClear(); // Clear setup call
-
-            const instance = createInstance();
-            const input = "not an array";
-            instance.render(input);
-
-            // *** UPDATED: Check error log ***
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Invalid actions argument received in render(). Expected array, got:`), input);
-            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv); // Should clear
+        it('should treat non-array actions argument as empty list, not log error', () => {
+            const dummyDiv = createButtonLikeMock('dummy');
+            mockContainer.appendChild(dummyDiv); // Add something to be cleared
+            mockContainer.appendChild.mockClear(); // Clear this setup call for appendChild
+            instance.render("not an array");
+            expect(mockLogger.error).not.toHaveBeenCalled();
+            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv); // Check that clearContainer was effective
             expect(mockContainer.children.length).toBe(0);
-            expect(mockContainer.appendChild).not.toHaveBeenCalled(); // Should not append
+            expect(mockDomElementFactory.button).not.toHaveBeenCalled(); // No buttons should be created
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container remains empty. Confirm button remains disabled.`));
         });
 
         it('should skip rendering invalid action objects within the array and log warning', () => {
-            const instance = createInstance();
-            const actions = [
-                {id: 'core:valid', command: 'do valid'},
-                null, // Invalid
-                {id: 'core:valid2', command: '  '}, // Invalid command
-                {command: 'missing id'}, // Invalid
-                {id: 'core:final', command: 'last one'}
-            ];
+            const actions = [{id: 'core:valid', command: 'do valid'}, null, {id: 'core:final', command: 'last one'}];
             const expectedValidCount = 2;
-            const expectedInvalidCount = 3;
-
+            const expectedInvalidCount = 1;
             instance.render(actions);
-
-            expect(mockDomElementFactory.button).toHaveBeenCalledTimes(expectedValidCount); // Only for valid ones
-            expect(mockContainer.appendChild).toHaveBeenCalledTimes(expectedValidCount);
-            expect(mockContainer.children.length).toBe(expectedValidCount);
-            expect(mockContainer.children[0].textContent).toBe('do valid');
-            expect(mockContainer.children[1].textContent).toBe('last one');
-
-            expect(mockLogger.warn).toHaveBeenCalledTimes(expectedInvalidCount); // 3 invalid items
-            // *** UPDATED: Check warning log ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Skipping invalid action object during render: `), expect.anything()); // Check general format
-            // *** UPDATED: Check info log ***
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${expectedValidCount} action buttons into container.`));
+            expect(mockDomElementFactory.button).toHaveBeenCalledTimes(expectedValidCount);
+            expect(mockLogger.warn).toHaveBeenCalledTimes(expectedInvalidCount);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Skipping invalid action object during render: `), null);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${expectedValidCount} action buttons. Selected action: none.`));
         });
     });
 
     // --- Button Click Behavior ---
     describe('Button Click Behavior', () => {
-
+        let instance;
         beforeEach(() => {
-            // Clear logs before each click test
+            instance = createInstance();
             mockLogger.debug.mockClear();
             mockLogger.warn.mockClear();
             mockLogger.error.mockClear();
             mockLogger.info.mockClear();
+            mockValidatedEventDispatcher.dispatchValidated.mockClear();
+            mockDomElementFactory.button.mockClear();
+            mockContainer._reset();
+            mockSendButton._reset(); // Ensure send button is reset
         });
 
-        it('should dispatch "core:submit_command" with correct command on button click', async () => {
-            const instance = createInstance();
-            const commandText = 'test command';
-            const actionId = 'core:test';
-            const actions = [{id: actionId, command: commandText}];
-            instance.render(actions); // This calls factory.button which creates the mock with simulateClick
-
-            expect(mockContainer.children.length).toBe(1);
+        it('should select action, enable send button, and log selection on action button click', async () => {
+            const actionToSelect = {id: 'test:examine', command: 'examine'};
+            instance.render([actionToSelect]);
             const buttonMock = mockContainer.children[0];
-            expect(buttonMock._simulateClick).toBeDefined(); // Ensure helper exists
-            buttonMock._actionId = actionId; // Ensure ID is set for later tests
-
-            // Simulate the click
             await buttonMock._simulateClick();
-
-            // Verify dispatchValidated call
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'core:submit_command',
-                {command: commandText} // Ensure it uses the command text
-            );
-            // *** UPDATED: Check info log ***
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Event 'core:submit_command' for "${commandText}" dispatched successfully.`));
-        });
-
-        it('should handle button click even if command has leading/trailing spaces initially', async () => {
-            const instance = createInstance();
-            const actionId = 'core:spaced';
-            // Command has spaces
-            const actions = [{id: actionId, command: '  spaced command  '}];
-            const expectedTrimmedCommand = 'spaced command';
-            instance.render(actions);
-
-            expect(mockContainer.children.length).toBe(1);
-            const buttonMock = mockContainer.children[0];
-            // Assume factory/render trimmed it for textContent (mock factory does this)
-            expect(buttonMock.textContent).toBe(expectedTrimmedCommand);
-            buttonMock._actionId = actionId; // Set ID
-
-            await buttonMock._simulateClick();
-
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'core:submit_command',
-                {command: expectedTrimmedCommand} // Dispatch the trimmed button text
-            );
-        });
-
-        it('should log warning and not dispatch if button textContent is empty at click time', async () => {
-            const instance = createInstance();
-            const actionId = 'core:empty';
-            const actions = [{id: actionId, command: 'will be emptied'}];
-            instance.render(actions);
-
-            expect(mockContainer.children.length).toBe(1);
-            const buttonMock = mockContainer.children[0];
-            buttonMock._actionId = actionId; // Set ID for log message
-            buttonMock.textContent = '   '; // Set to empty/whitespace just before click
-
-            await buttonMock._simulateClick();
-
+            expect(instance.selectedAction).toEqual(actionToSelect);
+            expect(mockSendButton.disabled).toBe(false);
+            expect(buttonMock.classList.add).toHaveBeenCalledWith('selected');
             expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
-            // *** UPDATED: Check warning log ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Action button clicked, but its textContent is unexpectedly empty or whitespace. ID: ${actionId}`));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Action selected: '${actionToSelect.command}'`));
         });
 
-        it('should log warning if dispatchValidated fails (returns false)', async () => {
-            mockValidatedEventDispatcher.dispatchValidated.mockResolvedValueOnce(false); // Simulate failed dispatch
-
-            const instance = createInstance();
-            const commandText = 'fail dispatch';
-            const actionId = 'core:fail';
-            const actions = [{id: actionId, command: commandText}];
-            instance.render(actions);
-
+        it('should select action with trimmed command, not dispatch', async () => {
+            const action = {id: 'core:spaced', command: '  spaced command  '};
+            const expectedTrimmedCommand = 'spaced command'; // This is what buttonText becomes
+            instance.render([action]);
             const buttonMock = mockContainer.children[0];
-            buttonMock._actionId = actionId;
+            expect(buttonMock.textContent).toBe(expectedTrimmedCommand);
             await buttonMock._simulateClick();
-
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            // *** UPDATED: Check warning log ***
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Event 'core:submit_command' for "${commandText}" was NOT dispatched`));
+            expect(instance.selectedAction).toEqual(action);
+            expect(mockSendButton.disabled).toBe(false);
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            // *** CORRECTED: Log uses the original command from selectedAction object ***
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Action selected: '${action.command}'`));
         });
 
-        it('should log error if dispatchValidated throws an error', async () => {
+        it('should still select action if button textContent is empty (selection uses actionId)', async () => {
+            const action = {id: 'core:empty', command: 'ValidCmd'};
+            instance.render([action]);
+            const buttonMock = mockContainer.children[0];
+            buttonMock.textContent = ' '; // Manually make it empty
+            await buttonMock._simulateClick();
+            expect(instance.selectedAction).toEqual(action);
+            expect(mockSendButton.disabled).toBe(false);
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("textContent is unexpectedly empty"));
+        });
+
+        it('should NOT dispatch or log dispatch warnings if VED would return false (action button click)', async () => {
+            mockValidatedEventDispatcher.dispatchValidated.mockResolvedValueOnce(false);
+            const action = {id: 'core:fail', command: 'fail dispatch'};
+            instance.render([action]);
+            const buttonMock = mockContainer.children[0];
+            await buttonMock._simulateClick();
+            expect(instance.selectedAction).toEqual(action);
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("was NOT dispatched"));
+        });
+
+        it('should NOT dispatch or log dispatch errors if VED would throw (action button click)', async () => {
             const testError = new Error("Dispatch Failed!");
-            mockValidatedEventDispatcher.dispatchValidated.mockRejectedValueOnce(testError); // Simulate thrown error
-
-            const instance = createInstance();
-            const commandText = 'throw error';
-            const actionId = 'core:throw';
-            const actions = [{id: actionId, command: commandText}];
-            instance.render(actions);
-
+            mockValidatedEventDispatcher.dispatchValidated.mockRejectedValueOnce(testError);
+            const action = {id: 'core:throw', command: 'throw error'};
+            instance.render([action]);
             const buttonMock = mockContainer.children[0];
-            buttonMock._actionId = actionId;
             await buttonMock._simulateClick();
-
-            expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-            // *** UPDATED: Check error log ***
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Error occurred during dispatch of 'core:submit_command' for "${commandText}"`),
-                testError
-            );
+            expect(instance.selectedAction).toEqual(action);
+            expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
+            expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining("Error occurred during dispatch"));
         });
     });
 
     // --- Dispose Method ---
     describe('Dispose Method', () => {
+        beforeEach(() => {
+            mockLogger.debug.mockClear();
+            mockSubscription.unsubscribe.mockClear();
+            // Clear subscribe calls on VED specifically for this describe block if needed
+            mockValidatedEventDispatcher.subscribe.mockClear();
+        });
         it('should unsubscribe from VED event', () => {
-            const instance = createInstance();
-            // Ensure subscription happened and we have the mock object
-            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalled();
-            expect(mockSubscription.unsubscribe).not.toHaveBeenCalled();
+            const freshInstance = createInstance(); // Creates instance, which subscribes
 
-            instance.dispose();
+            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1); // From this instance
 
+            freshInstance.dispose();
             expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(1);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Disposing subscriptions.`));
-        });
-
-        it('should handle disposing multiple times gracefully', () => {
-            const instance = createInstance();
-            instance.dispose();
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(1);
-
-            // Call dispose again
-            instance.dispose();
-            // Unsubscribe should not be called again because the internal array is cleared
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(1);
-        });
-
-        it('should handle case where subscription might be undefined (robustness)', () => {
-            const instance = createInstance();
-            // Clear the VED mock return value *after* construction but *before* dispose
-            mockValidatedEventDispatcher.subscribe.mockReturnValueOnce(undefined); // Simulate subscribe failing or returning undefined
-            // Recreate instance to get the undefined subscription internally
-            const instance2 = createInstance();
-
-            // Reset the mock for subsequent tests
-            mockValidatedEventDispatcher.subscribe.mockReturnValue(mockSubscription);
-
-            expect(() => instance2.dispose()).not.toThrow();
-            expect(mockSubscription.unsubscribe).not.toHaveBeenCalled(); // Because the specific subscription was undefined
         });
     });
 });

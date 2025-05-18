@@ -1,4 +1,3 @@
-/* css/style.css */
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap');
 
 :root {
@@ -461,7 +460,7 @@ button, .button-like {
     border-radius: var(--border-radius-md);
     cursor: pointer;
     text-align: center;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Added border-color transition */
     display: inline-block;
     margin: var(--spacing-xs);
 }
@@ -484,6 +483,7 @@ button:disabled, .button-like:disabled {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    border: none; /* Ensure disabled buttons don't show borders from other states */
 }
 
 /* Action buttons specifically */
@@ -496,12 +496,84 @@ button:disabled, .button-like:disabled {
 #action-buttons button {
     width: 100%; /* Full width of container */
     margin: var(--spacing-xs) 0; /* Remove horizontal margin, control vertical spacing */
-    /* width: calc(100% - calc(2 * var(--spacing-xs))); REMOVED as margin is now 0 for horizontal */
-    /* margin-bottom: var(--spacing-sm); Use consistent margin from above */
 }
 
 #action-buttons button:last-child {
     margin-bottom: 0;
+}
+
+/* Selected state for action buttons */
+#action-buttons button.selected {
+    background-color: var(--button-hover-bg-color); /* Darker blue, good contrast for selected state */
+    color: var(--button-text-color);
+    border: 2px solid var(--accent-color-primary); /* Lighter blue border for clear distinction */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), var(--shadow-sm); /* Inner shadow to make it feel pressed or active */
+    transform: translateY(0px); /* Override hover transform, it's already 'active' in selection */
+    font-weight: 700; /* Slightly bolder to emphasize selection */
+}
+
+/* Hover state for a selected action button */
+#action-buttons button.selected:hover {
+    background-color: var(--button-hover-bg-color); /* Maintain selected background */
+    border-color: var(--accent-color-focus-ring); /* Slightly different border on hover for feedback */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), var(--shadow-md); /* Slightly deeper shadow */
+    /* cursor: pointer; /* Inherited, allows interaction if needed (e.g., deselect) */
+    transform: translateY(0px); /* No movement for selected button on hover */
+}
+
+/* Active state for a selected action button (when clicked again) */
+#action-buttons button.selected:active {
+    background-color: var(--button-hover-bg-color); /* Maintain selected background */
+    border-color: var(--accent-color-primary); /* Revert to standard selected border or a slightly pressed look */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), var(--shadow-sm); /* Slightly less deep shadow on active */
+    transform: translateY(0px); /* No movement */
+}
+
+
+/* --- Specific Button Instances --- */
+
+/* "Confirm Action" Button (#player-confirm-turn-button) in the bottom input bar */
+#player-confirm-turn-button {
+    /* Inherits general button styles. These are explicit definitions as per requirements. */
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    padding: var(--spacing-sm) var(--spacing-lg); /* Consistent with general buttons */
+    background-color: var(--button-bg-color); /* Default background */
+    color: var(--button-text-color); /* Default text color */
+    border: none; /* Default no border */
+    border-radius: var(--border-radius-md); /* Default border radius */
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out;
+    display: inline-block; /* or flex if needed within its container */
+    margin: var(--spacing-xs); /* Consistent margin */
+    font-weight: 700; /* Make it prominent, slightly bolder than default 600 for general buttons */
+}
+
+/* Hover state for the "Confirm Action" button (when not disabled) */
+#player-confirm-turn-button:not(:disabled):hover {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Active state for the "Confirm Action" button (when not disabled) */
+#player-confirm-turn-button:not(:disabled):active {
+    background-color: var(--button-hover-bg-color); /* Can be same as hover or a slightly darker/pressed shade */
+    transform: translateY(0px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Disabled state for the "Confirm Action" button */
+#player-confirm-turn-button:disabled {
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-text-color);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    border: none; /* Ensure no border from other states interferes */
+    /* Opacity can also be used for disabled state if preferred */
+    /* opacity: 0.65; */
 }
 
 
@@ -694,14 +766,9 @@ button:disabled, .button-like:disabled {
     }
 
     #app-layout-container > .panel:last-child { /* e.g. #right-pane */
-        /* All panels get bottom border by default now, remove specific override if footer is distinct */
-        /* If #bottom-input-bar has a top border, this can be 0 for cleaner join */
         border-bottom-width: var(--border-width); /* Ensuring last panel also has bottom border before footer */
     }
 
-    /* If the footer has a strong top border, this can be set to 0 for the last panel in app-layout-container */
-    /* #app-layout-container > #right-pane { border-bottom-width: 0; } */
-    /* Kept original logic commented if preferred */
     .panel {
         padding: var(--spacing-sm);
     }
@@ -729,6 +796,16 @@ button:disabled, .button-like:disabled {
     #command-input {
         padding: var(--spacing-sm) var(--spacing-md);
     }
+
+    /* Confirm button will stretch to full width due to align-items: stretch on #bottom-input-bar */
+    /* Add specific styling for #player-confirm-turn-button on mobile if needed */
+    #player-confirm-turn-button {
+        margin-top: var(--spacing-sm); /* Add some space above if it's below the input */
+        width: 100%; /* Explicitly set to full width to conform to stretched layout */
+        margin-left: 0;
+        margin-right: 0;
+    }
+
 
     #quick-status-display {
         text-align: center;
@@ -776,6 +853,11 @@ button:disabled, .button-like:disabled {
 
     #command-input {
         padding: var(--spacing-sm); /* Keep reasonable padding for touch */
+    }
+
+    #player-confirm-turn-button {
+        margin-top: var(--spacing-xs); /* Adjust margin for very small screens */
+        padding: var(--spacing-sm); /* Adjust padding for very small screens */
     }
 
     #quick-status-display {

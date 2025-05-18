@@ -151,19 +151,26 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
 
     // ActionButtonsRenderer (Renders action buttons)
-    // VERIFIED: Target element is #action-buttons. This was already correct.
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
+        const loggerFromFactory = c.resolve(tokens.ILogger); // Resolve logger for use within factory warnings
         const buttonsContainer = docContext.query('#action-buttons');
+        const sendButton = docContext.query('#player-confirm-turn-button'); // <<<< QUERY FOR THE SEND BUTTON
+
         if (!buttonsContainer) {
-            logger.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
+            // Use logger resolved within this factory scope
+            loggerFromFactory.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
         }
+        // A warning for missing sendButton is not strictly necessary here,
+        // as the ActionButtonsRenderer constructor itself will log a more specific warning if it's null or invalid.
+
         return new ActionButtonsRenderer({
-            logger: c.resolve(tokens.ILogger), // Use resolved logger
+            logger: loggerFromFactory, // Pass the resolved logger
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            actionButtonsContainer: buttonsContainer
+            actionButtonsContainer: buttonsContainer,
+            sendButtonElement: sendButton // <<<< PASS THE QUERIED SEND BUTTON
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
