@@ -1,7 +1,12 @@
 // src/core/interfaces/IValidatedEventDispatcher.js
 
 /** @typedef {import('../eventBus.js').EventListener} EventListener */
-/** @typedef {() => void} UnsubscribeFn */ // Assuming UnsubscribeFn is a function that takes no args and returns void. Adjust if defined elsewhere differently.
+/** @typedef {() => void} UnsubscribeFn */
+
+/**
+ * @typedef {object} EventSubscriptionObject
+ * @property {UnsubscribeFn} unsubscribe - A function that, when called, unregisters the listener.
+ */
 
 /**
  * @interface IValidatedEventDispatcher
@@ -32,7 +37,8 @@ export class IValidatedEventDispatcher {
      * @function subscribe
      * @param {string} eventName - The name of the event to subscribe to.
      * @param {EventListener} listener - The function to call when the event is dispatched.
-     * @returns {UnsubscribeFn} A function that, when called, unregisters the provided listener.
+     * @returns {EventSubscriptionObject} An object containing an `unsubscribe` function
+     * that, when called, unregisters the provided listener.
      */
     subscribe(eventName, listener) {
         throw new Error('IValidatedEventDispatcher.subscribe method not implemented.');
