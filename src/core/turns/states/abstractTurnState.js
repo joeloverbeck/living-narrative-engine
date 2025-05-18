@@ -76,19 +76,74 @@ export class AbstractTurnState extends ITurnState {
 
     /** @override */
     async enterState(handler, previousState) {
-        // Note: 'handler' parameter here is the same as this._handler if called correctly by BaseTurnHandler._transitionToState
-        const turnCtx = this._getTurnContext(); // Use internal helper
-        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger(); // Fallback
-        const actorIdForLog = turnCtx?.getActor()?.id ?? 'N/A';
-        logger.info(`${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`);
+        const turnCtx = this._getTurnContext();
+
+        // Robust logger resolution (similar to the updated exitState)
+        let resolvedLogger = turnCtx?.getLogger();
+
+        if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
+            try {
+                resolvedLogger = handler.getLogger();
+            } catch (e) { /* ignore */
+            }
+        }
+
+        if (!resolvedLogger && this._handler && typeof this._handler.getLogger === 'function') {
+            try {
+                resolvedLogger = this._handler.getLogger();
+            } catch (e) { /* ignore */
+            }
+        }
+
+        const logger = resolvedLogger || console;
+
+        let actorIdForLog = 'N/A';
+        if (turnCtx && typeof turnCtx.getActor === 'function') {
+            const actor = turnCtx.getActor();
+            if (actor && typeof actor.id !== 'undefined') {
+                actorIdForLog = actor.id;
+            }
+        }
+
+        if (logger && typeof logger.info === 'function') {
+            logger.info(`${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`);
+        } else {
+            console.log(`(Fallback log) ${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`);
+        }
     }
 
     /** @override */
     async exitState(handler, nextState) {
+        // This method should already have the robust logger resolution from the previous step
         const turnCtx = this._getTurnContext();
-        const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
-        const actorIdForLog = turnCtx?.getActor()?.id ?? 'N/A';
-        logger.info(`${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`);
+        let resolvedLogger = turnCtx?.getLogger();
+        if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
+            try {
+                resolvedLogger = handler.getLogger();
+            } catch (e) { /* ignore */
+            }
+        }
+        if (!resolvedLogger && this._handler && typeof this._handler.getLogger === 'function') {
+            try {
+                resolvedLogger = this._handler.getLogger();
+            } catch (e) { /* ignore */
+            }
+        }
+        const logger = resolvedLogger || console;
+
+        let actorIdForLog = 'N/A';
+        if (turnCtx && typeof turnCtx.getActor === 'function') {
+            const actor = turnCtx.getActor();
+            if (actor && typeof actor.id !== 'undefined') {
+                actorIdForLog = actor.id;
+            }
+        }
+
+        if (logger && typeof logger.info === 'function') {
+            logger.info(`${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`);
+        } else {
+            console.log(`(Fallback log) ${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`);
+        }
     }
 
     /** @override */

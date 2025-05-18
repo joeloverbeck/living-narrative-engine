@@ -152,11 +152,12 @@ export class ProcessingCommandState extends AbstractTurnState {
             `CommandString: "${commandStringToLog}".`
         );
 
-        this.#turnActionToProcess = turnAction;
+        this.#turnActionToProcess = turnAction; // Ensure this is the most up-to-date turnAction
 
-        // SUT CHANGE: Removed await from IIFE
-        (async () => {
+        // Ensure this IIFE is awaited as per previous correction
+        await (async () => {
             try {
+                // Pass the 'turnAction' from this scope, which has been confirmed valid
                 await this._processCommandInternal(turnCtx, actor, this.#turnActionToProcess);
             } catch (error) {
                 const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
@@ -165,7 +166,6 @@ export class ProcessingCommandState extends AbstractTurnState {
                     `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
                     error
                 );
-                // Pass the original actorId if context changed or actor is gone from context
                 const actorIdForHandler = currentTurnCtxForCatch.getActor?.()?.id ?? actorId;
                 await this.#handleProcessingException(currentTurnCtxForCatch, error, actorIdForHandler);
             }
@@ -177,83 +177,91 @@ export class ProcessingCommandState extends AbstractTurnState {
         const actorId = actor.id;
 
         try {
-            // SUT CHANGE: Added await
             const commandProcessor = await this._getServiceFromContext(turnCtx, 'getCommandProcessor', 'ICommandProcessor', actorId);
             if (!commandProcessor) {
-                // _getServiceFromContext already called #handleProcessingException which sets _isProcessing = false
-                // and it also logs the error. So we just return here.
                 return;
             }
 
-            if (turnAction && typeof turnAction.actionDefinitionId !== 'undefined') {
-                logger.debug(`${this.getStateName()}: Invoking commandProcessor.process() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}`);
-            } else {
-                // This scenario should ideally be caught earlier (e.g., in enterState),
-                // but adding a warning here for robustness if an invalid turnAction somehow reaches this point.
-                logger.warn(`${this.getStateName()}: Invoking commandProcessor.process() for actor ${actorId} with invalid or minimal turnAction object: ${JSON.stringify(turnAction)}.`);
-                // Consider if this should be a hard error / call #handleProcessingException
-            }
-            const commandResult = await commandProcessor.process(turnCtx, actor, turnAction);
+            // CORRECTION POINT:
+            // Check if turnAction and its commandString are valid before using them.
+            // The CommandProcessor expects a string command.
+            if (turnAction && typeof turnAction.actionDefinitionId === 'string') {
+                // Determine the command string to pass to processCommand.
+                // Prefer turnAction.commandString, fallback to actionDefinitionId if commandString is falsy.
+                const commandStringToProcess = turnAction.commandString || turnAction.actionDefinitionId;
 
-            const activeTurnCtx = this._getTurnContext();
-            if (!activeTurnCtx || activeTurnCtx.getActor()?.id !== actorId) {
-                logger.warn(`${this.getStateName()}: Context or actor changed/invalidated after commandProcessor.process() for ${actorId}. Aborting further processing for this turn.`);
-                if (turnCtx.getActor()?.id === actorId && turnCtx.isValid?.()) { // Check if original context is still valid for this actor
-                    await this.#handleProcessingException(turnCtx, new Error("Context changed or actor mismatch after command processing."), actorId, false);
-                } else if (activeTurnCtx && activeTurnCtx.getActor()?.id) {
-                    logger.warn(`${this.getStateName()}: A new turn seems active for ${activeTurnCtx.getActor().id}. The turn for ${actorId} will not be explicitly ended by this path.`);
-                } else {
-                    logger.warn(`${this.getStateName()}: No active context or actor mismatch after commandProcessor.process() for ${actorId}. Turn cannot be formally ended by this path.`);
-                    // If the original context is no longer valid for the actor, or no handler available, we might be stuck
-                    // This situation might require a more global reset if the handler itself is compromised.
-                    // For now, ensure _isProcessing is false if we can't gracefully handle.
+                if (!commandStringToProcess) {
+                    logger.error(`${this.getStateName()}: No valid command string found in ITurnAction for actor ${actorId}. actionDefinitionId: ${turnAction.actionDefinitionId}, commandString: ${turnAction.commandString}.`);
+                    await this.#handleProcessingException(turnCtx, new Error("No command string available in ITurnAction to process."), actorId);
+                    return;
                 }
-                this._isProcessing = false; // Ensure processing stops
+
+                logger.debug(`${this.getStateName()}: Invoking commandProcessor.processCommand() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}, using commandString: "${commandStringToProcess}"`);
+
+                // Corrected method name from .process to .processCommand
+                // Corrected arguments: (actor, commandString)
+                const commandResult = await commandProcessor.processCommand(actor, commandStringToProcess);
+
+                const activeTurnCtx = this._getTurnContext();
+                if (!activeTurnCtx || activeTurnCtx.getActor()?.id !== actorId) {
+                    logger.warn(`${this.getStateName()}: Context or actor changed/invalidated after commandProcessor.processCommand() for ${actorId}. Aborting further processing for this turn.`);
+                    if (turnCtx.getActor()?.id === actorId && typeof turnCtx.isValid === 'function' && turnCtx.isValid()) {
+                        await this.#handleProcessingException(turnCtx, new Error("Context changed or actor mismatch after command processing."), actorId, false);
+                    } else if (activeTurnCtx && activeTurnCtx.getActor()?.id) {
+                        logger.warn(`${this.getStateName()}: A new turn seems active for ${activeTurnCtx.getActor().id}. The turn for ${actorId} will not be explicitly ended by this path.`);
+                    } else {
+                        logger.warn(`${this.getStateName()}: No active context or actor mismatch after commandProcessor.processCommand() for ${actorId}. Turn cannot be formally ended by this path.`);
+                    }
+                    this._isProcessing = false;
+                    return;
+                }
+
+                logger.debug(`${this.getStateName()}: Command processing completed for actor ${actorId}. Result success: ${commandResult?.success}.`);
+
+                const outcomeInterpreter = await this._getServiceFromContext(activeTurnCtx, 'getCommandOutcomeInterpreter', 'ICommandOutcomeInterpreter', actorId);
+                if (!outcomeInterpreter) {
+                    return;
+                }
+
+                const directiveType = outcomeInterpreter.interpret(commandResult);
+                logger.info(`${this.getStateName()}: Actor ${actorId} - Command result interpreted to directive: ${directiveType}`);
+
+                const directiveStrategy = TurnDirectiveStrategyResolver.resolveStrategy(directiveType);
+                if (!directiveStrategy) {
+                    const errorMsg = `${this.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
+                    logger.error(errorMsg);
+                    await this.#handleProcessingException(activeTurnCtx, new Error(errorMsg), actorId);
+                    return;
+                }
+                logger.debug(`${this.getStateName()}: Actor ${actorId} - Resolved strategy ${directiveStrategy.constructor.name} for directive ${directiveType}.`);
+
+                await directiveStrategy.execute(activeTurnCtx, directiveType, commandResult);
+                logger.debug(`${this.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`);
+
+                if (this._isProcessing && this._handler._currentState === this) {
+                    logger.debug(`${this.getStateName()}: Directive strategy executed for ${actorId}, state remains ${this.getStateName()}. Processing complete for this command.`);
+                    this._isProcessing = false;
+                }
+
+            } else {
+                // This case should ideally be caught earlier by checks in enterState,
+                // but included for robustness if an invalid turnAction reaches here.
+                logger.warn(`${this.getStateName()}: Cannot invoke commandProcessor.processCommand() for actor ${actorId} due to invalid or minimal turnAction object: ${JSON.stringify(turnAction)}.`);
+                await this.#handleProcessingException(turnCtx, new Error("Invalid ITurnAction object provided for command processing."), actorId);
                 return;
-            }
-
-            logger.debug(`${this.getStateName()}: Command processing completed for actor ${actorId}. Result success: ${commandResult?.success}.`);
-
-            // SUT CHANGE: Added await
-            const outcomeInterpreter = await this._getServiceFromContext(activeTurnCtx, 'getCommandOutcomeInterpreter', 'ICommandOutcomeInterpreter', actorId);
-            if (!outcomeInterpreter) {
-                // _getServiceFromContext already called #handleProcessingException which sets _isProcessing = false
-                return;
-            }
-
-            const directiveType = outcomeInterpreter.interpret(commandResult);
-            logger.info(`${this.getStateName()}: Actor ${actorId} - Command result interpreted to directive: ${directiveType}`);
-
-            const directiveStrategy = TurnDirectiveStrategyResolver.resolveStrategy(directiveType);
-            if (!directiveStrategy) {
-                const errorMsg = `${this.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
-                logger.error(errorMsg);
-                await this.#handleProcessingException(activeTurnCtx, new Error(errorMsg), actorId);
-                return;
-            }
-            logger.debug(`${this.getStateName()}: Actor ${actorId} - Resolved strategy ${directiveStrategy.constructor.name} for directive ${directiveType}.`);
-
-            await directiveStrategy.execute(activeTurnCtx, directiveType, commandResult);
-            logger.debug(`${this.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`);
-
-            // If the state is still this one and processing was ongoing, mark as no longer processing.
-            // A directive strategy might have initiated a transition, in which case _handler._currentState would be different.
-            if (this._isProcessing && this._handler._currentState === this) {
-                logger.debug(`${this.getStateName()}: Directive strategy executed for ${actorId}, state remains ${this.getStateName()}. Processing complete for this command.`);
-                this._isProcessing = false;
             }
 
         } catch (error) {
-            // Ensure we use the most current context if available, otherwise fallback to the one passed initially.
             const errorHandlingCtx = this._getTurnContext() ?? turnCtx;
-            // If actor is gone from context, use the original actorId.
             const actorIdForHandler = errorHandlingCtx.getActor?.()?.id ?? actorId;
-            await this.#handleProcessingException(errorHandlingCtx, error, actorIdForHandler);
-        } finally { // Add finally block to ensure _isProcessing is set to false
+            // Ensure the error passed to #handleProcessingException is an Error instance
+            const processingError = error instanceof Error ? error : new Error(String(error.message || error));
+            if (!(error instanceof Error) && error.stack) { // Preserve stack if possible from non-Error object
+                processingError.stack = error.stack;
+            }
+            await this.#handleProcessingException(errorHandlingCtx, processingError, actorIdForHandler);
+        } finally {
             if (this._isProcessing) {
-                // This case means an error occurred, or processing completed without explicitly setting _isProcessing to false,
-                // and it wasn't caught and handled by #handleProcessingException setting it.
-                // Or a path in try didn't set it to false before exiting (e.g. early return after _getServiceFromContext failure).
                 const finalLogger = this._getTurnContext()?.getLogger() ?? logger;
                 finalLogger.warn(`${this.getStateName()}: _isProcessing was still true at the end of _processCommandInternal for ${actorId}. Forcing false.`);
                 this._isProcessing = false;
@@ -265,10 +273,6 @@ export class ProcessingCommandState extends AbstractTurnState {
         // Ensure turnCtx is valid and has getLogger before proceeding.
         if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
             console.error(`${this.getStateName()}: Invalid turnCtx in _getServiceFromContext when trying to get ${serviceNameForLog} for actor ${actorIdForLog}. Cannot get logger or service.`);
-            // Cannot call #handleProcessingException as we can't even get a logger reliably from turnCtx.
-            // This is a critical failure. The calling method needs to handle the null return.
-            // Setting _isProcessing to false here might be risky if not coordinated with caller.
-            // Caller should check for null and then call #handleProcessingException with a last-known-good context or handler's context.
             return null;
         }
         const logger = turnCtx.getLogger();
@@ -278,15 +282,18 @@ export class ProcessingCommandState extends AbstractTurnState {
             }
             const service = turnCtx[methodName]();
             if (!service) {
-                // Log this specific failure but let #handleProcessingException decide on broader turn implications
                 throw new Error(`Method turnCtx.${methodName}() returned null or undefined.`);
             }
             return service;
-        } catch (error) {
+        } catch (error) { // 'error' here is the original error from turnCtx[methodName]()
             const errorMsg = `${this.getStateName()}: Failed to retrieve ${serviceNameForLog} from ITurnContext for actor ${actorIdForLog}. Error: ${error.message}`;
-            logger.error(errorMsg, error);
-            // Use the provided turnCtx for handling this specific service retrieval failure
-            await this.#handleProcessingException(turnCtx, new Error(errorMsg, {cause: error}), actorIdForLog);
+            logger.error(errorMsg, error); // Log the specific service retrieval failure
+
+            // MODIFICATION: Pass the original 'error' to #handleProcessingException
+            // This avoids creating a new wrapper error with {cause: ...}, which might be
+            // causing the TypeError in some environments, and ensures the original
+            // error is what's processed by the central exception handler.
+            await this.#handleProcessingException(turnCtx, error, actorIdForLog);
             return null;
         }
     }
