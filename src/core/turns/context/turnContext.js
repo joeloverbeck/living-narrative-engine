@@ -44,7 +44,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 /**
- * @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  */
 /**
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy

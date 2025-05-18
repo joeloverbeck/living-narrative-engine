@@ -4,11 +4,11 @@
 import { ICommandInputPort } from '../ports/ICommandInputPort.js';
 
 // --- Type Imports for JSDoc ---
-/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../ports/commonTypes.js').UnsubscribeFn} UnsubscribeFn */
 /** @typedef {import('../ports/ICommandInputPort.js').CommandListener} CommandListener */
-/** @typedef {import('../turns/handlers/playerTurnHandler.js').CommandSubmitEvent} CommandSubmitEvent */ // Assuming type definition location
-/** @typedef {import('../turns/handlers/playerTurnHandler.js').CommandSubmitEventData} CommandSubmitEventData */ // Assuming type definition location
+/** @typedef {import('../handlers/playerTurnHandler.js').CommandSubmitEvent} CommandSubmitEvent */ // Assuming type definition location
+/** @typedef {import('../handlers/playerTurnHandler.js').CommandSubmitEventData} CommandSubmitEventData */ // Assuming type definition location
 
 
 /**

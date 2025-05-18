@@ -2,9 +2,9 @@
 // --- FILE START ---
 // --- Interface Imports for JSDoc ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
+/** @typedef {import('../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../ports/commonTypes.js').UnsubscribeFn} UnsubscribeFn */
+/** @typedef {import('../turns/ports/commonTypes.js').UnsubscribeFn} UnsubscribeFn */
 
 // --- Constant Imports ---
 import { TURN_ENDED_ID } from '../constants/eventIds.js';

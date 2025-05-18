@@ -5,17 +5,18 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
-/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../../actions/availableAction.js').default} AvailableAction */
 
 // --- Import Custom Error ---
-// Assuming PromptError is defined in a shared errors location
-import { PromptError } from '../../errors/promptError.js';
-import { IPlayerPromptService } from '../interfaces/IPlayerPromptService.js'; // Adjusted path and added .js extension
+import {PromptError} from '../../errors/promptError.js'; // Adjusted path if necessary
+import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
 
 /**
  * @typedef {object} PlayerPromptServiceDependencies
@@ -25,13 +26,19 @@ import { IPlayerPromptService } from '../interfaces/IPlayerPromptService.js'; //
  * @property {IWorldContext} worldContext - Service to access current world state (like entity locations).
  * @property {EntityManager} entityManager - Service to manage entity instances.
  * @property {GameDataRepository} gameDataRepository - Service to access game definition data.
+ * @property {IValidatedEventDispatcher} validatedEventDispatcher - Dispatcher for subscribing to validated events.
+ */
+
+/**
+ * @typedef {object} PlayerPromptResolution
+ * @property {AvailableAction} action - The selected available action.
+ * @property {string | null} speech - The speech input from the player, or null.
  */
 
 /**
  * @class PlayerPromptService
  * @extends IPlayerPromptService
- * @description Service responsible for determining available player actions and triggering the prompt
- * mechanism via the appropriate output port. Includes error handling.
+ * @description Service responsible for prompting the player for actions and awaiting their response asynchronously.
  * Implements the IPlayerPromptService interface.
  */
 class PlayerPromptService extends IPlayerPromptService {
@@ -47,13 +54,18 @@ class PlayerPromptService extends IPlayerPromptService {
     #entityManager;
     /** @type {GameDataRepository} */
     #gameDataRepository;
+    /** @type {IValidatedEventDispatcher} */
+    #validatedEventDispatcher;
+
+    /** @type {number} Timeout for player prompt in milliseconds. */
+    static #PROMPT_TIMEOUT_MS = 60000; // 60 seconds
 
     /**
      * Creates an instance of PlayerPromptService.
      * Validates and injects all required dependencies.
      *
      * @param {PlayerPromptServiceDependencies} dependencies - The dependencies required by the service.
-     * @throws {Error} If any required dependency is missing or invalid (lacks essential methods).
+     * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
                     logger,
@@ -62,156 +74,215 @@ class PlayerPromptService extends IPlayerPromptService {
                     worldContext,
                     entityManager,
                     gameDataRepository,
+                    validatedEventDispatcher,
                 }) {
-        super(); // Call to super is important when extending
-        // Validate logger first, as it's used for logging other validation errors.
+        super();
+
         if (!logger || typeof logger.error !== 'function' || typeof logger.info !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') {
             console.error('PlayerPromptService Constructor: Invalid or missing ILogger dependency.');
-            // Note: Cannot use PromptError here as logger itself might be invalid
             throw new Error('PlayerPromptService: Invalid or missing ILogger dependency.');
         }
         this.#logger = logger;
 
-        // Validate ActionDiscoverySystem
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IActionDiscoverySystem dependency (requires getValidActions).');
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IActionDiscoverySystem dependency.');
             throw new Error('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
         }
         this.#actionDiscoverySystem = actionDiscoverySystem;
 
-        // Validate PromptOutputPort
         if (!promptOutputPort || typeof promptOutputPort.prompt !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IPromptOutputPort dependency (requires prompt).');
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IPromptOutputPort dependency.');
             throw new Error('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
         }
         this.#promptOutputPort = promptOutputPort;
 
-        // Validate WorldContext
         if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IWorldContext dependency (requires getLocationOfEntity).');
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IWorldContext dependency.');
             throw new Error('PlayerPromptService: Invalid or missing IWorldContext dependency.');
         }
         this.#worldContext = worldContext;
 
-        // Validate EntityManager
-        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') { // Check a core method
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing EntityManager dependency (requires getEntityInstance).');
+        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing EntityManager dependency.');
             throw new Error('PlayerPromptService: Invalid or missing EntityManager dependency.');
         }
         this.#entityManager = entityManager;
 
-        // Validate GameDataRepository
-        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') { // Check a core method
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing GameDataRepository dependency (requires getActionDefinition).');
+        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') {
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing GameDataRepository dependency.');
             throw new Error('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
         }
         this.#gameDataRepository = gameDataRepository;
+
+        if (!validatedEventDispatcher || typeof validatedEventDispatcher.subscribe !== 'function' || typeof validatedEventDispatcher.unsubscribe !== 'function') {
+            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IValidatedEventDispatcher dependency (requires subscribe and unsubscribe methods).');
+            throw new Error('PlayerPromptService: Invalid or missing IValidatedEventDispatcher dependency.');
+        }
+        this.#validatedEventDispatcher = validatedEventDispatcher;
 
         this.#logger.info('PlayerPromptService initialized successfully.');
     }
 
     /**
-     * Fetches the actor's location, discovers available actions, and sends them via the output port.
-     * Includes error handling for various stages.
+     * Prompts the actor for an action. It first discovers available actions and sends them to the UI.
+     * Then, it returns a Promise that resolves with the player's chosen action and speech
+     * once the 'core:player_turn_submitted' event is received, or rejects on timeout or error.
      *
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
-     * @returns {Promise<void>} A promise that resolves when the prompt has been sent successfully.
-     * @throws {PromptError} If the actor is invalid, location cannot be determined, action discovery fails,
-     * or sending the prompt via the output port fails. The error includes details
-     * about the failure point and may wrap the original error.
+     * @returns {Promise<PlayerPromptResolution>} A promise that resolves with an object containing the
+     * selected action and speech, or rejects with a PromptError.
+     * @throws {PromptError} If initial setup (actor validation, location fetching, action discovery,
+     * or sending prompt to UI) fails. The Promise itself can also reject with a PromptError
+     * for reasons like timeout, invalid action ID, or subscription issues.
      */
     async prompt(actor) {
         this.#logger.debug(`PlayerPromptService: Initiating prompt for actor ${actor?.id ?? 'INVALID'}.`);
 
         // 1. Input Validation
         if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
-            this.#logger.error('PlayerPromptService.prompt: Invalid actor provided.', { actor });
-            // No original error to wrap here
+            this.#logger.error('PlayerPromptService.prompt: Invalid actor provided.', {actor});
             throw new PromptError(`Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(actor)}`);
         }
         const actorId = actor.id;
 
-        // 2. Location Fetch (with Error Handling)
+        // 2. Location Fetch
         let currentLocation;
         try {
             this.#logger.debug(`PlayerPromptService: Fetching location for actor ${actorId}...`);
             currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
-            // Check for Null/Undefined Location
             if (!currentLocation) {
-                this.#logger.error(`PlayerPromptService.prompt: Failed to get location for actor ${actorId} (getLocationOfEntity resolved null/undefined).`);
-                // No original error to wrap here
+                this.#logger.error(`PlayerPromptService.prompt: Failed to get location for actor ${actorId}.`);
                 throw new PromptError(`Failed to determine actor location for ${actorId}: Location not found or undefined.`);
             }
             this.#logger.debug(`PlayerPromptService: Found location ${currentLocation.id} for actor ${actorId}.`);
         } catch (error) {
-            // Wrapped Location Fetch Error
             this.#logger.error(`PlayerPromptService.prompt: Error fetching location for actor ${actorId}.`, error);
-            // Re-throw specific error even if it was already a PromptError from the null check
-            if (error instanceof PromptError) {
-                throw error; // Preserve the specific message from the null check
-            } else {
-                // --- CORRECTED: Pass error directly as second argument ---
-                throw new PromptError(`Failed to determine actor location for ${actorId}`, error);
-            }
+            if (error instanceof PromptError) throw error;
+            throw new PromptError(`Failed to determine actor location for ${actorId}`, error);
         }
 
-        // 3. Context Creation (Only if location fetch succeeded)
+        // 3. Context Creation
         /** @type {ActionContext} */
         const context = {
             actor: actor,
-            currentLocation: currentLocation, // Known to be valid here
+            currentLocation: currentLocation,
             entityManager: this.#entityManager,
             gameDataRepository: this.#gameDataRepository,
             logger: this.#logger,
             worldContext: this.#worldContext,
-            // parsedCommand will be undefined during prompt generation
         };
         this.#logger.debug(`PlayerPromptService: Created ActionContext for actor ${actorId}.`);
 
-
-        // 4 & 5. Action Discovery and Port Call (Wrapped Together)
-        let discoveredActions = null; // Flag to check where error occurred
+        // 4. Action Discovery
+        /** @type {DiscoveredActionInfo[]} */
+        let discoveredActions;
         try {
-            // 4. Action Discovery
             this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
             discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
             this.#logger.debug(`PlayerPromptService: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
-
-            // 5. Port Call (Happy Path)
-            this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
-            await this.#promptOutputPort.prompt(actorId, discoveredActions); // No error message needed on happy path
-
-            this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
-
         } catch (error) {
-            // Wrapped Discovery & Port Call Errors
-            if (discoveredActions === null) {
-                // Error most likely occurred during getValidActions
-                this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
+            this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
+            try {
+                await this.#promptOutputPort.prompt(actorId, [], error instanceof Error ? error.message : 'Action discovery error');
+            } catch (portError) {
+                this.#logger.error(`PlayerPromptService: Failed to send error prompt via output port for actor ${actorId} after discovery failure. Port error:`, portError);
+            }
+            throw new PromptError(`Action discovery failed for actor ${actorId}`, error);
+        }
 
-                // Attempt to notify the player via the port about the error
-                try {
-                    this.#logger.debug(`PlayerPromptService: Attempting to send error prompt via output port for actor ${actorId} after discovery failure.`);
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown discovery error';
-                    await this.#promptOutputPort.prompt(actorId, [], errorMessage);
-                } catch (portError) {
-                    // Log the secondary failure but proceed to throw the original discovery error
-                    this.#logger.error(`PlayerPromptService: Failed to send error prompt via output port for actor ${actorId} AFTER discovery failure. Original discovery error will be thrown. Port error:`, portError);
+        // 5. Send Actions to UI
+        try {
+            this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
+            await this.#promptOutputPort.prompt(actorId, discoveredActions);
+            this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
+        } catch (error) {
+            this.#logger.error(`PlayerPromptService: Failed to dispatch prompt via output port for actor ${actorId}.`, error);
+            throw new PromptError(`Failed to dispatch prompt via output port for actor ${actorId}`, error);
+        }
+
+        // 6. Return Promise to await player input
+        return new Promise((resolve, reject) => {
+            let timeoutId = null;
+            /** @type {(() => void) | null} */
+            let unsubscribeFromEvent = null;
+
+            const cleanup = () => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+                if (unsubscribeFromEvent) {
+                    try {
+                        unsubscribeFromEvent();
+                        this.#logger.debug(`PlayerPromptService: Successfully unsubscribed from 'core:player_turn_submitted' for actor ${actorId}.`);
+                    } catch (unsubError) {
+                        this.#logger.warn(`PlayerPromptService: Error during unsubscription from 'core:player_turn_submitted' for actor ${actorId}.`, unsubError);
+                    }
+                    unsubscribeFromEvent = null;
+                }
+            };
+
+            this.#logger.debug(`PlayerPromptService: Setting up listener for 'core:player_turn_submitted' and timeout for actor ${actorId}. Timeout: ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
+
+            // Setup timeout
+            timeoutId = setTimeout(() => {
+                this.#logger.warn(`PlayerPromptService: Prompt timed out for actor ${actorId} after ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
+                cleanup();
+                reject(new PromptError(`Player prompt timed out for actor ${actorId}.`, null, "PROMPT_TIMEOUT"));
+            }, PlayerPromptService.#PROMPT_TIMEOUT_MS);
+
+            // Event handler
+            /** @param {object} eventPayload - The payload from 'core:player_turn_submitted' event.
+             * @param {string} eventPayload.actionId
+             * @param {string|null} eventPayload.speech
+             */
+            const handlePlayerTurnSubmitted = (eventPayload) => {
+                this.#logger.debug(`PlayerPromptService: Received 'core:player_turn_submitted' event for actor ${actorId}. Payload:`, eventPayload);
+
+                // It's good practice to ensure the event is for the prompted actor if the event doesn't inherently filter.
+                // However, the current event schema 'core:player_turn_submitted' does not include actorId.
+                // We assume the game architecture ensures this event is relevant.
+
+                cleanup();
+
+                if (!eventPayload || typeof eventPayload.actionId !== 'string') {
+                    this.#logger.error(`PlayerPromptService: Invalid event payload received for 'core:player_turn_submitted' for actor ${actorId}.`, eventPayload);
+                    reject(new PromptError(`Invalid event payload for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_PAYLOAD"));
+                    return;
                 }
 
-                // Re-throw the original discovery error, wrapped
-                // --- CORRECTED: Pass error directly as second argument ---
-                throw new PromptError(`Action discovery failed for actor ${actorId}`, error);
+                const {actionId, speech} = eventPayload;
+                const selectedAction = discoveredActions.find(da => da.action.id === actionId);
 
-            } else {
-                // Error most likely occurred during the happy-path promptOutputPort.prompt call
-                this.#logger.error(`PlayerPromptService: Failed to dispatch prompt via output port for actor ${actorId}.`, error);
-                // --- CORRECTED: Pass error directly as second argument ---
-                throw new PromptError(`Failed to dispatch prompt via output port for actor ${actorId}`, error);
+                if (!selectedAction) {
+                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions.`, {discoveredActions});
+                    reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}.`, null, "INVALID_ACTION_ID"));
+                } else {
+                    this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' received for actor ${actorId}. Resolving prompt.`);
+                    resolve({action: selectedAction, speech: speech || null});
+                }
+            };
+
+            // Subscribe to the event
+            try {
+                unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe('core:player_turn_submitted', handlePlayerTurnSubmitted);
+                if (typeof unsubscribeFromEvent !== 'function') {
+                    // This case might occur if the subscribe method could return something other than a function on failure,
+                    // e.g. if using SafeEventDispatcher which might return null.
+                    // Standard EventBus usually throws or returns a function.
+                    this.#logger.error(`PlayerPromptService: Subscription to 'core:player_turn_submitted' for actor ${actorId} did not return an unsubscribe function.`);
+                    cleanup(); // Attempt cleanup, though unsubscribeFromEvent might be null already
+                    reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
+                    return;
+                }
+                this.#logger.debug(`PlayerPromptService: Successfully subscribed to 'core:player_turn_submitted' for actor ${actorId}.`);
+            } catch (error) {
+                this.#logger.error(`PlayerPromptService: Error subscribing to 'core:player_turn_submitted' for actor ${actorId}.`, error);
+                cleanup();
+                reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}.`, error, "SUBSCRIPTION_ERROR"));
             }
-        }
-        // 6. Implicit successful resolution (return undefined) if no errors thrown
+        });
     }
 }
 

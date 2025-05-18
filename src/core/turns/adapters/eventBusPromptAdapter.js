@@ -4,8 +4,8 @@
 import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';
 
 // --- Type Imports for JSDoc ---
-/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../ports/commonTypes.js').DiscoveredActionInfo} DiscoveredActionInfo */
 
 /**
@@ -73,7 +73,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
             throw new Error("EventBusPromptAdapter.prompt: availableActions must be an array.");
         }
 
-        /** @type {import('../turns/handlers/playerTurnHandler.js').PlayerTurnPromptPayload} */
+        /** @type {import('../handlers/playerTurnHandler.js').PlayerTurnPromptPayload} */
         const payload = {
             entityId,
             availableActions,

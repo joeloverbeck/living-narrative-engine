@@ -13,7 +13,7 @@
 /** @typedef {import('../states/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../context/turnContext.js').TurnContext} ConcreteTurnContext */ // Alias for clarity
-/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 // TODO: Add typedef for AIPlayerStrategy if/when defined
 // /** @typedef {import('../strategies/aiPlayerStrategy.js').AIPlayerStrategy} AIPlayerStrategy */
 

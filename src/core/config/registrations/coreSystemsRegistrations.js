@@ -21,8 +21,8 @@
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
-/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler_Concrete */ // Renamed for clarity
 /** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler_Concrete */       // Renamed for clarity
 /** @typedef {import('../../turns/services/turnHandlerResolver.js').default} TurnHandlerResolver */

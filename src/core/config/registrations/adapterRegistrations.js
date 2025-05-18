@@ -10,14 +10,14 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
-/** @typedef {import('../../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
-/** @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
+/** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 
 // --- Adapter Imports ---
-import {EventBusCommandInputGateway} from '../../adapters/eventBusCommandInputGateway.js';
-import {EventBusPromptAdapter} from '../../adapters/eventBusPromptAdapter.js';
-import EventBusTurnEndAdapter from '../../adapters/eventBusTurnEndAdapter.js'; // Corrected filename case
+import {EventBusCommandInputGateway} from '../../turns/adapters/eventBusCommandInputGateway.js';
+import {EventBusPromptAdapter} from '../../turns/adapters/eventBusPromptAdapter.js';
+import EventBusTurnEndAdapter from '../../turns/adapters/eventBusTurnEndAdapter.js'; // Corrected filename case
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';

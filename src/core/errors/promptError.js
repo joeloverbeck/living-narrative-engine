@@ -9,7 +9,7 @@
  * @class PromptError
  * @extends Error
  * @description Custom error class for failures specifically related to player prompting logic,
- * such as issues during action discovery or dispatching the prompt event.
+ * such as issues during action discovery, dispatching the prompt event, or awaiting player input.
  */
 export class PromptError extends Error {
     /**
@@ -20,12 +20,21 @@ export class PromptError extends Error {
     cause;
 
     /**
+     * An optional error code for programmatic error handling or categorization.
+     * @type {string | undefined}
+     * @public
+     */
+    code;
+
+    /**
      * Creates an instance of PromptError.
      * @param {string} message - The primary error message describing the prompt failure.
      * @param {Error | any} [originalError] - The underlying error that triggered this error, if any.
      * This will be stored in the `cause` property.
+     * @param {string} [errorCode] - An optional error code (e.g., "PROMPT_TIMEOUT", "INVALID_ACTION_ID").
+     * This will be stored in the `code` property.
      */
-    constructor(message, originalError) {
+    constructor(message, originalError, errorCode) {
         super(message); // Pass message to the base Error class constructor
         this.name = 'PromptError'; // Set the name property for identification
 
@@ -39,9 +48,12 @@ export class PromptError extends Error {
             this.cause = originalError;
         }
 
+        // Store the error code if provided
+        if (errorCode !== undefined) {
+            this.code = errorCode;
+        }
+
         // Ensure the prototype chain is correctly set for instanceof checks
-        // This is often necessary when extending built-in types like Error in older JS environments
-        // or specific transpiler configurations, but generally good practice.
         Object.setPrototypeOf(this, PromptError.prototype);
     }
 }

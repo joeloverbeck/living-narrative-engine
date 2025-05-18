@@ -2,11 +2,11 @@
 // --- FILE START ---
 
 import {ITurnEndPort} from '../ports/ITurnEndPort.js';
-import {TURN_ENDED_ID} from "../constants/eventIds.js";
+import {TURN_ENDED_ID} from "../../constants/eventIds.js";
 
-/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
-/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 
 export default class EventBusTurnEndAdapter extends ITurnEndPort {

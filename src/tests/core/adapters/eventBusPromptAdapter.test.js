@@ -1,7 +1,7 @@
 // src/core/adapters/EventBusPromptAdapter.test.js
 // --- FILE START ---
 
-import { EventBusPromptAdapter } from '../../../core/adapters/eventBusPromptAdapter.js';
+import { EventBusPromptAdapter } from '../../../core/turns/adapters/eventBusPromptAdapter.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // --- Mocks ---

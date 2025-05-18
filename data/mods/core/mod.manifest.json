@@ -38,7 +38,8 @@
       "action_failed.event.json",
       "system_error_occurred.event.json",
       "submit_command.event.json",
-      "attempt_action.event.json"
+      "attempt_action.event.json",
+      "player_turn_submitted.event.json"
     ],
     "operations": [
     ]

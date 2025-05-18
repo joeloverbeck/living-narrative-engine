@@ -1,7 +1,7 @@
 // src/tests/core/adapters/EventBusTurnEndAdapter.test.js
 // --- FILE START ---
 
-import EventBusTurnEndAdapter from '../../../core/adapters/eventBusTurnEndAdapter.js';
+import EventBusTurnEndAdapter from '../../../core/turns/adapters/eventBusTurnEndAdapter.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 import {TURN_ENDED_ID} from "../../../core/constants/eventIds.js";
 

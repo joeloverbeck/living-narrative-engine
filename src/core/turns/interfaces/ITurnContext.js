@@ -25,7 +25,7 @@
  * @description Manages subscriptions to events, like command input.
  */
 /**
- * @typedef {import('../../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  * @description Port for notifying when a turn has ended.
  */
 /**

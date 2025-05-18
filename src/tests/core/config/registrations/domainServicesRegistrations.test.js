@@ -18,7 +18,7 @@
 /** @typedef {import('../../../../core/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../../core/turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
 /** @typedef {import('../../../../core/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../../../core/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../../../core/turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
