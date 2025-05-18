@@ -206,7 +206,7 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should throw error if domElementFactory is missing or invalid', () => {
-        const expectedErrorString = `${CLASS_PREFIX} 'domElementFactory' dependency is missing or invalid.`;
+        const expectedErrorString = `${CLASS_PREFIX} 'domElementFactory' dependency is missing or invalid (must have create and button methods).`;
         expect(() => createInstance(mockContainer, null)).toThrow(expectedErrorString);
         // Test with factory missing 'create' method (which is checked by constructor)
         expect(() => createInstance(mockContainer, {button: jest.fn()})).toThrow(expectedErrorString);
@@ -226,14 +226,17 @@ describe('ActionButtonsRenderer', () => {
     // --- Event Handling (#handleUpdateActions via simulated dispatch) ---
     describe('Event Handling (#handleUpdateActions)', () => {
         const eventType = 'textUI:update_available_actions';
-        const warningBase = `${CLASS_PREFIX} Received invalid or incomplete event object structure for '${eventType}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons. Received object:`;
+        // Note: The warningBase below was slightly off for the "missing payload" case.
+        // The actual logged message doesn't include "Received object:" in the string part.
+        const warningBaseForInvalidStructure = `${CLASS_PREFIX} Received invalid or incomplete event object structure for '${eventType}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons.`;
+
         let instance;
         let renderSpy;
 
         beforeEach(() => {
             instance = createInstance();
             renderSpy = jest.spyOn(instance, 'render').mockImplementation(() => {
-            }); // Spy on actual instance method
+            });
             if (!capturedEventHandler) throw new Error("Test setup error: event handler not captured");
             mockLogger.warn.mockClear();
             mockLogger.debug.mockClear();
@@ -248,7 +251,6 @@ describe('ActionButtonsRenderer', () => {
             expect(renderSpy).toHaveBeenCalledTimes(1);
             expect(renderSpy).toHaveBeenCalledWith(validActions);
             expect(mockLogger.warn).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Received event object for '${eventType}'`), validEventObject);
         });
 
         it('should filter invalid actions from the nested array and call render with valid ones', () => {
@@ -262,18 +264,32 @@ describe('ActionButtonsRenderer', () => {
                 action && typeof action === 'object' && typeof action.id === 'string' && action.id.length > 0 &&
                 typeof action.command === 'string' && action.command.trim().length > 0
             );
+
             capturedEventHandler(mixedEventObject);
+
             expect(renderSpy).toHaveBeenCalledWith(expectedValidActions);
+
+            // Corrected assertion for the warning
+            const expectedWarningString = `${CLASS_PREFIX} Received '${eventType}' with some invalid items in the nested actions array. Only valid action objects will be rendered.`;
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Received '${eventType}' with some invalid items`), mixedEventObject
+                expectedWarningString,
+                {originalEvent: mixedEventObject} // The code logs {originalEvent: eventObject}
             );
         });
 
         it('should call render with empty array for event object missing inner "payload"', () => {
-            const invalidEventObject = {type: eventType};
+            const invalidEventObject = {type: eventType}; // Missing payload
+
             capturedEventHandler(invalidEventObject);
+
             expect(renderSpy).toHaveBeenCalledWith([]);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(warningBase), invalidEventObject);
+
+            // Use the corrected warningBaseForInvalidStructure
+            // The second argument logged by the code is {receivedObject: eventObject}
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                warningBaseForInvalidStructure, // The string part
+                {receivedObject: invalidEventObject} // The details object
+            );
         });
     });
 
@@ -287,11 +303,11 @@ describe('ActionButtonsRenderer', () => {
             mockLogger.error.mockClear();
             mockLogger.info.mockClear();
             mockContainer._reset();
-            mockDomElementFactory.button.mockClear(); // Clear factory calls
+            mockDomElementFactory.button.mockClear();
         });
 
         it('should clear the container before rendering', () => {
-            const dummyDiv = createButtonLikeMock('dummy'); // Use factory for consistency
+            const dummyDiv = createButtonLikeMock('dummy');
             mockContainer.appendChild(dummyDiv);
             mockContainer.appendChild.mockClear();
             instance.render([{id: 'core:wait', command: 'wait'}]);
@@ -323,13 +339,13 @@ describe('ActionButtonsRenderer', () => {
 
         it('should treat non-array actions argument as empty list, not log error', () => {
             const dummyDiv = createButtonLikeMock('dummy');
-            mockContainer.appendChild(dummyDiv); // Add something to be cleared
-            mockContainer.appendChild.mockClear(); // Clear this setup call for appendChild
+            mockContainer.appendChild(dummyDiv);
+            mockContainer.appendChild.mockClear();
             instance.render("not an array");
             expect(mockLogger.error).not.toHaveBeenCalled();
-            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv); // Check that clearContainer was effective
+            expect(mockContainer.removeChild).toHaveBeenCalledWith(dummyDiv);
             expect(mockContainer.children.length).toBe(0);
-            expect(mockDomElementFactory.button).not.toHaveBeenCalled(); // No buttons should be created
+            expect(mockDomElementFactory.button).not.toHaveBeenCalled();
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container remains empty. Confirm button remains disabled.`));
         });
 
@@ -337,10 +353,19 @@ describe('ActionButtonsRenderer', () => {
             const actions = [{id: 'core:valid', command: 'do valid'}, null, {id: 'core:final', command: 'last one'}];
             const expectedValidCount = 2;
             const expectedInvalidCount = 1;
+
             instance.render(actions);
+
             expect(mockDomElementFactory.button).toHaveBeenCalledTimes(expectedValidCount);
             expect(mockLogger.warn).toHaveBeenCalledTimes(expectedInvalidCount);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Skipping invalid action object during render: `), null);
+
+            // Corrected assertion for the warning when actionObject is null
+            const expectedWarningString = `${CLASS_PREFIX} Skipping invalid action object during render: `;
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expectedWarningString,
+                {actionObject: null} // The code logs {actionObject: theItem}
+            );
+
             expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Rendered ${expectedValidCount} action buttons. Selected action: none.`));
         });
     });

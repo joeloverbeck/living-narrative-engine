@@ -1,4 +1,4 @@
-// src/tests/domUI/actionButtonsRenderer.test.js
+// src/tests/domUI/actionButtonsRenderer.constructor.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 // Import from specific file for clarity
@@ -156,24 +156,40 @@ describe('ActionButtonsRenderer', () => {
         it('should throw if actionButtonsContainer is missing (null) or not a valid DOM element', () => {
             expect(() => createRenderer(null)).toThrow(/'actionButtonsContainer' dependency is missing or not a valid DOM element/);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] 'actionButtonsContainer' dependency is missing or not a valid DOM element."), {receivedElement: null});
-            mockLogger.error.mockClear();
+            mockLogger.error.mockClear(); // Clear mock for the next assertion on the same mock
 
             const textNode = dom.window.document.createTextNode('text'); // Use current test's JSDOM
             expect(() => createRenderer(textNode)).toThrow(/'actionButtonsContainer' dependency is missing or not a valid DOM element/);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] 'actionButtonsContainer' dependency is missing or not a valid DOM element."), {receivedElement: textNode});
         });
 
-        // ****** CORRECTED TEST LOGIC ******
         it('should throw if domElementFactory is missing or invalid', () => {
+            const expectedErrorMessage = "[ActionButtonsRenderer] 'domElementFactory' dependency is missing or invalid (must have create and button methods).";
+
             // Test passing null directly as the factory dependency
-            expect(() => createRenderer(actionButtonsContainer, null)).toThrow(/dependency is missing or invalid/);
+            expect(() => createRenderer(actionButtonsContainer, null))
+                .toThrow(expectedErrorMessage);
 
-            // Test passing an empty object directly (which lacks the 'create' method)
-            expect(() => createRenderer(actionButtonsContainer, {})).toThrow(/dependency is missing or invalid/);
+            // Test passing an empty object directly (which lacks the 'create' and 'button' methods)
+            expect(() => createRenderer(actionButtonsContainer, {}))
+                .toThrow(expectedErrorMessage);
 
-            // Ensure the logger was called (it should be called twice, once for each expect above)
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] 'domElementFactory' dependency is missing or invalid."));
-            expect(mockLogger.error).toHaveBeenCalledTimes(2); // Called once per invalid case tested
+            // Ensure the logger was called twice
+            expect(mockLogger.error).toHaveBeenCalledTimes(2);
+
+            // Check the arguments of the first call to mockLogger.error
+            expect(mockLogger.error).toHaveBeenNthCalledWith(
+                1, // Call number
+                expectedErrorMessage, // Expected first argument (the error message string)
+                {receivedFactory: null} // Expected second argument (details object)
+            );
+
+            // Check the arguments of the second call to mockLogger.error
+            expect(mockLogger.error).toHaveBeenNthCalledWith(
+                2, // Call number
+                expectedErrorMessage, // Expected first argument (the error message string)
+                {receivedFactory: {}} // Expected second argument (details object)
+            );
         });
 
 
