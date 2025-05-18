@@ -30,10 +30,24 @@ import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
  */
 
 /**
+ * Represents the object resolved by the prompt() method's promise.
  * @typedef {object} PlayerPromptResolution
- * @property {AvailableAction} action - The selected available action.
+ * @property {AvailableAction} action - The selected available action object (contains id, command, etc.).
  * @property {string | null} speech - The speech input from the player, or null.
  */
+
+/**
+ * @typedef {object} CorePlayerTurnSubmittedEvent
+ * @property {string} type - The event type, e.g., 'core:player_turn_submitted'.
+ * @property {CorePlayerTurnSubmittedEventPayload} payload - The nested payload of the event.
+ */
+
+/**
+ * @typedef {object} CorePlayerTurnSubmittedEventPayload
+ * @property {string} actionId - The ID of the action submitted by the player.
+ * @property {string|null} speech - The speech associated with the action.
+ */
+
 
 /**
  * @class PlayerPromptService
@@ -131,7 +145,7 @@ class PlayerPromptService extends IPlayerPromptService {
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
      * @returns {Promise<PlayerPromptResolution>} A promise that resolves with an object containing the
-     * selected action and speech, or rejects with a PromptError.
+     * selected action (type AvailableAction) and speech, or rejects with a PromptError.
      * @throws {PromptError} If initial setup (actor validation, location fetching, action discovery,
      * or sending prompt to UI) fails. The Promise itself can also reject with a PromptError
      * for reasons like timeout, invalid action ID, or subscription issues.
@@ -176,7 +190,7 @@ class PlayerPromptService extends IPlayerPromptService {
 
         // 4. Action Discovery
         /** @type {DiscoveredActionInfo[]} */
-        let discoveredActions;
+        let discoveredActions; // This will be an array of DiscoveredActionInfo
         try {
             this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
             discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
@@ -225,54 +239,87 @@ class PlayerPromptService extends IPlayerPromptService {
 
             this.#logger.debug(`PlayerPromptService: Setting up listener for 'core:player_turn_submitted' and timeout for actor ${actorId}. Timeout: ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
 
-            // Setup timeout
             timeoutId = setTimeout(() => {
                 this.#logger.warn(`PlayerPromptService: Prompt timed out for actor ${actorId} after ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
                 cleanup();
                 reject(new PromptError(`Player prompt timed out for actor ${actorId}.`, null, "PROMPT_TIMEOUT"));
             }, PlayerPromptService.#PROMPT_TIMEOUT_MS);
 
-            // Event handler
-            /** @param {object} eventPayload - The payload from 'core:player_turn_submitted' event.
-             * @param {string} eventPayload.actionId
-             * @param {string|null} eventPayload.speech
+            /**
+             * Handles the 'core:player_turn_submitted' event.
+             * @param {CorePlayerTurnSubmittedEvent} eventObject - The full event object from EventBus.
              */
-            const handlePlayerTurnSubmitted = (eventPayload) => {
-                this.#logger.debug(`PlayerPromptService: Received 'core:player_turn_submitted' event for actor ${actorId}. Payload:`, eventPayload);
+            const handlePlayerTurnSubmitted = (eventObject) => {
+                this.#logger.debug(`PlayerPromptService: Received 'core:player_turn_submitted' event object for actor ${actorId}. Full Event:`, eventObject);
+
+                // Cleanup should be called regardless of payload validity for this specific event instance
+                // But ensure it's called only once per event instance.
+                // The outer Promise structure and cleanup function handle this.
 
                 // It's good practice to ensure the event is for the prompted actor if the event doesn't inherently filter.
-                // However, the current event schema 'core:player_turn_submitted' does not include actorId.
-                // We assume the game architecture ensures this event is relevant.
+                // However, the current event schema 'core:player_turn_submitted' does not include actorId in its payload.
+                // We assume the game architecture ensures this event is relevant to the current prompt context for `actorId`.
 
-                cleanup();
+                // --- MODIFICATION START ---
+                // Validate the structure of the received eventObject and its nested payload
+                if (!eventObject ||
+                    typeof eventObject.type !== 'string' ||
+                    eventObject.type !== 'core:player_turn_submitted' || // Check type
+                    !eventObject.payload || // Check if payload exists
+                    typeof eventObject.payload !== 'object') { // Check if payload is an object
 
-                if (!eventPayload || typeof eventPayload.actionId !== 'string') {
-                    this.#logger.error(`PlayerPromptService: Invalid event payload received for 'core:player_turn_submitted' for actor ${actorId}.`, eventPayload);
-                    reject(new PromptError(`Invalid event payload for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_PAYLOAD"));
+                    this.#logger.error(`PlayerPromptService: Invalid event object structure received for 'core:player_turn_submitted' for actor ${actorId}. Expected {type: 'core:player_turn_submitted', payload: {...}}. Received:`, eventObject);
+                    cleanup(); // Cleanup before rejecting
+                    reject(new PromptError(`Malformed event object for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
                     return;
                 }
 
-                const {actionId, speech} = eventPayload;
-                const selectedAction = discoveredActions.find(da => da.action.id === actionId);
+                // Extract the actual payload (which was validated by VED)
+                /** @type {CorePlayerTurnSubmittedEventPayload} */
+                const actualPayload = eventObject.payload;
 
-                if (!selectedAction) {
-                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions.`, {discoveredActions});
-                    reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}.`, null, "INVALID_ACTION_ID"));
+                // Now validate the actualPayload's content (actionId)
+                if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
+                    this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for 'core:player_turn_submitted' for actor ${actorId}. Payload:`, actualPayload);
+                    cleanup(); // Cleanup before rejecting
+                    reject(new PromptError(`Invalid actionId in payload for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
+                    return;
+                }
+
+                // If we reach here, the event structure and essential payload content are valid.
+                // Proceed with cleanup now that we're sure this listener instance is done.
+                cleanup();
+
+                const {actionId, speech} = actualPayload; // Destructure from the nested payload
+                // Find the DiscoveredActionInfo object based on the actionId.
+                // `discoveredActions` is an array of `DiscoveredActionInfo`.
+                // Each `DiscoveredActionInfo` has an `action` property of type `AvailableAction`.
+                const selectedDiscoveredActionInfo = discoveredActions.find(da => da.action.id === actionId);
+
+                if (!selectedDiscoveredActionInfo) {
+                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions.`, {
+                        discoveredActions,
+                        receivedActionId: actionId
+                    });
+                    reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
                 } else {
                     this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' received for actor ${actorId}. Resolving prompt.`);
-                    resolve({action: selectedAction, speech: speech || null});
+                    // The `prompt` method's Promise resolves with PlayerPromptResolution.
+                    // PlayerPromptResolution expects `action` to be of type `AvailableAction`.
+                    // `selectedDiscoveredActionInfo.action` is the `AvailableAction` object.
+                    resolve({
+                        action: selectedDiscoveredActionInfo.action, // This is the AvailableAction
+                        speech: speech || null
+                    });
                 }
+                // --- MODIFICATION END ---
             };
 
-            // Subscribe to the event
             try {
                 unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe('core:player_turn_submitted', handlePlayerTurnSubmitted);
                 if (typeof unsubscribeFromEvent !== 'function') {
-                    // This case might occur if the subscribe method could return something other than a function on failure,
-                    // e.g. if using SafeEventDispatcher which might return null.
-                    // Standard EventBus usually throws or returns a function.
                     this.#logger.error(`PlayerPromptService: Subscription to 'core:player_turn_submitted' for actor ${actorId} did not return an unsubscribe function.`);
-                    cleanup(); // Attempt cleanup, though unsubscribeFromEvent might be null already
+                    cleanup();
                     reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
                     return;
                 }
