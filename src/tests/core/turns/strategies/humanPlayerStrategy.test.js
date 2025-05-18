@@ -9,17 +9,6 @@ const mockTurnContext = {
     getActor: jest.fn(),
     getLogger: jest.fn(),
     getPlayerPromptService: jest.fn(),
-    // --- Add other methods if they become needed by the strategy or its helpers ---
-    // getGame: jest.fn(),
-    // getCommandProcessor: jest.fn(),
-    // getCommandOutcomeInterpreter: jest.fn(),
-    // getSafeEventDispatcher: jest.fn(),
-    // getSubscriptionManager: jest.fn(),
-    // getTurnEndPort: jest.fn(),
-    // endTurn: jest.fn(),
-    // isAwaitingExternalEvent: jest.fn(),
-    // requestTransition: jest.fn(),
-    // setAwaitingExternalEvent: jest.fn(),
 };
 
 // Mock for IPlayerPromptService
@@ -33,7 +22,6 @@ const mockMainLogger = {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    // Removed createChildLogger as it's no longer used by the strategy directly
 };
 
 // Mock for Entity (Actor)
@@ -41,6 +29,14 @@ const mockActor = {
     id: 'player1',
     name: 'TestPlayer',
 };
+
+// Mock for AvailableAction
+const mockAvailableAction = {
+    id: 'test:actionId',
+    command: 'Test Command String',
+    // Add other properties if your AvailableAction type has more
+};
+
 
 describe('HumanPlayerStrategy', () => {
     let strategy;
@@ -53,11 +49,12 @@ describe('HumanPlayerStrategy', () => {
         consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
         });
 
-        // Default setup: getLogger returns the main logger
+        // Default setup for mocks
         mockTurnContext.getLogger.mockReturnValue(mockMainLogger);
-        // Ensure other necessary mocks are set up
         mockTurnContext.getActor.mockReturnValue(mockActor);
         mockTurnContext.getPlayerPromptService.mockReturnValue(mockPlayerPromptService);
+        // Reset specific service mocks if they were changed in a test
+        mockPlayerPromptService.prompt.mockReset();
     });
 
     afterEach(() => {
@@ -65,129 +62,110 @@ describe('HumanPlayerStrategy', () => {
     });
 
     describe('decideAction', () => {
-        it('should prompt the player and return an ITurnAction with trimmed command string, correct actionDefinitionId, and resolvedParameters', async () => {
-            const rawCommand = '  look around  ';
-            const trimmedCommand = 'look around';
-            mockPlayerPromptService.prompt.mockResolvedValueOnce(rawCommand);
+        it('should call playerPromptService.prompt and return a correctly structured ITurnAction', async () => {
+            const playerData = {
+                action: {...mockAvailableAction, id: 'action:look', command: 'Look Around'},
+                speech: 'quickly',
+            };
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
 
             const turnAction = await strategy.decideAction(mockTurnContext);
 
             expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
             expect(mockTurnContext.getPlayerPromptService).toHaveBeenCalledTimes(1);
             expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor, `${mockActor.name || 'Player'}, your command?`);
+            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor); // No more prompt message argument
 
             expect(turnAction).toEqual({
-                commandString: trimmedCommand,
-                actionDefinitionId: 'player:commandInput',
-                resolvedParameters: {rawCommand: trimmedCommand},
+                actionDefinitionId: playerData.action.id,
+                commandString: playerData.action.command,
+                resolvedParameters: {speech: playerData.speech},
             });
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Initiating decideAction for actor ${mockActor.id}.`);
-            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Prompting actor ${mockActor.id} with message: "${mockActor.name || 'Player'}, your command?"`);
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${trimmedCommand}" from actor ${mockActor.id}.`);
-            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Resolving with ITurnAction for actor ${mockActor.id}:`, {turnActionDetails: turnAction});
+
+            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Initiating decideAction for actor ${mockActor.id}.`);
+            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${mockActor.id}.`);
+            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Received playerData for actor ${mockActor.id}. Details:`, playerData);
+            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: playerData for actor ${mockActor.id} validated successfully. Action ID: "${playerData.action.id}".`);
+            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Constructed ITurnAction for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`);
+            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: ITurnAction details for actor ${mockActor.id}:`, {turnActionDetails: turnAction});
         });
 
-        it('should re-prompt if the player provides an empty command string initially, then return correct ITurnAction', async () => {
-            const emptyCommand = '';
-            const validCommand = 'move north';
-            mockPlayerPromptService.prompt
-                .mockResolvedValueOnce(emptyCommand)
-                .mockResolvedValueOnce(validCommand);
+        it('should handle null speech from playerData correctly', async () => {
+            const playerData = {
+                action: {...mockAvailableAction, id: 'action:wait', command: 'Wait'},
+                speech: null,
+            };
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
 
             const turnAction = await strategy.decideAction(mockTurnContext);
 
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(2);
-            expect(mockPlayerPromptService.prompt).toHaveBeenNthCalledWith(1, mockActor, `${mockActor.name || 'Player'}, your command?`);
-            expect(mockPlayerPromptService.prompt).toHaveBeenNthCalledWith(2, mockActor, `${mockActor.name || 'Player'}, please enter a command. (Previous was empty)`);
             expect(turnAction).toEqual({
-                commandString: validCommand,
-                actionDefinitionId: 'player:commandInput',
-                resolvedParameters: {rawCommand: validCommand},
+                actionDefinitionId: playerData.action.id,
+                commandString: playerData.action.command,
+                resolvedParameters: {speech: null},
             });
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Empty command received from actor ${mockActor.id}. Re-prompting.`);
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${validCommand}" from actor ${mockActor.id}.`);
+            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor);
         });
 
-        it('should re-prompt if the player provides a whitespace-only command string initially, then return correct ITurnAction', async () => {
-            const whitespaceCommand = '   ';
-            const validCommand = 'inventory';
-            mockPlayerPromptService.prompt
-                .mockResolvedValueOnce(whitespaceCommand)
-                .mockResolvedValueOnce(validCommand);
+        // Test for safeguarding playerData integrity
+        it('should throw if playerData from prompt is null', async () => {
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(null);
+            const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: null`;
 
-            const turnAction = await strategy.decideAction(mockTurnContext);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(2);
-            expect(turnAction).toEqual({
-                commandString: validCommand,
-                actionDefinitionId: 'player:commandInput',
-                resolvedParameters: {rawCommand: validCommand},
-            });
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.debug).toHaveBeenCalledWith(`HumanPlayerStrategy: Empty command received from actor ${mockActor.id}. Re-prompting.`);
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${validCommand}" from actor ${mockActor.id}.`);
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
+                {receivedData: null}
+            );
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                // The error message in the final log includes the "Received: null" part
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
+            );
         });
 
-        it('should use "Player" in prompt if actor name is null, undefined or empty and return correct ITurnAction', async () => {
-            const actorWithoutName = {id: 'player2', name: null};
-            mockTurnContext.getActor.mockReturnValueOnce(actorWithoutName);
-            const command = 'test command';
-            mockPlayerPromptService.prompt.mockResolvedValueOnce(command);
+        it('should throw if playerData.action from prompt is null', async () => {
+            const playerData = {action: null, speech: 'hello'};
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
+            const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: ${JSON.stringify(playerData)}`;
 
-            let turnAction = await strategy.decideAction(mockTurnContext);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(actorWithoutName, 'Player, your command?');
-            expect(turnAction).toEqual({
-                commandString: command,
-                actionDefinitionId: 'player:commandInput',
-                resolvedParameters: {rawCommand: command},
-            });
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${command}" from actor ${actorWithoutName.id}.`);
-
-
-            // Clear mocks for the next part of the test within the same 'it' block
-            jest.clearAllMocks();
-            // Reset main logger mock for the next section
-            mockTurnContext.getLogger.mockReturnValue(mockMainLogger);
-            mockTurnContext.getPlayerPromptService.mockReturnValue(mockPlayerPromptService); // Ensure service is reset if needed
-
-
-            const actorWithUndefinedName = {id: 'player3'}; // name is undefined
-            mockTurnContext.getActor.mockReturnValueOnce(actorWithUndefinedName);
-            mockPlayerPromptService.prompt.mockResolvedValueOnce(command); // Reset for next call
-            turnAction = await strategy.decideAction(mockTurnContext);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(actorWithUndefinedName, 'Player, your command?');
-            expect(turnAction.commandString).toBe(command);
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${command}" from actor ${actorWithUndefinedName.id}.`);
-
-
-            // Clear mocks for the next part of the test within the same 'it' block
-            jest.clearAllMocks();
-            // Reset main logger mock for the next section
-            mockTurnContext.getLogger.mockReturnValue(mockMainLogger);
-            mockTurnContext.getPlayerPromptService.mockReturnValue(mockPlayerPromptService); // Ensure service is reset if needed
-
-            const actorWithEmptyName = {id: 'player4', name: ''};
-            mockTurnContext.getActor.mockReturnValueOnce(actorWithEmptyName);
-            mockPlayerPromptService.prompt.mockResolvedValueOnce(command); // Reset for next call
-            turnAction = await strategy.decideAction(mockTurnContext);
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(actorWithEmptyName, 'Player, your command?');
-            expect(turnAction.commandString).toBe(command);
-            // Log messages will now go to the main logger
-            expect(mockMainLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Received command "${command}" from actor ${actorWithEmptyName.id}.`);
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
+                {receivedData: playerData}
+            );
         });
+
+        it('should throw if playerData.action.id is missing or not a string', async () => {
+            const playerDataMissingId = {action: {command: 'Do It'}, speech: 'now'}; // missing id
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerDataMissingId);
+            const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
+            // Using RegExp to match the start of the error message
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(new RegExp(`^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+
+            const playerDataInvalidId = {action: {id: 123, command: 'Do It'}, speech: 'now'}; // id not a string
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerDataInvalidId);
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(new RegExp(`^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        });
+
+        it('should throw if playerData.action.command is missing or not a string', async () => {
+            const playerDataMissingCommand = {action: {id: 'cmd:do'}, speech: 'now'}; // missing command
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerDataMissingCommand);
+            const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(new RegExp(`^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+
+            const playerDataInvalidCommand = {action: {id: 'cmd:do', command: 123}, speech: 'now'}; // command not a string
+            mockPlayerPromptService.prompt.mockResolvedValueOnce(playerDataInvalidCommand);
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(new RegExp(`^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        });
+
 
         // --- Tests for _getLoggerFromContext (and initial context validation) ---
         it('should throw and log to console.error if ITurnContext is null', async () => {
             await expect(strategy.decideAction(null))
                 .rejects
                 .toThrow('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
-            // Expect console.error because logger cannot be obtained
             expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
-            // Ensure no logger methods were called
             expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
@@ -195,9 +173,7 @@ describe('HumanPlayerStrategy', () => {
             await expect(strategy.decideAction(undefined))
                 .rejects
                 .toThrow('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
-            // Expect console.error because logger cannot be obtained
             expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: ITurnContext is null or undefined.');
-            // Ensure no logger methods were called
             expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
@@ -206,9 +182,7 @@ describe('HumanPlayerStrategy', () => {
             await expect(strategy.decideAction(invalidContext))
                 .rejects
                 .toThrow('HumanPlayerStrategy Critical: context.getLogger is not a function.');
-            // Expect console.error because logger cannot be obtained
             expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: context.getLogger is not a function.');
-            // Ensure no logger methods were called
             expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
@@ -221,140 +195,172 @@ describe('HumanPlayerStrategy', () => {
 
             await expect(strategy.decideAction(mockTurnContext))
                 .rejects
-                .toThrow(`HumanPlayerStrategy Critical: context.getLogger() failed. Details: ${specificErrorMessage}`);
-            // Expect console.error because logger cannot be obtained reliably
-            expect(consoleErrorSpy).toHaveBeenCalledWith(`HumanPlayerStrategy Critical: context.getLogger() threw an error during retrieval: ${specificErrorMessage}`);
-            // Ensure no logger methods were called
+                .toThrow(`HumanPlayerStrategy Critical: context.getLogger() call failed. Details: ${specificErrorMessage}`);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(`HumanPlayerStrategy Critical: context.getLogger() call failed. Details: ${specificErrorMessage}`, specificError);
             expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
         it('should throw and log to console.error if logger from context is null', async () => {
             mockTurnContext.getLogger.mockReturnValueOnce(null);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
             await expect(strategy.decideAction(mockTurnContext))
                 .rejects
-                .toThrow('HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete.');
-            // Expect console.error because the retrieved logger is invalid
-            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: Logger retrieved from context is invalid or incomplete (missing required methods like info, error, debug).');
-            // Ensure no logger methods were called (as the logger instance was null)
-            expect(mockMainLogger.error).not.toHaveBeenCalled(); // Note: This check is tricky because the mock was *not* returned.
+                .toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
         it('should throw and log to console.error if logger from context is incomplete (e.g., missing error method)', async () => {
-            const incompleteLogger = {info: jest.fn(), debug: jest.fn()}; // Missing 'error'
+            const incompleteLogger = {info: jest.fn(), debug: jest.fn(), warn: jest.fn()}; // Missing 'error'
             mockTurnContext.getLogger.mockReturnValueOnce(incompleteLogger);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
             await expect(strategy.decideAction(mockTurnContext))
                 .rejects
-                .toThrow('HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete.');
-            // Expect console.error because the retrieved logger is invalid
-            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: Logger retrieved from context is invalid or incomplete (missing required methods like info, error, debug).');
-            // Ensure no error logging happened via the incomplete logger
-            expect(incompleteLogger.error).toBeUndefined(); // Or check that if it existed, it wasn't called
-            // Ensure mockMainLogger wasn't used either
+                .toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(incompleteLogger.error).toBeUndefined();
             expect(mockMainLogger.error).not.toHaveBeenCalled();
         });
 
         it('should throw and log to console.error if logger from context is incomplete (e.g., missing info method)', async () => {
-            const incompleteLogger = {error: jest.fn(), debug: jest.fn()}; // Missing 'info'
+            const incompleteLogger = {error: jest.fn(), debug: jest.fn(), warn: jest.fn()}; // Missing 'info'
             mockTurnContext.getLogger.mockReturnValueOnce(incompleteLogger);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
             await expect(strategy.decideAction(mockTurnContext))
                 .rejects
-                .toThrow('HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete.');
-            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: Logger retrieved from context is invalid or incomplete (missing required methods like info, error, debug).');
+                .toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             expect(incompleteLogger.info).toBeUndefined();
-            expect(mockMainLogger.info).not.toHaveBeenCalled();
         });
 
         it('should throw and log to console.error if logger from context is incomplete (e.g., missing debug method)', async () => {
-            const incompleteLogger = {error: jest.fn(), info: jest.fn()}; // Missing 'debug'
+            const incompleteLogger = {error: jest.fn(), info: jest.fn(), warn: jest.fn()}; // Missing 'debug'
             mockTurnContext.getLogger.mockReturnValueOnce(incompleteLogger);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
             await expect(strategy.decideAction(mockTurnContext))
                 .rejects
-                .toThrow('HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete.');
-            expect(consoleErrorSpy).toHaveBeenCalledWith('HumanPlayerStrategy Critical: Logger retrieved from context is invalid or incomplete (missing required methods like info, error, debug).');
+                .toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
             expect(incompleteLogger.debug).toBeUndefined();
-            expect(mockMainLogger.debug).not.toHaveBeenCalled();
+        });
+
+        it('should throw and log to console.error if logger from context is incomplete (e.g., missing warn method)', async () => {
+            const incompleteLogger = {error: jest.fn(), info: jest.fn(), debug: jest.fn()}; // Missing 'warn'
+            mockTurnContext.getLogger.mockReturnValueOnce(incompleteLogger);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
+            await expect(strategy.decideAction(mockTurnContext))
+                .rejects
+                .toThrow(expectedErrorMsg);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
+            expect(incompleteLogger.warn).toBeUndefined();
         });
 
 
         // --- Tests for _getActorFromContext (assuming logger was obtained successfully) ---
         it('should throw and log via MAIN logger if context.getActor is not a function', async () => {
-            // Setup: Ensure getLogger returns the valid mockMainLogger first
-            mockTurnContext.getLogger.mockReturnValue(mockMainLogger);
-
+            mockTurnContext.getLogger.mockReturnValue(mockMainLogger); // Ensure logger is fine
             const invalidContext = {
-                ...mockTurnContext, // Spread valid parts
-                getLogger: jest.fn().mockReturnValue(mockMainLogger), // Keep getLogger valid
-                getActor: "not-a-function" // Introduce the invalid part
+                ...mockTurnContext, // Spreads existing mocks including getLogger
+                getActor: "not-a-function" // Override getActor
             };
-
-            await expect(strategy.decideAction(invalidContext))
-                .rejects
-                .toThrow('HumanPlayerStrategy Critical: context.getActor is not a function.');
-
-            // Error logged by _getActorFromContext using the obtained logger
-            expect(mockMainLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy Critical: context.getActor is not a function.');
-            // Error logged by the outer catch block in decideAction
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: context.getActor is not a function.';
+            await expect(strategy.decideAction(invalidContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg); // Logged by _getActorFromContext
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor unknown_actor. Message: HumanPlayerStrategy Critical: context.getActor is not a function.`),
-                expect.any(Error) // Expect the actual error object to be logged
+                // Because getActor is not a function, actorIdForLog in final catch will be 'unknown_actor'
+                `HumanPlayerStrategy.decideAction: Operation failed for actor unknown_actor. Error: ${expectedErrorMsg}`,
+                expect.any(Error) // Logged by final catch in decideAction
             );
         });
 
+        it('should throw and log via MAIN logger if context.getActor throws', async () => {
+            const actorError = new Error("Cannot get actor");
+            // Critical: Ensure getActor mock is properly reset or set for this test case
+            // This will be the FIRST call to getActor in decideAction
+            mockTurnContext.getActor.mockImplementationOnce(() => {
+                throw actorError;
+            });
+            // Default mock for subsequent calls (if any, e.g. in the catch block) should still be mockActor
+            // However, since beforeEach resets getActor to mockReturnValue(mockActor), this is tricky.
+            // For this specific test, we want the first call to throw, and the second call (in catch) to potentially succeed or fail based on the default.
+
+            const expectedErrorMsg = `HumanPlayerStrategy Critical: context.getActor() call failed. Details: ${actorError.message}`;
+
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, actorError); // Logged by _getActorFromContext
+
+            // Check the second log call from the final catch block
+            // actorIdForLog will be 'player1' because the second call to getActor() (inside the catch) will succeed due to default mock
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
+            );
+        });
+
+        it('should throw and log via MAIN logger if context.getActor returns null or invalid actor', async () => {
+            mockTurnContext.getActor.mockReturnValueOnce(null); // First call returns null
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: Actor not available from ITurnContext or actor has an invalid ID.';
+
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {actorInstance: null});
+            // actorIdForLog in final catch will be 'player1' due to second call to getActor() using default mock
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
+            );
+
+            // Reset mocks for the second part of this test
+            jest.clearAllMocks();
+            mockTurnContext.getLogger.mockReturnValue(mockMainLogger); // Re-establish default mocks
+            mockTurnContext.getActor.mockReturnValueOnce({name: 'NoIDPlayer'}); // Invalid actor (no id) for the first call
+            // The default mock for getActor is still mockActor (player1) for the second call in catch
+            mockTurnContext.getPlayerPromptService.mockReturnValue(mockPlayerPromptService);
+
+
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {actorInstance: {name: 'NoIDPlayer'}});
+            expect(mockMainLogger.error).toHaveBeenCalledWith(
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
+            );
+        });
+
+
         // --- Tests for _getPlayerPromptServiceFromContext (assuming logger & actor obtained) ---
         it('should throw and log via MAIN logger if context.getPlayerPromptService is not a function', async () => {
-            // Setup: Ensure getLogger and getActor return valid mocks first
-            mockTurnContext.getLogger.mockReturnValue(mockMainLogger);
-            mockTurnContext.getActor.mockReturnValue(mockActor);
-
             const invalidContext = {
-                ...mockTurnContext, // Spread valid parts
-                getLogger: jest.fn().mockReturnValue(mockMainLogger), // Keep getLogger valid
-                getActor: jest.fn().mockReturnValue(mockActor), // Keep getActor valid
-                getPlayerPromptService: "not-a-function" // Introduce the invalid part
+                ...mockTurnContext,
+                getPlayerPromptService: "not-a-function"
             };
-
-
-            await expect(strategy.decideAction(invalidContext))
-                .rejects
-                .toThrow('HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.');
-
-            // Error logged by _getPlayerPromptServiceFromContext using the obtained logger
-            expect(mockMainLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.');
-            // Error logged by the outer catch block in decideAction
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.';
+            await expect(strategy.decideAction(invalidContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor ${mockActor.id}. Message: HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.`),
-                expect.any(Error) // Expect the actual error object to be logged
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
             );
         });
 
         it('should throw and log via MAIN logger if context.getPlayerPromptService returns null', async () => {
             mockTurnContext.getPlayerPromptService.mockReturnValueOnce(null);
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: PlayerPromptService not available from ITurnContext or is invalid (e.g., missing prompt method).';
 
-            await expect(strategy.decideAction(mockTurnContext))
-                .rejects
-                .toThrow('HumanPlayerStrategy Critical: PlayerPromptService not available or invalid from ITurnContext.');
-
-            // Error logged by _getPlayerPromptServiceFromContext
-            expect(mockMainLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy: PlayerPromptService not found in ITurnContext or is invalid (e.g., missing prompt method).');
-            // Error logged by the outer catch block in decideAction
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {serviceInstance: null});
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor ${mockActor.id}. Message: HumanPlayerStrategy Critical: PlayerPromptService not available or invalid from ITurnContext.`),
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
                 expect.any(Error)
             );
         });
 
         it('should throw and log via MAIN logger if playerPromptService from context is incomplete (missing prompt method)', async () => {
             mockTurnContext.getPlayerPromptService.mockReturnValueOnce({}); // Missing 'prompt'
+            const expectedErrorMsg = 'HumanPlayerStrategy Critical: PlayerPromptService not available from ITurnContext or is invalid (e.g., missing prompt method).';
 
-            await expect(strategy.decideAction(mockTurnContext))
-                .rejects
-                .toThrow('HumanPlayerStrategy Critical: PlayerPromptService not available or invalid from ITurnContext.');
-
-            // Error logged by _getPlayerPromptServiceFromContext
-            expect(mockMainLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy: PlayerPromptService not found in ITurnContext or is invalid (e.g., missing prompt method).');
-            // Error logged by the outer catch block in decideAction
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, {serviceInstance: {}});
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor ${mockActor.id}. Message: HumanPlayerStrategy Critical: PlayerPromptService not available or invalid from ITurnContext.`),
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
                 expect.any(Error)
             );
         });
@@ -365,45 +371,33 @@ describe('HumanPlayerStrategy', () => {
             mockTurnContext.getPlayerPromptService.mockImplementationOnce(() => {
                 throw specificError;
             });
+            const expectedErrorMsg = `HumanPlayerStrategy Critical: context.getPlayerPromptService() call failed. Details: ${specificErrorMessage}`;
 
-            await expect(strategy.decideAction(mockTurnContext))
-                .rejects
-                .toThrow(`HumanPlayerStrategy Critical: Failed to call context.getPlayerPromptService(). Details: ${specificErrorMessage}`);
-
-            // Error logged by _getPlayerPromptServiceFromContext
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(expectedErrorMsg);
+            expect(mockMainLogger.error).toHaveBeenCalledWith(expectedErrorMsg, specificError);
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                `HumanPlayerStrategy: Error calling context.getPlayerPromptService(): ${specificErrorMessage}`,
-                specificError // Check that the original error object is passed
-            );
-            // Error logged by the outer catch block in decideAction
-            expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor ${mockActor.id}. Message: HumanPlayerStrategy Critical: Failed to call context.getPlayerPromptService(). Details: ${specificErrorMessage}`),
-                expect.any(Error) // The specificError is re-thrown and caught here
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${expectedErrorMsg}`,
+                expect.any(Error)
             );
         });
 
         // --- Test for playerPromptService.prompt() itself throwing ---
-        it('should catch, log via MAIN logger, and re-throw if playerPromptService.prompt() throws an error', async () => {
+        it('should catch, log, and re-throw if playerPromptService.prompt() throws an error', async () => {
             const promptErrorMessage = 'Prompt service connection failed';
             const promptError = new Error(promptErrorMessage);
             mockPlayerPromptService.prompt.mockRejectedValueOnce(promptError);
 
-            await expect(strategy.decideAction(mockTurnContext))
-                .rejects
-                .toThrow(`Failed to get player input for actor ${mockActor.id}. Details: ${promptErrorMessage}`);
+            await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(promptError); // Should re-throw original error
 
-            // Log from the inner catch block (around prompt call) inside decideAction
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}: ${promptErrorMessage}`,
-                promptError // Check original error object
+                `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
+                promptError
             );
-            // Log from the outer catch block in decideAction
             expect(mockMainLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`HumanPlayerStrategy.decideAction: Unhandled error during turn decision for actor ${mockActor.id}. Message: Failed to get player input for actor ${mockActor.id}. Details: ${promptErrorMessage}`),
-                expect.any(Error) // The error re-thrown would be the one created in the inner catch
+                `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${promptErrorMessage}`,
+                promptError
             );
         });
     });
 });
-
 // --- FILE END ---
