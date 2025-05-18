@@ -349,90 +349,45 @@ class PlayerTurnHandler extends BaseTurnHandler {
     // The role of these methods changes: they primarily delegate to the current state.
 
     /**
-     * Handles a raw command string submitted directly to the handler.
-     *
-     * **Primary Human Player Flow:** This method is generally NOT part of the new standard input flow
-     * for human players. Human player input is now facilitated by `HumanPlayerStrategy` which uses
-     * `PlayerPromptService` (listening to `core:player_turn_submitted`) to produce a structured
-     * `ITurnAction`. This `ITurnAction` is then processed by states like `ProcessingCommandState`
-     * without a raw command string being passed to this `PlayerTurnHandler` method.
-     *
-     * **Secondary/Legacy Usage:** This method may still be legitimately called by:
-     * - AI strategies that operate by generating command strings.
-     * - Debugging tools or console commands.
-     * - Scripted game events that need to inject commands as raw strings.
-     *
-     * The method validates the current context and actor, then delegates the command string
-     * to the `handleSubmittedCommand` method of the current turn state.
-     *
-     * @param {string} commandString - The raw command string (e.g., "MOVE NORTH", "ATTACK GOBLIN").
-     * @param {Entity} actorEntity - The actor entity attempting to execute the command.
-     * @returns {Promise<void>} A promise that resolves when the command handling by the state is complete.
-     * @deprecated Prefer `ITurnAction` flow for new features, especially for player input.
-     * This method is retained for compatibility with systems that submit raw command strings
-     * (e.g., some AI, debug consoles, scripted events).
+     * Handles a command string that was somehow submitted.
+     * This method's primary role is now to delegate to the current state.
+     * In the new flow, AwaitingPlayerInputState should obtain an ITurnAction via strategy,
+     * and then transition to ProcessingCommandState. Direct command string submission
+     * to PlayerTurnHandler should become less common or routed through states.
+     * @param {string} commandString - The command string.
+     * @param {Entity} actorEntity - The actor submitting the command (usually from context via state).
+     * @returns {Promise<void>}
      */
     async handleSubmittedCommand(commandString, actorEntity) {
         this._assertHandlerActive();
         const currentContext = this.getTurnContext(); // Get ITurnContext
-
-        this._logger.warn(
-            `${this.constructor.name}: handleSubmittedCommand invoked directly for actor ${actorEntity?.id} with command "${commandString}". ` +
-            `Ensure this is intentional (e.g., AI, debug, script) and not a misuse from primary player input flow.`
-        );
-
-        if (!actorEntity || !actorEntity.id) {
-            const errMsg = `${this.constructor.name}: handleSubmittedCommand called with invalid actorEntity.`;
-            this._logger.error(errMsg, {actorEntity});
-            if (currentContext) {
-                currentContext.endTurn(new Error(errMsg));
-            } else {
-                this._logger.error(`${this.constructor.name}: No turn context to end for invalid actor in handleSubmittedCommand.`);
-            }
-            return;
-        }
-
         if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
             const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
             this._logger.error(errMsg);
-            if (currentContext) {
-                currentContext.endTurn(new Error(`Actor mismatch in handleSubmittedCommand. Submitted for ${actorEntity.id}, context is for ${currentContext.getActor()?.id}.`));
-            } else {
-                // Fallback to _handleTurnEnd if actorEntity is valid but no context or mismatched context
-                this._handleTurnEnd(actorEntity.id, new Error(`No context or mismatched context in handleSubmittedCommand for actor ${actorEntity.id}.`));
-            }
+            if (currentContext) currentContext.endTurn(new Error("Actor mismatch in handleSubmittedCommand"));
+            else this._handleTurnEnd(actorEntity.id, new Error("No context in handleSubmittedCommand"));
             return;
         }
 
         if (!this._currentState || typeof this._currentState.handleSubmittedCommand !== 'function') {
-            const errMsg = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it. Command: "${commandString}" for actor ${actorEntity.id}.`;
+            const errMsg = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
             this._logger.error(errMsg);
+            // If current state cannot handle it, this might be an error.
+            // Consider ending turn or throwing.
             currentContext.endTurn(new Error(errMsg));
             return;
         }
-
-        try {
-            await this._currentState.handleSubmittedCommand(this, commandString, actorEntity);
-        } catch (error) {
-            const errMsg = `${this.constructor.name}: Error during current state's (${this._currentState.getStateName()}) execution of handleSubmittedCommand for actor ${actorEntity.id}. Command: "${commandString}".`;
-            this._logger.error(errMsg, error);
-            // Ensure the turn ends if the state's command handling throws an unhandled error.
-            if (currentContext && !currentContext.isTurnEndingOrEnded()) {
-                currentContext.endTurn(new Error(errMsg + ` Original error: ${error.message}`, {cause: error}));
-            } else if (!currentContext) {
-                // This case should ideally not be reached if context checks above are thorough
-                this._logger.error(`${this.constructor.name}: No context to end turn after state command handling error for ${actorEntity.id}.`);
-            }
-            // Depending on desired behavior, re-throw or handle. For now, turn end is the primary recovery.
-        }
+        // Delegate to the current state.
+        // The state was constructed with 'this' (PlayerTurnHandler).
+        // AwaitingPlayerInputState's handleSubmittedCommand is now more of a fallback,
+        // as its enterState should resolve the action via strategy.
+        await this._currentState.handleSubmittedCommand(this, commandString, actorEntity);
     }
 
     /**
      * Handles the `core:turn_ended` system event.
      * Delegates to the current state.
      * @param {object} payload - The event payload.
-     * @param {string} payload.entityId - The ID of the entity whose turn ended.
-     * @param {any} [payload.error] - Optional error information if the turn ended due to an error.
      * @returns {Promise<void>}
      */
     async handleTurnEndedEvent(payload) {
@@ -453,13 +408,24 @@ class PlayerTurnHandler extends BaseTurnHandler {
         }
 
         if (!this._currentState || typeof this._currentState.handleTurnEndedEvent !== 'function') {
-            const errMsg = `${this.constructor.name}: handleTurnEndedEvent called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
-            this._logger.error(errMsg);
-            currentContext.endTurn(new Error(errMsg));
+            this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called, but current state ${this._currentState?.getStateName()} cannot handle it.`);
+            currentContext.endTurn(new Error(`Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`));
             return;
         }
         // Delegate to the current state.
         await this._currentState.handleTurnEndedEvent(this, payload);
+    }
+
+
+    // --- Test-only hooks ---
+    /* istanbul ignore next */
+    _TEST_GET_INTERNAL_CURRENT_STATE() {
+        return this._currentState;
+    }
+
+    /* istanbul ignore next */
+    _TEST_GET_INTERNAL_TURN_CONTEXT() {
+        return this.getTurnContext();
     }
 }
 

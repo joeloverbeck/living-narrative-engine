@@ -8,13 +8,12 @@
  */
 
 /** @typedef {import('../core/eventBus.js').default} EventBus */
-/** @typedef {import('../core/eventBus.js').EventListener} EventListener */
+/** @typedef {import('../core/eventBus.js').EventListener} EventListener */ // Added for type hinting
 /** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../core/services/gameDataRepository.js').EventDefinition} EventDefinition */
 /** @typedef {import('../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
-/** @typedef {import('../core/interfaces/IValidatedEventDispatcher.js').EventSubscriptionObject} EventSubscriptionObject */ // Added for return type
 
 import {IValidatedEventDispatcher} from "../core/interfaces/IValidatedEventDispatcher.js";
 
@@ -143,24 +142,24 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
 
     /**
      * Subscribes a listener function to a specific event name.
-     * Delegates directly to the underlying EventBus and returns an object
-     * containing a function that can be called to unsubscribe the listener.
+     * Delegates directly to the underlying EventBus and returns a function
+     * that can be called to unsubscribe the listener.
      * @param {string} eventName - The name of the event to subscribe to.
      * @param {EventListener} listener - The function to call when the event is dispatched.
-     * @returns {EventSubscriptionObject} An object containing an `unsubscribe` function.
+     * @returns {() => void} A function that, when called, unsubscribes the listener.
      */
     subscribe(eventName, listener) {
         this.#logger.debug(`VED: Delegating subscription for event "${eventName}" to EventBus.`);
         // Delegate subscription to the internal EventBus instance
         this.#eventBus.subscribe(eventName, listener);
 
-        // Return an object with an unsubscribe method
-        return {
-            unsubscribe: () => {
-                this.#logger.debug(`VED: Executing unsubscribe for "${eventName}" via returned object. Delegating to EventBus.`);
-                this.#eventBus.unsubscribe(eventName, listener);
-            }
+        // --- FIX START ---
+        // Return an unsubscribe function that delegates to the EventBus's unsubscribe
+        return () => {
+            this.#logger.debug(`VED: Executing unsubscribe callback for "${eventName}". Delegating to EventBus.`);
+            this.#eventBus.unsubscribe(eventName, listener);
         };
+        // --- FIX END ---
     }
 
     /**
