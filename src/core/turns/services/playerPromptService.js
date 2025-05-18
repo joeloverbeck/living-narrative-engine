@@ -4,7 +4,7 @@
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // Expected to be {id: string, command: string}
 /** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -12,7 +12,7 @@
 /** @typedef {import('../../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../../actions/availableAction.js').default} AvailableAction */
+/** @typedef {import('../../../actions/availableAction.js').default} AvailableAction */ // Typically {id: string, command: string, ...}
 
 // --- Import Custom Error ---
 import {PromptError} from '../../errors/promptError.js'; // Adjusted path if necessary
@@ -31,8 +31,9 @@ import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
 
 /**
  * Represents the object resolved by the prompt() method's promise.
+ * DiscoveredActionInfo from ActionDiscoverySystem is structurally compatible with AvailableAction for id/command.
  * @typedef {object} PlayerPromptResolution
- * @property {AvailableAction} action - The selected available action object (contains id, command, etc.).
+ * @property {DiscoveredActionInfo} action - The selected available action object (contains id, command, etc.).
  * @property {string | null} speech - The speech input from the player, or null.
  */
 
@@ -145,7 +146,7 @@ class PlayerPromptService extends IPlayerPromptService {
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
      * @returns {Promise<PlayerPromptResolution>} A promise that resolves with an object containing the
-     * selected action (type AvailableAction) and speech, or rejects with a PromptError.
+     * selected action (type DiscoveredActionInfo, structurally {id, command}) and speech, or rejects with a PromptError.
      * @throws {PromptError} If initial setup (actor validation, location fetching, action discovery,
      * or sending prompt to UI) fails. The Promise itself can also reject with a PromptError
      * for reasons like timeout, invalid action ID, or subscription issues.
@@ -189,12 +190,13 @@ class PlayerPromptService extends IPlayerPromptService {
         this.#logger.debug(`PlayerPromptService: Created ActionContext for actor ${actorId}.`);
 
         // 4. Action Discovery
-        /** @type {DiscoveredActionInfo[]} */
-        let discoveredActions; // This will be an array of DiscoveredActionInfo
+        /** @type {DiscoveredActionInfo[]} */ // This is an array of {id: string, command: string}
+        let discoveredActions;
         try {
             this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
             discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
             this.#logger.debug(`PlayerPromptService: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
+            // this.#logger.debug(`PlayerPromptService: Discovered actions raw content for actor ${actorId}:`, JSON.stringify(discoveredActions, null, 2));
         } catch (error) {
             this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
             try {
@@ -208,6 +210,7 @@ class PlayerPromptService extends IPlayerPromptService {
         // 5. Send Actions to UI
         try {
             this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
+            // Assuming promptOutputPort.prompt can handle DiscoveredActionInfo[] which is {id, command}[]
             await this.#promptOutputPort.prompt(actorId, discoveredActions);
             this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
         } catch (error) {
@@ -252,63 +255,67 @@ class PlayerPromptService extends IPlayerPromptService {
             const handlePlayerTurnSubmitted = (eventObject) => {
                 this.#logger.debug(`PlayerPromptService: Received 'core:player_turn_submitted' event object for actor ${actorId}. Full Event:`, eventObject);
 
-                // Cleanup should be called regardless of payload validity for this specific event instance
-                // But ensure it's called only once per event instance.
-                // The outer Promise structure and cleanup function handle this.
-
-                // It's good practice to ensure the event is for the prompted actor if the event doesn't inherently filter.
-                // However, the current event schema 'core:player_turn_submitted' does not include actorId in its payload.
-                // We assume the game architecture ensures this event is relevant to the current prompt context for `actorId`.
-
-                // --- MODIFICATION START ---
-                // Validate the structure of the received eventObject and its nested payload
                 if (!eventObject ||
                     typeof eventObject.type !== 'string' ||
-                    eventObject.type !== 'core:player_turn_submitted' || // Check type
-                    !eventObject.payload || // Check if payload exists
-                    typeof eventObject.payload !== 'object') { // Check if payload is an object
+                    eventObject.type !== 'core:player_turn_submitted' ||
+                    !eventObject.payload ||
+                    typeof eventObject.payload !== 'object') {
 
                     this.#logger.error(`PlayerPromptService: Invalid event object structure received for 'core:player_turn_submitted' for actor ${actorId}. Expected {type: 'core:player_turn_submitted', payload: {...}}. Received:`, eventObject);
-                    cleanup(); // Cleanup before rejecting
+                    cleanup();
                     reject(new PromptError(`Malformed event object for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
                     return;
                 }
 
-                // Extract the actual payload (which was validated by VED)
                 /** @type {CorePlayerTurnSubmittedEventPayload} */
                 const actualPayload = eventObject.payload;
 
-                // Now validate the actualPayload's content (actionId)
                 if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
                     this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for 'core:player_turn_submitted' for actor ${actorId}. Payload:`, actualPayload);
-                    cleanup(); // Cleanup before rejecting
+                    cleanup();
                     reject(new PromptError(`Invalid actionId in payload for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
                     return;
                 }
 
-                // If we reach here, the event structure and essential payload content are valid.
-                // Proceed with cleanup now that we're sure this listener instance is done.
                 cleanup();
 
-                const {actionId, speech} = actualPayload; // Destructure from the nested payload
-                // Find the DiscoveredActionInfo object based on the actionId.
-                // `discoveredActions` is an array of `DiscoveredActionInfo`.
-                // Each `DiscoveredActionInfo` has an `action` property of type `AvailableAction`.
-                const selectedDiscoveredActionInfo = discoveredActions.find(da => da.action.id === actionId);
+                const {actionId, speech} = actualPayload;
 
-                if (!selectedDiscoveredActionInfo) {
-                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions.`, {
-                        discoveredActions,
+                // --- MODIFICATION START ---
+                // Find the DiscoveredActionInfo object (which is {id, command}) based on the actionId.
+                // `discoveredActions` is an array of `DiscoveredActionInfo` objects.
+                const selectedAction = discoveredActions.find(da => {
+                    if (!da) {
+                        this.#logger.warn(`PlayerPromptService: Encountered a null or undefined item in discoveredActions array while searching for actionId: ${actionId}. Skipping this item.`);
+                        return false;
+                    }
+                    // `da` is expected to be {id: string, command: string}
+                    // No longer checking for da.action, as `da` *is* the action info.
+                    if (typeof da.id !== 'string') {
+                        this.#logger.warn(`PlayerPromptService: Item in discoveredActions is missing 'id' property, or 'id' is not a string. Item: ${JSON.stringify(da)}. This item will be skipped in search for actionId: ${actionId}.`);
+                        return false;
+                    }
+                    return da.id === actionId;
+                });
+
+                if (!selectedAction) {
+                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions. This could be due to the action not being available, or a malformed item in the originally discovered actions list.`, {
+                        discoveredActionsPreview: discoveredActions.map(item => {
+                            if (!item) return {error: "Null/undefined item in discoveredActions"};
+                            // Item is {id, command}
+                            if (typeof item.id !== 'string') return {
+                                error: "'id' is not a string",
+                                itemDetails: item // Log the problematic item
+                            };
+                            return {actionId: item.id, command: item.command};
+                        }),
                         receivedActionId: actionId
                     });
                     reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
                 } else {
                     this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' received for actor ${actorId}. Resolving prompt.`);
-                    // The `prompt` method's Promise resolves with PlayerPromptResolution.
-                    // PlayerPromptResolution expects `action` to be of type `AvailableAction`.
-                    // `selectedDiscoveredActionInfo.action` is the `AvailableAction` object.
                     resolve({
-                        action: selectedDiscoveredActionInfo.action, // This is the AvailableAction
+                        action: selectedAction, // `selectedAction` is the DiscoveredActionInfo {id, command}
                         speech: speech || null
                     });
                 }
