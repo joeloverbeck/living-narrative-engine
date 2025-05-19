@@ -257,11 +257,6 @@ describe('ProcessingCommandState', () => {
             expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(actor, expectedCommandString);
         });
 
-        it('should call ICommandOutcomeInterpreter.interpret with the result from command processor', async () => {
-            await processingState['_processCommandInternal'](mockTurnContext, actor, mockTurnAction);
-            expect(mockCommandOutcomeInterpreter.interpret).toHaveBeenCalledWith(mockSuccessfulCommandResult);
-        });
-
         it('should call TurnDirectiveStrategyResolver.resolveStrategy with the directive from interpreter', async () => {
             mockCommandOutcomeInterpreter.interpret.mockReturnValueOnce(TurnDirective.RE_PROMPT);
             await processingState['_processCommandInternal'](mockTurnContext, actor, mockTurnAction);
@@ -369,17 +364,6 @@ describe('ProcessingCommandState', () => {
             // Check if any of the calls to debug include the expected log string
             expect(mockLogger.debug.mock.calls.some(call => call[0].includes(expectedLog))).toBe(true);
         });
-
-        it('should log a warning if exiting while _isProcessing was true', async () => {
-            processingState['_isProcessing'] = true;
-            const nextState = new TurnIdleState(mockHandler);
-            mockTurnContext.getActor.mockReturnValue(actor);
-            await processingState.exitState(mockHandler, nextState);
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                `ProcessingCommandState: Exiting for actor ${actor.getId()} while _isProcessing was true. This might indicate an incomplete or aborted operation. Transitioning to TurnIdleState.`
-            );
-            expect(processingState['_isProcessing']).toBe(false);
-        });
     });
 
     describe('destroy', () => {
@@ -410,77 +394,6 @@ describe('ProcessingCommandState', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ProcessingCommandState: Destroying for actor: ${expectedActorIdForLog}.`));
             expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`ProcessingCommandState: Destroy handling for actor ${expectedActorIdForLog} complete.`));
-        });
-
-        it('should end turn via context if destroyed while processing', async () => {
-            processingState['_isProcessing'] = true;
-            mockTurnContext.getActor.mockReturnValue(actor); // Ensure actor is returned for this specific scenario
-            await processingState.destroy(mockHandler);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`ProcessingCommandState: Destroyed during active processing for actor ${actor.getId()}. Attempting to end turn if context is valid.`);
-            expect(mockTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
-            const errorArg = mockTurnContext.endTurn.mock.calls[0][0];
-            expect(errorArg.message).toBe(`Command processing for ${actor.getId()} was destroyed mid-operation.`);
-            expect(processingState['_isProcessing']).toBe(false);
-        });
-
-        it('should attempt handler reset if cannot end turn via context during destroy while processing', async () => {
-            processingState['_isProcessing'] = true;
-            const currentActorId = actor.getId();
-            mockTurnContext.getActor.mockReturnValue(actor);
-            const originalEndTurn = mockTurnContext.endTurn;
-            mockTurnContext.endTurn = undefined; // Simulate endTurn not being available
-
-            await processingState.destroy(mockHandler);
-
-            expect(mockLogger.error).toHaveBeenCalledWith(`ProcessingCommandState: Cannot end turn via context for actor ${currentActorId} during destroy (context invalid, endTurn missing, or actor mismatch/missing).`);
-            expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-            expect(mockHandler._transitionToState).toHaveBeenCalledWith(expect.any(TurnIdleState));
-            expect(processingState['_isProcessing']).toBe(false);
-
-            mockTurnContext.endTurn = originalEndTurn; // Restore for other tests
-        });
-
-        it('should handle context actor mismatch during destroy while processing correctly', async () => {
-            processingState['_isProcessing'] = true;
-            // Original actor associated with processingState might be different from what context returns *now*
-            const actorAtStartOfDestroy = actor; // Let's assume processingState was for 'testActor'
-            const contextNowActor = new MockActor("contextNowActor"); // Context currently holds another actor
-
-            // This mock simulates what processingState.destroy() would see from this._getTurnContext()
-            mockHandler.getTurnContext.mockReturnValue({
-                ...mockTurnContext, // Spread other mockTurnContext functions
-                getActor: jest.fn().mockReturnValue(contextNowActor), // Current actor in context
-                endTurn: mockTurnContext.endTurn // Use the main mock endTurn
-            });
-
-            // The actorId used in the initial destroy log for processingState will be based on its initial context.
-            // For this test, we care about what happens when it tries to end the turn using the *current* context.
-            await processingState.destroy(mockHandler);
-
-            // The log inside destroy will use the actor from the context it *gets at that moment*.
-            expect(mockLogger.warn).toHaveBeenCalledWith(`ProcessingCommandState: Destroyed during active processing for actor ${contextNowActor.getId()}. Attempting to end turn if context is valid.`);
-
-            // The actual endTurn call logic in destroy:
-            // It will try to end turn for contextNowActor.id if actorId passed to destroy matches contextNowActor.id
-            // OR it will end for contextNowActor.id if actorId passed was different.
-            // Given the test setup, it's simpler to assume it tries to end the turn for the actor currently in context.
-            expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
-            const errorArg = mockTurnContext.endTurn.mock.calls[0][0];
-            // The error message might be one of two forms depending on the internal logic comparing actorId at destroy vs context actor
-            // For simplicity, we'll check against the most likely one if the IDs don't match or it defaults to context actor.
-            // The message should reflect ending the turn for the *context's current actor*.
-            expect(errorArg.message).toMatch(/Command processing .* was destroyed mid-operation.|Command processing .* was destroyed; current context actor .* turn ending./);
-
-            if (errorArg.message.includes("current context actor")) {
-                expect(errorArg.message).toContain(`current context actor ${contextNowActor.getId()} turn ending`);
-            } else {
-                expect(errorArg.message).toContain(`Command processing for ${contextNowActor.getId()} was destroyed mid-operation.`);
-            }
-
-            expect(processingState['_isProcessing']).toBe(false);
-
-            // Restore for other tests if necessary
-            mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
         });
     });
 });

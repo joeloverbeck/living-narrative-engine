@@ -130,7 +130,7 @@ export class InputStateController extends RendererBase {
             // We log a warning specifically if the reason for using the default
             // is that the payload was missing or didn't contain a valid placeholder string.
             if (!payload || typeof payload.placeholder !== 'string') {
-                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`, {receivedEvent: event});
+                this.logger.info(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`, {receivedEvent: event});
             }
         }
 

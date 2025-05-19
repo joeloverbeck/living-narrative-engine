@@ -24,7 +24,8 @@
       "wait.action.json"
     ],
     "rules": [
-      "turn_started.rule.json"
+      "turn_started.rule.json",
+      "turn_ended.rule.json"
     ],
     "events": [
       "engine_initialized.event.json",

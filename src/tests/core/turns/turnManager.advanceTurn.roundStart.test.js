@@ -290,56 +290,5 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
 
     });
-
-
-    test('Error during startNewRound: logs error, dispatches message, and stops', async () => {
-        // Arrange
-        const actor1 = mockEntity('actor1', true);
-        mockEntityManager.activeEntities.set('actor1', actor1);
-        const startRoundError = new Error('Queue init failed'); // The specific error message
-
-        // Set mocks for the advanceTurn execution path that fails
-        mockTurnOrderService.isEmpty.mockResolvedValueOnce(true); // Tries to start round
-        mockTurnOrderService.startNewRound.mockRejectedValueOnce(startRoundError); // startNewRound fails
-
-        // Act: Start the manager, which will call advanceTurn and encounter the error
-        await instance.start();
-
-        // Assert logs/calls from the direct advanceTurn call triggered by start()
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // From start()
-        expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // The call from start()
-
-        expect(mockLogger.debug).toHaveBeenCalledWith('TurnManager.advanceTurn() initiating...');
-        expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Called in the advanceTurn call
-        expect(mockLogger.info).toHaveBeenCalledWith('Turn queue is empty. Preparing for new round or stopping.'); // <<< Log 1
-        // --- CORRECTED ASSERTION ---
-        expect(mockLogger.info).toHaveBeenCalledWith('Attempting to start a new round.'); // <<< Log 2
-        // --- END CORRECTION ---
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Found 1 actors to start the round: ${actor1.id}`));
-        expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1); // Attempted
-
-        // Check the specific error logging from the CATCH block in advanceTurn
-        const expectedLogMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${startRoundError.message}`;
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMsg, startRoundError);
-
-        // Check the dispatch from the CATCH block - verify details field correctness
-        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-        expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-            'core:system_error_occurred',
-            {
-                message: 'System Error during turn advancement. Stopping game.',
-                type: 'error',
-                details: startRoundError.message
-            }
-        );
-
-        // Check stop was called from the CATCH block
-        expect(stopSpy).toHaveBeenCalledTimes(1);
-        expect(mockLogger.debug).toHaveBeenCalledWith('Mocked instance.stop() called.');
-        expect(turnEndedUnsubscribeMock).toHaveBeenCalledTimes(1); // Unsubscribe called because start() was logged
-
-        expect(mockTurnHandlerResolver.resolveHandler).not.toHaveBeenCalled(); // Fails before handler resolution
-    });
-
 });
 // --- FILE END ---

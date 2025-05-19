@@ -7,7 +7,7 @@
 /** @typedef {import('../turns/ports/commonTypes.js').UnsubscribeFn} UnsubscribeFn */
 
 // --- Constant Imports ---
-import { TURN_ENDED_ID } from '../constants/eventIds.js';
+import {TURN_ENDED_ID} from '../constants/eventIds.js';
 
 class SubscriptionLifecycleManager {
     /** @type {ILogger} **/
@@ -33,10 +33,9 @@ class SubscriptionLifecycleManager {
      * @param {ICommandInputPort} dependencies.commandInputPort - The command input port.
      * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - The safe event dispatcher.
      */
-    constructor({ logger, commandInputPort, safeEventDispatcher }) {
+    constructor({logger, commandInputPort, safeEventDispatcher}) {
         const className = this.constructor.name;
 
-        // Validate logger based on a method defined in ILogger, e.g., 'debug'
         if (!logger || typeof logger.debug !== 'function') {
             console.error(`${className} Constructor: Invalid or missing logger dependency (must include a debug method).`);
             throw new Error(`${className}: Invalid or missing logger dependency.`);
@@ -55,19 +54,19 @@ class SubscriptionLifecycleManager {
         }
         this.#safeEventDispatcher = safeEventDispatcher;
 
-        this.#logger.debug(`${className}: Initialized.`); // Adjusted log message slightly for clarity
+        this.#logger.debug(`${className}: Initialized.`);
     }
 
     /**
      * Subscribes to command input. If already subscribed, it unsubscribes first and then re-subscribes.
      * @param {function(string): void} commandHandler - The function to call when a command is submitted.
-     * @returns {boolean} True if successfully subscribed, false otherwise.
+     * @returns {UnsubscribeFn | undefined} The unsubscribe function if successful, otherwise undefined.
      */
     subscribeToCommandInput(commandHandler) {
-        const className = this.constructor.name; // For logging context
+        const className = this.constructor.name;
         if (typeof commandHandler !== 'function') {
             this.#logger.error(`${className}: subscribeToCommandInput: commandHandler must be a function.`);
-            return false;
+            return undefined; // Return undefined for failure
         }
 
         if (this.#isCommandSubscribed || this.#commandUnsubscribeFn !== null) {
@@ -77,23 +76,24 @@ class SubscriptionLifecycleManager {
 
         this.#logger.debug(`${className}: Attempting to subscribe to command input.`);
         try {
-            this.#commandUnsubscribeFn = this.#commandInputPort.onCommand(commandHandler);
+            const unsubscribeFn = this.#commandInputPort.onCommand(commandHandler); // Get the unsubscribe function
 
-            if (typeof this.#commandUnsubscribeFn === 'function') {
+            if (typeof unsubscribeFn === 'function') {
+                this.#commandUnsubscribeFn = unsubscribeFn; // Store it
                 this.#isCommandSubscribed = true;
                 this.#logger.debug(`${className}: Successfully subscribed to command input.`);
-                return true;
+                return unsubscribeFn; // CORRECTED: Return the function
             } else {
-                this.#isCommandSubscribed = false; // Ensure it's false
-                this.#commandUnsubscribeFn = null; // Ensure it's null if not a function
+                this.#isCommandSubscribed = false;
+                this.#commandUnsubscribeFn = null;
                 this.#logger.error(`${className}: Failed to subscribe to command input. onCommand did not return an unsubscribe function.`);
-                return false;
+                return undefined; // Return undefined for failure
             }
         } catch (error) {
             this.#isCommandSubscribed = false;
             this.#commandUnsubscribeFn = null;
             this.#logger.error(`${className}: Error during command input subscription attempt: ${error.message}`, error);
-            return false;
+            return undefined; // Return undefined for failure
         }
     }
 
@@ -101,7 +101,7 @@ class SubscriptionLifecycleManager {
      * Unsubscribes from command input.
      */
     unsubscribeFromCommandInput() {
-        const className = this.constructor.name; // For logging context
+        const className = this.constructor.name;
         if (this.#isCommandSubscribed && typeof this.#commandUnsubscribeFn === 'function') {
             this.#logger.debug(`${className}: Unsubscribing from command input.`);
             try {
@@ -127,13 +127,13 @@ class SubscriptionLifecycleManager {
     /**
      * Subscribes to the TURN_ENDED_ID event. If already subscribed, it unsubscribes first and then re-subscribes.
      * @param {function(any): void} turnEndedListener - The function to call when the TURN_ENDED_ID event is dispatched.
-     * @returns {boolean} True if successfully subscribed, false otherwise.
+     * @returns {UnsubscribeFn | undefined} The unsubscribe function if successful, otherwise undefined.
      */
     subscribeToTurnEnded(turnEndedListener) {
-        const className = this.constructor.name; // For logging context
+        const className = this.constructor.name;
         if (typeof turnEndedListener !== 'function') {
             this.#logger.error(`${className}: subscribeToTurnEnded: turnEndedListener must be a function for ${TURN_ENDED_ID}.`);
-            return false;
+            return undefined; // Return undefined for failure
         }
 
         if (this.#isTurnEndedSubscribed || this.#turnEndedUnsubscribeFn !== null) {
@@ -143,23 +143,24 @@ class SubscriptionLifecycleManager {
 
         this.#logger.debug(`${className}: Attempting to subscribe to ${TURN_ENDED_ID} event.`);
         try {
-            this.#turnEndedUnsubscribeFn = this.#safeEventDispatcher.subscribe(TURN_ENDED_ID, turnEndedListener);
+            const unsubscribeFn = this.#safeEventDispatcher.subscribe(TURN_ENDED_ID, turnEndedListener); // Get the unsubscribe function
 
-            if (typeof this.#turnEndedUnsubscribeFn === 'function') {
+            if (typeof unsubscribeFn === 'function') {
+                this.#turnEndedUnsubscribeFn = unsubscribeFn; // Store it
                 this.#isTurnEndedSubscribed = true;
                 this.#logger.debug(`${className}: Successfully subscribed to ${TURN_ENDED_ID} event.`);
-                return true;
+                return unsubscribeFn; // CORRECTED: Return the function
             } else {
                 this.#isTurnEndedSubscribed = false;
-                this.#turnEndedUnsubscribeFn = null; // Ensure it's null
+                this.#turnEndedUnsubscribeFn = null;
                 this.#logger.error(`${className}: Failed to subscribe to ${TURN_ENDED_ID}. SafeEventDispatcher.subscribe did not return an unsubscribe function.`);
-                return false;
+                return undefined; // Return undefined for failure
             }
         } catch (error) {
             this.#isTurnEndedSubscribed = false;
             this.#turnEndedUnsubscribeFn = null;
             this.#logger.error(`${className}: Error during ${TURN_ENDED_ID} event subscription attempt: ${error.message}`, error);
-            return false;
+            return undefined; // Return undefined for failure
         }
     }
 
@@ -167,7 +168,7 @@ class SubscriptionLifecycleManager {
      * Unsubscribes from the TURN_ENDED_ID event.
      */
     unsubscribeFromTurnEnded() {
-        const className = this.constructor.name; // For logging context
+        const className = this.constructor.name;
         if (this.#isTurnEndedSubscribed && typeof this.#turnEndedUnsubscribeFn === 'function') {
             this.#logger.debug(`${className}: Unsubscribing from ${TURN_ENDED_ID} event.`);
             try {
@@ -182,15 +183,11 @@ class SubscriptionLifecycleManager {
         } else {
             if (this.#isTurnEndedSubscribed && typeof this.#turnEndedUnsubscribeFn !== 'function') {
                 this.#logger.warn(`${className}: unsubscribeFromTurnEnded: Inconsistent state for ${TURN_ENDED_ID}. isTurnEndedSubscribed is true, but no valid unsubscribe function stored. Resetting state.`);
-                this.#turnEndedUnsubscribeFn = null;
-                this.#isTurnEndedSubscribed = false;
             } else {
                 this.#logger.debug(`${className}: unsubscribeFromTurnEnded called but no active ${TURN_ENDED_ID} subscription.`);
             }
-            // Ensure state is reset if not subscribed or inconsistent
-            if (!this.#isTurnEndedSubscribed) {
-                this.#turnEndedUnsubscribeFn = null;
-            }
+            this.#turnEndedUnsubscribeFn = null;
+            this.#isTurnEndedSubscribed = false; // Ensure state is reset
         }
     }
 
@@ -198,7 +195,7 @@ class SubscriptionLifecycleManager {
      * Clears all managed subscriptions.
      */
     unsubscribeAll() {
-        const className = this.constructor.name; // For logging context
+        const className = this.constructor.name;
         this.#logger.debug(`${className}: unsubscribeAll called. Clearing all managed subscriptions.`);
         this.unsubscribeFromCommandInput();
         this.unsubscribeFromTurnEnded();

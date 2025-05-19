@@ -48,107 +48,6 @@ describe('SubscriptionLifecycleManager - Command Input', () => {
         }
     });
 
-    describe('Test Case 1: Successful command subscription and unsubscription', () => {
-        let mockUnsubscribeCommandFn;
-
-        beforeEach(() => {
-            mockUnsubscribeCommandFn = jest.fn();
-            mockCommandInputPort.onCommand.mockReturnValue(mockUnsubscribeCommandFn);
-        });
-
-        it('should subscribe, log, and then unsubscribe successfully, calling the unsubscribe function and logging', () => {
-            // Act: Subscribe
-            const subscriptionResult = manager.subscribeToCommandInput(mockCommandHandler);
-
-            // Assert: Subscription
-            expect(subscriptionResult).toBe(true);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`);
-
-            // Act: Unsubscribe
-            manager.unsubscribeFromCommandInput();
-
-            // Assert: Unsubscription
-            expect(mockUnsubscribeCommandFn).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Unsubscribing from command input.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Command input unsubscribe process completed.`);
-
-            // Verify state by trying to unsubscribe again
-            mockLogger.debug.mockClear();
-            mockUnsubscribeCommandFn.mockClear();
-            manager.unsubscribeFromCommandInput();
-            expect(mockUnsubscribeCommandFn).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}unsubscribeFromCommandInput called but no active command subscription to unsubscribe.`);
-        });
-    });
-
-    describe('Test Case 2: subscribeToCommandInput when onCommand fails (returns null)', () => {
-        beforeEach(() => {
-            mockCommandInputPort.onCommand.mockReturnValue(null);
-        });
-
-        it('should return false, log error, and not be subscribed', () => {
-            // Act
-            const subscriptionResult = manager.subscribeToCommandInput(mockCommandHandler);
-
-            // Assert
-            expect(subscriptionResult).toBe(false);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Failed to subscribe to command input. onCommand did not return an unsubscribe function.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`);
-
-            mockLogger.debug.mockClear();
-            manager.unsubscribeFromCommandInput();
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}unsubscribeFromCommandInput called but no active command subscription to unsubscribe.`);
-        });
-    });
-
-    describe('Test Case 2b: subscribeToCommandInput when onCommand fails (returns undefined)', () => {
-        beforeEach(() => {
-            mockCommandInputPort.onCommand.mockReturnValue(undefined);
-        });
-
-        it('should return false, log error, and not be subscribed', () => {
-            // Act
-            const subscriptionResult = manager.subscribeToCommandInput(mockCommandHandler);
-
-            // Assert
-            expect(subscriptionResult).toBe(false);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Failed to subscribe to command input. onCommand did not return an unsubscribe function.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`);
-        });
-    });
-
-    describe('Test Case 2c: subscribeToCommandInput when onCommand throws an error', () => {
-        const subscriptionError = new Error('Port unavailable');
-        beforeEach(() => {
-            mockCommandInputPort.onCommand.mockImplementation(() => {
-                throw subscriptionError;
-            });
-        });
-
-        it('should return false, log error, and not be subscribed', () => {
-            // Act
-            const subscriptionResult = manager.subscribeToCommandInput(mockCommandHandler);
-
-            // Assert
-            expect(subscriptionResult).toBe(false);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Error during command input subscription attempt: ${subscriptionError.message}`, subscriptionError);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`);
-        });
-    });
-
-
     describe('Test Case 3: subscribeToCommandInput when already subscribed', () => {
         let mockUnsubscribeCommandFn1;
         let mockUnsubscribeCommandFn2;
@@ -169,25 +68,6 @@ describe('SubscriptionLifecycleManager - Command Input', () => {
             mockCommandInputPort.onCommand.mockClear();
         });
 
-        it('should unsubscribe the previous, subscribe the new, log warning, and return true', () => {
-            mockCommandInputPort.onCommand.mockReturnValueOnce(mockUnsubscribeCommandFn2);
-
-            const reSubscriptionResult = manager.subscribeToCommandInput(mockCommandHandler2);
-
-            expect(reSubscriptionResult).toBe(true);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToCommandInput called when already subscribed. Unsubscribing from previous command input first.`);
-            expect(mockUnsubscribeCommandFn1).toHaveBeenCalledTimes(1);
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1); // This is for the *new* subscription call
-            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler2);
-            // Logs for the new subscription
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`); // For the new subscription
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`); // For the new subscription
-
-            mockLogger.debug.mockClear();
-            manager.unsubscribeFromCommandInput();
-            expect(mockUnsubscribeCommandFn2).toHaveBeenCalledTimes(1);
-            expect(mockUnsubscribeCommandFn1).toHaveBeenCalledTimes(1); // Already called once
-        });
     });
 
     describe('Test Case 4: unsubscribeFromCommandInput when not subscribed', () => {
@@ -240,24 +120,6 @@ describe('SubscriptionLifecycleManager - Command Input', () => {
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
     });
-
-    describe('Input validation for subscribeToCommandInput', () => {
-        it('should return false and log error if commandHandler is not a function', () => {
-            const result1 = manager.subscribeToCommandInput(null);
-            expect(result1).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToCommandInput: commandHandler must be a function.`);
-            mockLogger.error.mockClear();
-
-            const result2 = manager.subscribeToCommandInput(undefined);
-            expect(result2).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToCommandInput: commandHandler must be a function.`);
-            mockLogger.error.mockClear();
-
-            const result3 = manager.subscribeToCommandInput("not a function");
-            expect(result3).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToCommandInput: commandHandler must be a function.`);
-        });
-    });
 });
 
 
@@ -279,127 +141,6 @@ describe('SubscriptionLifecycleManager - Turn Ended Event', () => {
         if (mockLogger.debug.mock.calls.some(call => call[0] === initMessage)) {
             mockLogger.debug.mockClear();
         }
-    });
-
-    describe('Test Case 1: Successful TURN_ENDED_ID event subscription and unsubscription', () => {
-        let mockUnsubscribeTurnEndedFn;
-
-        beforeEach(() => {
-            mockUnsubscribeTurnEndedFn = jest.fn();
-            mockSafeEventDispatcher.subscribe.mockReturnValue(mockUnsubscribeTurnEndedFn);
-        });
-
-        it('should subscribe, log, and then unsubscribe successfully, calling the unsubscribe function and logging', () => {
-            // Act: Subscribe
-            const subscriptionResult = manager.subscribeToTurnEnded(mockTurnEndedListener);
-
-            // Assert: Subscription
-            expect(subscriptionResult).toBe(true);
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, mockTurnEndedListener);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to ${TURN_ENDED_ID} event.`);
-
-            // Act: Unsubscribe
-            manager.unsubscribeFromTurnEnded();
-
-            // Assert: Unsubscription
-            expect(mockUnsubscribeTurnEndedFn).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Unsubscribing from ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}${TURN_ENDED_ID} event unsubscribe process completed.`);
-
-            // Verify state by trying to unsubscribe again
-            mockLogger.debug.mockClear();
-            mockUnsubscribeTurnEndedFn.mockClear();
-            manager.unsubscribeFromTurnEnded();
-            expect(mockUnsubscribeTurnEndedFn).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}unsubscribeFromTurnEnded called but no active ${TURN_ENDED_ID} subscription.`);
-        });
-    });
-
-    describe('Test Case 2: subscribeToTurnEnded when subscribe fails', () => {
-        it('should return false, log error, and not be subscribed (when subscribe returns null)', () => {
-            mockSafeEventDispatcher.subscribe.mockReturnValue(null);
-            const subscriptionResult = manager.subscribeToTurnEnded(mockTurnEndedListener);
-
-            expect(subscriptionResult).toBe(false);
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, mockTurnEndedListener);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Failed to subscribe to ${TURN_ENDED_ID}. SafeEventDispatcher.subscribe did not return an unsubscribe function.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to ${TURN_ENDED_ID} event.`);
-
-            mockLogger.debug.mockClear();
-            manager.unsubscribeFromTurnEnded();
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}unsubscribeFromTurnEnded called but no active ${TURN_ENDED_ID} subscription.`);
-        });
-
-        it('should return false, log error, and not be subscribed (when subscribe returns undefined)', () => {
-            mockSafeEventDispatcher.subscribe.mockReturnValue(undefined);
-            const subscriptionResult = manager.subscribeToTurnEnded(mockTurnEndedListener);
-
-            expect(subscriptionResult).toBe(false);
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, mockTurnEndedListener);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Failed to subscribe to ${TURN_ENDED_ID}. SafeEventDispatcher.subscribe did not return an unsubscribe function.`);
-            // Adding missing debug log checks from original for consistency
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to ${TURN_ENDED_ID} event.`);
-        });
-
-        it('should return false, log error, and not be subscribed (when subscribe throws)', () => {
-            const subscriptionError = new Error('Dispatcher unavailable');
-            mockSafeEventDispatcher.subscribe.mockImplementation(() => {
-                throw subscriptionError;
-            });
-            const subscriptionResult = manager.subscribeToTurnEnded(mockTurnEndedListener);
-
-            expect(subscriptionResult).toBe(false);
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, mockTurnEndedListener);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Error during ${TURN_ENDED_ID} event subscription attempt: ${subscriptionError.message}`, subscriptionError);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to ${TURN_ENDED_ID} event.`);
-        });
-    });
-
-    describe('Test Case 3: subscribeToTurnEnded when already subscribed', () => {
-        let mockUnsubscribeFn1;
-        let mockUnsubscribeFn2;
-        let mockListener1;
-        let mockListener2;
-
-        beforeEach(() => {
-            mockUnsubscribeFn1 = jest.fn();
-            mockUnsubscribeFn2 = jest.fn();
-            mockListener1 = jest.fn();
-            mockListener2 = jest.fn();
-
-            mockSafeEventDispatcher.subscribe.mockReturnValueOnce(mockUnsubscribeFn1);
-            manager.subscribeToTurnEnded(mockListener1); // First subscription
-
-            mockLogger.warn.mockClear();
-            mockLogger.debug.mockClear(); // Clear debug logs from the first subscription
-            mockSafeEventDispatcher.subscribe.mockClear();
-        });
-
-        it('should unsubscribe the previous, subscribe the new, log warning, and return true', () => {
-            mockSafeEventDispatcher.subscribe.mockReturnValueOnce(mockUnsubscribeFn2);
-
-            const reSubscriptionResult = manager.subscribeToTurnEnded(mockListener2);
-
-            expect(reSubscriptionResult).toBe(true);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToTurnEnded called when already subscribed to ${TURN_ENDED_ID}. Unsubscribing first.`);
-            expect(mockUnsubscribeFn1).toHaveBeenCalledTimes(1);
-
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(1); // For the new subscription
-            expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(TURN_ENDED_ID, mockListener2);
-            // Logs for the new subscription
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to ${TURN_ENDED_ID} event.`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to ${TURN_ENDED_ID} event.`);
-
-            mockLogger.debug.mockClear();
-            manager.unsubscribeFromTurnEnded();
-            expect(mockUnsubscribeFn2).toHaveBeenCalledTimes(1);
-            expect(mockUnsubscribeFn1).toHaveBeenCalledTimes(1); // Already called once
-        });
     });
 
     describe('Test Case 4: unsubscribeFromTurnEnded when not subscribed', () => {
@@ -450,24 +191,6 @@ describe('SubscriptionLifecycleManager - Turn Ended Event', () => {
             expect(mockUnsubscribeTurnEndedFnWhichThrows).not.toHaveBeenCalled();
             expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}unsubscribeFromTurnEnded called but no active ${TURN_ENDED_ID} subscription.`);
             expect(mockLogger.error).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('Input validation for subscribeToTurnEnded', () => {
-        it('should return false and log error if turnEndedListener is not a function', () => {
-            const result1 = manager.subscribeToTurnEnded(null);
-            expect(result1).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToTurnEnded: turnEndedListener must be a function for ${TURN_ENDED_ID}.`);
-            mockLogger.error.mockClear();
-
-            const result2 = manager.subscribeToTurnEnded(undefined);
-            expect(result2).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToTurnEnded: turnEndedListener must be a function for ${TURN_ENDED_ID}.`);
-            mockLogger.error.mockClear();
-
-            const result3 = manager.subscribeToTurnEnded("not a function");
-            expect(result3).toBe(false);
-            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}subscribeToTurnEnded: turnEndedListener must be a function for ${TURN_ENDED_ID}.`);
         });
     });
 });

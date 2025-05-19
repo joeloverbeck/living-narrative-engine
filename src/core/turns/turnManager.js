@@ -299,16 +299,19 @@ class TurnManager {
                 if (!handler) {
                     this.#logger.warn(`Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`);
                     // Simulate an unsuccessful turn end to allow round progression check
-                    this.#handleTurnEndedEvent({
-                        type: TURN_ENDED_ID, // Added type for consistency with event object structure
+                    // Since #handleTurnEndedEvent is now called asynchronously via the event bus,
+                    // we directly call it here if we want immediate processing for this specific case.
+                    // However, to maintain consistency with event-driven flow, it might be better
+                    // to dispatch a dummy 'core:turn_ended' event, but that could be overkill.
+                    // For now, directly calling #handleTurnEndedEvent (which is not async itself) is okay.
+                    this.#handleTurnEndedEvent({ // This will schedule advanceTurn via its own logic
+                        type: TURN_ENDED_ID,
                         payload: {
                             entityId: actorId,
-                            success: false, // Mark as unsuccessful
+                            success: false,
                             error: new Error(`No turn handler resolved for actor ${actorId}.`)
                         }
                     });
-                    // Schedule next advancement (handleTurnEndedEvent now calls setTimeout)
-                    // setTimeout(() => this.advanceTurn(), 0); // Removed, handled by #handleTurnEndedEvent
                     return;
                 }
 
@@ -322,14 +325,13 @@ class TurnManager {
                     this.#dispatchSystemError(`Error initiating turn for ${actorId}.`, startTurnError)
                         .catch(e => this.#logger.error(`Failed to dispatch system error after startTurn failure: ${e.message}`));
 
-                    // If startTurn fails immediately, treat it as the turn ending unsuccessfully
-                    if (this.#currentActor?.id === actorId) { // Check if still the current actor
-                        this.#logger.warn(`Manually advancing turn after startTurn initiation failure for ${actorId}.`);
+                    if (this.#currentActor?.id === actorId) {
+                        this.#logger.warn(`Manually handling turn end after startTurn initiation failure for ${actorId}.`);
                         this.#handleTurnEndedEvent({
-                            type: TURN_ENDED_ID, // Added type for consistency
+                            type: TURN_ENDED_ID,
                             payload: {
                                 entityId: actorId,
-                                success: false, // Mark as unsuccessful
+                                success: false,
                                 error: startTurnError
                             }
                         });
@@ -340,9 +342,7 @@ class TurnManager {
                 this.#logger.debug(`Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`);
             }
         } catch (error) {
-            // --- CORRECTED ERROR MESSAGE ---
             const errorMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${error.message}`;
-            // --- END CORRECTION ---
             this.#logger.error(errorMsg, error);
             await this.#dispatchSystemError('System Error during turn advancement. Stopping game.', error);
             await this.stop();
@@ -354,28 +354,33 @@ class TurnManager {
      * @private
      */
     #subscribeToTurnEnd() {
-        // --- Subscription logic (unchanged) ---
         if (this.#turnEndedUnsubscribe) {
             this.#logger.warn("Attempted to subscribe to turn end event, but already subscribed.");
             return;
         }
         try {
             this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
+
             const handlerCallback = (event) => {
-                // Wrap in try-catch to prevent subscriber errors from breaking TurnManager
-                try {
-                    this.#handleTurnEndedEvent(event);
-                } catch (handlerError) {
-                    this.#logger.error(`Error processing ${TURN_ENDED_ID} event: ${handlerError.message}`, handlerError);
-                    // Decide if a system error should be dispatched or if the manager should stop
-                    this.#dispatchSystemError('Error processing turn ended event.', handlerError).catch(e => this.#logger.error(`Failed to dispatch system error after event handler failure: ${e.message}`));
-                    // Maybe stop the manager if event handling fails critically?
-                    // this.stop().catch(e => this.#logger.error(`Error stopping manager after event handler failure: ${e.message}`));
-                }
+                // MODIFICATION: Use setTimeout to schedule as a macrotask
+                setTimeout(() => {
+                    try {
+                        // #handleTurnEndedEvent is not an async function itself,
+                        // but it initiates async operations.
+                        this.#handleTurnEndedEvent(event);
+                    } catch (handlerError) {
+                        // This catch handles synchronous errors thrown directly by #handleTurnEndedEvent
+                        this.#logger.error(`Error processing ${TURN_ENDED_ID} event (setTimeout): ${handlerError.message}`, handlerError);
+                        // Note: #dispatchSystemError is async
+                        this.#dispatchSystemError('Error processing turn ended event (setTimeout).', handlerError)
+                            .catch(e => this.#logger.error(`Failed to dispatch system error after setTimeout event handler failure: ${e.message}`));
+                    }
+                }, 0); // Delay of 0 ms, but schedules as a macrotask
             };
+
             this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(TURN_ENDED_ID, handlerCallback);
             if (typeof this.#turnEndedUnsubscribe !== 'function') {
-                this.#turnEndedUnsubscribe = null; // Ensure it's nulled if not a function
+                this.#turnEndedUnsubscribe = null;
                 throw new Error("Subscription function did not return an unsubscribe callback.");
             }
         } catch (error) {
@@ -384,7 +389,6 @@ class TurnManager {
                 .catch(e => this.#logger.error(`Failed to dispatch system error after subscription failure: ${e.message}`));
             this.stop().catch(e => this.#logger.error(`Error stopping manager after subscription failure: ${e.message}`));
         }
-        // --- End Subscription logic ---
     }
 
     /**
@@ -392,7 +396,6 @@ class TurnManager {
      * @private
      */
     #unsubscribeFromTurnEnd() {
-        // --- Unsubscription logic (unchanged) ---
         if (this.#turnEndedUnsubscribe) {
             this.#logger.debug(`Unsubscribing from '${TURN_ENDED_ID}' event.`);
             try {
@@ -405,7 +408,6 @@ class TurnManager {
         } else {
             this.#logger.debug("Attempted to unsubscribe from turn end event, but was not subscribed.");
         }
-        // --- End Unsubscription logic ---
     }
 
     /**
@@ -415,7 +417,7 @@ class TurnManager {
      * @param {{ type?: typeof TURN_ENDED_ID, payload: SystemEventPayloads[typeof TURN_ENDED_ID] }} event - The full event object or a simulated payload.
      * @private
      */
-    #handleTurnEndedEvent(event) {
+    #handleTurnEndedEvent(event) { // This method itself is not async
         if (!this.#isRunning) {
             this.#logger.debug(`Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`);
             return;
@@ -428,49 +430,50 @@ class TurnManager {
         }
 
         const endedActorId = payload.entityId;
-        const successStatus = payload.success; // true, false, or potentially undefined/null
+        const successStatus = payload.success;
 
         this.#logger.debug(`Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus ?? 'N/A'}. Current actor: ${this.#currentActor?.id || 'None'}`);
 
         if (!this.#currentActor || this.#currentActor.id !== endedActorId) {
             this.#logger.warn(`Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but current active actor is ${this.#currentActor?.id || 'None'}. This event will be IGNORED by TurnManager's primary turn cycling logic.`);
-            // Note: Even if ignored for turn *advancement*, we might still want to record success if the round is in progress?
-            // Decision: For now, only record success if it's for the *current* actor, simplifies logic.
             return;
         }
 
-        // --- NEW: Update round success flag ---
         if (successStatus === true) {
             this.#logger.debug(`Marking round as having had a successful turn (actor: ${endedActorId}).`);
             this.#roundHadSuccessfulTurn = true;
         }
-        // --- END NEW ---
 
-        // --- MODIFIED LOG LINE ---
         this.#logger.info(`Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`);
-        // --- END MODIFIED LOG LINE ---
 
         const handlerToDestroy = this.#currentHandler;
 
-        // Clear currentActor and currentHandler *before* potential async ops
         this.#currentActor = null;
         this.#currentHandler = null;
 
-        // Destroy the handler for the completed turn asynchronously
         if (handlerToDestroy) {
             if (typeof handlerToDestroy.signalNormalApparentTermination === 'function') {
                 handlerToDestroy.signalNormalApparentTermination();
             }
             if (typeof handlerToDestroy.destroy === 'function') {
                 this.#logger.debug(`Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`);
+                // destroy() can be async, handle its promise to catch errors
                 Promise.resolve(handlerToDestroy.destroy())
                     .catch(destroyError => this.#logger.error(`Error destroying handler for ${endedActorId} after turn end: ${destroyError.message}`, destroyError));
             }
         }
 
         // Schedule advanceTurn to run after the current event processing stack clears.
-        // This allows the destroy promise above to proceed without blocking advancement.
-        setTimeout(() => this.advanceTurn(), 0);
+        setTimeout(() => {
+            // advanceTurn is async, so if we want to catch errors from it, we should.
+            this.advanceTurn().catch(advanceTurnError => {
+                this.#logger.error(`Error during scheduled advanceTurn after turn end for ${endedActorId}: ${advanceTurnError.message}`, advanceTurnError);
+                // This is a critical failure in turn advancement, dispatch system error and stop.
+                this.#dispatchSystemError('Critical error during scheduled turn advancement.', advanceTurnError)
+                    .catch(e => this.#logger.error(`Failed to dispatch system error for advanceTurn failure: ${e.message}`));
+                this.stop().catch(e => this.#logger.error(`Failed to stop manager after advanceTurn failure: ${e.message}`));
+            });
+        }, 0);
     }
 
     /**
@@ -481,19 +484,18 @@ class TurnManager {
      * @private
      */
     async #dispatchSystemError(message, detailsOrError) {
-        // --- Dispatch logic (unchanged, ensure SYSTEM_ERROR_OCCURRED_ID is imported) ---
         const detailString = detailsOrError instanceof Error ? detailsOrError.message : String(detailsOrError);
+        const stackString = detailsOrError instanceof Error ? detailsOrError.stack : undefined;
         try {
             await this.#dispatcher.dispatchValidated(SYSTEM_ERROR_OCCURRED_ID, {
-                // eventName: SYSTEM_ERROR_OCCURRED_ID, // VED might need eventName in payload
                 message: message,
                 type: 'error',
-                details: detailString
+                details: detailString,
+                stack: stackString // Optionally include stack
             });
         } catch (dispatchError) {
             this.#logger.error(`Failed to dispatch ${SYSTEM_ERROR_OCCURRED_ID}: ${dispatchError.message}`, dispatchError);
         }
-        // --- End Dispatch logic ---
     }
 }
 

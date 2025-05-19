@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "turn_ended",
+  "comment": "Handles the end of an entity's turn by unmarking them as the current actor.",
+  "event_type": "core:turn_ended",
+  "actions": [
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Unmark the entity specified in the event payload as the current actor by removing the 'core:current_actor' component.",
+      "parameters": {
+        "entity_ref": "{event.payload.entityId}",
+        "component_type": "core:current_actor"
+      }
+    }
+  ]
+}

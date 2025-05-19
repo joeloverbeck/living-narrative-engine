@@ -18,6 +18,10 @@
       "result": {
         "$ref": "http://example.com/schemas/defs/action-result.schema.json",
         "description": "The result object returned by the action's execution logic. Conforms to the ActionResult definition, containing success status and potentially messages useful for UI feedback or logging."
+      },
+      "originalInput": {
+        "type": "string",
+        "description": "Optional. The original command string that led to this action."
       }
     },
     "required": [
