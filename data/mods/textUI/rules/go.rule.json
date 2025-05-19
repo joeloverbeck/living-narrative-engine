@@ -95,7 +95,8 @@
             "parameters": {
               "eventType": "core:turn_ended",
               "payload": {
-                "entityId": "{event.payload.actorId}"
+                "entityId": "{event.payload.actorId}",
+                "success": true
               }
             }
           }
@@ -118,7 +119,11 @@
             "parameters": {
               "eventType": "core:turn_ended",
               "payload": {
-                "entityId": "{event.payload.actorId}"
+                "entityId": "{event.payload.actorId}",
+                "success": false,
+                "error": {
+                  "message": "Failed to move: No valid target location resolved for the given direction."
+                }
               }
             }
           }

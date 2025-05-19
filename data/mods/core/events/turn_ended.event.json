@@ -10,10 +10,30 @@
       "entityId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique ID of the entity whose turn is ending."
+      },
+      "success": {
+        "type": "boolean",
+        "description": "Indicates whether the turn was completed successfully. True if the primary action of the turn was successful, false otherwise (e.g., failed move, invalid action)."
+      },
+      "error": {
+        "type": "object",
+        "description": "Optional. Details of an error if the turn did not complete successfully or resulted in an error state.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A human-readable error message."
+          },
+          "code": {
+            "type": "string",
+            "description": "An optional error code."
+          }
+        },
+        "additionalProperties": true
       }
     },
     "required": [
-      "entityId"
+      "entityId",
+      "success"
     ],
     "additionalProperties": false
   }
