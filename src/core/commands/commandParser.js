@@ -103,80 +103,64 @@ class CommandParser extends ICommandParser {
             const remainingText = inputTrimmedStart.substring(matchedVerbLength);
             const textAfterCommand = remainingText.trimStart();
 
-            // Reuse existing argument parsing logic block
             if (textAfterCommand) {
-                // --- REVISED PREPOSITION FINDING LOGIC V3 --- (Kept as-is)
-                let firstMatchIndex = -1;
-                let firstMatchPrep = null;
-                let firstMatchLength = 0;
-                const words = textAfterCommand.split(/\s+/).filter(Boolean);
+                // --- MODIFICATION START: Conditional Preposition Parsing ---
+                const actionDefinition = allActionDefinitions.find(def => def.id === matchedActionId);
 
-                for (const word of words) {
-                    const lowerWord = word.toLowerCase();
-                    if (SUPPORTED_PREPOSITIONS.includes(lowerWord)) {
-                        // Use regex to ensure whole word match, considering start/end of string or whitespace boundaries
-                        const wordBoundaryPattern = new RegExp(`(?:^|\\s)${word}(?:\\s|$)`, 'i');
-                        const match = wordBoundaryPattern.exec(textAfterCommand);
-                        if (match) {
-                            // Find the precise start index of the matched preposition within the textAfterCommand
-                            const prepStartIndex = match.index + match[0].toLowerCase().indexOf(lowerWord);
+                if (actionDefinition && actionDefinition.target_domain === 'direction') {
+                    // If the action's target domain is 'direction' (e.g., for "go"),
+                    // treat the entire remaining text as the direct object phrase.
+                    parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
+                    parsedCommand.preposition = null;
+                    parsedCommand.indirectObjectPhrase = null;
+                } else {
+                    // --- ORIGINAL PREPOSITION FINDING LOGIC (for other actions) ---
+                    // This logic will now only run if the action's target_domain is not 'direction'
+                    // or if the action definition couldn't be found (which shouldn't happen if matchedActionId is valid).
 
-                            // Check if this preposition occurs *before* any previously found one
-                            if (firstMatchIndex === -1 || prepStartIndex < firstMatchIndex) {
-                                firstMatchIndex = prepStartIndex;
-                                firstMatchPrep = lowerWord; // Store the matched preposition (lowercase)
-                                firstMatchLength = word.length; // Store the original length for substring calculation
-                                // Keep searching to ensure we find the *first* one.
-                                // break; // NO BREAK - must find the *first* occurrence in textAfterCommand
+                    // --- REVISED PREPOSITION FINDING LOGIC V3 --- (Kept as-is from your original code)
+                    let firstMatchIndex = -1;
+                    let firstMatchPrep = null;
+                    let firstMatchLength = 0;
+                    const words = textAfterCommand.split(/\s+/).filter(Boolean);
+
+                    for (const word of words) {
+                        const lowerWord = word.toLowerCase();
+                        if (SUPPORTED_PREPOSITIONS.includes(lowerWord)) {
+                            const wordBoundaryPattern = new RegExp(`(?:^|\\s)${word}(?:\\s|$)`, 'i');
+                            const match = wordBoundaryPattern.exec(textAfterCommand);
+                            if (match) {
+                                const prepStartIndex = match.index + match[0].toLowerCase().indexOf(lowerWord);
+                                if (firstMatchIndex === -1 || prepStartIndex < firstMatchIndex) {
+                                    firstMatchIndex = prepStartIndex;
+                                    firstMatchPrep = lowerWord;
+                                    firstMatchLength = word.length;
+                                }
                             }
                         }
                     }
+                    // --- END REVISED PREPOSITION FINDING LOGIC V3 ---
+
+                    if (firstMatchPrep !== null) {
+                        const prepositionIndexInText = firstMatchIndex;
+                        const foundPreposition = firstMatchPrep;
+                        const textBeforePrep = textAfterCommand.substring(0, prepositionIndexInText).trimEnd();
+                        const textAfterPrep = textAfterCommand.substring(prepositionIndexInText + firstMatchLength).trimStart();
+
+                        parsedCommand.preposition = foundPreposition;
+                        parsedCommand.directObjectPhrase = textBeforePrep === '' ? null : textBeforePrep;
+                        parsedCommand.indirectObjectPhrase = textAfterPrep === '' ? null : textAfterPrep;
+                    } else {
+                        // No preposition found, the entire remaining text is the direct object
+                        parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
+                        parsedCommand.preposition = null;
+                        parsedCommand.indirectObjectPhrase = null;
+                    }
+                    // --- END ORIGINAL PREPOSITION FINDING LOGIC ---
                 }
-                // Corrected logic: break should have been outside the inner `if (match)` but inside the `if (SUPPORTED_PREPOSITIONS.includes(lowerWord))`?
-                // Let's re-evaluate the V3 logic's intent. It iterates all words. If a word is a prep, it finds its index using regex. It stores the *first* match's details (index, prep, length).
-                // The original loop structure without a break inside the `if(SUPPORTED_PREPOSITIONS)` correctly finds the details of the first preposition encountered. No change needed here.
-
-                // --- END REVISED PREPOSITION FINDING LOGIC V3 ---
-
-                if (firstMatchPrep !== null) {
-                    // Found a preposition
-                    const prepositionIndexInText = firstMatchIndex;
-                    const foundPreposition = firstMatchPrep; // Already lowercase
-                    const textBeforePrep = textAfterCommand.substring(0, prepositionIndexInText).trimEnd();
-                    const textAfterPrep = textAfterCommand.substring(prepositionIndexInText + firstMatchLength).trimStart(); // Use firstMatchLength here
-
-                    parsedCommand.preposition = foundPreposition;
-                    parsedCommand.directObjectPhrase = textBeforePrep === '' ? null : textBeforePrep;
-                    parsedCommand.indirectObjectPhrase = textAfterPrep === '' ? null : textAfterPrep; // trimEnd() potentially needed if punctuation handling requires it later
-
-                    // Refined assignment based on whether textBeforePrep is empty (handles V+P+IO case)
-                    // This refinement seems unnecessary given the check above. Reverting to simpler logic.
-                    /*
-                              if (textBeforePrep.trim() !== "") {
-                                  parsedCommand.preposition = foundPreposition;
-                                  parsedCommand.directObjectPhrase = textBeforePrep.trimEnd();
-                                  const potentialIO = textAfterPrep.trimStart();
-                                  parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
-                              } else {
-                                  // Handles cases like "look > north" (V+P+IO)
-                                  parsedCommand.preposition = foundPreposition;
-                                  parsedCommand.directObjectPhrase = null;
-                                  const potentialIO = textAfterPrep.trimStart();
-                                  parsedCommand.indirectObjectPhrase = potentialIO === "" ? null : potentialIO.trimEnd();
-                              }
-                              */
-
-                } else {
-                    // No preposition found, the entire remaining text is the direct object
-                    parsedCommand.directObjectPhrase = textAfterCommand.trimEnd(); // trimEnd needed? Yes, potentially.
-                    parsedCommand.preposition = null;
-                    parsedCommand.indirectObjectPhrase = null;
-                }
+                // --- MODIFICATION END ---
             } else {
                 // textAfterCommand is empty (e.g., just "look" or "inventory")
-                // DO/Prep/IO should remain null as initialized.
-                // --- REMOVED Alias Handling ---
-                // Deleted the 'else' block containing special logic for 'core:move' and matchedAlias.
                 parsedCommand.directObjectPhrase = null;
                 parsedCommand.preposition = null;
                 parsedCommand.indirectObjectPhrase = null;
@@ -184,16 +168,9 @@ class CommandParser extends ICommandParser {
 
         } else {
             // --- Update Error Handling ---
-            // matchedActionId is null, meaning the inputVerb didn't match any actionDefinition.commandVerb
-            if (inputTrimmedStart !== '') { // Avoid error on purely whitespace input
-                // As per ticket instructions, assume this indicates an internal issue if commands
-                // are expected to be generated system-side via ActionDiscovery.
-                // If user typing is primary, "Unknown command." might be better, but following spec:
+            if (inputTrimmedStart !== '') {
                 parsedCommand.error = 'Internal Error: Command verb mismatch.';
-                // If a user-facing error is preferred for direct typing:
-                // parsedCommand.error = "Unknown command.";
             }
-            // If input was only whitespace, error remains null (handled by initial check).
         }
 
         return parsedCommand;
