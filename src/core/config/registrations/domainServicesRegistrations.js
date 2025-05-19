@@ -15,7 +15,7 @@ import {TurnOrderService} from "../../turns/order/turnOrderService.js";
 import CommandProcessor from "../../commands/commandProcessor.js";
 import PlayerPromptService from '../../turns/services/playerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js';
-import PerceptionUpdateService from '../../../services/PerceptionUpdateService.js'; // <<< ADDED IMPORT
+import PerceptionUpdateService from '../../../services/perceptionUpdateService.js'; // <<< ADDED IMPORT
 
 // Import getEntityIdsForScopes directly
 import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
@@ -38,7 +38,7 @@ import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
-/** @typedef {import('../../../services/PerceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED TYPEDEF
+/** @typedef {import('../../../services/perceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED TYPEDEF
 
 
 /**

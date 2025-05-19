@@ -79,7 +79,7 @@ describe('InputStateController', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Initialized.'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Attached to INPUT element.'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+            expect(mockLogger.debug).toHaveBeenCalledTimes(4);
         });
 
         it('should throw error if inputElement is missing or null', () => {
@@ -472,9 +472,9 @@ describe('InputStateController', () => {
 
             expect(mockSubscriptions[0].unsubscribe).toHaveBeenCalledTimes(1);
             expect(mockSubscriptions[1].unsubscribe).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+            expect(mockLogger.debug).toHaveBeenCalledTimes(3);
         });
 
         it('should be safe to call dispose multiple times', () => {
@@ -485,9 +485,9 @@ describe('InputStateController', () => {
             controller.dispose();
             expect(mockSubscriptions[0].unsubscribe).toHaveBeenCalledTimes(1);
             expect(mockSubscriptions[1].unsubscribe).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+            expect(mockLogger.debug).toHaveBeenCalledTimes(3);
 
             mockSubscriptions[0].unsubscribe.mockClear();
             mockSubscriptions[1].unsubscribe.mockClear();
@@ -497,7 +497,7 @@ describe('InputStateController', () => {
 
             expect(mockSubscriptions[0].unsubscribe).not.toHaveBeenCalled();
             expect(mockSubscriptions[1].unsubscribe).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
             expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         });

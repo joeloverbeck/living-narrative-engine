@@ -14,6 +14,8 @@ import {RendererBase} from './rendererBase.js';
  * Manages the enabled/disabled state and placeholder text of a specific HTML input element.
  * Subscribes to VED events like 'textUI:disable_input' and 'textUI:enable_input'
  * to reactively update the input's state.
+ * It also prevents the 'Enter' key from submitting forms or triggering other default actions
+ * when pressed in the managed input element by intercepting the event in the capturing phase.
  */
 export class InputStateController extends RendererBase {
     /**
@@ -29,6 +31,13 @@ export class InputStateController extends RendererBase {
      * @type {Array<IEventSubscription|undefined>}
      */
     #subscriptions = [];
+
+    /**
+     * Stores the bound event handler for the keydown event on the input element.
+     * @private
+     * @type {((event: KeyboardEvent) => void) | null}
+     */
+    #boundHandleKeydown = null;
 
     /**
      * Creates an instance of InputStateController.
@@ -51,15 +60,20 @@ export class InputStateController extends RendererBase {
             throw new Error(errMsg);
         }
         // Check specifically if it's an INPUT element
-        // Using tagName for broader compatibility (works in jsdom/browser)
         if (inputElement.tagName !== 'INPUT') {
             const errMsg = `${this._logPrefix} 'inputElement' must be an HTMLInputElement (<input>), but received '${inputElement.tagName}'.`;
             this.logger.error(errMsg, {element: inputElement});
-            throw new Error(errMsg); // Acceptance criteria: Throws if element not <input>
+            throw new Error(errMsg);
         }
 
         this.#inputElement = /** @type {HTMLInputElement} */ (inputElement);
         this.logger.debug(`${this._logPrefix} Attached to INPUT element.`);
+
+        // Bind and add the keydown listener to prevent Enter key submissions
+        this.#boundHandleKeydown = this.#handleKeydown.bind(this);
+        // MODIFIED: Add listener in CAPTURING phase
+        this.#inputElement.addEventListener('keydown', this.#boundHandleKeydown, true);
+        this.logger.debug(`${this._logPrefix} Added keydown listener in capturing phase to input element to intercept 'Enter' key.`);
 
         // Subscribe to events that affect the input state
         this.#subscribeToEvents();
@@ -72,12 +86,10 @@ export class InputStateController extends RendererBase {
     #subscribeToEvents() {
         const ved = this.validatedEventDispatcher; // Alias for brevity
 
-        // Listen for events telling us to disable the input
         this.#subscriptions.push(
             ved.subscribe('textUI:disable_input', this.#handleDisableInput.bind(this))
         );
 
-        // Listen for events telling us to enable the input (used in tests, future-proofing)
         this.#subscriptions.push(
             ved.subscribe('textUI:enable_input', this.#handleEnableInput.bind(this))
         );
@@ -85,7 +97,20 @@ export class InputStateController extends RendererBase {
         this.logger.debug(`${this._logPrefix} Subscribed to VED events 'textUI:disable_input' and 'textUI:enable_input'.`);
     }
 
-    // --- Private Event Handlers ---
+    /**
+     * Handles keydown events on the input element.
+     * Specifically intercepts the 'Enter' key to prevent default actions and stop further propagation.
+     * @private
+     * @param {KeyboardEvent} event - The keyboard event.
+     */
+    #handleKeydown(event) {
+        if (event.key === 'Enter') {
+            this.logger.debug(`${this._logPrefix} 'Enter' key pressed in input field. Preventing default action and stopping immediate propagation.`);
+            event.preventDefault();
+            // MODIFIED: Ensure immediate propagation is stopped to prevent other listeners on the same element
+            event.stopImmediatePropagation();
+        }
+    }
 
     /**
      * Handles the 'textUI:disable_input' event.
@@ -95,16 +120,12 @@ export class InputStateController extends RendererBase {
     #handleDisableInput(event) {
         const payload = event.payload;
         const eventType = event.type;
-
-        const defaultMessage = 'Input disabled.'; // Behavior unchanged for disable
+        const defaultMessage = 'Input disabled.';
         const message = (payload && typeof payload.message === 'string') ? payload.message : defaultMessage;
 
-        if (message === defaultMessage) {
-            if (!payload || typeof payload.message !== 'string') {
-                this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'message' string in payload, using default: "${defaultMessage}"`, {receivedEvent: event});
-            }
+        if (message === defaultMessage && (!payload || typeof payload.message !== 'string')) {
+            this.logger.warn(`${this._logPrefix} Received '${eventType}' without valid 'message' string in payload, using default: "${defaultMessage}"`, {receivedEvent: event});
         }
-
         this.setEnabled(false, message);
     }
 
@@ -116,28 +137,14 @@ export class InputStateController extends RendererBase {
     #handleEnableInput(event) {
         const payload = event.payload;
         const eventType = event.type;
-
-        // Default placeholder if payload is missing or placeholder is not a string
-        // Ticket 3.1: Changed default placeholder for speech input
         const defaultPlaceholder = 'Enter speech (optional)...';
         const placeholder = (payload && typeof payload.placeholder === 'string') ? payload.placeholder : defaultPlaceholder;
 
-        // Log warning if the specific placeholder wasn't found and the default was used.
-        // Ticket 3.1: Ensure log message correctly refers to "placeholder" (already does)
-        // and reflects the new default if it's used.
-        if (placeholder === defaultPlaceholder) {
-            // This condition means we are using the defaultPlaceholder.
-            // We log a warning specifically if the reason for using the default
-            // is that the payload was missing or didn't contain a valid placeholder string.
-            if (!payload || typeof payload.placeholder !== 'string') {
-                this.logger.info(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`, {receivedEvent: event});
-            }
+        if (placeholder === defaultPlaceholder && (!payload || typeof payload.placeholder !== 'string')) {
+            this.logger.info(`${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`, {receivedEvent: event});
         }
-
         this.setEnabled(true, placeholder);
     }
-
-    // --- Public API ---
 
     /**
      * Enables or disables the managed input element and sets its placeholder text.
@@ -166,16 +173,23 @@ export class InputStateController extends RendererBase {
     }
 
     /**
-     * Dispose method for cleanup. Unsubscribes from all VED events.
+     * Dispose method for cleanup. Unsubscribes from all VED events and removes DOM event listeners.
      */
     dispose() {
-        this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
+        this.logger.debug(`${this._logPrefix} Disposing subscriptions and event listeners.`);
         this.#subscriptions.forEach(sub => {
             if (sub && typeof sub.unsubscribe === 'function') {
                 sub.unsubscribe();
             }
         });
         this.#subscriptions = [];
+
+        if (this.#inputElement && this.#boundHandleKeydown) {
+            // MODIFIED: Ensure correct arguments for removeEventListener (true for capture phase)
+            this.#inputElement.removeEventListener('keydown', this.#boundHandleKeydown, true);
+            this.logger.debug(`${this._logPrefix} Removed keydown listener (capturing phase) from input element.`);
+            this.#boundHandleKeydown = null;
+        }
         super.dispose();
     }
 }

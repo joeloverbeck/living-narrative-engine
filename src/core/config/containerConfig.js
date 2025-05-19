@@ -14,7 +14,7 @@ import ConsoleLogger from '../services/consoleLogger.js';
 /** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../worldContext.js').default} WorldContext */ // <<< Added WorldContext import for type hint
-/** @typedef {import('../../services/PerceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED IMPORT FOR TYPE HINT
+/** @typedef {import('../../services/perceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED IMPORT FOR TYPE HINT
 
 // --- Import registration bundle functions ---
 import {registerLoaders} from './registrations/loadersRegistrations.js';

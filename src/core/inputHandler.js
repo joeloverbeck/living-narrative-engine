@@ -104,22 +104,20 @@ class InputHandler extends IInputHandler {
      */
     _handleInputKeyDown(event) {
         if (event.key === 'Enter' && this.#isEnabled) {
-            event.preventDefault();
-            const command = this.#inputElement.value.trim();
-            this.#inputElement.value = '';
+            // MODIFICATION: The original Enter key logic for command submission is now removed.
+            // InputStateController is expected to handle preventDefault and stopImmediatePropagation
+            // for the 'Enter' key on this input, effectively preventing this handler
+            // from needing to process 'Enter' for command submission.
 
-            if (command) {
-                // Ensure the callback exists before calling
-                if (this.#onCommandCallback) {
-                    this.#onCommandCallback(command);
-                } else {
-                    console.warn('InputHandler: Enter pressed, but no command callback is set.');
-                }
-            } else {
-                // Re-focus if Enter pressed with no command (consistent experience)
-                this.#inputElement.focus();
-            }
+            // Log that Enter was pressed here, but we are not processing it for command submission.
+            // This log might not even appear if InputStateController successfully stops propagation.
+            console.log("InputHandler: 'Enter' key pressed on command input. Command submission via 'Enter' is disabled; speech input preserved.");
+
+            // DO NOT call event.preventDefault() here if InputStateController is already doing it.
+            // DO NOT clear the input: this.#inputElement.value = '';
+            // DO NOT call this.#onCommandCallback for 'Enter' key.
         }
+        // Other non-Enter key specific logic for this input could remain if any.
     }
 
     /**

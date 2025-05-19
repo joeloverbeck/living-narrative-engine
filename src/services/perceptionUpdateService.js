@@ -1,5 +1,4 @@
-// src/services/PerceptionUpdateService.js
-// ****** MODIFIED FILE ******
+// src/services/perceptionUpdateService.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
