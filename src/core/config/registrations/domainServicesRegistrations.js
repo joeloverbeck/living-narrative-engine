@@ -1,4 +1,5 @@
 // src/core/config/registrations/domainServicesRegistrations.js
+// ****** MODIFIED FILE ******
 
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
@@ -14,6 +15,7 @@ import {TurnOrderService} from "../../turns/order/turnOrderService.js";
 import CommandProcessor from "../../commands/commandProcessor.js";
 import PlayerPromptService from '../../turns/services/playerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js';
+import PerceptionUpdateService from '../../../services/PerceptionUpdateService.js'; // <<< ADDED IMPORT
 
 // Import getEntityIdsForScopes directly
 import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
@@ -36,6 +38,7 @@ import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
+/** @typedef {import('../../../services/PerceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED TYPEDEF
 
 
 /**
@@ -136,7 +139,6 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain-services Registration: Registered ${String(tokens.ITurnOrderService)}.`);
 
-    // Register PlayerPromptService against IPlayerPromptService token
     r.singletonFactory(tokens.IPlayerPromptService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.IPlayerPromptService)}...`);
         const playerPromptDeps = {
@@ -146,7 +148,7 @@ export function registerDomainServices(container) {
             worldContext: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
             entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
             gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)),
-            validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)) // <<< --- THIS LINE IS ADDED ---
+            validatedEventDispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher))
         };
         for (const [key, value] of Object.entries(playerPromptDeps)) {
             if (!value) {
@@ -179,5 +181,26 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.SubscriptionLifecycleManager)} factory.`);
 
+    // <<< --- ADDED REGISTRATION FOR PerceptionUpdateService --- >>>
+    r.singletonFactory(tokens.PerceptionUpdateService, c => {
+        log.debug(`Domain-services Registration: Factory creating ${String(tokens.PerceptionUpdateService)}...`);
+        const pusDeps = {
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager))
+        };
+        if (!pusDeps.logger || !pusDeps.entityManager) {
+            const errorMsg = `Domain-services Registration: Factory for ${String(tokens.PerceptionUpdateService)} FAILED to resolve dependencies. Logger: ${!!pusDeps.logger}, EntityManager: ${!!pusDeps.entityManager}`;
+            log.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+        log.debug(`Domain-services Registration: Dependencies for ${String(tokens.PerceptionUpdateService)} resolved, creating instance.`);
+        return new PerceptionUpdateService(pusDeps);
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.PerceptionUpdateService)} factory.`);
+    // <<< --- END ADDED REGISTRATION --- >>>
+
+
     log.info('Domain-services Registration: complete.');
 }
+
+// --- FILE END ---

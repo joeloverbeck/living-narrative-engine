@@ -1,0 +1,77 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:perceptible_event",
+  "description": "Dispatched when an action or occurrence happens that should be perceptible to entities within a specific location. This event is intended to be logged by observers for creating a history of local happenings.",
+  "payloadSchema": {
+    "type": "object",
+    "description": "Payload for the core:perceptible_event.",
+    "required": [
+      "eventName",
+      "locationId",
+      "descriptionText",
+      "timestamp",
+      "perceptionType",
+      "actorId"
+    ],
+    "properties": {
+      "eventName": {
+        "description": "Confirms the type of event.",
+        "const": "core:perceptible_event"
+      },
+      "locationId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the location where the event occurred and can be perceived."
+      },
+      "descriptionText": {
+        "type": "string",
+        "description": "A human-readable text summarizing the event (e.g., 'Character A leaves towards the north.', 'Character B picks up the Rusty Key.'). This is the primary text to be stored in perception logs."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp indicating when the event occurred. Essential for ordering and summarizing recent events."
+      },
+      "perceptionType": {
+        "type": "string",
+        "description": "A category for the type of perceptible event, aiding in filtering or specific processing by observers (including LLMs).",
+        "enum": [
+          "character_enter",
+          "character_exit",
+          "item_pickup",
+          "item_drop",
+          "item_use",
+          "speech_local",
+          "speech_targeted",
+          "action_self_general",
+          "action_target_general",
+          "combat_attack",
+          "combat_effect",
+          "state_change_observable"
+        ]
+      },
+      "actorId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity primarily responsible for causing the event."
+      },
+      "targetId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
+        "description": "Optional. The ID of the primary entity or item targeted by the event (e.g., who was spoken to, what item was picked up)."
+      },
+      "involvedEntities": {
+        "type": "array",
+        "description": "Optional. An array of other entity IDs that were involved or directly affected by the event, beyond the primary actor and target. (e.g., multiple recipients of an effect).",
+        "items": {
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
+        },
+        "default": []
+      },
+      "contextualData": {
+        "type": "object",
+        "description": "Optional. A flexible field for additional, structured data specific to the perceptionType. This could include details like the exact words spoken, the specific item definition ID for a pickup, or the direction of movement for an exit. Useful for more advanced AI reasoning.",
+        "additionalProperties": true,
+        "default": {}
+      }
+    },
+    "additionalProperties": false
+  }
+}

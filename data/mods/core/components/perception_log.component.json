@@ -1,0 +1,70 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:perception_log",
+  "description": "Stores a chronological log of recent perceptible events witnessed by or occurring around the entity. Used to provide context and a summary of recent happenings.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "maxEntries": {
+        "type": "integer",
+        "description": "The maximum number of log entries to retain. Older entries are discarded when this limit is exceeded.",
+        "default": 50,
+        "minimum": 1
+      },
+      "logEntries": {
+        "type": "array",
+        "description": "An ordered list of perceived event details. Newest entries are typically added to the end or beginning depending on desired retrieval order.",
+        "items": {
+          "type": "object",
+          "required": [
+            "descriptionText",
+            "timestamp",
+            "perceptionType",
+            "actorId"
+          ],
+          "properties": {
+            "eventId": {
+              "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+              "description": "A unique ID for this specific log entry or the originating perceptible event instance (if available and useful for deduplication or correlation)."
+            },
+            "descriptionText": {
+              "type": "string",
+              "description": "The human-readable summary of the event."
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the event occurred."
+            },
+            "perceptionType": {
+              "type": "string",
+              "description": "The category of the perceived event."
+            },
+            "actorId": {
+              "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+              "description": "The ID of the entity that caused the event."
+            },
+            "targetId": {
+              "$ref": "http://example.com/schemas/common.schema.json#/definitions/nullableNamespacedId",
+              "description": "Optional. The ID of the primary target of the event."
+            },
+            "involvedEntities": {
+              "type": "array",
+              "items": {
+                "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
+              },
+              "default": [],
+              "description": "Optional. Other entities involved."
+            }
+          }
+        },
+        "default": []
+      }
+    },
+    "required": [
+      "logEntries",
+      "maxEntries"
+    ],
+    "additionalProperties": false
+  }
+}

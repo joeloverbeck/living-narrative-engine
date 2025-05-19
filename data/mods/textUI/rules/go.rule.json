@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "handle_core_go_action",
-  "comment": "Handles the 'core:go' action. It resolves the direction to a target location using WorldContext via SystemDataRegistry, moves the actor by updating their 'core:position' component, informs the UI, and ends the actor's turn. It also handles cases where the direction is invalid.",
+  "rule_id": "handle_core_go_action_with_perception",
+  "comment": "Handles the 'core:go' action. It resolves the direction to a target location, moves the actor, dispatches perceptible events for leaving and entering, informs the UI, and ends the actor's turn. It also handles cases where the direction is invalid.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -31,6 +31,17 @@
       }
     },
     {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the name of the current location for the 'leaves' perception message.",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{context.actorPositionComponent.locationId}"
+        },
+        "component_type": "core:name",
+        "result_variable": "currentLocationNameComponent"
+      }
+    },
+    {
       "type": "QUERY_SYSTEM_DATA",
       "comment": "Resolve the direction to a target location ID using the WorldContext service.",
       "parameters": {
@@ -57,6 +68,25 @@
         },
         "then_actions": [
           {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch perceptible event: actor leaving current location.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "eventName": "core:perceptible_event",
+                "locationId": "{context.actorPositionComponent.locationId}",
+                "descriptionText": "{context.actorNameComponent.text} leaves {context.currentLocationNameComponent.text} heading {event.payload.direction}.",
+                "timestamp": "{system.timestampISO}",
+                "perceptionType": "character_exit",
+                "actorId": "{event.payload.actorId}",
+                "contextualData": {
+                  "direction": "{event.payload.direction}",
+                  "originLocationName": "{context.currentLocationNameComponent.text}"
+                }
+              }
+            }
+          },
+          {
             "type": "MODIFY_COMPONENT",
             "comment": "Update the actor's locationId in their 'core:position' component to the new target location.",
             "parameters": {
@@ -76,6 +106,26 @@
               },
               "component_type": "core:name",
               "result_variable": "targetLocationNameComponent"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch perceptible event: actor entering new location.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "eventName": "core:perceptible_event",
+                "locationId": "{context.resolvedTargetLocationId}",
+                "descriptionText": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}.",
+                "timestamp": "{system.timestampISO}",
+                "perceptionType": "character_enter",
+                "actorId": "{event.payload.actorId}",
+                "contextualData": {
+                  "previousLocationId": "{context.actorPositionComponent.locationId}",
+                  "previousLocationName": "{context.currentLocationNameComponent.text}",
+                  "entryDirection": "{event.payload.direction}"
+                }
+              }
             }
           },
           {

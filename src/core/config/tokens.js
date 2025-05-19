@@ -70,6 +70,7 @@
  * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
  * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
  * @property {DiToken} SubscriptionLifecycleManager - Token for managing subscription lifecycles (implementation).
+ * @property {DiToken} PerceptionUpdateService - Token for the service updating perception logs.
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -170,6 +171,7 @@ export const tokens = Object.freeze({
     PlayerPromptService: 'PlayerPromptService',         // Concrete class token
     CommandOutcomeInterpreter: 'CommandOutcomeInterpreter', // Concrete class token
     SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
+    PerceptionUpdateService: 'PerceptionUpdateService', // <<< ADDED TOKEN
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -216,3 +218,4 @@ export const tokens = Object.freeze({
     SetVariableHandler: 'SetVariableHandler',
     QuerySystemDataHandler: 'QuerySystemDataHandler',
 });
+// --- FILE END ---

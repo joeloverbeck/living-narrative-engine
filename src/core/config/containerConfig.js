@@ -13,6 +13,8 @@ import ConsoleLogger from '../services/consoleLogger.js';
 /** @typedef {import('../services/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
 /** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../worldContext.js').default} WorldContext */ // <<< Added WorldContext import for type hint
+/** @typedef {import('../../services/PerceptionUpdateService.js').default} PerceptionUpdateService */ // <<< ADDED IMPORT FOR TYPE HINT
 
 // --- Import registration bundle functions ---
 import {registerLoaders} from './registrations/loadersRegistrations.js';
@@ -63,7 +65,7 @@ export function configureContainer(
     registerUI(container, {outputDiv, inputElement, titleElement, document: window.document});
 
     // 3. Domain Logic Services (Business rules, core calculations)
-    registerDomainServices(container); // Registers CommandProcessor, PlayerPromptService etc.
+    registerDomainServices(container); // Registers CommandProcessor, PlayerPromptService, PerceptionUpdateService etc.
 
     // 4. Logic Interpretation Layer (Depends on Domain Services, Infrastructure)
     registerInterpreters(container); // Registers CommandOutcomeInterpreter, OperationInterpreter etc.
@@ -98,21 +100,44 @@ export function configureContainer(
         const gameDataRepo = /** @type {GameDataRepository} */ (
             container.resolve(tokens.IGameDataRepository)
         );
-        systemDataRegistry.registerSource('GameDataRepository', gameDataRepo);
-        logger.info(`Container Config: Data source 'GameDataRepository' successfully registered in SystemDataRegistry.`);
+        // Assuming GameDataRepository might not have handleQuery, but its own 'query' method
+        // For it to be compatible with SystemDataRegistry, it would need a handleQuery adapter,
+        // or SystemDataRegistry would need to be more flexible.
+        // For now, if GameDataRepository is to be used via SystemDataRegistry, it must adhere to IQueryableDataSource.
+        // Let's assume it's made compatible or not queried this way for this ticket.
+        // If GameDataRepository does not have .handleQuery, this specific registration will log a warning by SystemDataRegistry.
+        systemDataRegistry.registerSource('GameDataRepository', gameDataRepo); // Assuming GameDataRepo implements handleQuery or similar
+        logger.info(`Container Config: Data source 'GameDataRepository' registered in SystemDataRegistry.`);
 
-        const worldContextInstance = /** @type {WorldContext} */ (
-            container.resolve(tokens.IWorldContext) // Use the token for WorldContext
+
+        const worldContextInstance = /** @type {WorldContext} */ ( // Added type hint
+            container.resolve(tokens.IWorldContext)
         );
-        const worldContextKey = 'WorldContext'; // This key must match rule's source_id
+        const worldContextKey = 'WorldContext';
         logger.debug(`Container Config: Registering data source '${worldContextKey}' in SystemDataRegistry...`);
         systemDataRegistry.registerSource(worldContextKey, worldContextInstance);
         logger.info(`Container Config: Data source '${worldContextKey}' successfully registered in SystemDataRegistry.`);
 
+        const perceptionUpdateServiceInstance = /** @type {PerceptionUpdateService} */ (
+            container.resolve(tokens.PerceptionUpdateService)
+        );
+        const perceptionUpdateServiceKey = 'PerceptionUpdateService'; // This is the source_id
+        logger.debug(`Container Config: Registering data source '${perceptionUpdateServiceKey}' in SystemDataRegistry...`);
+        systemDataRegistry.registerSource(perceptionUpdateServiceKey, perceptionUpdateServiceInstance);
+        logger.info(`Container Config: Data source '${perceptionUpdateServiceKey}' successfully registered in SystemDataRegistry.`);
+
+
     } catch (error) {
-        logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', error);
-        throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`);
+        logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', {
+            message: error.message,
+            stack: error.stack,
+            errorObj: error
+        });
+        // It's often better to rethrow with the original error for a more complete stack trace.
+        throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`, {cause: error});
     }
 
     logger.info('Container Config: Configuration and registry population complete.');
 }
+
+// --- FILE END ---
