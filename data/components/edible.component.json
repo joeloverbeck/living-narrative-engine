@@ -1,9 +1,0 @@
-{
-  "id": "component:edible",
-  "description": "Marker component indicating an entity can be eaten. Holds no specific data.",
-  "dataSchema": {
-    "type": "object",
-    "properties": {},
-    "additionalProperties": false
-  }
-}

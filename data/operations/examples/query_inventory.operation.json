@@ -1,9 +1,0 @@
-{
-  "type": "QUERY_COMPONENT",
-  "comment": "Get the actor's inventory component",
-  "parameters": {
-    "entity_ref": "actor",
-    "component_type": "core:inventory",
-    "result_variable": "actorInventory"
-  }
-}
