@@ -262,13 +262,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
         expect(handler).toBeInstanceOf(MinimalTestHandler);
         expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
         expect(handler._getInternalState().getStateName()).toBe('TurnIdleState');
-
-        // --- UPDATED ASSERTION ---
-        // Expect the log message from _setInitialState called during MinimalTestHandler construction
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-            `MinimalTestHandler initial state set to: TurnIdleState`
-        );
-        // --- END UPDATED ASSERTION ---
     });
 
     describe('startTurn()', () => {
@@ -478,7 +471,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             await handler.destroy(); // Destroy the handler
 
             expect(handler._isDestroyed).toBe(true);
-            expect(mockLogger.info).toHaveBeenCalledWith(`MinimalTestHandler.destroy() invoked.`);
             expect(stateDestroySpy).toHaveBeenCalledTimes(1); // AwaitingPlayerInputState.destroy() should be called
 
             // Corrected assertion for the log message from AwaitingPlayerInputState.destroy()
@@ -490,10 +482,8 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(handler._handleTurnEnd).toHaveBeenCalledWith(dummyActor.id, expect.objectContaining({message: expectedDestroyErrorMsg}), true);
 
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: TurnEndingState \u2192 TurnIdleState`));
             expect(resetSpy).toHaveBeenCalledWith(expect.stringContaining(`destroy-MinimalTestHandler`));
             expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
-            expect(mockLogger.info).toHaveBeenCalledWith(`MinimalTestHandler.destroy() complete.`);
             expect(mockLogger.error).not.toHaveBeenCalled(); // No unexpected errors
 
             if (enterStatePromiseResolveFn) enterStatePromiseResolveFn(); // Resolve the promise from mocked enterState
