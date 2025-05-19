@@ -16,7 +16,8 @@
     "items": [
     ],
     "locations": [
-      "adventurers_guild.location.json"
+      "adventurers_guild.location.json",
+      "town.location.json"
     ],
     "actions": [
     ],

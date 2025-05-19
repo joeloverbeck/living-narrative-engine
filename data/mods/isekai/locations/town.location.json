@@ -1,0 +1,18 @@
+{
+  "id": "isekai:town",
+  "components": {
+    "core:name": {
+      "text": "Isekai Town"
+    },
+    "core:description": {
+      "text": "A bustling town in a new world."
+    },
+    "core:exits": [
+      {
+        "direction": "to the adventurers' guild",
+        "target": "isekai:adventurers_guild",
+        "blocker": null
+      }
+    ]
+  }
+}

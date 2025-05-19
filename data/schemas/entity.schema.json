@@ -18,8 +18,15 @@
         "description": "Component keys must be valid namespaced IDs referencing the component type."
       },
       "additionalProperties": {
-        "type": "object",
-        "description": "Component data. The structure is validated at runtime against the schema for the component type ID used as the key."
+        "oneOf": [
+          {
+            "type": "object"
+          },
+          {
+            "type": "array"
+          }
+        ],
+        "description": "Component data. This can be an object or an array. Its specific structure is validated at runtime against the 'dataSchema' of the corresponding component definition (e.g., the dataSchema for 'core:name' which is an object, or 'core:exits' which is an array)."
       }
     }
   },

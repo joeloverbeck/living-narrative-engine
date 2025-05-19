@@ -6,6 +6,13 @@
     },
     "core:description": {
       "text": "The local adventurers' guild."
-    }
+    },
+    "core:exits": [
+      {
+        "direction": "out to town",
+        "target": "isekai:town",
+        "blocker": null
+      }
+    ]
   }
 }
