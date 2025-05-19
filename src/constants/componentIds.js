@@ -10,3 +10,4 @@ export const POSITION_COMPONENT_ID = 'core:position'; // Define constant for cla
 export const EXITS_COMPONENT_ID = 'core:exits';
 export const EQUIPMENT_COMPONENT_ID = 'core:equipment';
 export const INVENTORY_COMPONENT_ID = 'core:inventory';
+export const PERCEPTION_LOG_COMPONENT_ID = 'core:perception_log';
