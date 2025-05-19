@@ -27,7 +27,11 @@
     },
     "name": {
       "type": "string",
-      "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). Primarily for debugging or tooling."
+      "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). This is the primary display name for the action in UI elements like buttons and tooltips."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional. A detailed description of what the action does. Used for tooltips and can be leveraged by LLMs for contextual understanding."
     },
     "target_domain": {
       "type": "string",
@@ -72,6 +76,8 @@
   "required": [
     "id",
     "commandVerb",
+    "name",
+    "description",
     "target_domain",
     "template"
   ],

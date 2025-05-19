@@ -7,9 +7,7 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../core/constants/eventIds.js";
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn // ADDED: For type clarity
- // Remove or comment out IEventSubscription if it's causing confusion here and UnsubscribeFn is the correct contract
- // @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('../core/interfaces/CommonTypes').NamespacedId} NamespacedId
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  */
@@ -18,7 +16,9 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../core/constants/eventIds.js";
  * Represents an individual action available to the player.
  * @typedef {object} AvailableAction
  * @property {NamespacedId} id - The unique ID of the action definition (e.g., 'core:wait').
- * @property {string} command - The formatted command string (e.g., 'wait', 'go north'), also used as button text.
+ * @property {string} name - The human-readable name of the action (e.g., "Wait", "Go"). Used for tooltip titles.
+ * @property {string} command - The formatted command string (e.g., 'wait', 'go north'). Used for button text and for dispatching.
+ * @property {string} description - A detailed description of the action for tooltips. (Now considered mandatory by #handleUpdateActions filter)
  */
 
 /**
@@ -51,7 +51,7 @@ export class ActionButtonsRenderer extends RendererBase {
     #actionButtonsContainer;
     /** @private @type {DomElementFactoryType} */
     #domElementFactory;
-    /** @private @type {Array<UnsubscribeFn|undefined>} */ // MODIFIED: Store UnsubscribeFn directly
+    /** @private @type {Array<UnsubscribeFn|undefined>} */
     #subscriptions = [];
     /** @private @readonly */
     _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions';
@@ -142,18 +142,15 @@ export class ActionButtonsRenderer extends RendererBase {
             return;
         }
 
-        // 'unsubscribeCallback' will be the UnsubscribeFn returned by validatedEventDispatcher.subscribe
         const unsubscribeCallback = this.validatedEventDispatcher.subscribe(
             this._EVENT_TYPE_SUBSCRIBED,
             this.#handleUpdateActions.bind(this)
         );
 
-        // MODIFIED: Check if the returned value is a function
         if (typeof unsubscribeCallback === 'function') {
-            this.#subscriptions.push(unsubscribeCallback); // Store the function directly
+            this.#subscriptions.push(unsubscribeCallback);
             this.logger.debug(`${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`);
         } else {
-            // This path should ideally not be taken if validatedEventDispatcher.subscribe correctly returns a function
             this.logger.error(`${this._logPrefix} Failed to subscribe to VED event '${this._EVENT_TYPE_SUBSCRIBED}'. Expected an unsubscribe function but received:`, unsubscribeCallback);
         }
     }
@@ -172,11 +169,17 @@ export class ActionButtonsRenderer extends RendererBase {
 
             const innerPayload = eventObject.payload;
 
-            const validActions = innerPayload.actions.filter(action =>
-                action && typeof action === 'object' &&
-                typeof action.id === 'string' && action.id.length > 0 &&
-                typeof action.command === 'string' && action.command.trim().length > 0
-            );
+            const validActions = innerPayload.actions.filter(action => {
+                const isValid = action && typeof action === 'object' &&
+                    typeof action.id === 'string' && action.id.trim().length > 0 &&
+                    typeof action.name === 'string' && action.name.trim().length > 0 &&
+                    typeof action.command === 'string' && action.command.trim().length > 0 &&
+                    typeof action.description === 'string' && action.description.trim().length > 0;
+                if (!isValid) {
+                    this.logger.warn(`${this._logPrefix} Invalid action object found in payload (missing required fields or incorrect types):`, {action});
+                }
+                return isValid;
+            });
 
             if (validActions.length !== innerPayload.actions.length) {
                 this.logger.warn(`${this._logPrefix} Received '${eventTypeForLog}' with some invalid items in the nested actions array. Only valid action objects will be rendered.`, {originalEvent: eventObject});
@@ -232,14 +235,29 @@ export class ActionButtonsRenderer extends RendererBase {
         }
 
         this.availableActions.forEach(actionObject => {
-            if (!actionObject || typeof actionObject.id !== 'string' || actionObject.id.length === 0 ||
-                typeof actionObject.command !== 'string' || actionObject.command.trim() === '') {
-                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render: `, {actionObject});
+            if (!actionObject || typeof actionObject.id !== 'string' || actionObject.id.trim().length === 0) {
+                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty id): `, {actionObject});
+                return;
+            }
+            if (typeof actionObject.command !== 'string' || actionObject.command.trim().length === 0) {
+                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty command): `, {actionObject});
+                return;
+            }
+            if (typeof actionObject.name !== 'string' || actionObject.name.trim().length === 0) {
+                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty name for tooltip): `, {actionObject});
+                return;
+            }
+            // MODIFIED: Add guard for description
+            if (typeof actionObject.description !== 'string' || actionObject.description.trim().length === 0) {
+                this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty description): `, {actionObject});
                 return;
             }
 
             const buttonText = actionObject.command.trim();
-            const actionId = actionObject.id;
+            const actionId = actionObject.id; // Already validated to be a non-empty string
+            const actionNameForTooltip = actionObject.name.trim(); // Already validated
+            const actionDescription = actionObject.description.trim(); // Now validated by the guard above
+
             if (typeof this.#domElementFactory.button !== 'function') {
                 this.logger.error(`${this._logPrefix} domElementFactory.button is not a function. Cannot create action button.`);
                 return;
@@ -252,7 +270,9 @@ export class ActionButtonsRenderer extends RendererBase {
             }
 
             if (typeof button.setAttribute === 'function') {
-                button.setAttribute('title', `Select action: ${buttonText}`);
+                let tooltipContent = `${actionNameForTooltip}`;
+                tooltipContent += `\n\nDescription:\n${actionDescription}`;
+                button.setAttribute('title', tooltipContent);
                 button.setAttribute('data-action-id', actionId);
             }
 
@@ -275,7 +295,7 @@ export class ActionButtonsRenderer extends RendererBase {
                         if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
                             this.sendButtonElement.disabled = true;
                         }
-                        this.logger.info(`${this._logPrefix} Action deselected: '${clickedActionObjectInListener.command}' (ID: ${clickedActionObjectInListener.id})`);
+                        this.logger.info(`${this._logPrefix} Action deselected: '${clickedActionObjectInListener.name}' (ID: ${clickedActionObjectInListener.id})`);
                     } else {
                         if (this.selectedAction) {
                             const previousButton = this.#actionButtonsContainer.querySelector(`button.action-button.selected[data-action-id="${this.selectedAction.id}"]`);
@@ -290,7 +310,7 @@ export class ActionButtonsRenderer extends RendererBase {
                         if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
                             this.sendButtonElement.disabled = false;
                         }
-                        this.logger.info(`${this._logPrefix} Action selected: '${this.selectedAction.command}' (ID: ${this.selectedAction.id})`);
+                        this.logger.info(`${this._logPrefix} Action selected: '${this.selectedAction.name}' (ID: ${this.selectedAction.id})`);
                     }
                 });
             } else {
@@ -305,7 +325,7 @@ export class ActionButtonsRenderer extends RendererBase {
         });
 
         const childCount = this.#actionButtonsContainer.children ? this.#actionButtonsContainer.children.length : 0;
-        this.logger.info(`${this._logPrefix} Rendered ${childCount} action buttons. Selected action: ${this.selectedAction ? `'${this.selectedAction.command}'` : 'none'}.`);
+        this.logger.info(`${this._logPrefix} Rendered ${childCount} action buttons. Selected action: ${this.selectedAction ? `'${this.selectedAction.name}' (ID: ${this.selectedAction.id})` : 'none'}.`);
 
         if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
             this.sendButtonElement.disabled = !this.selectedAction;
@@ -315,18 +335,15 @@ export class ActionButtonsRenderer extends RendererBase {
     /** @private */
     async #handleSendAction() {
         if (this.#isDisposed) return;
-
         if (!this.sendButtonElement) {
             this.logger.error(`${this._logPrefix} #handleSendAction called, but sendButtonElement is null.`);
             return;
         }
-
         if (!this.selectedAction) {
             this.logger.warn(`${this._logPrefix} 'Confirm Action' clicked, but no action is selected.`);
             if (typeof this.sendButtonElement.disabled === 'boolean') this.sendButtonElement.disabled = true;
             return;
         }
-
         let speechText = '';
         if (this.#speechInputElement && typeof this.#speechInputElement.value === 'string') {
             speechText = this.#speechInputElement.value.trim();
@@ -335,18 +352,15 @@ export class ActionButtonsRenderer extends RendererBase {
         } else {
             this.logger.warn(`${this._logPrefix} No speech input element available. Proceeding without speech text.`, {speechInputElement: this.#speechInputElement});
         }
-
         const actionId = this.selectedAction.id;
-        const command = this.selectedAction.command;
-        this.logger.info(`${this._logPrefix} Attempting to send action: '${command}' (ID: ${actionId}), Speech: "${speechText}"`);
-
+        const actionName = this.selectedAction.name;
+        const commandToDispatch = this.selectedAction.command;
+        this.logger.info(`${this._logPrefix} Attempting to send action: '${actionName}' (ID: ${actionId}, Command: '${commandToDispatch}'), Speech: "${speechText}"`);
         if (!this.validatedEventDispatcher || typeof this.validatedEventDispatcher.dispatchValidated !== 'function') {
             this.logger.error(`${this._logPrefix} ValidatedEventDispatcher not available or 'dispatchValidated' method is missing. Cannot send action.`);
             return;
         }
-
         const eventPayload = {actionId, speech: speechText || null};
-
         try {
             const dispatchResult = await this.validatedEventDispatcher.dispatchValidated(
                 PLAYER_TURN_SUBMITTED_ID, eventPayload
@@ -354,7 +368,6 @@ export class ActionButtonsRenderer extends RendererBase {
             if (dispatchResult) {
                 this.logger.debug(`${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionId}'.`);
                 if (this.#speechInputElement && typeof this.#speechInputElement.value === 'string') this.#speechInputElement.value = '';
-
                 const selectedButton = this.#actionButtonsContainer.querySelector(`button.action-button.selected[data-action-id="${actionId}"]`);
                 if (selectedButton && selectedButton.classList && typeof selectedButton.classList.remove === 'function') {
                     selectedButton.classList.remove('selected');
@@ -380,23 +393,19 @@ export class ActionButtonsRenderer extends RendererBase {
         }
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
         this.#subscriptions.forEach(unsubscribeFunc => {
-            // MODIFIED: Call the unsubscribe function directly
             if (typeof unsubscribeFunc === 'function') {
                 unsubscribeFunc();
             }
         });
-        this.#subscriptions = []; // Clear the array
-
+        this.#subscriptions = [];
         if (this.sendButtonElement && typeof this.sendButtonElement.removeEventListener === 'function' && this.#boundHandleSendAction) {
             this.sendButtonElement.removeEventListener('click', this.#boundHandleSendAction);
             this.logger.debug(`${this._logPrefix} Removed click listener from 'Confirm Action' button.`);
         }
         this.#boundHandleSendAction = null;
-
         this.#clearContainer();
         this.availableActions = [];
         this.#speechInputElement = null;
-
         this.logger.info(`${this._logPrefix} ActionButtonsRenderer disposed.`);
         super.dispose();
         this.#isDisposed = true;

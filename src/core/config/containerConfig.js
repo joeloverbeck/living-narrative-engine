@@ -86,6 +86,7 @@ export function configureContainer(
     logger.info('Container Config: all core bundles registered.');
 
     // --- Populate Registries (Post-Registration Steps) ---
+
     // --- Populate SystemDataRegistry ---
     try {
         logger.debug('Container Config: Populating SystemDataRegistry...');
@@ -112,28 +113,6 @@ export function configureContainer(
         logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', error);
         throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`);
     }
-
-    // --- Populate SystemDataRegistry ---
-    try {
-        logger.debug('Container Config: Populating SystemDataRegistry...');
-        const systemDataRegistry = /** @type {SystemDataRegistry} */ (
-            container.resolve(tokens.SystemDataRegistry)
-        );
-        // VVVVVV MODIFIED LINE VVVVVV
-        // Resolve using the interface token here as well for consistency.
-        const gameDataRepo = /** @type {GameDataRepository} */ (
-            container.resolve(tokens.IGameDataRepository)
-        );
-        // ^^^^^^ MODIFIED LINE ^^^^^^
-        const dataSourceKey = 'GameDataRepository'; // The key for SystemDataRegistry can remain the concrete name
-        logger.debug(`Container Config: Registering data source '${dataSourceKey}' (resolved via IGameDataRepository) in SystemDataRegistry...`);
-        systemDataRegistry.registerSource(dataSourceKey, gameDataRepo);
-        logger.info(`Container Config: Data source '${dataSourceKey}' successfully registered in SystemDataRegistry.`);
-    } catch (error) {
-        logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', error);
-        throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`);
-    }
-    // --- End SystemDataRegistry Population ---
 
     logger.info('Container Config: Configuration and registry population complete.');
 }

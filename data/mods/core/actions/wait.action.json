@@ -3,6 +3,7 @@
   "id": "core:wait",
   "commandVerb": "wait",
   "name": "Wait",
+  "description": "Passes your turn without performing any action.",
   "target_domain": "none",
   "prerequisites": [],
   "template": "wait"

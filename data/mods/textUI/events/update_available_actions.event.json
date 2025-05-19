@@ -9,24 +9,36 @@
     "properties": {
       "actions": {
         "type": "array",
-        "description": "An array of objects, each representing a valid action the player can currently take, including its ID and formatted command.",
+        "description": "An array of objects, each representing a valid action the player can currently take, including its ID, name, description, and formatted command.",
         "items": {
           "type": "object",
-          "description": "Object containing the action ID and its formatted command string.",
+          "description": "Object containing the action ID, name, description, and its formatted command string.",
           "properties": {
             "id": {
               "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
               "description": "The unique ID of the action definition (e.g., 'core:wait')."
             },
+            "name": {
+              "type": "string",
+              "description": "The human-readable name of the action (e.g., 'Wait').",
+              "minLength": 1
+            },
             "command": {
               "type": "string",
               "description": "The formatted command string ready for display/parsing (e.g., 'wait', 'go north').",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string",
+              "description": "A detailed description of what the action does.",
               "minLength": 1
             }
           },
           "required": [
             "id",
-            "command"
+            "name",
+            "command",
+            "description"
           ],
           "additionalProperties": false
         },

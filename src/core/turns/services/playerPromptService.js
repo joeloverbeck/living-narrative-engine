@@ -4,7 +4,14 @@
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */ // Expected to be {id: string, command: string}
+// MODIFIED: Update DiscoveredActionInfo to reflect the new structure
+/**
+ * @typedef {object} DiscoveredActionInfo
+ * @property {string} id - The unique ID of the action.
+ * @property {string} name - The human-readable name of the action.
+ * @property {string} command - The command string for the action.
+ * @property {string} [description] - Optional. The detailed description of the action.
+ */
 /** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -12,10 +19,10 @@
 /** @typedef {import('../../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../../actions/availableAction.js').default} AvailableAction */ // Typically {id: string, command: string, ...}
+// Removed AvailableAction import as DiscoveredActionInfo is now the primary type
 
 // --- Import Custom Error ---
-import {PromptError} from '../../errors/promptError.js'; // Adjusted path if necessary
+import {PromptError} from '../../errors/promptError.js';
 import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
 import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
 
@@ -32,9 +39,8 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
 
 /**
  * Represents the object resolved by the prompt() method's promise.
- * DiscoveredActionInfo from ActionDiscoverySystem is structurally compatible with AvailableAction for id/command.
  * @typedef {object} PlayerPromptResolution
- * @property {DiscoveredActionInfo} action - The selected available action object (contains id, command, etc.).
+ * @property {DiscoveredActionInfo} action - The selected available action object.
  * @property {string | null} speech - The speech input from the player, or null.
  */
 
@@ -147,7 +153,7 @@ class PlayerPromptService extends IPlayerPromptService {
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
      * @returns {Promise<PlayerPromptResolution>} A promise that resolves with an object containing the
-     * selected action (type DiscoveredActionInfo, structurally {id, command}) and speech, or rejects with a PromptError.
+     * selected action (type DiscoveredActionInfo) and speech, or rejects with a PromptError.
      * @throws {PromptError} If initial setup (actor validation, location fetching, action discovery,
      * or sending prompt to UI) fails. The Promise itself can also reject with a PromptError
      * for reasons like timeout, invalid action ID, or subscription issues.
@@ -191,13 +197,18 @@ class PlayerPromptService extends IPlayerPromptService {
         this.#logger.debug(`PlayerPromptService: Created ActionContext for actor ${actorId}.`);
 
         // 4. Action Discovery
-        /** @type {DiscoveredActionInfo[]} */ // This is an array of {id: string, command: string}
+        /** @type {DiscoveredActionInfo[]} */
         let discoveredActions;
         try {
             this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
+            // IMPORTANT: #actionDiscoverySystem.getValidActions MUST now return DiscoveredActionInfo objects
+            // that include 'name' and 'description' (optional).
             discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
             this.#logger.debug(`PlayerPromptService: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
-            // this.#logger.debug(`PlayerPromptService: Discovered actions raw content for actor ${actorId}:`, JSON.stringify(discoveredActions, null, 2));
+            // Example check for the new fields (optional, for debugging during transition)
+            // if (discoveredActions.length > 0 && typeof discoveredActions[0].name === 'undefined') {
+            //     this.#logger.warn(`PlayerPromptService: First discovered action for ${actorId} is missing 'name' field. ActionDiscoverySystem may need an update.`, {action: discoveredActions[0]});
+            // }
         } catch (error) {
             this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
             try {
@@ -211,7 +222,7 @@ class PlayerPromptService extends IPlayerPromptService {
         // 5. Send Actions to UI
         try {
             this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
-            // Assuming promptOutputPort.prompt can handle DiscoveredActionInfo[] which is {id, command}[]
+            // promptOutputPort.prompt will receive DiscoveredActionInfo[] which should now be enriched.
             await this.#promptOutputPort.prompt(actorId, discoveredActions);
             this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
         } catch (error) {
@@ -282,45 +293,41 @@ class PlayerPromptService extends IPlayerPromptService {
 
                 const {actionId, speech} = actualPayload;
 
-                // --- MODIFICATION START ---
-                // Find the DiscoveredActionInfo object (which is {id, command}) based on the actionId.
+                // Find the DiscoveredActionInfo object based on the actionId.
                 // `discoveredActions` is an array of `DiscoveredActionInfo` objects.
                 const selectedAction = discoveredActions.find(da => {
-                    if (!da) {
-                        this.#logger.warn(`PlayerPromptService: Encountered a null or undefined item in discoveredActions array while searching for actionId: ${actionId}. Skipping this item.`);
-                        return false;
-                    }
-                    // `da` is expected to be {id: string, command: string}
-                    // No longer checking for da.action, as `da` *is* the action info.
-                    if (typeof da.id !== 'string') {
-                        this.#logger.warn(`PlayerPromptService: Item in discoveredActions is missing 'id' property, or 'id' is not a string. Item: ${JSON.stringify(da)}. This item will be skipped in search for actionId: ${actionId}.`);
+                    if (!da || typeof da.id !== 'string') { // Basic sanity check for each item
+                        this.#logger.warn(`PlayerPromptService: Encountered a malformed item in discoveredActions array while searching for actionId: ${actionId}. Item:`, da);
                         return false;
                     }
                     return da.id === actionId;
                 });
 
                 if (!selectedAction) {
-                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions. This could be due to the action not being available, or a malformed item in the originally discovered actions list.`, {
-                        discoveredActionsPreview: discoveredActions.map(item => {
-                            if (!item) return {error: "Null/undefined item in discoveredActions"};
-                            // Item is {id, command}
-                            if (typeof item.id !== 'string') return {
-                                error: "'id' is not a string",
-                                itemDetails: item // Log the problematic item
-                            };
-                            return {actionId: item.id, command: item.command};
-                        }),
+                    this.#logger.error(`PlayerPromptService: Invalid actionId '${actionId}' received for actor ${actorId}. Not found in discovered actions.`, {
+                        discoveredActionsPreview: discoveredActions.map(item => item ? {
+                            id: item.id,
+                            name: item.name,
+                            command: item.command
+                        } : {error: "Null/undefined item"}),
                         receivedActionId: actionId
                     });
                     reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
                 } else {
-                    this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' received for actor ${actorId}. Resolving prompt.`);
+                    // Ensure the selectedAction at least has the 'name' field, as ActionButtonsRenderer now expects it.
+                    // This check is more of a safeguard; the fix should be in ActionDiscoverySystem.
+                    if (typeof selectedAction.name !== 'string' || selectedAction.name.trim() === '') {
+                        this.#logger.warn(`PlayerPromptService: Action '${actionId}' found, but it's missing a valid 'name' field. UI might not display it correctly. Action:`, selectedAction);
+                        // Decide: reject or resolve with incomplete data?
+                        // For now, resolve, but ActionDiscoverySystem must be fixed.
+                    }
+
+                    this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' (Name: '${selectedAction.name || "N/A"}') received for actor ${actorId}. Resolving prompt.`);
                     resolve({
-                        action: selectedAction, // `selectedAction` is the DiscoveredActionInfo {id, command}
+                        action: selectedAction, // `selectedAction` is the DiscoveredActionInfo
                         speech: speech || null
                     });
                 }
-                // --- MODIFICATION END ---
             };
 
             try {
