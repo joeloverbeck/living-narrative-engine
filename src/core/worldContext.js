@@ -41,8 +41,8 @@ class WorldContext extends IWorldContext {
         if (!entityManager || typeof entityManager.getEntitiesWithComponent !== 'function' || typeof entityManager.getEntityInstance !== 'function') {
             throw new Error('WorldContext requires a valid EntityManager instance.');
         }
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') { // Added debug check for logger
-            throw new Error('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.'); // Added warn for completeness
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') { // Added warn check
+            throw new Error('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.');
         }
         this.#entityManager = entityManager;
         this.#logger = logger;
@@ -132,7 +132,7 @@ class WorldContext extends IWorldContext {
         const positionData = this.#entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
 
         if (!positionData) {
-            return null;
+            return null; // Entity might not have a position, or doesn't exist.
         }
 
         if (typeof positionData.locationId !== 'string' || !positionData.locationId) {
@@ -204,41 +204,72 @@ class WorldContext extends IWorldContext {
     }
 
     /**
+     * Retrieves the current timestamp in ISO 8601 format.
+     * @returns {string} The current ISO 8601 timestamp (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
+     * @implements {IWorldContext.getCurrentISOTimestamp}
+     */
+    getCurrentISOTimestamp() {
+        return new Date().toISOString();
+    }
+
+    /**
      * Handles queries directed to the WorldContext via the SystemDataRegistry.
-     * @param {object} queryDetails - Details about the query.
-     * Expected to be an object with a `query_type` property.
+     * @param {string | object} queryDetails - Details about the query.
+     * Can be a simple string (e.g., "getCurrentISOTimestamp")
+     * or an object (e.g., { action: "getCurrentISOTimestamp" } or { query_type: "..."}).
      * @returns {any | undefined} The result of the query or undefined if not supported.
+     * @implements {IWorldContext.handleQuery}
      */
     handleQuery(queryDetails) {
         this.#logger.debug(`WorldContext.handleQuery received: ${JSON.stringify(queryDetails)}`);
 
-        if (typeof queryDetails === 'object' && queryDetails !== null && queryDetails.query_type) {
-            const {query_type, ...params} = queryDetails; // Destructure query_type and other params
+        let actionToPerform = null;
+        let queryParams = {};
 
-            switch (query_type) {
-                case 'getTargetLocationForDirection':
-                    // The getTargetLocationForDirection method already expects an object
-                    // with current_location_id and direction_taken, which are in params.
-                    // Ensure params has the required fields before calling.
-                    if (params.current_location_id && params.direction_taken) {
-                        return this.getTargetLocationForDirection(params);
-                    } else {
-                        this.#logger.warn(`WorldContext: Missing 'current_location_id' or 'direction_taken' for 'getTargetLocationForDirection' query.`, {params});
-                        return undefined;
-                    }
-                // Add other case statements for other query_types WorldContext might support
-                // case 'getSomeOtherData':
-                //     return this.handleSomeOtherData(params);
-                default:
-                    this.#logger.warn(`WorldContext: Unsupported query_type: '${query_type}'`);
-                    return undefined;
+        if (typeof queryDetails === 'string') {
+            actionToPerform = queryDetails;
+        } else if (typeof queryDetails === 'object' && queryDetails !== null) {
+            // Prefer 'action' field for rule-based queries as per typical rule engine parameter naming
+            if (typeof queryDetails.action === 'string' && queryDetails.action.trim() !== '') {
+                actionToPerform = queryDetails.action;
+                const {action, ...rest} = queryDetails;
+                queryParams = rest;
             }
-        } else {
-            this.#logger.warn(`WorldContext: Invalid queryDetails format. Expected object with query_type. Received: ${JSON.stringify(queryDetails)}`);
+            // Support 'query_type' for backward compatibility or internal system use
+            else if (typeof queryDetails.query_type === 'string' && queryDetails.query_type.trim() !== '') {
+                actionToPerform = queryDetails.query_type;
+                const {query_type, ...rest} = queryDetails;
+                queryParams = rest;
+            }
+        }
+
+        if (!actionToPerform) {
+            this.#logger.warn(`WorldContext: Invalid queryDetails format. Could not determine action/query_type. Received: ${JSON.stringify(queryDetails)}`);
             return undefined;
         }
-    }
 
+        switch (actionToPerform) {
+            case 'getTargetLocationForDirection':
+                // queryParams should contain current_location_id and direction_taken
+                if (queryParams.current_location_id && queryParams.direction_taken) {
+                    return this.getTargetLocationForDirection(queryParams);
+                } else {
+                    this.#logger.warn(`WorldContext: Missing 'current_location_id' or 'direction_taken' for 'getTargetLocationForDirection' query.`, {
+                        queryParams,
+                        fullQueryDetails: queryDetails
+                    });
+                    return undefined;
+                }
+            case 'getCurrentISOTimestamp':
+                return this.getCurrentISOTimestamp();
+            // Add other case statements for other actions/query_types WorldContext might support
+            // case 'getSomeOtherData':
+            //     return this.handleSomeOtherData(queryParams);
+            default:
+                this.#logger.warn(`WorldContext: Unsupported action/query_type: '${actionToPerform}'`, {queryDetails});
+                return undefined;
+        }
+    }
 }
 
 export default WorldContext;

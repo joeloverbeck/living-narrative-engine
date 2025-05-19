@@ -40,7 +40,29 @@ export class IWorldContext {
         throw new Error('IWorldContext.getLocationOfEntity method not implemented.');
     }
 
+    /**
+     * Retrieves the current timestamp in ISO 8601 format.
+     * This method might not be called directly if WorldContext is primarily used via SystemDataRegistry's
+     * handleQuery mechanism, but it defines the capability.
+     * @function getCurrentISOTimestamp
+     * @returns {string} The current ISO 8601 timestamp (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
+     */
+    getCurrentISOTimestamp() {
+        throw new Error('IWorldContext.getCurrentISOTimestamp method not implemented.');
+    }
+
     // Note: assertSingleCurrentActor? is not included as per ticket conditions (#3 dependency).
+
+    /**
+     * Handles queries directed to the WorldContext via the SystemDataRegistry.
+     * The specific structure of queryDetails can vary.
+     * @function handleQuery
+     * @param {string | object} queryDetails - Details about the query.
+     * @returns {any | undefined} The result of the query or undefined if not supported.
+     */
+    handleQuery(queryDetails) {
+        throw new Error('IWorldContext.handleQuery method not implemented.');
+    }
 }
 
 // --- FILE END ---
