@@ -28,6 +28,12 @@
     --button-disabled-bg-color: #cce5ff;
     --button-disabled-text-color: #86b7fe; /* Contrast on disabled bg: 1.57:1. WCAG doesn't strictly require for disabled, but noted. */
 
+    /* NEW: Variables for selected action button for enhanced visual clarity */
+    --button-selected-bg-color: var(--accent-color-primary); /* #007bff - Brighter blue for selected */
+    --button-selected-text-color: #FFFFFF; /* White text */
+    --button-selected-border-color: var(--button-bg-color); /* #005cbf - Darker blue border, contrasts with selected bg */
+    --button-selected-glow-color: rgba(0, 123, 255, 0.45); /* Glow for emphasis, similar to focus ring but distinct */
+
 
     /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
     --error-text-color: #721c24; /* Dark Red (Bootstrap alert style, 4.58:1 on #f8d7da, >7:1 on #FFF) */
@@ -502,32 +508,39 @@ button:disabled, .button-like:disabled {
     margin-bottom: 0;
 }
 
+/* MODIFIED SECTION STARTS HERE */
 /* Selected state for action buttons */
 #action-buttons button.selected {
-    background-color: var(--button-hover-bg-color); /* Darker blue, good contrast for selected state */
-    color: var(--button-text-color);
-    border: 2px solid var(--accent-color-primary); /* Lighter blue border for clear distinction */
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), var(--shadow-sm); /* Inner shadow to make it feel pressed or active */
-    transform: translateY(0px); /* Override hover transform, it's already 'active' in selection */
-    font-weight: 700; /* Slightly bolder to emphasize selection */
+    background-color: var(--button-selected-bg-color); /* Use the new distinct bright blue */
+    color: var(--button-selected-text-color); /* White text */
+    border: 2px solid var(--button-selected-border-color); /* Darker blue border for contrast */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), /* Subtle inner definition */ 0 0 8px 2px var(--button-selected-glow-color); /* Clear outer glow for emphasis */
+    transform: translateY(0px); /* Override any hover transform, selected is static */
+    font-weight: 700; /* Emphasize text (already present, good) */
+    /* z-index: 1; */ /* Optional: uncomment if stacking issues arise with glows/shadows overlapping other elements */
 }
 
-/* Hover state for a selected action button */
+/* Hover state for a selected action button - should still look clearly selected */
 #action-buttons button.selected:hover {
-    background-color: var(--button-hover-bg-color); /* Maintain selected background */
-    border-color: var(--accent-color-focus-ring); /* Slightly different border on hover for feedback */
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), var(--shadow-md); /* Slightly deeper shadow */
-    /* cursor: pointer; /* Inherited, allows interaction if needed (e.g., deselect) */
-    transform: translateY(0px); /* No movement for selected button on hover */
+    background-color: var(--button-selected-bg-color); /* Maintain the selected background color */
+    /* filter: brightness(1.05); */ /* Optional: uncomment for a very subtle brightening on hover */
+    border-color: var(--button-selected-border-color); /* Maintain the selected border color */
+    /* Slightly enhance the glow or shadows on hover for feedback */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2), /* Slightly deeper inner shadow */ 0 0 10px 3px var(--button-selected-glow-color); /* Stronger/larger glow */
+    transform: translateY(0px); /* Ensure no movement */
 }
 
-/* Active state for a selected action button (when clicked again) */
+/* Active state for a selected action button (e.g., if clicked again, perhaps to deselect) */
 #action-buttons button.selected:active {
-    background-color: var(--button-hover-bg-color); /* Maintain selected background */
-    border-color: var(--accent-color-primary); /* Revert to standard selected border or a slightly pressed look */
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), var(--shadow-sm); /* Slightly less deep shadow on active */
-    transform: translateY(0px); /* No movement */
+    /* Use a darker shade for a "pressed" feel, distinct from the normal selected state */
+    background-color: var(--button-hover-bg-color); /* Darkest blue, like a standard button active/hover */
+    color: var(--button-selected-text-color); /* Keep white text */
+    border-color: var(--button-bg-color); /* Border matches the darker background family */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), /* Deeper inset shadow for pressed feel */ 0 0 6px 1px var(--button-selected-glow-color); /* Slightly reduced glow when pressed hard */
+    transform: translateY(0px); /* Ensure no movement */
 }
+
+/* MODIFIED SECTION ENDS HERE */
 
 
 /* --- Specific Button Instances --- */
