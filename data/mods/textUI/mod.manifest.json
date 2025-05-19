@@ -23,6 +23,7 @@
       "submit_command.rule.json",
       "command_parse_failed.rule.json",
       "wait.rule.json",
+      "go.rule.json",
       "entity_speech.rule.json"
     ],
     "events": [

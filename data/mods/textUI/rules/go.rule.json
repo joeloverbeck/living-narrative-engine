@@ -1,0 +1,129 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "handle_core_go_action",
+  "comment": "Handles the 'core:go' action. It resolves the direction to a target location using WorldContext via SystemDataRegistry, moves the actor by updating their 'core:position' component, informs the UI, and ends the actor's turn. It also handles cases where the direction is invalid.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "core:go"
+    ]
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the name component of the actor for messaging.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:name",
+        "result_variable": "actorNameComponent"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the current position component of the actor to get their current location ID.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPositionComponent"
+      }
+    },
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Resolve the direction to a target location ID using the WorldContext service.",
+      "parameters": {
+        "source_id": "WorldContext",
+        "query_details": {
+          "query_type": "getTargetLocationForDirection",
+          "current_location_id": "{context.actorPositionComponent.locationId}",
+          "direction_taken": "{event.payload.direction}"
+        },
+        "result_variable": "resolvedTargetLocationId"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Check if a valid target location was resolved by WorldContext.",
+      "parameters": {
+        "condition": {
+          "!=": [
+            {
+              "var": "context.resolvedTargetLocationId"
+            },
+            null
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Update the actor's locationId in their 'core:position' component to the new target location.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "field": "locationId",
+              "mode": "set",
+              "value": "{context.resolvedTargetLocationId}"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name of the new target location for messaging.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.resolvedTargetLocationId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "targetLocationNameComponent"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a message to the UI indicating the actor has moved.",
+            "parameters": {
+              "eventType": "textUI:display_message",
+              "payload": {
+                "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}.",
+                "type": "info"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch an event to indicate the actor's turn has ended after successful movement.",
+            "parameters": {
+              "eventType": "core:turn_ended",
+              "payload": {
+                "entityId": "{event.payload.actorId}"
+              }
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Inform the actor that they cannot go in the specified direction (no valid exit found).",
+            "parameters": {
+              "eventType": "textUI:display_message",
+              "payload": {
+                "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked.",
+                "type": "warning"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch an event to indicate the actor's turn has ended, even on a failed move attempt.",
+            "parameters": {
+              "eventType": "core:turn_ended",
+              "payload": {
+                "entityId": "{event.payload.actorId}"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

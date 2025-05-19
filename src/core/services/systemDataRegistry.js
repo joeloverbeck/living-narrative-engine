@@ -137,23 +137,28 @@ export class SystemDataRegistry {
                     return undefined; // Method not found on source
                 }
             }
-            // --- END FIX ---
+            // +++ NEW CASE: WorldContext +++
+            else if (sourceId === 'WorldContext') { // Ensure this key matches what you register
+                if (queryDetails && queryDetails.query_type === 'getTargetLocationForDirection') {
+                    if (typeof sourceInstance.getTargetLocationForDirection === 'function') {
+                        this.#logger.debug(`${methodName}: Forwarding 'getTargetLocationForDirection' query to 'WorldContext' with details: ${JSON.stringify(queryDetails)}`);
+                        // The queryDetails object itself contains current_location_id and direction_taken
+                        return sourceInstance.getTargetLocationForDirection(queryDetails);
+                    } else {
+                        this.#logger.error(`${methodName}: Source 'WorldContext' does not have a callable 'getTargetLocationForDirection' method.`);
+                        return undefined;
+                    }
+                }
+                // You could add more 'else if' blocks here for other query_types for WorldContext
+                this.#logger.warn(`${methodName}: Unsupported query_type '${queryDetails ? queryDetails.query_type : 'N/A'}' for sourceId 'WorldContext'.`);
+                return undefined;
+            }
+            // +++ END NEW CASE +++
 
-            // --- Add other specific query handlers here as needed ---
-            // Example:
-            // if (sourceId === 'SomeOtherSource' && typeof queryDetails === 'object' && queryDetails.type === 'getUser') {
-            //     if (typeof sourceInstance.fetchUser === 'function') {
-            //         return sourceInstance.fetchUser(queryDetails.userId);
-            //     } else {
-            //         // Handle missing method
-            //     }
-            // }
-
-
-            // ** Fallback for Unhandled Queries **
-            this.#logger.warn(`${methodName}: Query for sourceId '${sourceId}' with details '${JSON.stringify(queryDetails)}' is not currently supported.`);
-            return undefined;
-
+            else {
+                this.#logger.warn(`${methodName}: Query for sourceId '${sourceId}' with details '${JSON.stringify(queryDetails)}' is not currently supported.`);
+                return undefined;
+            }
         } catch (error) {
             // AC: query handles query-failed scenarios gracefully (returns undefined, logs errors).
             this.#logger.error(

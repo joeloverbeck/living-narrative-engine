@@ -86,25 +86,31 @@ export function configureContainer(
     logger.info('Container Config: all core bundles registered.');
 
     // --- Populate Registries (Post-Registration Steps) ---
-    // --- Populate SystemServiceRegistry ---
+    // --- Populate SystemDataRegistry ---
     try {
-        logger.debug('Container Config: Populating SystemServiceRegistry...');
-        const systemServiceRegistry = /** @type {SystemServiceRegistry} */ (
-            container.resolve(tokens.SystemServiceRegistry)
+        logger.debug('Container Config: Populating SystemDataRegistry...');
+        const systemDataRegistry = /** @type {SystemDataRegistry} */ (
+            container.resolve(tokens.SystemDataRegistry)
         );
-        // VVVVVV MODIFIED LINE VVVVVV
-        // Resolve using the interface token, as this seems to be how GameDataRepository is registered.
-        const gameDataRepoForSSR = /** @type {GameDataRepository} */ (
+
+        // Register GameDataRepository (existing)
+        const gameDataRepo = /** @type {GameDataRepository} */ (
             container.resolve(tokens.IGameDataRepository)
         );
-        // ^^^^^^ MODIFIED LINE ^^^^^^
-        const serviceKey = 'GameDataRepository'; // The key for SystemServiceRegistry can remain the concrete name
-        logger.debug(`Container Config: Registering service '${serviceKey}' (resolved via IGameDataRepository) in SystemServiceRegistry...`);
-        systemServiceRegistry.registerService(serviceKey, gameDataRepoForSSR);
-        logger.info(`Container Config: Service '${serviceKey}' successfully registered in SystemServiceRegistry.`);
+        systemDataRegistry.registerSource('GameDataRepository', gameDataRepo);
+        logger.info(`Container Config: Data source 'GameDataRepository' successfully registered in SystemDataRegistry.`);
+
+        const worldContextInstance = /** @type {WorldContext} */ (
+            container.resolve(tokens.IWorldContext) // Use the token for WorldContext
+        );
+        const worldContextKey = 'WorldContext'; // This key must match rule's source_id
+        logger.debug(`Container Config: Registering data source '${worldContextKey}' in SystemDataRegistry...`);
+        systemDataRegistry.registerSource(worldContextKey, worldContextInstance);
+        logger.info(`Container Config: Data source '${worldContextKey}' successfully registered in SystemDataRegistry.`);
+
     } catch (error) {
-        logger.error('Container Config: CRITICAL ERROR during SystemServiceRegistry population:', error);
-        throw new Error(`Failed to populate SystemServiceRegistry: ${error.message}`);
+        logger.error('Container Config: CRITICAL ERROR during SystemDataRegistry population:', error);
+        throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`);
     }
 
     // --- Populate SystemDataRegistry ---

@@ -176,10 +176,60 @@ class WorldContext extends IWorldContext {
         return locationEntity;
     }
 
-    // Removed #actorEntity, #currentLocation private fields
-    // Removed setPlayer method
-    // Removed setCurrentLocation method
-    // Removed internal _updateContext method
+    /**
+     * Resolves a direction taken from a current location to a target location ID.
+     * This method is intended to be called via SystemDataRegistry for rules.
+     * @param {object} queryParams - Parameters for the query.
+     * @param {string} queryParams.current_location_id - The ID of the current location entity.
+     * @param {string} queryParams.direction_taken - The direction string (e.g., "out to town").
+     * @returns {string | null} The ID of the target location, or null if invalid.
+     */
+    getTargetLocationForDirection({current_location_id, direction_taken}) {
+        if (!current_location_id || typeof current_location_id !== 'string') {
+            this.#logger.warn('WorldContext.getTargetLocationForDirection: Missing or invalid current_location_id.', {
+                current_location_id,
+                direction_taken
+            });
+            return null;
+        }
+        if (!direction_taken || typeof direction_taken !== 'string') {
+            this.#logger.warn('WorldContext.getTargetLocationForDirection: Missing or invalid direction_taken.', {
+                current_location_id,
+                direction_taken
+            });
+            return null;
+        }
+
+        this.#logger.debug(`WorldContext: Attempting to resolve direction '${direction_taken}' from location '${current_location_id}'.`);
+
+        const exitsComponentData = this.#entityManager.getComponentData(current_location_id, 'core:exits');
+
+        if (!exitsComponentData) {
+            this.#logger.warn(`WorldContext: Location '${current_location_id}' has no 'core:exits' component.`);
+            return null;
+        }
+
+        if (!Array.isArray(exitsComponentData)) {
+            this.#logger.error(`WorldContext: 'core:exits' component data for location '${current_location_id}' is not an array.`, {data: exitsComponentData});
+            return null;
+        }
+
+        const foundExit = exitsComponentData.find(exit => exit.direction === direction_taken);
+
+        if (foundExit) {
+            if (foundExit.blocker) {
+                this.#logger.debug(`WorldContext: Exit from '${current_location_id}' via '${direction_taken}' to '${foundExit.target}' is blocked by '${foundExit.blocker}'.`);
+                // For now, a blocked exit means "can't go that way"
+                return null;
+            }
+            this.#logger.debug(`WorldContext: Successfully resolved direction. Target location: '${foundExit.target}'.`);
+            return foundExit.target; // This is the target location ID string
+        } else {
+            this.#logger.warn(`WorldContext: No exit found for direction '${direction_taken}' from location '${current_location_id}'.`);
+            return null;
+        }
+    }
+
 }
 
 export default WorldContext;

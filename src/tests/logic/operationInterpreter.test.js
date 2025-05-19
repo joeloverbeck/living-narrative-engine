@@ -294,7 +294,8 @@ describe('OperationInterpreter', () => {
             expect.any(Error)
         );
         // Verify the warning from resolvePlaceholders itself was likely called (via the interpreter passing the logger)
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Placeholder path "invalid.path.that.does.not.exist" from {invalid.path.that.does.not.exist} could not be resolved'));
+        const expectedWarningMessage = 'Placeholder path "invalid.path.that.does.not.exist" (interpreted as "invalid.path.that.does.not.exist") from {invalid.path.that.does.not.exist} could not be resolved. Path: .message -> {invalid.path.that.does.not.exist}';
+        expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarningMessage);
         // Verify the interpreter still logged the attempt to resolve and execute
         expect(mockLogger.debug).toHaveBeenCalledWith('Executing handler for operation type "LOG"...');
     });
