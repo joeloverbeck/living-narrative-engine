@@ -28,7 +28,6 @@
       "turn_ended.rule.json"
     ],
     "events": [
-      "engine_initialized.event.json",
       "turn_started.event.json",
       "player_turn_prompt.event.json",
       "ai_turn_processing_started.event.json",

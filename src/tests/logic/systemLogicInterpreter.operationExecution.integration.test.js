@@ -10,170 +10,178 @@
 /** @typedef {import('../../../data/schemas/rule.schema.json').SystemRule} SystemRule */
 /** @typedef {import('../../../data/schemas/entity.schema.json').Entity} Entity */
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('../../../data/schemas/operation.schema.json').Operation} Operation */ // Added for spy typing
+/** @typedef {import('../../../data/schemas/operation.schema.json').Operation} Operation */
 
 
 // --- Class Under Test ---
-import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js'; // Adjust path as needed
+import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js';
 
 // --- Dependencies ---
-// Import actual classes or stubs as needed for the integration scope
-import RealEventBus from '../../core/eventBus.js'; // Adjust path as needed
-import RealJsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Adjust path as needed
-// Using a stub for OperationInterpreter to isolate SystemLogicInterpreter's interaction
-import OperationInterpreterStub from '../../logic/operationInterpreter.js'; // Adjust path - Assuming this is a valid stub/mock
+import RealEventBus from '../../core/eventBus.js';
+import RealJsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
+import OperationInterpreterStub from '../../logic/operationInterpreter.js'; // Assuming this is the intended path for the stub
 
 // Import jest functions directly
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 import OperationRegistry from '../../logic/operationRegistry';
 
 // --- Test Data ---
 /** @type {SystemRule} */
 const testRule_ActionOrder = {
-  rule_id: 'TestRule_ActionOrder',
-  event_type: 'test:event_action_order',
-  actions: [
-    { type: 'LOG', parameters: { message: 'First Action - Actor: {actor.id}' } },
-    { type: 'LOG', parameters: { message: 'Second Action - Event: {event.type}' } }
-  ]
+    rule_id: 'TestRule_ActionOrder',
+    event_type: 'test:event_action_order',
+    actions: [
+        {type: 'LOG', parameters: {message: 'First Action - Actor: {actor.id}'}},
+        {type: 'LOG', parameters: {message: 'Second Action - Event: {event.type}'}}
+    ]
 };
 
 // --- Test Suite ---
 describe('SystemLogicInterpreter - Operation Execution Integration Test', () => {
 
-  // --- Variable Declarations ---
-  /** @type {jest.Mocked<ILogger>} */
-  let mockLogger;
-  /** @type {jest.Mocked<ILogger>} */
-  let mockLoggerForOperationInterpreter;
-  /** @type {RealEventBus} */
-  let eventBusInstance;
-  /** @type {jest.Mocked<IDataRegistry>} */
-  let mockDataRegistry;
-  /** @type {RealJsonLogicEvaluationService} */
-  let jsonLogicServiceInstance;
-  /** @type {jest.Mocked<EntityManager>} */
-  let mockEntityManager;
-  /** @type {OperationInterpreterStub} */
-  let mockOperationInterpreter; // Use the stub/mock instance
-  /** @type {SystemLogicInterpreter} */
-  let systemLogicInterpreter;
-  /** @type {OperationRegistry} */ // <-- ADD TYPE DEF for registry
-  let operationRegistry;
-  /** @type {jest.SpyInstance<void, [Operation, JsonLogicEvaluationContext]>} */
-  let executeSpy; // Spy specifically on the 'execute' method of the mock interpreter
+    /** @type {jest.Mocked<ILogger>} */
+    let mockLogger;
+    /** @type {jest.Mocked<ILogger>} */
+    let mockLoggerForOperationInterpreter;
+    /** @type {RealEventBus} */
+    let eventBusInstance;
+    /** @type {jest.Mocked<IDataRegistry>} */
+    let mockDataRegistry;
+    /** @type {RealJsonLogicEvaluationService} */
+    let jsonLogicServiceInstance;
+    /** @type {jest.Mocked<EntityManager>} */
+    let mockEntityManager;
+    /** @type {OperationInterpreterStub} */
+    let mockOperationInterpreterInstance; // Renamed for clarity
+    /** @type {SystemLogicInterpreter} */
+    let systemLogicInterpreter;
+    /** @type {OperationRegistry} */
+    let operationRegistry;
+    /** @type {jest.SpyInstance<void, [Operation, JsonLogicEvaluationContext]>} */ // Context type might need adjustment based on actual OperationInterpreter signature
+    let executeSpy;
 
-  beforeEach(() => {
-    // Mock dependencies
-    mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-    mockLoggerForOperationInterpreter = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-    eventBusInstance = new RealEventBus(); // Using real event bus for dispatch/subscribe interaction
-    mockDataRegistry = { getAllSystemRules: jest.fn() };
-    jsonLogicServiceInstance = new RealJsonLogicEvaluationService({ logger: mockLogger }); // Real service for condition evaluation if needed later
-    mockEntityManager = { getEntityInstance: jest.fn(), getComponentData: jest.fn() };
+    beforeEach(() => {
+        mockLogger = {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            loggedMessages: [],
+            _log: jest.fn(),
+            clearLogs: jest.fn()
+        };
+        mockLoggerForOperationInterpreter = {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            loggedMessages: [],
+            _log: jest.fn(),
+            clearLogs: jest.fn()
+        };
 
-    // Configure Mocks for this test scenario
-    mockDataRegistry.getAllSystemRules.mockReturnValue([testRule_ActionOrder]);
-    const mockActorEntity = { id: 'testActor001' };
-    mockEntityManager.getEntityInstance.mockImplementation((entityId) => {
-      if (entityId === 'testActor001') return mockActorEntity;
-      return undefined;
+        eventBusInstance = new RealEventBus();
+        mockDataRegistry = {getAllSystemRules: jest.fn()};
+        jsonLogicServiceInstance = new RealJsonLogicEvaluationService({logger: mockLogger});
+
+        // Simplified mockActorEntity for this test, assuming createComponentAccessor handles it
+        const mockActorEntity = {
+            id: 'testActor001',
+            // components property might be added by createComponentAccessor if not present.
+            // If createComponentAccessor expects these, they should be mocked:
+            // getComponentData: jest.fn(),
+            // hasComponent: jest.fn()
+        };
+        mockEntityManager = {
+            getEntityInstance: jest.fn().mockImplementation((entityId) => {
+                if (entityId === 'testActor001') return mockActorEntity;
+                return undefined;
+            }),
+            // These are often called by createComponentAccessor, ensure they return valid defaults
+            getComponentData: jest.fn().mockReturnValue(null),
+            hasComponent: jest.fn().mockReturnValue(false),
+        };
+
+
+        mockDataRegistry.getAllSystemRules.mockReturnValue([testRule_ActionOrder]);
+
+        operationRegistry = new OperationRegistry({logger: mockLoggerForOperationInterpreter});
+        mockOperationInterpreterInstance = new OperationInterpreterStub({
+            logger: mockLoggerForOperationInterpreter,
+            operationRegistry: operationRegistry
+        });
+
+        executeSpy = jest.spyOn(mockOperationInterpreterInstance, 'execute');
+
+        systemLogicInterpreter = new SystemLogicInterpreter({
+            logger: mockLogger,
+            eventBus: eventBusInstance,
+            dataRegistry: mockDataRegistry,
+            jsonLogicEvaluationService: jsonLogicServiceInstance,
+            entityManager: mockEntityManager,
+            operationInterpreter: mockOperationInterpreterInstance
+        });
     });
 
-    // 0. Instantiate OperationRegistry <-- ADD THIS STEP
-    //    Use the specific logger intended for the interpreter if desired
-    operationRegistry = new OperationRegistry({ logger: mockLoggerForOperationInterpreter });
-
-    // 1. Instantiate the OperationInterpreter (using stub alias) <-- MODIFY THIS STEP
-    //    Pass both logger and registry
-    mockOperationInterpreter = new OperationInterpreterStub({
-      logger: mockLoggerForOperationInterpreter,
-      operationRegistry: operationRegistry // <-- Pass the registry instance
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
-    // 2. --- AC1: Spy on OperationInterpreter.execute --- (remains the same)
-    executeSpy = jest.spyOn(mockOperationInterpreter, 'execute');
+    it('should delegate action execution to OperationInterpreter.execute when a matching rule triggers', async () => {
+        systemLogicInterpreter.initialize();
+        expect(mockDataRegistry.getAllSystemRules).toHaveBeenCalled();
+        expect(executeSpy).not.toHaveBeenCalled();
 
-    // 3. Instantiate SystemLogicInterpreter (remains the same)
-    systemLogicInterpreter = new SystemLogicInterpreter({
-      logger: mockLogger,
-      eventBus: eventBusInstance,
-      dataRegistry: mockDataRegistry,
-      jsonLogicEvaluationService: jsonLogicServiceInstance,
-      entityManager: mockEntityManager,
-      operationInterpreter: mockOperationInterpreter // Inject the correctly instantiated OperationInterpreter
+        const eventPayload = {actorId: 'testActor001'};
+        const eventType = 'test:event_action_order';
+        await eventBusInstance.dispatch(eventType, eventPayload);
+
+        expect(executeSpy).toHaveBeenCalledTimes(2);
+
+        // Define the structure for the NESTED evaluationContext
+        // This matches the content of `jsonLogicDataForEvaluation`
+        const expectedJsonLogicContext = expect.objectContaining({
+            event: expect.objectContaining({type: eventType, payload: eventPayload}),
+            actor: expect.objectContaining({
+                id: 'testActor001',
+                components: expect.any(Object) // createComponentAccessor likely adds a components proxy
+            }),
+            target: null,
+            context: {},
+            globals: {}, // Present in received evaluationContext
+            entities: {}  // Present in received evaluationContext
+            // logger is NOT in the received evaluationContext based on previous test outputs
+        });
+
+        // Define the structure for the argument to OperationInterpreter.execute
+        // This matches `finalNestedExecutionContext`
+        const expectedContextForOperationInterpreter = expect.objectContaining({
+            event: expect.objectContaining({type: eventType, payload: eventPayload}), // Top-level
+            actor: expect.objectContaining({
+                id: 'testActor001',
+                components: expect.any(Object) // Top-level actor is also processed by createComponentAccessor
+            }), // Top-level
+            target: null, // Top-level
+            logger: expect.any(Object), // Top-level logger from SystemLogicInterpreter itself
+            evaluationContext: expectedJsonLogicContext
+        });
+
+        // Verify the first call
+        expect(executeSpy).toHaveBeenNthCalledWith(1,
+            expect.objectContaining({
+                type: 'LOG',
+                parameters: {message: 'First Action - Actor: {actor.id}'}
+            }),
+            expectedContextForOperationInterpreter // Use the corrected nested structure
+        );
+
+        // Verify the second call
+        expect(executeSpy).toHaveBeenNthCalledWith(2,
+            expect.objectContaining({
+                type: 'LOG',
+                parameters: {message: 'Second Action - Event: {event.type}'}
+            }),
+            expectedContextForOperationInterpreter // Context should be the same for subsequent actions of the same rule
+        );
     });
-
-    // --- AC2: Confirmation ---
-    // No spy is created on SystemLogicInterpreter.prototype._executeActions in this setup.
-  });
-
-  afterEach(() => {
-    // Restore all mocks and spies
-    jest.restoreAllMocks();
-  });
-
-  it('should delegate action execution to OperationInterpreter.execute when a matching rule triggers', async () => {
-    // Arrange: Initialize interpreter to load rules and subscribe
-    systemLogicInterpreter.initialize();
-    expect(mockDataRegistry.getAllSystemRules).toHaveBeenCalled(); // Ensure rules were loaded
-    // Spy should not have been called yet
-    expect(executeSpy).not.toHaveBeenCalled();
-
-    // Act: Dispatch an event that matches the test rule
-    const eventPayload = { actorId: 'testActor001' };
-    const eventType = 'test:event_action_order';
-    await eventBusInstance.dispatch(eventType, eventPayload); // Use await for async dispatch if applicable
-
-    // Assert: Verify interaction with OperationInterpreter.execute
-    // --- AC3: Check Call Count ---
-    // Rule has 2 actions, both should be passed to OperationInterpreter
-    expect(executeSpy).toHaveBeenCalledTimes(2);
-
-    // --- AC3 & AC4: Check Arguments and Order ---
-
-    // Verify the first call to OperationInterpreter.execute
-    expect(executeSpy).toHaveBeenNthCalledWith(1,
-      // 1st argument: The first Operation object from the rule
-      expect.objectContaining({
-        type: 'LOG',
-        parameters: { message: 'First Action - Actor: {actor.id}' }
-      }),
-      // 2nd argument: The evaluation context object
-      expect.objectContaining({
-        event: expect.objectContaining({ type: eventType, payload: eventPayload }),
-        actor: expect.objectContaining({ id: 'testActor001' }),
-        target: null, // Target ID wasn't in payload, so context.target should be null
-        context: {} // Assuming no complex context derivation in this basic test
-      })
-    );
-
-    // Verify the second call to OperationInterpreter.execute
-    expect(executeSpy).toHaveBeenNthCalledWith(2,
-      // 1st argument: The second Operation object from the rule
-      expect.objectContaining({
-        type: 'LOG',
-        parameters: { message: 'Second Action - Event: {event.type}' }
-      }),
-      // 2nd argument: The same evaluation context object
-      expect.objectContaining({
-        event: expect.objectContaining({ type: eventType, payload: eventPayload }),
-        actor: expect.objectContaining({ id: 'testActor001' }),
-        target: null,
-        context: {}
-      })
-    );
-
-    // --- AC5: Implicit ---
-    // If the above expectations pass without errors, the test passes.
-  });
-
-  // --- Add more tests as needed ---
-  // e.g., test cases for:
-  // - Rules with conditions (mock jsonLogicServiceInstance.evaluate)
-  // - Events with different payloads (actorId, targetId, entityId)
-  // - Rules with IF operations (verify conditions evaluated, correct branch actions passed to executeSpy)
-  // - Rules with no actions
-  // - Events that don't match any rules
-
 });

@@ -13,12 +13,21 @@
   },
   "actions": [
     {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the name component of the current actor (entity who has chosen to wait).",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:name",
+        "result_variable": "actorNameComponent"
+      }
+    },
+    {
       "type": "DISPATCH_EVENT",
       "comment": "Dispatch a message to the UI indicating that the entity has waited.",
       "parameters": {
         "eventType": "textUI:display_message",
         "payload": {
-          "message": "{event.payload.actorId} waits.",
+          "message": "{evaluationContext.context.actorNameComponent.text} waits.",
           "type": "info"
         }
       }
