@@ -86,8 +86,8 @@ describe('WorldContext (Stateless)', () => {
         });
 
         it('should throw if Logger is invalid or missing', () => {
-            expect(() => new WorldContext(mockEntityManager, null)).toThrow('WorldContext requires a valid ILogger instance.');
-            expect(() => new WorldContext(mockEntityManager, {})).toThrow('WorldContext requires a valid ILogger instance.');
+            expect(() => new WorldContext(mockEntityManager, null)).toThrow('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.');
+            expect(() => new WorldContext(mockEntityManager, {})).toThrow('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.');
         });
 
         it('should successfully initialize with valid dependencies', () => {

@@ -6,7 +6,7 @@
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 
 import {IWorldContext} from './interfaces/IWorldContext.js';
-import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../constants/componentIds.js'; // Assuming these constants exist
+import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../constants/componentIds.js';
 
 /**
  * Provides a stateless view of the world context, deriving information directly
@@ -41,8 +41,8 @@ class WorldContext extends IWorldContext {
         if (!entityManager || typeof entityManager.getEntitiesWithComponent !== 'function' || typeof entityManager.getEntityInstance !== 'function') {
             throw new Error('WorldContext requires a valid EntityManager instance.');
         }
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
-            throw new Error('WorldContext requires a valid ILogger instance.');
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') { // Added debug check for logger
+            throw new Error('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.'); // Added warn for completeness
         }
         this.#entityManager = entityManager;
         this.#logger = logger;
@@ -60,58 +60,43 @@ class WorldContext extends IWorldContext {
     #assertSingleCurrentActor(actors) {
         const actorCount = actors.length;
         if (actorCount === 1) {
-            return true; // Assertion passes
+            return true;
         }
 
         const errorMessage = `WorldContext: Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found ${actorCount}.`;
 
         if (process.env.NODE_ENV !== 'production') {
-            // In development, throw an error for immediate feedback
             this.#logger.error(errorMessage + ' (Throwing in dev mode)');
             throw new Error(errorMessage);
         } else {
-            // In production, log an error but allow the calling function to return null gracefully
             this.#logger.error(errorMessage + ' (Returning null in prod mode)');
-            return false; // Assertion fails
+            return false;
         }
     }
 
 
     /**
      * Retrieves the primary entity currently marked as the active actor.
-     * It expects exactly one entity to have the `CURRENT_ACTOR_COMPONENT_ID`.
-     * Logs an error and returns null if zero or more than one actor is found.
-     * Uses a development-only assertion (`#assertSingleCurrentActor`) to throw on error during development.
      * @returns {Entity | null} The current actor entity instance, or null if none or multiple are found.
      * @implements {IWorldContext.getCurrentActor}
      */
     getCurrentActor() {
         const actors = this.#entityManager.getEntitiesWithComponent(CURRENT_ACTOR_COMPONENT_ID);
-
-        // Perform assertion (throws in dev if fails, logs in prod)
         if (!this.#assertSingleCurrentActor(actors)) {
-            return null; // Assertion failed in production (or dev if error wasn't caught)
+            return null;
         }
-
-        // If assertion passed, we know actors.length === 1
         const actor = actors[0];
-        // this.#logger.debug(`WorldContext: Found current actor: ${actor.id}`);
         return actor;
     }
 
     /**
      * Retrieves the entity representing the current location of the primary actor.
-     * This is derived by first finding the current actor, then getting their position component,
-     * and finally resolving the location entity based on the locationId in the position component.
-     * Logs errors and returns null if the actor cannot be determined, has no position,
-     * or the location entity cannot be found.
      * @returns {Entity | null} The entity instance representing the current location, or null if it cannot be determined.
      * @implements {IWorldContext.getCurrentLocation}
      */
     getCurrentLocation() {
         const actor = this.getCurrentActor();
         if (!actor) {
-            // Error already logged by getCurrentActor if actor count != 1
             this.#logger.debug('WorldContext.getCurrentLocation: Cannot get location because current actor could not be determined.');
             return null;
         }
@@ -126,20 +111,16 @@ class WorldContext extends IWorldContext {
         const locationEntity = this.#entityManager.getEntityInstance(locationId);
 
         if (!locationEntity) {
-            // This might indicate a data integrity issue (position points to a non-existent entity)
             this.#logger.warn(`WorldContext.getCurrentLocation: Could not find location entity with ID '${locationId}' referenced by actor '${actor.id}'.`);
             return null;
         }
-
-        // this.#logger.debug(`WorldContext: Current location for actor ${actor.id} is ${locationEntity.id}`);
         return locationEntity;
     }
 
     /**
      * Retrieves the location entity containing a specific entity instance, based on its position component.
      * @param {string} entityId - The unique ID of the entity whose location is requested.
-     * @returns {Entity | null} The location entity instance where the specified entity resides,
-     * or null if the entity is not found, has no position component, or the location entity doesn't exist.
+     * @returns {Entity | null} The location entity instance where the specified entity resides.
      * @implements {IWorldContext.getLocationOfEntity}
      */
     getLocationOfEntity(entityId) {
@@ -148,17 +129,13 @@ class WorldContext extends IWorldContext {
             return null;
         }
 
-        // We don't need the full Entity instance here, just its components via EntityManager
         const positionData = this.#entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
 
         if (!positionData) {
-            // It's valid for an entity to not have a position, so debug log might be more appropriate
-            // this.#logger.debug(`WorldContext.getLocationOfEntity: Entity '${entityId}' does not have a '${POSITION_COMPONENT_ID}' component.`);
             return null;
         }
 
         if (typeof positionData.locationId !== 'string' || !positionData.locationId) {
-            // Entity has position, but no valid locationId
             this.#logger.warn(`WorldContext.getLocationOfEntity: Entity '${entityId}' has a position component but is missing a valid locationId.`);
             return null;
         }
@@ -167,12 +144,9 @@ class WorldContext extends IWorldContext {
         const locationEntity = this.#entityManager.getEntityInstance(locationId);
 
         if (!locationEntity) {
-            // Position points to a non-existent location entity
             this.#logger.warn(`WorldContext.getLocationOfEntity: Could not find location entity with ID '${locationId}' referenced by entity '${entityId}'.`);
             return null;
         }
-
-        // this.#logger.debug(`WorldContext: Location of entity ${entityId} is ${locationEntity.id}`);
         return locationEntity;
     }
 
@@ -184,7 +158,7 @@ class WorldContext extends IWorldContext {
      * @param {string} queryParams.direction_taken - The direction string (e.g., "out to town").
      * @returns {string | null} The ID of the target location, or null if invalid.
      */
-    getTargetLocationForDirection({current_location_id, direction_taken}) {
+    getTargetLocationForDirection({current_location_id, direction_taken}) { // Destructures from the passed object
         if (!current_location_id || typeof current_location_id !== 'string') {
             this.#logger.warn('WorldContext.getTargetLocationForDirection: Missing or invalid current_location_id.', {
                 current_location_id,
@@ -219,14 +193,49 @@ class WorldContext extends IWorldContext {
         if (foundExit) {
             if (foundExit.blocker) {
                 this.#logger.debug(`WorldContext: Exit from '${current_location_id}' via '${direction_taken}' to '${foundExit.target}' is blocked by '${foundExit.blocker}'.`);
-                // For now, a blocked exit means "can't go that way"
                 return null;
             }
             this.#logger.debug(`WorldContext: Successfully resolved direction. Target location: '${foundExit.target}'.`);
-            return foundExit.target; // This is the target location ID string
+            return foundExit.target;
         } else {
             this.#logger.warn(`WorldContext: No exit found for direction '${direction_taken}' from location '${current_location_id}'.`);
             return null;
+        }
+    }
+
+    /**
+     * Handles queries directed to the WorldContext via the SystemDataRegistry.
+     * @param {object} queryDetails - Details about the query.
+     * Expected to be an object with a `query_type` property.
+     * @returns {any | undefined} The result of the query or undefined if not supported.
+     */
+    handleQuery(queryDetails) {
+        this.#logger.debug(`WorldContext.handleQuery received: ${JSON.stringify(queryDetails)}`);
+
+        if (typeof queryDetails === 'object' && queryDetails !== null && queryDetails.query_type) {
+            const {query_type, ...params} = queryDetails; // Destructure query_type and other params
+
+            switch (query_type) {
+                case 'getTargetLocationForDirection':
+                    // The getTargetLocationForDirection method already expects an object
+                    // with current_location_id and direction_taken, which are in params.
+                    // Ensure params has the required fields before calling.
+                    if (params.current_location_id && params.direction_taken) {
+                        return this.getTargetLocationForDirection(params);
+                    } else {
+                        this.#logger.warn(`WorldContext: Missing 'current_location_id' or 'direction_taken' for 'getTargetLocationForDirection' query.`, {params});
+                        return undefined;
+                    }
+                // Add other case statements for other query_types WorldContext might support
+                // case 'getSomeOtherData':
+                //     return this.handleSomeOtherData(params);
+                default:
+                    this.#logger.warn(`WorldContext: Unsupported query_type: '${query_type}'`);
+                    return undefined;
+            }
+        } else {
+            this.#logger.warn(`WorldContext: Invalid queryDetails format. Expected object with query_type. Received: ${JSON.stringify(queryDetails)}`);
+            return undefined;
         }
     }
 

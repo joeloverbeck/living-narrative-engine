@@ -1,7 +1,7 @@
 // src/core/services/gameDataRepository.js
 // ────────────────────────────────────────────────────────────────────────────────
 
-import { IGameDataRepository } from "../interfaces/IGameDataRepository.js";
+import {IGameDataRepository} from "../interfaces/IGameDataRepository.js";
 
 /**
  * @class GameDataRepository
@@ -33,12 +33,10 @@ export class GameDataRepository extends IGameDataRepository {
     constructor(registry, logger) {
         super();
         // --- Validation ---
-        // Validate Logger first
         if (!logger?.info || !logger?.warn || !logger?.error || !logger?.debug) {
             throw new Error('GameDataRepository requires a valid ILogger with info, warn, error, and debug methods.');
         }
 
-        // Validate IDataRegistry for methods *actually used* by this facade
         if (!registry ||
             typeof registry.getStartingPlayerId !== 'function' ||
             typeof registry.getStartingLocationId !== 'function' ||
@@ -49,7 +47,6 @@ export class GameDataRepository extends IGameDataRepository {
             typeof registry.getEventDefinition !== 'function' ||
             typeof registry.getAllEventDefinitions !== 'function'
         ) {
-            // Be specific about which methods are missing for easier debugging
             const missing = [
                 !registry && 'registry object',
                 !(registry?.getStartingPlayerId) && 'getStartingPlayerId',
@@ -63,7 +60,6 @@ export class GameDataRepository extends IGameDataRepository {
             ].filter(Boolean).join(', ');
             throw new Error(`GameDataRepository requires a valid IDataRegistry with specific methods. Missing or invalid: ${missing}.`);
         }
-        // --- End Validation ---
 
         this.#registry = registry;
         this.#logger = logger;
@@ -121,7 +117,6 @@ export class GameDataRepository extends IGameDataRepository {
      * @returns {ActionDefinition[]}
      */
     getAllActionDefinitions() {
-        // Delegate to the specific method on IDataRegistry
         return this.#registry.getAllActionDefinitions();
     }
 
@@ -137,9 +132,8 @@ export class GameDataRepository extends IGameDataRepository {
             this.#logger.warn(`GameDataRepository: getActionDefinition called with invalid ID: ${id}`);
             return null;
         }
-        // Delegate to the specific method on IDataRegistry
         const definition = this.#registry.getActionDefinition(id);
-        return definition ?? null; // Ensure null is returned if undefined
+        return definition ?? null;
     }
 
     // ────────────────────────────────────────────────────────────────────────────
@@ -158,9 +152,8 @@ export class GameDataRepository extends IGameDataRepository {
             this.#logger.warn(`GameDataRepository: getEntityDefinition called with invalid ID: ${id}`);
             return null;
         }
-        // Delegate to the specific method on IDataRegistry
         const definition = this.#registry.getEntityDefinition(id);
-        return definition ?? null; // Ensure null is returned if undefined
+        return definition ?? null;
     }
 
     /**
@@ -170,7 +163,6 @@ export class GameDataRepository extends IGameDataRepository {
      * @returns {EntityDefinition[]} An array of all entity definitions.
      */
     getAllEntityDefinitions() {
-        // Delegate to the specific method on IDataRegistry
         return this.#registry.getAllEntityDefinitions();
     }
 
@@ -190,9 +182,8 @@ export class GameDataRepository extends IGameDataRepository {
             this.#logger.warn(`GameDataRepository: getEventDefinition called with invalid ID: ${id}`);
             return null;
         }
-        // Delegate to the specific method on IDataRegistry
         const definition = this.#registry.getEventDefinition(id);
-        return definition ?? null; // Ensure null is returned if undefined
+        return definition ?? null;
     }
 
     /**
@@ -202,15 +193,46 @@ export class GameDataRepository extends IGameDataRepository {
      * @returns {EventDefinition[]} An array of all event definitions.
      */
     getAllEventDefinitions() {
-        // Delegate to the specific method on IDataRegistry
         return this.#registry.getAllEventDefinitions();
     }
 
-    // Note: No other specific getters (like getItemDefinition) are included here.
-    // If access to other types is needed, consumers should ideally use a
-    // registry instance directly or this facade could be extended *if* the
-    // IDataRegistry interface defines corresponding specific methods.
+    // --- ADDED METHOD ---
+    /**
+     * Handles queries directed to the GameDataRepository via the SystemDataRegistry.
+     * @param {string | object} queryDetails - Details about the query.
+     * For GameDataRepository, this is expected to be a string for simple queries.
+     * @returns {any | undefined} The result of the query or undefined if not supported.
+     */
+    handleQuery(queryDetails) {
+        this.#logger.debug(`GameDataRepository.handleQuery received: ${JSON.stringify(queryDetails)}`);
+        if (typeof queryDetails === 'string') {
+            switch (queryDetails) {
+                case 'getWorldName':
+                    return this.getWorldName();
+                // Add other simple string-based queries here if needed in the future
+                default:
+                    this.#logger.warn(`GameDataRepository: Unsupported string query: '${queryDetails}'`);
+                    return undefined;
+            }
+        } else if (typeof queryDetails === 'object' && queryDetails !== null) {
+            // If GameDataRepository needs to support complex object-based queries in the future:
+            // const { query_type, ...params } = queryDetails;
+            // switch (query_type) {
+            //     case 'someComplexQuery':
+            //         return this.handleSomeComplexQuery(params);
+            //     default:
+            //         this.#logger.warn(`GameDataRepository: Unsupported object query_type: '${queryDetails.query_type}'`);
+            //         return undefined;
+            // }
+            this.#logger.warn(`GameDataRepository: Received object query, but no complex query types are currently supported. Query: ${JSON.stringify(queryDetails)}`);
+            return undefined;
+        } else {
+            this.#logger.warn(`GameDataRepository: Invalid queryDetails format. Expected string or object. Received: ${typeof queryDetails}`);
+            return undefined;
+        }
+    }
+
+    // --- END ADDED METHOD ---
 }
 
-// Optional default export for `import GameDataRepository from ...` style
 export default GameDataRepository;
