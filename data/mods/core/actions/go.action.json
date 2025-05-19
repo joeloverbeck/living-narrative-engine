@@ -1,0 +1,20 @@
+{
+  "id": "core:go",
+  "commandVerb": "go",
+  "name": "Go",
+  "target_domain": "direction",
+  "prerequisites": [
+    {
+      "logic": {
+        "==": [
+          {
+            "var": "target.blocker"
+          },
+          null
+        ]
+      },
+      "failure_message": "The way is blocked."
+    }
+  ],
+  "template": "go {direction}"
+}

@@ -1,5 +1,5 @@
 // src/systems/actionDiscoverySystem.js
-// --- FILE START (Entire file content as requested) ---
+// --- FILE START ---
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -13,13 +13,14 @@
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../core/services/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
-/** @typedef {import('../services/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
+// Note: Duplicate getEntityIdsForScopesFn typedef removed as it's already defined above.
 
 // --- Dependency Imports ---
 import {ActionTargetContext} from '../models/actionTargetContext.js';
-// formatActionCommand is often imported where used, or injected like others
-// import {formatActionCommand} from '../services/actionFormatter.js';
 import {IActionDiscoverySystem} from "../core/interfaces/IActionDiscoverySystem.js";
+// --- BEGIN FIX for using core:exits ---
+import {EXITS_COMPONENT_ID} from '../constants/componentIds.js'; // Adjust path if necessary
+// --- END FIX for using core:exits ---
 
 
 /**
@@ -66,15 +67,12 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                 }) {
         super();
 
-
-        // --- Existing validation checks ---
         if (!gameDataRepository || !entityManager || !actionValidationService || !logger || !formatActionCommandFn) {
             throw new Error('ActionDiscoverySystem requires GameDataRepository, EntityManager, ActionValidationService, ILogger, and formatActionCommandFn instances.');
         }
         if (!getEntityIdsForScopesFn || typeof getEntityIdsForScopesFn !== 'function') {
             throw new Error('ActionDiscoverySystem requires a valid getEntityIdsForScopesFn function.');
         }
-        // --- End validation checks ---
 
         this.#gameDataRepository = gameDataRepository;
         this.#entityManager = entityManager;
@@ -96,13 +94,11 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
         this.#logger.debug(`Starting action discovery for actor: ${actorEntity.id}`);
         const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
         /** @type {DiscoveredActionInfo[]} */
-        const validActions = []; // Store results as objects
+        const validActions = [];
 
-        // --- 1. Iterate through all Action Definitions ---
         for (const actionDef of allActionDefinitions) {
             this.#logger.debug(` -> Processing action definition: ${actionDef.id}`);
 
-            // --- Initial Actor Validation Check ---
             const initialActorContext = ActionTargetContext.noTarget();
             if (!this.#actionValidationService.isValid(actionDef, actorEntity, initialActorContext)) {
                 this.#logger.debug(`    - Action ${actionDef.id} skipped: Invalid for actor based on initial check.`);
@@ -112,9 +108,7 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
             const domain = actionDef.target_domain;
             this.#logger.debug(` -> Passed initial actor check for ${actionDef.id}. Proceeding with target domain: ${domain}`);
 
-            // --- 2. Handle based on Target Domain ---
             try {
-                // --- Domain: 'none' or 'self' ---
                 if (domain === 'none' || domain === 'self') {
                     const targetContext = (domain === 'self') ? ActionTargetContext.forEntity(actorEntity.id)
                         : ActionTargetContext.noTarget();
@@ -122,7 +116,6 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                     if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) {
                         const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager, {});
                         if (command !== null) {
-                            // --- Store ID and Command ---
                             validActions.push({id: actionDef.id, command: command});
                             this.#logger.debug(`    * Found valid action (no target/self): ${command} (ID: ${actionDef.id})`);
                         } else {
@@ -134,41 +127,41 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                 }
                 // --- Domain: 'direction' ---
                 else if (domain === 'direction') {
-                    const connectionsData = this.#entityManager.getComponentData(context.currentLocation?.id, 'Connections');
-                    this.#logger.debug(`Checking connections data for location: ${context.currentLocation?.id}`, connectionsData);
+                    // --- BEGIN MODIFICATION: Use core:exits (EXITS_COMPONENT_ID) ---
+                    const exitsData = this.#entityManager.getComponentData(context.currentLocation?.id, EXITS_COMPONENT_ID);
+                    this.#logger.debug(`Checking exits data (component ${EXITS_COMPONENT_ID}) for location: ${context.currentLocation?.id}`, exitsData);
 
-                    let potentialDirections = [];
-                    if (connectionsData && connectionsData.connections && typeof connectionsData.connections === 'object') {
-                        potentialDirections = Object.keys(connectionsData.connections);
-                        this.#logger.debug(`Extracted potentialDirections: ${potentialDirections.join(', ')}`);
-                    } else {
-                        this.#logger.debug(`Connections data not found or invalid structure on currentLocation ${context.currentLocation?.id}.`);
-                    }
+                    if (Array.isArray(exitsData) && exitsData.length > 0) {
+                        this.#logger.debug(`    - Found ${exitsData.length} potential exits from ${EXITS_COMPONENT_ID}. Checking validation...`);
 
-                    if (potentialDirections.length === 0) {
-                        this.#logger.debug(`    - No potential direction targets found for action ${actionDef.id}.`);
-                    } else {
-                        this.#logger.debug(`    - Found ${potentialDirections.length} potential direction targets. Checking validation...`);
-                    }
+                        for (const exit of exitsData) {
+                            // Ensure the exit object and its direction property are valid
+                            if (exit && typeof exit.direction === 'string' && exit.direction.trim() !== '') {
+                                const direction = exit.direction;
+                                this.#logger.debug(`    -> Processing exit direction: ${direction}`);
+                                const targetContext = ActionTargetContext.forDirection(direction);
 
-                    for (const direction of potentialDirections) {
-                        this.#logger.debug(`    -> Processing direction: ${direction}`);
-                        const targetContext = ActionTargetContext.forDirection(direction);
-                        if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) {
-                            this.#logger.debug(`      - isValid TRUE for ${direction}. Calling formatter.`);
-                            const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager, {});
-                            if (command !== null) {
-                                // --- Store ID and Command ---
-                                validActions.push({id: actionDef.id, command: command});
-                                this.#logger.debug(`    * Found valid action (direction: ${direction}): ${command} (ID: ${actionDef.id})`);
+                                if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) {
+                                    this.#logger.debug(`      - isValid TRUE for ${direction}. Calling formatter.`);
+                                    const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager, {});
+                                    if (command !== null) {
+                                        validActions.push({id: actionDef.id, command: command});
+                                        this.#logger.debug(`    * Found valid action (direction: ${direction}): ${command} (ID: ${actionDef.id})`);
+                                    } else {
+                                        this.#logger.warn(`    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`);
+                                    }
+                                } else {
+                                    this.#logger.debug(`      - isValid FALSE for ${direction}.`);
+                                }
                             } else {
-                                this.#logger.warn(`    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`);
+                                this.#logger.warn(`    - Skipping invalid exit object in ${EXITS_COMPONENT_ID} data for location ${context.currentLocation?.id}:`, exit);
                             }
-                        } else {
-                            this.#logger.debug(`      - isValid FALSE for ${direction}.`);
                         }
+                    } else {
+                        this.#logger.debug(`    - No ${EXITS_COMPONENT_ID} data found, or it's empty/invalid, on currentLocation ${context.currentLocation?.id}. No potential direction targets for action ${actionDef.id}.`);
                     }
-                } // End domain === 'direction'
+                    // --- END MODIFICATION ---
+                }
                 // --- Domain: Entity Scopes (inventory, environment, etc.) ---
                 else {
                     const potentialTargetIds = this.#getEntityIdsForScopesFn([domain], context);
@@ -190,7 +183,6 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                         if (this.#actionValidationService.isValid(actionDef, actorEntity, targetContext)) {
                             const command = this.#formatActionCommandFn(actionDef, targetContext, this.#entityManager, {});
                             if (command !== null) {
-                                // --- Store ID and Command ---
                                 validActions.push({id: actionDef.id, command: command});
                                 this.#logger.debug(`    * Found valid action (target ${targetId}): ${command} (ID: ${actionDef.id})`);
                             } else {
@@ -208,6 +200,8 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
         } // End loop through action definitions
 
         this.#logger.debug(`Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} valid commands/actions.`);
-        return validActions; // Return the array of {id, command} objects
+        return validActions;
     }
 }
+
+// --- FILE END ---

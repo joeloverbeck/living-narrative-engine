@@ -22,7 +22,8 @@
     "locations": [
     ],
     "actions": [
-      "wait.action.json"
+      "wait.action.json",
+      "go.action.json"
     ],
     "rules": [
       "turn_started.rule.json",
