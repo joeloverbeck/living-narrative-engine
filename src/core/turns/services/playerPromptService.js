@@ -79,8 +79,8 @@ class PlayerPromptService extends IPlayerPromptService {
     /** @type {IValidatedEventDispatcher} */
     #validatedEventDispatcher;
 
-    /** @type {number} Timeout for player prompt in milliseconds. */
-    static #PROMPT_TIMEOUT_MS = 60000; // 60 seconds
+    // REMOVED: Timeout for player prompt in milliseconds.
+    // static #PROMPT_TIMEOUT_MS = 60000; // 60 seconds
 
     /**
      * Creates an instance of PlayerPromptService.
@@ -148,7 +148,8 @@ class PlayerPromptService extends IPlayerPromptService {
     /**
      * Prompts the actor for an action. It first discovers available actions and sends them to the UI.
      * Then, it returns a Promise that resolves with the player's chosen action and speech
-     * once the PLAYER_TURN_SUBMITTED_ID event is received, or rejects on timeout or error.
+     * once the PLAYER_TURN_SUBMITTED_ID event is received, or rejects on error.
+     * Note: This method no longer implements a timeout. The promise will wait indefinitely for player input.
      *
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
@@ -156,7 +157,7 @@ class PlayerPromptService extends IPlayerPromptService {
      * selected action (type DiscoveredActionInfo) and speech, or rejects with a PromptError.
      * @throws {PromptError} If initial setup (actor validation, location fetching, action discovery,
      * or sending prompt to UI) fails. The Promise itself can also reject with a PromptError
-     * for reasons like timeout, invalid action ID, or subscription issues.
+     * for reasons like invalid action ID or subscription issues.
      */
     async prompt(actor) {
         this.#logger.debug(`PlayerPromptService: Initiating prompt for actor ${actor?.id ?? 'INVALID'}.`);
@@ -201,14 +202,8 @@ class PlayerPromptService extends IPlayerPromptService {
         let discoveredActions;
         try {
             this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
-            // IMPORTANT: #actionDiscoverySystem.getValidActions MUST now return DiscoveredActionInfo objects
-            // that include 'name' and 'description' (optional).
             discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
             this.#logger.debug(`PlayerPromptService: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
-            // Example check for the new fields (optional, for debugging during transition)
-            // if (discoveredActions.length > 0 && typeof discoveredActions[0].name === 'undefined') {
-            //     this.#logger.warn(`PlayerPromptService: First discovered action for ${actorId} is missing 'name' field. ActionDiscoverySystem may need an update.`, {action: discoveredActions[0]});
-            // }
         } catch (error) {
             this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
             try {
@@ -222,7 +217,6 @@ class PlayerPromptService extends IPlayerPromptService {
         // 5. Send Actions to UI
         try {
             this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
-            // promptOutputPort.prompt will receive DiscoveredActionInfo[] which should now be enriched.
             await this.#promptOutputPort.prompt(actorId, discoveredActions);
             this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
         } catch (error) {
@@ -232,15 +226,12 @@ class PlayerPromptService extends IPlayerPromptService {
 
         // 6. Return Promise to await player input
         return new Promise((resolve, reject) => {
-            let timeoutId = null;
+            // REMOVED: timeoutId variable
             /** @type {(() => void) | null} */
             let unsubscribeFromEvent = null;
 
             const cleanup = () => {
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
+                // REMOVED: clearTimeout call
                 if (unsubscribeFromEvent) {
                     try {
                         unsubscribeFromEvent();
@@ -252,13 +243,15 @@ class PlayerPromptService extends IPlayerPromptService {
                 }
             };
 
-            this.#logger.debug(`PlayerPromptService: Setting up listener for PLAYER_TURN_SUBMITTED_ID and timeout for actor ${actorId}. Timeout: ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
+            this.#logger.debug(`PlayerPromptService: Setting up listener for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`);
 
-            timeoutId = setTimeout(() => {
-                this.#logger.warn(`PlayerPromptService: Prompt timed out for actor ${actorId} after ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
-                cleanup();
-                reject(new PromptError(`Player prompt timed out for actor ${actorId}.`, null, "PROMPT_TIMEOUT"));
-            }, PlayerPromptService.#PROMPT_TIMEOUT_MS);
+            // REMOVED: setTimeout logic
+            // timeoutId = setTimeout(() => {
+            //     this.#logger.warn(`PlayerPromptService: Prompt timed out for actor ${actorId} after ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
+            //     cleanup();
+            //     reject(new PromptError(`Player prompt timed out for actor ${actorId}.`, null, "PROMPT_TIMEOUT"));
+            // }, PlayerPromptService.#PROMPT_TIMEOUT_MS);
+
 
             /**
              * Handles the PLAYER_TURN_SUBMITTED_ID event.
@@ -274,7 +267,7 @@ class PlayerPromptService extends IPlayerPromptService {
                     typeof eventObject.payload !== 'object') {
 
                     this.#logger.error(`PlayerPromptService: Invalid event object structure received for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}. Expected {type: PLAYER_TURN_SUBMITTED_ID, payload: {...}}. Received:`, eventObject);
-                    cleanup();
+                    cleanup(); // Still important to cleanup subscription
                     reject(new PromptError(`Malformed event object for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
                     return;
                 }
@@ -284,19 +277,17 @@ class PlayerPromptService extends IPlayerPromptService {
 
                 if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
                     this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}. Payload:`, actualPayload);
-                    cleanup();
+                    cleanup(); // Still important to cleanup subscription
                     reject(new PromptError(`Invalid actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
                     return;
                 }
 
-                cleanup();
+                cleanup(); // Crucial: Clear timeout and unsubscribe
 
                 const {actionId, speech} = actualPayload;
 
-                // Find the DiscoveredActionInfo object based on the actionId.
-                // `discoveredActions` is an array of `DiscoveredActionInfo` objects.
                 const selectedAction = discoveredActions.find(da => {
-                    if (!da || typeof da.id !== 'string') { // Basic sanity check for each item
+                    if (!da || typeof da.id !== 'string') {
                         this.#logger.warn(`PlayerPromptService: Encountered a malformed item in discoveredActions array while searching for actionId: ${actionId}. Item:`, da);
                         return false;
                     }
@@ -312,19 +303,16 @@ class PlayerPromptService extends IPlayerPromptService {
                         } : {error: "Null/undefined item"}),
                         receivedActionId: actionId
                     });
+                    // No cleanup() here as it's already called.
                     reject(new PromptError(`Invalid actionId '${actionId}' submitted by actor ${actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
                 } else {
-                    // Ensure the selectedAction at least has the 'name' field, as ActionButtonsRenderer now expects it.
-                    // This check is more of a safeguard; the fix should be in ActionDiscoverySystem.
                     if (typeof selectedAction.name !== 'string' || selectedAction.name.trim() === '') {
                         this.#logger.warn(`PlayerPromptService: Action '${actionId}' found, but it's missing a valid 'name' field. UI might not display it correctly. Action:`, selectedAction);
-                        // Decide: reject or resolve with incomplete data?
-                        // For now, resolve, but ActionDiscoverySystem must be fixed.
                     }
 
                     this.#logger.info(`PlayerPromptService: Valid actionId '${actionId}' (Name: '${selectedAction.name || "N/A"}') received for actor ${actorId}. Resolving prompt.`);
                     resolve({
-                        action: selectedAction, // `selectedAction` is the DiscoveredActionInfo
+                        action: selectedAction,
                         speech: speech || null
                     });
                 }
@@ -334,14 +322,14 @@ class PlayerPromptService extends IPlayerPromptService {
                 unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe(PLAYER_TURN_SUBMITTED_ID, handlePlayerTurnSubmitted);
                 if (typeof unsubscribeFromEvent !== 'function') {
                     this.#logger.error(`PlayerPromptService: Subscription to PLAYER_TURN_SUBMITTED_ID for actor ${actorId} did not return an unsubscribe function.`);
-                    cleanup();
+                    cleanup(); // Ensure cleanup if subscription object is bad
                     reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
                     return;
                 }
                 this.#logger.debug(`PlayerPromptService: Successfully subscribed to PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`);
             } catch (error) {
                 this.#logger.error(`PlayerPromptService: Error subscribing to PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, error);
-                cleanup();
+                cleanup(); // Ensure cleanup on subscription error
                 reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}.`, error, "SUBSCRIPTION_ERROR"));
             }
         });
