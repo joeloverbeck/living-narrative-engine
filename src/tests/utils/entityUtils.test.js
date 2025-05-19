@@ -4,7 +4,7 @@ import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 // Assuming NAME_COMPONENT_ID is exported from a file like this,
 // as per the import in the provided entityUtils.js.
-import { NAME_COMPONENT_ID } from '../../types/components.js';
+import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 
 // Mock ILogger
 const mockLogger = {

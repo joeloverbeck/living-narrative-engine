@@ -3,7 +3,7 @@
 import {jest, describe, beforeEach, afterEach, it, expect} from '@jest/globals';
 import TurnManager from '../../../core/turns/turnManager.js';
 import {TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID} from "../../../core/constants/eventIds.js"; // Added SYSTEM_ERROR_OCCURRED_ID
-import {ACTOR_COMPONENT_ID} from '../../../types/components.js';
+import {ACTOR_COMPONENT_ID} from '../../../constants/componentIds.js';
 
 
 // Mock Entity structure

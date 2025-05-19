@@ -2,8 +2,6 @@
 
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
-import ConditionEvaluationService from '../../../services/conditionEvaluationService.js';
-import {ItemTargetResolverService} from "../../../services/itemTargetResolver.js";
 import {TargetResolutionService} from "../../../services/targetResolutionService.js";
 import {ActionValidationContextBuilder} from "../../../services/actionValidationContextBuilder.js";
 import {PrerequisiteEvaluationService} from "../../../services/prerequisiteEvaluationService.js";
@@ -50,10 +48,6 @@ export function registerDomainServices(container) {
     /** @type {ILogger} */
     const log = container.resolve(tokens.ILogger);
     log.debug('Domain-services Registration: starting…');
-
-    r.single(tokens.ConditionEvaluationService, ConditionEvaluationService, [tokens.IEntityManager]);
-    r.single(tokens.ItemTargetResolverService, ItemTargetResolverService,
-        [tokens.IEntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger]);
 
     r.singletonFactory(tokens.TargetResolutionService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.TargetResolutionService)}...`);

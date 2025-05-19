@@ -4,7 +4,7 @@
 import {describe, it, expect, beforeEach, afterEach, jest} from '@jest/globals';
 import WorldContext from '../../core/worldContext.js'; // Adjust path if needed
 import Entity from '../../entities/entity.js'; // Adjust path if needed
-import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../../types/components.js'; // Adjust path
+import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../../constants/componentIds.js'; // Adjust path
 
 // --- Mock Implementations ---
 

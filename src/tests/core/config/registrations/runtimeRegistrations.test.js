@@ -98,8 +98,6 @@ const createMockTurnHandlerResolverObject = () => ({
 
 // Simple object mocks for other domain services needed by factories but not the focus
 const mockActionValidationService = {validateAction: jest.fn(), isValid: jest.fn(() => true)}; // Add mock isValid
-const mockConditionEvaluationService = {evaluateCondition: jest.fn()};
-const mockItemTargetResolverService = {resolveTarget: jest.fn()};
 const mockTargetResolutionService = {resolveTargets: jest.fn()};
 const mockPayloadValueResolverService = {resolveValue: jest.fn()};
 const mockPrerequisiteEvaluationService = {evaluatePrerequisites: jest.fn()};
@@ -277,8 +275,6 @@ describe('registerRuntime', () => {
 
         // Simple object mocks for remaining dependencies
         mockContainer.register(tokens.ActionValidationService, mockActionValidationService, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ConditionEvaluationService, mockConditionEvaluationService, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ItemTargetResolverService, mockItemTargetResolverService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.TargetResolutionService, mockTargetResolutionService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.PrerequisiteEvaluationService, mockPrerequisiteEvaluationService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.DomainContextCompatibilityChecker, mockDomainContextCompatibilityChecker, {lifecycle: 'singleton'});
@@ -296,8 +292,6 @@ describe('registerRuntime', () => {
         Object.values(mockValidatedEventDispatcher).forEach(fn => fn?.mockClear?.());
         Object.values(mockTurnHandlerResolverObject).forEach(fn => fn?.mockClear?.());
         Object.values(mockActionValidationService).forEach(fn => fn?.mockClear?.());
-        Object.values(mockConditionEvaluationService).forEach(fn => fn?.mockClear?.());
-        Object.values(mockItemTargetResolverService).forEach(fn => fn?.mockClear?.());
         Object.values(mockTargetResolutionService).forEach(fn => fn?.mockClear?.());
         Object.values(mockPayloadValueResolverService).forEach(fn => fn?.mockClear?.());
         Object.values(mockPrerequisiteEvaluationService).forEach(fn => fn?.mockClear?.());

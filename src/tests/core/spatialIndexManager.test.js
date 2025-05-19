@@ -2,7 +2,7 @@
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 import SpatialIndexManager from '../../core/spatialIndexManager.js';
-import {POSITION_COMPONENT_ID} from '../../types/components.js'; // Assuming path is correct
+import {POSITION_COMPONENT_ID} from '../../constants/componentIds.js'; // Assuming path is correct
 import Entity from '../../entities/entity.js'; // Needed for buildIndex mock
 
 describe('SpatialIndexManager', () => {

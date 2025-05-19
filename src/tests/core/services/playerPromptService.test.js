@@ -5,6 +5,7 @@ import PlayerPromptService from '../../../core/turns/services/playerPromptServic
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
 import Entity from "../../../entities/entity.js";
 import {PromptError} from '../../../core/errors/promptError.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../../../core/constants/eventIds.js";
 
 const createMockLogger = () => ({
     info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
@@ -23,7 +24,6 @@ let mockLogger, mockActionDiscoverySystem, mockPromptOutputPort, mockWorldContex
     validDependencies, service, mockActor;
 
 const PROMPT_TIMEOUT_DURATION = 60000;
-const SUBMITTED_EVENT_TYPE = 'core:player_turn_submitted';
 
 
 beforeEach(() => {
@@ -100,10 +100,10 @@ describe('PlayerPromptService prompt Method', () => {
         const mockUnsubscribeFn = jest.fn();
         mockValidatedEventDispatcher.subscribe.mockReset();
         mockValidatedEventDispatcher.subscribe.mockImplementation((eventName, eventHandlerCallback) => {
-            if (eventName === SUBMITTED_EVENT_TYPE) {
+            if (eventName === PLAYER_TURN_SUBMITTED_ID) {
                 Promise.resolve().then(() => {
                     eventHandlerCallback({
-                        type: SUBMITTED_EVENT_TYPE,
+                        type: PLAYER_TURN_SUBMITTED_ID,
                         payload: {actionId: chosenActionId, speech: chosenSpeech}
                     });
                 });
@@ -113,7 +113,7 @@ describe('PlayerPromptService prompt Method', () => {
 
         const resultPromise = service.prompt(mockActor);
         await expect(resultPromise).resolves.toEqual(expectedResolution);
-        expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(SUBMITTED_EVENT_TYPE, expect.any(Function));
+        expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, expect.any(Function));
         expect(mockUnsubscribeFn).toHaveBeenCalled();
     });
 
@@ -208,7 +208,7 @@ describe('PlayerPromptService prompt Method', () => {
         const getCallbackAndPromise = async (actorForPrompt) => {
             let capturedCbArg;
             mockValidatedEventDispatcher.subscribe.mockImplementationOnce((evtName, cb) => {
-                if (evtName === SUBMITTED_EVENT_TYPE) {
+                if (evtName === PLAYER_TURN_SUBMITTED_ID) {
                     capturedCbArg = cb;
                 }
                 return mockUnsubscribeFnForSuite;
@@ -224,7 +224,7 @@ describe('PlayerPromptService prompt Method', () => {
                 const calls = mockValidatedEventDispatcher.subscribe.mock.calls;
                 if (calls.length > 0) {
                     const lastCall = calls[calls.length - 1];
-                    if (lastCall[0] === SUBMITTED_EVENT_TYPE && typeof lastCall[1] === 'function') {
+                    if (lastCall[0] === PLAYER_TURN_SUBMITTED_ID && typeof lastCall[1] === 'function') {
                         capturedCbArg = lastCall[1];
                     }
                 }
@@ -246,7 +246,7 @@ describe('PlayerPromptService prompt Method', () => {
         it('should reject with PromptError if submitted actionId is invalid', async () => {
             const {promptPromise, capturedCallback} = await getCallbackAndPromise(mockActor);
             capturedCallback({
-                type: SUBMITTED_EVENT_TYPE,
+                type: PLAYER_TURN_SUBMITTED_ID,
                 payload: {actionId: 'invalid-action-id', speech: null}
             });
             await expect(promptPromise).rejects.toMatchObject({
@@ -263,7 +263,7 @@ describe('PlayerPromptService prompt Method', () => {
             const validAction = mockDiscoveredActionsList[0];
 
             capturedCallback({
-                type: SUBMITTED_EVENT_TYPE,
+                type: PLAYER_TURN_SUBMITTED_ID,
                 payload: {actionId: validAction.id, speech: "test speech"}
             });
 
@@ -278,7 +278,7 @@ describe('PlayerPromptService prompt Method', () => {
 
             await expect(promptPromise).rejects.toMatchObject({
                 name: 'PromptError',
-                message: `Malformed event object for '${SUBMITTED_EVENT_TYPE}' for actor ${mockActor.id}.`,
+                message: `Malformed event object for PLAYER_TURN_SUBMITTED_ID for actor ${mockActor.id}.`,
                 code: "INVALID_EVENT_STRUCTURE"
             });
             expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();
@@ -287,7 +287,7 @@ describe('PlayerPromptService prompt Method', () => {
         it('should reject with PromptError if event.payload is missing actionId', async () => {
             const {promptPromise, capturedCallback} = await getCallbackAndPromise(mockActor);
             capturedCallback({
-                type: SUBMITTED_EVENT_TYPE,
+                type: PLAYER_TURN_SUBMITTED_ID,
                 payload: {speech: "only speech, no actionId"}
             });
 
@@ -298,7 +298,7 @@ describe('PlayerPromptService prompt Method', () => {
                 expect(error).toBeInstanceOf(PromptError);
                 expect(error.name).toBe('PromptError');
                 expect(error.code).toBe('INVALID_PAYLOAD_CONTENT');
-                const expectedMessage = `Invalid actionId in payload for '${SUBMITTED_EVENT_TYPE}' for actor ${mockActor.id}.`;
+                const expectedMessage = `Invalid actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${mockActor.id}.`;
                 expect(error.message).toBe(expectedMessage);
             }
             expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();

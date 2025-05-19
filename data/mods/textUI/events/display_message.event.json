@@ -26,7 +26,8 @@
           "internal",
           "debug",
           "echo",
-          "fatal"
+          "fatal",
+          "speech"
         ],
         "default": "info"
       },

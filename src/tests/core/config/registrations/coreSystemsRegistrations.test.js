@@ -92,11 +92,11 @@ describe('registerCoreSystems', () => {
     const initializableSystemTokens = [
         tokens.GameRuleSystem, tokens.EquipmentEffectSystem, tokens.EquipmentSlotSystem,
         tokens.InventorySystem, tokens.CombatSystem, tokens.DeathSystem,
-        tokens.WorldPresenceSystem, tokens.ItemUsageSystem, tokens.BlockerSystem,
+        tokens.WorldPresenceSystem, tokens.BlockerSystem,
         tokens.MovementSystem, tokens.MoveCoordinatorSystem,
         tokens.PerceptionSystem, tokens.NotificationUISystem,
         tokens.OpenableSystem, tokens.HealthSystem, tokens.StatusEffectSystem,
-        tokens.LockSystem, tokens.IActionDiscoverySystem, tokens.ITurnManager // Ensure ITurnManager is correctly listed if tagged
+        tokens.IActionDiscoverySystem, tokens.ITurnManager // Ensure ITurnManager is correctly listed if tagged
     ]; // Count should be 19
 
     // Updated expected count based on the SUT: 19 initializable + PlayerTurnHandler (shutdownable only) + AITurnHandler (untagged) + TurnHandlerResolver (untagged) = 22
@@ -106,7 +106,7 @@ describe('registerCoreSystems', () => {
     const shutdownableSystemTokens = [
         tokens.CombatSystem, tokens.WorldPresenceSystem, tokens.PerceptionSystem,
         tokens.NotificationUISystem, tokens.OpenableSystem, tokens.HealthSystem,
-        tokens.StatusEffectSystem, tokens.LockSystem,
+        tokens.StatusEffectSystem,
         tokens.PlayerTurnHandler // AITurnHandler is NOT shutdownable
     ]; // Count = 9
 

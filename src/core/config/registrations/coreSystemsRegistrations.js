@@ -16,8 +16,6 @@
 /** @typedef {import('../../interfaces/eventBus.js').EventBus} EventBus */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
-/** @typedef {import('../../../services/conditionEvaluationService.js').ConditionEvaluationService} ConditionEvaluationService */
-/** @typedef {import('../../../services/itemTargetResolverService.js').ItemTargetResolverService} ItemTargetResolverService */
 /** @typedef {import('../../../services/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -36,19 +34,6 @@
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 
 // --- System Imports ---
-import EquipmentEffectSystem from '../../../systems/equipmentEffectSystem.js';
-import EquipmentSlotSystem from '../../../systems/equipmentSlotSystem.js';
-import InventorySystem from '../../../systems/inventorySystem.js';
-import CombatSystem from '../../../systems/combatSystem.js';
-import DeathSystem from '../../../systems/deathSystem.js';
-import MovementSystem from '../../../systems/movementSystem.js';
-import WorldPresenceSystem from '../../../systems/worldPresenceSystem.js';
-import ItemUsageSystem from '../../../systems/itemUsageSystem.js';
-import {NotificationUISystem} from '../../../systems/notificationUISystem.js';
-import OpenableSystem from '../../../systems/openableSystem.js';
-import HealthSystem from '../../../systems/healthSystem.js';
-import StatusEffectSystem from '../../../systems/statusEffectSystem.js';
-import LockSystem from '../../../systems/lockSystem.js';
 import {ActionDiscoverySystem} from '../../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turns/turnManager.js';
 
@@ -78,91 +63,6 @@ export function registerCoreSystems(container) {
 
     let registrationCount = 0;
     logger.info('Core Systems Registration: Starting...');
-
-    // --- Systems (Tagged as Initializable only) ---
-    // ... (all your existing system registrations remain unchanged here) ...
-    registrar.tagged(INITIALIZABLE).single(tokens.EquipmentEffectSystem, EquipmentEffectSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentEffectSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.EquipmentSlotSystem, EquipmentSlotSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.EquipmentSlotSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.InventorySystem, InventorySystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository, tokens.IWorldContext
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.InventorySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.DeathSystem, DeathSystem, [
-        tokens.EventBus, tokens.IEntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.DeathSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.ItemUsageSystem, ItemUsageSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.ConditionEvaluationService, tokens.ItemTargetResolverService, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.ItemUsageSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).single(tokens.MovementSystem, MovementSystem, [
-        tokens.EventBus, tokens.IEntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.MovementSystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
-
-    // --- Systems with Shutdown() (Tagged with both INITIALIZABLE and SHUTDOWNABLE) ---
-    const initializableAndShutdownable = [...INITIALIZABLE, ...SHUTDOWNABLE];
-    const tagsString = initializableAndShutdownable.join(', ');
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.CombatSystem, CombatSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.CombatSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.WorldPresenceSystem, WorldPresenceSystem, [
-        tokens.EventBus, tokens.IEntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.WorldPresenceSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.NotificationUISystem, NotificationUISystem, [
-        tokens.EventBus, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.NotificationUISystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.OpenableSystem, OpenableSystem, [
-        tokens.EventBus, tokens.IEntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.OpenableSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.HealthSystem, HealthSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.HealthSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.StatusEffectSystem, StatusEffectSystem, [
-        tokens.EventBus, tokens.IEntityManager, tokens.IGameDataRepository
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.StatusEffectSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
-    registrar.tagged(initializableAndShutdownable).single(tokens.LockSystem, LockSystem, [
-        tokens.EventBus, tokens.IEntityManager
-    ]);
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.LockSystem)} tagged with ${tagsString}.`);
-    registrationCount++;
-
 
     // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory ---
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({

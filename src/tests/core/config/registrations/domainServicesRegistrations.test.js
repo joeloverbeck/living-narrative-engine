@@ -46,11 +46,6 @@ const mockJsonLogicServiceInstance = {};
 const mockPlayerPromptServiceInstance = {prompt: jest.fn()}; // Mock instance for IPlayerPromptService
 
 // --- MOCK the Modules Directly Inline ---
-jest.mock('../../../../services/conditionEvaluationService.js', () => ({__esModule: true, default: jest.fn()}));
-jest.mock("../../../../services/itemTargetResolver.js", () => ({
-    __esModule: true,
-    ItemTargetResolverService: jest.fn()
-}));
 jest.mock("../../../../services/targetResolutionService.js", () => ({
     __esModule: true,
     TargetResolutionService: jest.fn().mockImplementation(() => {
@@ -106,8 +101,6 @@ jest.mock('../../../../core/turns/services/playerPromptService.js', () => ({
 
 
 // --- Import AFTER mocking ---
-import ConditionEvaluationService from '../../../../services/conditionEvaluationService.js';
-import {ItemTargetResolverService} from "../../../../services/itemTargetResolver.js";
 import {
     TargetResolutionService as MockedTargetResolutionService
 } from "../../../../services/targetResolutionService.js";
@@ -303,8 +296,6 @@ describe('registerDomainServices', () => {
         mockContainer.register.mockClear();
         mockContainer.resolve.mockClear();
 
-        ConditionEvaluationService.mockClear();
-        ItemTargetResolverService.mockClear();
         MockedTargetResolutionService.mockClear();
         ActionValidationContextBuilder.mockClear();
         PrerequisiteEvaluationService.mockClear();
@@ -339,14 +330,6 @@ describe('registerDomainServices', () => {
             registerDomainServices(mockContainer);
         }).not.toThrow();
 
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ConditionEvaluationService, ConditionEvaluationService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: [tokens.IEntityManager] // Verify dependency uses interface token
-        }));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.ItemTargetResolverService, ItemTargetResolverService, expect.objectContaining({
-            lifecycle: 'singleton',
-            dependencies: [tokens.IEntityManager, tokens.IValidatedEventDispatcher, tokens.ConditionEvaluationService, tokens.ILogger] // Verify IEntityManager
-        }));
         expect(mockContainer.register).toHaveBeenCalledWith(
             tokens.TargetResolutionService,
             expect.any(Function),

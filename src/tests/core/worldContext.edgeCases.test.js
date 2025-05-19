@@ -19,7 +19,7 @@ import WorldContext from '../../core/worldContext.js';
 import ConsoleLogger from '../../core/services/consoleLogger.js';
 import Entity from '../../entities/entity.js';
 import EntityManager from '../../entities/entityManager.js'; // Mocked constructor
-import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../../types/components.js';
+import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../../constants/componentIds.js';
 
 describe('WorldContext Edge Cases', () => {
     let worldContext;

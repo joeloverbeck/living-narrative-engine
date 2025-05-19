@@ -13,7 +13,7 @@
 /** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManagerInterface */
 
 // Import the necessary component ID constants
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../types/components.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../constants/componentIds.js';
 import {TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js"; // Assuming TURN_ENDED_ID is 'core:turn_ended' and SYSTEM_ERROR_OCCURRED_ID is 'core:system_error_occurred'
 
 /**

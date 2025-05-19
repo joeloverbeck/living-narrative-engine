@@ -3,7 +3,7 @@
 
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 import TurnManager from '../../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID} from '../../../types/components.js';
+import {ACTOR_COMPONENT_ID} from '../../../constants/componentIds.js';
 
 // Mocks for dependencies
 const mockLogger = {

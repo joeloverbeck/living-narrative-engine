@@ -2,7 +2,7 @@
 // --- FILE START (Corrected) ---
 
 import TurnManager from '../../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../types/components.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../constants/componentIds.js';
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 
 // Mock dependencies

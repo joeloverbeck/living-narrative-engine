@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "core:entity_spoke",
+  "description": "Fired when an entity (player or AI) speaks as part of their turn.",
+  "payloadSchema": {
+    "title": "Core: Entity Spoke Payload",
+    "description": "Payload for the core:entity_spoke event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity that spoke."
+      },
+      "speechContent": {
+        "type": "string",
+        "description": "The text content of what the entity said."
+      }
+    },
+    "required": [
+      "entityId",
+      "speechContent"
+    ],
+    "additionalProperties": false
+  }
+}

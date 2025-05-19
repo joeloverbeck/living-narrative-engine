@@ -5,7 +5,7 @@ import {
     INVENTORY_COMPONENT_ID,
     ITEM_COMPONENT_ID,
     EXITS_COMPONENT_ID
-} from '../types/components.js'; // Used by _handleLocation via SpatialIndex
+} from '../constants/componentIds.js'; // Used by _handleLocation via SpatialIndex
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */

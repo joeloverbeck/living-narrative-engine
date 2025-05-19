@@ -12,6 +12,7 @@
       "current_actor.component.json",
       "position.component.json",
       "name.component.json",
+      "description.component.json",
       "exits.component.json"
     ],
     "characters": [
@@ -39,7 +40,8 @@
       "system_error_occurred.event.json",
       "submit_command.event.json",
       "attempt_action.event.json",
-      "player_turn_submitted.event.json"
+      "player_turn_submitted.event.json",
+      "entity_spoke.event.json"
     ],
     "operations": [
     ]

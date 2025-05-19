@@ -3,6 +3,9 @@
   "components": {
     "core:name": {
       "text": "Adventurers' Guild"
+    },
+    "core:description": {
+      "text": "The local adventurers' guild."
     }
   }
 }

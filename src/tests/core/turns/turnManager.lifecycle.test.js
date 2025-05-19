@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import TurnManager from '../../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../types/components.js';
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../constants/componentIds.js';
 import {TURN_ENDED_ID, TURN_STARTED_ID, SYSTEM_ERROR_OCCURRED_ID} from '../../../core/constants/eventIds.js';
 import {beforeEach, describe, expect, jest, test, afterEach} from "@jest/globals";
 

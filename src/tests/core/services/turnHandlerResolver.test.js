@@ -3,7 +3,7 @@
 
 import TurnHandlerResolver from '../../../core/turns/services/turnHandlerResolver.js';
 import Entity from '../../../entities/entity.js';
-import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../../types/components.js';
+import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../../constants/componentIds.js';
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 
 // --- Mock Interfaces/Classes Inline ---

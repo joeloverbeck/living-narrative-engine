@@ -1,0 +1,17 @@
+{
+  "id": "core:description",
+  "description": "A textual description for an entity, which can be used for display or informational purposes.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The descriptive text content for the entity."
+      }
+    }
+  }
+}

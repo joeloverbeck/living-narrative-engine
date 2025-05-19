@@ -3,7 +3,7 @@
 import {describe, it, expect, beforeEach, jest, afterEach} from '@jest/globals'; // Added afterEach
 import EntityManager from '../../entities/entityManager.js'; // Adjust path if necessary
 import Entity from '../../entities/entity.js';
-import {POSITION_COMPONENT_ID} from "../../types/components.js"; // Adjust path if necessary
+import {POSITION_COMPONENT_ID} from "../../constants/componentIds.js"; // Adjust path if necessary
 
 // --- Mock Implementations ---
 // (Keep the mock creation functions as they are)

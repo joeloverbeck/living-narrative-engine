@@ -293,33 +293,6 @@
           }
         },
         {
-          "type": "MODIFY_DOM_ELEMENT",
-          "comment": "Update the main title text",
-          "parameters": {
-            "selector": "#title-element",
-            "property": "textContent",
-            "value": "{event.payload.text}"
-          }
-        },
-        {
-          "type": "APPEND_UI_MESSAGE",
-          "comment": "Append a message received from an event to the default output area.",
-          "parameters": {
-            "text": "You hear a strange noise from the {event.payload.direction}.",
-            "message_type": "info"
-          }
-        },
-        {
-          "type": "APPEND_UI_MESSAGE",
-          "comment": "Append an error message to a specific log panel.",
-          "parameters": {
-            "selector": "#error-log-panel",
-            "text": "Error: {event.payload.errorMessage}",
-            "message_type": "error",
-            "allow_html": false
-          }
-        },
-        {
           "type": "SET_VARIABLE",
           "comment": "Store the player's current gold amount in a variable",
           "parameters": {
@@ -548,63 +521,6 @@
       },
       "required": [
         "message"
-      ],
-      "additionalProperties": false
-    },
-    "ModifyDomElementParameters": {
-      "type": "object",
-      "description": "Parameters for the MODIFY_DOM_ELEMENT operation. Modifies a property of a DOM element selected via CSS selector.",
-      "properties": {
-        "selector": {
-          "type": "string",
-          "description": "Required. A CSS selector string to identify the target DOM element(s). If multiple elements match, the behavior might depend on the handler implementation (e.g., modify first, modify all).",
-          "minLength": 1
-        },
-        "property": {
-          "type": "string",
-          "description": "Required. The name of the DOM element property to modify (e.g., 'textContent', 'innerHTML', 'className', 'style.display', 'dataset.value'). Dot notation can be used for nested properties like 'style.color'.",
-          "minLength": 1
-        },
-        "value": {
-          "description": "Required. The new value to set for the specified property. Can be a literal value or use placeholder syntax (e.g., '{event.payload.someValue}', '{actor.id}', '{variableName}') which will be resolved at runtime."
-        }
-      },
-      "required": [
-        "selector",
-        "property",
-        "value"
-      ],
-      "additionalProperties": false
-    },
-    "AppendUiMessageParameters": {
-      "type": "object",
-      "description": "Parameters for the APPEND_UI_MESSAGE operation. Appends a formatted message to a UI container.",
-      "properties": {
-        "selector": {
-          "type": "string",
-          "description": "Optional. CSS selector for the container element to append the message to. Defaults to a pre-configured output area (e.g., '#outputDiv').",
-          "default": "#outputDiv",
-          "minLength": 1
-        },
-        "text": {
-          "type": "string",
-          "description": "Required. The message content. Supports placeholder resolution (e.g., '{event.payload.text}', '{variableName}').",
-          "minLength": 1
-        },
-        "message_type": {
-          "type": "string",
-          "description": "Optional. The type hint for the message (e.g., 'info', 'error', 'combat', 'warning', 'success'). Used for styling (e.g., adding class 'message-{message_type}'). Supports placeholder resolution (e.g., '{event.payload.type}', '{messageClass}'). Defaults to 'info'.",
-          "default": "info",
-          "minLength": 1
-        },
-        "allow_html": {
-          "type": "boolean",
-          "description": "Optional. If true, treats the 'text' as raw HTML. If false (default), treats 'text' as plain text content for safety.",
-          "default": false
-        }
-      },
-      "required": [
-        "text"
       ],
       "additionalProperties": false
     },

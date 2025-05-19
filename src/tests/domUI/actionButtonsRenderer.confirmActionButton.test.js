@@ -7,6 +7,7 @@ import DocumentContext from '../../domUI/documentContext.js';
 import DomElementFactory from '../../domUI/domElementFactory.js';
 import ConsoleLogger from '../../core/services/consoleLogger.js';
 import ValidatedEventDispatcher from '../../services/validatedEventDispatcher.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../../core/constants/eventIds.js";
 
 jest.mock('../../core/services/consoleLogger');
 jest.mock('../../services/validatedEventDispatcher');
@@ -24,7 +25,6 @@ describe('ActionButtonsRenderer', () => {
     let commandInputElement;
 
     const CLASS_PREFIX = '[ActionButtonsRenderer]';
-    const PLAYER_TURN_SUBMITTED_EVENT = 'core:player_turn_submitted';
 
     const createMockElement = (sourceDoc, tagName = 'div', id = '', classesParam = [], textContent = '') => {
         const element = sourceDoc.createElement(tagName);
@@ -270,10 +270,10 @@ describe('ActionButtonsRenderer', () => {
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-                PLAYER_TURN_SUBMITTED_EVENT,
+                PLAYER_TURN_SUBMITTED_ID,
                 {actionId: actionToSubmit.id, speech: 'Player says this'}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Event '${PLAYER_TURN_SUBMITTED_EVENT}' dispatched successfully for action ID '${actionToSubmit.id}'.`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionToSubmit.id}'.`));
             expect(commandInputElement.value).toBe('');
             expect(renderer.selectedAction).toBeNull();
             expect(mockSendButton.disabled).toBe(true);
@@ -297,7 +297,7 @@ describe('ActionButtonsRenderer', () => {
             await mockSendButton.click();
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-                PLAYER_TURN_SUBMITTED_EVENT,
+                PLAYER_TURN_SUBMITTED_ID,
                 {actionId: actionToSubmit.id, speech: null}
             );
             expect(commandInputElement.value).toBe('');
@@ -318,7 +318,7 @@ describe('ActionButtonsRenderer', () => {
             await rendererForThisTest.sendButtonElement.click();
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-                PLAYER_TURN_SUBMITTED_EVENT,
+                PLAYER_TURN_SUBMITTED_ID,
                 {actionId: actionToSubmit.id, speech: null}
             );
             expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -341,7 +341,7 @@ describe('ActionButtonsRenderer', () => {
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_EVENT}' for action ID '${actionToSubmit.id}'. dispatchValidated returned false.`),
+                expect.stringContaining(`${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action ID '${actionToSubmit.id}'. dispatchValidated returned false.`),
                 {payload: {actionId: actionToSubmit.id, speech: 'Test speech'}}
             );
 
@@ -369,7 +369,7 @@ describe('ActionButtonsRenderer', () => {
 
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_EVENT}' (Action ID: ${actionToSubmit.id}).`),
+                expect.stringContaining(`${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}' (Action ID: ${actionToSubmit.id}).`),
                 {error: dispatchError, payload: {actionId: actionToSubmit.id, speech: 'Test speech again'}}
             );
 

@@ -6,7 +6,7 @@
 /** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
 
 import {IWorldContext} from './interfaces/IWorldContext.js';
-import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../types/components.js'; // Assuming these constants exist
+import {POSITION_COMPONENT_ID, CURRENT_ACTOR_COMPONENT_ID} from '../constants/componentIds.js'; // Assuming these constants exist
 
 /**
  * Provides a stateless view of the world context, deriving information directly

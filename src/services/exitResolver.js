@@ -3,8 +3,8 @@
 // Replaces the legacy connectionResolver.
 // Resolves exits stored directly on the location’s `core:exits` component.
 
-import {EXITS_COMPONENT_ID} from '../types/components.js';
-import {NAME_COMPONENT_ID} from '../types/components.js';
+import {EXITS_COMPONENT_ID} from '../constants/componentIds.js';
+import {NAME_COMPONENT_ID} from '../constants/componentIds.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */

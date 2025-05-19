@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import TurnManager from '../../../core/turns/turnManager.js';
-import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../types/components.js'; // Keep if mock entities are used
+import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../../constants/componentIds.js'; // Keep if mock entities are used
 import {beforeEach, describe, expect, it, jest} from "@jest/globals"; // Use 'it' alias for test cases
 
 // --- Mock Setup ---

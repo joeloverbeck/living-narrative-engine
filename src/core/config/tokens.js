@@ -55,8 +55,6 @@
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
- * @property {DiToken} ConditionEvaluationService - Token for evaluating conditions.
- * @property {DiToken} ItemTargetResolverService - Token for resolving item targets.
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
  * @property {DiToken} JsonLogicEvaluationService - Token for evaluating JsonLogic rules.
  * @property {DiToken} ActionValidationContextBuilder - Token for building action validation contexts.
@@ -92,12 +90,6 @@
  * @property {DiToken} IEntityManager - Token for the entity manager interface.
  * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
  *
- * --- Quest Services ---
- * @property {DiToken} QuestPrerequisiteService - Token for quest prerequisite logic.
- * @property {DiToken} QuestRewardService - Token for quest reward logic.
- * @property {DiToken} ObjectiveEventListenerService - Token for listening to events for objectives.
- * @property {DiToken} ObjectiveStateCheckerService - Token for checking objective states.
- *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
@@ -106,26 +98,6 @@
  * @property {DiToken} GameLoop - Token for the main game loop.
  * @property {DiToken} InputSetupService - Token for setting up input handling.
  *
- * --- Systems (Implementations) ---
- * @property {DiToken} GameRuleSystem - Token for the game rule system.
- * @property {DiToken} EquipmentEffectSystem - Token for the equipment effect system.
- * @property {DiToken} EquipmentSlotSystem - Token for the equipment slot system.
- * @property {DiToken} InventorySystem - Token for the inventory system.
- * @property {DiToken} CombatSystem - Token for the combat system.
- * @property {DiToken} DeathSystem - Token for the death system.
- * @property {DiToken} WorldPresenceSystem - Token for the world presence system.
- * @property {DiToken} ItemUsageSystem - Token for the item usage system.
- * @property {DiToken} BlockerSystem - Token for the blocker system.
- * @property {DiToken} MovementSystem - Token for the movement system.
- * @property {DiToken} MoveCoordinatorSystem - Token for the move coordinator system.
- * @property {DiToken} QuestSystem - Token for the quest system.
- * @property {DiToken} QuestStartTriggerSystem - Token for the quest start trigger system.
- * @property {DiToken} PerceptionSystem - Token for the perception system.
- * @property {DiToken} NotificationUISystem - Token for the notification UI system.
- * @property {DiToken} OpenableSystem - Token for the openable system.
- * @property {DiToken} HealthSystem - Token for the health system.
- * @property {DiToken} StatusEffectSystem - Token for the status effect system.
- * @property {DiToken} LockSystem - Token for the lock system.
  *
  * --- Logic/Interpretation Layer ---
  * @property {DiToken} OperationRegistry - Token for the operation handler registry service.
@@ -184,8 +156,6 @@ export const tokens = Object.freeze({
     // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
     GameDataRepository: 'GameDataRepository', // Concrete class token
     EntityManager: 'EntityManager',           // Concrete class token
-    ConditionEvaluationService: 'ConditionEvaluationService',
-    ItemTargetResolverService: 'ItemTargetResolverService',
     TargetResolutionService: 'TargetResolutionService',
     JsonLogicEvaluationService: 'JsonLogicEvaluationService',
     ActionValidationContextBuilder: 'ActionValidationContextBuilder',
@@ -222,12 +192,6 @@ export const tokens = Object.freeze({
     IGameDataRepository: 'IGameDataRepository',             // Interface token
 
 
-    // Quest Services
-    QuestPrerequisiteService: 'QuestPrerequisiteService',
-    QuestRewardService: 'QuestRewardService',
-    ObjectiveEventListenerService: 'ObjectiveEventListenerService',
-    ObjectiveStateCheckerService: 'ObjectiveStateCheckerService',
-
     // Initialization & Orchestration
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
@@ -236,24 +200,6 @@ export const tokens = Object.freeze({
     GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',
 
-    // Systems (Implementations)
-    GameRuleSystem: 'GameRuleSystem',
-    EquipmentEffectSystem: 'EquipmentEffectSystem',
-    EquipmentSlotSystem: 'EquipmentSlotSystem',
-    InventorySystem: 'InventorySystem',
-    CombatSystem: 'CombatSystem',
-    DeathSystem: 'DeathSystem',
-    WorldPresenceSystem: 'WorldPresenceSystem',
-    ItemUsageSystem: 'ItemUsageSystem',
-    MovementSystem: 'MovementSystem',
-    MoveCoordinatorSystem: 'MoveCoordinatorSystem',
-    QuestSystem: 'QuestSystem',
-    QuestStartTriggerSystem: 'QuestStartTriggerSystem',
-    NotificationUISystem: 'NotificationUISystem',
-    OpenableSystem: 'OpenableSystem',
-    HealthSystem: 'HealthSystem',
-    StatusEffectSystem: 'StatusEffectSystem',
-    LockSystem: 'LockSystem',
 
     // Logic/Interpretation Layer
     OperationRegistry: 'OperationRegistry',

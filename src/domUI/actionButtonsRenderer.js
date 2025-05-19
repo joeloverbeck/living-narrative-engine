@@ -1,6 +1,7 @@
 // src/domUI/actionButtonsRenderer.js
 
 import {RendererBase} from './rendererBase.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../core/constants/eventIds.js";
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
@@ -54,8 +55,6 @@ export class ActionButtonsRenderer extends RendererBase {
     #subscriptions = [];
     /** @private @readonly */
     _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions';
-    /** @private @readonly */
-    _PLAYER_TURN_SUBMITTED_EVENT_TYPE = 'core:player_turn_submitted';
 
     /** @private @type {boolean} */
     #isDisposed = false;
@@ -350,10 +349,10 @@ export class ActionButtonsRenderer extends RendererBase {
 
         try {
             const dispatchResult = await this.validatedEventDispatcher.dispatchValidated(
-                this._PLAYER_TURN_SUBMITTED_EVENT_TYPE, eventPayload
+                PLAYER_TURN_SUBMITTED_ID, eventPayload
             );
             if (dispatchResult) {
-                this.logger.debug(`${this._logPrefix} Event '${this._PLAYER_TURN_SUBMITTED_EVENT_TYPE}' dispatched successfully for action ID '${actionId}'.`);
+                this.logger.debug(`${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionId}'.`);
                 if (this.#speechInputElement && typeof this.#speechInputElement.value === 'string') this.#speechInputElement.value = '';
 
                 const selectedButton = this.#actionButtonsContainer.querySelector(`button.action-button.selected[data-action-id="${actionId}"]`);
@@ -365,10 +364,10 @@ export class ActionButtonsRenderer extends RendererBase {
                 this.selectedAction = null;
                 if (typeof this.sendButtonElement.disabled === 'boolean') this.sendButtonElement.disabled = true;
             } else {
-                this.logger.error(`${this._logPrefix} Failed to dispatch '${this._PLAYER_TURN_SUBMITTED_EVENT_TYPE}' for action ID '${actionId}'. dispatchValidated returned false.`, {payload: eventPayload});
+                this.logger.error(`${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action ID '${actionId}'. dispatchValidated returned false.`, {payload: eventPayload});
             }
         } catch (error) {
-            this.logger.error(`${this._logPrefix} Exception during dispatchValidated for '${this._PLAYER_TURN_SUBMITTED_EVENT_TYPE}' (Action ID: ${actionId}).`, {
+            this.logger.error(`${this._logPrefix} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}' (Action ID: ${actionId}).`, {
                 error,
                 payload: eventPayload
             });

@@ -5,7 +5,7 @@ import {ITurnHandlerResolver} from '../interfaces/ITurnHandlerResolver.js';
 // ITurnHandler might be implicitly used by the factory return types, but not directly in this file.
 
 // --- Core Imports ---
-import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../../types/components.js';
+import {PLAYER_COMPONENT_ID, ACTOR_COMPONENT_ID} from '../../../constants/componentIds.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

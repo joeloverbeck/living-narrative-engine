@@ -1,7 +1,7 @@
 // src/entities/entityManager.js
 
 import Entity from './entity.js';
-import {POSITION_COMPONENT_ID} from "../types/components.js";
+import {POSITION_COMPONENT_ID} from "../constants/componentIds.js";
 // Corrected import path for IEntityManager
 import { IEntityManager } from "../core/interfaces/IEntityManager.js";
 

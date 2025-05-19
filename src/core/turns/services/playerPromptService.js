@@ -17,6 +17,7 @@
 // --- Import Custom Error ---
 import {PromptError} from '../../errors/promptError.js'; // Adjusted path if necessary
 import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
 
 /**
  * @typedef {object} PlayerPromptServiceDependencies
@@ -39,7 +40,7 @@ import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
 
 /**
  * @typedef {object} CorePlayerTurnSubmittedEvent
- * @property {string} type - The event type, e.g., 'core:player_turn_submitted'.
+ * @property {string} type - The event type, e.g., PLAYER_TURN_SUBMITTED_ID.
  * @property {CorePlayerTurnSubmittedEventPayload} payload - The nested payload of the event.
  */
 
@@ -141,7 +142,7 @@ class PlayerPromptService extends IPlayerPromptService {
     /**
      * Prompts the actor for an action. It first discovers available actions and sends them to the UI.
      * Then, it returns a Promise that resolves with the player's chosen action and speech
-     * once the 'core:player_turn_submitted' event is received, or rejects on timeout or error.
+     * once the PLAYER_TURN_SUBMITTED_ID event is received, or rejects on timeout or error.
      *
      * @async
      * @param {Entity} actor - The entity (player) to prompt for actions.
@@ -232,15 +233,15 @@ class PlayerPromptService extends IPlayerPromptService {
                 if (unsubscribeFromEvent) {
                     try {
                         unsubscribeFromEvent();
-                        this.#logger.debug(`PlayerPromptService: Successfully unsubscribed from 'core:player_turn_submitted' for actor ${actorId}.`);
+                        this.#logger.debug(`PlayerPromptService: Successfully unsubscribed from PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`);
                     } catch (unsubError) {
-                        this.#logger.warn(`PlayerPromptService: Error during unsubscription from 'core:player_turn_submitted' for actor ${actorId}.`, unsubError);
+                        this.#logger.warn(`PlayerPromptService: Error during unsubscription from PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, unsubError);
                     }
                     unsubscribeFromEvent = null;
                 }
             };
 
-            this.#logger.debug(`PlayerPromptService: Setting up listener for 'core:player_turn_submitted' and timeout for actor ${actorId}. Timeout: ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
+            this.#logger.debug(`PlayerPromptService: Setting up listener for PLAYER_TURN_SUBMITTED_ID and timeout for actor ${actorId}. Timeout: ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
 
             timeoutId = setTimeout(() => {
                 this.#logger.warn(`PlayerPromptService: Prompt timed out for actor ${actorId} after ${PlayerPromptService.#PROMPT_TIMEOUT_MS}ms.`);
@@ -249,21 +250,21 @@ class PlayerPromptService extends IPlayerPromptService {
             }, PlayerPromptService.#PROMPT_TIMEOUT_MS);
 
             /**
-             * Handles the 'core:player_turn_submitted' event.
+             * Handles the PLAYER_TURN_SUBMITTED_ID event.
              * @param {CorePlayerTurnSubmittedEvent} eventObject - The full event object from EventBus.
              */
             const handlePlayerTurnSubmitted = (eventObject) => {
-                this.#logger.debug(`PlayerPromptService: Received 'core:player_turn_submitted' event object for actor ${actorId}. Full Event:`, eventObject);
+                this.#logger.debug(`PlayerPromptService: Received PLAYER_TURN_SUBMITTED_ID event object for actor ${actorId}. Full Event:`, eventObject);
 
                 if (!eventObject ||
                     typeof eventObject.type !== 'string' ||
-                    eventObject.type !== 'core:player_turn_submitted' ||
+                    eventObject.type !== PLAYER_TURN_SUBMITTED_ID ||
                     !eventObject.payload ||
                     typeof eventObject.payload !== 'object') {
 
-                    this.#logger.error(`PlayerPromptService: Invalid event object structure received for 'core:player_turn_submitted' for actor ${actorId}. Expected {type: 'core:player_turn_submitted', payload: {...}}. Received:`, eventObject);
+                    this.#logger.error(`PlayerPromptService: Invalid event object structure received for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}. Expected {type: PLAYER_TURN_SUBMITTED_ID, payload: {...}}. Received:`, eventObject);
                     cleanup();
-                    reject(new PromptError(`Malformed event object for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
+                    reject(new PromptError(`Malformed event object for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
                     return;
                 }
 
@@ -271,9 +272,9 @@ class PlayerPromptService extends IPlayerPromptService {
                 const actualPayload = eventObject.payload;
 
                 if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
-                    this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for 'core:player_turn_submitted' for actor ${actorId}. Payload:`, actualPayload);
+                    this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}. Payload:`, actualPayload);
                     cleanup();
-                    reject(new PromptError(`Invalid actionId in payload for 'core:player_turn_submitted' for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
+                    reject(new PromptError(`Invalid actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
                     return;
                 }
 
@@ -323,16 +324,16 @@ class PlayerPromptService extends IPlayerPromptService {
             };
 
             try {
-                unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe('core:player_turn_submitted', handlePlayerTurnSubmitted);
+                unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe(PLAYER_TURN_SUBMITTED_ID, handlePlayerTurnSubmitted);
                 if (typeof unsubscribeFromEvent !== 'function') {
-                    this.#logger.error(`PlayerPromptService: Subscription to 'core:player_turn_submitted' for actor ${actorId} did not return an unsubscribe function.`);
+                    this.#logger.error(`PlayerPromptService: Subscription to PLAYER_TURN_SUBMITTED_ID for actor ${actorId} did not return an unsubscribe function.`);
                     cleanup();
                     reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
                     return;
                 }
-                this.#logger.debug(`PlayerPromptService: Successfully subscribed to 'core:player_turn_submitted' for actor ${actorId}.`);
+                this.#logger.debug(`PlayerPromptService: Successfully subscribed to PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`);
             } catch (error) {
-                this.#logger.error(`PlayerPromptService: Error subscribing to 'core:player_turn_submitted' for actor ${actorId}.`, error);
+                this.#logger.error(`PlayerPromptService: Error subscribing to PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, error);
                 cleanup();
                 reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}.`, error, "SUBSCRIPTION_ERROR"));
             }

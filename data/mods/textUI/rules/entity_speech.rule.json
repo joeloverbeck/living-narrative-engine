@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "entity_speech",
+  "comment": "Handles entity speech by querying the speaker's name and dispatching a formatted message to the UI for conspicuous display.",
+  "event_type": "core:entity_spoke",
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the name component of the entity that spoke. It's assumed 'actor' will refer to event.payload.entityId in this context.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:name",
+        "result_variable": "speakerNameComponent"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Send the formatted speech content to the UI with a special 'speech' type.",
+      "parameters": {
+        "eventType": "textUI:display_message",
+        "payload": {
+          "message": "{evaluationContext.context.speakerNameComponent.text}: {event.payload.speechContent}",
+          "type": "speech",
+          "allowHtml": false
+        }
+      }
+    }
+  ]
+}

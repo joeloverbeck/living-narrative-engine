@@ -42,6 +42,12 @@
     --info-text-color: #0c5460; /* Dark Teal/Blue (Bootstrap alert style, 6.85:1 on #FFF) */
     --echo-text-color: var(--secondary-text-color); /* Muted grey for command echoes (4.56:1 on #FFF) - OK */
 
+    /* --- ADDED: Variables for speech messages --- */
+    --speech-text-color: #5e35b1; /* Deep Purple (Material Purple 700) - conspicuous and thematic */
+    --speech-bg-color: #f3e5f5; /* Light Purple tint (Material Purple 50) for background */
+    --speech-border-color: var(--speech-text-color); /* Border matches text color for emphasis */
+    /* --- END ADDED --- */
+
     /* Fonts */
     --font-narrative: 'Merriweather', serif;
     --font-ui: 'Open Sans', sans-serif;
@@ -308,6 +314,30 @@ a:focus-visible {
 #center-pane #message-list li.message-success {
     color: var(--success-text-color);
 }
+
+/* --- ADDED: Styling for speech messages --- */
+#center-pane #message-list li.message-speech {
+    font-family: var(--font-narrative); /* Consistent with other messages */
+    font-style: italic;
+    font-weight: 600; /* Semi-bold for emphasis */
+    color: var(--speech-text-color);
+    background-color: var(--speech-bg-color);
+
+    /* Original list item padding: var(--spacing-sm) var(--spacing-md); */
+    /* Adjust left padding to account for the border, keep others same */
+    padding-top: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    padding-right: var(--spacing-md);
+    padding-left: calc(var(--spacing-md) - 3px); /* 3px is border width */
+
+    border-left: 3px solid var(--speech-border-color);
+    border-radius: var(--border-radius-xs); /* Subtle rounding */
+
+    margin-top: var(--spacing-xs); /* Add a little vertical separation */
+    margin-bottom: var(--spacing-xs);
+}
+
+/* --- END ADDED --- */
 
 /* Right Pane Styling */
 #right-pane {
@@ -795,6 +825,15 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
+    /* --- ADDED: Adjust speech message padding for mobile --- */
+    #center-pane #message-list li.message-speech {
+        /* Original list item padding on mobile: var(--spacing-xs) var(--spacing-sm) */
+        /* Adjust left padding for the border */
+        padding-left: calc(var(--spacing-sm) - 3px); /* 3px is border width */
+        padding-right: var(--spacing-sm); /* Keep right padding consistent with other mobile li */
+    }
+
+    /* --- END ADDED --- */
     #bottom-input-bar {
         flex-direction: column;
         align-items: stretch; /* Make children take full width */
@@ -856,6 +895,16 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
+    /* --- ADDED: Adjust speech message padding for very small screens --- */
+    /* This re-affirms the mobile padding adjustment, ensuring it applies here too if not overridden */
+    #center-pane #message-list li.message-speech {
+        /* Original list item padding on very small: var(--spacing-xs) var(--spacing-sm) */
+        /* Adjust left padding for the border */
+        padding-left: calc(var(--spacing-sm) - 3px); /* 3px is border width */
+        padding-right: var(--spacing-sm); /* Keep right padding consistent */
+    }
+
+    /* --- END ADDED --- */
     #bottom-input-bar {
         padding: var(--spacing-xs); /* Further reduced padding */
     }

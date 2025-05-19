@@ -5,7 +5,7 @@ import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../services/targetResolutionService.js';
 import { ResolutionStatus } from '../../types/resolutionStatus.js';
 import Entity from '../../entities/entity.js';
-import { INVENTORY_COMPONENT_ID, NAME_COMPONENT_ID } from '../../types/components.js';
+import { INVENTORY_COMPONENT_ID, NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 import {getEntityIdsForScopes} from "../../services/entityScopeService.js";
 
 // --- Mocks for Dependencies ---

@@ -6,7 +6,7 @@ import {
     EQUIPMENT_COMPONENT_ID,
     EXITS_COMPONENT_ID,
     INVENTORY_COMPONENT_ID,
-} from "../types/components.js";
+} from "../constants/componentIds.js";
 import { matchNames } from '../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected

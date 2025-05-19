@@ -28,7 +28,6 @@ describe('ActionButtonsRenderer', () => {
     let commandInputElement;
 
     const CLASS_PREFIX = '[ActionButtonsRenderer]';
-    const PLAYER_TURN_SUBMITTED_EVENT = 'core:player_turn_submitted';
 
     // --- Mock Elements ---
     const createMockElement = (sourceDoc, tagName = 'div', id = '', classes = [], textContent = '') => {

@@ -1,6 +1,6 @@
 // src/utils/entityUtils.js
 
-import { NAME_COMPONENT_ID } from '../types/components.js';
+import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../core/interfaces/ILogger.js').ILogger} ILogger */
