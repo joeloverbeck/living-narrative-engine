@@ -1,16 +1,32 @@
 // src/domUI/locationRenderer.js
 import {RendererBase} from './rendererBase.js';
-// DomElementFactory is not explicitly used in the new version of render directly,
-// but it is used by the helper methods, so the import might be kept if helpers are complex.
-// For this refactor, we'll ensure it's available and used in helpers.
-// import DomElementFactory from './domElementFactory.js'; // Keep if helpers use it extensively
+// Assuming these component IDs are defined and exported from a constants file
+import {
+    POSITION_COMPONENT_ID, // e.g., 'core:position'
+    NAME_COMPONENT_ID,     // e.g., 'core:name'
+    DESCRIPTION_COMPONENT_ID // e.g., 'core:description'
+} from '../constants/componentIds.js'; // Adjust path as necessary
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
- * @typedef {import('./domElementFactory').default} DomElementFactory // Correctly typed import
+ * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn
+ * @typedef {import('./domElementFactory').default} DomElementFactory
+ * @typedef {import('../core/interfaces/IEntityManager').IEntityManager} IEntityManager
+ * @typedef {import('../core/interfaces/IDataRegistry').IDataRegistry} IDataRegistry // Assuming this interface exists
+ */
+
+/**
+ * @typedef {object} CoreTurnStartedPayload
+ * @property {import('../core/interfaces/CommonTypes').NamespacedId} entityId
+ * @property {'player'|'ai'} entityType
+ */
+
+/**
+ * @typedef {object} CoreTurnStartedEvent
+ * @property {string} type - The event type name (e.g., 'core:turn_started').
+ * @property {CoreTurnStartedPayload} payload - The payload of the event.
  */
 
 /**
@@ -18,7 +34,7 @@ import {RendererBase} from './rendererBase.js';
  * @typedef {object} LocationDisplayPayload
  * @property {string} name - The name of the location.
  * @property {string} description - The textual description of the location.
- * @property {Array<{description: string, id?: string}>} exits - List of exits from the location. (id might be added for future use as per #302)
+ * @property {Array<{description: string, id?: string}>} exits - List of exits from the location.
  * @property {Array<{id: string, name: string}>} [items] - Optional list of items present in the location.
  * @property {Array<{id: string, name: string}>} [entities] - Optional list of entities (NPCs, etc.) present.
  */
@@ -26,32 +42,22 @@ import {RendererBase} from './rendererBase.js';
 /**
  * Renders the details of the current game location (name, description, exits, items, entities)
  * into designated child elements within '#location-info-container'.
- * Subscribes to 'event:display_location' via VED.
+ * Subscribes to 'core:turn_started' via VED to update based on the current entity's location.
  */
 export class LocationRenderer extends RendererBase {
-    /**
-     * The main container element for location info, expected to be '#location-info-container'.
-     * This is used as the root to query for sub-elements.
-     * @private
-     * @type {HTMLElement}
-     */
-    #baseContainerElement; // This will be #location-info-container
-
-    /**
-     * Factory for creating DOM elements programmatically.
-     * @private
-     * @type {DomElementFactory}
-     */
+    /** @private @type {HTMLElement} */
+    #baseContainerElement;
+    /** @private @type {DomElementFactory} */
     #domElementFactory;
-
-    /**
-     * Stores VED subscriptions for later disposal.
-     * @private
-     * @type {Array<IEventSubscription|undefined>}
-     */
+    /** @private @type {IEntityManager} */
+    #entityManager;
+    /** @private @type {IDataRegistry} */
+    #dataRegistry;
+    /** @private @type {Array<UnsubscribeFn|undefined>} */
     #subscriptions = [];
+    /** @private @readonly */
+    _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
 
-    // IDs of the target sub-elements
     /** @private @const @type {string} */
     static #NAME_DISPLAY_ID = 'location-name-display';
     /** @private @const @type {string} */
@@ -63,24 +69,14 @@ export class LocationRenderer extends RendererBase {
     /** @private @const @type {string} */
     static #ENTITIES_DISPLAY_ID = 'location-entities-display';
 
-
-    /**
-     * Creates an instance of LocationRenderer.
-     *
-     * @param {object} deps - Dependencies object.
-     * @param {ILogger} deps.logger - The logger instance.
-     * @param {IDocumentContext} deps.documentContext - The document context.
-     * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
-     * @param {DomElementFactory} deps.domElementFactory - Factory for creating DOM elements.
-     * @param {HTMLElement | null} deps.containerElement - The container element ('#location-info-container') to render location details into.
-     * @throws {Error} If dependencies are invalid, especially containerElement or domElementFactory.
-     */
     constructor({
                     logger,
                     documentContext,
                     validatedEventDispatcher,
                     domElementFactory,
-                    containerElement // This should be #location-info-container
+                    entityManager,
+                    dataRegistry,
+                    containerElement
                 }) {
         super({logger, documentContext, validatedEventDispatcher});
 
@@ -91,8 +87,22 @@ export class LocationRenderer extends RendererBase {
         }
         this.#domElementFactory = domElementFactory;
 
+        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
+            const errMsg = `${this._logPrefix} 'entityManager' dependency is missing or invalid.`;
+            this.logger.error(errMsg);
+            throw new Error(errMsg);
+        }
+        this.#entityManager = entityManager;
+
+        // Ensure dataRegistry has getEntityDefinition, as locations are entities.
+        if (!dataRegistry || typeof dataRegistry.getEntityDefinition !== 'function') {
+            const errMsg = `${this._logPrefix} 'dataRegistry' dependency is missing or invalid (must have getEntityDefinition).`;
+            this.logger.error(errMsg, {receivedRegistry: dataRegistry});
+            throw new Error(errMsg);
+        }
+        this.#dataRegistry = dataRegistry;
+
         if (!containerElement || containerElement.nodeType !== 1) {
-            // Renaming to #baseContainerElement to clarify its role as the parent of the specific display areas.
             const errMsg = `${this._logPrefix} 'containerElement' (expected '#location-info-container') dependency is missing or not a valid DOM element.`;
             this.logger.error(errMsg);
             throw new Error(errMsg);
@@ -103,108 +113,138 @@ export class LocationRenderer extends RendererBase {
         this.#subscribeToEvents();
     }
 
-    /**
-     * Subscribes to VED events relevant for rendering the location.
-     * @private
-     */
+    /** @private */
     #subscribeToEvents() {
-        const ved = this.validatedEventDispatcher;
-        this.#subscriptions.push(
-            ved.subscribe('event:display_location', this.#handleDisplayLocation.bind(this))
+        if (!this.validatedEventDispatcher || typeof this.validatedEventDispatcher.subscribe !== 'function') {
+            this.logger.error(`${this._logPrefix} ValidatedEventDispatcher not available or 'subscribe' method is missing.`);
+            return;
+        }
+        const unsubscribeFn = this.validatedEventDispatcher.subscribe(
+            this._EVENT_TYPE_SUBSCRIBED,
+            this.#handleTurnStarted.bind(this)
         );
-        this.logger.debug(`${this._logPrefix} Subscribed to VED event 'event:display_location'.`);
-    }
 
-    /**
-     * Handles the 'event:display_location' event from VED.
-     * Validates the payload and calls the public render method.
-     * @private
-     * @param {LocationDisplayPayload | object} payload - Expected payload for 'event:display_location'.
-     * @param {string} eventType - The name of the triggered event.
-     */
-    #handleDisplayLocation(payload, eventType) {
-        this.logger.debug(`${this._logPrefix} Received '${eventType}' event. Payload:`, payload);
-
-        if (
-            payload &&
-            typeof payload.name === 'string' &&
-            typeof payload.description === 'string' &&
-            Array.isArray(payload.exits) &&
-            (!payload.items || Array.isArray(payload.items)) &&
-            (!payload.entities || Array.isArray(payload.entities))
-        ) {
-            const locationData = /** @type {LocationDisplayPayload} */ (payload);
-            this.render(locationData);
+        if (typeof unsubscribeFn === 'function') {
+            this.#subscriptions.push(unsubscribeFn);
+            this.logger.debug(`${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`);
         } else {
-            this.logger.error(`${this._logPrefix} Received invalid or incomplete payload for '${eventType}'. Cannot render location. Payload:`, payload);
-            this.#clearAllDisplaysOnError();
+            this.logger.error(`${this._logPrefix} Failed to subscribe to VED event '${this._EVENT_TYPE_SUBSCRIBED}'. Expected an unsubscribe function.`);
         }
     }
 
     /**
-     * Clears all specific display areas in case of a major error or invalid payload.
+     * Handles the 'core:turn_started' event.
+     * Fetches the current entity's location and renders its details.
      * @private
+     * @param {CoreTurnStartedEvent} event - The event object from VED.
      */
-    #clearAllDisplaysOnError() {
-        const idsToClear = [
-            LocationRenderer.#NAME_DISPLAY_ID,
-            LocationRenderer.#DESCRIPTION_DISPLAY_ID,
-            LocationRenderer.#EXITS_DISPLAY_ID,
-            LocationRenderer.#ITEMS_DISPLAY_ID,
-            LocationRenderer.#ENTITIES_DISPLAY_ID
-        ];
+    #handleTurnStarted(event) { // Removed async as getEntityDefinition is likely synchronous
+        this.logger.debug(`${this._logPrefix} Received '${event.type}' event. Payload:`, event.payload);
+
+        if (!event.payload || !event.payload.entityId) {
+            this.logger.warn(`${this._logPrefix} '${event.type}' event is missing entityId. Cannot update location display.`);
+            this.#clearAllDisplaysOnErrorWithMessage('No entity specified for turn.');
+            return;
+        }
+
+        const entityId = event.payload.entityId;
+
+        try {
+            const actingEntity = this.#entityManager.getEntityInstance(entityId);
+            if (!actingEntity) {
+                this.logger.warn(`${this._logPrefix} Entity '${entityId}' (whose turn started) not found. Cannot determine location.`);
+                this.#clearAllDisplaysOnErrorWithMessage(`Entity ${entityId} not found.`);
+                return;
+            }
+
+            const positionComponent = actingEntity.getComponentData(POSITION_COMPONENT_ID);
+            if (!positionComponent || typeof positionComponent.locationId !== 'string' || !positionComponent.locationId) {
+                this.logger.warn(`${this._logPrefix} Entity '${entityId}' has no valid position or locationId. Position:`, positionComponent);
+                this.#clearAllDisplaysOnErrorWithMessage(`Location for ${entityId} is unknown.`);
+                return;
+            }
+
+            const locationId = positionComponent.locationId;
+            const locationEntityDefinition = this.#dataRegistry.getEntityDefinition(locationId);
+
+            if (!locationEntityDefinition) {
+                this.logger.error(`${this._logPrefix} Location entity definition for ID '${locationId}' not found.`);
+                this.#clearAllDisplaysOnErrorWithMessage(`Location data for '${locationId}' missing.`);
+                return;
+            }
+
+            // Extract name and description from the location entity's components
+            const nameComponentData = locationEntityDefinition.components?.[NAME_COMPONENT_ID];
+            const descriptionComponentData = locationEntityDefinition.components?.[DESCRIPTION_COMPONENT_ID];
+
+            const locationName = nameComponentData?.text || 'Unnamed Location';
+            const locationDescription = descriptionComponentData?.text || 'No description available.';
+
+            // Exits: For now, assume exits are not yet handled or are empty.
+            // If exits were a component (e.g., 'core:exits') on the location entity:
+            // const exitsData = locationEntityDefinition.components?.['core:exits']?.list || [];
+            const exits = []; // Per current requirement: only name and description
+
+            const displayPayload = {
+                name: locationName,
+                description: locationDescription,
+                exits: exits,
+                items: [], // Future scope
+                entities: [] // Future scope
+            };
+
+            this.render(displayPayload);
+
+        } catch (error) {
+            this.logger.error(`${this._logPrefix} Error processing '${event.type}' for entity '${entityId}':`, error);
+            this.#clearAllDisplaysOnErrorWithMessage('Error retrieving location details.');
+        }
+    }
+
+    /** @private */
+    #clearAllDisplaysOnErrorWithMessage(message) {
+        const idsAndDefaults = {
+            [LocationRenderer.#NAME_DISPLAY_ID]: '(Location Unknown)',
+            [LocationRenderer.#DESCRIPTION_DISPLAY_ID]: message,
+            [LocationRenderer.#EXITS_DISPLAY_ID]: '(Exits Unavailable)',
+            [LocationRenderer.#ITEMS_DISPLAY_ID]: '(Items Unavailable)',
+            [LocationRenderer.#ENTITIES_DISPLAY_ID]: '(Other Entities Unavailable)'
+        };
         let errorLogged = false;
-        for (const id of idsToClear) {
+        for (const [id, defaultText] of Object.entries(idsAndDefaults)) {
             try {
                 const element = this.documentContext.query(`#${id}`);
                 if (element) {
                     this._clearElementContent(element);
-                    const pError = this.#domElementFactory.p('error-message', '(Error displaying this section)');
-                    if (pError) element.appendChild(pError);
+                    const text = (id === LocationRenderer.#DESCRIPTION_DISPLAY_ID) ? message : defaultText;
+                    const pError = this.#domElementFactory.p('error-message', text);
+                    if (pError) {
+                        element.appendChild(pError);
+                    } else {
+                        element.textContent = text;
+                    }
                 } else if (!errorLogged) {
-                    // Log only once if a general query issue is suspected
-                    this.logger.warn(`${this._logPrefix} Could not find element #${id} to clear on error.`);
-                    errorLogged = true; // Avoid flooding logs if many are missing
+                    this.logger.warn(`${this._logPrefix} Could not find element #${id} to clear/update on error.`);
+                    errorLogged = true;
                 }
             } catch (e) {
-                this.logger.error(`${this._logPrefix} Error while clearing element #${id}:`, e);
+                this.logger.error(`${this._logPrefix} Error while clearing/updating element #${id} on error:`, e);
             }
         }
     }
 
-
-    // --- Private Helper Methods ---
-
-    /**
-     * Clears the content of a given HTML element.
-     * @private
-     * @param {HTMLElement} element - The element to clear.
-     */
+    /** @private */
     _clearElementContent(element) {
         if (element) {
-            // More robust clearing than innerHTML = ''
             while (element.firstChild) {
                 element.removeChild(element.firstChild);
             }
         }
     }
 
-    /**
-     * Renders a list of items (exits, items, entities) into a target element.
-     * Creates a title for the list and then either a list of items or an "empty" message.
-     * @private
-     * @param {Array<object> | undefined} dataArray - The array of data objects to render.
-     * @param {HTMLElement} targetElement - The DOM element to render into.
-     * @param {string} title - The title for this section (e.g., "Exits", "Items").
-     * @param {string} itemTextProperty - The property name on each data object that contains the text to display (e.g., 'description', 'name').
-     * @param {string} emptyText - Text to display if dataArray is empty (e.g., "(None)").
-     * @param {string} itemClassName - Optional CSS class for each list item element.
-     */
+    /** @private */
     _renderList(dataArray, targetElement, title, itemTextProperty, emptyText, itemClassName = 'list-item') {
         this._clearElementContent(targetElement);
-
-        // Create and append title (e.g., <h4>Exits:</h4>)
-        // Using H4 for semantic structure below H2 for location name.
         const titleEl = this.#domElementFactory.create('h4');
         if (titleEl) {
             titleEl.textContent = `${title}:`;
@@ -218,28 +258,24 @@ export class LocationRenderer extends RendererBase {
             if (pEmpty) {
                 targetElement.appendChild(pEmpty);
             } else {
-                this.logger.warn(`${this._logPrefix} Failed to create empty message for ${title}.`);
-                targetElement.appendChild(this.documentContext.document.createTextNode(emptyText)); // Fallback
+                targetElement.appendChild(this.documentContext.document.createTextNode(emptyText));
             }
         } else {
-            const ul = this.#domElementFactory.ul(undefined, 'location-detail-list'); // class for the <ul>
+            const ul = this.#domElementFactory.ul(undefined, 'location-detail-list');
             if (!ul) {
                 this.logger.error(`${this._logPrefix} Failed to create UL element for ${title}.`);
-                // Fallback to just appending text if UL creation fails
                 dataArray.forEach(item => {
-                    const text = item[itemTextProperty] || 'Unnamed';
+                    const text = item?.[itemTextProperty] || 'Unnamed';
                     const pItem = this.#domElementFactory.p(itemClassName, text);
                     if (pItem) targetElement.appendChild(pItem);
                 });
                 return;
             }
-
             dataArray.forEach(item => {
-                const text = item[itemTextProperty] || `(Invalid ${itemTextProperty})`;
+                const textValue = item && typeof item === 'object' ? item[itemTextProperty] : `(Invalid item in ${title})`;
+                const text = textValue || `(Invalid ${itemTextProperty} for item)`;
                 const li = this.#domElementFactory.li(itemClassName, text);
                 if (li) {
-                    // For exits, Ticket #302 will add clickability here.
-                    // For now, just text.
                     ul.appendChild(li);
                 } else {
                     this.logger.warn(`${this._logPrefix} Failed to create LI element for item in ${title}.`);
@@ -249,13 +285,6 @@ export class LocationRenderer extends RendererBase {
         }
     }
 
-    // --- Public API ---
-
-    /**
-     * Renders the location details into their designated sub-elements within '#location-info-container'.
-     *
-     * @param {LocationDisplayPayload} locationDto - The location data to render.
-     */
     render(locationDto) {
         if (!this.#baseContainerElement) {
             this.logger.error(`${this._logPrefix} Cannot render location, baseContainerElement is not set.`);
@@ -266,90 +295,61 @@ export class LocationRenderer extends RendererBase {
             return;
         }
         if (!locationDto) {
-            this.logger.warn(`${this._logPrefix} Received null or undefined location DTO. Clearing location display sections.`);
-            this.#clearAllDisplaysOnError();
+            this.logger.warn(`${this._logPrefix} Received null location DTO. Clearing display.`);
+            this.#clearAllDisplaysOnErrorWithMessage('(No location data to display)');
             return;
         }
 
-        this.logger.debug(`${this._logPrefix} Rendering location: "${locationDto.name}" into specific sub-elements.`);
-
-        // Get references to the target sub-elements
+        this.logger.debug(`${this._logPrefix} Rendering location: "${locationDto.name}" into sub-elements.`);
         const nameDisplay = this.documentContext.query(`#${LocationRenderer.#NAME_DISPLAY_ID}`);
         const descriptionDisplay = this.documentContext.query(`#${LocationRenderer.#DESCRIPTION_DISPLAY_ID}`);
         const exitsDisplay = this.documentContext.query(`#${LocationRenderer.#EXITS_DISPLAY_ID}`);
         const itemsDisplay = this.documentContext.query(`#${LocationRenderer.#ITEMS_DISPLAY_ID}`);
         const entitiesDisplay = this.documentContext.query(`#${LocationRenderer.#ENTITIES_DISPLAY_ID}`);
 
-        // --- Render Location Name ---
         if (nameDisplay) {
-            this._clearElementContent(nameDisplay); // Clear first
+            this._clearElementContent(nameDisplay);
             nameDisplay.textContent = locationDto.name || 'Unnamed Location';
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#NAME_DISPLAY_ID} not found.`);
         }
 
-        // --- Render Location Description ---
         if (descriptionDisplay) {
-            this._clearElementContent(descriptionDisplay); // Clear first
-            // Per ticket: "Assume textContent for safety unless specified"
+            this._clearElementContent(descriptionDisplay);
             descriptionDisplay.textContent = locationDto.description || 'You see nothing remarkable.';
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#DESCRIPTION_DISPLAY_ID} not found.`);
         }
 
-        // --- Render Exits ---
         if (exitsDisplay) {
-            this._renderList(
-                locationDto.exits,
-                exitsDisplay,
-                'Exits',
-                'description',
-                '(None)'
-            );
+            this._renderList(locationDto.exits, exitsDisplay, 'Exits', 'description', '(None visible)');
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#EXITS_DISPLAY_ID} not found.`);
         }
 
-        // --- Render Items ---
         if (itemsDisplay) {
-            this._renderList(
-                locationDto.items,
-                itemsDisplay,
-                'Items',
-                'name',
-                '(None seen)'
-            );
+            this._renderList(locationDto.items, itemsDisplay, 'Items', 'name', '(None seen)');
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#ITEMS_DISPLAY_ID} not found.`);
         }
 
-        // --- Render Entities ---
         if (entitiesDisplay) {
-            this._renderList(
-                locationDto.entities,
-                entitiesDisplay,
-                'Entities',
-                'name',
-                '(None seen)'
-            );
+            this._renderList(locationDto.entities, entitiesDisplay, 'Entities', 'name', '(None seen)');
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#ENTITIES_DISPLAY_ID} not found.`);
         }
-
-        this.logger.info(`${this._logPrefix} Location "${locationDto.name}" rendered into sub-elements successfully.`);
+        this.logger.info(`${this._logPrefix} Location "${locationDto.name}" display updated.`);
     }
 
-    /**
-     * Dispose method for cleanup. Unsubscribes from all VED events.
-     */
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
+        this.#subscriptions.forEach(unsubscribeFn => {
+            if (typeof unsubscribeFn === 'function') {
+                unsubscribeFn();
             }
         });
         this.#subscriptions = [];
         super.dispose();
+        this.logger.info(`${this._logPrefix} LocationRenderer disposed.`);
     }
 }
