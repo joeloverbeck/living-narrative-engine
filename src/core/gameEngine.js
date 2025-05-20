@@ -120,7 +120,7 @@ class GameEngine {
             turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
         } catch (error) {
             this.#logger?.error("GameEngine.#onGameReady: Failed to resolve ITurnManager. Cannot start turns.", error);
-            this.#isInitialized = false;
+            this.#isInitialized = false; // Mark as not initialized if we can't get turn manager
             throw new Error('Failed to resolve ITurnManager in #onGameReady.');
         }
 
@@ -130,7 +130,7 @@ class GameEngine {
             this.#logger?.info("GameEngine.#onGameReady: TurnManager started successfully.");
         } catch (error) {
             this.#logger?.error("GameEngine.#onGameReady: CRITICAL ERROR starting TurnManager.", error);
-            this.#isInitialized = false;
+            this.#isInitialized = false; // Mark as not initialized if turn manager fails to start
             if (turnManager && typeof turnManager.stop === 'function') {
                 try {
                     await turnManager.stop();
@@ -158,7 +158,9 @@ class GameEngine {
 
         if (this.isInitialized) {
             this.#logger?.warn(`GameEngine: startNewGame('${worldName}') called, but engine is already initialized. Please stop the engine first.`);
-            return; // Or throw an error
+            // Consider calling await this.stop(); here if auto-stop is desired,
+            // or throw an error to enforce manual stop. For now, returning as per original logic.
+            return;
         }
 
         this.#logger?.info(`GameEngine: Starting NEW GAME initialization sequence for world: ${worldName}...`);
@@ -172,11 +174,8 @@ class GameEngine {
                 throw new Error('EntityManager not available for new game start.');
             }
 
-            if (this.#playtimeTracker) { // Reset playtime for a new game
-                this.#logger?.debug('GameEngine: Resetting PlaytimeTracker for new game.');
-                this.#playtimeTracker.reset();
-            }
-
+            // PlaytimeTracker reset is now handled *after* successful initialization.
+            // The old reset call that was here has been removed.
 
             const initializationService = /** @type {InitializationService} */ (
                 this.#container.resolve(tokens.InitializationService)
@@ -187,25 +186,46 @@ class GameEngine {
             if (!initResult.success) {
                 const failureReason = initResult.error?.message || 'Unknown initialization error';
                 this.#logger?.error(`GameEngine: New game initialization sequence failed for world '${worldName}'. Reason: ${failureReason}`, initResult.error);
-                this.#isInitialized = false; // Ensure state is false if init failed before #onGameReady
+                this.#isInitialized = false; // Ensure state is false if init failed
+                // Playtime should be reset on failure if it was somehow started or carried over.
+                // The main catch block handles this, but being explicit here too for init failure.
+                if (this.#playtimeTracker) {
+                    this.#logger?.debug('GameEngine: Resetting PlaytimeTracker due to failed initialization sequence.');
+                    this.#playtimeTracker.reset();
+                }
                 throw initResult.error || new Error(`Game engine new game initialization failed: ${failureReason}`);
             }
 
             this.#logger?.info('GameEngine: New game initialization sequence reported success.');
 
-            if (this.#playtimeTracker) { // Start session timer after successful new game init
-                this.#playtimeTracker.startSession();
+            // Reset playtime tracker for the new game *after* successful initialization
+            if (this.#playtimeTracker) {
+                this.#logger?.debug('GameEngine: Resetting PlaytimeTracker for new game session.');
+                this.#playtimeTracker.reset();
+            } else {
+                this.#logger?.warn('GameEngine: PlaytimeTracker not available, cannot reset for new game.');
             }
 
+            // Start session timer after successful new game init and playtime reset
+            if (this.#playtimeTracker) {
+                this.#logger?.debug('GameEngine: Starting new PlaytimeTracker session.');
+                this.#playtimeTracker.startSession();
+            } else {
+                this.#logger?.warn('GameEngine: PlaytimeTracker not available, cannot start session.');
+            }
+
+            this.#logger?.info('GameEngine: Finalizing new game setup via #onGameReady...');
             await this.#onGameReady();
+            this.#logger?.info(`GameEngine: New game '${worldName}' started successfully and is ready.`);
 
         } catch (error) {
-            this.#logger?.error(`GameEngine: CRITICAL ERROR during new game initialization or TurnManager startup for world '${worldName}'.`, error);
-            this.#isInitialized = false;
-            if (this.#playtimeTracker) { // Also reset playtime on critical failure during new game start
-                this.#playtimeTracker.reset();
+            this.#logger?.error(`GameEngine: CRITICAL ERROR during new game initialization or startup for world '${worldName}'.`, error);
+            this.#isInitialized = false; // Ensure engine is marked as not initialized on any critical failure
+            if (this.#playtimeTracker) {
+                this.#logger?.debug('GameEngine: Resetting PlaytimeTracker due to critical error during new game start.');
+                this.#playtimeTracker.reset(); // Reset playtime on any critical failure during new game start
             }
-            throw error;
+            throw error; // Re-throw the error to be handled by the caller
         }
     }
 
@@ -325,56 +345,50 @@ class GameEngine {
         if (!saveIdentifier || typeof saveIdentifier !== 'string' || saveIdentifier.trim() === '') {
             const errorMsg = 'GameEngine.loadGame requires a valid non-empty saveIdentifier argument.';
             this.#logger?.error(errorMsg);
-            // Not explicitly in ticket, but good practice to return failure for invalid input.
             return {success: false, error: errorMsg};
         }
 
         if (this.isInitialized) {
             this.#logger?.warn("GameEngine.loadGame: Engine is already initialized. Stopping current game before loading.");
-            await this.stop(); // this.stop() sets #isInitialized to false and should handle current playtime session.
+            await this.stop();
         }
 
         /** @type {LoadAndRestoreResult | undefined} */
         let loadRestoreResult;
         try {
             if (!this.#gamePersistenceService) {
-                // This should ideally not happen if constructor succeeded.
                 this.#logger?.error(`GameEngine.loadGame: GamePersistenceService is not available. Cannot load game for ${saveIdentifier}.`);
                 throw new Error('GamePersistenceService is not available for loading game.');
             }
             loadRestoreResult = await this.#gamePersistenceService.loadAndRestoreGame(saveIdentifier);
         } catch (error) {
             this.#logger?.error(`GameEngine.loadGame: Unexpected error during loadAndRestoreGame for ${saveIdentifier}. ${error.message}.`, error);
-            this.#isInitialized = false; // Ensure it's false
+            this.#isInitialized = false;
             if (this.#playtimeTracker) {
                 this.#logger?.debug(`GameEngine.loadGame: Resetting PlaytimeTracker due to error in loadAndRestoreGame.`);
                 this.#playtimeTracker.reset();
             }
-            // Re-throw the original error to be caught by the caller or a higher-level handler.
-            // Or, if the method must return a specific structure:
-            // return { success: false, error: `Unexpected error: ${error.message}` };
-            throw error; // As per ticket "Throw error; // Re-throw the original error"
+            throw error;
         }
 
         if (loadRestoreResult && loadRestoreResult.success) {
             this.#logger?.info(`GameEngine.loadGame: Successfully loaded and restored state from ${saveIdentifier}.`);
 
-            // PlaytimeTracker historical playtime is restored by GamePersistenceService.
-            // Now start a new session timer.
             if (this.#playtimeTracker) {
-                this.#logger?.debug(`GameEngine.loadGame: Starting new PlaytimeTracker session.`);
+                this.#logger?.debug(`GameEngine.loadGame: Starting new PlaytimeTracker session after successful load.`);
                 this.#playtimeTracker.startSession();
+            } else {
+                this.#logger?.warn('GameEngine.loadGame: PlaytimeTracker not available, cannot start session after load.');
             }
 
-            await this.#onGameReady(); // Sets #isInitialized = true and starts turns
+            this.#logger?.info(`GameEngine.loadGame: Finalizing loaded game setup via #onGameReady...`);
+            await this.#onGameReady();
             this.#logger?.info(`GameEngine.loadGame: Game ready with loaded state from ${saveIdentifier}.`);
             return {success: true};
         } else {
-            // Handle cases where loadRestoreResult is undefined (shouldn't happen if no throw)
-            // or loadRestoreResult.success is false.
             const reason = loadRestoreResult?.error || 'Unknown failure from GamePersistenceService.loadAndRestoreGame.';
             this.#logger?.error(`GameEngine.loadGame: Failed to load game from ${saveIdentifier}. Reason: ${reason}`);
-            this.#isInitialized = false; // Ensure it's false
+            this.#isInitialized = false;
             if (this.#playtimeTracker) {
                 this.#logger?.debug(`GameEngine.loadGame: Resetting PlaytimeTracker due to failed game load.`);
                 this.#playtimeTracker.reset();
@@ -391,14 +405,9 @@ class GameEngine {
 
         if (!this.isInitialized) {
             this.#logger?.info('GameEngine: Stop requested, but engine is not initialized. No action needed.');
-            // Even if not initialized, if playtime tracker might be in an odd state from a previous failed attempt,
-            // resetting it here could be a safety measure, though loadGame handles its own resets.
-            // For now, adhering to "No action needed".
             return;
         }
 
-        // End current playtime session before shutdown sequence, if PlaytimeTracker exists
-        // This part is an assumption for "handles playtime via PlaytimeTracker"
         if (this.#playtimeTracker) {
             this.#logger?.debug('GameEngine.stop: Ending current PlaytimeTracker session and accumulating time.');
             this.#playtimeTracker.endSessionAndAccumulate();
@@ -435,10 +444,6 @@ class GameEngine {
         } finally {
             this.#isInitialized = false;
             this.#logger?.info('GameEngine: Engine stop sequence finished, internal state reset (isInitialized = false).');
-            // Note: PlaytimeTracker is NOT reset here by stop().
-            // It holds the accumulated time including the session just ended.
-            // If a new game is started, startNewGame->reset() is called.
-            // If a game is loaded, loadGame->setAccumulatedPlaytime() (via persistence) is called.
         }
     }
 
@@ -458,7 +463,6 @@ class GameEngine {
         }
 
         try {
-            // Pass the current initialized state to GamePersistenceService
             return await this.#gamePersistenceService.saveGame(saveName, this.isInitialized);
         } catch (error) {
             const errorMessage = (error && error.message) ? error.message : 'An unknown error occurred.';

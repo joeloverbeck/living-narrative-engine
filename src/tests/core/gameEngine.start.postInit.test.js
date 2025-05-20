@@ -148,7 +148,7 @@ describe('GameEngine startNewGame() - Post-Initialization Success Logic', () => 
             expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Starting NEW GAME initialization sequence for world: ${inputWorldName}...`);
             // Debug logs from startNewGame()
             expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Clearing EntityManager before new game initialization.');
-            expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Resetting PlaytimeTracker for new game.');
+            expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Resetting PlaytimeTracker for new game session.');
             expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: InitializationService resolved for new game.');
             // Info log from startNewGame()
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: New game initialization sequence reported success.');
