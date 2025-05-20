@@ -256,8 +256,8 @@ a:focus-visible {
     flex: 0 0 25%;
     max-width: 320px;
     min-width: 280px;
-    display: flex; /* ADDED to allow perception log to take remaining space */
-    flex-direction: column; /* ADDED */
+    display: flex;
+    flex-direction: column;
 }
 
 /* Center Pane Styling */
@@ -275,7 +275,7 @@ a:focus-visible {
     padding: var(--spacing-md);
     border: var(--border-width) solid var(--border-color-subtle);
     border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-md); /* Keep margin if input bar is directly after for visual separation if center pane doesn't fill space, but it's flex grow. */
+    margin-bottom: var(--spacing-md);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -289,7 +289,7 @@ a:focus-visible {
 #center-pane #message-list li {
     padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: var(--border-width) solid var(--border-color-subtle);
-    color: var(--primary-text-color); /* Default text color for messages */
+    color: var(--primary-text-color);
     font-family: var(--font-narrative);
     line-height: 1.7;
 }
@@ -317,29 +317,21 @@ a:focus-visible {
     color: var(--success-text-color);
 }
 
-/* --- ADDED: Styling for speech messages --- */
 #center-pane #message-list li.message-speech {
-    font-family: var(--font-narrative); /* Consistent with other messages */
+    font-family: var(--font-narrative);
     font-style: italic;
-    font-weight: 600; /* Semi-bold for emphasis */
+    font-weight: 600;
     color: var(--speech-text-color);
     background-color: var(--speech-bg-color);
-
-    /* Original list item padding: var(--spacing-sm) var(--spacing-md); */
-    /* Adjust left padding to account for the border, keep others same */
     padding-top: var(--spacing-sm);
     padding-bottom: var(--spacing-sm);
     padding-right: var(--spacing-md);
-    padding-left: calc(var(--spacing-md) - 3px); /* 3px is border width */
-
+    padding-left: calc(var(--spacing-md) - 3px);
     border-left: 3px solid var(--speech-border-color);
-    border-radius: var(--border-radius-xs); /* Subtle rounding */
-
-    margin-top: var(--spacing-xs); /* Add a little vertical separation */
+    border-radius: var(--border-radius-xs);
+    margin-top: var(--spacing-xs);
     margin-bottom: var(--spacing-xs);
 }
-
-/* --- END ADDED --- */
 
 /* Right Pane Styling */
 #right-pane {
@@ -359,13 +351,11 @@ a:focus-visible {
     border-top: var(--border-width) solid var(--panel-border-color);
 }
 
-/* Container for the command input field */
 #input-container {
     flex-grow: 1;
     margin-right: var(--spacing-md);
 }
 
-/* Command Input Field */
 #speech-input {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -383,7 +373,6 @@ a:focus-visible {
     opacity: 0.8;
 }
 
-/* Quick Status Display Area */
 #quick-status-display {
     white-space: nowrap;
     align-self: center;
@@ -395,34 +384,30 @@ a:focus-visible {
     background-color: var(--panel-bg-color);
 }
 
-/* Styling for widgets within panes */
 #location-info-container,
 #character-status-widget,
 #actions-widget,
 #inventory-widget,
-#perception-log-widget /* ADDED */
-{
+#perception-log-widget {
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md);
     border: var(--border-width) solid var(--border-color-subtle);
     border-radius: var(--border-radius-md);
     background-color: var(--panel-bg-color);
-    flex-shrink: 0; /* ADDED - Ensure widgets don't shrink excessively if left-pane is flex column */
+    flex-shrink: 0;
 }
 
-/* Ensure last widget in a panel doesn't have excessive bottom margin if panel has padding */
 .panel > div[id$="-widget"]:last-child,
 .panel > div[id$="-container"]:last-child {
     margin-bottom: 0;
 }
 
 
-#location-info-container h2, /* This is for #location-name-display */
+#location-info-container h2,
 #character-status-widget h3,
 #actions-widget h3,
 #inventory-widget h3,
-#perception-log-widget h3 /* ADDED */
-{
+#perception-log-widget h3 {
     margin-top: 0;
     margin-bottom: var(--spacing-sm);
     color: var(--primary-text-color);
@@ -431,48 +416,55 @@ a:focus-visible {
     padding-bottom: var(--spacing-sm);
 }
 
-#location-name-display { /* Specific h2 for location name */
+#location-name-display {
     font-family: var(--font-ui);
     font-size: var(--font-size-h2);
     color: var(--primary-text-color);
-    border-bottom: none; /* Override general widget title border */
-    padding-bottom: 0; /* Override general widget title padding */
-    margin-bottom: var(--spacing-md); /* Space before description */
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
 }
 
-#location-description-display { /* This is a <p> tag */
+#location-description-display {
     font-family: var(--font-narrative);
-    color: var(--primary-text-color); /* Main description text a bit more prominent */
+    color: var(--primary-text-color);
     line-height: 1.7;
     margin-bottom: var(--spacing-md);
 }
 
-/* Styling for lists within location info (exits, items, entities) (REFINED/NEW) */
 #location-exits-display ul,
-#location-items-display ul,
-#location-entities-display ul {
-    list-style-type: none; /* Changed from disc/square for cleaner look, can be reverted if preferred */
-    padding-left: 0; /* No indent if no bullets */
-    /* If using list-style-type: disc; or similar, use: padding-left: var(--spacing-lg); */
+#location-characters-display ul {
+    list-style-type: none;
+    padding-left: 0;
     margin-top: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
 }
 
 #location-exits-display li,
-#location-items-display li,
-#location-entities-display li {
+#location-characters-display li {
     font-family: var(--font-narrative);
-    color: var(--secondary-text-color);
-    line-height: 1.7;
+    color: var(--secondary-text-color); /* This will apply to the name part */
+    line-height: 1.7; /* Applied to the whole li */
     margin-bottom: var(--spacing-xs);
-    padding: var(--spacing-xs) 0; /* Minimal vertical padding for readability */
+    padding: var(--spacing-xs) 0;
 }
 
-/* Styling for clickable list items (e.g., exits, items in lists) (NEW) */
+/* NEW: Styling for character descriptions within the list */
+#location-characters-display li .character-description {
+    font-size: 0.9em; /* Slightly smaller than the name */
+    /* color: var(--secondary-text-color); /* Already inherited or use a more distinct one if needed */
+    margin-left: 1em; /* Indent description under the name */
+    font-style: italic;
+    display: block; /* Ensures it takes its own line if long */
+    margin-top: var(--spacing-xs); /* Small space between name and description */
+    line-height: 1.5; /* Adjust line height for description if needed */
+}
+
+
 .clickable-list-item {
     cursor: pointer;
-    padding: var(--spacing-xs) var(--spacing-sm); /* Add some padding for better click target */
-    margin: 0 calc(-1 * var(--spacing-sm)); /* Counteract padding to align with non-clickable text if needed */
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin: 0 calc(-1 * var(--spacing-sm));
     border-radius: var(--border-radius-sm);
     transition: background-color 0.15s ease-out, color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
@@ -482,26 +474,22 @@ a:focus-visible {
     color: var(--accent-color-primary);
 }
 
-.clickable-list-item:focus-visible { /* outline: none; is handled by the general group selector */
+.clickable-list-item:focus-visible {
     background-color: var(--accent-color-focus-ring);
-    color: var(--primary-text-color); /* Ensure good contrast on focus bg */
-    box-shadow: inset 0 0 0 2px var(--accent-color-primary); /* Inner ring for subtle focus */
+    color: var(--primary-text-color);
+    box-shadow: inset 0 0 0 2px var(--accent-color-primary);
 }
 
-/* End of Location list specific styling */
-
-/* --- START: Styles for Perception Log Widget --- */
 #perception-log-widget {
-    /* Allow this widget to grow and its list to scroll if #left-pane is a flex column */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Important for child with overflow-y: auto */
-    min-height: 100px; /* Example minimum height */
+    overflow: hidden;
+    min-height: 100px;
 }
 
 #perception-log-widget h3 {
-    flex-shrink: 0; /* Prevent title from shrinking */
+    flex-shrink: 0;
 }
 
 #perception-log-list {
@@ -509,19 +497,19 @@ a:focus-visible {
     padding: 0;
     margin: 0;
     overflow-y: auto;
-    flex-grow: 1; /* Allow list to take available space */
+    flex-grow: 1;
     font-family: var(--font-narrative);
     font-size: var(--font-size-small);
     color: var(--secondary-text-color);
     border: var(--border-width) solid var(--border-color-subtle);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-xs);
-    background-color: var(--primary-bg-color); /* Slightly different background for the list area */
+    background-color: var(--primary-bg-color);
 }
 
 #perception-log-list li {
     padding: var(--spacing-xs) var(--spacing-sm);
-    border-bottom: var(--border-width) dashed var(--border-color-subtle); /* Dashed for distinction */
+    border-bottom: var(--border-width) dashed var(--border-color-subtle);
     line-height: 1.5;
 }
 
@@ -529,16 +517,12 @@ a:focus-visible {
     border-bottom: none;
 }
 
-#perception-log-list li.empty-log-message { /* For placeholder messages */
+#perception-log-list li.empty-log-message {
     font-style: italic;
     text-align: center;
     color: var(--input-placeholder-color);
 }
 
-/* --- END: Styles for Perception Log Widget --- */
-
-
-/* General Button Styling */
 button, .button-like {
     font-family: var(--font-ui);
     font-size: var(--font-size-base);
@@ -550,7 +534,7 @@ button, .button-like {
     border-radius: var(--border-radius-md);
     cursor: pointer;
     text-align: center;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Added border-color transition */
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     display: inline-block;
     margin: var(--spacing-xs);
 }
@@ -563,8 +547,8 @@ button:hover, .button-like:hover {
 
 button:active, .button-like:active {
     transform: translateY(0px);
-    background-color: var(--button-hover-bg-color); /* Keep hover color or slightly darker */
-    box-shadow: var(--shadow-sm); /* Slightly less shadow than hover */
+    background-color: var(--button-hover-bg-color);
+    box-shadow: var(--shadow-sm);
 }
 
 button:disabled, .button-like:disabled {
@@ -573,148 +557,84 @@ button:disabled, .button-like:disabled {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-    border: none; /* Ensure disabled buttons don't show borders from other states */
+    border: none;
 }
 
-/* --- MODIFIED Action buttons styling FOR HORIZONTAL FLOW AND WRAPPING --- */
 #action-buttons {
     display: flex;
-    /* flex-direction: column; /* REMOVED - Default is row */
-    flex-wrap: wrap; /* ADDED - Allow buttons to wrap */
-    justify-content: flex-start; /* ADDED - Align buttons to the start of each line */
-    /* If you prefer buttons to be centered as a group on each line, use: */
-    /* justify-content: center; */
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 #action-buttons button {
-    width: auto; /* MODIFIED - Allow buttons to size based on content */
-    margin: var(--spacing-xs); /* MODIFIED - Uniform spacing for horizontal and vertical gaps */
-    /* Note: The general 'button' style above already provides 'margin: var(--spacing-xs)' */
-    /* This explicit rule here ensures it or makes it more specific if needed. */
+    width: auto;
+    margin: var(--spacing-xs);
 }
 
-/* REMOVED - This rule was for vertically stacked buttons and is less relevant for wrapped layout.
-#action-buttons button:last-child {
-    margin-bottom: 0;
-}
-*/
-/* --- END MODIFIED Action buttons styling --- */
-
-
-/* --- NEW: Optional styles for #actions-widget in #center-pane --- */
-/* Uncomment and adjust these rules if you want to constrain the width of the action buttons area */
-/* when it's located in the #center-pane. By default, it will span the full width of #center-pane. */
-
-/* Option 1: Constrain the width of the entire #actions-widget and center it. */
-/*
-#center-pane > #actions-widget {
-    max-width: 400px;  // Adjust this value as needed (e.g., similar to #right-pane's width)
-    margin-left: auto;
-    margin-right: auto;
-}
-
-// If using Option 1, you might want to center the widget's title as well:
-#center-pane > #actions-widget > h3 {
-    text-align: center;
-}
-*/
-
-/* Option 2: Let #actions-widget be full-width, but constrain and center the #action-buttons container within it. */
-/* This option works well with the horizontal flow and wrapping buttons. */
-/*
-#center-pane > #actions-widget #action-buttons {
-    max-width: 450px; // Adjust this value as needed, container for the wrapping buttons
-    margin-left: auto;
-    margin-right: auto;
-    // justify-content: center; // If you want the buttons themselves centered within this max-width
-}
-*/
-/* --- END NEW Optional Styles --- */
-
-
-/* MODIFIED SECTION STARTS HERE */
-/* Selected state for action buttons */
 #action-buttons button.selected {
-    background-color: var(--button-selected-bg-color); /* Use the new distinct bright blue */
-    color: var(--button-selected-text-color); /* White text */
-    border: 2px solid var(--button-selected-border-color); /* Darker blue border for contrast */
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), /* Subtle inner definition */ 0 0 8px 2px var(--button-selected-glow-color); /* Clear outer glow for emphasis */
-    transform: translateY(0px); /* Override any hover transform, selected is static */
-    font-weight: 700; /* Emphasize text (already present, good) */
-    /* z-index: 1; */ /* Optional: uncomment if stacking issues arise with glows/shadows overlapping other elements */
+    background-color: var(--button-selected-bg-color);
+    color: var(--button-selected-text-color);
+    border: 2px solid var(--button-selected-border-color);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15),
+    0 0 8px 2px var(--button-selected-glow-color);
+    transform: translateY(0px);
+    font-weight: 700;
 }
 
-/* Hover state for a selected action button - should still look clearly selected */
 #action-buttons button.selected:hover {
-    background-color: var(--button-selected-bg-color); /* Maintain the selected background color */
-    /* filter: brightness(1.05); */ /* Optional: uncomment for a very subtle brightening on hover */
-    border-color: var(--button-selected-border-color); /* Maintain the selected border color */
-    /* Slightly enhance the glow or shadows on hover for feedback */
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2), /* Slightly deeper inner shadow */ 0 0 10px 3px var(--button-selected-glow-color); /* Stronger/larger glow */
-    transform: translateY(0px); /* Ensure no movement */
+    background-color: var(--button-selected-bg-color);
+    border-color: var(--button-selected-border-color);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 0 10px 3px var(--button-selected-glow-color);
+    transform: translateY(0px);
 }
 
-/* Active state for a selected action button (e.g., if clicked again, perhaps to deselect) */
 #action-buttons button.selected:active {
-    /* Use a darker shade for a "pressed" feel, distinct from the normal selected state */
-    background-color: var(--button-hover-bg-color); /* Darkest blue, like a standard button active/hover */
-    color: var(--button-selected-text-color); /* Keep white text */
-    border-color: var(--button-bg-color); /* Border matches the darker background family */
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), /* Deeper inset shadow for pressed feel */ 0 0 6px 1px var(--button-selected-glow-color); /* Slightly reduced glow when pressed hard */
-    transform: translateY(0px); /* Ensure no movement */
+    background-color: var(--button-hover-bg-color);
+    color: var(--button-selected-text-color);
+    border-color: var(--button-bg-color);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25),
+    0 0 6px 1px var(--button-selected-glow-color);
+    transform: translateY(0px);
 }
 
-/* MODIFIED SECTION ENDS HERE */
-
-
-/* --- Specific Button Instances --- */
-
-/* "Confirm Action" Button (#player-confirm-turn-button) in the bottom input bar */
 #player-confirm-turn-button {
-    /* Inherits general button styles. These are explicit definitions as per requirements. */
     font-family: var(--font-ui);
     font-size: var(--font-size-base);
-    padding: var(--spacing-sm) var(--spacing-lg); /* Consistent with general buttons */
-    background-color: var(--button-bg-color); /* Default background */
-    color: var(--button-text-color); /* Default text color */
-    border: none; /* Default no border */
-    border-radius: var(--border-radius-md); /* Default border radius */
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out;
-    display: inline-block; /* or flex if needed within its container */
-    margin: var(--spacing-xs); /* Consistent margin */
-    font-weight: 700; /* Make it prominent, slightly bolder than default 600 for general buttons */
+    display: inline-block;
+    margin: var(--spacing-xs);
+    font-weight: 700;
 }
 
-/* Hover state for the "Confirm Action" button (when not disabled) */
 #player-confirm-turn-button:not(:disabled):hover {
     background-color: var(--button-hover-bg-color);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
 
-/* Active state for the "Confirm Action" button (when not disabled) */
 #player-confirm-turn-button:not(:disabled):active {
-    background-color: var(--button-hover-bg-color); /* Can be same as hover or a slightly darker/pressed shade */
+    background-color: var(--button-hover-bg-color);
     transform: translateY(0px);
     box-shadow: var(--shadow-sm);
 }
 
-/* Disabled state for the "Confirm Action" button */
 #player-confirm-turn-button:disabled {
     background-color: var(--button-disabled-bg-color);
     color: var(--button-disabled-text-color);
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
-    border: none; /* Ensure no border from other states interferes */
-    /* Opacity can also be used for disabled state if preferred */
-    /* opacity: 0.65; */
+    border: none;
 }
 
-
-/* Styling for the global error output div */
 #error-output.error {
     padding: var(--spacing-md);
     background-color: var(--error-bg-color);
@@ -722,8 +642,8 @@ button:disabled, .button-like:disabled {
     border: var(--border-width) solid var(--error-text-color);
     border-radius: var(--border-radius-sm);
     text-align: center;
-    margin: var(--spacing-md) auto; /* Centered if it's outside main layout flow */
-    display: none; /* Initially hidden */
+    margin: var(--spacing-md) auto;
+    display: none;
     max-width: 800px;
 }
 
@@ -731,7 +651,6 @@ button:disabled, .button-like:disabled {
     display: block;
 }
 
-/* Scrollbar Styling (Webkit browsers) */
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -739,29 +658,24 @@ button:disabled, .button-like:disabled {
 
 ::-webkit-scrollbar-track {
     background: var(--secondary-bg-color);
-    border-radius: var(--border-radius-sm); /* Match thumb radius */
+    border-radius: var(--border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
     background: var(--accent-color-secondary);
     border-radius: var(--border-radius-sm);
-    border: 2px solid var(--secondary-bg-color); /* Creates a nice padding effect */
+    border: 2px solid var(--secondary-bg-color);
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color-primary);
 }
 
-/* Scrollbar Styling (Firefox) */
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color-secondary) var(--secondary-bg-color);
 }
 
-
-/* --- Responsive Adjustments --- */
-
-/* Tablet Layout */
 @media (max-width: 1024px) {
     :root {
         --font-size-base: 15px;
@@ -810,30 +724,28 @@ button:disabled, .button-like:disabled {
     }
 
     #left-pane {
-        flex: 1 1 30%; /* Was 0 0 25% */
+        flex: 1 1 30%;
         order: 1;
         min-width: 220px;
-        max-width: none; /* Allow it to grow more */
+        max-width: none;
     }
 
     #center-pane {
-        flex: 1 1 70%; /* Was 1 1 auto */
+        flex: 1 1 70%;
         order: 2;
-        min-width: 280px; /* Ensure it has enough space */
+        min-width: 280px;
     }
 
     #right-pane {
-        flex: 1 1 100%; /* Full width on its own row */
+        flex: 1 1 100%;
         order: 3;
         max-width: 100%;
-        min-width: initial; /* Reset min-width */
-        margin-top: var(--spacing-lg); /* Space when it wraps below */
-        border-left-width: var(--border-width); /* Add back left border as it's now starting a 'row' */
+        min-width: initial;
+        margin-top: var(--spacing-lg);
+        border-left-width: var(--border-width);
     }
 }
 
-
-/* Mobile Layout */
 @media (max-width: 768px) {
     :root {
         --font-size-base: 14px;
@@ -848,8 +760,8 @@ button:disabled, .button-like:disabled {
 
     body {
         font-size: var(--font-size-base);
-        overflow-y: auto; /* Allow body to scroll */
-        height: auto; /* Adjust height for scrollable content */
+        overflow-y: auto;
+        height: auto;
     }
 
     h1, #title-element {
@@ -866,42 +778,32 @@ button:disabled, .button-like:disabled {
 
     #app-layout-container {
         flex-direction: column;
-        flex-wrap: nowrap; /* Ensure they stack and don't try to wrap */
+        flex-wrap: nowrap;
         height: auto;
-        /* Removed border-left/right from container itself if they existed */
     }
 
     #left-pane, #center-pane, #right-pane {
-        flex: 1 0 auto; /* Allow shrinking but prefer basis size */
+        flex: 1 0 auto;
         width: 100%;
         max-width: 100%;
-        min-width: 100% !important; /* Force full width */
+        min-width: 100% !important;
         margin-left: 0;
         margin-right: 0;
-        margin-top: 0; /* Remove top margin from tablet mode for right-pane */
-        box-shadow: none; /* Simpler look on mobile, borders are enough */
-        border-left-width: var(--border-width); /* Consistent side borders */
+        margin-top: 0;
+        box-shadow: none;
+        border-left-width: var(--border-width);
         border-right-width: var(--border-width);
-        border-top-width: 0; /* Base for stacked items */
-        border-bottom-width: var(--border-width); /* All panels get a bottom border */
+        border-top-width: 0;
+        border-bottom-width: var(--border-width);
     }
 
     #left-pane {
         order: 1;
-        /* On mobile, #left-pane might need a specific height or let content define it.
-           If #perception-log-widget is to scroll, #left-pane needs a defined height
-           or to be part of a flex container that gives it space.
-           Given body is `height: auto; overflow-y: auto;`, panels will stack.
-           The `flex-grow: 1` on `#perception-log-widget` and `#perception-log-list`
-           might not behave as expected if `#left-pane` height is purely content-driven.
-           Setting a max-height on `#perception-log-list` might be more robust for mobile.
-        */
     }
 
-    #perception-log-list { /* Added mobile-specific height constraint */
-        max-height: 150px; /* Adjust as needed for mobile view */
+    #perception-log-list {
+        max-height: 150px;
     }
-
 
     #center-pane {
         order: 2;
@@ -911,12 +813,12 @@ button:disabled, .button-like:disabled {
         order: 3;
     }
 
-    #app-layout-container > .panel:first-child { /* e.g. #left-pane */
-        border-top-width: var(--border-width); /* First panel gets a top border */
+    #app-layout-container > .panel:first-child {
+        border-top-width: var(--border-width);
     }
 
-    #app-layout-container > .panel:last-child { /* e.g. #right-pane */
-        border-bottom-width: var(--border-width); /* Ensuring last panel also has bottom border before footer */
+    #app-layout-container > .panel:last-child {
+        border-bottom-width: var(--border-width);
     }
 
     .panel {
@@ -925,25 +827,21 @@ button:disabled, .button-like:disabled {
 
     #center-pane #outputDiv {
         padding: var(--spacing-sm);
-        margin-bottom: var(--spacing-sm); /* Reduce margin on mobile */
+        margin-bottom: var(--spacing-sm);
     }
 
     #center-pane #message-list li {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
-    /* --- ADDED: Adjust speech message padding for mobile --- */
     #center-pane #message-list li.message-speech {
-        /* Original list item padding on mobile: var(--spacing-xs) var(--spacing-sm) */
-        /* Adjust left padding for the border */
-        padding-left: calc(var(--spacing-sm) - 3px); /* 3px is border width */
-        padding-right: var(--spacing-sm); /* Keep right padding consistent with other mobile li */
+        padding-left: calc(var(--spacing-sm) - 3px);
+        padding-right: var(--spacing-sm);
     }
 
-    /* --- END ADDED --- */
     #bottom-input-bar {
         flex-direction: column;
-        align-items: stretch; /* Make children take full width */
+        align-items: stretch;
         padding: var(--spacing-sm);
     }
 
@@ -956,26 +854,20 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
-    /* Confirm button will stretch to full width due to align-items: stretch on #bottom-input-bar */
-    /* Add specific styling for #player-confirm-turn-button on mobile if needed */
     #player-confirm-turn-button {
-        margin-top: var(--spacing-sm); /* Add some space above if it's below the input */
-        width: 100%; /* Explicitly set to full width to conform to stretched layout */
+        margin-top: var(--spacing-sm);
+        width: 100%;
         margin-left: 0;
         margin-right: 0;
     }
 
-
     #quick-status-display {
         text-align: center;
         margin-top: var(--spacing-sm);
-        width: 100%; /* Full width for better centering/layout */
+        width: 100%;
     }
-
-    /* #action-buttons button width is auto now, will wrap. This is fine. */
 }
 
-/* Very Small Screens */
 @media (max-width: 480px) {
     :root {
         --font-size-base: 13px;
@@ -987,7 +879,6 @@ button:disabled, .button-like:disabled {
         --spacing-xs: 3px;
     }
 
-    /* Inherit body, h1-h3 font size changes from root */
     .panel {
         padding: var(--spacing-sm);
     }
@@ -1000,36 +891,30 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
-    #perception-log-list { /* Added very-small-specific height constraint */
-        max-height: 120px; /* Adjust as needed for very small screens */
+    #perception-log-list {
+        max-height: 120px;
     }
 
-
-    /* --- ADDED: Adjust speech message padding for very small screens --- */
-    /* This re-affirms the mobile padding adjustment, ensuring it applies here too if not overridden */
     #center-pane #message-list li.message-speech {
-        /* Original list item padding on very small: var(--spacing-xs) var(--spacing-sm) */
-        /* Adjust left padding for the border */
-        padding-left: calc(var(--spacing-sm) - 3px); /* 3px is border width */
-        padding-right: var(--spacing-sm); /* Keep right padding consistent */
+        padding-left: calc(var(--spacing-sm) - 3px);
+        padding-right: var(--spacing-sm);
     }
 
-    /* --- END ADDED --- */
     #bottom-input-bar {
-        padding: var(--spacing-xs); /* Further reduced padding */
+        padding: var(--spacing-xs);
     }
 
     #input-container {
-        margin-bottom: var(--spacing-xs); /* Further reduced margin */
+        margin-bottom: var(--spacing-xs);
     }
 
     #speech-input {
-        padding: var(--spacing-sm); /* Keep reasonable padding for touch */
+        padding: var(--spacing-sm);
     }
 
     #player-confirm-turn-button {
-        margin-top: var(--spacing-xs); /* Adjust margin for very small screens */
-        padding: var(--spacing-sm); /* Adjust padding for very small screens */
+        margin-top: var(--spacing-xs);
+        padding: var(--spacing-sm);
     }
 
     #quick-status-display {

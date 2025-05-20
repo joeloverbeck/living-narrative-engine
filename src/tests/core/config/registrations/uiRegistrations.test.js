@@ -4,33 +4,30 @@
 /** @typedef {import('../../../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../../../core/interfaces/IInputHandler.js').IInputHandler} IInputHandler */
-// ADDED for LocationRenderer test dependencies
 /** @typedef {import('../../../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../../../core/interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
-/** @typedef {any} AppContainer */ // Using 'any' for the mock container type for simplicity
+/** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
 import {describe, beforeEach, afterEach, it, expect, jest} from '@jest/globals';
 
 // --- Class Under Test ---
-import {registerUI} from '../../../../core/config/registrations/uiRegistrations.js'; // Adjust path as needed
+import {registerUI} from '../../../../core/config/registrations/uiRegistrations.js';
 
 // --- Dependencies & Concrete Classes ---
 import {tokens} from '../../../../core/config/tokens.js';
 import InputHandler from '../../../../core/inputHandler.js';
-// --- NEW Imports needed by registerUI factories ---
 import {
     UiMessageRenderer,
     DomElementFactory,
     DocumentContext,
     DomUiFacade,
-    // Also needed by factories using them:
     TitleRenderer,
     InputStateController,
     LocationRenderer,
     InventoryPanel,
     ActionButtonsRenderer,
-    PerceptionLogRenderer // <<< ADDED FOR TEST ACCURACY
+    PerceptionLogRenderer
 } from '../../../../domUI/index.js';
 
 
@@ -39,14 +36,12 @@ const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: j
 const mockEventBus = {subscribe: jest.fn(), dispatch: jest.fn()};
 const mockValidatedEventDispatcher = {dispatchValidated: jest.fn(), subscribe: jest.fn(), unsubscribe: jest.fn()};
 
-// ADDED: Mocks for new dependencies needed by LocationRenderer in its test
 const mockEntityManagerService = {
     getEntityInstance: jest.fn(),
-    // Add any other IEntityManager methods if LocationRenderer starts using them
+    getEntitiesInLocation: jest.fn(() => new Set()), // <<< MODIFIED: Added mock for getEntitiesInLocation
 };
 const mockDataRegistryService = {
     getEntityDefinition: jest.fn(),
-    // Add any other IDataRegistry methods if LocationRenderer starts using them
 };
 
 
@@ -60,7 +55,7 @@ let mockActionButtonsContainer;
 let mockLocationInfoContainer;
 let mockInventoryWidget;
 let mockPlayerConfirmTurnButton;
-let mockPerceptionLogList; // <<< ADDED for PerceptionLogRenderer
+let mockPerceptionLogList;
 
 
 const setupDomMocks = () => {
@@ -73,7 +68,7 @@ const setupDomMocks = () => {
     mockLocationInfoContainer = mockDocument.createElement('div');
     mockInventoryWidget = mockDocument.createElement('div');
     mockPlayerConfirmTurnButton = mockDocument.createElement('button');
-    mockPerceptionLogList = mockDocument.createElement('ul'); // <<< ADDED
+    mockPerceptionLogList = mockDocument.createElement('ul');
 
 
     mockInputElement.id = 'input-element';
@@ -84,7 +79,7 @@ const setupDomMocks = () => {
     mockLocationInfoContainer.id = 'location-info-container';
     mockInventoryWidget.id = 'inventory-widget';
     mockPlayerConfirmTurnButton.id = 'player-confirm-turn-button';
-    mockPerceptionLogList.id = 'perception-log-list'; // <<< ADDED
+    mockPerceptionLogList.id = 'perception-log-list';
 
 
     mockDocument.body.innerHTML = '';
@@ -96,7 +91,7 @@ const setupDomMocks = () => {
     mockDocument.body.appendChild(mockLocationInfoContainer);
     mockDocument.body.appendChild(mockInventoryWidget);
     mockDocument.body.appendChild(mockPlayerConfirmTurnButton);
-    mockDocument.body.appendChild(mockPerceptionLogList); // <<< ADDED
+    mockDocument.body.appendChild(mockPerceptionLogList);
 
 
     jest.spyOn(mockInputElement, 'addEventListener');
@@ -143,13 +138,9 @@ const createMockContainer = () => {
                 const depsMap = {};
                 options.dependencies.forEach(depToken => {
                     let propName = String(depToken);
-                    // Heuristic to convert token name to constructor param name
-                    // e.g., tokens.ActionButtonsRenderer -> 'actionButtonsRenderer'
-                    // This is brittle and depends on consistent naming.
                     if (propName.startsWith('I') && propName.length > 1 && propName[1] === propName[1].toUpperCase()) {
-                        propName = propName.substring(1); // Remove 'I' if it's like an interface
+                        propName = propName.substring(1);
                     }
-                    // Convert from PascalCase (like UiMessageRenderer) to camelCase (uiMessageRenderer)
                     propName = propName.charAt(0).toLowerCase() + propName.slice(1);
 
                     try {
@@ -185,7 +176,6 @@ const createMockContainer = () => {
         if (token === tokens.ILogger) return mockLogger;
         if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
         if (token === tokens.EventBus) return mockEventBus;
-        // ADDED: Ensure IEntityManager is mockable for PerceptionLogRenderer factory test if needed later
         if (token === tokens.IEntityManager) return mockEntityManagerService;
 
 
@@ -220,7 +210,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
-        // ADDED: Register IEntityManager as it's needed by PerceptionLogRenderer's factory
         mockContainer.register(tokens.IEntityManager, mockEntityManagerService, {lifecycle: 'singleton'});
 
 
@@ -247,25 +236,18 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
     it('should register IDocumentContext via singletonFactory resolving to DocumentContext', () => {
         registerUI(mockContainer, mockUiArgs);
-        mockContainer.resolve(tokens.IDocumentContext); // This will trigger the factory
-        // Check that the factory for IDocumentContext tried to resolve WindowDocument
+        mockContainer.resolve(tokens.IDocumentContext);
         const iDocContextReg = mockContainer._registrations.get(tokens.IDocumentContext);
         expect(iDocContextReg).toBeDefined();
-        // To properly test this, we might need to spy on the factory function itself or check instance type
-        const instance = mockContainer.resolve(tokens.IDocumentContext); // get the actual instance
+        const instance = mockContainer.resolve(tokens.IDocumentContext);
         expect(instance).toBeInstanceOf(DocumentContext);
-        // The factory for IDocumentContext calls c.resolve(tokens.WindowDocument)
-        // We need to ensure that resolve was called with WindowDocument when IDocumentContext factory ran.
-        // This requires a more involved spy on the factory or resolve.
-        // For now, we trust the factory registration.
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
     });
 
     it('should register DomElementFactory via singletonFactory', () => {
         registerUI(mockContainer, mockUiArgs);
-        const instance = mockContainer.resolve(tokens.DomElementFactory); // Trigger factory
+        const instance = mockContainer.resolve(tokens.DomElementFactory);
         expect(instance).toBeInstanceOf(DomElementFactory);
-        // The factory for DomElementFactory calls c.resolve(tokens.IDocumentContext)
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
     });
 
@@ -273,7 +255,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.UiMessageRenderer);
         expect(instance).toBeInstanceOf(UiMessageRenderer);
-        // Check if dependencies were resolved by the mock container's 'single' logic
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
@@ -307,15 +288,20 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             if (token === tokens.ILogger) return mockLogger;
             if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
             if (token === tokens.DomElementFactory) return domFactoryInstance;
-            if (token === tokens.IEntityManager) return mockEntityManagerService;
+            if (token === tokens.IEntityManager) return mockEntityManagerService; // This will now provide the mock with getEntitiesInLocation
             if (token === tokens.IDataRegistry) return mockDataRegistryService;
             if (token === tokens.LocationRenderer) {
                 const registration = mockContainer._registrations.get(tokens.LocationRenderer);
-                return registration.factoryOrValue(mockContainer); // Use current mockContainer
+                return registration.factoryOrValue(mockContainer);
             }
             return originalResolve(token);
         });
         mockContainer.resolve = resolveTracker;
+
+        // Clear mock call counts for entityManagerService before resolving LocationRenderer
+        mockEntityManagerService.getEntityInstance.mockClear();
+        mockEntityManagerService.getEntitiesInLocation.mockClear();
+
 
         const instance = mockContainer.resolve(tokens.LocationRenderer);
 
@@ -387,15 +373,13 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         mockContainer.resolve = originalResolve;
     });
 
-    // Test for PerceptionLogRenderer
     it('should register PerceptionLogRenderer via singletonFactory', () => {
         registerUI(mockContainer, mockUiArgs);
 
         const docContextInstance = new DocumentContext(mockDocument);
         const domFactoryInstance = new DomElementFactory(docContextInstance);
-        // Ensure querySelector for '#perception-log-list' is handled if PerceptionLogRenderer constructor uses it.
         const querySpy = jest.spyOn(docContextInstance, 'query').mockImplementation(selector => {
-            if (selector === `#${'perception-log-list'}`) return mockPerceptionLogList; // From PerceptionLogRenderer
+            if (selector === `#${'perception-log-list'}`) return mockPerceptionLogList;
             return null;
         });
 
@@ -406,10 +390,10 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             if (token === tokens.ILogger) return mockLogger;
             if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
             if (token === tokens.DomElementFactory) return domFactoryInstance;
-            if (token === tokens.IEntityManager) return mockEntityManagerService; // Crucial for PerceptionLogRenderer
+            if (token === tokens.IEntityManager) return mockEntityManagerService;
             if (token === tokens.PerceptionLogRenderer) {
                 const registration = mockContainer._registrations.get(tokens.PerceptionLogRenderer);
-                return registration.factoryOrValue(mockContainer); // Use current mockContainer
+                return registration.factoryOrValue(mockContainer);
             }
             return originalResolve(token);
         });
@@ -421,8 +405,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         expect(resolveTracker).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(resolveTracker).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
         expect(resolveTracker).toHaveBeenCalledWith(tokens.DomElementFactory);
-        expect(resolveTracker).toHaveBeenCalledWith(tokens.IEntityManager); // Check this dependency
-        expect(querySpy).toHaveBeenCalledWith('#perception-log-list'); // Check if it queries for its element
+        expect(resolveTracker).toHaveBeenCalledWith(tokens.IEntityManager);
+        expect(querySpy).toHaveBeenCalledWith('#perception-log-list');
 
         mockContainer.resolve = originalResolve;
     });
@@ -433,7 +417,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.DomUiFacade);
         expect(regCall).toBeDefined();
         expect(regCall[1]).toBe(DomUiFacade);
-        // *** MODIFIED EXPECTATION START ***
         expect(regCall[2]).toEqual(expect.objectContaining({
             lifecycle: 'singleton',
             dependencies: [
@@ -443,10 +426,9 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
                 tokens.TitleRenderer,
                 tokens.InputStateController,
                 tokens.UiMessageRenderer,
-                tokens.PerceptionLogRenderer // <<< ADDED EXPECTED TOKEN
+                tokens.PerceptionLogRenderer
             ]
         }));
-        // *** MODIFIED EXPECTATION END ***
     });
 
     it('should register IInputHandler via singletonFactory with IValidatedEventDispatcher', () => {

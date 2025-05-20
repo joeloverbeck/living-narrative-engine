@@ -6,6 +6,9 @@
     "core:name": {
       "text": "Hero"
     },
+    "core:description": {
+      "text": "A big, powerful hero, ready to take over this isekai world."
+    },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
       "x": 0,

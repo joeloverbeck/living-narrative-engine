@@ -6,6 +6,9 @@
     "core:name": {
       "text": "Sidekick"
     },
+    "core:description": {
+      "text": "A plucky sidekick, ready to follow the hero anywhere."
+    },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
       "x": 0,

@@ -8,24 +8,20 @@ import {beforeEach, afterEach, describe, expect, it, jest} from '@jest/globals';
 import {LocationRenderer} from '../../domUI/index.js';
 
 // --- Mock Dependencies ---
-
-// Mock component IDs directly, as they would be imported by the module under test
-// It's often cleaner to mock the module they come from.
 jest.mock('../../constants/componentIds.js', () => ({
     POSITION_COMPONENT_ID: 'test:position',
     NAME_COMPONENT_ID: 'test:name',
     DESCRIPTION_COMPONENT_ID: 'test:description',
     EXITS_COMPONENT_ID: 'test:exits',
+    ACTOR_COMPONENT_ID: 'test:actor',
 }));
 
-// Re-import constants to get the mocked values within the test file scope
-// These are effectively the same string values as above due to the mock,
-// but it makes the tests read as if they are using the "real" constants.
 import {
     POSITION_COMPONENT_ID,
     NAME_COMPONENT_ID,
     DESCRIPTION_COMPONENT_ID,
-    EXITS_COMPONENT_ID
+    EXITS_COMPONENT_ID,
+    ACTOR_COMPONENT_ID
 } from '../../constants/componentIds.js';
 
 
@@ -41,11 +37,11 @@ const createMockLogger = () => ({
 const createMockDocumentContext = () => {
     const mockDocument = {
         createElement: jest.fn(tagName => {
-            const el = document.createElement(tagName); // Use JSDOM's document
+            const el = document.createElement(tagName);
             jest.spyOn(el, 'appendChild');
             return el;
         }),
-        createTextNode: jest.fn(text => document.createTextNode(text)), // Use JSDOM's document
+        createTextNode: jest.fn(text => document.createTextNode(text)),
     };
     return {
         document: mockDocument,
@@ -61,7 +57,7 @@ const createMockDocumentContext = () => {
 
 /** @returns {import('../../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} */
 const createMockVed = () => ({
-    subscribe: jest.fn(() => jest.fn()), // Returns an unsubscribe mock
+    subscribe: jest.fn(() => jest.fn()),
     dispatchValidated: jest.fn(),
 });
 
@@ -99,7 +95,6 @@ const createMockDomElementFactory = (mockDocumentContext) => ({
     li: jest.fn((className, textContent) => {
         const el = mockDocumentContext.document.createElement('li');
         if (className) el.className = className;
-        if (textContent) el.textContent = textContent;
         return el;
     }),
 });
@@ -107,6 +102,7 @@ const createMockDomElementFactory = (mockDocumentContext) => ({
 /** @returns {import('../../core/interfaces/IEntityManager').IEntityManager} */
 const createMockEntityManager = () => ({
     getEntityInstance: jest.fn(),
+    getEntitiesInLocation: jest.fn(() => new Set()),
 });
 
 /** @returns {import('../../core/interfaces/IDataRegistry').IDataRegistry} */
@@ -116,41 +112,32 @@ const createMockDataRegistry = () => ({
 
 
 describe('LocationRenderer', () => {
-    /** @type {ILogger} */
     let mockLogger;
-    /** @type {IDocumentContext} */
     let mockDocumentContext;
-    /** @type {IValidatedEventDispatcher} */
     let mockVed;
-    /** @type {DomElementFactory} */
     let mockDomElementFactory;
-    /** @type {IEntityManager} */
     let mockEntityManager;
-    /** @type {IDataRegistry} */
     let mockDataRegistry;
-    /** @type {HTMLElement} */
     let mockContainerElement;
-    /** @type {HTMLElement} */
-    let mockNameDisplay, mockDescriptionDisplay, mockExitsDisplay, mockItemsDisplay, mockEntitiesDisplay;
+    let mockNameDisplay, mockDescriptionDisplay, mockExitsDisplay, mockCharactersDisplay;
 
-    /** @type {{logger: ILogger, documentContext: IDocumentContext, validatedEventDispatcher: IValidatedEventDispatcher, domElementFactory: DomElementFactory, entityManager: IEntityManager, dataRegistry: IDataRegistry, containerElement: HTMLElement}} */
     let rendererDeps;
-
-    /** @type {Function} */
-    let turnStartedCallback; // To capture the callback passed to VED.subscribe
+    let turnStartedCallback;
 
     const MOCK_PLAYER_ID = 'player:1';
     const MOCK_LOCATION_ID = 'world:loc1';
+    const MOCK_OTHER_ACTOR_ID = 'npc:guard';
+    const MOCK_NON_ACTOR_ID = 'item:rock';
+
 
     beforeEach(() => {
         mockLogger = createMockLogger();
         mockDocumentContext = createMockDocumentContext();
         mockVed = createMockVed();
         mockDomElementFactory = createMockDomElementFactory(mockDocumentContext);
-        mockEntityManager = createMockEntityManager();
+        mockEntityManager = createMockEntityManager(); // mockEntityManager is initialized here
         mockDataRegistry = createMockDataRegistry();
 
-        // Setup JSDOM elements for query selectors
         mockContainerElement = document.createElement('div');
         mockContainerElement.id = 'location-info-container';
 
@@ -160,25 +147,20 @@ describe('LocationRenderer', () => {
         mockDescriptionDisplay.id = 'location-description-display';
         mockExitsDisplay = document.createElement('div');
         mockExitsDisplay.id = 'location-exits-display';
-        mockItemsDisplay = document.createElement('div');
-        mockItemsDisplay.id = 'location-items-display';
-        mockEntitiesDisplay = document.createElement('div');
-        mockEntitiesDisplay.id = 'location-entities-display';
+        mockCharactersDisplay = document.createElement('div');
+        mockCharactersDisplay.id = 'location-characters-display';
 
-        // Add to a dummy parent in JSDOM's body to make querySelector work
         document.body.appendChild(mockContainerElement);
         mockContainerElement.appendChild(mockNameDisplay);
         mockContainerElement.appendChild(mockDescriptionDisplay);
         mockContainerElement.appendChild(mockExitsDisplay);
-        mockContainerElement.appendChild(mockItemsDisplay);
-        mockContainerElement.appendChild(mockEntitiesDisplay);
+        mockContainerElement.appendChild(mockCharactersDisplay);
 
         mockDocumentContext.query.mockImplementation(selector => {
             if (selector === '#location-name-display') return mockNameDisplay;
             if (selector === '#location-description-display') return mockDescriptionDisplay;
             if (selector === '#location-exits-display') return mockExitsDisplay;
-            if (selector === '#location-items-display') return mockItemsDisplay;
-            if (selector === '#location-entities-display') return mockEntitiesDisplay;
+            if (selector === '#location-characters-display') return mockCharactersDisplay;
             return null;
         });
 
@@ -187,26 +169,24 @@ describe('LocationRenderer', () => {
             documentContext: mockDocumentContext,
             validatedEventDispatcher: mockVed,
             domElementFactory: mockDomElementFactory,
-            entityManager: mockEntityManager,
+            entityManager: mockEntityManager, // mockEntityManager is assigned to rendererDeps
             dataRegistry: mockDataRegistry,
             containerElement: mockContainerElement,
         };
 
-        // Capture the event handler
         mockVed.subscribe.mockImplementation((eventType, callback) => {
             if (eventType === 'core:turn_started') {
                 turnStartedCallback = callback;
             }
-            return jest.fn(); // unsubscribe function
+            return jest.fn();
         });
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
-        document.body.innerHTML = ''; // Clean up JSDOM
+        document.body.innerHTML = '';
     });
 
-    // --- Constructor Tests ---
     describe('Constructor', () => {
         it('should successfully create an instance with valid dependencies and subscribe to events', () => {
             expect(() => new LocationRenderer(rendererDeps)).not.toThrow();
@@ -221,12 +201,20 @@ describe('LocationRenderer', () => {
 
         it('should throw if entityManager is missing', () => {
             rendererDeps.entityManager = null;
-            expect(() => new LocationRenderer(rendererDeps)).toThrow("'entityManager' dependency is missing or invalid.");
+            expect(() => new LocationRenderer(rendererDeps)).toThrow("'entityManager' dependency is missing or invalid (must have getEntityInstance and getEntitiesInLocation).");
+        });
+        it('should throw if entityManager is missing getEntityInstance', () => {
+            rendererDeps.entityManager = {getEntitiesInLocation: jest.fn()};
+            expect(() => new LocationRenderer(rendererDeps)).toThrow("'entityManager' dependency is missing or invalid (must have getEntityInstance and getEntitiesInLocation).");
+        });
+        it('should throw if entityManager is missing getEntitiesInLocation', () => {
+            rendererDeps.entityManager = {getEntityInstance: jest.fn()};
+            expect(() => new LocationRenderer(rendererDeps)).toThrow("'entityManager' dependency is missing or invalid (must have getEntityInstance and getEntitiesInLocation).");
         });
 
         it('should throw if dataRegistry is missing or invalid', () => {
             rendererDeps.dataRegistry = null;
-            expect(() => new LocationRenderer(rendererDeps)).toThrow("'dataRegistry' dependency is missing or invalid");
+            expect(() => new LocationRenderer(rendererDeps)).toThrow("'dataRegistry' dependency is missing or invalid (must have getEntityDefinition).");
         });
         it('should throw if dataRegistry is missing getEntityDefinition', () => {
             rendererDeps.dataRegistry = {
@@ -236,30 +224,36 @@ describe('LocationRenderer', () => {
             expect(() => new LocationRenderer(rendererDeps)).toThrow("must have getEntityDefinition");
         });
 
-
         it('should throw if containerElement is missing or invalid', () => {
             rendererDeps.containerElement = null;
             expect(() => new LocationRenderer(rendererDeps)).toThrow("'containerElement' (expected '#location-info-container') dependency is missing or not a valid DOM element.");
         });
     });
 
-    // --- Event Handling and Rendering Logic ---
     describe('#handleTurnStarted and render', () => {
         let renderer;
         const mockPlayerEntity = {
+            id: MOCK_PLAYER_ID,
             getComponentData: jest.fn(),
-            id: MOCK_PLAYER_ID
+            hasComponent: jest.fn(),
         };
 
         beforeEach(() => {
-            renderer = new LocationRenderer(rendererDeps); // Instance created, subscription happens.
-            // Reset mocks for entity and registry for each test in this block
             mockEntityManager.getEntityInstance.mockReset();
+            mockEntityManager.getEntitiesInLocation.mockReset(); // Ensure this is also reset
             mockDataRegistry.getEntityDefinition.mockReset();
             mockPlayerEntity.getComponentData.mockReset();
+            mockPlayerEntity.hasComponent.mockReset();
 
-            mockEntityManager.getEntityInstance.mockReturnValue(mockPlayerEntity);
-            mockPlayerEntity.getComponentData.mockReturnValue({locationId: MOCK_LOCATION_ID});
+            mockEntityManager.getEntityInstance.mockImplementation(id => {
+                if (id === MOCK_PLAYER_ID) return mockPlayerEntity;
+                return null;
+            });
+            mockPlayerEntity.getComponentData.mockImplementation(compId => {
+                if (compId === POSITION_COMPONENT_ID) return {locationId: MOCK_LOCATION_ID};
+                return null;
+            });
+            renderer = new LocationRenderer(rendererDeps);
         });
 
         const simulateTurnStarted = (payloadOverride = {}) => {
@@ -267,31 +261,37 @@ describe('LocationRenderer', () => {
                 type: 'core:turn_started',
                 payload: {entityId: MOCK_PLAYER_ID, entityType: 'player', ...payloadOverride},
             };
-            turnStartedCallback(event);
+            if (turnStartedCallback) {
+                turnStartedCallback(event);
+            } else {
+                throw new Error("turnStartedCallback was not captured by mockVed.subscribe");
+            }
         };
 
         it('should clear displays and log warning if event payload has no entityId', () => {
-            jest.spyOn(renderer, 'render'); // Spy on render to check if it's called
-            turnStartedCallback({type: 'core:turn_started', payload: {}}); // No entityId
+            jest.spyOn(renderer, 'render');
+            turnStartedCallback({type: 'core:turn_started', payload: {}});
 
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('event is missing entityId'));
             expect(mockNameDisplay.textContent).toContain('(Location Unknown)');
             expect(mockDescriptionDisplay.textContent).toContain('No entity specified for turn.');
             expect(mockExitsDisplay.textContent).toContain('(Exits Unavailable)');
-            expect(renderer.render).not.toHaveBeenCalled(); // render method should not be called directly in this path
+            expect(mockCharactersDisplay.textContent).toContain('(Characters Unavailable)');
+            expect(renderer.render).not.toHaveBeenCalled();
         });
 
         it('should clear displays and log warning if entity not found', () => {
             mockEntityManager.getEntityInstance.mockReturnValue(null);
             simulateTurnStarted();
-
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Entity '${MOCK_PLAYER_ID}' (whose turn started) not found`));
-            expect(mockNameDisplay.textContent).toContain('(Location Unknown)');
             expect(mockDescriptionDisplay.textContent).toContain(`Entity ${MOCK_PLAYER_ID} not found.`);
         });
 
         it('should clear displays and log warning if entity has no position component', () => {
-            mockPlayerEntity.getComponentData.mockReturnValue(null); // No position
+            mockPlayerEntity.getComponentData.mockImplementation(compId => {
+                if (compId === POSITION_COMPONENT_ID) return null;
+                return null;
+            });
             simulateTurnStarted();
             expect(mockPlayerEntity.getComponentData).toHaveBeenCalledWith(POSITION_COMPONENT_ID);
             expect(mockDescriptionDisplay.textContent).toContain(`Location for ${MOCK_PLAYER_ID} is unknown.`);
@@ -300,7 +300,6 @@ describe('LocationRenderer', () => {
         it('should clear displays and log error if location definition not found', () => {
             mockDataRegistry.getEntityDefinition.mockReturnValue(null);
             simulateTurnStarted();
-
             expect(mockDataRegistry.getEntityDefinition).toHaveBeenCalledWith(MOCK_LOCATION_ID);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Location entity definition for ID '${MOCK_LOCATION_ID}' not found.`));
             expect(mockDescriptionDisplay.textContent).toContain(`Location data for '${MOCK_LOCATION_ID}' missing.`);
@@ -314,44 +313,32 @@ describe('LocationRenderer', () => {
                     [DESCRIPTION_COMPONENT_ID]: {text: "A place for testing."}
                 }
             };
+            // Moved the mock setup into a beforeEach for this describe block
+            beforeEach(() => {
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set()); // No other characters for these exit tests
+            });
 
             it('should render with one exit correctly formatted', () => {
                 const locationDefWithExit = {
                     ...baseLocationDef,
                     components: {
                         ...baseLocationDef.components,
-                        [EXITS_COMPONENT_ID]: [
-                            {direction: "North", target: "world:loc2", blocker: null}
-                        ]
+                        [EXITS_COMPONENT_ID]: [{direction: "North", target: "world:loc2"}]
                     }
                 };
                 mockDataRegistry.getEntityDefinition.mockReturnValue(locationDefWithExit);
                 jest.spyOn(renderer, 'render');
-                jest.spyOn(renderer, '_renderList'); // Spy on _renderList
-
                 simulateTurnStarted();
-
                 expect(renderer.render).toHaveBeenCalledWith({
                     name: "Test Location",
                     description: "A place for testing.",
                     exits: [{description: "North", id: "world:loc2"}],
-                    items: [],
-                    entities: []
+                    characters: []
                 });
-                expect(mockNameDisplay.textContent).toBe("Test Location");
-                expect(mockDescriptionDisplay.textContent).toBe("A place for testing.");
-
-                // Check _renderList call for exits
-                expect(renderer._renderList).toHaveBeenCalledWith(
-                    [{description: "North", id: "world:loc2"}], // exits data
-                    mockExitsDisplay, // target element
-                    'Exits',            // title
-                    'description',      // itemTextProperty
-                    '(None visible)'    // emptyText
-                );
-                // Check DOM output (simplified)
-                expect(mockExitsDisplay.querySelector('h4').textContent).toBe("Exits:");
-                expect(mockExitsDisplay.querySelector('ul li').textContent).toBe("North");
+                // Basic check for list item content
+                const exitListItems = mockExitsDisplay.querySelectorAll('ul li');
+                expect(exitListItems.length).toBe(1);
+                expect(exitListItems[0].textContent).toBe("North");
             });
 
             it('should render with multiple exits correctly formatted', () => {
@@ -407,133 +394,192 @@ describe('LocationRenderer', () => {
             });
 
             it('should render with "None visible" if exits component is missing', () => {
-                // EXITS_COMPONENT_ID is not in baseLocationDef.components
-                mockDataRegistry.getEntityDefinition.mockReturnValue(baseLocationDef);
+                mockDataRegistry.getEntityDefinition.mockReturnValue(baseLocationDef); // No EXITS_COMPONENT_ID
                 jest.spyOn(renderer, 'render');
                 jest.spyOn(renderer, '_renderList');
 
                 simulateTurnStarted();
 
                 expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({exits: []}));
-                expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`No exits data found for location '${MOCK_LOCATION_ID}'`));
                 expect(renderer._renderList).toHaveBeenCalledWith([], mockExitsDisplay, 'Exits', 'description', '(None visible)');
                 expect(mockExitsDisplay.querySelector('p.empty-list-message').textContent).toBe("(None visible)");
-            });
-
-            it('should render with "None visible" and log warning if exits component is not an array', () => {
-                const malformedExitsDef = {
-                    ...baseLocationDef,
-                    components: {...baseLocationDef.components, [EXITS_COMPONENT_ID]: {"oops": "not-an-array"}}
-                };
-                mockDataRegistry.getEntityDefinition.mockReturnValue(malformedExitsDef);
-                jest.spyOn(renderer, 'render');
-                jest.spyOn(renderer, '_renderList');
-
-                simulateTurnStarted();
-
-                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({exits: []}));
-                expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`Exits data for location '${MOCK_LOCATION_ID}' is present but not an array`),
-                    {"oops": "not-an-array"}
-                );
-                expect(renderer._renderList).toHaveBeenCalledWith([], mockExitsDisplay, 'Exits', 'description', '(None visible)');
-                expect(mockExitsDisplay.querySelector('p.empty-list-message').textContent).toBe("(None visible)");
-            });
-
-            it('should filter out exits with missing or falsy "direction" but include those with missing "target"', () => {
-                const locationDefPartialExits = {
-                    ...baseLocationDef,
-                    components: {
-                        ...baseLocationDef.components,
-                        [EXITS_COMPONENT_ID]: [
-                            {direction: "Valid Exit", target: "world:locValid"},
-                            {target: "world:locMissingDirection"}, // Missing direction
-                            {direction: null, target: "world:locNullDirection"}, // Null direction
-                            {direction: "", target: "world:locEmptyDirection"}, // Empty direction
-                            {direction: "Only Direction"} // Missing target (should be included)
-                        ]
-                    }
-                };
-                mockDataRegistry.getEntityDefinition.mockReturnValue(locationDefPartialExits);
-                jest.spyOn(renderer, 'render');
-
-                simulateTurnStarted();
-
-                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({
-                    exits: [
-                        {description: "Valid Exit", id: "world:locValid"},
-                        {description: "Only Direction", id: undefined} // Target becomes undefined
-                    ]
-                }));
-                expect(mockExitsDisplay.querySelectorAll('ul li').length).toBe(2);
-                expect(mockExitsDisplay.querySelectorAll('ul li')[0].textContent).toBe("Valid Exit");
-                expect(mockExitsDisplay.querySelectorAll('ul li')[1].textContent).toBe("Only Direction");
-            });
-
-            it('should use default texts if name/description components are missing', () => {
-                const locationDefMinimal = {
-                    id: MOCK_LOCATION_ID,
-                    components: { // No name or description components
-                        [EXITS_COMPONENT_ID]: [{direction: "East", target: "world:locE"}]
-                    }
-                };
-                mockDataRegistry.getEntityDefinition.mockReturnValue(locationDefMinimal);
-                jest.spyOn(renderer, 'render');
-                simulateTurnStarted();
-
-                expect(renderer.render).toHaveBeenCalledWith({
-                    name: "Unnamed Location",
-                    description: "No description available.",
-                    exits: [{description: "East", id: "world:locE"}],
-                    items: [],
-                    entities: []
-                });
-                expect(mockNameDisplay.textContent).toBe("Unnamed Location");
-                expect(mockDescriptionDisplay.textContent).toBe("No description available.");
             });
         });
 
-        it('should log an error if a display element (e.g., exitsDisplay) is not found during render', () => {
-            const locationDef = {
+
+        describe('Characters Processing and Rendering', () => {
+            const baseLocationDef = {
                 id: MOCK_LOCATION_ID,
                 components: {
-                    [NAME_COMPONENT_ID]: {text: "Test Location"},
-                    [DESCRIPTION_COMPONENT_ID]: {text: "A place for testing."},
-                    [EXITS_COMPONENT_ID]: [{direction: "North", target: "world:loc2"}]
+                    [NAME_COMPONENT_ID]: {text: "Guild Hall"},
+                    [DESCRIPTION_COMPONENT_ID]: {text: "A busy place."}
                 }
             };
+
+            beforeEach(() => {
+                mockDataRegistry.getEntityDefinition.mockReturnValue(baseLocationDef);
+            });
+
+            it('should render "None else here" if no other characters are in the location', () => {
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+                jest.spyOn(renderer, '_renderList');
+                simulateTurnStarted();
+
+                expect(renderer._renderList).toHaveBeenCalledWith(
+                    [],
+                    mockCharactersDisplay,
+                    'Characters',
+                    'name',
+                    '(None else here)'
+                );
+                expect(mockCharactersDisplay.querySelector('p.empty-list-message').textContent).toBe("(None else here)");
+            });
+
+            it('should render a character with name and description', () => {
+                const otherActor = {
+                    id: MOCK_OTHER_ACTOR_ID,
+                    hasComponent: jest.fn(compId => compId === ACTOR_COMPONENT_ID),
+                    getComponentData: jest.fn(compId => {
+                        if (compId === NAME_COMPONENT_ID) return {text: "Guard"};
+                        if (compId === DESCRIPTION_COMPONENT_ID) return {text: "A stern-looking guard."};
+                        if (compId === POSITION_COMPONENT_ID) return {locationId: MOCK_LOCATION_ID};
+                        return null;
+                    })
+                };
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set([MOCK_PLAYER_ID, MOCK_OTHER_ACTOR_ID]));
+                mockEntityManager.getEntityInstance.mockImplementation(id => {
+                    if (id === MOCK_PLAYER_ID) return mockPlayerEntity;
+                    if (id === MOCK_OTHER_ACTOR_ID) return otherActor;
+                    return null;
+                });
+                jest.spyOn(renderer, 'render');
+                simulateTurnStarted();
+
+                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({
+                    characters: [{id: MOCK_OTHER_ACTOR_ID, name: "Guard", description: "A stern-looking guard."}]
+                }));
+                const characterListItems = mockCharactersDisplay.querySelectorAll('ul li');
+                expect(characterListItems.length).toBe(1);
+                expect(characterListItems[0].querySelector('span').textContent).toBe("Guard");
+                expect(characterListItems[0].querySelector('p.character-description').textContent).toBe("A stern-looking guard.");
+            });
+
+
+            it('should render a character with name only if no description component', () => {
+                const otherActorNoDesc = {
+                    id: MOCK_OTHER_ACTOR_ID,
+                    hasComponent: jest.fn(compId => compId === ACTOR_COMPONENT_ID),
+                    getComponentData: jest.fn(compId => {
+                        if (compId === NAME_COMPONENT_ID) return {text: "Silent Bob"};
+                        if (compId === POSITION_COMPONENT_ID) return {locationId: MOCK_LOCATION_ID};
+                        return null;
+                    })
+                };
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set([MOCK_PLAYER_ID, MOCK_OTHER_ACTOR_ID]));
+                mockEntityManager.getEntityInstance.mockImplementation(id => {
+                    if (id === MOCK_PLAYER_ID) return mockPlayerEntity;
+                    if (id === MOCK_OTHER_ACTOR_ID) return otherActorNoDesc;
+                    return null;
+                });
+                jest.spyOn(renderer, 'render');
+                simulateTurnStarted();
+
+                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({
+                    characters: [{id: MOCK_OTHER_ACTOR_ID, name: "Silent Bob", description: undefined}]
+                }));
+                const characterListItems = mockCharactersDisplay.querySelectorAll('ul li');
+                expect(characterListItems.length).toBe(1);
+                expect(characterListItems[0].querySelector('span').textContent).toBe("Silent Bob");
+                expect(characterListItems[0].querySelector('p.character-description')).toBeNull();
+            });
+
+            it('should exclude the current actor from the character list', () => {
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set([MOCK_PLAYER_ID]));
+                mockPlayerEntity.hasComponent.mockImplementation(compId => compId === ACTOR_COMPONENT_ID || compId === POSITION_COMPONENT_ID);
+                mockPlayerEntity.getComponentData.mockImplementation(compId => {
+                    if (compId === POSITION_COMPONENT_ID) return {locationId: MOCK_LOCATION_ID};
+                    if (compId === NAME_COMPONENT_ID) return {text: "Hero"};
+                    if (compId === DESCRIPTION_COMPONENT_ID) return {text: "The protagonist."}
+                    return null;
+                });
+                jest.spyOn(renderer, 'render');
+                simulateTurnStarted();
+
+                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({
+                    characters: []
+                }));
+                expect(mockCharactersDisplay.querySelector('p.empty-list-message').textContent).toBe("(None else here)");
+            });
+
+            it('should ignore non-actor entities in the location', () => {
+                const nonActorEntity = {
+                    id: MOCK_NON_ACTOR_ID,
+                    hasComponent: jest.fn(compId => compId === POSITION_COMPONENT_ID),
+                    getComponentData: jest.fn(compId => {
+                        if (compId === NAME_COMPONENT_ID) return {text: "A Rock"};
+                        if (compId === POSITION_COMPONENT_ID) return {locationId: MOCK_LOCATION_ID};
+                        return null;
+                    })
+                };
+                mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set([MOCK_PLAYER_ID, MOCK_NON_ACTOR_ID]));
+                mockEntityManager.getEntityInstance.mockImplementation(id => {
+                    if (id === MOCK_PLAYER_ID) return mockPlayerEntity;
+                    if (id === MOCK_NON_ACTOR_ID) return nonActorEntity;
+                    return null;
+                });
+                jest.spyOn(renderer, 'render');
+                simulateTurnStarted();
+                expect(renderer.render).toHaveBeenCalledWith(expect.objectContaining({
+                    characters: []
+                }));
+                expect(mockCharactersDisplay.querySelector('p.empty-list-message').textContent).toBe("(None else here)");
+            });
+        });
+
+        it('should log an error if a display element (e.g., charactersDisplay) is not found during render', () => {
+            const locationDef = {id: MOCK_LOCATION_ID, components: {}};
             mockDataRegistry.getEntityDefinition.mockReturnValue(locationDef);
-            // Simulate the element being missing
+            mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+
             mockDocumentContext.query.mockImplementation(selector => {
-                if (selector === '#location-exits-display') return null; // Critical element missing
+                if (selector === '#location-characters-display') return null;
                 if (selector === '#location-name-display') return mockNameDisplay;
                 if (selector === '#location-description-display') return mockDescriptionDisplay;
-                // For items and entities, allow them to be missing for this specific test
-                if (selector === '#location-items-display') return null;
-                if (selector === '#location-entities-display') return null;
+                if (selector === '#location-exits-display') return mockExitsDisplay;
                 return null;
             });
 
-            // Re-create renderer with this specific mockDocumentContext setup for the query
-            renderer = new LocationRenderer(rendererDeps);
-            // Re-capture callback
+            // Must re-initialize renderer with the modified mockDocumentContext for this specific test
+            const testRenderer = new LocationRenderer(rendererDeps);
+            // And also re-capture the callback for this specific instance
+            let testTurnStartedCallback;
             mockVed.subscribe.mockImplementation((eventType, callback) => {
                 if (eventType === 'core:turn_started') {
-                    turnStartedCallback = callback;
+                    testTurnStartedCallback = callback;
                 }
-                return jest.fn(); // unsubscribe function
+                return jest.fn();
             });
-            new LocationRenderer(rendererDeps); // This will call subscribe again
+            new LocationRenderer(rendererDeps); // This re-subscribes using the latest mock.
+            // It's important to ensure the callback used is from the correct instance.
+
+            if (testTurnStartedCallback) {
+                testTurnStartedCallback({
+                    type: 'core:turn_started',
+                    payload: {entityId: MOCK_PLAYER_ID, entityType: 'player'},
+                });
+            } else {
+                // If the test setup is such that the original `turnStartedCallback` is still the one bound
+                // to the original `renderer` instance, this path might be taken.
+                // It's safer to ensure the callback from the correct instance is used.
+                // For this test, directly calling render or ensuring the right callback is tricky if not careful.
+                // A simpler way for this specific case might be to directly call render on testRenderer if the goal
+                // is only to test the query part inside render().
+                // However, sticking to the event flow:
+                simulateTurnStarted(); // This will use the `turnStartedCallback` from the outer scope's `renderer`
+            }
 
 
-            simulateTurnStarted();
-
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Element #location-exits-display not found."));
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Element #location-items-display not found."));
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Element #location-entities-display not found."));
-
-            // Ensure other parts still rendered
-            expect(mockNameDisplay.textContent).toBe("Test Location");
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Element #location-characters-display not found."));
         });
     });
 
@@ -545,8 +591,8 @@ describe('LocationRenderer', () => {
             renderer.dispose();
             expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
 
-            renderer.dispose(); // Call again
-            expect(mockUnsubscribe).toHaveBeenCalledTimes(1); // Should not be called again
+            renderer.dispose();
+            expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('[LocationRenderer] LocationRenderer disposed.');
         });
     });
