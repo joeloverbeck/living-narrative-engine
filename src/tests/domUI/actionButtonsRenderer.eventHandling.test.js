@@ -168,7 +168,7 @@ describe('ActionButtonsRenderer', () => {
         const finalDocContext = {
             query: jest.fn(selector => { // Default query mock
                 if (selector === '#player-confirm-turn-button' && sendButtonOverride === null) return null;
-                if (selector === '#command-input') return undefined;
+                if (selector === '#speech-input') return undefined;
                 return undefined; // Default to undefined for other queries
             }),
             create: jest.fn(tagName => { // Default create mock
@@ -221,7 +221,7 @@ describe('ActionButtonsRenderer', () => {
         expect(capturedEventHandler).toBeInstanceOf(Function);
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Subscribed to VED event 'textUI:update_available_actions'."));
         expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining("Speech input element ('#command-input') not found or unusable"),
+            expect.stringContaining("Speech input element ('#speech-input') not found or unusable"),
             {queriedElement: undefined}
         );
     });

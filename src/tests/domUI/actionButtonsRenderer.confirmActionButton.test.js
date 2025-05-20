@@ -125,7 +125,7 @@ describe('ActionButtonsRenderer', () => {
             <div id="game-container">
                 <div id="action-buttons"></div>
                 <button id="player-confirm-turn-button"></button>
-                <input type="text" id="command-input" />
+                <input type="text" id="speech-input" />
             </div>
         </body></html>`);
         currentDocument = dom.window.document;
@@ -159,8 +159,8 @@ describe('ActionButtonsRenderer', () => {
         } else {
             currentDocument.body.appendChild(globalMockSendButton);
         }
-        const commandInputOriginal = currentDocument.getElementById('command-input');
-        commandInputElement = createMockElement(currentDocument, 'input', 'command-input', [], '');
+        const commandInputOriginal = currentDocument.getElementById('speech-input');
+        commandInputElement = createMockElement(currentDocument, 'input', 'speech-input', [], '');
         commandInputElement.type = 'text';
         if (commandInputOriginal && commandInputOriginal.parentNode) {
             commandInputOriginal.parentNode.replaceChild(commandInputElement, commandInputOriginal);
@@ -206,7 +206,7 @@ describe('ActionButtonsRenderer', () => {
             specificTestDocContext = {
                 ...docContext,
                 query: jest.fn(selector => {
-                    if (selector === '#command-input') return commandInputElement; // Global command input
+                    if (selector === '#speech-input') return commandInputElement; // Global command input
                     return currentDocument.querySelector(selector);
                 }),
                 getElementById: jest.fn(id => currentDocument.getElementById(id)),
@@ -293,7 +293,7 @@ describe('ActionButtonsRenderer', () => {
             const localDocContextNoSpeech = {
                 ...specificTestDocContext,
                 query: (selector) => {
-                    if (selector === '#command-input') return null; // Simulate speech input not found for this specific renderer
+                    if (selector === '#speech-input') return null; // Simulate speech input not found for this specific renderer
                     return currentDocument.querySelector(selector); // Use actual document for other queries
                 },
             };

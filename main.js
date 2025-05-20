@@ -15,14 +15,14 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
     // --- Get Root DOM Elements ---
     const outputDiv = document.getElementById('outputDiv');
     const errorDiv = document.getElementById('error-output'); // For fallback errors
-    const inputElement = document.getElementById('command-input');
+    const inputElement = document.getElementById('speech-input');
     const titleElement = document.querySelector('h1'); // For engine status and fallback errors
 
     // --- Basic check if essential elements exist ---
     if (!outputDiv || !inputElement || !errorDiv || !titleElement) {
         const missing = [
             !outputDiv ? 'output' : null,
-            !inputElement ? 'command-input' : null,
+            !inputElement ? 'speech-input' : null,
             !errorDiv ? 'error-output' : null,
             !titleElement ? 'h1 title' : null
         ].filter(Boolean).join(', ');

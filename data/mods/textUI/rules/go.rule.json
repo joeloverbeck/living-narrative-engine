@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "handle_core_go_action_with_perception",
-  "comment": "Handles the 'core:go' action. It resolves the direction to a target location, moves the actor, dispatches perceptible events for leaving and entering, informs the UI, and ends the actor's turn. It also handles cases where the direction is invalid.",
+  "comment": "Handles the 'core:go' action. It resolves direction, moves actor, dispatches perceptible events for leaving and entering, informs UI, and ends turn. Handles invalid directions.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -23,22 +23,33 @@
     },
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Fetch the current position component of the actor to get their current location ID.",
+      "comment": "Fetch the current position component of the actor to get their current location ID (pre-move).",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
-        "result_variable": "actorPositionComponent"
+        "result_variable": "actorPositionComponentPreMove"
       }
     },
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Fetch the name of the current location for the 'leaves' perception message.",
+      "comment": "Fetch the name of the current location (pre-move).",
       "parameters": {
         "entity_ref": {
-          "entityId": "{context.actorPositionComponent.locationId}"
+          "entityId": "{context.actorPositionComponentPreMove.locationId}"
         },
         "component_type": "core:name",
-        "result_variable": "currentLocationNameComponent"
+        "result_variable": "currentLocationNameComponentPreMove"
+      }
+    },
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Fetch the current ISO timestamp from WorldContext for perception logging.",
+      "parameters": {
+        "source_id": "WorldContext",
+        "query_details": {
+          "action": "getCurrentISOTimestamp"
+        },
+        "result_variable": "currentTimestamp"
       }
     },
     {
@@ -47,8 +58,8 @@
       "parameters": {
         "source_id": "WorldContext",
         "query_details": {
-          "query_type": "getTargetLocationForDirection",
-          "current_location_id": "{context.actorPositionComponent.locationId}",
+          "action": "getTargetLocationForDirection",
+          "current_location_id": "{context.actorPositionComponentPreMove.locationId}",
           "direction_taken": "{event.payload.direction}"
         },
         "result_variable": "resolvedTargetLocationId"
@@ -69,19 +80,20 @@
         "then_actions": [
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Dispatch perceptible event: actor leaving current location.",
+            "comment": "Dispatch perceptible event for actor leaving current location.",
             "parameters": {
               "eventType": "core:perceptible_event",
               "payload": {
                 "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPositionComponent.locationId}",
-                "descriptionText": "{context.actorNameComponent.text} leaves {context.currentLocationNameComponent.text} heading {event.payload.direction}.",
-                "timestamp": "{system.timestampISO}",
+                "locationId": "{context.actorPositionComponentPreMove.locationId}",
+                "descriptionText": "{context.actorNameComponent.text} leaves {context.currentLocationNameComponentPreMove.text} heading {event.payload.direction}.",
+                "timestamp": "{context.currentTimestamp}",
                 "perceptionType": "character_exit",
                 "actorId": "{event.payload.actorId}",
+                "targetId": null,
+                "involvedEntities": [],
                 "contextualData": {
-                  "direction": "{event.payload.direction}",
-                  "originLocationName": "{context.currentLocationNameComponent.text}"
+                  "direction": "{event.payload.direction}"
                 }
               }
             }
@@ -99,7 +111,7 @@
           },
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Fetch the name of the new target location for messaging.",
+            "comment": "Fetch the name of the new target location for messaging and perception.",
             "parameters": {
               "entity_ref": {
                 "entityId": "{context.resolvedTargetLocationId}"
@@ -110,20 +122,21 @@
           },
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Dispatch perceptible event: actor entering new location.",
+            "comment": "Dispatch perceptible event for actor entering new location.",
             "parameters": {
               "eventType": "core:perceptible_event",
               "payload": {
                 "eventName": "core:perceptible_event",
                 "locationId": "{context.resolvedTargetLocationId}",
-                "descriptionText": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}.",
-                "timestamp": "{system.timestampISO}",
+                "descriptionText": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text} (from {context.currentLocationNameComponentPreMove.text}).",
+                "timestamp": "{context.currentTimestamp}",
                 "perceptionType": "character_enter",
                 "actorId": "{event.payload.actorId}",
+                "targetId": null,
+                "involvedEntities": [],
                 "contextualData": {
-                  "previousLocationId": "{context.actorPositionComponent.locationId}",
-                  "previousLocationName": "{context.currentLocationNameComponent.text}",
-                  "entryDirection": "{event.payload.direction}"
+                  "originLocationId": "{context.actorPositionComponentPreMove.locationId}",
+                  "originLocationName": "{context.currentLocationNameComponentPreMove.text}"
                 }
               }
             }

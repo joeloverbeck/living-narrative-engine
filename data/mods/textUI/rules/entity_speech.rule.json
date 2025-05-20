@@ -1,16 +1,56 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "entity_speech",
-  "comment": "Handles entity speech by querying the speaker's name and dispatching a formatted message to the UI for conspicuous display.",
+  "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI message.",
   "event_type": "core:entity_spoke",
   "actions": [
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Fetch the name component of the entity that spoke. It's assumed 'actor' will refer to event.payload.entityId in this context.",
+      "comment": "Fetch the name component of the entity that spoke (actor is event.payload.entityId).",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
         "result_variable": "speakerNameComponent"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch the position component of the entity that spoke to get their locationId.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "speakerPositionComponent"
+      }
+    },
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Fetch the current ISO timestamp from WorldContext.",
+      "parameters": {
+        "source_id": "WorldContext",
+        "query_details": {
+          "action": "getCurrentISOTimestamp"
+        },
+        "result_variable": "currentTimestamp"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch a perceptible event for the speech act, to be logged.",
+      "parameters": {
+        "eventType": "core:perceptible_event",
+        "payload": {
+          "eventName": "core:perceptible_event",
+          "locationId": "{context.speakerPositionComponent.locationId}",
+          "descriptionText": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+          "timestamp": "{context.currentTimestamp}",
+          "perceptionType": "speech_local",
+          "actorId": "{event.payload.entityId}",
+          "targetId": null,
+          "involvedEntities": [],
+          "contextualData": {
+            "speechContent": "{event.payload.speechContent}"
+          }
+        }
       }
     },
     {
@@ -19,7 +59,7 @@
       "parameters": {
         "eventType": "textUI:display_message",
         "payload": {
-          "message": "{evaluationContext.context.speakerNameComponent.text}: {event.payload.speechContent}",
+          "message": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
           "type": "speech",
           "allowHtml": false
         }

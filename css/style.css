@@ -157,7 +157,7 @@ a:active { /* NEW */
 }
 
 /* Remove outline if a custom box-shadow is the primary indicator, but ensure it's clear */
-#command-input:focus-visible,
+#speech-input:focus-visible,
 button:focus-visible,
 .button-like:focus-visible,
 a:focus-visible,
@@ -166,13 +166,13 @@ a:focus-visible,
 }
 
 /* Specific Focus for Command Input (already good, ensuring it uses :focus-visible) */
-#command-input:focus-visible { /* Changed from :focus to :focus-visible */
+#speech-input:focus-visible { /* Changed from :focus to :focus-visible */
     border-color: var(--accent-color-primary);
     box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring); /* Original shadow was fine */
 }
 
 /* Ensure :focus is also styled if :focus-visible is not supported by an older browser, though it's widely supported */
-#command-input:focus {
+#speech-input:focus {
     border-color: var(--accent-color-primary);
     box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
 }
@@ -364,7 +364,7 @@ a:focus-visible {
 }
 
 /* Command Input Field */
-#command-input {
+#speech-input {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     font-family: var(--font-ui);
@@ -376,7 +376,7 @@ a:focus-visible {
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-#command-input::placeholder {
+#speech-input::placeholder {
     color: var(--input-placeholder-color);
     opacity: 0.8;
 }
@@ -522,21 +522,61 @@ button:disabled, .button-like:disabled {
     border: none; /* Ensure disabled buttons don't show borders from other states */
 }
 
-/* Action buttons specifically */
+/* --- MODIFIED Action buttons styling FOR HORIZONTAL FLOW AND WRAPPING --- */
 #action-buttons {
-    /* Container for buttons if any specific layout is needed */
     display: flex;
-    flex-direction: column; /* Stack buttons vertically */
+    /* flex-direction: column; /* REMOVED - Default is row */
+    flex-wrap: wrap; /* ADDED - Allow buttons to wrap */
+    justify-content: flex-start; /* ADDED - Align buttons to the start of each line */
+    /* If you prefer buttons to be centered as a group on each line, use: */
+    /* justify-content: center; */
 }
 
 #action-buttons button {
-    width: 100%; /* Full width of container */
-    margin: var(--spacing-xs) 0; /* Remove horizontal margin, control vertical spacing */
+    width: auto; /* MODIFIED - Allow buttons to size based on content */
+    margin: var(--spacing-xs); /* MODIFIED - Uniform spacing for horizontal and vertical gaps */
+    /* Note: The general 'button' style above already provides 'margin: var(--spacing-xs)' */
+    /* This explicit rule here ensures it or makes it more specific if needed. */
 }
 
+/* REMOVED - This rule was for vertically stacked buttons and is less relevant for wrapped layout.
 #action-buttons button:last-child {
     margin-bottom: 0;
 }
+*/
+/* --- END MODIFIED Action buttons styling --- */
+
+
+/* --- NEW: Optional styles for #actions-widget in #center-pane --- */
+/* Uncomment and adjust these rules if you want to constrain the width of the action buttons area */
+/* when it's located in the #center-pane. By default, it will span the full width of #center-pane. */
+
+/* Option 1: Constrain the width of the entire #actions-widget and center it. */
+/*
+#center-pane > #actions-widget {
+    max-width: 400px;  // Adjust this value as needed (e.g., similar to #right-pane's width)
+    margin-left: auto;
+    margin-right: auto;
+}
+
+// If using Option 1, you might want to center the widget's title as well:
+#center-pane > #actions-widget > h3 {
+    text-align: center;
+}
+*/
+
+/* Option 2: Let #actions-widget be full-width, but constrain and center the #action-buttons container within it. */
+/* This option works well with the horizontal flow and wrapping buttons. */
+/*
+#center-pane > #actions-widget #action-buttons {
+    max-width: 450px; // Adjust this value as needed, container for the wrapping buttons
+    margin-left: auto;
+    margin-right: auto;
+    // justify-content: center; // If you want the buttons themselves centered within this max-width
+}
+*/
+/* --- END NEW Optional Styles --- */
+
 
 /* MODIFIED SECTION STARTS HERE */
 /* Selected state for action buttons */
@@ -707,7 +747,7 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
-    #command-input {
+    #speech-input {
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
@@ -845,7 +885,7 @@ button:disabled, .button-like:disabled {
         margin-bottom: var(--spacing-sm);
     }
 
-    #command-input {
+    #speech-input {
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
@@ -865,9 +905,7 @@ button:disabled, .button-like:disabled {
         width: 100%; /* Full width for better centering/layout */
     }
 
-    #action-buttons button {
-        width: 100%; /* Already set, but good to confirm */
-    }
+    /* #action-buttons button width is auto now, will wrap. This is fine. */
 }
 
 /* Very Small Screens */
@@ -913,7 +951,7 @@ button:disabled, .button-like:disabled {
         margin-bottom: var(--spacing-xs); /* Further reduced margin */
     }
 
-    #command-input {
+    #speech-input {
         padding: var(--spacing-sm); /* Keep reasonable padding for touch */
     }
 

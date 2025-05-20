@@ -128,7 +128,7 @@ describe('ActionButtonsRenderer', () => {
             <div id="game-container">
                 <div id="action-buttons"></div>
                 <button id="player-confirm-turn-button"></button>
-                <input type="text" id="command-input" />
+                <input type="text" id="speech-input" />
             </div>
         </body></html>`);
         document = dom.window.document;
@@ -142,7 +142,7 @@ describe('ActionButtonsRenderer', () => {
 
         actionButtonsContainer = document.getElementById('action-buttons');
         const sendButtonElemOriginal = document.getElementById('player-confirm-turn-button');
-        const commandInputElemOriginal = document.getElementById('command-input');
+        const commandInputElemOriginal = document.getElementById('speech-input');
 
         if (!actionButtonsContainer || !sendButtonElemOriginal || !commandInputElemOriginal) {
             throw new Error("Test setup failed: Essential JSDOM elements not found.");
@@ -151,7 +151,7 @@ describe('ActionButtonsRenderer', () => {
         mockSendButton = createMockElement(document, 'button', 'player-confirm-turn-button');
         sendButtonElemOriginal.parentNode.replaceChild(mockSendButton, sendButtonElemOriginal);
 
-        commandInputElement = createMockElement(document, 'input', 'command-input');
+        commandInputElement = createMockElement(document, 'input', 'speech-input');
         commandInputElement.type = 'text';
         commandInputElemOriginal.parentNode.replaceChild(commandInputElement, commandInputElemOriginal);
 
@@ -231,7 +231,7 @@ describe('ActionButtonsRenderer', () => {
             const localCtx = {
                 query: jest.fn(selector => {
                     if (selector === '#player-confirm-turn-button') return null;
-                    if (selector === '#command-input') return null;
+                    if (selector === '#speech-input') return null;
                     return localDoc.querySelector(selector);
                 }),
                 getElementById: jest.fn(id => localDoc.getElementById(id)),
@@ -257,7 +257,7 @@ describe('ActionButtonsRenderer', () => {
         });
 
 
-        it('should warn if speech input element (#command-input) is not found', () => {
+        it('should warn if speech input element (#speech-input) is not found', () => {
             const domNoInput = new JSDOM(`<!DOCTYPE html><html><body>
                 <div id="action-buttons"></div>
                 <button id="player-confirm-turn-button"></button>
@@ -278,7 +278,7 @@ describe('ActionButtonsRenderer', () => {
                 sendButtonElement: confirmButton
             });
 
-            const expectedWarningMsg = `${CLASS_PREFIX} Speech input element ('#command-input') not found or unusable. Speech input will be unavailable for submitted actions.`;
+            const expectedWarningMsg = `${CLASS_PREFIX} Speech input element ('#speech-input') not found or unusable. Speech input will be unavailable for submitted actions.`;
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 expectedWarningMsg,
                 {queriedElement: null}

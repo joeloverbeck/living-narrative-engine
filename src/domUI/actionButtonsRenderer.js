@@ -119,15 +119,15 @@ export class ActionButtonsRenderer extends RendererBase {
             this.sendButtonElement = null;
         }
 
-        const speechInput = this.documentContext.query('#command-input');
+        const speechInput = this.documentContext.query('#speech-input');
         if (speechInput && (typeof HTMLInputElement !== 'undefined' && speechInput instanceof HTMLInputElement)) {
             this.#speechInputElement = speechInput;
-            this.logger.debug(`${this._logPrefix} Speech input element ('#command-input') cached:`, this.#speechInputElement);
+            this.logger.debug(`${this._logPrefix} Speech input element ('#speech-input') cached:`, this.#speechInputElement);
         } else if (speechInput && typeof speechInput.value === 'string') {
-            this.logger.warn(`${this._logPrefix} Element found for '#command-input' but it is not an HTMLInputElement. Attempting to use based on 'value' property.`, {element: speechInput});
+            this.logger.warn(`${this._logPrefix} Element found for '#speech-input' but it is not an HTMLInputElement. Attempting to use based on 'value' property.`, {element: speechInput});
             this.#speechInputElement = speechInput;
         } else {
-            this.logger.warn(`${this._logPrefix} Speech input element ('#command-input') not found or unusable. Speech input will be unavailable for submitted actions.`, {queriedElement: speechInput});
+            this.logger.warn(`${this._logPrefix} Speech input element ('#speech-input') not found or unusable. Speech input will be unavailable for submitted actions.`, {queriedElement: speechInput});
             this.#speechInputElement = null;
         }
 

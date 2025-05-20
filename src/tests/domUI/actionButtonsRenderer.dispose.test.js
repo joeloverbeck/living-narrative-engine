@@ -127,7 +127,7 @@ describe('ActionButtonsRenderer', () => {
             <div id="game-container">
                 <div id="action-buttons"></div>
                 <button id="player-confirm-turn-button"></button>
-                <input type="text" id="command-input" />
+                <input type="text" id="speech-input" />
             </div>
         </body></html>`);
         document = dom.window.document; // Capture the JSDOM document
@@ -164,8 +164,8 @@ describe('ActionButtonsRenderer', () => {
         }
 
 
-        const commandInputElemOriginal = document.getElementById('command-input');
-        commandInputElement = createMockElement(document, 'input', 'command-input');
+        const commandInputElemOriginal = document.getElementById('speech-input');
+        commandInputElement = createMockElement(document, 'input', 'speech-input');
         if (commandInputElemOriginal && commandInputElemOriginal.parentNode) {
             commandInputElemOriginal.parentNode.replaceChild(commandInputElement, commandInputElemOriginal);
         } else {
