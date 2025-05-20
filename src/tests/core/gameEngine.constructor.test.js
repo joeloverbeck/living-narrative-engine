@@ -1,181 +1,145 @@
 // src/tests/core/gameEngine.constructor.test.js
 
 // --- Imports ---
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 import GameEngine from '../../core/gameEngine.js'; // Class under test
 import AppContainer from '../../core/config/appContainer.js'; // Needed for type checking and mock structure reference
+import {tokens} from '../../core/config/tokens.js'; // Import tokens
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+// Mock types for other services resolved in constructor
+/** @typedef {import('../../core/interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
+/** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+
 
 // --- Test Suite ---
 describe('GameEngine Constructor', () => {
 
-  /** @type {jest.Mocked<AppContainer>} */
-  let mockAppContainer;
-  /** @type {jest.Mocked<ILogger>} */
-  let mockLogger;
+    /** @type {jest.Mocked<AppContainer>} */
+    let mockAppContainer;
+    /** @type {jest.Mocked<ILogger>} */
+    let mockLogger;
+    // Mocks for other services that GameEngine constructor tries to resolve
+    /** @type {jest.Mocked<ISaveLoadService>} */
+    let mockSaveLoadService;
+    /** @type {jest.Mocked<IDataRegistry>} */
+    let mockDataRegistry;
+    /** @type {jest.Mocked<EntityManager>} */
+    let mockEntityManager;
 
-  beforeEach(() => {
-    // Clear mocks before each test for isolation
-    jest.clearAllMocks();
 
-    // 1. Create Mock ILogger
-    // We only need the methods the constructor uses directly or in its fallback
-    mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
+    beforeEach(() => {
+        jest.clearAllMocks();
 
-    // 2. Create Mock AppContainer
-    // We need a mock 'resolve' method.
-    mockAppContainer = {
-      // Mock other AppContainer methods if needed by other tests, but constructor only needs resolve
-      resolve: jest.fn(),
-      // Add dummy implementations or mocks for other methods if GameEngine constructor were to use them
-      register: jest.fn(),
-      disposeSingletons: jest.fn(),
-      reset: jest.fn(),
-    };
+        mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
+        mockSaveLoadService = {saveManualGame: jest.fn(), listManualSaveSlots: jest.fn()};
+        mockDataRegistry = {getEntityDefinition: jest.fn(), getLoadedModManifests: jest.fn()};
+        mockEntityManager = {activeEntities: new Map(), getEntitiesWithComponent: jest.fn()};
 
-    // 3. Configure Mock AppContainer.resolve
-    // By default, configure it to resolve the mock logger successfully for most tests
-    mockAppContainer.resolve.mockImplementation((key) => {
-      if (key === 'ILogger') {
-        return mockLogger; // Return our mock logger when requested
-      }
-      // Optional: Throw an error or return undefined for unexpected resolutions in this test context
-      // Adjust this default behavior as needed for specific tests (like the fallback test)
-      throw new Error(`MockAppContainer: Default behavior - Unexpected resolution attempt for key "${key}".`);
-    });
-  });
+        mockAppContainer = {
+            resolve: jest.fn(),
+            register: jest.fn(),
+            disposeSingletons: jest.fn(),
+            reset: jest.fn(),
+        };
 
-  // --- Test Case: TEST-ENG-001 ---
-  it('[TEST-ENG-001] should successfully instantiate and resolve ILogger', () => {
-    // --- Arrange (Given) ---
-    // Mocks are set up in beforeEach
-    // mockAppContainer is configured by default to resolve 'ILogger' to mockLogger
-
-    // --- Act (When) ---
-    const gameEngineInstance = new GameEngine({ container: mockAppContainer });
-
-    // --- Assert (Then) ---
-    // 1. Then the result is an instance of GameEngine.
-    expect(gameEngineInstance).toBeDefined();
-    expect(gameEngineInstance).toBeInstanceOf(GameEngine);
-
-    // 2. Then mockAppContainer.resolve was called with 'ILogger'.
-    expect(mockAppContainer.resolve).toHaveBeenCalledTimes(1); // Ensure resolve was called
-    expect(mockAppContainer.resolve).toHaveBeenCalledWith('ILogger'); // Ensure it was called specifically for ILogger
-
-    // 3. Then the resolved mockLogger.info method was called with the expected message.
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Ensure logger.info was called
-    expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to start.'); // Ensure the correct message was logged
-  });
-
-  // --- Test Case: TEST-ENG-003 ---
-  // [X] Given a mock AppContainer configured to throw an error when resolving 'ILogger'.
-  // [X] Given spies are attached to console.warn and console.info.
-  // [X] When new GameEngine({ container: mockAppContainer }) is called.
-  // [X] Then the constructor does not throw an error.
-  // [X] Then console.warn was called with a message indicating failure to resolve ILogger and fallback.
-  // [X] Then console.info was called with a message indicating successful instance creation (using the fallback logger).
-  // [X] Remember to restore console spies after the test.
-  it('[TEST-ENG-003] should fall back to console logging if ILogger cannot be resolved', () => {
-    // --- Arrange (Given) ---
-    // 1. Configure mockAppContainer to throw an error when resolving 'ILogger'
-    const resolutionError = new Error('Simulated ILogger resolution failure.');
-    mockAppContainer.resolve.mockImplementation((key) => {
-      if (key === 'ILogger') {
-        throw resolutionError;
-      }
-      // Allow other resolutions if needed, or keep throwing for unexpected ones
-      throw new Error(`MockAppContainer: TEST-ENG-003 - Unexpected resolution attempt for key "${key}".`);
+        mockAppContainer.resolve.mockImplementation((key) => {
+            if (key === tokens.ILogger) return mockLogger;
+            if (key === tokens.ISaveLoadService) return mockSaveLoadService;
+            if (key === tokens.IDataRegistry) return mockDataRegistry;
+            if (key === tokens.EntityManager) return mockEntityManager;
+            return undefined;
+        });
     });
 
-    // 2. Spy on console.warn and console.info to verify fallback behavior
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {}); // Suppress actual console output during test
-    const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {}); // Suppress actual console output during test
+    it('[TEST-ENG-001] should successfully instantiate and resolve ILogger', () => {
+        const gameEngineInstance = new GameEngine({container: mockAppContainer});
 
-    let gameEngineInstance;
-    let constructorError = null;
+        expect(gameEngineInstance).toBeInstanceOf(GameEngine);
 
-    // --- Act (When) ---
-    try {
-      gameEngineInstance = new GameEngine({ container: mockAppContainer });
-    } catch (error) {
-      constructorError = error; // Catch potential errors during construction
-    }
+        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(4);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ISaveLoadService);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.EntityManager);
 
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Instance created. Ready to start.');
 
-    // --- Assert (Then) ---
-    // 1. Then the constructor does not throw an error.
-    expect(constructorError).toBeNull(); // Ensure no error was thrown
-    expect(gameEngineInstance).toBeDefined();
-    expect(gameEngineInstance).toBeInstanceOf(GameEngine); // Check instance creation still happens
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
 
-    // 2. Check resolve was called
-    expect(mockAppContainer.resolve).toHaveBeenCalledTimes(1);
-    expect(mockAppContainer.resolve).toHaveBeenCalledWith('ILogger');
+    it('[TEST-ENG-003] should fall back to console logging if ILogger cannot be resolved', () => {
+        const resolutionError = new Error('Simulated ILogger resolution failure.');
+        mockAppContainer.resolve.mockImplementation((key) => {
+            if (key === tokens.ILogger) {
+                throw resolutionError;
+            }
+            if (key === tokens.ISaveLoadService) return mockSaveLoadService;
+            if (key === tokens.IDataRegistry) return mockDataRegistry;
+            if (key === tokens.EntityManager) return mockEntityManager;
+            return undefined;
+        });
 
-    // 3. Then console.warn was called with the expected message and error
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console for logging.',
-      resolutionError // Check that the original error was passed to the warning
-    );
+        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
+        const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {
+        });
 
-    // 4. Then console.info was called *by the fallback logger* with the standard creation message
-    expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-    expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine: Instance created with AppContainer. Ready to start.');
+        let gameEngineInstance;
+        let constructorError = null;
 
-    // 5. Check the actual mockLogger (which wasn't returned) was NOT called
-    expect(mockLogger.info).not.toHaveBeenCalled();
-    expect(mockLogger.warn).not.toHaveBeenCalled();
+        try {
+            gameEngineInstance = new GameEngine({container: mockAppContainer});
+        } catch (error) {
+            constructorError = error;
+        }
 
-    // Cleanup: Restore console spies
-    consoleWarnSpy.mockRestore();
-    consoleInfoSpy.mockRestore();
-  });
+        expect(constructorError).toBeNull();
+        expect(gameEngineInstance).toBeInstanceOf(GameEngine);
 
-  // --- Test Case: TEST-ENG-002 ---
-  // [ ] Given container is null.
-  // [ ] When new GameEngine({ container: null }) is called.
-  // [ ] Then an Error is thrown with a message indicating the AppContainer is required.
-  it('[TEST-ENG-002] should throw an error if container option is null', () => {
-    // --- Arrange (Given) ---
-    const options = { container: null };
-    const expectedErrorMessage = 'GameEngine requires a valid AppContainer instance.';
+        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(4);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ISaveLoadService);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.EntityManager);
 
-    // --- Act & Assert (When & Then) ---
-    // Verify that calling the constructor with null container throws the specific error
-    expect(() => {
-      new GameEngine(options);
-    }).toThrow(new Error(expectedErrorMessage));
-  });
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+            'GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console.', // <<< CORRECTED MESSAGE
+            resolutionError
+        );
 
-  // --- Test Case: TEST-ENG-002 ---
-  // [ ] Given container is undefined.
-  // [ ] When new GameEngine({}) is called.
-  // [ ] Then an Error is thrown with a message indicating the AppContainer is required.
-  it('[TEST-ENG-002] should throw an error if container option is missing or undefined', () => {
-    // --- Arrange (Given) ---
-    const optionsMissing = {}; // container property is missing
-    const optionsUndefined = { container: undefined }; // container property is explicitly undefined
-    const expectedErrorMessage = 'GameEngine requires a valid AppContainer instance.';
+        expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
+        expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine: Instance created. Ready to start.');
 
-    // --- Act & Assert (When & Then) ---
-    // Verify that calling the constructor with a missing container property throws the specific error
-    expect(() => {
-      new GameEngine(optionsMissing);
-    }).toThrow(new Error(expectedErrorMessage));
+        expect(mockLogger.info).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
 
-    // Verify that calling the constructor with an undefined container property throws the specific error
-    expect(() => {
-      new GameEngine(optionsUndefined);
-    }).toThrow(new Error(expectedErrorMessage));
-  });
+        consoleWarnSpy.mockRestore();
+        consoleInfoSpy.mockRestore();
+    });
 
-}); // End describe block
+    it('[TEST-ENG-002] should throw an error if container option is null', () => {
+        const options = {container: null};
+        const expectedErrorMessage = 'GameEngine requires a valid AppContainer instance.';
+        expect(() => {
+            new GameEngine(options);
+        }).toThrow(new Error(expectedErrorMessage));
+    });
+
+    it('[TEST-ENG-002] should throw an error if container option is missing or undefined', () => {
+        const optionsMissing = {};
+        const optionsUndefined = {container: undefined};
+        const expectedErrorMessage = 'GameEngine requires a valid AppContainer instance.';
+        expect(() => {
+            new GameEngine(optionsMissing);
+        }).toThrow(new Error(expectedErrorMessage));
+        expect(() => {
+            new GameEngine(optionsUndefined);
+        }).toThrow(new Error(expectedErrorMessage));
+    });
+
+});

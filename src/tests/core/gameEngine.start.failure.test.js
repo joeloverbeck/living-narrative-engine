@@ -8,15 +8,12 @@ import {tokens} from '../../core/config/tokens.js'; // <<< IMPORTED
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-// GameLoop type import is still useful for the mock object itself
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */
-/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // <<< ADDED
-// --- Refactoring Specific Imports ---
+/** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
-/** @typedef {import('../../core/initializers/services/initializationService.js').InitializationResult} InitializationResult */ // Added for clarity
+/** @typedef {import('../../core/initializers/services/initializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('../../core/shutdown/services/shutdownService.js').default} ShutdownService */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-// InputHandler, InputElement, TitleElement potentially needed if fallback logic exists
 /** @typedef {import('../../core/inputHandler.js').default} InputHandler */
 /** @typedef {HTMLInputElement} MockInputElement */
 /** @typedef {HTMLElement} MockTitleElement */
@@ -30,8 +27,8 @@ describe('GameEngine start() - Failure Scenarios', () => {
     /** @type {jest.Mocked<ILogger>} */
     let mockLogger;
     /** @type {jest.Mocked<GameLoop>} */
-    let mockGameLoop; // Keep this mock for when init *succeeds* and InitService returns it
-    /** @type {jest.Mocked<ITurnManager>} */ // <<< ADDED
+    let mockGameLoop;
+    /** @type {jest.Mocked<ITurnManager>} */
     let mockTurnManager;
     /** @type {jest.Mocked<InitializationService>} */
     let mockInitializationService;
@@ -40,43 +37,34 @@ describe('GameEngine start() - Failure Scenarios', () => {
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
     let mockvalidatedEventDispatcher;
     /** @type {jest.Mocked<InputHandler>} */
-    let mockInputHandler; // Kept for potential fallback tests
+    let mockInputHandler;
     /** @type {jest.Mocked<HTMLInputElement>} */
-    let mockInputElement; // Kept for potential fallback tests
+    let mockInputElement;
     /** @type {jest.Mocked<HTMLElement>} */
-    let mockTitleElement; // Kept for potential fallback tests
+    let mockTitleElement;
 
-    // Spy for global alert (if used in other tests)
     /** @type {jest.SpyInstance} */
     let alertSpy;
 
-    // Variable to store the default resolve implementation
     /** @type {(key: any) => any} */
     let defaultResolveImplementation;
 
-    // Helper function to access engine state via public getters
     let getIsInitialized;
-    // REMOVED: getGameLoop helper function
-
-    // Variable to hold the current engine instance for helpers
     let currentEngineInstance = null;
 
     beforeEach(() => {
         jest.clearAllMocks();
         if (alertSpy) alertSpy.mockRestore();
-        currentEngineInstance = null; // Reset instance holder
+        currentEngineInstance = null;
 
-        // --- Create Mocks ---
         mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-        // Provide a mock GameLoop instance. InitializationService needs to return
-        // *something* identifiable as a game loop on success in its result object.
         mockGameLoop = {
             start: jest.fn().mockResolvedValue(undefined),
             stop: jest.fn(),
             processSubmittedCommand: jest.fn(),
-            isRunning: false // Or a getter mock: isRunning: jest.fn().mockReturnValue(false)
+            isRunning: false
         };
-        mockTurnManager = { // <<< ADDED MOCK
+        mockTurnManager = {
             start: jest.fn().mockResolvedValue(undefined),
             stop: jest.fn().mockResolvedValue(undefined)
         };
@@ -89,89 +77,52 @@ describe('GameEngine start() - Failure Scenarios', () => {
 
         mockAppContainer = {resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn()};
 
-        // --- Define the DEFAULT resolve implementation using TOKENS ---
         defaultResolveImplementation = (key) => {
-            // Use direct token comparison
-            if (key === tokens.ILogger) {
-                return mockLogger;
-            }
-            if (key === tokens.InitializationService) {
-                return mockInitializationService;
-            }
-            if (key === tokens.ShutdownService) {
-                return mockShutdownService;
-            }
-            if (key === tokens.IValidatedEventDispatcher) {
-                return mockvalidatedEventDispatcher;
-            }
-            if (key === tokens.ITurnManager) { // <<< ADDED
-                return mockTurnManager;
-            }
-            // Handle GameLoop needed IF a test specifically needs to resolve it (e.g., via InitService result check)
-            // For most failure/transient tests, resolving GameLoop shouldn't be needed directly from container.
-            if (key === tokens.GameLoop) {
-                // This case should ideally only be hit if something *other* than GameEngine
-                // is trying to resolve GameLoop, or if a test specifically overrides
-                // the resolver to provide it for checking InitService result.
-                // Return undefined by default, as GameEngine no longer stores it.
-                // console.warn(`Default mock resolve falling back for key: ${String(key)} -> undefined (likely for testing InitService result)`);
-                return undefined;
-            }
-            // Fallback related mocks (use string keys if they are simple DOM element IDs/selectors)
-            if (key === 'InputHandler') { // Assuming InputHandler might still be string-based? Adjust if tokenized.
-                return mockInputHandler;
-            }
-            if (key === 'inputElement') {
-                return mockInputElement;
-            }
-            if (key === 'titleElement') {
-                return mockTitleElement;
-            }
-            // Add other token checks as needed
+            if (key === tokens.ILogger) return mockLogger;
+            if (key === tokens.InitializationService) return mockInitializationService;
+            if (key === tokens.ShutdownService) return mockShutdownService;
+            if (key === tokens.IValidatedEventDispatcher) return mockvalidatedEventDispatcher;
+            if (key === tokens.ITurnManager) return mockTurnManager;
+            if (key === tokens.GameLoop) return undefined;
+            if (key === 'InputHandler') return mockInputHandler;
+            if (key === 'inputElement') return mockInputElement;
+            if (key === 'titleElement') return mockTitleElement;
+            // For new services added to GameEngine constructor, ensure they can be resolved if needed by other tests using default.
+            // For this specific failing test, they might not be directly used by the SUT's path after InitializationService fails to resolve.
+            if (key === tokens.ISaveLoadService) return undefined; // Or a mock if its methods were called
+            if (key === tokens.IDataRegistry) return undefined;    // Or a mock
+            if (key === tokens.EntityManager) return undefined;      // Or a mock
+            if (key === tokens.WorldLoader) return undefined; // Or a mock for WorldLoader
 
-            // Fallback if no match
-            // console.warn(`Default mock resolve falling back for key:`, key); // Log the actual key
             return undefined;
         };
 
-        // Set the initial mock implementation primarily for the constructor
+        // Initial mock for constructor calls
         mockAppContainer.resolve.mockImplementation((key) => {
-            if (key === tokens.ILogger) {
-                return mockLogger;
-            }
-            // Delegate to the default for others during setup
+            if (key === tokens.ILogger) return mockLogger;
+            // ISaveLoadService, IDataRegistry, EntityManager will be resolved here by constructor using defaultResolveImplementation
             return defaultResolveImplementation(key);
         });
 
-        // Spy on global alert (if needed)
         alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {
         });
 
-        // --- Setup Helpers ---
-        // Redefine getIsInitialized to use the module-scoped currentEngineInstance
         getIsInitialized = () => currentEngineInstance ? currentEngineInstance.isInitialized : false;
-        // REMOVED: getGameLoop = () => currentEngineInstance ? currentEngineInstance.gameLoop : null;
 
-        // Helper function to set the current engine instance (used within tests)
         const setCurrentEngineInstance = (instance) => {
             currentEngineInstance = instance;
         };
-
-        // Make setCurrentEngineInstance available via a spy for tests to call
         jest.spyOn(global, 'setCurrentEngineInstance_TEST_HELPER').mockImplementation(setCurrentEngineInstance);
-
     });
 
-    // Add a dummy function to the global scope for the spyOn above
     global.setCurrentEngineInstance_TEST_HELPER = (instance) => {
     };
-
 
     afterEach(() => {
         if (alertSpy) alertSpy.mockRestore();
         jest.clearAllMocks();
-        global.setCurrentEngineInstance_TEST_HELPER.mockRestore(); // Clean up the spy
-        currentEngineInstance = null; // Clear instance reference
+        global.setCurrentEngineInstance_TEST_HELPER.mockRestore();
+        currentEngineInstance = null;
     });
 
     // ========================================================================= //
@@ -391,18 +342,37 @@ describe('GameEngine start() - Failure Scenarios', () => {
         it('should NOT attempt to disable UI via InputHandler/inputElement if resolving InitializationService fails', async () => {
             const worldName = 'testWorld';
             const initServiceResolveError = new Error('Init Service Gone');
+
+            // This initial mockAppContainer.resolve setup will be used by the GameEngine constructor
+            // It allows ILogger, ISaveLoadService, IDataRegistry, EntityManager to be "resolved" (to undefined or mocks via default)
             mockAppContainer.resolve.mockImplementation((key) => {
                 if (key === tokens.ILogger) return mockLogger;
-                if (key === tokens.InitializationService) throw initServiceResolveError;
-                // Allow resolving InputHandler etc. via default for this test if needed elsewhere
                 return defaultResolveImplementation(key);
             });
-            mockInputElement.disabled = false; // Ensure initial state
 
-            const gameEngineInstance = new GameEngine({container: mockAppContainer});
+            mockInputElement.disabled = false;
+
+            const gameEngineInstance = new GameEngine({container: mockAppContainer}); // Constructor calls resolve
             setCurrentEngineInstance_TEST_HELPER(gameEngineInstance);
+
             mockLogger.error.mockClear();
-            mockInputHandler.disable.mockClear(); // Clear specific mock
+            mockInputHandler.disable.mockClear();
+
+            // Clear resolve calls made by the constructor and set up the specific behavior for the start() method call
+            mockAppContainer.resolve.mockClear();
+            mockAppContainer.resolve.mockImplementation((key) => {
+                // This implementation is active *during* the gameEngineInstance.start() call
+                if (key === tokens.ILogger) { // Logger might be called within start's try/catch
+                    return mockLogger;
+                }
+                if (key === tokens.InitializationService) {
+                    // This is the critical call within start() that we want to fail
+                    throw initServiceResolveError;
+                }
+                // Any other unexpected resolve during start() can be handled or logged here
+                // console.warn(`Unexpected resolve during start() for key: ${String(key)}`);
+                return undefined;
+            });
 
             await expect(gameEngineInstance.start(worldName)).rejects.toThrow(initServiceResolveError);
 
@@ -412,22 +382,21 @@ describe('GameEngine start() - Failure Scenarios', () => {
                 initServiceResolveError
             );
 
-            // Verify only Logger and InitializationService were attempted before failure
-            const resolveCalls = mockAppContainer.resolve.mock.calls;
-            // Filter out logger calls which happen in constructor too
-            const callsDuringStart = resolveCalls.filter(call => call[0] !== tokens.ILogger);
-            // Expect only the attempt to resolve InitializationService
-            expect(callsDuringStart).toHaveLength(1);
-            expect(callsDuringStart[0][0]).toBe(tokens.InitializationService);
+            // Now, resolveCallsMadeDuringStart contains *only* calls made during gameEngineInstance.start()
+            const resolveCallsMadeDuringStart = mockAppContainer.resolve.mock.calls;
 
-            // Crucial: Assert that UI disable wasn't attempted
+            // Filter out any ILogger calls that might have occurred within the start method's error handling.
+            const callsOfInterest = resolveCallsMadeDuringStart.filter(call => call[0] !== tokens.ILogger);
+
+            expect(callsOfInterest).toHaveLength(1); // Should now be 1 (only InitializationService)
+            expect(callsOfInterest[0][0]).toBe(tokens.InitializationService);
+
             expect(mockInputHandler.disable).not.toHaveBeenCalled();
-            expect(mockInputElement.disabled).toBe(false); // Check DOM element mock state too
+            expect(mockInputElement.disabled).toBe(false);
 
             expect(mockTurnManager.start).not.toHaveBeenCalled();
             expect(mockInitializationService.runInitializationSequence).not.toHaveBeenCalled();
             expect(getIsInitialized()).toBe(false);
-            // No GameLoop check needed
         });
     });
 

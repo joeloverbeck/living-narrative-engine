@@ -2,6 +2,7 @@
   "version": "0.0.1",
   "dependencies": {
     "@eslint/compat": "^1.2.8",
+    "@msgpack/msgpack": "^3.1.1",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "jest-mock-extended": "^4.0.0-beta1",
@@ -9,6 +10,7 @@
     "json-logic-js": "^2.0.5",
     "lint": "^0.8.19",
     "lodash": "^4.17.21",
+    "pako": "^2.1.0",
     "semver": "^7.7.1",
     "tinyqueue": "^3.0.0",
     "uuid": "^11.1.0"
