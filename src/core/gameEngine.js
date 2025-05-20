@@ -15,7 +15,7 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../services/playtimeTracker.js').default} PlaytimeTracker */
-/** @typedef {import('../services/gamePersistenceService.js').default} GamePersistenceService */ // <<< ADDED IMPORT FOR GamePersistenceService
+/** @typedef {import('../services/gamePersistenceService.js').default} GamePersistenceService */
 
 
 // --- Import Tokens ---
@@ -34,15 +34,13 @@ class GameEngine {
     #isInitialized = false;
     /** @private @type {ILogger | null} */
     #logger = null;
-    // /** @private @type {ISaveLoadService | null} */ // <<< REMOVED as per ticket
-    // #saveLoadService = null;
     /** @private @type {IDataRegistry | null} */
     #dataRegistry = null;
     /** @private @type {EntityManager | null} */
     #entityManager = null;
     /** @private @type {PlaytimeTracker | null} */
     #playtimeTracker = null;
-    /** @private @type {GamePersistenceService | null} */ // <<< ADDED GamePersistenceService field
+    /** @private @type {GamePersistenceService | null} */
     #gamePersistenceService = null;
 
 
@@ -103,6 +101,47 @@ class GameEngine {
         return this.#isInitialized;
     }
 
+    /**
+     * @async
+     * @private
+     * @method #onGameReady
+     * @description Centralizes the common final steps required to make the game engine active and playable
+     * after either a new game has been initialized or a saved game has been successfully loaded and restored.
+     * Sets the engine to initialized, resolves and starts the TurnManager.
+     * @throws {Error} If ITurnManager cannot be resolved or fails to start.
+     */
+    async #onGameReady() {
+        this.#isInitialized = true;
+        this.#logger?.info("GameEngine: Game data processed. Engine is now initialized.");
+
+        let turnManager = null;
+        try {
+            turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
+        } catch (error) {
+            this.#logger?.error("GameEngine.#onGameReady: Failed to resolve ITurnManager. Cannot start turns.", error);
+            this.#isInitialized = false;
+            throw new Error('Failed to resolve ITurnManager in #onGameReady.');
+        }
+
+        try {
+            this.#logger?.info("GameEngine.#onGameReady: Starting TurnManager...");
+            await turnManager.start(); // Assuming start() is general enough for new/resume
+            this.#logger?.info("GameEngine.#onGameReady: TurnManager started successfully.");
+        } catch (error) {
+            this.#logger?.error("GameEngine.#onGameReady: CRITICAL ERROR starting TurnManager.", error);
+            this.#isInitialized = false;
+            if (turnManager && typeof turnManager.stop === 'function') {
+                try {
+                    await turnManager.stop();
+                    this.#logger?.warn("GameEngine.#onGameReady: Attempted to stop TurnManager after startup error.");
+                } catch (stopError) {
+                    this.#logger?.error("GameEngine.#onGameReady: Error stopping TurnManager during error handling.", stopError);
+                }
+            }
+            throw error; // Re-throw the original error from turnManager.start()
+        }
+    }
+
 
     /**
      * Initializes the game using InitializationService and then starts the turn processing via TurnManager.
@@ -123,8 +162,6 @@ class GameEngine {
 
         this.#logger?.info(`GameEngine: Starting NEW GAME initialization sequence for world: ${worldName}...`);
 
-        let initResult;
-        let turnManager = null;
         try {
             if (this.#entityManager) {
                 this.#logger?.debug('GameEngine: Clearing EntityManager before new game initialization.');
@@ -134,41 +171,30 @@ class GameEngine {
                 throw new Error('EntityManager not available for new game start.');
             }
 
-
             const initializationService = /** @type {InitializationService} */ (
                 this.#container.resolve(tokens.InitializationService)
             );
             this.#logger?.debug('GameEngine: InitializationService resolved for new game.');
-            initResult = await initializationService.runInitializationSequence(worldName);
+            const initResult = await initializationService.runInitializationSequence(worldName);
 
             if (!initResult.success) {
                 const failureReason = initResult.error?.message || 'Unknown initialization error';
                 this.#logger?.error(`GameEngine: New game initialization sequence failed for world '${worldName}'. Reason: ${failureReason}`, initResult.error);
-                this.#isInitialized = false;
+                this.#isInitialized = false; // Ensure state is false if init failed before #onGameReady
                 throw initResult.error || new Error(`Game engine new game initialization failed: ${failureReason}`);
             }
 
             this.#logger?.info('GameEngine: New game initialization sequence reported success.');
-            this.#isInitialized = true;
+            // Centralize final steps to make engine playable
+            await this.#onGameReady();
 
-            this.#logger?.info('GameEngine: Resolving TurnManager for new game...');
-            turnManager = /** @type {ITurnManager} */ (
-                this.#container.resolve(tokens.ITurnManager)
-            );
-            this.#logger?.info('GameEngine: Starting TurnManager for new game...');
-            await turnManager.start();
         } catch (error) {
             this.#logger?.error(`GameEngine: CRITICAL ERROR during new game initialization or TurnManager startup for world '${worldName}'.`, error);
+            // #onGameReady and initializationService path should handle setting #isInitialized to false.
+            // If #onGameReady threw, it also attempts to stop its turnManager.
+            // We re-set it here just in case error occurred before #onGameReady was called or if #onGameReady failed to set it.
             this.#isInitialized = false;
-            if (turnManager && typeof turnManager.stop === 'function') {
-                try {
-                    await turnManager.stop();
-                    this.#logger.warn("GameEngine: Attempted to stop TurnManager after new game startup error.");
-                } catch (stopError) {
-                    this.#logger.error("GameEngine: Error stopping TurnManager during new game error handling.", stopError);
-                }
-            }
-            throw error;
+            throw error; // Re-throw the error to be handled by the caller
         }
     }
 
@@ -176,9 +202,12 @@ class GameEngine {
      * Restores the game state from a deserialized save game object.
      * This method assumes mod definitions have already been loaded into DataRegistry
      * based on the save file's mod manifest *before* this method is called.
+     * The actual restoration of game data components (entities, playtime, turn number etc.)
+     * is expected to be handled by GamePersistenceService.loadAndRestoreGame, which then
+     * provides the deserializedSaveData. This method applies that data.
      * @param {SaveGameStructure} deserializedSaveData - The full save game object.
      * @returns {Promise<void>}
-     * @throws {Error} If restoration fails.
+     * @throws {Error} If restoration fails or if #onGameReady fails.
      */
     async restoreState(deserializedSaveData) {
         this.#logger?.info('GameEngine: Restoring game state from save data...');
@@ -191,61 +220,97 @@ class GameEngine {
             this.#logger?.error('GameEngine.restoreState: EntityManager is not available. Cannot restore entities.');
             throw new Error('EntityManager not available for state restoration.');
         }
+        // DataRegistry is not strictly critical here as entity definitions should already be in components by this stage.
         if (!this.#dataRegistry) {
-            this.#logger?.warn('GameEngine.restoreState: DataRegistry is not available. Definition lookups might fail if needed.');
+            this.#logger?.warn('GameEngine.restoreState: DataRegistry is not available. This might be an issue if further definition lookups were needed.');
         }
 
-        this.#logger?.debug('GameEngine.restoreState: Clearing existing entity state via EntityManager.clearAll().');
+        // Clear existing state (though GamePersistenceService.restoreGameState might also do this)
+        this.#logger?.debug('GameEngine.restoreState: Clearing existing entity state via EntityManager.clearAll() before applying loaded state.');
         this.#entityManager.clearAll();
 
-        this.#logger?.info(`GameEngine.restoreState: Restoring ${deserializedSaveData.gameState.entities.length} entities.`);
-        for (const savedEntityData of deserializedSaveData.gameState.entities) {
-            if (!savedEntityData.instanceId || !savedEntityData.definitionId || typeof savedEntityData.components !== 'object') {
-                this.#logger?.warn('GameEngine.restoreState: Skipping invalid entity data in save:', savedEntityData);
-                continue;
-            }
-            const entity = new OriginalEntity(savedEntityData.instanceId);
-            this.#logger?.debug(`GameEngine.restoreState: Created entity instance ${entity.id} (definition: ${savedEntityData.definitionId}).`);
-            this.#entityManager.activeEntities.set(entity.id, entity);
-
-            for (const [componentTypeId, componentData] of Object.entries(savedEntityData.components)) {
-                try {
-                    this.#entityManager.addComponent(entity.id, componentTypeId, componentData);
-                    this.#logger?.debug(`GameEngine.restoreState: Added component ${componentTypeId} to entity ${entity.id}.`);
-                } catch (compError) {
-                    this.#logger?.error(`GameEngine.restoreState: Failed to add component ${componentTypeId} to entity ${entity.id}. Error: ${compError.message}. Skipping component, entity may be in an inconsistent state.`, compError);
+        // Entity Restoration
+        this.#logger?.info(`GameEngine.restoreState: Restoring ${deserializedSaveData.gameState.entities?.length || 0} entities.`);
+        if (deserializedSaveData.gameState?.entities) {
+            for (const savedEntityData of deserializedSaveData.gameState.entities) {
+                if (!savedEntityData.instanceId || !savedEntityData.definitionId || typeof savedEntityData.components !== 'object') {
+                    this.#logger?.warn('GameEngine.restoreState: Skipping invalid entity data in save:', savedEntityData);
+                    continue;
                 }
-            }
-            this.#logger?.debug(`GameEngine.restoreState: Finished restoring components for entity ${entity.id}.`);
-        }
-        this.#logger?.info('GameEngine.restoreState: All entities and components restored.');
+                // OriginalEntity is assumed to be the class for game entities.
+                // This is a simplified reconstruction; a more robust system might use EntityManager.reconstructEntity.
+                // However, the ticket context implies GamePersistenceService.restoreGameState already did this,
+                // and GameEngine.restoreState is more about applying it to the live engine state if not already done.
+                // For now, following the existing pattern in this method, but noting that
+                // GamePersistenceService.restoreGameState does more detailed reconstruction.
+                // This block might become redundant if GamePersistenceService fully populates EntityManager.
+                const entity = new OriginalEntity(savedEntityData.instanceId);
+                // Manually set definitionId if your Entity class needs it post-construction and it's not part of constructor
+                // entity.definitionId = savedEntityData.definitionId; // Example if needed
+                this.#logger?.debug(`GameEngine.restoreState: Re-registering entity instance ${entity.id} (definition: ${savedEntityData.definitionId}).`);
+                this.#entityManager.activeEntities.set(entity.id, entity); // Ensure it's in activeEntities
 
+                for (const [componentTypeId, componentData] of Object.entries(savedEntityData.components)) {
+                    try {
+                        // This assumes addComponent correctly re-attaches/re-initializes components from data.
+                        this.#entityManager.addComponent(entity.id, componentTypeId, componentData);
+                        this.#logger?.debug(`GameEngine.restoreState: Added/Restored component ${componentTypeId} to entity ${entity.id}.`);
+                    } catch (compError) {
+                        this.#logger?.error(`GameEngine.restoreState: Failed to add/restore component ${componentTypeId} to entity ${entity.id}. Error: ${compError.message}. Skipping component.`, compError);
+                    }
+                }
+                this.#logger?.debug(`GameEngine.restoreState: Finished restoring components for entity ${entity.id}.`);
+            }
+        }
+        this.#logger?.info('GameEngine.restoreState: Entity restoration process in GameEngine scope complete.');
+
+        // Playtime and TurnManager state (like currentTurn) should have been restored by GamePersistenceService.
+        // Log what GamePersistenceService should have done.
         if (deserializedSaveData.metadata && typeof deserializedSaveData.metadata.playtimeSeconds === 'number') {
-            this.#logger?.info(`GameEngine.restoreState: Restored accumulated playtime (delegated to PlaytimeTracker): ${deserializedSaveData.metadata.playtimeSeconds} seconds.`);
+            this.#logger?.info(`GameEngine.restoreState: PlaytimeTracker should have been updated by GamePersistenceService to ${deserializedSaveData.metadata.playtimeSeconds}s.`);
         } else {
-            this.#logger?.warn('GameEngine.restoreState: Playtime not found or invalid in save data. Resetting (delegated to PlaytimeTracker).');
+            this.#logger?.warn('GameEngine.restoreState: Playtime data not found or invalid in save data; PlaytimeTracker state depends on GamePersistenceService.');
         }
 
-        const turnManager = this.#container.resolve(tokens.ITurnManager);
-        if (turnManager && deserializedSaveData.gameState.engineInternals && typeof deserializedSaveData.gameState.engineInternals.currentTurn === 'number') {
-            if (typeof turnManager.setCurrentTurn === 'function') {
-                turnManager.setCurrentTurn(deserializedSaveData.gameState.engineInternals.currentTurn);
-                this.#logger?.info(`GameEngine.restoreState: Restored current turn to ${deserializedSaveData.gameState.engineInternals.currentTurn}.`);
+        // Resolve TurnManager to set current turn, as per original logic.
+        // This should happen BEFORE #onGameReady calls turnManager.start().
+        try {
+            const turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
+            if (turnManager && deserializedSaveData.gameState?.engineInternals && typeof deserializedSaveData.gameState.engineInternals.currentTurn === 'number') {
+                if (typeof turnManager.setCurrentTurn === 'function') {
+                    turnManager.setCurrentTurn(deserializedSaveData.gameState.engineInternals.currentTurn);
+                    this.#logger?.info(`GameEngine.restoreState: Set current turn on TurnManager to ${deserializedSaveData.gameState.engineInternals.currentTurn}.`);
+                } else {
+                    this.#logger?.warn('GameEngine.restoreState: TurnManager does not have setCurrentTurn method. Cannot restore turn count directly here.');
+                }
             } else {
-                this.#logger?.warn('GameEngine.restoreState: TurnManager does not have setCurrentTurn method. Cannot restore turn count.');
+                this.#logger?.info('GameEngine.restoreState: Current turn data not found in save or TurnManager not resolved for setCurrentTurn.');
             }
+        } catch (error) {
+            this.#logger?.error('GameEngine.restoreState: Failed to resolve ITurnManager for setting current turn. Turn state may not be fully restored.', error);
         }
 
-        if (deserializedSaveData.gameState.playerState) {
-            this.#logger?.debug('GameEngine.restoreState: Processing playerState from save:', deserializedSaveData.gameState.playerState);
+
+        if (deserializedSaveData.gameState?.playerState) {
+            this.#logger?.debug('GameEngine.restoreState: PlayerState data was present in save. Restoration depends on GamePersistenceService/other services.');
         }
 
-        if (deserializedSaveData.gameState.worldState) {
-            this.#logger?.debug('GameEngine.restoreState: Processing worldState from save:', deserializedSaveData.gameState.worldState);
+        if (deserializedSaveData.gameState?.worldState) {
+            this.#logger?.debug('GameEngine.restoreState: WorldState data was present in save. Restoration depends on GamePersistenceService/other services.');
         }
 
-        this.#isInitialized = true;
-        this.#logger?.info('GameEngine: State restoration complete. Engine is initialized with loaded data.');
+        // this.#isInitialized = true; // Moved to #onGameReady
+        // this.#logger?.info('GameEngine: State restoration complete. Engine is initialized with loaded data.'); // Moved to #onGameReady
+
+        // Centralize final steps to make engine playable
+        try {
+            await this.#onGameReady();
+            this.#logger?.info('GameEngine: State restoration and engine readiness complete.');
+        } catch (error) {
+            this.#logger?.error('GameEngine.restoreState: CRITICAL ERROR during #onGameReady after state restoration.', error);
+            this.#isInitialized = false; // Ensure this is false if #onGameReady fails
+            throw error; // Propagate error
+        }
     }
 
     /**
@@ -300,9 +365,8 @@ class GameEngine {
      * A promise resolving to the outcome of the save operation.
      */
     async triggerManualSave(saveName) {
-        this.#logger?.info(`GameEngine: Manual save triggered for name: "${saveName}"`); // <<< UPDATED Logic: Log the call
+        this.#logger?.info(`GameEngine: Manual save triggered for name: "${saveName}"`);
 
-        // <<< UPDATED Logic: Check if #gamePersistenceService is available
         if (!this.#gamePersistenceService) {
             const errorMsg = 'GamePersistenceService is not available. Cannot save game.';
             this.#logger?.error(`GameEngine.triggerManualSave: ${errorMsg}`);
@@ -310,13 +374,8 @@ class GameEngine {
         }
 
         try {
-            // <<< UPDATED Logic: Call #gamePersistenceService.saveGame
-            // Pass this.isInitialized to allow GamePersistenceService.isSavingAllowed()
-            // to consider the engine's basic ready state.
             return await this.#gamePersistenceService.saveGame(saveName, this.isInitialized);
         } catch (error) {
-            // This catch block handles unexpected errors from the saveGame call itself,
-            // though GamePersistenceService.saveGame is designed to return a structured error object.
             const errorMessage = (error && error.message) ? error.message : 'An unknown error occurred.';
             this.#logger?.error(`GameEngine.triggerManualSave: An unexpected error occurred while calling GamePersistenceService.saveGame for "${saveName}": ${errorMessage}`, error);
             return {success: false, error: `Unexpected error during save delegation: ${errorMessage}`};

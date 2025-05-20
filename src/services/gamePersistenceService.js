@@ -4,6 +4,7 @@
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */ // Added for loadResult typing
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -152,8 +153,6 @@ class GamePersistenceService {
     captureCurrentGameState() {
         this.#logger.info('GamePersistenceService: Capturing current game state...');
 
-        // Core dependencies are expected to be present due to constructor checks.
-        // These checks serve as an additional safeguard during the actual operation.
         if (!this.#entityManager) {
             this.#logger.error('GamePersistenceService.captureCurrentGameState: EntityManager is not available!');
             throw new Error('EntityManager not available for capturing game state.');
@@ -162,11 +161,11 @@ class GamePersistenceService {
             this.#logger.error('GamePersistenceService.captureCurrentGameState: DataRegistry is not available!');
             throw new Error('DataRegistry not available for capturing mod manifest.');
         }
-        if (!this.#playtimeTracker) { // Should be guaranteed by constructor
+        if (!this.#playtimeTracker) {
             this.#logger.error('GamePersistenceService.captureCurrentGameState: PlaytimeTracker is not available!');
             throw new Error('PlaytimeTracker not available for capturing game state.');
         }
-        if (!this.#container) { // Should be guaranteed by constructor
+        if (!this.#container) {
             this.#logger.error('GamePersistenceService.captureCurrentGameState: AppContainer is not available!');
             throw new Error('AppContainer not available for resolving dependencies.');
         }
@@ -174,14 +173,11 @@ class GamePersistenceService {
         const entitiesData = [];
         for (const entity of this.#entityManager.activeEntities.values()) {
             const components = {};
-            // entity.componentEntries should yield [componentTypeId, componentData]
             for (const [componentTypeId, componentData] of entity.componentEntries) {
-                // Deep clone component data to ensure the save file has an independent snapshot
                 components[componentTypeId] = this.#deepClone(componentData);
             }
             entitiesData.push({
                 instanceId: entity.id,
-                // Fallback for definitionId as seen in the original GameEngine logic
                 definitionId: entity.definitionId || (this.#entityManager.getEntityDefinition?.(entity.id)?.id || 'unknown:definition'),
                 components: components,
             });
@@ -193,12 +189,11 @@ class GamePersistenceService {
             activeModsManifest = this.#dataRegistry.getLoadedModManifests().map(mod => ({
                 modId: mod.modId,
                 version: mod.version,
-                // checksum: mod.checksum, // Optional: if manifest includes it and it's desired in the save
             }));
             this.#logger.debug(`GamePersistenceService: Captured ${activeModsManifest.length} active mods from DataRegistry.`);
         } else {
             this.#logger.warn('GamePersistenceService: DataRegistry does not have getLoadedModManifests. Mod manifest in save may be incomplete or basic.');
-            const coreModDef = this.#dataRegistry.getModDefinition?.('core'); // Hypothetical method from original
+            const coreModDef = this.#dataRegistry.getModDefinition?.('core');
             if (coreModDef) {
                 activeModsManifest = [{modId: 'core', version: coreModDef.version || 'unknown'}];
             } else {
@@ -214,11 +209,10 @@ class GamePersistenceService {
             currentTurn = turnManager?.currentTurn ?? 0;
         } catch (error) {
             this.#logger.warn('GamePersistenceService.captureCurrentGameState: Failed to resolve ITurnManager. Current turn will be default (0).', error);
-            // currentTurn remains 0
         }
 
         let worldLoader = null;
-        let currentWorldName = 'Unknown Game'; // Default value
+        let currentWorldName = 'Unknown Game';
         try {
             worldLoader = /** @type {WorldLoader} */ (this.#container.resolve(tokens.WorldLoader));
             currentWorldName = worldLoader?.getActiveWorldName() || 'Unknown Game';
@@ -231,38 +225,26 @@ class GamePersistenceService {
 
         const gameStateObject = {
             metadata: {
-                saveFormatVersion: '1.0.0', // Consider making this a constant or configurable
-                engineVersion: '0.1.0-stub', // TODO: Get this from a central place (e.g., package.json or config)
+                saveFormatVersion: '1.0.0',
+                engineVersion: '0.1.0-stub',
                 gameTitle: currentWorldName,
                 timestamp: new Date().toISOString(),
                 playtimeSeconds: currentTotalPlaytime,
-                saveName: '', // This should be set by the calling context (e.g., the method that orchestrates saving)
-                // screenshotDataURI: undefined, // Optional, not part of this port
+                saveName: '',
             },
             modManifest: {
                 activeMods: activeModsManifest,
             },
             gameState: {
                 entities: entitiesData,
-                playerState: {
-                    // Placeholder: Adapt as actual player state structure evolves.
-                    // e.g., globalFlags: this.#somePlayerStateService.getFlags(),
-                    // This data would be gathered from relevant services or entity components.
-                },
-                worldState: {
-                    // Placeholder: Adapt as actual world state structure evolves.
-                    // e.g., timeOfDay: this.#worldStateService.getCurrentTimeOfDay(),
-                    // This data would be gathered from relevant services or entity components.
-                },
+                playerState: {},
+                worldState: {},
                 engineInternals: {
                     currentTurn: currentTurn,
-                    // Other engine-specific states if needed, e.g.:
-                    // eventQueueSnapshot: this.eventSystem?.snapshotQueue() || [],
-                    // ruleEngineVariables: this.ruleProcessor?.getPersistentVariables() || {},
                 },
             },
             integrityChecks: {
-                gameStateChecksum: 'PENDING_CALCULATION', // To be calculated by ISaveLoadService before final save
+                gameStateChecksum: 'PENDING_CALCULATION',
             },
         };
 
@@ -272,9 +254,6 @@ class GamePersistenceService {
 
     /**
      * Determines if the game is currently in a state where saving is permissible.
-     * This method checks if the game engine is initialized and includes a placeholder
-     * for more detailed checks against critical game moments (e.g., UI dialogs, turn phases).
-     *
      * @param {boolean} isEngineInitialized - Indicates whether the core game engine is initialized.
      * @returns {boolean} True if saving is allowed, false otherwise.
      */
@@ -283,45 +262,19 @@ class GamePersistenceService {
             this.#logger.warn('GamePersistenceService.isSavingAllowed: Save attempt while engine not initialized.');
             return false;
         }
-
         // TODO: Implement actual logic to check if game is in a "non-critical moment".
-        // This might involve querying other services (e.g., UI service for modal dialogs,
-        // ITurnManager for turn phase) via this.#container or injected dependencies.
-        // For example:
-        // const uiService = this.#container.resolve(tokens.UIService);
-        // if (uiService.isModalDialogOpen()) {
-        //     this.#logger.debug('GamePersistenceService.isSavingAllowed: Modal dialog is open, saving not allowed.');
-        //     return false;
-        // }
-        // const turnManager = this.#container.resolve(tokens.ITurnManager);
-        // if (turnManager.currentPhase === 'AI_THINKING' || turnManager.currentPhase === 'PLAYER_ACTION_RESOLUTION') {
-        //     this.#logger.debug(`GamePersistenceService.isSavingAllowed: Game in critical phase (${turnManager.currentPhase}), saving not allowed.`);
-        //     return false;
-        // }
-
         this.#logger.debug('GamePersistenceService.isSavingAllowed: Check returned true (currently a basic stub).');
         return true;
     }
 
     /**
      * Orchestrates the process of saving the game.
-     * It checks if saving is allowed, captures the current game state,
-     * sets the save name in the metadata, and then delegates to the
-     * ISaveLoadService to write the game data to a persistent store.
-     *
      * @async
      * @public
-     * @param {string} saveName - The desired name for the save. This will be used
-     * to identify the save file and will also be stored
-     * within the save file's metadata.
-     * @param {boolean} isEngineInitialized - The current initialized state of the
-     * GameEngine. This is used to determine
-     * if saving is permissible.
+     * @param {string} saveName - The desired name for the save.
+     * @param {boolean} isEngineInitialized - The current initialized state of the GameEngine.
      * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>}
-     * A promise that resolves with an object indicating the outcome of the save operation.
-     * - On success: `{ success: true, message: string, filePath: string }`
-     * - On failure (e.g., saving not allowed, service unavailable, internal error):
-     * `{ success: false, error: string }`
+     * Outcome of the save operation.
      */
     async saveGame(saveName, isEngineInitialized) {
         this.#logger.info(`GamePersistenceService: Manual save triggered with name: "${saveName}".`);
@@ -334,9 +287,6 @@ class GamePersistenceService {
 
         if (!this.isSavingAllowed(isEngineInitialized)) {
             const errorMsg = 'Saving is not currently allowed.';
-            // The ticket asks for: "Saving is not currently allowed (e.g., engine not ready or critical moment in game)."
-            // My method `isSavingAllowed` logs the reason (e.g. engine not initialized).
-            // The returned error message should be generic as per ticket, the detailed log is already done.
             this.#logger.warn(`GamePersistenceService.saveGame: Saving is not currently allowed (e.g., engine not ready or critical moment in game).`);
             return {success: false, error: errorMsg};
         }
@@ -344,12 +294,9 @@ class GamePersistenceService {
         try {
             this.#logger.debug(`GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`);
             const gameStateObject = this.captureCurrentGameState();
-
-            // Ensure metadata object exists before attempting to set saveName
-            // captureCurrentGameState should always create .metadata, but this is a safe check.
             if (!gameStateObject.metadata) {
                 this.#logger.warn(`GamePersistenceService.saveGame: gameStateObject from captureCurrentGameState was missing 'metadata' property. Initializing it for saveName.`);
-                gameStateObject.metadata = {}; // Initialize if somehow missing
+                gameStateObject.metadata = {};
             }
             gameStateObject.metadata.saveName = saveName;
             this.#logger.debug(`GamePersistenceService.saveGame: Set saveName "${saveName}" in gameStateObject.metadata.`);
@@ -365,13 +312,197 @@ class GamePersistenceService {
             return result;
 
         } catch (error) {
-            // Ensure error.message is accessed safely
             const errorMessage = (error && error.message) ? error.message : 'An unknown error occurred.';
             this.#logger.error(`GamePersistenceService.saveGame: An unexpected error occurred during saveGame for "${saveName}": ${errorMessage}`, error);
-            // The ticket asks for: `Unexpected error during save: ${error.message}` (using backticks for template literal)
-            // I'll stick to the exact format.
             return {success: false, error: `Unexpected error during save: ${errorMessage}`};
         }
+    }
+
+    /**
+     * Orchestrates the full restoration of the game state from a SaveGameStructure object.
+     * Uses EntityManager.reconstructEntity() and other services to repopulate the game world.
+     * This logic is ported and adapted from the original GameEngine.restoreState().
+     * @async
+     * @public
+     * @param {SaveGameStructure} deserializedSaveData - The complete SaveGameStructure object.
+     * @returns {Promise<{success: boolean, error?: string}>} A promise resolving to an object indicating the outcome.
+     * On success: { success: true }
+     * On critical failure: { success: false, error: "Detailed critical error message" }
+     */
+    async restoreGameState(deserializedSaveData) {
+        this.#logger.info('GamePersistenceService.restoreGameState: Starting game state restoration...');
+
+        // Input Validation
+        if (!deserializedSaveData || typeof deserializedSaveData !== 'object') {
+            const errorMsg = "Invalid save data structure provided to restoreGameState: deserializedSaveData is null or not an object.";
+            this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`);
+            return {success: false, error: "Invalid save data structure provided to restoreGameState."};
+        }
+        if (!deserializedSaveData.gameState || typeof deserializedSaveData.gameState !== 'object') {
+            const errorMsg = "Invalid save data structure provided to restoreGameState: deserializedSaveData.gameState is null or not an object.";
+            this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`);
+            return {success: false, error: "Invalid save data structure provided to restoreGameState."};
+        }
+
+        // Service Availability Check
+        if (!this.#entityManager) {
+            const errorMsg = "EntityManager is not available for state restoration.";
+            this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`);
+            return {success: false, error: errorMsg};
+        }
+        if (!this.#playtimeTracker) {
+            const errorMsg = "PlaytimeTracker is not available for state restoration.";
+            this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`);
+            return {success: false, error: errorMsg};
+        }
+        // AppContainer (#container) is implicitly checked by its usage later & constructor.
+
+        // Clear Existing State
+        try {
+            this.#entityManager.clearAll();
+            this.#logger.debug('GamePersistenceService.restoreGameState: Existing entity state has been cleared.');
+        } catch (error) {
+            const errorMsg = `Failed to clear existing entity state: ${error.message}`;
+            this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`, error);
+            return {success: false, error: `Critical error during state clearing: ${errorMsg}`};
+        }
+
+        // Restore Entities
+        this.#logger.info('GamePersistenceService.restoreGameState: Restoring entities...');
+        const entitiesToRestore = deserializedSaveData.gameState.entities;
+
+        if (!Array.isArray(entitiesToRestore)) {
+            this.#logger.warn('GamePersistenceService.restoreGameState: deserializedSaveData.gameState.entities is not an array. Treating as empty. No entities will be restored.');
+        } else {
+            for (const savedEntityData of entitiesToRestore) {
+                if (!savedEntityData || typeof savedEntityData.instanceId !== 'string' || !savedEntityData.instanceId) {
+                    this.#logger.warn(`GamePersistenceService.restoreGameState: Invalid entity data found in save (missing or invalid instanceId, or data is null/undefined). Skipping. Data: ${JSON.stringify(savedEntityData)}`);
+                    continue;
+                }
+                try {
+                    // reconstructEntity itself is synchronous in the provided code, but await handles both sync/async.
+                    const restoredEntity = await this.#entityManager.reconstructEntity(savedEntityData);
+                    if (!restoredEntity) {
+                        // This condition means reconstructEntity itself determined a failure for this entity
+                        // and returned a falsy value (e.g. null). It should have logged the specifics.
+                        this.#logger.warn(`GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId}. reconstructEntity indicated failure. Skipping.`);
+                    }
+                    // Successful reconstruction is logged within reconstructEntity.
+                } catch (entityError) {
+                    // This catch block handles errors thrown by reconstructEntity itself (e.g., invalid base savedEntityData structure)
+                    this.#logger.warn(`GamePersistenceService.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`, entityError);
+                }
+            }
+        }
+        this.#logger.info('GamePersistenceService.restoreGameState: Entity restoration complete.');
+
+        // Restore Playtime
+        if (deserializedSaveData.metadata && typeof deserializedSaveData.metadata.playtimeSeconds === 'number') {
+            try {
+                this.#playtimeTracker.setAccumulatedPlaytime(deserializedSaveData.metadata.playtimeSeconds);
+                this.#logger.info(`GamePersistenceService.restoreGameState: Restored accumulated playtime: ${deserializedSaveData.metadata.playtimeSeconds} seconds.`);
+            } catch (playtimeError) {
+                this.#logger.error(`GamePersistenceService.restoreGameState: Error setting accumulated playtime (${deserializedSaveData.metadata.playtimeSeconds}s): ${playtimeError.message}. Resetting playtime.`, playtimeError);
+                this.#playtimeTracker.setAccumulatedPlaytime(0); // Default to 0 on error
+            }
+        } else {
+            this.#logger.warn('GamePersistenceService.restoreGameState: Playtime data not found or invalid in save data. Resetting playtime.');
+            this.#playtimeTracker.setAccumulatedPlaytime(0); // Or this.#playtimeTracker.reset() if it exists and is preferred
+        }
+
+        // Restore TurnManager State
+        let turnManager = null;
+        try {
+            turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
+        } catch (resolveError) {
+            this.#logger.error(`GamePersistenceService.restoreGameState: Failed to resolve ITurnManager: ${resolveError.message}. Cannot restore turn count.`, resolveError);
+        }
+
+        if (turnManager) {
+            if (deserializedSaveData.gameState.engineInternals && typeof deserializedSaveData.gameState.engineInternals.currentTurn === 'number') {
+                if (typeof turnManager.setCurrentTurn === 'function') {
+                    try {
+                        turnManager.setCurrentTurn(deserializedSaveData.gameState.engineInternals.currentTurn);
+                        this.#logger.info(`GamePersistenceService.restoreGameState: Restored current turn to ${deserializedSaveData.gameState.engineInternals.currentTurn}.`);
+                    } catch (turnError) {
+                        this.#logger.error(`GamePersistenceService.restoreGameState: Error calling turnManager.setCurrentTurn(${deserializedSaveData.gameState.engineInternals.currentTurn}): ${turnError.message}. Turn count not restored.`, turnError);
+                    }
+                } else {
+                    this.#logger.warn('GamePersistenceService.restoreGameState: TurnManager does not have a setCurrentTurn method. Cannot restore turn count.');
+                }
+            } else {
+                this.#logger.info('GamePersistenceService.restoreGameState: Current turn data not found or invalid in deserializedSaveData.gameState.engineInternals. Turn count not restored from save.');
+            }
+        } // If turnManager resolution failed, error already logged.
+
+        // Restore Other Game States (Placeholder Logic)
+        if (deserializedSaveData.gameState.playerState) {
+            this.#logger.debug(`GamePersistenceService.restoreGameState: Processing playerState from save: ${JSON.stringify(deserializedSaveData.gameState.playerState, null, 2)}`);
+            // TODO: Implement actual player state restoration logic, likely delegating to a PlayerStateService.
+        } else {
+            this.#logger.debug('GamePersistenceService.restoreGameState: No playerState found in save data.');
+        }
+
+        if (deserializedSaveData.gameState.worldState) {
+            this.#logger.debug(`GamePersistenceService.restoreGameState: Processing worldState from save: ${JSON.stringify(deserializedSaveData.gameState.worldState, null, 2)}`);
+            // TODO: Implement actual world state restoration logic, likely delegating to a WorldStateService.
+        } else {
+            this.#logger.debug('GamePersistenceService.restoreGameState: No worldState found in save data.');
+        }
+
+        this.#logger.info('GamePersistenceService.restoreGameState: Game state restoration process complete.');
+        return {success: true};
+    }
+
+    /**
+     * Loads raw game data from a save identifier using ISaveLoadService,
+     * then restores the game state using that data.
+     * @async
+     * @public
+     * @param {string} saveIdentifier - The unique identifier for the save file to be loaded (e.g., a filename or path).
+     * @returns {Promise<{success: boolean, error?: string}>} A promise resolving to an object indicating the outcome
+     * of the entire load and restore operation.
+     * On success: { success: true }
+     * On failure: { success: false, error: "Detailed error message" }
+     */
+    async loadAndRestoreGame(saveIdentifier) {
+        this.#logger.info(`GamePersistenceService: Attempting to load and restore game from identifier: ${saveIdentifier}.`);
+
+        // Check if this.#saveLoadService is available
+        if (!this.#saveLoadService) {
+            const errorMsg = 'SaveLoadService is not available. Cannot load game.';
+            this.#logger.error(`GamePersistenceService.loadAndRestoreGame: ${errorMsg}`);
+            return {success: false, error: errorMsg};
+        }
+
+        // Load Raw Data
+        /** @type {LoadGameResult} */
+        let loadResult;
+        try {
+            loadResult = await this.#saveLoadService.loadGameData(saveIdentifier);
+        } catch (serviceError) {
+            // This catch is for unexpected errors from loadGameData itself (e.g., if it throws instead of returning a structured error)
+            const errorMsg = `An unexpected error occurred while calling SaveLoadService.loadGameData for "${saveIdentifier}": ${serviceError.message}`;
+            this.#logger.error(`GamePersistenceService.loadAndRestoreGame: ${errorMsg}`, serviceError);
+            return {success: false, error: `Unexpected error during data loading: ${serviceError.message}`};
+        }
+
+
+        // Handle Load Result
+        if (!loadResult || !loadResult.success || !loadResult.data) {
+            const reason = loadResult?.error || 'No data returned from loadGameData or load failed.';
+            this.#logger.error(`GamePersistenceService.loadAndRestoreGame: Failed to load raw game data from ${saveIdentifier}. Reason: ${reason}`);
+            return {success: false, error: loadResult?.error || "Failed to load raw game data from storage."};
+        }
+
+        this.#logger.info(`GamePersistenceService.loadAndRestoreGame: Raw game data successfully loaded from ${saveIdentifier}. Proceeding with state restoration.`);
+
+        // Restore Game State
+        // The 'data' field of loadResult should be the SaveGameStructure
+        const restoreResult = await this.restoreGameState(/** @type {SaveGameStructure} */ (loadResult.data));
+
+        // Return Result
+        return restoreResult;
     }
 }
 

@@ -90,7 +90,10 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
             if (key === 'titleElement') return mockTitleElement;
 
             // Mocks for services resolved in GameEngine constructor
-            if (key === tokens.PlaytimeTracker) return {getTotalPlaytime: jest.fn().mockReturnValue(0)};
+            if (key === tokens.PlaytimeTracker) return {
+                getTotalPlaytime: jest.fn().mockReturnValue(0),
+                setAccumulatedPlaytime: jest.fn()
+            };
             if (key === tokens.GamePersistenceService) return {saveGame: jest.fn()};
             if (key === tokens.IDataRegistry) return {
                 getLoadedModManifests: jest.fn().mockReturnValue([]),
@@ -229,7 +232,10 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
             // Configure mockAppContainer to throw error when InitializationService is resolved
             mockAppContainer.resolve.mockImplementation((key) => {
                 if (key === tokens.ILogger) return mockLogger;
-                if (key === tokens.PlaytimeTracker) return {getTotalPlaytime: jest.fn().mockReturnValue(0)};
+                if (key === tokens.PlaytimeTracker) return {
+                    getTotalPlaytime: jest.fn().mockReturnValue(0),
+                    setAccumulatedPlaytime: jest.fn()
+                };
                 if (key === tokens.GamePersistenceService) return {saveGame: jest.fn()};
                 if (key === tokens.IDataRegistry) return {getLoadedModManifests: jest.fn().mockReturnValue([])};
                 if (key === tokens.EntityManager) return {clearAll: jest.fn()}; // Needs clearAll for startNewGame
@@ -367,7 +373,10 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
 
             mockAppContainer.resolve.mockImplementation((key) => {
                 if (key === tokens.ILogger) return mockLogger;
-                if (key === tokens.PlaytimeTracker) return {getTotalPlaytime: jest.fn().mockReturnValue(0)};
+                if (key === tokens.PlaytimeTracker) return {
+                    getTotalPlaytime: jest.fn().mockReturnValue(0),
+                    setAccumulatedPlaytime: jest.fn()
+                };
                 if (key === tokens.GamePersistenceService) return {saveGame: jest.fn()};
                 if (key === tokens.IDataRegistry) return {getLoadedModManifests: jest.fn().mockReturnValue([])};
                 if (key === tokens.EntityManager) return {clearAll: jest.fn()}; // Needs clearAll for startNewGame
@@ -496,22 +505,26 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
     // ========================================================================= //
     describe('[TEST-ENG-031] GameEngine startNewGame() (Failure) - Inconsistent State Post-Successful Initialization Report', () => { // <<< UPDATED describe title
         const expectedCriticalLogSubstring = (worldName) => `GameEngine: CRITICAL ERROR during new game initialization or TurnManager startup for world '${worldName}'.`;
+        const newErrorMsgFromOnGameReady = 'Failed to resolve ITurnManager in #onGameReady.';
 
         it('should reject, log error, and prevent turn start if TurnManager fails to resolve after SUCCESSFUL init report', async () => {
             const worldName = 'testWorld';
             const initResultSuccess = {success: true, error: null, gameLoop: mockGameLoop};
-            const turnManagerResolveError = new Error("Simulated TurnManager Resolution Failure");
+            const turnManagerResolveError = new Error("Simulated TurnManager Resolution Failure"); // This is the original error
 
             mockInitializationService.runInitializationSequence.mockResolvedValue(initResultSuccess);
 
             mockAppContainer.resolve.mockImplementation((key) => {
                 if (key === tokens.ILogger) return mockLogger;
-                if (key === tokens.PlaytimeTracker) return {getTotalPlaytime: jest.fn().mockReturnValue(0)};
+                if (key === tokens.PlaytimeTracker) return {
+                    getTotalPlaytime: jest.fn().mockReturnValue(0),
+                    setAccumulatedPlaytime: jest.fn()
+                };
                 if (key === tokens.GamePersistenceService) return {saveGame: jest.fn()};
                 if (key === tokens.IDataRegistry) return {getLoadedModManifests: jest.fn().mockReturnValue([])};
                 if (key === tokens.EntityManager) return {clearAll: jest.fn()};
                 if (key === tokens.InitializationService) return mockInitializationService;
-                if (key === tokens.ITurnManager) throw turnManagerResolveError;
+                if (key === tokens.ITurnManager) throw turnManagerResolveError; // Simulate original failure
                 return defaultResolveImplementation(key);
             });
 
@@ -521,14 +534,24 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
             mockTurnManager.start.mockClear();
             mockInitializationService.runInitializationSequence.mockClear();
 
-            await expect(gameEngineInstance.startNewGame(worldName)).rejects.toThrow(turnManagerResolveError); // <<< CORRECTED METHOD CALL
+            // Expect the new error message thrown by #onGameReady
+            await expect(gameEngineInstance.startNewGame(worldName)).rejects.toThrow(newErrorMsgFromOnGameReady);
 
             expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(worldName);
             expect(getIsInitialized()).toBe(false);
+
+            // Check the log from #onGameReady (which logs the original error)
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                "GameEngine.#onGameReady: Failed to resolve ITurnManager. Cannot start turns.",
+                turnManagerResolveError // Original error
+            );
+
+            // Check the log from startNewGame's catch block (which logs the new error)
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expectedCriticalLogSubstring(worldName),
-                turnManagerResolveError
+                expect.objectContaining({message: newErrorMsgFromOnGameReady}) // New error
             );
+
             expect(mockTurnManager.start).not.toHaveBeenCalled();
         });
 
@@ -538,22 +561,36 @@ describe('GameEngine startNewGame() - Failure Scenarios', () => { // <<< UPDATED
             const turnManagerStartError = new Error("Simulated TurnManager Start Failure");
 
             mockInitializationService.runInitializationSequence.mockResolvedValue(initResultSuccess);
-            mockTurnManager.start.mockRejectedValue(turnManagerStartError);
-            mockAppContainer.resolve.mockImplementation(defaultResolveImplementation);
+            // mockTurnManager.start is configured in defaultResolveImplementation, reset and re-mock for this specific test.
+            mockTurnManager.start = jest.fn().mockRejectedValue(turnManagerStartError);
+
+
+            // Ensure AppContainer returns the re-mocked mockTurnManager
+            mockAppContainer.resolve.mockImplementation((key) => {
+                if (key === tokens.ITurnManager) return mockTurnManager;
+                return defaultResolveImplementation(key);
+            });
+
 
             const gameEngineInstance = new GameEngine({container: mockAppContainer});
             global.setCurrentEngineInstance_TEST_HELPER(gameEngineInstance);
             mockLogger.error.mockClear(); // Clear constructor logs
-            mockTurnManager.start.mockClear(); // Clear any previous mock settings
-            mockTurnManager.start.mockRejectedValue(turnManagerStartError); // Apply the rejection for this test
+            // mockTurnManager.start.mockClear(); // Already cleared and re-assigned above
             mockInitializationService.runInitializationSequence.mockClear();
 
 
-            await expect(gameEngineInstance.startNewGame(worldName)).rejects.toThrow(turnManagerStartError); // <<< CORRECTED METHOD CALL
+            await expect(gameEngineInstance.startNewGame(worldName)).rejects.toThrow(turnManagerStartError);
 
             expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(worldName);
             expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
             expect(getIsInitialized()).toBe(false);
+
+            // Check the log from #onGameReady (which logs the original error from turnManager.start())
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                "GameEngine.#onGameReady: CRITICAL ERROR starting TurnManager.",
+                turnManagerStartError
+            );
+            // Check the log from startNewGame's catch block (which also logs the original error because #onGameReady re-throws it)
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expectedCriticalLogSubstring(worldName),
                 turnManagerStartError

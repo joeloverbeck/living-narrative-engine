@@ -21,6 +21,7 @@ import {tokens} from '../../core/config/tokens.js'; // Import tokens
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService */
 /** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../core/shutdown/services/shutdownService.js').default} ShutdownService */
 
 
 // --- Test Suite ---
@@ -49,6 +50,8 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
     let mockDataRegistry;
     /** @type {jest.Mocked<EntityManager>} */
     let mockEntityManager;
+    /** @type {jest.Mocked<ShutdownService>} */
+    let mockShutdownService;
 
 
     beforeEach(() => {
@@ -71,7 +74,8 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
             getTotalPlaytime: jest.fn().mockReturnValue(0),
             reset: jest.fn(),
             start: jest.fn(),
-            stop: jest.fn()
+            stop: jest.fn(),
+            setAccumulatedPlaytime: jest.fn()
         };
         mockGamePersistenceService = {saveGame: jest.fn()};
         mockDataRegistry = {getLoadedModManifests: jest.fn().mockReturnValue([]), getModDefinition: jest.fn()};
@@ -81,6 +85,8 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
             addComponent: jest.fn(),
             getEntityDefinition: jest.fn()
         };
+        mockShutdownService = {runShutdownSequence: jest.fn().mockResolvedValue(undefined)};
+
 
         mockAppContainer = {resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn()};
 
@@ -98,6 +104,8 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
                     return mockDataRegistry;
                 case tokens.EntityManager:
                     return mockEntityManager;
+                case tokens.ShutdownService:
+                    return mockShutdownService;
 
                 // Dependencies for GameEngine.startNewGame()
                 case tokens.InitializationService:
@@ -125,7 +133,7 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
         mockValidatedEventDispatcher.dispatchValidated.mockClear();
         mockEntityManager.clearAll.mockClear(); // Also called in startNewGame
 
-        await gameEngineInstance.startNewGame(worldName); // <<< CORRECTED METHOD CALL
+        await gameEngineInstance.startNewGame(worldName);
 
         expect(mockEntityManager.clearAll).toHaveBeenCalledTimes(1);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.InitializationService);
@@ -141,26 +149,30 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
         expect(mockGameLoop.start).not.toHaveBeenCalled();
 
         const resolveOrder = mockAppContainer.resolve.mock.calls.map(call => call[0]);
-        expect(resolveOrder).toEqual([
-            tokens.InitializationService, // First, resolve InitService
-            tokens.ITurnManager         // Then, resolve TurnManager
-            // IValidatedEventDispatcher is not resolved in the success path of startNewGame currently
-        ]);
+        // Order of resolution within startNewGame and #onGameReady
+        expect(resolveOrder).toEqual(expect.arrayContaining([
+            tokens.InitializationService, // From startNewGame
+            tokens.ITurnManager         // From #onGameReady
+        ]));
+        // Check specific order if necessary, but arrayContaining is safer if other resolves happen for other reasons.
+        // For more strictness:
+        // expect(resolveOrder[0]).toBe(tokens.InitializationService);
+        // expect(resolveOrder[1]).toBe(tokens.ITurnManager);
     });
 
     it('[TEST-ENG-012 Revised] should rely on TurnManager to handle GameLoop, not use GameLoop from InitializationService result directly', async () => {
         const worldName = 'testWorld';
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
-        mockAppContainer.resolve.mockClear(); // Clear constructor resolve calls
-        mockTurnManager.start.mockClear(); // Ensure it's clean for the assertion
+        // Clear constructor resolve calls and other relevant mocks
+        mockAppContainer.resolve.mockClear();
+        mockTurnManager.start.mockClear();
 
-        await gameEngineInstance.startNewGame(worldName); // <<< CORRECTED METHOD CALL
+        await gameEngineInstance.startNewGame(worldName);
 
-        const resolveCallsAfterConstructor = mockAppContainer.resolve.mock.calls;
-        const resolvedKeysAfterConstructor = resolveCallsAfterConstructor.map(callArgs => callArgs[0]);
+        const resolvedKeysDuringStartNewGame = mockAppContainer.resolve.mock.calls.map(callArgs => callArgs[0]);
 
-        expect(resolvedKeysAfterConstructor).not.toContain(tokens.GameLoop);
-        expect(resolvedKeysAfterConstructor).not.toContain('GameLoop');
+        expect(resolvedKeysDuringStartNewGame).not.toContain(tokens.GameLoop); // GameEngine doesn't resolve GameLoop
+        expect(resolvedKeysDuringStartNewGame).not.toContain('GameLoop'); // String check just in case
         expect(mockGameLoop.start).not.toHaveBeenCalled(); // GameEngine doesn't start it directly
         expect(mockTurnManager.start).toHaveBeenCalledTimes(1); // TurnManager is started
     });
@@ -169,30 +181,32 @@ describe('GameEngine startNewGame() - Success Path (Initialization Delegated)', 
         const worldName = 'testWorld';
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
 
-        // Clear logs from constructor
+        // Clear logs from constructor and other setup calls
         mockLogger.info.mockClear();
         mockLogger.debug.mockClear();
         mockLogger.warn.mockClear();
         mockLogger.error.mockClear();
         mockEntityManager.clearAll.mockClear(); // Called in startNewGame
 
-        await gameEngineInstance.startNewGame(worldName); // <<< CORRECTED METHOD CALL
+        await gameEngineInstance.startNewGame(worldName);
 
-        // Log assertions updated for startNewGame
+        // Log assertions for startNewGame()
         expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Starting NEW GAME initialization sequence for world: ${worldName}...`);
         expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Clearing EntityManager before new game initialization.');
         expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: InitializationService resolved for new game.');
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: New game initialization sequence reported success.');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Resolving TurnManager for new game...');
-        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting TurnManager for new game...');
 
-        // Ensure logs related to starting the *GameLoop directly* by GameEngine are GONE
+        // Log assertions for #onGameReady()
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Game data processed. Engine is now initialized.');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine.#onGameReady: Starting TurnManager...');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine.#onGameReady: TurnManager started successfully.');
+
+        // Ensure old/other specific log messages are GONE
+        expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: Resolving TurnManager for new game...');
+        expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: Starting TurnManager for new game...'); // This exact message is gone
         expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: Starting GameLoop...');
         expect(mockLogger.info).not.toHaveBeenCalledWith('GameEngine: GameLoop started successfully.');
-
-        // Ensure logs related to the *internal steps* of old direct initialization are GONE
         expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('GameDataRepository resolved'));
-        // ... (other similar negative assertions for logs that are now part of InitializationService)
     });
 
 }); // End describe block

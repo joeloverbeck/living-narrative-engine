@@ -14,18 +14,19 @@
 
 // Import the necessary component ID constants
 import {ACTOR_COMPONENT_ID, PLAYER_COMPONENT_ID} from '../../constants/componentIds.js';
-import {TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js"; // Assuming TURN_ENDED_ID is 'core:turn_ended' and SYSTEM_ERROR_OCCURRED_ID is 'core:system_error_occurred'
+import {TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js";
+import {ITurnManager} from "./interfaces/ITurnManager.js"; // Assuming TURN_ENDED_ID is 'core:turn_ended' and SYSTEM_ERROR_OCCURRED_ID is 'core:system_error_occurred'
 
 /**
  * @class TurnManager
- * @implements {ITurnManagerInterface}
+ * @implements {ITurnManager}
  * @classdesc Manages the overall turn lifecycle. Determines the next actor,
  * initiates their turn via the appropriate handler, and waits for a turn completion
  * event (`core:turn_ended`) before advancing to the next turn or round.
  * Dispatches semantic events like 'core:turn_started' and 'core:system_error_occurred'.
  * Includes logic to stop if a round completes with no successful turns.
  */
-class TurnManager {
+class TurnManager extends ITurnManager {
     /** @type {ITurnOrderService} */
     #turnOrderService;
     /** @type {EntityManager} */
@@ -74,6 +75,8 @@ class TurnManager {
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor(options) {
+        super();
+        
         const {turnOrderService, entityManager, logger, dispatcher, turnHandlerResolver} = options || {};
         const className = this.constructor.name;
 
