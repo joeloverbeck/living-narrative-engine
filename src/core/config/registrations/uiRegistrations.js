@@ -19,6 +19,7 @@ import {
     LocationRenderer,
     InventoryPanel,
     ActionButtonsRenderer,
+    PerceptionLogRenderer, // <<< ADDED
     DomUiFacade,
     // Base utilities
     DomElementFactory,
@@ -107,11 +108,10 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     }));
     logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
-    // LocationRenderer (MODIFIED)
-    // Target element is #location-info-container
+    // LocationRenderer
     registrar.singletonFactory(tokens.LocationRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
-        const resolvedLogger = c.resolve(tokens.ILogger); // Resolve once for this factory
+        const resolvedLogger = c.resolve(tokens.ILogger);
         const locationContainer = docContext.query('#location-info-container');
         if (!locationContainer) {
             resolvedLogger.warn(`UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`);
@@ -121,15 +121,14 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            entityManager: c.resolve(tokens.IEntityManager), // ADDED dependency
-            dataRegistry: c.resolve(tokens.IDataRegistry),   // ADDED dependency
+            entityManager: c.resolve(tokens.IEntityManager),
+            dataRegistry: c.resolve(tokens.IDataRegistry),
             containerElement: locationContainer
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager and IDataRegistry.`);
 
     // InventoryPanel
-    // Target element is #inventory-widget
     registrar.singletonFactory(tokens.InventoryPanel, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         const resolvedLogger = c.resolve(tokens.ILogger);
@@ -169,14 +168,34 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
+    // PerceptionLogRenderer <<< ADDED REGISTRATION
+    registrar.singletonFactory(tokens.PerceptionLogRenderer, c => {
+        const resolvedLogger = c.resolve(tokens.ILogger);
+        // The PerceptionLogRenderer currently finds its own '#perception-log-list'
+        // So, no specific container element needs to be queried and passed here
+        // unless its constructor is changed to accept one.
+        return new PerceptionLogRenderer({
+            logger: resolvedLogger,
+            documentContext: c.resolve(tokens.IDocumentContext),
+            validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+            domElementFactory: c.resolve(tokens.DomElementFactory),
+            entityManager: c.resolve(tokens.IEntityManager)
+            // containerElement: perceptionLogListElement, // If needed in the future
+        });
+    });
+    logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
+
+
     // --- 3. Register Facade ---
     registrar.single(tokens.DomUiFacade, DomUiFacade, [
+        // tokens.DomRenderer, // Deprecated
         tokens.ActionButtonsRenderer,
         tokens.InventoryPanel,
         tokens.LocationRenderer,
         tokens.TitleRenderer,
         tokens.InputStateController,
-        tokens.UiMessageRenderer
+        tokens.UiMessageRenderer,
+        tokens.PerceptionLogRenderer // <<< ADDED to facade dependencies
     ]);
     logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 

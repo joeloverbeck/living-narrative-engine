@@ -256,6 +256,8 @@ a:focus-visible {
     flex: 0 0 25%;
     max-width: 320px;
     min-width: 280px;
+    display: flex; /* ADDED to allow perception log to take remaining space */
+    flex-direction: column; /* ADDED */
 }
 
 /* Center Pane Styling */
@@ -397,12 +399,15 @@ a:focus-visible {
 #location-info-container,
 #character-status-widget,
 #actions-widget,
-#inventory-widget {
+#inventory-widget,
+#perception-log-widget /* ADDED */
+{
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md);
     border: var(--border-width) solid var(--border-color-subtle);
     border-radius: var(--border-radius-md);
     background-color: var(--panel-bg-color);
+    flex-shrink: 0; /* ADDED - Ensure widgets don't shrink excessively if left-pane is flex column */
 }
 
 /* Ensure last widget in a panel doesn't have excessive bottom margin if panel has padding */
@@ -415,7 +420,9 @@ a:focus-visible {
 #location-info-container h2, /* This is for #location-name-display */
 #character-status-widget h3,
 #actions-widget h3,
-#inventory-widget h3 {
+#inventory-widget h3,
+#perception-log-widget h3 /* ADDED */
+{
     margin-top: 0;
     margin-bottom: var(--spacing-sm);
     color: var(--primary-text-color);
@@ -482,6 +489,53 @@ a:focus-visible {
 }
 
 /* End of Location list specific styling */
+
+/* --- START: Styles for Perception Log Widget --- */
+#perception-log-widget {
+    /* Allow this widget to grow and its list to scroll if #left-pane is a flex column */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Important for child with overflow-y: auto */
+    min-height: 100px; /* Example minimum height */
+}
+
+#perception-log-widget h3 {
+    flex-shrink: 0; /* Prevent title from shrinking */
+}
+
+#perception-log-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1; /* Allow list to take available space */
+    font-family: var(--font-narrative);
+    font-size: var(--font-size-small);
+    color: var(--secondary-text-color);
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-xs);
+    background-color: var(--primary-bg-color); /* Slightly different background for the list area */
+}
+
+#perception-log-list li {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-bottom: var(--border-width) dashed var(--border-color-subtle); /* Dashed for distinction */
+    line-height: 1.5;
+}
+
+#perception-log-list li:last-child {
+    border-bottom: none;
+}
+
+#perception-log-list li.empty-log-message { /* For placeholder messages */
+    font-style: italic;
+    text-align: center;
+    color: var(--input-placeholder-color);
+}
+
+/* --- END: Styles for Perception Log Widget --- */
 
 
 /* General Button Styling */
@@ -834,7 +888,20 @@ button:disabled, .button-like:disabled {
 
     #left-pane {
         order: 1;
+        /* On mobile, #left-pane might need a specific height or let content define it.
+           If #perception-log-widget is to scroll, #left-pane needs a defined height
+           or to be part of a flex container that gives it space.
+           Given body is `height: auto; overflow-y: auto;`, panels will stack.
+           The `flex-grow: 1` on `#perception-log-widget` and `#perception-log-list`
+           might not behave as expected if `#left-pane` height is purely content-driven.
+           Setting a max-height on `#perception-log-list` might be more robust for mobile.
+        */
     }
+
+    #perception-log-list { /* Added mobile-specific height constraint */
+        max-height: 150px; /* Adjust as needed for mobile view */
+    }
+
 
     #center-pane {
         order: 2;
@@ -932,6 +999,11 @@ button:disabled, .button-like:disabled {
     #center-pane #message-list li {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
+
+    #perception-log-list { /* Added very-small-specific height constraint */
+        max-height: 120px; /* Adjust as needed for very small screens */
+    }
+
 
     /* --- ADDED: Adjust speech message padding for very small screens --- */
     /* This re-affirms the mobile padding adjustment, ensuring it applies here too if not overridden */

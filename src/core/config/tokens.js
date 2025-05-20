@@ -1,5 +1,4 @@
 // src/core/config/tokens.js
-// ****** MODIFIED FILE ******
 
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -37,6 +36,7 @@
  * @property {DiToken} LocationRenderer - Token for the component rendering location details.
  * @property {DiToken} InventoryPanel - Token for the component managing the inventory panel UI.
  * @property {DiToken} ActionButtonsRenderer - Token for the component rendering available action buttons.
+ * @property {DiToken} PerceptionLogRenderer - Token for the component rendering perception logs. // <<< ADDED
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
@@ -141,6 +141,7 @@ export const tokens = Object.freeze({
     LocationRenderer: 'LocationRenderer',
     InventoryPanel: 'InventoryPanel',
     ActionButtonsRenderer: 'ActionButtonsRenderer',
+    PerceptionLogRenderer: 'PerceptionLogRenderer', // <<< ADDED
     DomUiFacade: 'DomUiFacade',
 
     // Loaders
@@ -171,7 +172,7 @@ export const tokens = Object.freeze({
     PlayerPromptService: 'PlayerPromptService',         // Concrete class token
     CommandOutcomeInterpreter: 'CommandOutcomeInterpreter', // Concrete class token
     SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
-    PerceptionUpdateService: 'PerceptionUpdateService', // <<< ADDED TOKEN
+    PerceptionUpdateService: 'PerceptionUpdateService', // <<< ADDED TOKEN (already present from previous user request, good)
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',

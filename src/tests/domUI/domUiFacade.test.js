@@ -1,8 +1,8 @@
-// src/domUI/DomUiFacade.test.js
+// src/tests/domUI/DomUiFacade.test.js
 /**
  * @fileoverview Unit tests for the DomUiFacade class.
  */
-import {DomUiFacade} from '../../domUI/index.js';
+import {DomUiFacade} from '../../domUI/index.js'; // Adjusted path to point to index.js
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // Mock the renderer/controller classes
@@ -13,6 +13,7 @@ const mockLocationRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockTitleRenderer = {set: jest.fn(), dispose: jest.fn()};
 const mockInputStateController = {setEnabled: jest.fn(), dispose: jest.fn()};
 const mockUiMessageRenderer = {render: jest.fn(), dispose: jest.fn()};
+const mockPerceptionLogRenderer = {render: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
 
 describe('DomUiFacade', () => {
     let validDeps;
@@ -29,6 +30,7 @@ describe('DomUiFacade', () => {
             titleRenderer: mockTitleRenderer,
             inputStateController: mockInputStateController,
             uiMessageRenderer: mockUiMessageRenderer,
+            perceptionLogRenderer: mockPerceptionLogRenderer, // <<< ADDED TO VALID DEPS
         };
     });
 
@@ -39,33 +41,45 @@ describe('DomUiFacade', () => {
     });
 
     it('should throw an error if actionButtonsRenderer is missing', () => {
-        delete validDeps.actionButtonsRenderer;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
+        const deps = {...validDeps}; // Create a copy to modify
+        delete deps.actionButtonsRenderer;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
     });
 
     it('should throw an error if inventoryPanel is missing', () => {
-        delete validDeps.inventoryPanel;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid inventoryPanel dependency.');
+        const deps = {...validDeps};
+        delete deps.inventoryPanel;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid inventoryPanel dependency.');
     });
 
     it('should throw an error if locationRenderer is missing', () => {
-        delete validDeps.locationRenderer;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid locationRenderer dependency.');
+        const deps = {...validDeps};
+        delete deps.locationRenderer;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid locationRenderer dependency.');
     });
 
     it('should throw an error if titleRenderer is missing', () => {
-        delete validDeps.titleRenderer;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid titleRenderer dependency.');
+        const deps = {...validDeps};
+        delete deps.titleRenderer;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid titleRenderer dependency.');
     });
 
     it('should throw an error if inputStateController is missing', () => {
-        delete validDeps.inputStateController;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid inputStateController dependency.');
+        const deps = {...validDeps};
+        delete deps.inputStateController;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid inputStateController dependency.');
     });
 
     it('should throw an error if uiMessageRenderer is missing', () => {
-        delete validDeps.uiMessageRenderer;
-        expect(() => new DomUiFacade(validDeps)).toThrow('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
+        const deps = {...validDeps};
+        delete deps.uiMessageRenderer;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
+    });
+
+    it('should throw an error if perceptionLogRenderer is missing', () => { // <<< ADDED TEST
+        const deps = {...validDeps};
+        delete deps.perceptionLogRenderer;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
     });
 
     // --- Getter Tests (Acceptance Criteria) ---
@@ -100,6 +114,12 @@ describe('DomUiFacade', () => {
         expect(facade.messages).toBe(mockUiMessageRenderer);
     });
 
+    it('should provide a getter for perceptionLog', () => { // <<< ADDED TEST
+        const facade = new DomUiFacade(validDeps);
+        expect(facade.perceptionLog).toBe(mockPerceptionLogRenderer);
+    });
+
+
     // --- Dispose Test ---
 
     it('should call dispose on all underlying renderers if they have a dispose method', () => {
@@ -112,6 +132,7 @@ describe('DomUiFacade', () => {
         expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
         expect(mockUiMessageRenderer.dispose).toHaveBeenCalledTimes(1);
+        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
     });
 
     it('should not throw if a renderer lacks a dispose method', () => {
@@ -119,9 +140,16 @@ describe('DomUiFacade', () => {
             ...validDeps,
             actionButtonsRenderer: {render: jest.fn()} // No dispose
         };
+        // Ensure perceptionLogRenderer is still present in incompleteDeps if it's part of validDeps now
+        if (!incompleteDeps.perceptionLogRenderer) {
+            incompleteDeps.perceptionLogRenderer = mockPerceptionLogRenderer;
+        }
+
+
         const facade = new DomUiFacade(incompleteDeps);
         expect(() => facade.dispose()).not.toThrow();
         // Check others were still called
         expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1);
+        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
     });
 });

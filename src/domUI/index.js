@@ -13,6 +13,7 @@ export * from './inputStateController.js';
 export * from './locationRenderer.js';
 export * from './inventoryPanel.js';
 export * from './actionButtonsRenderer.js';
+export * from './perceptionLogRenderer.js';
 
-// *** ADDED: Export the new facade ***
+// *** ADDED: Export the new facade *** (Already present, but ensure it's correct)
 export {DomUiFacade} from './domUiFacade.js'; // Use named export
