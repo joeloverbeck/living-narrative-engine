@@ -43,6 +43,12 @@
     <aside id="right-pane" class="panel">
         <div id="inventory-widget" role="region" aria-label="Inventory">
         </div>
+
+        <div id="game-actions-widget" role="region" aria-labelledby="game-actions-heading">
+            <h3 id="game-actions-heading">Game Menu</h3>
+            <button type="button" id="open-save-game-button" class="menu-button">Save Game</button>
+            <button type="button" id="open-load-game-button" class="menu-button">Load Game</button>
+        </div>
     </aside>
 </div>
 
@@ -55,6 +61,51 @@
 </footer>
 
 <div id="error-output" class="error" role="alert" aria-live="assertive"></div>
+
+<div id="save-game-screen" class="modal-overlay" role="dialog" aria-labelledby="save-game-title" aria-modal="true"
+     style="display: none;">
+    <div class="modal-content">
+        <h2 id="save-game-title" class="modal-title">Save Game</h2>
+
+        <div id="save-slots-container" role="radiogroup" aria-labelledby="save-slots-group-label">
+            <p id="save-slots-group-label" class="visually-hidden">Select a save slot</p>
+        </div>
+
+        <div class="save-details-section">
+            <label for="save-name-input">Save Name:</label>
+            <input type="text" id="save-name-input" placeholder="Enter save name..." disabled/>
+        </div>
+
+        <div id="save-game-status-message" class="status-message-area" role="status" aria-live="polite">
+        </div>
+
+        <div class="modal-actions save-actions">
+            <button type="button" id="confirm-save-button" class="button-primary" disabled>Save</button>
+            <button type="button" id="cancel-save-button" class="button-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="load-game-screen" class="modal-overlay" role="dialog" aria-labelledby="load-game-title" aria-modal="true"
+     style="display: none;">
+    <div class="modal-content">
+        <h2 id="load-game-title" class="modal-title">Load Game</h2>
+
+        <div id="load-slots-container" role="radiogroup" aria-labelledby="load-slots-group-label">
+            <p id="load-slots-group-label" class="visually-hidden">Select a game to load</p>
+        </div>
+
+        <div id="load-game-status-message" class="status-message-area" role="status" aria-live="polite">
+        </div>
+
+        <div class="modal-actions load-actions">
+            <button type="button" id="confirm-load-button" class="button-primary" disabled>Load</button>
+            <button type="button" id="delete-save-button" class="button-danger">Delete</button>
+            <button type="button" id="cancel-load-button" class="button-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script src="bundle.js"></script>
 </body>
 </html>

@@ -38,6 +38,8 @@
  * @property {DiToken} ActionButtonsRenderer - Token for the component rendering available action buttons.
  * @property {DiToken} PerceptionLogRenderer - Token for the component rendering perception logs.
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
+ * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
+ * @property {DiToken} LoadGameUI - Token for the Load Game UI component. // <<< ADDED
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
  * --- Loaders ---
@@ -72,7 +74,7 @@
  * @property {DiToken} SubscriptionLifecycleManager - Token for managing subscription lifecycles (implementation).
  * @property {DiToken} PerceptionUpdateService - Token for the service updating perception logs.
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
- * @property {DiToken} GamePersistenceService - Token for the game state persistence service. // <<< NEW TOKEN
+ * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -92,8 +94,8 @@
  * @property {DiToken} ICommandOutcomeInterpreter - Token for the command outcome interpreter interface.
  * @property {DiToken} IEntityManager - Token for the entity manager interface.
  * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
- * @property {DiToken} ISaveLoadService - Token for the save/load service interface. // <<< NEW TOKEN
- * @property {DiToken} IStorageProvider - Token for the storage provider interface. // <<< NEW TOKEN (assuming it might be needed)
+ * @property {DiToken} ISaveLoadService - Token for the save/load service interface.
+ * @property {DiToken} IStorageProvider - Token for the storage provider interface.
  *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
@@ -147,6 +149,8 @@ export const tokens = Object.freeze({
     ActionButtonsRenderer: 'ActionButtonsRenderer',
     PerceptionLogRenderer: 'PerceptionLogRenderer',
     DomUiFacade: 'DomUiFacade',
+    SaveGameUI: 'SaveGameUI',
+    LoadGameUI: 'LoadGameUI', // <<< ADDED
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
@@ -178,7 +182,7 @@ export const tokens = Object.freeze({
     SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
     PerceptionUpdateService: 'PerceptionUpdateService',
     PlaytimeTracker: 'PlaytimeTracker',
-    GamePersistenceService: 'GamePersistenceService', // <<< ADDED
+    GamePersistenceService: 'GamePersistenceService',
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -199,8 +203,8 @@ export const tokens = Object.freeze({
     ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter', // Interface token
     IEntityManager: 'IEntityManager',                         // Interface token
     IGameDataRepository: 'IGameDataRepository',             // Interface token
-    ISaveLoadService: 'ISaveLoadService', // <<< ADDED
-    IStorageProvider: 'IStorageProvider', // <<< ADDED (as per refined ticket, useful for SaveLoadService)
+    ISaveLoadService: 'ISaveLoadService',
+    IStorageProvider: 'IStorageProvider',
 
 
     // Initialization & Orchestration

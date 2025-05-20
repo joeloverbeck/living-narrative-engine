@@ -19,7 +19,8 @@ import {tokens} from '../../core/config/tokens.js';
 /** @typedef {import('../../services/playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService */
 /** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Updated to use IEntityManager for the type hint of the mock
+/** @typedef {import('../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../core/gameLoop.js').default} GameLoop */
 
 
@@ -45,14 +46,14 @@ describe('GameEngine stop()', () => {
     let mockGamePersistenceService;
     /** @type {jest.Mocked<IDataRegistry>} */
     let mockDataRegistry;
-    /** @type {jest.Mocked<EntityManager>} */
+    /** @type {jest.Mocked<IEntityManager>} */ // Updated mock type
     let mockEntityManager;
     /** @type {jest.Mocked<GameLoop>} */
     let mockGameLoop;
     /** @type {GameEngine} */
     let gameEngineInstance;
     /** @type {jest.SpyInstance} */
-    let consoleInfoSpy; // To spy on console.info for specific final log messages
+    let consoleInfoSpy;
     /** @type {jest.SpyInstance} */
     let consoleErrorSpy;
 
@@ -63,12 +64,11 @@ describe('GameEngine stop()', () => {
 
 
         mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-        mockGameLoop = {start: jest.fn(), stop: jest.fn(), isRunning: true}; // Mock for init result
+        mockGameLoop = {start: jest.fn(), stop: jest.fn(), isRunning: true};
         mockShutdownService = {runShutdownSequence: jest.fn().mockResolvedValue(undefined)};
         mockInitializationService = {
             runInitializationSequence: jest.fn().mockResolvedValue({
                 success: true,
-                // gameLoop: mockGameLoop, // GameLoop is no longer returned by init service
                 error: null,
             }),
         };
@@ -78,28 +78,27 @@ describe('GameEngine stop()', () => {
             stop: jest.fn().mockResolvedValue(undefined),
             setCurrentTurn: jest.fn()
         };
-        // Corrected PlaytimeTracker mock
         mockPlaytimeTracker = {
             getTotalPlaytime: jest.fn().mockReturnValue(0),
             reset: jest.fn(),
-            startSession: jest.fn(), // Corrected: was 'start'
-            endSessionAndAccumulate: jest.fn(), // Added: GameEngine.stop() calls this
-            setAccumulatedPlaytime: jest.fn() // Added: for completeness
+            startSession: jest.fn(),
+            endSessionAndAccumulate: jest.fn(),
+            setAccumulatedPlaytime: jest.fn()
         };
         mockGamePersistenceService = {
             saveGame: jest.fn(),
-            loadAndRestoreGame: jest.fn() // Added for completeness
+            loadAndRestoreGame: jest.fn()
         };
         mockDataRegistry = {
             getLoadedModManifests: jest.fn().mockReturnValue([]),
             getModDefinition: jest.fn(),
-            getEntityDefinition: jest.fn() // Added for completeness (GameEngine.restoreState calls EntityManager.addComponent)
+            getEntityDefinition: jest.fn()
         };
-        mockEntityManager = {
+        mockEntityManager = { // This mock will be returned for IEntityManager
             clearAll: jest.fn(),
             activeEntities: new Map(),
-            addComponent: jest.fn(), // Called by deprecated restoreState
-            getEntityDefinition: jest.fn() // Called by GameEngine constructor indirectly
+            addComponent: jest.fn(),
+            getEntityDefinition: jest.fn() // Though not directly used by constructor, good to have
         };
 
         mockAppContainer = {
@@ -111,37 +110,40 @@ describe('GameEngine stop()', () => {
             if (key === tokens.PlaytimeTracker) return mockPlaytimeTracker;
             if (key === tokens.GamePersistenceService) return mockGamePersistenceService;
             if (key === tokens.IDataRegistry) return mockDataRegistry;
-            if (key === tokens.EntityManager) return mockEntityManager;
+            // VVVVVV MODIFIED VVVVVV
+            if (key === tokens.IEntityManager) return mockEntityManager; // GameEngine constructor now asks for IEntityManager
+            // ^^^^^^ MODIFIED ^^^^^^
             if (key === tokens.InitializationService) return mockInitializationService;
             if (key === tokens.ITurnManager) return mockTurnManager;
             if (key === tokens.ShutdownService) return mockShutdownService;
-            if (key === tokens.GameLoop) return mockGameLoop;
+            if (key === tokens.GameLoop) return mockGameLoop; // Though GameLoop might be obsolete as direct dep
             if (key === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
 
             console.warn(`STOP_TEST_WARN: Unhandled resolution for key: ${String(key)}`);
             return undefined;
         });
 
+        // This instantiation might throw if critical dependencies (like ILogger, IEntityManager) are not mocked above correctly
         gameEngineInstance = new GameEngine({container: mockAppContainer});
+
         consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {
         });
         consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
         });
 
 
+        // --- Initialize and Start the Engine for tests that need an active engine ---
+        // Clear mocks from constructor before calling startNewGame
+        mockAppContainer.resolve.mockClear(); // Clear calls like ILogger, IEntityManager from constructor
+        mockLogger.info.mockClear();
+        // mockEntityManager.clearAll() // Not called by constructor directly
+        // mockPlaytimeTracker.reset() // Not called by constructor directly
+
         try {
-            mockAppContainer.resolve.mockClear(); // Clear calls from GameEngine constructor
-            mockLogger.info.mockClear();
-            mockEntityManager.clearAll.mockClear(); // constructor might not call this, but to be safe for startNewGame
-            mockPlaytimeTracker.reset.mockClear(); // Clear calls from GameEngine constructor related logic if any (none currently)
-
-
             await gameEngineInstance.startNewGame('defaultWorld');
         } catch (error) {
-            // This catch should ideally NOT be hit if constructor and startNewGame mocks are correct
-            // Use the spied console.error for test visibility
             console.error(">>> UNEXPECTED Error during test setup startNewGame() call:", error);
-            throw error; // Re-throw to fail the test if setup fails
+            throw error;
         }
 
         // Clear mocks called during startNewGame to isolate tests for stop()
@@ -149,11 +151,13 @@ describe('GameEngine stop()', () => {
         mockLogger.warn.mockClear();
         mockLogger.error.mockClear();
         mockLogger.debug.mockClear();
-        mockAppContainer.resolve.mockClear();
+        mockAppContainer.resolve.mockClear(); // Clear calls from startNewGame (like InitializationService, ITurnManager)
         mockInitializationService.runInitializationSequence.mockClear();
-        mockValidatedEventDispatcher.dispatchValidated.mockClear();
+        if (mockValidatedEventDispatcher && mockValidatedEventDispatcher.dispatchValidated) { // Ensure it's defined
+            mockValidatedEventDispatcher.dispatchValidated.mockClear();
+        }
         mockTurnManager.start.mockClear();
-        mockEntityManager.clearAll.mockClear();
+        mockEntityManager.clearAll.mockClear(); // Specifically clear this after startNewGame
         mockPlaytimeTracker.reset.mockClear();
         mockPlaytimeTracker.startSession.mockClear();
         if (consoleInfoSpy) consoleInfoSpy.mockClear();
@@ -169,7 +173,6 @@ describe('GameEngine stop()', () => {
     describe('Initial State Check (Sub-Ticket 20.5)', () => {
         it('should log info and NOT call ShutdownService when engine was never initialized', async () => {
             const localMockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-            // Corrected local PlaytimeTracker mock
             const localMockPlaytimeTracker = {
                 getTotalPlaytime: jest.fn().mockReturnValue(0),
                 reset: jest.fn(),
@@ -182,54 +185,51 @@ describe('GameEngine stop()', () => {
                 getLoadedModManifests: jest.fn().mockReturnValue([]),
                 getEntityDefinition: jest.fn()
             };
-            const localEntityManager = {clearAll: jest.fn(), getEntityDefinition: jest.fn()};
+            const localEntityManager = {clearAll: jest.fn(), getEntityDefinition: jest.fn()}; // Mock for IEntityManager
 
             const localMockContainer = {
                 resolve: jest.fn((key) => {
                     if (key === tokens.ILogger) return localMockLogger;
                     if (key === tokens.PlaytimeTracker) return localMockPlaytimeTracker;
                     if (key === tokens.GamePersistenceService) return localMockGamePersistenceService;
-                    if (key === tokens.IDataRegistry) return localDataRegistry;
-                    if (key === tokens.EntityManager) return localEntityManager;
+                    // if (key === tokens.IDataRegistry) return localDataRegistry; // Not strictly needed for constructor
+                    if (key === tokens.IEntityManager) return localEntityManager; // Provide for IEntityManager
+                    // console.warn(`LOCAL_MOCK_WARN: Unhandled resolution for key: ${String(key)}`);
                     return undefined;
                 }),
                 register: jest.fn(), reset: jest.fn(), disposeSingletons: jest.fn(),
             };
             const uninitializedEngine = new GameEngine({container: localMockContainer});
-            localMockLogger.info.mockClear(); // Clear constructor logs
+            localMockLogger.info.mockClear();
 
             await uninitializedEngine.stop();
 
             expect(localMockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested.');
             expect(localMockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested, but engine is not initialized. No action needed.');
-            // Check that resolve was called for constructor deps but not for ShutdownService
             const shutdownServiceCall = localMockContainer.resolve.mock.calls.find(call => call[0] === tokens.ShutdownService);
             expect(shutdownServiceCall).toBeUndefined();
             expect(mockShutdownService.runShutdownSequence).not.toHaveBeenCalled(); // Global mock
         });
 
         it('should log info and NOT call ShutdownService when engine was stopped (state reset manually)', async () => {
-            // gameEngineInstance is initialized and started in beforeEach
-            await gameEngineInstance.stop(); // First stop
+            await gameEngineInstance.stop();
 
-            // Clear mocks from the first stop() call
             mockLogger.info.mockClear();
             mockLogger.warn.mockClear();
             mockLogger.error.mockClear();
             mockLogger.debug.mockClear();
-            mockAppContainer.resolve.mockClear(); // Crucial: clear resolve calls
+            mockAppContainer.resolve.mockClear();
             mockShutdownService.runShutdownSequence.mockClear();
             mockTurnManager.stop.mockClear();
-            mockAppContainer.disposeSingletons.mockClear();
+            if (mockAppContainer.disposeSingletons) mockAppContainer.disposeSingletons.mockClear();
             mockPlaytimeTracker.endSessionAndAccumulate.mockClear();
 
 
-            await gameEngineInstance.stop(); // Second call to stop()
+            await gameEngineInstance.stop();
 
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested.');
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested, but engine is not initialized. No action needed.');
 
-            // Ensure ShutdownService was not resolved on the second call
             const shutdownServiceCall = mockAppContainer.resolve.mock.calls.find(call => call[0] === tokens.ShutdownService);
             expect(shutdownServiceCall).toBeUndefined();
             expect(mockShutdownService.runShutdownSequence).not.toHaveBeenCalled();
@@ -239,11 +239,10 @@ describe('GameEngine stop()', () => {
     describe('Shutdown Service Delegation (Sub-Ticket 20.6)', () => {
         it('should delegate to ShutdownService and log success when runShutdownSequence resolves', async () => {
             mockShutdownService.runShutdownSequence.mockResolvedValue(undefined);
-            // gameEngineInstance is initialized and started in beforeEach
             await gameEngineInstance.stop();
 
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested.');
-            expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1); // Called when stopping initialized engine
+            expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1);
             expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ShutdownService);
             expect(mockShutdownService.runShutdownSequence).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Executing shutdown sequence via ShutdownService...');
@@ -257,7 +256,7 @@ describe('GameEngine stop()', () => {
             const shutdownError = new Error('Shutdown Service Failed');
             mockShutdownService.runShutdownSequence.mockRejectedValue(shutdownError);
 
-            await expect(gameEngineInstance.stop()).resolves.toBeUndefined(); // stop() should not reject itself
+            await expect(gameEngineInstance.stop()).resolves.toBeUndefined();
 
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Stop requested.');
             expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1);
@@ -265,12 +264,9 @@ describe('GameEngine stop()', () => {
             expect(mockShutdownService.runShutdownSequence).toHaveBeenCalledTimes(1);
             expect(mockLogger.error).toHaveBeenCalledWith('GameEngine: Error resolving or running ShutdownService.', shutdownError);
             expect(mockLogger.warn).toHaveBeenCalledWith('GameEngine: Attempting minimal fallback cleanup after ShutdownService error...');
-            // ITurnManager is resolved twice if ShutdownService fails: once by ShutdownService (mocked), once by fallback
-            // However, our mockAppContainer.resolve for ShutdownService might not actually call resolve for ITurnManager
-            // The fallback path in GameEngine.stop explicitly calls resolve for ITurnManager.
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager); // For fallback
-            expect(mockTurnManager.stop).toHaveBeenCalledTimes(1); // Called by fallback
-            expect(mockAppContainer.disposeSingletons).toHaveBeenCalledTimes(1); // Called by fallback
+            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
+            expect(mockTurnManager.stop).toHaveBeenCalledTimes(1); // From fallback (already called once in setup's stop if not cleared)
+            if (mockAppContainer.disposeSingletons) expect(mockAppContainer.disposeSingletons).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Engine stop sequence finished, internal state reset (isInitialized = false).');
             expect(gameEngineInstance.isInitialized).toBe(false);
         });
@@ -280,34 +276,42 @@ describe('GameEngine stop()', () => {
         it('should log error and attempt fallback cleanup when resolving ShutdownService fails', async () => {
             const resolveError = new Error('Cannot resolve ShutdownService');
 
-            // Ensure gameEngineInstance is initialized (it is from beforeEach)
-            // Now, make resolve fail for ShutdownService specifically for the stop() call
-            const originalResolve = mockAppContainer.resolve; // Save original complex mock
+            // Save the original mock implementation from beforeEach
+            const originalGlobalResolve = mockAppContainer.resolve.getMockImplementation();
+
             mockAppContainer.resolve = jest.fn((key) => {
                 if (key === tokens.ShutdownService) throw resolveError;
-                // Delegate to original mock for other resolutions needed by stop's fallback
+                // Delegate to the original for other necessary resolutions by stop() or its fallbacks
+                // e.g., ITurnManager for fallback, or ILogger if it were re-resolved (it's not).
+                // The global mock already handles ILogger, PlaytimeTracker, IEntityManager for constructor.
+                if (originalGlobalResolve) {
+                    return originalGlobalResolve(key);
+                }
+                // Fallback if originalGlobalResolve is somehow undefined (should not happen)
                 if (key === tokens.ITurnManager) return mockTurnManager;
-                if (key === tokens.ILogger) return mockLogger; // Should already be set in instance
-                // if (key === tokens.PlaytimeTracker) return mockPlaytimeTracker; // Not directly resolved by stop's fallback
-                return originalResolve(key); // Fallback to original for other deps if any (though less likely for stop)
+                if (key === tokens.ILogger) return mockLogger;
+                return undefined;
             });
 
 
-            await expect(gameEngineInstance.stop()).resolves.toBeUndefined(); // stop() should not reject
+            await expect(gameEngineInstance.stop()).resolves.toBeUndefined();
 
             expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1);
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ShutdownService); // Attempted
-            expect(mockShutdownService.runShutdownSequence).not.toHaveBeenCalled(); // Because resolution failed
+            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ShutdownService);
+            expect(mockShutdownService.runShutdownSequence).not.toHaveBeenCalled();
             expect(mockLogger.error).toHaveBeenCalledWith('GameEngine: Error resolving or running ShutdownService.', resolveError);
             expect(mockLogger.warn).toHaveBeenCalledWith('GameEngine: Attempting minimal fallback cleanup after ShutdownService error...');
 
-            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager); // For fallback
-            expect(mockTurnManager.stop).toHaveBeenCalledTimes(1); // Called by fallback
-            expect(mockAppContainer.disposeSingletons).toHaveBeenCalledTimes(1); // Called by fallback
+            expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
+            expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
+            if (mockAppContainer.disposeSingletons) expect(mockAppContainer.disposeSingletons).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Engine stop sequence finished, internal state reset (isInitialized = false).');
             expect(gameEngineInstance.isInitialized).toBe(false);
 
-            mockAppContainer.resolve = originalResolve; // Restore original mockAppContainer.resolve
+            // Restore the original resolve mock if it was saved
+            if (originalGlobalResolve) {
+                mockAppContainer.resolve.mockImplementation(originalGlobalResolve);
+            }
         });
     });
 });

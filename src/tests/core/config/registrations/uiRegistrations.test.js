@@ -6,6 +6,7 @@
 /** @typedef {import('../../../../core/interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 /** @typedef {import('../../../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../../../core/interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */ // Added
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -29,6 +30,8 @@ import {
     ActionButtonsRenderer,
     PerceptionLogRenderer
 } from '../../../../domUI/index.js';
+import SaveGameUI from '../../../../domUI/saveGameUI.js'; // Added
+import LoadGameUI from '../../../../domUI/loadGameUI.js'; // Added
 
 
 // --- Mock Implementations ---
@@ -38,10 +41,16 @@ const mockValidatedEventDispatcher = {dispatchValidated: jest.fn(), subscribe: j
 
 const mockEntityManagerService = {
     getEntityInstance: jest.fn(),
-    getEntitiesInLocation: jest.fn(() => new Set()), // <<< MODIFIED: Added mock for getEntitiesInLocation
+    getEntitiesInLocation: jest.fn(() => new Set()),
 };
 const mockDataRegistryService = {
     getEntityDefinition: jest.fn(),
+};
+const mockSaveLoadService = { // Added
+    listManualSaveSlots: jest.fn(),
+    loadGameData: jest.fn(),
+    saveManualGame: jest.fn(),
+    deleteManualSave: jest.fn(),
 };
 
 
@@ -56,6 +65,8 @@ let mockLocationInfoContainer;
 let mockInventoryWidget;
 let mockPlayerConfirmTurnButton;
 let mockPerceptionLogList;
+let mockOpenSaveGameButton;
+let mockOpenLoadGameButton;
 
 
 const setupDomMocks = () => {
@@ -69,6 +80,8 @@ const setupDomMocks = () => {
     mockInventoryWidget = mockDocument.createElement('div');
     mockPlayerConfirmTurnButton = mockDocument.createElement('button');
     mockPerceptionLogList = mockDocument.createElement('ul');
+    mockOpenSaveGameButton = mockDocument.createElement('button');
+    mockOpenLoadGameButton = mockDocument.createElement('button');
 
 
     mockInputElement.id = 'input-element';
@@ -80,6 +93,8 @@ const setupDomMocks = () => {
     mockInventoryWidget.id = 'inventory-widget';
     mockPlayerConfirmTurnButton.id = 'player-confirm-turn-button';
     mockPerceptionLogList.id = 'perception-log-list';
+    mockOpenSaveGameButton.id = 'open-save-game-button';
+    mockOpenLoadGameButton.id = 'open-load-game-button';
 
 
     mockDocument.body.innerHTML = '';
@@ -92,6 +107,8 @@ const setupDomMocks = () => {
     mockDocument.body.appendChild(mockInventoryWidget);
     mockDocument.body.appendChild(mockPlayerConfirmTurnButton);
     mockDocument.body.appendChild(mockPerceptionLogList);
+    mockDocument.body.appendChild(mockOpenSaveGameButton);
+    mockDocument.body.appendChild(mockOpenLoadGameButton);
 
 
     jest.spyOn(mockInputElement, 'addEventListener');
@@ -118,7 +135,7 @@ const createMockContainer = () => {
     });
 
     const resolveSpy = jest.fn((token) => {
-        const tokenString = String(token);
+        const tokenString = String(token); // Use String() for Symbols
         if (instances.has(token)) return instances.get(token);
 
         const registration = registrations.get(token);
@@ -131,13 +148,18 @@ const createMockContainer = () => {
                 && options?.dependencies
                 && Array.isArray(options.dependencies)
                 && options?.lifecycle === 'singleton';
+
             const isFactoryFunction = typeof factoryOrValue === 'function' && !isClassForSingle;
+
 
             if (isClassForSingle) {
                 const ClassConstructor = factoryOrValue;
                 const depsMap = {};
                 options.dependencies.forEach(depToken => {
                     let propName = String(depToken);
+                    if (propName.startsWith('Symbol(I') && propName.endsWith(')')) {
+                        propName = propName.substring(8, propName.length - 1);
+                    }
                     if (propName.startsWith('I') && propName.length > 1 && propName[1] === propName[1].toUpperCase()) {
                         propName = propName.substring(1);
                     }
@@ -167,7 +189,7 @@ const createMockContainer = () => {
                 instance = factoryOrValue;
             }
 
-            if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory') && instance !== undefined) {
+            if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory' || (options.isInstance && lifecycle === 'singleton')) && instance !== undefined) {
                 instances.set(token, instance);
             }
             return instance;
@@ -177,7 +199,8 @@ const createMockContainer = () => {
         if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
         if (token === tokens.EventBus) return mockEventBus;
         if (token === tokens.IEntityManager) return mockEntityManagerService;
-
+        if (token === tokens.IDataRegistry) return mockDataRegistryService;
+        if (token === tokens.ISaveLoadService) return mockSaveLoadService;
 
         throw new Error(`Mock Resolve Error: Token not registered or explicitly mocked: ${tokenString}`);
     });
@@ -211,6 +234,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IEntityManager, mockEntityManagerService, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IDataRegistry, mockDataRegistryService, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.ISaveLoadService, mockSaveLoadService, {lifecycle: 'singleton'});
 
 
         mockContainer.register.mockClear();
@@ -228,17 +253,18 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
     it('should register essential external dependencies (document, elements) as singleton instances', () => {
         registerUI(mockContainer, mockUiArgs);
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.WindowDocument, mockDocument, expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.outputDiv, mockOutputDiv, expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.inputElement, mockInputElement, expect.objectContaining({lifecycle: 'singleton'}));
-        expect(mockContainer.register).toHaveBeenCalledWith(tokens.titleElement, mockTitleElement, expect.objectContaining({lifecycle: 'singleton'}));
+        // registrar.instance(token, value) calls container.register(token, value, { lifecycle: 'singleton' })
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.WindowDocument, mockDocument, {lifecycle: 'singleton'});
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.outputDiv, mockOutputDiv, {lifecycle: 'singleton'});
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.inputElement, mockInputElement, {lifecycle: 'singleton'});
+        expect(mockContainer.register).toHaveBeenCalledWith(tokens.titleElement, mockTitleElement, {lifecycle: 'singleton'});
     });
 
     it('should register IDocumentContext via singletonFactory resolving to DocumentContext', () => {
         registerUI(mockContainer, mockUiArgs);
-        mockContainer.resolve(tokens.IDocumentContext);
         const iDocContextReg = mockContainer._registrations.get(tokens.IDocumentContext);
         expect(iDocContextReg).toBeDefined();
+        expect(iDocContextReg.options.lifecycle).toBe('singletonFactory');
         const instance = mockContainer.resolve(tokens.IDocumentContext);
         expect(instance).toBeInstanceOf(DocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
@@ -288,7 +314,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             if (token === tokens.ILogger) return mockLogger;
             if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
             if (token === tokens.DomElementFactory) return domFactoryInstance;
-            if (token === tokens.IEntityManager) return mockEntityManagerService; // This will now provide the mock with getEntitiesInLocation
+            if (token === tokens.IEntityManager) return mockEntityManagerService;
             if (token === tokens.IDataRegistry) return mockDataRegistryService;
             if (token === tokens.LocationRenderer) {
                 const registration = mockContainer._registrations.get(tokens.LocationRenderer);
@@ -297,11 +323,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             return originalResolve(token);
         });
         mockContainer.resolve = resolveTracker;
-
-        // Clear mock call counts for entityManagerService before resolving LocationRenderer
-        mockEntityManagerService.getEntityInstance.mockClear();
-        mockEntityManagerService.getEntitiesInLocation.mockClear();
-
 
         const instance = mockContainer.resolve(tokens.LocationRenderer);
 
@@ -417,18 +438,23 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.DomUiFacade);
         expect(regCall).toBeDefined();
         expect(regCall[1]).toBe(DomUiFacade);
-        expect(regCall[2]).toEqual(expect.objectContaining({
+
+        const expectedDeps = [
+            tokens.ActionButtonsRenderer,
+            tokens.InventoryPanel,
+            tokens.LocationRenderer,
+            tokens.TitleRenderer,
+            tokens.InputStateController,
+            tokens.UiMessageRenderer,
+            tokens.PerceptionLogRenderer,
+            tokens.SaveGameUI,
+            tokens.LoadGameUI
+        ];
+        // regCall[2] is the options object: { lifecycle: 'singleton', dependencies: [...] }
+        expect(regCall[2]).toEqual({ // Use toEqual for the whole object
             lifecycle: 'singleton',
-            dependencies: [
-                tokens.ActionButtonsRenderer,
-                tokens.InventoryPanel,
-                tokens.LocationRenderer,
-                tokens.TitleRenderer,
-                tokens.InputStateController,
-                tokens.UiMessageRenderer,
-                tokens.PerceptionLogRenderer
-            ]
-        }));
+            dependencies: expectedDeps
+        });
     });
 
     it('should register IInputHandler via singletonFactory with IValidatedEventDispatcher', () => {

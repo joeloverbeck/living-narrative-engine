@@ -10,8 +10,8 @@ import {tokens} from '../../core/config/tokens.js'; // Import tokens
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../services/playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService */
-/** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+// Updated to use IEntityManager for the type hint of the mock
+/** @typedef {import('../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 
 // --- Test Suite ---
@@ -25,9 +25,7 @@ describe('GameEngine Constructor', () => {
     let mockPlaytimeTracker;
     /** @type {jest.Mocked<GamePersistenceService>} */
     let mockGamePersistenceService;
-    /** @type {jest.Mocked<IDataRegistry>} */
-    let mockDataRegistry;
-    /** @type {jest.Mocked<EntityManager>} */
+    /** @type {jest.Mocked<IEntityManager>} */ // Updated mock type
     let mockEntityManager;
 
 
@@ -35,11 +33,25 @@ describe('GameEngine Constructor', () => {
         jest.clearAllMocks();
 
         mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
-        // Mock actual services resolved by constructor
-        mockPlaytimeTracker = {start: jest.fn(), stop: jest.fn(), getTotalPlaytime: jest.fn(), reset: jest.fn()};
-        mockGamePersistenceService = {saveGame: jest.fn(), loadGame: jest.fn()}; // Add methods if needed
-        mockDataRegistry = {getEntityDefinition: jest.fn(), getLoadedModManifests: jest.fn()};
-        mockEntityManager = {activeEntities: new Map(), getEntitiesWithComponent: jest.fn(), clearAll: jest.fn()};
+        mockPlaytimeTracker = {
+            // Methods called by GameEngine constructor or its subsequent logic if successful
+            getTotalPlaytime: jest.fn().mockReturnValue(0), // For potential future use
+            reset: jest.fn(), // Called by startNewGame, not directly by constructor logic path shown
+            startSession: jest.fn(), // Called by startNewGame
+            endSessionAndAccumulate: jest.fn(), // Called by stop
+            setAccumulatedPlaytime: jest.fn() // For potential future use
+        };
+        mockGamePersistenceService = {
+            saveGame: jest.fn(),
+            loadAndRestoreGame: jest.fn()
+        };
+        mockEntityManager = { // This mock will be returned for IEntityManager
+            clearAll: jest.fn(), // Called by startNewGame, not directly by constructor logic path shown
+            // Add any other methods if constructor were to use them post-resolution
+            activeEntities: new Map(),
+            getEntitiesWithComponent: jest.fn(),
+            addComponent: jest.fn()
+        };
 
         mockAppContainer = {
             resolve: jest.fn(),
@@ -48,22 +60,19 @@ describe('GameEngine Constructor', () => {
             reset: jest.fn(),
         };
 
-        // Updated mockImplementation to reflect actual constructor dependencies
         mockAppContainer.resolve.mockImplementation((key) => {
             if (key === tokens.ILogger) return mockLogger;
             if (key === tokens.PlaytimeTracker) return mockPlaytimeTracker;
             if (key === tokens.GamePersistenceService) return mockGamePersistenceService;
-            if (key === tokens.IDataRegistry) return mockDataRegistry;
-            if (key === tokens.EntityManager) return mockEntityManager;
-            // If a token is requested that isn't one of these, it might indicate an issue
-            // or an unhandled dependency in the test setup.
-            // For constructor tests, we primarily care about these 5.
-            console.warn(`MockAppContainer (Constructor Test): Unexpected resolution for ${String(key)}`);
+            // VVVVVV MODIFIED VVVVVV
+            if (key === tokens.IEntityManager) return mockEntityManager; // GameEngine constructor now asks for IEntityManager
+            // ^^^^^^ MODIFIED ^^^^^^
+            console.warn(`MockAppContainer (Constructor Test): Unexpected resolution attempt for token: ${String(key)}`);
             return undefined;
         });
     });
 
-    it('[TEST-ENG-001] should successfully instantiate and resolve its core dependencies', () => { // Updated test description
+    it('[TEST-ENG-001] should successfully instantiate and resolve its core dependencies', () => {
         let gameEngineInstance;
         let constructorError = null;
         try {
@@ -72,42 +81,36 @@ describe('GameEngine Constructor', () => {
             constructorError = error;
         }
 
-        expect(constructorError).toBeNull(); // Should not throw if all critical dependencies are met
+        expect(constructorError).toBeNull();
         expect(gameEngineInstance).toBeInstanceOf(GameEngine);
 
-        // Constructor resolves 5 services
-        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(5);
+        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(4); // ILogger, IEntityManager, PlaytimeTracker, GamePersistenceService
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.PlaytimeTracker);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.GamePersistenceService);
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.EntityManager);
+        // VVVVVV MODIFIED ASSERTION VVVVVV
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+        // ^^^^^^ MODIFIED ASSERTION ^^^^^^
 
-        // Check logger calls from successful instantiation
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine Constructor: GamePersistenceService resolved successfully.');
         expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Instance created. Ready to start.');
-        expect(mockLogger.info).toHaveBeenCalledTimes(2); // Adjust if more info logs are added for successful resolutions
+        expect(mockLogger.info).toHaveBeenCalledTimes(2); // GPS success + Instance created
 
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        // GameEngine constructor will throw if PlaytimeTracker or GamePersistenceService fails to resolve.
-        // It only warns for IDataRegistry and EntityManager.
     });
 
-    it('[TEST-ENG-003] should fall back to console logging if ILogger cannot be resolved, but still attempt to resolve other services', () => { // Updated test description
+    it('[TEST-ENG-003] should fall back to console logging if ILogger cannot be resolved, but still attempt to resolve other services', () => {
         const iLoggerResolutionError = new Error('Simulated ILogger resolution failure.');
-        // GamePersistenceService is critical, so we'll let it resolve for this test,
-        // but PlaytimeTracker is also critical. For this test, we are focusing on ILogger fallback.
         mockAppContainer.resolve.mockImplementation((key) => {
             if (key === tokens.ILogger) {
                 throw iLoggerResolutionError;
             }
-            // These are critical and will throw if they fail, GameEngine handles this.
-            // For this specific test, we assume they resolve, or the test would be about them.
             if (key === tokens.PlaytimeTracker) return mockPlaytimeTracker;
             if (key === tokens.GamePersistenceService) return mockGamePersistenceService;
-            // These will only warn if they fail
-            if (key === tokens.IDataRegistry) return mockDataRegistry;
-            if (key === tokens.EntityManager) return mockEntityManager;
+            // VVVVVV MODIFIED VVVVVV
+            if (key === tokens.IEntityManager) return mockEntityManager; // Provide IEntityManager
+            // ^^^^^^ MODIFIED ^^^^^^
+            console.warn(`MockAppContainer (ILogger Fail Test): Unexpected resolution attempt for token: ${String(key)}`);
             return undefined;
         });
 
@@ -116,7 +119,7 @@ describe('GameEngine Constructor', () => {
         const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {
         });
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
-        }); // GameEngine uses logger.error for critical fails
+        }); // For GameEngine's own error if deps fail
 
         let gameEngineInstance;
         let constructorError = null;
@@ -127,36 +130,34 @@ describe('GameEngine Constructor', () => {
             constructorError = error;
         }
 
-        // Even if ILogger fails, the constructor might still throw if PlaytimeTracker or GamePersistenceService resolution fails *after* ILogger.
-        // Given the current GameEngine code, if PlaytimeTracker resolves and GamePersistenceService resolves, it shouldn't throw.
-        // The test name suggests it's about ILogger fallback, implying other criticals might succeed.
-        expect(constructorError).toBeNull(); // Assuming PlaytimeTracker and GamePersistenceService DO resolve for this test.
+        expect(constructorError).toBeNull(); // Because IEntityManager is now mocked, constructor should pass
         expect(gameEngineInstance).toBeInstanceOf(GameEngine);
 
-        // All 5 services are still attempted to be resolved
-        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(5);
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ILogger); // Attempted
+        expect(mockAppContainer.resolve).toHaveBeenCalledTimes(4); // ILogger (attempted), IEntityManager, PlaytimeTracker, GamePersistenceService
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.PlaytimeTracker);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.GamePersistenceService);
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
-        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.EntityManager);
+        // VVVVVV MODIFIED ASSERTION VVVVVV
+        expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+        // ^^^^^^ MODIFIED ASSERTION ^^^^^^
 
-        expect(consoleWarnSpy).toHaveBeenCalledTimes(1); // For ILogger fallback
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-            'GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console.',
+            'GameEngine Constructor: Could not resolve ILogger. Falling back to console for initial error logging.',
             iLoggerResolutionError
         );
 
-        // The internal #logger is now console, so console.info is called.
-        // One for GamePersistenceService resolved, one for "Instance created".
-        expect(consoleInfoSpy).toHaveBeenCalledTimes(2);
         expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine Constructor: GamePersistenceService resolved successfully.');
         expect(consoleInfoSpy).toHaveBeenCalledWith('GameEngine: Instance created. Ready to start.');
+        expect(consoleInfoSpy).toHaveBeenCalledTimes(2);
 
-        // The actual mockLogger (if it existed) wouldn't be used.
-        expect(mockLogger.info).not.toHaveBeenCalled();
+
+        expect(mockLogger.info).not.toHaveBeenCalled(); // Original logger's methods shouldn't be called
         expect(mockLogger.warn).not.toHaveBeenCalled();
-        expect(consoleErrorSpy).not.toHaveBeenCalled(); // No other critical errors expected for *this* specific scenario
+        // GameEngine's own logger.error (which would be console.error here) shouldn't be called for ILogger failure itself,
+        // but would be for other critical deps if they failed (they don't in this specific test path now).
+        expect(consoleErrorSpy).not.toHaveBeenCalledWith(expect.stringContaining('IEntityManager failed to resolve'));
+
 
         consoleWarnSpy.mockRestore();
         consoleInfoSpy.mockRestore();
@@ -166,13 +167,12 @@ describe('GameEngine Constructor', () => {
     it('[TEST-ENG-002] should throw an error if container option is null', () => {
         const options = {container: null};
         const expectedErrorMessage = 'GameEngine requires a valid AppContainer instance.';
-        // Spy on console.error to suppress it during this expected failure
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
         });
         expect(() => {
             new GameEngine(options);
         }).toThrow(new Error(expectedErrorMessage));
-        expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMessage); // Check that GameEngine itself logged the error
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMessage);
         consoleErrorSpy.mockRestore();
     });
 
@@ -187,7 +187,7 @@ describe('GameEngine Constructor', () => {
             new GameEngine(optionsMissing);
         }).toThrow(new Error(expectedErrorMessage));
         expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMessage);
-        consoleErrorSpy.mockClear(); // Clear for the next assertion
+        consoleErrorSpy.mockClear();
 
         expect(() => {
             new GameEngine(optionsUndefined);

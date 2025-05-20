@@ -8,20 +8,20 @@
 /** @typedef {import('./initializers/services/initializationService.js').default} InitializationService */
 /** @typedef {import('./initializers/services/initializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('./shutdown/services/shutdownService.js').default} ShutdownService */
-// ISaveLoadService import will be removed as per ticket if no longer used
-// /** @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
-/** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-/** @typedef {import('./interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Type hint for the concrete class
+/** @typedef {import('../entities/interfaces/IEntityManager.js').IEntityManager} IEntityManagerResolved */ // Type hint for the resolved interface
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../services/playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../services/gamePersistenceService.js').default} GamePersistenceService */
-/** @typedef {import('../services/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */ // Assuming GamePersistenceService exports this type
+/** @typedef {import('../services/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
 
 
 // --- Import Tokens ---
 import {tokens} from './config/tokens.js';
-import OriginalEntity from '../entities/entity.js'; // Assuming Entity class is default export
+// OriginalEntity import remains if EntityManager or other parts still conceptually use it,
+// even if not directly instantiated in this file after restoreState removal.
+// For now, assuming it might be needed by other parts of the system that GameEngine interacts with.
+import OriginalEntity from '../entities/entity.js';
 
 /**
  * Encapsulates the core game engine, managing state, coordinating initialization
@@ -35,15 +35,42 @@ class GameEngine {
     #isInitialized = false;
     /** @private @type {ILogger | null} */
     #logger = null;
-    /** @private @type {IDataRegistry | null} */
-    #dataRegistry = null;
-    /** @private @type {EntityManager | null} */
+    /** @private @type {IEntityManagerResolved | null} */ // Changed to use the interface type for the resolved instance
     #entityManager = null;
     /** @private @type {PlaytimeTracker | null} */
     #playtimeTracker = null;
     /** @private @type {GamePersistenceService | null} */
     #gamePersistenceService = null;
 
+    /**
+     * @private
+     * @method #resolveDependency
+     * @description Resolves a dependency from the AppContainer, with standardized error handling and fallback.
+     * @param {symbol} token - The token to resolve.
+     * @param {string} serviceNameString - A string representation of the service name for error messages.
+     * @param {(message: string, error?: Error) => void} errorHandlerCallback - Callback to handle errors.
+     * @param {boolean} [isLoggerFallback=false] - If true and token is ILogger, falls back to console on error.
+     * @returns {any | null} The resolved service or null/console fallback on error.
+     */
+    #resolveDependency(token, serviceNameString, errorHandlerCallback, isLoggerFallback = false) {
+        try {
+            return this.#container.resolve(token);
+        } catch (error) {
+            const errorMessage = `GameEngine Constructor: Could not resolve ${serviceNameString}.`;
+            if (isLoggerFallback && token === tokens.ILogger) {
+                console.warn(`${errorMessage} Falling back to console for initial error logging.`, error);
+                return {
+                    info: console.info,
+                    warn: console.warn,
+                    error: console.error,
+                    debug: console.debug
+                };
+            }
+            // Use the provided errorHandlerCallback, which should ideally use an already resolved logger or console.
+            errorHandlerCallback(`${errorMessage} Dependent features may not function.`, error);
+            return null; // Indicate resolution failure
+        }
+    }
 
     /**
      * Creates a new GameEngine instance.
@@ -52,44 +79,56 @@ class GameEngine {
      */
     constructor({container}) {
         if (!container) {
+            // Fallback to console.error if logger is not even attempted to be resolved.
             console.error('GameEngine requires a valid AppContainer instance.');
             throw new Error('GameEngine requires a valid AppContainer instance.');
         }
         this.#container = container;
 
-        try {
-            this.#logger = this.#container.resolve(tokens.ILogger);
-        } catch (error) {
-            console.warn('GameEngine Constructor: Could not resolve ILogger dependency. Falling back to console.', error);
-            this.#logger = {info: console.info, warn: console.warn, error: console.error, debug: console.debug};
+        // --- Resolve Logger First (with special fallback handling) ---
+        this.#logger = /** @type {ILogger} */ (this.#resolveDependency(
+            tokens.ILogger,
+            'ILogger',
+            (msg, err) => console.warn(msg, err), // Fallback error handler for the logger itself
+            true // isLoggerFallback = true
+        ));
+
+        // --- Resolve Other Core Dependencies ---
+        this.#entityManager = /** @type {IEntityManagerResolved} */ (this.#resolveDependency(
+            tokens.IEntityManager, // <<< CORRECTED TOKEN
+            'IEntityManager', // Changed string to reflect interface token
+            (msg, err) => this.#logger.error(msg, err)
+        ));
+        if (!this.#entityManager) {
+            const errorMsg = 'GameEngine Constructor: CRITICAL - IEntityManager failed to resolve. New game start will fail.';
+            this.#logger.error(errorMsg); // Log using the potentially fallback logger
+            throw new Error('Critical: IEntityManager failed to resolve.'); // Updated error message
         }
 
-        try {
-            this.#playtimeTracker = /** @type {PlaytimeTracker} */ (this.#container.resolve(tokens.PlaytimeTracker));
-        } catch (error) {
-            this.#logger.error('GameEngine Constructor: CRITICAL - Could not resolve PlaytimeTracker. Playtime features and save/load will fail.', error);
-            throw new Error('GameEngine failed to initialize PlaytimeTracker.'); // Make it fatal
+        this.#playtimeTracker = /** @type {PlaytimeTracker} */ (this.#resolveDependency(
+            tokens.PlaytimeTracker,
+            'PlaytimeTracker',
+            (msg, err) => this.#logger.error(msg, err)
+        ));
+        if (!this.#playtimeTracker) {
+            const errorMsg = 'GameEngine Constructor: CRITICAL - Could not resolve PlaytimeTracker. Playtime features and save/load will fail.';
+            this.#logger.error(errorMsg);
+            throw new Error('Critical: PlaytimeTracker failed to resolve.');
         }
 
-        try {
-            this.#gamePersistenceService = /** @type {GamePersistenceService} */ (this.#container.resolve(tokens.GamePersistenceService));
+        this.#gamePersistenceService = /** @type {GamePersistenceService} */ (this.#resolveDependency(
+            tokens.GamePersistenceService,
+            'GamePersistenceService',
+            (msg, err) => this.#logger.error(msg, err)
+        ));
+        if (!this.#gamePersistenceService) {
+            const errorMsg = 'GameEngine Constructor: CRITICAL - Could not resolve GamePersistenceService. Manual save operations will fail.';
+            this.#logger.error(errorMsg);
+            throw new Error('Critical: GamePersistenceService failed to resolve.');
+        } else {
+            // Re-added log message for GamePersistenceService successful resolution
             this.#logger.info('GameEngine Constructor: GamePersistenceService resolved successfully.');
-        } catch (error) {
-            this.#logger.error('GameEngine Constructor: CRITICAL - Could not resolve GamePersistenceService. Manual save operations will fail.', error);
-            throw new Error('GameEngine failed to initialize GamePersistenceService.'); // Make it fatal
         }
-
-        try {
-            this.#dataRegistry = this.#container.resolve(tokens.IDataRegistry);
-        } catch (error) {
-            this.#logger.warn('GameEngine Constructor: Could not resolve IDataRegistry. Mod manifest capture will fail.', error);
-        }
-        try {
-            this.#entityManager = this.#container.resolve(tokens.EntityManager); // Assuming concrete EntityManager token for now
-        } catch (error) {
-            this.#logger.warn('GameEngine Constructor: Could not resolve EntityManager. Game state capture/restore will fail.', error);
-        }
-
 
         this.#logger.info('GameEngine: Instance created. Ready to start.');
     }
@@ -158,8 +197,6 @@ class GameEngine {
 
         if (this.isInitialized) {
             this.#logger?.warn(`GameEngine: startNewGame('${worldName}') called, but engine is already initialized. Please stop the engine first.`);
-            // Consider calling await this.stop(); here if auto-stop is desired,
-            // or throw an error to enforce manual stop. For now, returning as per original logic.
             return;
         }
 
@@ -170,12 +207,10 @@ class GameEngine {
                 this.#logger?.debug('GameEngine: Clearing EntityManager before new game initialization.');
                 this.#entityManager.clearAll();
             } else {
+                // This case should ideally not be reached if constructor throws on failed EntityManager resolution.
                 this.#logger?.error('GameEngine: EntityManager is not available. Cannot clear before new game.');
                 throw new Error('EntityManager not available for new game start.');
             }
-
-            // PlaytimeTracker reset is now handled *after* successful initialization.
-            // The old reset call that was here has been removed.
 
             const initializationService = /** @type {InitializationService} */ (
                 this.#container.resolve(tokens.InitializationService)
@@ -186,9 +221,7 @@ class GameEngine {
             if (!initResult.success) {
                 const failureReason = initResult.error?.message || 'Unknown initialization error';
                 this.#logger?.error(`GameEngine: New game initialization sequence failed for world '${worldName}'. Reason: ${failureReason}`, initResult.error);
-                this.#isInitialized = false; // Ensure state is false if init failed
-                // Playtime should be reset on failure if it was somehow started or carried over.
-                // The main catch block handles this, but being explicit here too for init failure.
+                this.#isInitialized = false;
                 if (this.#playtimeTracker) {
                     this.#logger?.debug('GameEngine: Resetting PlaytimeTracker due to failed initialization sequence.');
                     this.#playtimeTracker.reset();
@@ -198,20 +231,13 @@ class GameEngine {
 
             this.#logger?.info('GameEngine: New game initialization sequence reported success.');
 
-            // Reset playtime tracker for the new game *after* successful initialization
             if (this.#playtimeTracker) {
                 this.#logger?.debug('GameEngine: Resetting PlaytimeTracker for new game session.');
                 this.#playtimeTracker.reset();
-            } else {
-                this.#logger?.warn('GameEngine: PlaytimeTracker not available, cannot reset for new game.');
-            }
-
-            // Start session timer after successful new game init and playtime reset
-            if (this.#playtimeTracker) {
                 this.#logger?.debug('GameEngine: Starting new PlaytimeTracker session.');
                 this.#playtimeTracker.startSession();
             } else {
-                this.#logger?.warn('GameEngine: PlaytimeTracker not available, cannot start session.');
+                this.#logger?.warn('GameEngine: PlaytimeTracker not available, cannot reset or start session for new game.');
             }
 
             this.#logger?.info('GameEngine: Finalizing new game setup via #onGameReady...');
@@ -220,125 +246,15 @@ class GameEngine {
 
         } catch (error) {
             this.#logger?.error(`GameEngine: CRITICAL ERROR during new game initialization or startup for world '${worldName}'.`, error);
-            this.#isInitialized = false; // Ensure engine is marked as not initialized on any critical failure
+            this.#isInitialized = false;
             if (this.#playtimeTracker) {
                 this.#logger?.debug('GameEngine: Resetting PlaytimeTracker due to critical error during new game start.');
-                this.#playtimeTracker.reset(); // Reset playtime on any critical failure during new game start
+                this.#playtimeTracker.reset();
             }
-            throw error; // Re-throw the error to be handled by the caller
-        }
-    }
-
-    /**
-     * Restores the game state from a deserialized save game object.
-     * This method assumes mod definitions have already been loaded into DataRegistry
-     * based on the save file's mod manifest *before* this method is called.
-     * The actual restoration of game data components (entities, playtime, turn number etc.)
-     * is expected to be handled by GamePersistenceService.loadAndRestoreGame, which then
-     * provides the deserializedSaveData. This method applies that data.
-     * @param {SaveGameStructure} deserializedSaveData - The full save game object.
-     * @returns {Promise<void>}
-     * @throws {Error} If restoration fails or if #onGameReady fails.
-     * @deprecated This method's core logic has been moved to GamePersistenceService.restoreGameState.
-     * GameEngine.loadGame() should be used as the public API for loading, which orchestrates
-     * GamePersistenceService. This method may be removed in future versions.
-     */
-    async restoreState(deserializedSaveData) {
-        this.#logger?.warn('GameEngine.restoreState is deprecated. GamePersistenceService.restoreGameState should be used internally by loadGame flow.');
-        this.#logger?.info('GameEngine: Restoring game state from save data (via deprecated method)...');
-
-        if (!deserializedSaveData || typeof deserializedSaveData !== 'object') {
-            this.#logger?.error('GameEngine.restoreState: Invalid or null deserializedSaveData provided.');
-            throw new Error('Invalid save data provided for state restoration.');
-        }
-        if (!this.#entityManager) {
-            this.#logger?.error('GameEngine.restoreState: EntityManager is not available. Cannot restore entities.');
-            throw new Error('EntityManager not available for state restoration.');
-        }
-        if (!this.#dataRegistry) {
-            this.#logger?.warn('GameEngine.restoreState: DataRegistry is not available. This might be an issue if further definition lookups were needed.');
-        }
-
-        this.#logger?.debug('GameEngine.restoreState: Clearing existing entity state via EntityManager.clearAll() before applying loaded state.');
-        this.#entityManager.clearAll();
-
-        this.#logger?.info(`GameEngine.restoreState: Restoring ${deserializedSaveData.gameState.entities?.length || 0} entities.`);
-        if (deserializedSaveData.gameState?.entities) {
-            for (const savedEntityData of deserializedSaveData.gameState.entities) {
-                if (!savedEntityData.instanceId || !savedEntityData.definitionId || typeof savedEntityData.components !== 'object') {
-                    this.#logger?.warn('GameEngine.restoreState: Skipping invalid entity data in save:', savedEntityData);
-                    continue;
-                }
-                const entity = new OriginalEntity(savedEntityData.instanceId);
-                this.#logger?.debug(`GameEngine.restoreState: Re-registering entity instance ${entity.id} (definition: ${savedEntityData.definitionId}).`);
-                this.#entityManager.activeEntities.set(entity.id, entity);
-
-                for (const [componentTypeId, componentData] of Object.entries(savedEntityData.components)) {
-                    try {
-                        this.#entityManager.addComponent(entity.id, componentTypeId, componentData);
-                        this.#logger?.debug(`GameEngine.restoreState: Added/Restored component ${componentTypeId} to entity ${entity.id}.`);
-                    } catch (compError) {
-                        this.#logger?.error(`GameEngine.restoreState: Failed to add/restore component ${componentTypeId} to entity ${entity.id}. Error: ${compError.message}. Skipping component.`, compError);
-                    }
-                }
-                this.#logger?.debug(`GameEngine.restoreState: Finished restoring components for entity ${entity.id}.`);
-            }
-        }
-        this.#logger?.info('GameEngine.restoreState: Entity restoration process in GameEngine scope complete.');
-
-        if (deserializedSaveData.metadata && typeof deserializedSaveData.metadata.playtimeSeconds === 'number') {
-            this.#logger?.info(`GameEngine.restoreState: PlaytimeTracker should have been updated by GamePersistenceService to ${deserializedSaveData.metadata.playtimeSeconds}s.`);
-            if (this.#playtimeTracker) { // Manually setting it here since this is a deprecated path
-                this.#playtimeTracker.setAccumulatedPlaytime(deserializedSaveData.metadata.playtimeSeconds);
-            }
-        } else {
-            this.#logger?.warn('GameEngine.restoreState: Playtime data not found or invalid in save data; PlaytimeTracker state depends on GamePersistenceService.');
-        }
-
-        try {
-            const turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
-            if (turnManager && deserializedSaveData.gameState?.engineInternals && typeof deserializedSaveData.gameState.engineInternals.currentTurn === 'number') {
-                if (typeof turnManager.setCurrentTurn === 'function') {
-                    turnManager.setCurrentTurn(deserializedSaveData.gameState.engineInternals.currentTurn);
-                    this.#logger?.info(`GameEngine.restoreState: Set current turn on TurnManager to ${deserializedSaveData.gameState.engineInternals.currentTurn}.`);
-                } else {
-                    this.#logger?.warn('GameEngine.restoreState: TurnManager does not have setCurrentTurn method. Cannot restore turn count directly here.');
-                }
-            } else {
-                this.#logger?.info('GameEngine.restoreState: Current turn data not found in save or TurnManager not resolved for setCurrentTurn.');
-            }
-        } catch (error) {
-            this.#logger?.error('GameEngine.restoreState: Failed to resolve ITurnManager for setting current turn. Turn state may not be fully restored.', error);
-        }
-
-        if (deserializedSaveData.gameState?.playerState) {
-            this.#logger?.debug('GameEngine.restoreState: PlayerState data was present in save. Restoration depends on GamePersistenceService/other services.');
-        }
-
-        if (deserializedSaveData.gameState?.worldState) {
-            this.#logger?.debug('GameEngine.restoreState: WorldState data was present in save. Restoration depends on GamePersistenceService/other services.');
-        }
-        try {
-            await this.#onGameReady(); // This will set #isInitialized = true
-            this.#logger?.info('GameEngine: State restoration and engine readiness complete (via deprecated method).');
-        } catch (error) {
-            this.#logger?.error('GameEngine.restoreState: CRITICAL ERROR during #onGameReady after state restoration (via deprecated method).', error);
-            this.#isInitialized = false;
             throw error;
         }
     }
 
-    /**
-     * Loads a game from a save identifier.
-     * This method orchestrates stopping any current game, delegating to GamePersistenceService
-     * to load and restore data, and then finalizing the engine state using #onGameReady().
-     *
-     * @param {string} saveIdentifier - The identifier for the save game to load.
-     * @returns {Promise<{success: boolean, error?: string}>} A promise resolving to an object
-     * indicating the success or failure of the load operation.
-     * On success: `{ success: true }`.
-     * On failure: `{ success: false, error: "Error message" }`.
-     */
     async loadGame(saveIdentifier) {
         this.#logger?.info(`GameEngine: loadGame called for identifier: ${saveIdentifier}.`);
 
@@ -357,25 +273,27 @@ class GameEngine {
         let loadRestoreResult;
         try {
             if (!this.#gamePersistenceService) {
-                this.#logger?.error(`GameEngine.loadGame: GamePersistenceService is not available. Cannot load game for ${saveIdentifier}.`);
+                const errorMsg = `GameEngine.loadGame: GamePersistenceService is not available. Cannot load game for ${saveIdentifier}.`;
+                this.#logger?.error(errorMsg);
                 throw new Error('GamePersistenceService is not available for loading game.');
             }
             loadRestoreResult = await this.#gamePersistenceService.loadAndRestoreGame(saveIdentifier);
+
         } catch (error) {
-            this.#logger?.error(`GameEngine.loadGame: Unexpected error during loadAndRestoreGame for ${saveIdentifier}. ${error.message}.`, error);
+            this.#logger?.error(`GameEngine.loadGame: Error during loadAndRestoreGame for ${saveIdentifier}. ${error.message}.`, error);
             this.#isInitialized = false;
             if (this.#playtimeTracker) {
                 this.#logger?.debug(`GameEngine.loadGame: Resetting PlaytimeTracker due to error in loadAndRestoreGame.`);
                 this.#playtimeTracker.reset();
             }
-            throw error;
+            return {success: false, error: `Error during game load/restore: ${error.message}`};
         }
 
         if (loadRestoreResult && loadRestoreResult.success) {
-            this.#logger?.info(`GameEngine.loadGame: Successfully loaded and restored state from ${saveIdentifier}.`);
+            this.#logger?.info(`GameEngine.loadGame: Successfully loaded and restored state from ${saveIdentifier} via GamePersistenceService.`);
 
             if (this.#playtimeTracker) {
-                this.#logger?.debug(`GameEngine.loadGame: Starting new PlaytimeTracker session after successful load.`);
+                this.#logger?.debug(`GameEngine.loadGame: Starting PlaytimeTracker session after successful load.`);
                 this.#playtimeTracker.startSession();
             } else {
                 this.#logger?.warn('GameEngine.loadGame: PlaytimeTracker not available, cannot start session after load.');
@@ -397,9 +315,6 @@ class GameEngine {
         }
     }
 
-    /**
-     * Stops the game engine by delegating to the ShutdownService and resetting internal state.
-     */
     async stop() {
         this.#logger?.info('GameEngine: Stop requested.');
 
@@ -425,7 +340,7 @@ class GameEngine {
             this.#logger?.error('GameEngine: Error resolving or running ShutdownService.', shutdownError);
             this.#logger?.warn('GameEngine: Attempting minimal fallback cleanup after ShutdownService error...');
             try {
-                const fallbackTurnManager = this.#container.resolve(tokens.ITurnManager);
+                const fallbackTurnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
                 if (fallbackTurnManager && typeof fallbackTurnManager.stop === 'function') {
                     await fallbackTurnManager.stop();
                     this.#logger?.warn('GameEngine: Fallback - Manually stopped TurnManager.');
@@ -447,12 +362,6 @@ class GameEngine {
         }
     }
 
-    /**
-     * Triggers a manual save operation by delegating to GamePersistenceService.
-     * @param {string} saveName - The desired name for the save file.
-     * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>}
-     * A promise resolving to the outcome of the save operation.
-     */
     async triggerManualSave(saveName) {
         this.#logger?.info(`GameEngine: Manual save triggered for name: "${saveName}"`);
 

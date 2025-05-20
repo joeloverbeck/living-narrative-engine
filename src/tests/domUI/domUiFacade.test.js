@@ -1,4 +1,4 @@
-// src/tests/domUI/DomUiFacade.test.js
+// src/tests/domUI/domUiFacade.test.js
 /**
  * @fileoverview Unit tests for the DomUiFacade class.
  */
@@ -13,7 +13,9 @@ const mockLocationRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockTitleRenderer = {set: jest.fn(), dispose: jest.fn()};
 const mockInputStateController = {setEnabled: jest.fn(), dispose: jest.fn()};
 const mockUiMessageRenderer = {render: jest.fn(), dispose: jest.fn()};
-const mockPerceptionLogRenderer = {render: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
+const mockPerceptionLogRenderer = {render: jest.fn(), dispose: jest.fn()};
+const mockSaveGameUI = {show: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
+const mockLoadGameUI = {show: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
 
 describe('DomUiFacade', () => {
     let validDeps;
@@ -30,7 +32,9 @@ describe('DomUiFacade', () => {
             titleRenderer: mockTitleRenderer,
             inputStateController: mockInputStateController,
             uiMessageRenderer: mockUiMessageRenderer,
-            perceptionLogRenderer: mockPerceptionLogRenderer, // <<< ADDED TO VALID DEPS
+            perceptionLogRenderer: mockPerceptionLogRenderer,
+            saveGameUI: mockSaveGameUI, // <<< ADDED TO VALID DEPS
+            loadGameUI: mockLoadGameUI   // <<< ADDED TO VALID DEPS
         };
     });
 
@@ -41,7 +45,7 @@ describe('DomUiFacade', () => {
     });
 
     it('should throw an error if actionButtonsRenderer is missing', () => {
-        const deps = {...validDeps}; // Create a copy to modify
+        const deps = {...validDeps};
         delete deps.actionButtonsRenderer;
         expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
     });
@@ -76,11 +80,24 @@ describe('DomUiFacade', () => {
         expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
     });
 
-    it('should throw an error if perceptionLogRenderer is missing', () => { // <<< ADDED TEST
+    it('should throw an error if perceptionLogRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.perceptionLogRenderer;
         expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
     });
+
+    it('should throw an error if saveGameUI is missing', () => { // <<< ADDED TEST
+        const deps = {...validDeps};
+        delete deps.saveGameUI;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid saveGameUI dependency.');
+    });
+
+    it('should throw an error if loadGameUI is missing', () => { // <<< ADDED TEST
+        const deps = {...validDeps};
+        delete deps.loadGameUI;
+        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid loadGameUI dependency.');
+    });
+
 
     // --- Getter Tests (Acceptance Criteria) ---
 
@@ -114,9 +131,19 @@ describe('DomUiFacade', () => {
         expect(facade.messages).toBe(mockUiMessageRenderer);
     });
 
-    it('should provide a getter for perceptionLog', () => { // <<< ADDED TEST
+    it('should provide a getter for perceptionLog', () => {
         const facade = new DomUiFacade(validDeps);
         expect(facade.perceptionLog).toBe(mockPerceptionLogRenderer);
+    });
+
+    it('should provide a getter for saveGame', () => { // <<< ADDED TEST
+        const facade = new DomUiFacade(validDeps);
+        expect(facade.saveGame).toBe(mockSaveGameUI);
+    });
+
+    it('should provide a getter for loadGame', () => { // <<< ADDED TEST
+        const facade = new DomUiFacade(validDeps);
+        expect(facade.loadGame).toBe(mockLoadGameUI);
     });
 
 
@@ -132,17 +159,23 @@ describe('DomUiFacade', () => {
         expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
         expect(mockUiMessageRenderer.dispose).toHaveBeenCalledTimes(1);
-        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
+        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
+        expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
+        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
     });
 
     it('should not throw if a renderer lacks a dispose method', () => {
         const incompleteDeps = {
             ...validDeps,
-            actionButtonsRenderer: {render: jest.fn()} // No dispose
+            actionButtonsRenderer: {render: jest.fn()}, // No dispose
+            saveGameUI: {show: jest.fn()} // No dispose for saveGameUI either
         };
-        // Ensure perceptionLogRenderer is still present in incompleteDeps if it's part of validDeps now
+        // Ensure other mocks are still present
         if (!incompleteDeps.perceptionLogRenderer) {
             incompleteDeps.perceptionLogRenderer = mockPerceptionLogRenderer;
+        }
+        if (!incompleteDeps.loadGameUI) { // ensure loadGameUI is present
+            incompleteDeps.loadGameUI = mockLoadGameUI;
         }
 
 
@@ -150,6 +183,8 @@ describe('DomUiFacade', () => {
         expect(() => facade.dispose()).not.toThrow();
         // Check others were still called
         expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1);
-        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
+        expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
+        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1); // Check loadGameUI dispose
+        // mockSaveGameUI.dispose should not have been called since it was replaced
     });
 });

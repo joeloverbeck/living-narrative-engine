@@ -1,9 +1,9 @@
 // src/services/saveLoadService.js
 
 import {ISaveLoadService} from '../interfaces/ISaveLoadService.js';
-import {encode, decode} from '@msgpack/msgpack'; // [cite: 748, 753, 804]
-import pako from 'pako'; // [cite: 748, 753, 822]
-import {createHash} from 'crypto';
+import {encode, decode} from '@msgpack/msgpack'; //
+import pako from 'pako'; //
+// REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -14,10 +14,10 @@ import {createHash} from 'crypto';
 
 
 // --- Constants ---
-// const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic [cite: 153, 165]
+// const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
 const MANUAL_SAVE_DIR = 'manual_saves';
-const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify potential manual save files [cite: 105]
-// const TEMP_SAVE_SUFFIX = '.tmp'; // [cite: 221] // Defined in writeFileAtomically in IStorageProvider context
+const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify potential manual save files
+// const TEMP_SAVE_SUFFIX = '.tmp'; // // Defined in writeFileAtomically in IStorageProvider context
 
 /**
  * @implements {ISaveLoadService}
@@ -43,20 +43,43 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     /**
-     * Generates an SHA256 checksum for the given data.
-     * For Uint8Array, it hashes directly. Otherwise, it stringifies to JSON.
-     * @param {any} data - The data to hash.
-     * @returns {string} The SHA256 hash as a hex string.
+     * Converts an ArrayBuffer to a hexadecimal string.
+     * @param {ArrayBuffer} buffer - The buffer to convert.
+     * @returns {string} The hexadecimal string.
      * @private
      */
-    #generateChecksum(data) {
+    #arrayBufferToHex(buffer) {
+        return Array.from(new Uint8Array(buffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+
+    /**
+     * Generates an SHA256 checksum for the given data using Web Crypto API.
+     * For Uint8Array, it hashes directly. Otherwise, it stringifies to JSON then encodes to UTF-8.
+     * @param {any} data - The data to hash.
+     * @returns {Promise<string>} The SHA256 hash as a hex string.
+     * @private
+     */
+    async #generateChecksum(data) {
+        let dataToHash;
         if (data instanceof Uint8Array) {
-            return createHash('sha256').update(data).digest('hex');
+            dataToHash = data;
+        } else {
+            // For consistency with how it's likely generated if not Uint8Array
+            // (e.g. if gameState was JSON before MessagePack)
+            // However, for gameStateChecksum, it's specifically calculated on the MessagePack bytes of gameState.
+            const stringToHash = typeof data === 'string' ? data : JSON.stringify(data);
+            dataToHash = new TextEncoder().encode(stringToHash);
         }
-        // For consistency with how it's likely generated if not Uint8Array (e.g. if gameState was JSON before MessagePack)
-        // However, for gameStateChecksum, it's specifically calculated on the MessagePack bytes of gameState.
-        const stringToHash = typeof data === 'string' ? data : JSON.stringify(data);
-        return createHash('sha256').update(stringToHash).digest('hex');
+
+        try {
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', dataToHash);
+            return this.#arrayBufferToHex(hashBuffer);
+        } catch (error) {
+            this.#logger.error('Error generating checksum using Web Crypto API:', error);
+            throw new Error(`Checksum generation failed: ${error.message}`);
+        }
     }
 
     /**
@@ -81,28 +104,29 @@ class SaveLoadService extends ISaveLoadService {
     /**
      * Serializes the game state to MessagePack and then compresses it with Gzip.
      * Calculates and embeds the gameStateChecksum before full serialization.
+     * This method is now asynchronous due to #generateChecksum being async.
      * @param {object} gameStateObject - The full game state object to process.
-     * @returns {{compressedData: Uint8Array, finalSaveObject: object}}
+     * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
      * @private
      */
-    #serializeAndCompress(gameStateObject) {
+    async #serializeAndCompress(gameStateObject) {
         const finalSaveObject = this.#deepClone(gameStateObject);
 
         if (!finalSaveObject.gameState || typeof finalSaveObject.gameState !== 'object') {
             this.#logger.error('Invalid or missing gameState property in save object for checksum calculation.');
             throw new Error('Invalid gameState for checksum calculation.');
         }
-        // Calculate checksum on the MessagePack representation of ONLY the gameState section [cite: 515]
+        // Calculate checksum on the MessagePack representation of ONLY the gameState section
         const gameStateMessagePack = encode(finalSaveObject.gameState);
-        finalSaveObject.integrityChecks.gameStateChecksum = this.#generateChecksum(gameStateMessagePack); // [cite: 515, 660, 956]
+        finalSaveObject.integrityChecks.gameStateChecksum = await this.#generateChecksum(gameStateMessagePack); //
         this.#logger.info(`Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`);
 
         this.#logger.debug('Serializing full game state object to MessagePack...');
-        const messagePackData = encode(finalSaveObject); // [cite: 434, 753]
+        const messagePackData = encode(finalSaveObject); //
         this.#logger.info(`MessagePack Raw Size: ${messagePackData.byteLength} bytes`);
 
         this.#logger.debug('Compressing MessagePack data with Gzip...');
-        const compressedData = pako.gzip(messagePackData); // [cite: 444, 753]
+        const compressedData = pako.gzip(messagePackData); //
         this.#logger.info(`Gzipped Size: ${compressedData.byteLength} bytes`);
 
         return {compressedData, finalSaveObject};
@@ -115,28 +139,28 @@ class SaveLoadService extends ISaveLoadService {
      * @returns {Promise<{success: boolean, data?: object, error?: string, userFriendlyError?: string}>}
      * @private
      */
-    async #deserializeAndDecompress(filePath) { // [cite: 115]
+    async #deserializeAndDecompress(filePath) { //
         this.#logger.debug(`Attempting to read and deserialize file: ${filePath}`);
         let fileContent;
         try {
-            fileContent = await this.#storageProvider.readFile(filePath); // [cite: 117]
-            if (!fileContent || fileContent.byteLength === 0) { // Basic integrity check: file size too small [cite: 141]
-                const userMsg = "The selected save file is empty or cannot be read. It might be corrupted or inaccessible."; // [cite: 144]
+            fileContent = await this.#storageProvider.readFile(filePath); //
+            if (!fileContent || fileContent.byteLength === 0) { // Basic integrity check: file size too small
+                const userMsg = "The selected save file is empty or cannot be read. It might be corrupted or inaccessible."; //
                 this.#logger.warn(`File is empty or could not be read: ${filePath}. User message: "${userMsg}"`);
-                return {success: false, error: 'File is empty or unreadable.', userFriendlyError: userMsg}; // [cite: 139, 140]
+                return {success: false, error: 'File is empty or unreadable.', userFriendlyError: userMsg}; //
             }
         } catch (readError) {
-            const userMsg = "Could not access or read the selected save file. Please check file permissions or try another save."; // [cite: 140, 144]
+            const userMsg = "Could not access or read the selected save file. Please check file permissions or try another save."; //
             this.#logger.error(`Error reading file ${filePath}:`, readError);
-            return {success: false, error: `File read error: ${readError.message}`, userFriendlyError: userMsg}; // [cite: 139]
+            return {success: false, error: `File read error: ${readError.message}`, userFriendlyError: userMsg}; //
         }
 
         let decompressedData;
         try {
-            decompressedData = pako.ungzip(fileContent); // [cite: 444]
+            decompressedData = pako.ungzip(fileContent); //
             this.#logger.debug(`Decompressed data size for ${filePath}: ${decompressedData.byteLength} bytes`);
         } catch (gzipError) {
-            const userMsg = "The save file appears to be corrupted (could not decompress). Please try another save."; // [cite: 120, 144]
+            const userMsg = "The save file appears to be corrupted (could not decompress). Please try another save."; //
             this.#logger.error(`Gzip decompression failed for ${filePath}:`, gzipError);
             return {
                 success: false,
@@ -147,10 +171,10 @@ class SaveLoadService extends ISaveLoadService {
 
         let deserializedObject;
         try {
-            deserializedObject = decode(decompressedData); // [cite: 434, 118]
+            deserializedObject = decode(decompressedData); //
             this.#logger.debug(`Successfully deserialized MessagePack for ${filePath}`);
         } catch (msgpackError) {
-            const userMsg = "The save file appears to be corrupted (could not understand file content). Please try another save."; // [cite: 120, 144]
+            const userMsg = "The save file appears to be corrupted (could not understand file content). Please try another save."; //
             this.#logger.error(`MessagePack deserialization failed for ${filePath}:`, msgpackError);
             return {
                 success: false,
@@ -173,7 +197,7 @@ class SaveLoadService extends ISaveLoadService {
 
         let files;
         try {
-            files = await this.#storageProvider.listFiles(MANUAL_SAVE_DIR, MANUAL_SAVE_PATTERN.source); // [cite: 105]
+            files = await this.#storageProvider.listFiles(MANUAL_SAVE_DIR, MANUAL_SAVE_PATTERN.source); //
             this.#logger.info(`Found ${files.length} potential manual save files in ${MANUAL_SAVE_DIR}.`);
         } catch (listError) {
             this.#logger.error(`Error listing files in ${MANUAL_SAVE_DIR}:`, listError);
@@ -196,14 +220,14 @@ class SaveLoadService extends ISaveLoadService {
                     saveName: fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') + ' (Corrupted)',
                     timestamp: 'N/A',
                     playtimeSeconds: 0,
-                    isCorrupted: true, // [cite: 109]
+                    isCorrupted: true, //
                 });
                 continue;
             }
 
             const saveObject = /** @type {SaveGameStructure | undefined} */ (deserializationResult.data);
 
-            if (!saveObject || typeof saveObject.metadata !== 'object' || saveObject.metadata === null) { // [cite: 109]
+            if (!saveObject || typeof saveObject.metadata !== 'object' || saveObject.metadata === null) { //
                 this.#logger.warn(`No metadata section found in ${filePath}. Flagging as corrupted for listing.`);
                 collectedMetadata.push({
                     identifier: filePath,
@@ -219,7 +243,7 @@ class SaveLoadService extends ISaveLoadService {
 
             if (typeof saveName !== 'string' || !saveName ||
                 typeof timestamp !== 'string' || !timestamp ||
-                typeof playtimeSeconds !== 'number' || isNaN(playtimeSeconds)) { // [cite: 106, 109]
+                typeof playtimeSeconds !== 'number' || isNaN(playtimeSeconds)) { //
                 this.#logger.warn(`Essential metadata missing or malformed in ${filePath}. Contents: ${JSON.stringify(saveObject.metadata)}. Flagging as corrupted for listing.`);
                 collectedMetadata.push({
                     identifier: filePath,
@@ -231,7 +255,7 @@ class SaveLoadService extends ISaveLoadService {
                 continue;
             }
 
-            collectedMetadata.push({ // [cite: 107]
+            collectedMetadata.push({ //
                 identifier: filePath,
                 saveName: saveName,
                 timestamp: timestamp,
@@ -240,7 +264,7 @@ class SaveLoadService extends ISaveLoadService {
             this.#logger.info(`Successfully parsed metadata for ${filePath}: Name="${saveName}", Timestamp="${timestamp}"`);
         }
 
-        this.#logger.info(`Finished listing manual save slots. Returning ${collectedMetadata.length} items.`); // [cite: 108]
+        this.#logger.info(`Finished listing manual save slots. Returning ${collectedMetadata.length} items.`); //
         return collectedMetadata;
     }
 
@@ -249,18 +273,18 @@ class SaveLoadService extends ISaveLoadService {
      * @param {string} saveIdentifier - The full path or unique ID of the save file to load.
      * @returns {Promise<LoadGameResult>}
      */
-    async loadGameData(saveIdentifier) { // [cite: 115]
+    async loadGameData(saveIdentifier) { //
         this.#logger.info(`Attempting to load game data from: "${saveIdentifier}"`);
 
         if (!saveIdentifier || typeof saveIdentifier !== 'string' || saveIdentifier.trim() === '') {
             const errorMsg = 'Invalid saveIdentifier provided for loading.';
-            const userMsg = "Cannot load game: No save file was specified."; // [cite: 144]
+            const userMsg = "Cannot load game: No save file was specified."; //
             this.#logger.error(errorMsg);
             return {success: false, error: userMsg, data: null}; //
         }
 
         // 1. Read and deserialize the file content (includes basic I/O and format checks)
-        const deserializationResult = await this.#deserializeAndDecompress(saveIdentifier); // [cite: 117, 118]
+        const deserializationResult = await this.#deserializeAndDecompress(saveIdentifier); //
 
         if (!deserializationResult.success || !deserializationResult.data) {
             this.#logger.warn(`Failed to deserialize ${saveIdentifier}: ${deserializationResult.error}`);
@@ -269,61 +293,61 @@ class SaveLoadService extends ISaveLoadService {
                 success: false,
                 error: deserializationResult.userFriendlyError || 'Unknown deserialization error',
                 data: null
-            }; // [cite: 139, 140, 142, 144]
+            }; //
         }
 
         const loadedObject = /** @type {SaveGameStructure} */ (deserializationResult.data);
 
         // 2. Basic Structure Validation (Integrity Check before full deserialization of gameState)
-        // Check for the presence of key sections as defined in PRD Table 3 / Tech Spike V.C. [cite: 484, 933]
+        // Check for the presence of key sections as defined in PRD Table 3 / Tech Spike V.C.
         const requiredSections = ['metadata', 'modManifest', 'gameState', 'integrityChecks'];
         for (const section of requiredSections) {
             if (!(section in loadedObject) || typeof loadedObject[section] !== 'object' || loadedObject[section] === null) {
                 const devMsg = `Save file ${saveIdentifier} is missing or has invalid section: '${section}'.`;
-                const userMsg = "The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version."; // [cite: 141, 144]
+                const userMsg = "The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version."; //
                 this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-                return {success: false, error: userMsg, data: null}; // [cite: 120, 142]
+                return {success: false, error: userMsg, data: null}; //
             }
         }
         this.#logger.debug(`Basic structure validation passed for ${saveIdentifier}. All required sections present.`);
 
-        // 3. Integrity Check: Verify gameStateChecksum [cite: 244, 516, 660, 956]
+        // 3. Integrity Check: Verify gameStateChecksum
         // This is a more specific integrity check after the basic structure is confirmed. SL-E04 will handle more advanced corruption.
         const storedChecksum = loadedObject.integrityChecks.gameStateChecksum;
         if (!storedChecksum || typeof storedChecksum !== 'string') {
             const devMsg = `Save file ${saveIdentifier} is missing gameStateChecksum.`;
-            const userMsg = "The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version."; // [cite: 141, 144]
+            const userMsg = "The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version."; //
             this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-            return {success: false, error: userMsg, data: null}; // [cite: 246, 142]
+            return {success: false, error: userMsg, data: null}; //
         }
 
         let recalculatedChecksum;
         try {
             // The checksum is calculated on the MessagePack representation of the gameState object.
-            const gameStateMessagePack = encode(loadedObject.gameState); // [cite: 119] implicitly tests if gameState is serializable
-            recalculatedChecksum = this.#generateChecksum(gameStateMessagePack);
+            const gameStateMessagePack = encode(loadedObject.gameState); // implicitly tests if gameState is serializable
+            recalculatedChecksum = await this.#generateChecksum(gameStateMessagePack);
         } catch (checksumError) {
             const devMsg = `Error calculating checksum for gameState in ${saveIdentifier}: ${checksumError.message}.`;
-            const userMsg = "Could not verify the integrity of the save file due to an internal error. The file might be corrupted."; // [cite: 144]
+            const userMsg = "Could not verify the integrity of the save file due to an internal error. The file might be corrupted."; //
             this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
-            return {success: false, error: userMsg, data: null}; // [cite: 120, 142]
+            return {success: false, error: userMsg, data: null}; //
         }
 
 
         if (storedChecksum !== recalculatedChecksum) {
             const devMsg = `Checksum mismatch for ${saveIdentifier}. Stored: ${storedChecksum}, Calculated: ${recalculatedChecksum}.`;
-            const userMsg = "The save file appears to be corrupted (integrity check failed). Please try another save or a backup."; // [cite: 141, 144]
+            const userMsg = "The save file appears to be corrupted (integrity check failed). Please try another save or a backup."; //
             this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-            return {success: false, error: userMsg, data: null}; // [cite: 245, 246, 142]
+            return {success: false, error: userMsg, data: null}; //
         }
         this.#logger.info(`Checksum VERIFIED for ${saveIdentifier}.`);
 
-        // Performance: Deserialization performance is primarily dependent on MessagePack library & Gzip library efficiency. [cite: 121]
+        // Performance: Deserialization performance is primarily dependent on MessagePack library & Gzip library efficiency.
         // These are generally fast. Explicit profiling would be part of a broader performance optimization task.
 
         // All checks passed
         this.#logger.info(`Game data loaded and validated successfully from: "${saveIdentifier}"`);
-        return {success: true, data: loadedObject, error: null}; // [cite: 118]
+        return {success: true, data: loadedObject, error: null}; //
     }
 
 
@@ -336,7 +360,7 @@ class SaveLoadService extends ISaveLoadService {
         if (!saveName || typeof saveName !== 'string' || saveName.trim() === '') {
             const userMsg = "Invalid save name provided. Please enter a valid name.";
             this.#logger.error('Invalid saveName provided for manual save.');
-            return {success: false, error: userMsg}; // [cite: 198] (implicitly)
+            return {success: false, error: userMsg}; // (implicitly)
         }
 
         const fileName = `manual_save_${saveName.replace(/[^a-zA-Z0-9_-]/g, '_')}.sav`;
@@ -346,29 +370,30 @@ class SaveLoadService extends ISaveLoadService {
             const mutableGameState = this.#deepClone(gameStateObject);
 
             if (!mutableGameState.metadata) mutableGameState.metadata = {};
-            mutableGameState.metadata.saveName = saveName; // [cite: 495]
+            mutableGameState.metadata.saveName = saveName; //
 
             if (!mutableGameState.integrityChecks) mutableGameState.integrityChecks = {};
 
-            const {compressedData} = this.#serializeAndCompress(mutableGameState); // [cite: 434, 444]
+            // #serializeAndCompress is now async
+            const {compressedData} = await this.#serializeAndCompress(mutableGameState); //
 
-            const writeResult = await this.#storageProvider.writeFileAtomically(filePath, compressedData); // [cite: 221, 222, 665]
+            const writeResult = await this.#storageProvider.writeFileAtomically(filePath, compressedData); //
 
             if (writeResult.success) {
                 this.#logger.info(`Manual game "${saveName}" saved successfully to ${filePath}.`);
-                return {success: true, message: `Game saved as "${saveName}".`, filePath: filePath}; // [cite: 197, 363]
+                return {success: true, message: `Game saved as "${saveName}".`, filePath: filePath}; //
             } else {
                 this.#logger.error(`Failed to write manual save "${saveName}" to ${filePath}: ${writeResult.error}`);
                 // Example of a more user-friendly message if a specific error was identifiable
-                let userError = `Failed to save game: ${writeResult.error}`; // [cite: 198]
+                let userError = `Failed to save game: ${writeResult.error}`; //
                 if (writeResult.error && writeResult.error.toLowerCase().includes('disk full')) { // Hypothetical error check
-                    userError = "Failed to save game: Not enough disk space."; // [cite: 265, 198]
+                    userError = "Failed to save game: Not enough disk space."; //
                 }
-                return {success: false, error: userError}; // [cite: 363]
+                return {success: false, error: userError}; //
             }
         } catch (error) {
             this.#logger.error(`Error during manual save process for "${saveName}":`, error);
-            return {success: false, error: `An unexpected error occurred while saving: ${error.message}`}; // [cite: 198, 363]
+            return {success: false, error: `An unexpected error occurred while saving: ${error.message}`}; //
         }
     }
 

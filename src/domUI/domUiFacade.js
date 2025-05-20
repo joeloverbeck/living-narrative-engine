@@ -9,7 +9,9 @@
 /** @typedef {import('./titleRenderer').TitleRenderer} TitleRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
 /** @typedef {import('./uiMessageRenderer').UiMessageRenderer} UiMessageRenderer */
-/** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */ // <<< ADDED
+/** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
+/** @typedef {import('./saveGameUI').default} SaveGameUI */
+/** @typedef {import('./loadGameUI').default} LoadGameUI */ // <<< ADDED
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -24,7 +26,9 @@ export class DomUiFacade {
     /** @private @type {TitleRenderer} */ #titleRenderer;
     /** @private @type {InputStateController} */ #inputStateController;
     /** @private @type {UiMessageRenderer} */ #uiMessageRenderer;
-    /** @private @type {PerceptionLogRenderer} */ #perceptionLogRenderer; // <<< ADDED
+    /** @private @type {PerceptionLogRenderer} */ #perceptionLogRenderer;
+    /** @private @type {SaveGameUI} */ #saveGameUI;
+    /** @private @type {LoadGameUI} */ #loadGameUI; // <<< ADDED
 
     /**
      * Creates an instance of DomUiFacade.
@@ -36,7 +40,9 @@ export class DomUiFacade {
      * @param {TitleRenderer} deps.titleRenderer - Renderer for the main game title.
      * @param {InputStateController} deps.inputStateController - Controller for the player input element's state.
      * @param {UiMessageRenderer} deps.uiMessageRenderer - Renderer for UI messages (echo, info, error).
-     * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs. // <<< ADDED
+     * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
+     * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
+     * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component. // <<< ADDED
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
@@ -46,7 +52,9 @@ export class DomUiFacade {
                     titleRenderer,
                     inputStateController,
                     uiMessageRenderer,
-                    perceptionLogRenderer // <<< ADDED
+                    perceptionLogRenderer,
+                    saveGameUI,
+                    loadGameUI // <<< ADDED
                 }) {
         // Basic validation to ensure all renderers are provided
         if (!actionButtonsRenderer || typeof actionButtonsRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
@@ -55,7 +63,9 @@ export class DomUiFacade {
         if (!titleRenderer || typeof titleRenderer.set !== 'function') throw new Error('DomUiFacade: Missing or invalid titleRenderer dependency.');
         if (!inputStateController || typeof inputStateController.setEnabled !== 'function') throw new Error('DomUiFacade: Missing or invalid inputStateController dependency.');
         if (!uiMessageRenderer || typeof uiMessageRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
-        if (!perceptionLogRenderer || typeof perceptionLogRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.'); // <<< ADDED
+        if (!perceptionLogRenderer || typeof perceptionLogRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
+        if (!saveGameUI || typeof saveGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid saveGameUI dependency.');
+        if (!loadGameUI || typeof loadGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid loadGameUI dependency.'); // <<< ADDED
 
         this.#actionButtonsRenderer = actionButtonsRenderer;
         this.#inventoryPanel = inventoryPanel;
@@ -63,10 +73,9 @@ export class DomUiFacade {
         this.#titleRenderer = titleRenderer;
         this.#inputStateController = inputStateController;
         this.#uiMessageRenderer = uiMessageRenderer;
-        this.#perceptionLogRenderer = perceptionLogRenderer; // <<< ADDED
-
-        // No logging here as this facade is just a thin wrapper
-        // console.log('[DomUiFacade] Initialized.');
+        this.#perceptionLogRenderer = perceptionLogRenderer;
+        this.#saveGameUI = saveGameUI;
+        this.#loadGameUI = loadGameUI; // <<< ADDED
     }
 
     /** @returns {ActionButtonsRenderer} */
@@ -104,13 +113,21 @@ export class DomUiFacade {
         return this.#perceptionLogRenderer;
     }
 
+    /** @returns {SaveGameUI} */
+    get saveGame() {
+        return this.#saveGameUI;
+    }
+
+    /** @returns {LoadGameUI} */ // <<< ADDED
+    get loadGame() { // <<< ADDED
+        return this.#loadGameUI; // <<< ADDED
+    } // <<< ADDED
+
     /**
      * Optional: Dispose method to potentially call dispose on all managed renderers.
      * Useful if the facade's lifecycle manages the renderers' lifecycle.
      */
     dispose() {
-        // console.log('[DomUiFacade] Disposing...');
-        // Call dispose on each renderer if they have a dispose method
         this.#actionButtonsRenderer?.dispose?.();
         this.#inventoryPanel?.dispose?.();
         this.#locationRenderer?.dispose?.();
@@ -118,6 +135,7 @@ export class DomUiFacade {
         this.#inputStateController?.dispose?.();
         this.#uiMessageRenderer?.dispose?.();
         this.#perceptionLogRenderer?.dispose?.();
-        // console.log('[DomUiFacade] Disposal complete.');
+        this.#saveGameUI?.dispose?.();
+        this.#loadGameUI?.dispose?.(); // <<< ADDED
     }
 }
