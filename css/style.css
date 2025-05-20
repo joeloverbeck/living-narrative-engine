@@ -373,16 +373,7 @@ a:focus-visible {
     opacity: 0.8;
 }
 
-#quick-status-display {
-    white-space: nowrap;
-    align-self: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-small);
-    color: var(--secondary-text-color);
-    background-color: var(--panel-bg-color);
-}
+/* Styles for #quick-status-display removed */
 
 #location-info-container,
 #character-status-widget,
@@ -861,11 +852,7 @@ button:disabled, .button-like:disabled {
         margin-right: 0;
     }
 
-    #quick-status-display {
-        text-align: center;
-        margin-top: var(--spacing-sm);
-        width: 100%;
-    }
+    /* Styles for #quick-status-display in this media query removed */
 }
 
 @media (max-width: 480px) {
@@ -917,8 +904,5 @@ button:disabled, .button-like:disabled {
         padding: var(--spacing-sm);
     }
 
-    #quick-status-display {
-        font-size: var(--font-size-small);
-        padding: var(--spacing-xs);
-    }
+    /* Styles for #quick-status-display in this media query removed */
 }
