@@ -3,14 +3,13 @@ import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 import {UiMessageRenderer} from '../../domUI/index.js';
 import DocumentContext from '../../domUI/documentContext';
-import DomElementFactory from '../../domUI/domElementFactory'; // <-- Import DomElementFactory
+import DomElementFactory from '../../domUI/domElementFactory';
 import ConsoleLogger from '../../core/services/consoleLogger';
 import ValidatedEventDispatcher from '../../services/validatedEventDispatcher';
 
-// Mock dependencies
 jest.mock('../../core/services/consoleLogger');
 jest.mock('../../services/validatedEventDispatcher');
-jest.mock('../../domUI/domElementFactory'); // <-- Mock DomElementFactory
+// jest.mock('../../domUI/domElementFactory'); // We will mock methods individually
 
 describe('UiMessageRenderer', () => {
     let dom;
@@ -18,21 +17,19 @@ describe('UiMessageRenderer', () => {
     let docContext;
     let mockLogger;
     let mockVed;
-    let mockDomElementFactory; // <-- Declare mockDomElementFactory
-    let container;
-    let messageList; // Define messageList here
+    let mockDomElementFactoryInstance; // Instance of the real factory, but we'll spy on its methods
+    let outputDiv; // Define outputDiv
+    let messageList;
 
     beforeEach(() => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="outputDiv"><ul id="message-list"></ul></div></body></html>`); // Ensure #outputDiv and #message-list exist
+        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="outputDiv"><ul id="message-list"></ul></div></body></html>`);
         document = dom.window.document;
-        docContext = new DocumentContext(document.body);
+        docContext = new DocumentContext(document.body); // Use document.body to ensure it can find #outputDiv
 
-        // Clear mocks and create new instances for each test
         mockLogger = new ConsoleLogger();
         mockVed = new ValidatedEventDispatcher(null, mockLogger);
-        mockDomElementFactory = new DomElementFactory(docContext); // <-- Instantiate mockDomElementFactory
+        mockDomElementFactoryInstance = new DomElementFactory(docContext); // Real factory for spying
 
-        // Spy on logger methods
         jest.spyOn(mockLogger, 'info').mockImplementation(() => {
         });
         jest.spyOn(mockLogger, 'warn').mockImplementation(() => {
@@ -42,10 +39,9 @@ describe('UiMessageRenderer', () => {
         jest.spyOn(mockLogger, 'debug').mockImplementation(() => {
         });
 
-        // Spy on factory methods (and provide basic mock implementations)
-        jest.spyOn(mockDomElementFactory, 'li').mockImplementation((cls, text) => { // Adjusted mock signature
-            const li = document.createElement('li');
-            // Helper to add classes based on factory logic
+        // Spy on factory methods that will be used by the renderer
+        jest.spyOn(mockDomElementFactoryInstance, 'li').mockImplementation((cls, text) => {
+            const liEl = document.createElement('li');
             const addClasses = (element, classes) => {
                 if (!classes) return;
                 if (Array.isArray(classes)) {
@@ -55,68 +51,63 @@ describe('UiMessageRenderer', () => {
                     if (clsArr.length > 0) element.classList.add(...clsArr);
                 }
             };
-            addClasses(li, cls);
-            if (text !== undefined) li.textContent = text;
-            return li;
+            addClasses(liEl, cls);
+            if (text !== undefined) liEl.textContent = text;
+            return liEl;
         });
-        jest.spyOn(mockDomElementFactory, 'ul').mockImplementation((id, cls) => { // Adjusted mock signature
-            const ul = document.createElement('ul');
-            if (id) ul.id = id;
-            // Helper to add classes based on factory logic
-            const addClasses = (element, classes) => {
-                if (!classes) return;
-                if (Array.isArray(classes)) {
-                    element.classList.add(...classes.filter(c => c));
-                } else if (typeof classes === 'string') {
-                    const clsArr = classes.split(' ').filter(c => c);
-                    if (clsArr.length > 0) element.classList.add(...clsArr);
+
+        // Spy on 'create' specifically for 'ul' creation if needed, or general 'create'
+        jest.spyOn(mockDomElementFactoryInstance, 'create').mockImplementation((tagName, options) => {
+            if (tagName === 'ul' && options && options.id === 'message-list') {
+                const ulEl = document.createElement('ul');
+                ulEl.id = options.id;
+                if (options.attrs) {
+                    for (const [key, value] of Object.entries(options.attrs)) {
+                        ulEl.setAttribute(key, value);
+                    }
                 }
-            };
-            addClasses(ul, cls);
-            return ul;
+                return ulEl;
+            }
+            // Fallback to a simple createElement for other potential 'create' calls if any
+            return document.createElement(tagName);
         });
 
 
-        // Mock documentContext.query specifically for #message-list to return the list
+        outputDiv = document.getElementById('outputDiv');
         messageList = document.getElementById('message-list');
-        jest.spyOn(docContext, 'query'); // Spy on query generally
-        docContext.query.mockImplementation((selector) => { // Provide general implementation
+
+        // General mock for docContext.query, can be overridden in specific tests if needed
+        const originalQuery = docContext.query.bind(docContext); // Bind to keep 'this' context if original is complex
+        jest.spyOn(docContext, 'query').mockImplementation((selector) => {
             if (selector === '#message-list') {
-                // Use the potentially modified messageList variable
                 return document.getElementById('message-list');
             }
             if (selector === '#outputDiv') {
                 return document.getElementById('outputDiv');
             }
-            // Fallback to original JSDOM querySelector for other selectors if needed
-            return document.querySelector(selector);
+            // Fallback to JSDOM's actual querySelector for any other selectors.
+            // This might be document.querySelector(selector) if docContext wraps 'document'
+            // or use the original method if docContext.query has more logic.
+            // For this test setup, document.querySelector is likely sufficient.
+            return dom.window.document.querySelector(selector);
         });
-
-
-        container = messageList; // Messages are rendered into the messageList
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        jest.restoreAllMocks(); // Use restoreAllMocks to clean up spies on real instances
         if (document && document.body) {
-            document.body.innerHTML = ''; // Clean up DOM
+            document.body.innerHTML = '';
         }
     });
 
-// --- Helper to create renderer ---
-// --- FIX: Pass dependencies as a single object map ---
-// --- FIX: Add mockDomElementFactory ---
-// --- FIX: Remove selector and options from here, they are handled by the class itself ---
-    const createRenderer = () => {
+    const createRenderer = (factoryInstance = mockDomElementFactoryInstance) => {
         return new UiMessageRenderer({
             logger: mockLogger,
             documentContext: docContext,
             validatedEventDispatcher: mockVed,
-            domElementFactory: mockDomElementFactory // <-- Pass the factory
+            domElementFactory: factoryInstance
         });
     };
-
-// --- Test Scenarios ---
 
     describe('Rendering Messages', () => {
         it('should render info message', () => {
@@ -124,7 +115,7 @@ describe('UiMessageRenderer', () => {
             const text = 'Info message test';
             renderer.render(text, 'info');
 
-            const messageElement = container.querySelector('li'); // Messages are LIs now
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe(text);
             expect(messageElement.classList.contains('message')).toBe(true);
@@ -132,63 +123,48 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: info - ${text.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should render fatal error message', () => {
             const renderer = createRenderer();
             const text = 'Fatal error test';
-            // Simulate fatal event by passing the full event object structure
             renderer["_UiMessageRenderer__onShowFatal"]({
-                type: 'core:system_error_occurred', // Add type
-                payload: {message: text} // Nest payload
+                type: 'core:system_error_occurred',
+                payload: {message: text}
             });
-
-
-            const messageElement = container.querySelector('li'); // Messages are LIs
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
-            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(text);
             expect(messageElement.classList.contains('message-fatal')).toBe(true);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Fatal error displayed: ${text}`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: fatal - ${text.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should render fatal error message with Error details', () => {
             const renderer = createRenderer();
             const baseText = 'Fatal error occurred.';
             const errorDetails = 'Detailed reason.';
             const fullText = `${baseText}\nDetails: ${errorDetails}`;
-            // Simulate fatal event with an error object, wrapped in event object structure
             renderer["_UiMessageRenderer__onShowFatal"]({
-                type: 'core:system_error_occurred', // Add type
-                payload: {                    // Nest payload
-                    message: baseText,
-                    error: new Error(errorDetails)
-                }
+                type: 'core:system_error_occurred',
+                payload: {message: baseText, error: new Error(errorDetails)}
             });
-
-            const messageElement = container.querySelector('li'); // Messages are LIs
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
-            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(fullText);
             expect(messageElement.classList.contains('message-fatal')).toBe(true);
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Fatal error displayed: ${fullText}`));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: fatal - ${fullText.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should render command echo message', () => {
             const renderer = createRenderer();
             const command = 'look around';
             const text = `> ${command}`;
-            // Simulate echo event by passing the full event object structure
             renderer["_UiMessageRenderer__onCommandEcho"]({
-                type: 'core:action_executed', // Add type
-                payload: {originalInput: command} // Nest payload
+                type: 'core:action_executed',
+                payload: {originalInput: command}
             });
-
-
-            const messageElement = container.querySelector('li'); // Messages are LIs
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
-            // --- Check the actual rendered text ---
             expect(messageElement.textContent).toBe(text);
             expect(messageElement.classList.contains('message-echo')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - ${text.substring(0, 50)}`));
@@ -197,9 +173,8 @@ describe('UiMessageRenderer', () => {
         it('should render info message with HTML when allowHtml is true', () => {
             const renderer = createRenderer();
             const text = 'Info <b>bold</b> test';
-            renderer.render(text, 'info', true); // allowHtml = true
-
-            const messageElement = container.querySelector('li');
+            renderer.render(text, 'info', true);
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.innerHTML).toBe(text);
             expect(messageElement.textContent).toBe('Info bold test');
@@ -210,23 +185,20 @@ describe('UiMessageRenderer', () => {
         it('should render info message without HTML when allowHtml is false (default)', () => {
             const renderer = createRenderer();
             const text = 'Info <b>bold</b> test';
-            renderer.render(text, 'info', false); // allowHtml = false (or default)
-
-            const messageElement = container.querySelector('li');
+            renderer.render(text, 'info', false);
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
-            expect(messageElement.textContent).toBe(text); // Text content should include tags
-            expect(messageElement.innerHTML).toBe('Info &lt;b&gt;bold&lt;/b&gt; test'); // HTML should be escaped
+            expect(messageElement.textContent).toBe(text);
+            expect(messageElement.innerHTML).toBe('Info &lt;b&gt;bold&lt;/b&gt; test');
             expect(messageElement.classList.contains('message-info')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: info - ${text.substring(0, 50)}`));
         });
-
     });
 
     describe('Event Handling (VED Subscriptions)', () => {
         it('should subscribe to events on construction', () => {
-            // createRenderer calls the constructor
             createRenderer();
-            expect(mockVed.subscribe).toHaveBeenCalledTimes(4); // Check count based on constructor
+            expect(mockVed.subscribe).toHaveBeenCalledTimes(4);
             expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:display_message', expect.any(Function));
             expect(mockVed.subscribe).toHaveBeenCalledWith('core:system_error_occurred', expect.any(Function));
             expect(mockVed.subscribe).toHaveBeenCalledWith('core:action_executed', expect.any(Function));
@@ -234,32 +206,24 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events.'));
         });
 
-        // --- CORRECTED TEST ---
         it('should handle textUI:display_message event', () => {
             const renderer = createRenderer();
             const payload = {message: 'VED Message', type: 'info', allowHtml: false};
-            // Manually trigger the handler that subscribe would have registered
             const displayMessageHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'textUI:display_message')[1];
-            // --- Pass the full event object structure ---
             displayMessageHandler({type: 'textUI:display_message', payload: payload});
-
-            const messageElement = container.querySelector('li');
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe(payload.message);
             expect(messageElement.classList.contains('message-info')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: info - ${payload.message.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should handle core:system_error_occurred event', () => {
             const renderer = createRenderer();
             const payload = {message: 'VED Fatal Error'};
-            // Manually trigger the handler
             const fatalHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:system_error_occurred')[1];
-            // --- Pass the full event object structure ---
             fatalHandler({type: 'core:system_error_occurred', payload: payload});
-
-            const messageElement = container.querySelector('li');
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe(payload.message);
             expect(messageElement.classList.contains('message-fatal')).toBe(true);
@@ -267,287 +231,241 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: fatal - ${payload.message.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should handle core:action_executed event (echo)', () => {
             const renderer = createRenderer();
             const command = 'do something';
             const payload = {originalInput: command};
-            // Manually trigger the handler
             const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
-            // --- Pass the full event object structure ---
             echoHandler({type: 'core:action_executed', payload: payload});
-
-
-            const messageElement = container.querySelector('li');
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe(`> ${command}`);
             expect(messageElement.classList.contains('message-echo')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should handle core:action_failed event (echo)', () => {
             const renderer = createRenderer();
             const command = 'try something else';
             const payload = {originalInput: command};
-            // Manually trigger the handler
             const echoFailedHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_failed')[1];
-            // --- Pass the full event object structure ---
             echoFailedHandler({type: 'core:action_failed', payload: payload});
-
-
-            const messageElement = container.querySelector('li');
+            const messageElement = messageList.querySelector('li');
             expect(messageElement).not.toBeNull();
             expect(messageElement.textContent).toBe(`> ${command}`);
             expect(messageElement.classList.contains('message-echo')).toBe(true);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
         });
 
-        // --- CORRECTED TEST ---
         it('should ignore echo events without valid originalInput', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad payload wrapped in event object
             const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
-
-            // --- Pass full event object with invalid payload ---
             echoHandler({type: 'core:action_executed', payload: {originalInput: null}});
             echoHandler({type: 'core:action_executed', payload: {originalInput: ''}});
-            echoHandler({type: 'core:action_executed', payload: {}}); // Missing originalInput
-
-            const messageElements = container.querySelectorAll('li');
-            expect(messageElements.length).toBe(0); // No message should be rendered
-            expect(mockLogger.warn).toHaveBeenCalledTimes(3); // Called for each bad payload
-            // --- Logger receives the full event object as the second argument now ---
+            echoHandler({type: 'core:action_executed', payload: {}});
+            const messageElements = messageList.querySelectorAll('li');
+            expect(messageElements.length).toBe(0);
+            expect(mockLogger.warn).toHaveBeenCalledTimes(3);
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining('Received command echo event without valid originalInput.'),
-                expect.objectContaining({type: 'core:action_executed', payload: expect.anything()}) // Check structure
+                expect.stringContaining('Received command echo event without valid originalInput or command.'),
+                expect.objectContaining({type: 'core:action_executed', payload: expect.anything()})
             );
         });
 
-        // --- CORRECTED TEST ---
         it('should handle invalid display_message payload', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad *event objects*
             const displayMessageHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'textUI:display_message')[1];
-
-            // --- Pass invalid/malformed event objects directly ---
-            displayMessageHandler(null); // Test null event object
-            displayMessageHandler({}); // Test empty event object (missing payload)
-            displayMessageHandler({type: 'textUI:display_message', payload: {message: 123}}); // Test wrong message type in payload
-
-            const messageElements = container.querySelectorAll('li');
-            expect(messageElements.length).toBe(0); // No message should be rendered
+            displayMessageHandler(null);
+            displayMessageHandler({});
+            displayMessageHandler({type: 'textUI:display_message', payload: {message: 123}});
+            const messageElements = messageList.querySelectorAll('li');
+            expect(messageElements.length).toBe(0);
             expect(mockLogger.warn).toHaveBeenCalledTimes(3);
-            // --- Update expected log message text AND check the second argument (the invalid event object) ---
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining("Received invalid or malformed 'textUI:display_message' event object."), // Updated message
-                expect.anything() // The second arg is the problematic event object itself
+                expect.stringContaining("Received invalid or malformed 'textUI:display_message' event object."),
+                expect.anything()
             );
         });
 
-        // --- CORRECTED TEST ---
         it('should handle invalid system_error_occurred payload', () => {
             const renderer = createRenderer();
-            // Manually trigger the handler with bad *event objects*
             const fatalHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:system_error_occurred')[1];
-
-            // --- Pass invalid/malformed event objects directly ---
-            fatalHandler(null); // Test null event object
-            fatalHandler({}); // Test empty event object (missing payload)
-            fatalHandler({type: 'core:system_error_occurred', payload: {message: 123}}); // Test wrong message type
-
-            // It should render a generic fatal message
-            // Query ALL fatal messages, as this gets called 3 times
-            const messageElements = container.querySelectorAll('li.message-fatal');
-            expect(messageElements.length).toBe(3); // One generic message rendered per invalid call
+            fatalHandler(null);
+            fatalHandler({});
+            fatalHandler({type: 'core:system_error_occurred', payload: {message: 123}});
+            const messageElements = messageList.querySelectorAll('li.message-fatal');
+            expect(messageElements.length).toBe(3);
             messageElements.forEach(messageElement => {
                 expect(messageElement.textContent).toBe('An unspecified fatal system error occurred.');
             });
-
-            // Check logs - error for payload, debug for render
             expect(mockLogger.error).toHaveBeenCalledTimes(3);
-            // --- Logger receives the full event object as the second argument now ---
             expect(mockLogger.error).toHaveBeenCalledWith(
                 expect.stringContaining("Received invalid 'core:system_error_occurred' payload."),
-                expect.anything() // The second arg is the problematic event object
+                expect.anything()
             );
-            // --- REMOVED THIS LINE --- expect(mockLogger.debug).toHaveBeenCalledTimes(3);
-            // Check that the specific debug message from render was called (at least once, implicitly 3 times due to element count check)
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Rendered message: fatal - An unspecified fatal system error occurred."));
         });
 
         it('should unsubscribe from events on dispose', () => {
             const mockSubscription = {unsubscribe: jest.fn()};
+            mockVed.subscribe.mockReset();
             mockVed.subscribe.mockReturnValue(mockSubscription);
 
-            const renderer = createRenderer(); // This calls subscribe
+            const renderer = createRenderer();
             renderer.dispose();
 
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4); // Once for each subscription
+            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
         });
     });
 
-
     describe('Error Handling & Edge Cases', () => {
-        it('should log error if message list cannot be found initially', () => {
-            // Setup: Remove the list before creating the renderer
+        it('should log info if message list cannot be found initially and then create it', () => {
             document.getElementById('message-list').remove();
-            // Spy on querySelector to ensure it returns null for #message-list
-            docContext.query.mockImplementation((selector) => {
-                if (selector === '#message-list') return null;
-                if (selector === '#outputDiv') return document.getElementById('outputDiv'); // Allow finding outputDiv
-                return document.querySelector(selector);
+            // docContext.query will be re-spied on in createRenderer if not careful,
+            // but the default beforeEach mock should handle returning current DOM state.
+            // Let's ensure the spy is fresh for this test's specific needs if it differs.
+            const currentQueryMock = jest.spyOn(docContext, 'query').mockImplementation((selector) => {
+                if (selector === '#message-list') return document.getElementById('message-list');
+                if (selector === '#outputDiv') return document.getElementById('outputDiv');
+                return dom.window.document.querySelector(selector);
             });
 
-            createRenderer(); // Constructor calls #ensureMessageList
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #message-list element!'));
-            // Since #outputDiv exists and factory is mocked, it should *attempt* to create it
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('#message-list created dynamically.'));
-            // --- FIX: Check only for the first argument ---
-            expect(mockDomElementFactory.ul).toHaveBeenCalledWith('message-list');
-            // Ensure it was added back to the DOM (ul mock returns a real element)
+            createRenderer();
+
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('#message-list element not found. Attempting to create it.'));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('#message-list created dynamically inside #outputDiv with aria-live.'));
+            expect(mockDomElementFactoryInstance.create).toHaveBeenCalledWith('ul', {
+                id: 'message-list',
+                attrs: {'aria-live': 'polite'}
+            });
             expect(document.getElementById('message-list')).not.toBeNull();
             expect(document.getElementById('message-list').tagName).toBe('UL');
+            currentQueryMock.mockRestore(); // Restore general mock
         });
 
-        it('should log error if #outputDiv is missing during list creation', () => {
-            // Setup: Remove both list and main content
+        it('should log errors if #outputDiv and #message-list are missing during list creation', () => {
             document.getElementById('message-list')?.remove();
             document.getElementById('outputDiv')?.remove();
-            // Spy on querySelector to ensure it returns null for both
-            docContext.query.mockImplementation((selector) => {
-                if (selector === '#message-list' || selector === '#outputDiv') {
-                    return null;
-                }
-                return document.querySelector(selector);
+
+            const currentQueryMock = jest.spyOn(docContext, 'query').mockImplementation((selector) => {
+                if (selector === '#message-list' || selector === '#outputDiv') return null;
+                return dom.window.document.querySelector(selector);
             });
 
-            createRenderer(); // Constructor calls #ensureMessageList
+            createRenderer();
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #outputDiv element! Automatic scrolling of chat panel may not work.'));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('#message-list element not found. Attempting to create it.'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot create #message-list: #outputDiv container not found. Messages may not display correctly and scrolling will fail.'));
+            // The "Critical" log is NOT expected here due to early return.
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Could not find #message-list element!'));
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot find #outputDiv to append message list.'));
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to find or create #message-list.'));
-            expect(mockDomElementFactory.ul).not.toHaveBeenCalled(); // Creation should not have been attempted
+            const finalList = document.getElementById('message-list');
+            expect(finalList).toBeNull();
+            currentQueryMock.mockRestore();
         });
 
         it('should log error and not render if message list is invalid after ensure', () => {
-            // 1. Create renderer (ensure runs successfully initially)
             const renderer = createRenderer();
-            // Verify it was found initially using the internal getter provided for testing
             expect(renderer["_UiMessageRenderer__messageList"]).not.toBeNull();
-            expect(renderer["_UiMessageRenderer__messageList"].id).toBe('message-list');
 
-            // 2. Re-configure mock to simulate list disappearing AFTER initial setup
-            //    AND prevent its recreation.
-            docContext.query.mockImplementation((selector) => {
-                if (selector === '#message-list') {
-                    return null; // Simulate it's gone from DOM query
-                }
-                if (selector === '#outputDiv') {
-                    // Still allow finding outputDiv if ensure tries to recreate
-                    return document.getElementById('outputDiv');
-                }
-                return document.querySelector(selector); // Fallback for other queries
-            });
-            // ALSO mock the factory to fail creating the UL if ensure tries that path
-            mockDomElementFactory.ul.mockReturnValue(null);
+            const currentQueryMock = jest.spyOn(docContext, 'query').mockImplementation(selector => (selector === '#message-list' ? null : document.getElementById('outputDiv')));
+            const currentCreateMock = jest.spyOn(mockDomElementFactoryInstance, 'create').mockReturnValue(null);
 
-            // 3. Sabotage the internal reference *just before* calling render
             renderer["_UiMessageRenderer__messageList"] = null;
-
-            // 4. Call render.
-            //    - It calls #ensureMessageList.
-            //    - #ensureMessageList sees internal ref is null.
-            //    - docContext.query('#message-list') returns null (due to mock).
-            //    - domElementFactory.ul() returns null (due to mock).
-            //    - #ensureMessageList fails to set this.#messageList.
-            //    - render proceeds to check if this.#messageList is valid.
-            //    - The check `!this.#messageList` is now true.
             renderer.render('Test message');
 
-            // 5. Assert the expected error log from the check in render()
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message, list element invalid or not found.'));
-            // The original container (messageList initially assigned to container var) might have been removed or replaced
-            // Check that the *current* message list in the DOM (if any) is empty, or simply that the render didn't add an LI.
-            const currentMessageList = document.getElementById('message-list');
-            if (currentMessageList) {
-                expect(currentMessageList.querySelector('li')).toBeNull();
-            } else {
-                // If the list couldn't even be recreated, that's fine too.
-                // The main point is no 'li' was added.
-                expect(document.querySelector('#message-list li')).toBeNull();
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create #message-list element dynamically using .create()'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Critical: Failed to find or create #message-list. Messages will not be displayed.'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message: #message-list element is invalid, not found, or unappendable.'));
+
+            const currentMessageListDOM = document.getElementById('message-list');
+            if (currentMessageListDOM) {
+                expect(currentMessageListDOM.querySelector('li')).toBeNull();
             }
-            // Also ensure factory wasn't called to make an LI
-            expect(mockDomElementFactory.li).not.toHaveBeenCalled();
+            expect(mockDomElementFactoryInstance.li).not.toHaveBeenCalled();
+            currentQueryMock.mockRestore();
+            currentCreateMock.mockRestore();
         });
 
 
         it('should log error and not render if DomElementFactory is missing', () => {
-            // Create renderer *without* the factory
-            const renderer = new UiMessageRenderer({
-                logger: mockLogger,
-                documentContext: docContext,
-                validatedEventDispatcher: mockVed,
-                domElementFactory: null // <-- Set factory to null
-            });
-
+            const renderer = createRenderer(null);
             renderer.render('Test message');
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message, DomElementFactory is missing.'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('DomElementFactory dependency is missing or invalid.'));
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Cannot render message: DomElementFactory is missing.'));
             const currentMessageList = document.getElementById('message-list');
-            expect(currentMessageList.innerHTML).toBe(''); // List exists but should be empty
+            if (currentMessageList) expect(currentMessageList.innerHTML).toBe('');
         });
 
         it('should log error if DOM element factory fails to create li', () => {
-            // Mock the factory to return null for li creation
-            mockDomElementFactory.li.mockReturnValue(null);
-
+            const currentLiMock = jest.spyOn(mockDomElementFactoryInstance, 'li').mockReturnValue(null);
             const renderer = createRenderer();
             renderer.render('Test message', 'info');
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create message item element.'));
-            expect(container.innerHTML).toBe(''); // No item should be appended
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to create message item (li) element using DomElementFactory.'));
+            if (messageList) expect(messageList.innerHTML).toBe('');
+            currentLiMock.mockRestore();
         });
 
         it('should handle dispose being called multiple times gracefully', () => {
             const mockSubscription = {unsubscribe: jest.fn()};
-            mockVed.subscribe.mockReturnValue(mockSubscription);
+            mockVed.subscribe.mockReset().mockReturnValue(mockSubscription);
             const renderer = createRenderer();
-
             renderer.dispose();
-            renderer.dispose(); // Call again
-
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4); // Should only be called once per subscription
-            // Base dispose log might be called twice, but subscription log only once
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.')); // Logged on first call
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.')); // Base class log (called potentially twice, check at least once)
+            renderer.dispose();
+            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4);
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.'));
         });
 
         it('should handle scrolling correctly', () => {
             const renderer = createRenderer();
-            // Get the actual message list element via the test accessor
-            const actualMessageList = renderer["_UiMessageRenderer__messageList"];
-            expect(actualMessageList).not.toBeNull(); // Ensure it exists
+            const targetOutputDiv = renderer["_UiMessageRenderer__outputDivElement"];
+            expect(targetOutputDiv).not.toBeNull();
 
-            // Mock scroll properties/methods on the *actual* element
-            const scrollIntoViewMock = jest.fn();
-            Object.defineProperty(actualMessageList, 'scrollHeight', {configurable: true, value: 500});
-            Object.defineProperty(actualMessageList, 'scrollTop', {configurable: true, writable: true, value: 0});
-            actualMessageList.scrollIntoView = scrollIntoViewMock; // Attach mock method
+            Object.defineProperty(targetOutputDiv, 'scrollHeight', {configurable: true, writable: true, value: 0});
+            Object.defineProperty(targetOutputDiv, 'scrollTop', {configurable: true, writable: true, value: 0});
 
-
+            targetOutputDiv.scrollHeight = 500;
             renderer.render('Message 1');
-            // Check direct scroll assignment first
-            expect(actualMessageList.scrollTop).toBe(500);
+            expect(targetOutputDiv.scrollTop).toBe(500);
 
+            // Test fallback
+            renderer["_UiMessageRenderer__outputDivElement"] = null;
 
-            // Test fallback if scrollTop isn't defined (less likely with JSDOM but good coverage)
-            Object.defineProperty(actualMessageList, 'scrollTop', {configurable: true, value: undefined}); // Make scrollTop undefined
+            // Ensure docContext.query also returns null for #outputDiv for this specific part of the test
+            const originalDocQuery = docContext.query; // Store the mock implementation from beforeEach
+            const tempQueryMock = jest.spyOn(docContext, 'query').mockImplementation(selector => {
+                if (selector === '#outputDiv') return null;
+                if (selector === '#message-list') return document.getElementById('message-list');
+                // For any other selector, you might want to call the originalQuery if it was more complex
+                // or just fallback to JSDOM's default if originalQuery was also a simple mock.
+                // In this case, the beforeEach mock is already quite specific.
+                return dom.window.document.querySelector(selector);
+            });
+
+            const lastChildMock = {scrollIntoView: jest.fn()};
+            const currentMessageList = renderer["_UiMessageRenderer__messageList"];
+            if (currentMessageList) {
+                Object.defineProperty(currentMessageList, 'lastChild', {
+                    configurable: true,
+                    value: lastChildMock
+                });
+            } else {
+                throw new Error("MessageList is unexpectedly null for scroll fallback test.");
+            }
+
             renderer.render('Message 2');
-            expect(scrollIntoViewMock).toHaveBeenCalledWith({behavior: 'smooth', block: 'end'});
-        });
+            expect(lastChildMock.scrollIntoView).toHaveBeenCalledWith({behavior: 'auto', block: 'end'});
 
+            tempQueryMock.mockRestore(); // Restore to the query mock defined in beforeEach
+                                         // or originalDocQuery.mockRestore() if originalDocQuery was a spy on real method.
+                                         // Since docContext.query is already a mock from beforeEach, restoring the spy is fine.
+
+            // Restore outputDivElement on the instance if needed for further actions in this test (not in this case)
+            if (targetOutputDiv) renderer["_UiMessageRenderer__outputDivElement"] = targetOutputDiv;
+        });
     });
 });

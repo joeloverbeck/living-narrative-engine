@@ -68,7 +68,6 @@ class AppContainer {
 
         if (this.#instances.has(registrationKey) && (lifecycle === 'singleton' || lifecycle === 'singletonFactory')) {
             this.#instances.delete(registrationKey);
-            console.debug(`AppContainer: Cleared cached instance for overwritten singleton "${registrationKey}".`);
         }
     }
 
@@ -94,21 +93,17 @@ class AppContainer {
             if (this.#instances.has(registrationKey)) {
                 return this.#instances.get(registrationKey);
             }
-            console.debug(`AppContainer: Creating singleton instance for "${registrationKey}"...`);
             try {
                 const instance = this._createInstance(registrationKey, factoryOrValueOrClass, options);
                 this.#instances.set(registrationKey, instance);
-                console.debug(`AppContainer: Singleton instance for "${registrationKey}" created.`);
                 return instance;
             } catch (error) {
                 console.error(`AppContainer: Error creating singleton instance for "${registrationKey}":`, error);
                 throw new Error(`Failed to create instance for "${registrationKey}" (lifecycle: ${lifecycle}): ${error.message}`, {cause: error});
             }
         } else if (lifecycle === 'transient') {
-            console.debug(`AppContainer: Creating transient instance for "${registrationKey}"...`);
             try {
                 const instance = this._createInstance(registrationKey, factoryOrValueOrClass, options);
-                console.debug(`AppContainer: Transient instance for "${registrationKey}" created.`);
                 return instance;
             } catch (error) {
                 console.error(`AppContainer: Error creating transient instance for "${registrationKey}":`, error);
@@ -149,7 +144,6 @@ class AppContainer {
 
             // Only resolve dependencies if there are any
             if (deps.length > 0) {
-                console.debug(`AppContainer: Resolving ${deps.length} dependencies for class "${targetClassName}" (key: "${key}")...`);
                 deps.forEach((depToken) => {
                     let propName = String(depToken);
                     if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) propName = propName.substring(1);
@@ -161,8 +155,6 @@ class AppContainer {
                         throw new Error(`Failed to resolve dependency "${String(depToken)}" needed by "${targetClassName}" (registered as "${key}"): ${e.message}`, {cause: e});
                     }
                 });
-            } else {
-                console.debug(`AppContainer: Instantiating class "${targetClassName}" (key: "${key}") with no dependencies.`);
             }
 
             // Use 'new', passing an empty map if no dependencies
@@ -170,12 +162,10 @@ class AppContainer {
 
         } else if (isFactoryFunction) {
             // --- Handle Factory function ---
-            console.debug(`AppContainer: Executing factory function for key "${key}".`);
             return factoryOrValueOrClass(this); // Execute factory
 
         } else {
             // --- Handle Instance/Value registration ---
-            console.debug(`AppContainer: Returning pre-registered instance/value for key "${key}".`);
             return factoryOrValueOrClass; // Return value
         }
     }
@@ -189,11 +179,9 @@ class AppContainer {
      */
     resolveByTag(tag) {
         const resolvedInstances = [];
-        console.debug(`AppContainer: Resolving instances by tag "${tag}"...`);
 
         for (const [key, registration] of this.#registrations.entries()) {
             if (registration.options?.tags?.includes(tag)) {
-                console.debug(`AppContainer: Found tag "${tag}" on registration "${key}". Resolving...`);
                 try {
                     const instance = this.resolve(key);
                     resolvedInstances.push(instance);
@@ -203,7 +191,6 @@ class AppContainer {
             }
         }
 
-        console.debug(`AppContainer: Found ${resolvedInstances.length} instances for tag "${tag}".`);
         return resolvedInstances;
     }
 

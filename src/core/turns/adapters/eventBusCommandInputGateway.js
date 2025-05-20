@@ -109,7 +109,6 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
                 try {
                     this.#ved.unsubscribe('core:submit_command', handlerToRemove);
                     this.#listeners.delete(listener);
-                    // console.debug('EventBusCommandInputGateway: Listener unsubscribed successfully.');
                 } catch (unsubError) {
                     // Log or handle unsubscription errors if necessary
                     console.error(`EventBusCommandInputGateway: Failed to unsubscribe listener from core:submit_command: ${unsubError.message}`, unsubError);
@@ -129,7 +128,6 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
      * Good practice for preventing memory leaks, especially in long-running applications.
      */
     destroy() {
-        // console.debug('EventBusCommandInputGateway: Destroying and unsubscribing all listeners...');
         // Create a copy of keys to iterate over, as we modify the map during iteration
         const listenersToUnsubscribe = Array.from(this.#listeners.keys());
         listenersToUnsubscribe.forEach(listener => {
@@ -143,7 +141,6 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
             }
         });
         this.#listeners.clear();
-        // console.debug('EventBusCommandInputGateway: Destruction complete.');
     }
 }
 

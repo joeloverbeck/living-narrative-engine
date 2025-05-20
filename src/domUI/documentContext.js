@@ -48,7 +48,6 @@ class DocumentContext {
         if (EnvDocument && root instanceof EnvDocument) {
             this.#docContext = root;
             contextFound = true;
-            // console.debug('[DocumentContext] Initialized using provided root argument as Document.');
         }
         // --- END FIX ---
 
@@ -57,7 +56,6 @@ class DocumentContext {
         if (!contextFound && EnvHTMLElement && root instanceof EnvHTMLElement && root.ownerDocument) {
             this.#docContext = root.ownerDocument;
             contextFound = true;
-            // console.debug('[DocumentContext] Initialized using ownerDocument from provided root element.');
         }
 
         // 3. If no context yet, explicitly try using the global document
@@ -65,7 +63,6 @@ class DocumentContext {
         if (!contextFound && typeof global !== 'undefined' && typeof global.document !== 'undefined') {
             this.#docContext = global.document;
             contextFound = true;
-            // console.debug('[DocumentContext] Initialized using global.document.');
         }
 
         // 4. Set to null and log error if no context could be determined

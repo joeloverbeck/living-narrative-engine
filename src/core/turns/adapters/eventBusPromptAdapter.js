@@ -86,13 +86,11 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
             // We don't need to await the boolean result unless downstream specifically needs it.
             // Returning Promise<void> after the *attempt* is usually sufficient.
             await /** @type {ISafeEventDispatcher} */ (this.#dispatcher).dispatchSafely('core:player_turn_prompt', payload);
-            // console.debug(`EventBusPromptAdapter: Safely dispatched 'core:player_turn_prompt' for ${entityId}.`);
             return Promise.resolve(); // Resolve void after attempt
         } else {
             // Using IValidatedEventDispatcher directly
             try {
                 await /** @type {IValidatedEventDispatcher} */ (this.#dispatcher).dispatchValidated('core:player_turn_prompt', payload);
-                // console.debug(`EventBusPromptAdapter: Dispatched 'core:player_turn_prompt' via VED for ${entityId}.`);
                 return Promise.resolve(); // Resolve void after successful dispatch
             } catch (dispatchError) {
                 // If VED throws, log it and re-throw? Or just log?
