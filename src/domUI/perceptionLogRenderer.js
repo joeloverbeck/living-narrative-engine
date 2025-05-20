@@ -28,9 +28,22 @@ import {PERCEPTION_LOG_COMPONENT_ID} from "../constants/componentIds.js";
  */
 
 /**
+ * Represents a single log entry object as stored in the component.
+ * @typedef {object} LogEntryObject
+ * @property {string} descriptionText - The human-readable summary of the event.
+ * @property {string} timestamp - When the event occurred.
+ * @property {string} perceptionType - The category of the perceived event.
+ * @property {import('../core/interfaces/CommonTypes').NamespacedId} actorId - The ID of the entity that caused the event.
+ * @property {import('../core/interfaces/CommonTypes').NullableNamespacedId} [targetId] - Optional. The ID of the primary target of the event.
+ * @property {Array<import('../core/interfaces/CommonTypes').NamespacedId>} [involvedEntities] - Optional. Other entities involved.
+ * @property {import('../core/interfaces/CommonTypes').NamespacedId} [eventId] - Optional. Unique ID for the log entry or originating event.
+ */
+
+/**
  * Represents the data structure for the perception log component.
  * @typedef {object} PerceptionLogComponentData
- * @property {string[]} entries - An array of perception log strings.
+ * @property {number} maxEntries - Maximum number of entries to retain.
+ * @property {LogEntryObject[]} logEntries - An array of perception log objects.
  */
 
 const PERCEPTION_LOG_LIST_ID = 'perception-log-list';
@@ -81,7 +94,6 @@ export class PerceptionLogRenderer extends RendererBase {
         this.#logListElement = this.documentContext.query(`#${PERCEPTION_LOG_LIST_ID}`);
         if (!this.#logListElement) {
             this.logger.error(`${this._logPrefix} Could not find '#${PERCEPTION_LOG_LIST_ID}' element. Perception logs will not be displayed.`);
-            // Optionally, try to create it if #perception-log-widget exists? For now, assume it's there from HTML.
         } else {
             this.logger.debug(`${this._logPrefix} Attached to log list element:`, this.#logListElement);
         }
@@ -145,13 +157,15 @@ export class PerceptionLogRenderer extends RendererBase {
             /** @type {PerceptionLogComponentData | undefined} */
             const perceptionData = actorEntity.getComponentData(PERCEPTION_LOG_COMPONENT_ID);
 
-            if (!perceptionData || !Array.isArray(perceptionData.entries) || perceptionData.entries.length === 0) {
-                this.logger.info(`${this._logPrefix} Actor '${actorId}' has '${PERCEPTION_LOG_COMPONENT_ID}' component, but it's empty or malformed.`);
+            // CRITICAL FIX: Use 'logEntries' instead of 'entries'
+            if (!perceptionData || !Array.isArray(perceptionData.logEntries) || perceptionData.logEntries.length === 0) {
+                this.logger.info(`${this._logPrefix} Actor '${actorId}' has '${PERCEPTION_LOG_COMPONENT_ID}' component, but its 'logEntries' are empty or malformed.`);
                 this.renderMessage('Perception log is empty.');
                 return;
             }
 
-            this.render(perceptionData.entries);
+            // CRITICAL FIX: Pass 'perceptionData.logEntries'
+            this.render(perceptionData.logEntries);
 
         } catch (error) {
             this.logger.error(`${this._logPrefix} Error processing '${event.type}' for entity '${actorId}':`, error);
@@ -203,7 +217,7 @@ export class PerceptionLogRenderer extends RendererBase {
 
     /**
      * Renders the array of perception log entries.
-     * @param {string[]} logEntries - An array of log strings.
+     * @param {LogEntryObject[]} logEntries - An array of log entry objects.
      */
     render(logEntries) {
         if (!this.#logListElement) {
@@ -220,21 +234,31 @@ export class PerceptionLogRenderer extends RendererBase {
         this.#clearList();
 
         if (!logEntries || logEntries.length === 0) {
-            // This case should ideally be handled by renderMessage before calling render([])
-            // but as a safeguard:
             this.renderMessage(this.#currentActorId ? 'Perception log is empty.' : 'No actor selected.');
             return;
         }
 
         logEntries.forEach(entry => {
-            const li = this.#domElementFactory.li(undefined, entry);
-            if (li) {
-                this.#logListElement.appendChild(li);
+            // CRITICAL FIX: Check if entry is an object and access entry.descriptionText
+            if (entry && typeof entry.descriptionText === 'string') {
+                const li = this.#domElementFactory.li(undefined, entry.descriptionText);
+                if (li) {
+                    // Optional: Add more details as a title attribute for hover info
+                    let title = `Time: ${entry.timestamp}\nType: ${entry.perceptionType}\nActor: ${entry.actorId}`;
+                    if (entry.targetId) title += `\nTarget: ${entry.targetId}`;
+                    li.title = title;
+                    this.#logListElement.appendChild(li);
+                } else {
+                    this.logger.warn(`${this._logPrefix} Failed to create LI element for log entry: "${String(entry.descriptionText).substring(0, 50)}..."`);
+                    const textNode = this.documentContext.document?.createTextNode(entry.descriptionText);
+                    if (textNode) this.#logListElement.appendChild(textNode); // Fallback
+                }
+            } else if (typeof entry === 'string') { // Fallback for unexpected old string format
+                this.logger.warn(`${this._logPrefix} Log entry was a string, not an object: "${entry.substring(0, 50)}..."`);
+                const li = this.#domElementFactory.li(undefined, entry);
+                if (li) this.#logListElement.appendChild(li);
             } else {
-                this.logger.warn(`${this._logPrefix} Failed to create LI element for log entry: "${entry.substring(0, 50)}..."`);
-                // Fallback: append text node directly if LI creation fails
-                const textNode = this.documentContext.document?.createTextNode(entry);
-                if (textNode) this.#logListElement.appendChild(textNode);
+                this.logger.warn(`${this._logPrefix} Skipping malformed log entry object:`, entry);
             }
         });
 

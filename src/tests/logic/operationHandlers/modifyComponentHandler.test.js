@@ -4,20 +4,19 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import ModifyComponentHandler from '../../../logic/operationHandlers/modifyComponentHandler.js'; // adjust path if tests folder differs
+import ModifyComponentHandler from '../../../logic/operationHandlers/modifyComponentHandler.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */ // Assuming default export
 /** @typedef {import('../../../logic/defs.js').ExecutionContext} ExecutionContext */
 
 // -----------------------------------------------------------------------------
 //  Mock services
 // -----------------------------------------------------------------------------
 const mockEntityManager = {
-    // addComponent: jest.fn(), // No longer used by ModifyComponentHandler
     getComponentData: jest.fn(),
-    // updateComponentData: jest.fn(), // Add if your EM requires explicit updates after mutation
+    addComponent: jest.fn(), // Crucial for the new logic
 };
 
 const mockLogger = {
@@ -66,48 +65,41 @@ describe('ModifyComponentHandler', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        // mockEntityManager.addComponent.mockReturnValue(true); // No longer needed
-        // Ensure getComponentData is mocked before each test if needed by default
-        mockEntityManager.getComponentData.mockImplementation((/*entityId, componentType*/) => {
-            // Return a default mock value or undefined if needed
-            // e.g., return {}; or return undefined;
-            // Or clear specific mocks if set within tests:
-            // mockEntityManager.getComponentData.mockClear(); // Or .mockReset();
-        });
+        // Default mock for addComponent to simulate success
+        mockEntityManager.addComponent.mockReturnValue(true);
+        // Clear any specific mock implementations for getComponentData from previous tests
+        mockEntityManager.getComponentData.mockReset();
         handler = new ModifyComponentHandler({entityManager: mockEntityManager, logger: mockLogger});
     });
 
     // ---------------------------------------------------------------------------
-    //  Constructor validation
+    //  Constructor validation ( √ - these should still pass )
     // ---------------------------------------------------------------------------
     test('throws without valid dependencies', () => {
         expect(() => new ModifyComponentHandler({logger: mockLogger})).toThrow(/EntityManager/);
-        // Updated check: Now only requires getComponentData
-        expect(() => new ModifyComponentHandler({entityManager: {}, logger: mockLogger})).toThrow(/getComponentData/);
+        expect(() => new ModifyComponentHandler({
+            entityManager: {addComponent: jest.fn() /* missing getComponentData */},
+            logger: mockLogger
+        })).toThrow(/getComponentData/);
         expect(() => new ModifyComponentHandler({entityManager: mockEntityManager})).toThrow(/ILogger/);
     });
 
     // ---------------------------------------------------------------------------
-    //  DELETED: Whole-component replacement tests (Moved to AddComponentHandler tests)
-    // ---------------------------------------------------------------------------
-    // test('set whole component passes through to EntityManager.addComponent', () => { ... });
-    // test('set whole component with non-object value warns and skips', () => { ... });
-
-    // ---------------------------------------------------------------------------
-    //  Validation: Field is now required
+    //  Validation: Field is now required ( √ - these should still pass )
     // ---------------------------------------------------------------------------
     test('inc mode without field warns and skips', () => {
-        const params = {entity_ref: 'actor', component_type: 'ns:c', mode: 'inc', value: 1}; // No 'field'
+        const params = {entity_ref: 'actor', component_type: 'ns:c', mode: 'inc', value: 1};
         handler.execute(params, buildCtx());
-        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled(); // Shouldn't get this far
-        // Check the NEW expected warning
+        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not call addComponent
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('field" parameter (non-empty string) is required'));
     });
 
     test('set mode without field warns and skips', () => {
-        const params = {entity_ref: 'actor', component_type: 'ns:c', mode: 'set', value: {a:1}}; // No 'field'
+        const params = {entity_ref: 'actor', component_type: 'ns:c', mode: 'set', value: {a: 1}};
         handler.execute(params, buildCtx());
-        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled(); // Shouldn't get this far
+        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not call addComponent
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('field" parameter (non-empty string) is required'));
     });
 
@@ -116,131 +108,157 @@ describe('ModifyComponentHandler', () => {
     //  Field-level SET – path creation
     // ---------------------------------------------------------------------------
     test('set nested field creates path and assigns value', () => {
-        const compObj = {}; // EM returns reference to this
-        mockEntityManager.getComponentData.mockReturnValue(compObj);
+        const initialCompObj = {}; // What getComponentData returns
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+
         const params = {
             entity_ref: 'actor',
             component_type: 'game:stats',
-            field: 'resources.mana.current', // Field is present
+            field: 'resources.mana.current',
             mode: 'set',
             value: 5,
         };
         handler.execute(params, buildCtx());
+
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'game:stats');
-        expect(compObj.resources.mana.current).toBe(5);
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // Should succeed silently
+        // Assert that addComponent was called with the modified data
+        const expectedModifiedData = {
+            resources: {
+                mana: {
+                    current: 5,
+                },
+            },
+        };
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(actorId, 'game:stats', expectedModifiedData);
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     // ---------------------------------------------------------------------------
     //  Field-level INC – happy path
     // ---------------------------------------------------------------------------
-    test('inc numeric leaf works and leaves component mutated in-place', () => {
-        const compObj = {stats: {hp: 10}};
-        mockEntityManager.getComponentData.mockReturnValue(compObj);
+    test('inc numeric leaf works and passes modified data to addComponent', () => {
+        const initialCompObj = {stats: {hp: 10}};
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+
         const params = {
             entity_ref: 'actor',
             component_type: 'core:stats',
-            field: 'stats.hp', // Field is present
+            field: 'stats.hp',
             mode: 'inc',
             value: 15,
         };
         handler.execute(params, buildCtx());
+
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'core:stats');
-        expect(compObj.stats.hp).toBe(25);
-        expect(mockLogger.warn).not.toHaveBeenCalled(); // Should succeed silently
+        const expectedModifiedData = {stats: {hp: 25}};
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(actorId, 'core:stats', expectedModifiedData);
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    test('inc with non-numeric leaf logs warn and does not mutate', () => {
-        const compObj = {foo: {bar: 'not-num'}};
-        mockEntityManager.getComponentData.mockReturnValue(compObj);
+    test('inc with non-numeric leaf logs correct warning and does not call addComponent', () => {
+        const initialCompObj = {foo: {bar: 'not-num'}};
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+
         handler.execute({
             entity_ref: 'actor',
             component_type: 'c:t',
-            field: 'foo.bar', // Field is present
+            field: 'foo.bar',
             mode: 'inc',
             value: 2
         }, buildCtx());
+
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'c:t');
-        expect(compObj.foo.bar).toBe('not-num'); // Check no mutation
-        // Check the NEW expected warning
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not increment field at path "foo.bar". Ensure the target field exists and is a number.'));
+        // addComponent should NOT be called because local mutation failed
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+        // Check the new warning message
+        expect(mockLogger.warn).toHaveBeenCalledWith(`MODIFY_COMPONENT: Local mutation (mode "inc") failed for field "foo.bar" on component "c:t" for entity "${actorId}". Check path or if 'inc' target is a number.`);
     });
 
-    test('inc along missing chain logs warn', () => {
-        const compObj = {a: {}}; // 'b' is missing
-        mockEntityManager.getComponentData.mockReturnValue(compObj);
+    test('inc along missing chain logs correct warning and does not call addComponent', () => {
+        const initialCompObj = {a: {}}; // 'b' is missing
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+
         handler.execute({
             entity_ref: 'actor',
             component_type: 'x:y',
-            field: 'a.b.c', // Field is present, but path invalid
+            field: 'a.b.c',
             mode: 'inc',
             value: 1
         }, buildCtx());
+
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'x:y');
-        expect(compObj.a.b).toBeUndefined(); // Check no mutation / path creation
-        // Check the NEW expected warning
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not increment field at path "a.b.c". Ensure the target field exists and is a number.'));
+        // addComponent should NOT be called
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+        // Check the new warning message
+        expect(mockLogger.warn).toHaveBeenCalledWith(`MODIFY_COMPONENT: Local mutation (mode "inc") failed for field "a.b.c" on component "x:y" for entity "${actorId}". Check path or if 'inc' target is a number.`);
     });
 
     // ---------------------------------------------------------------------------
-    //  Entity reference resolution paths (Now tested in context of field modification)
+    //  Entity reference resolution paths ( √ - this should largely remain the same,
+    //  just ensuring getComponentData is called, and addComponent for successful cases)
     // ---------------------------------------------------------------------------
-    // DELETED: test('resolves "actor" / "target" / direct id', () => { ... });
-    // -> This was testing addComponent calls, moved to AddComponentHandler tests.
-    // -> We still need to ensure entity resolution works for getComponentData calls.
-
-    test('resolves "actor", "target", direct id for getComponentData', () => {
-        mockEntityManager.getComponentData.mockReturnValue({}); // Need component data to exist for modification
+    test('resolves "actor", "target", direct id for getComponentData and addComponent', () => {
+        const initialData = {f: 0};
+        mockEntityManager.getComponentData.mockReturnValue(initialData);
+        const expectedModifiedData = {f: 1};
 
         // Actor
         handler.execute({entity_ref: 'actor', component_type: 'c:t', field: 'f', mode: 'set', value: 1}, buildCtx());
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'c:t');
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(actorId, 'c:t', expectedModifiedData);
 
         // Target
         handler.execute({entity_ref: 'target', component_type: 't:id', field: 'f', mode: 'set', value: 1}, buildCtx());
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(targetId, 't:id');
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(targetId, 't:id', expectedModifiedData);
 
         // Direct ID
-        handler.execute({entity_ref: {entityId: 'specific'}, component_type: 'x:y', field: 'f', mode: 'set', value: 1}, buildCtx());
+        handler.execute({
+            entity_ref: {entityId: 'specific'},
+            component_type: 'x:y',
+            field: 'f',
+            mode: 'set',
+            value: 1
+        }, buildCtx());
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('specific', 'x:y');
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith('specific', 'x:y', expectedModifiedData);
     });
 
-
     test('fails to resolve bad entity_ref and logs (with field present)', () => {
-        // MODIFIED: Added a 'field' parameter so the handler proceeds to entity resolution
         handler.execute({
-            entity_ref: '  ', // Invalid entity ref
+            entity_ref: '  ',
             component_type: 'c',
-            field: 'some_field', // Field is now present
+            field: 'some_field',
             mode: 'set',
             value: {}
         }, buildCtx());
-        // Now we expect the entity resolution warning, not the missing field warning
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('could not resolve entity id'), expect.anything());
-        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled(); // Should fail before getting component
+        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
     // ---------------------------------------------------------------------------
-    //  Validation: inc requires numeric value
+    //  Validation: inc requires numeric value ( √ - should still pass )
     // ---------------------------------------------------------------------------
     test('inc non-number value is rejected', () => {
-        // This test is still valid as it checks the 'value' type specifically for 'inc' mode
         handler.execute({
             entity_ref: 'actor',
             component_type: 'c',
-            field: 'x', // Field is present
+            field: 'x',
             mode: 'inc',
-            value: 'nope' // Invalid value for inc
+            value: 'nope'
         }, buildCtx());
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('inc mode requires a numeric value'));
-        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled(); // Should fail before getting component
+        expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
     // ---------------------------------------------------------------------------
-    // Validation: Component existence and type checks
+    // Validation: Component existence and type checks ( √ - should still pass,
+    // and addComponent should not be called if these fail )
     // ---------------------------------------------------------------------------
     test('warns if component does not exist on entity', () => {
-        mockEntityManager.getComponentData.mockReturnValue(undefined); // Simulate component not found
+        mockEntityManager.getComponentData.mockReturnValue(undefined);
         handler.execute({
             entity_ref: 'actor',
             component_type: 'non:existent',
@@ -250,10 +268,11 @@ describe('ModifyComponentHandler', () => {
         }, buildCtx());
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'non:existent');
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Component "non:existent" not found on entity "actor-1"'));
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
     test('warns if retrieved component data is not an object', () => {
-        mockEntityManager.getComponentData.mockReturnValue('not-an-object'); // Simulate invalid component data type
+        mockEntityManager.getComponentData.mockReturnValue('not-an-object');
         handler.execute({
             entity_ref: 'actor',
             component_type: 'bad:data',
@@ -263,18 +282,60 @@ describe('ModifyComponentHandler', () => {
         }, buildCtx());
         expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'bad:data');
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Component "bad:data" on entity "actor-1" is not an object'));
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
     });
 
-
     // ---------------------------------------------------------------------------
-    //  Context logger precedence
+    //  Context logger precedence ( √ - should still pass )
     // ---------------------------------------------------------------------------
     test('uses logger from execution context when provided', () => {
         const ctxLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
         const ctx = buildCtx({logger: ctxLogger});
-        // Use a case that triggers a warning within ModifyComponentHandler's scope
         handler.execute({entity_ref: 'actor', component_type: 'c', field: 'f', mode: 'inc', value: 'bad'}, ctx);
         expect(ctxLogger.warn).toHaveBeenCalledWith(expect.stringContaining('inc mode requires a numeric value'));
         expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    // New test: Check addComponent failure logging
+    test('logs warning if entityManager.addComponent returns false', () => {
+        const initialCompObj = {stats: {hp: 10}};
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+        mockEntityManager.addComponent.mockReturnValue(false); // Simulate addComponent failure
+
+        const params = {
+            entity_ref: 'actor',
+            component_type: 'core:stats',
+            field: 'stats.hp',
+            mode: 'inc',
+            value: 15,
+        };
+        handler.execute(params, buildCtx());
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(actorId, 'core:stats', {stats: {hp: 25}});
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('EntityManager.addComponent reported an unexpected failure'));
+    });
+
+    test('logs error if entityManager.addComponent throws', () => {
+        const initialCompObj = {stats: {hp: 10}};
+        mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+        const testError = new Error("Validation failed in EM");
+        mockEntityManager.addComponent.mockImplementation(() => {
+            throw testError;
+        });
+
+        const params = {
+            entity_ref: 'actor',
+            component_type: 'core:stats',
+            field: 'stats.hp',
+            mode: 'inc',
+            value: 15,
+        };
+        handler.execute(params, buildCtx());
+
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(actorId, 'core:stats', {stats: {hp: 25}});
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining('Error during EntityManager.addComponent'),
+            expect.objectContaining({error: testError})
+        );
     });
 });

@@ -113,6 +113,8 @@ class ModifyComponentHandler {
 
     /**
      * Executes the MODIFY_COMPONENT operation for field-level mutations.
+     * It now prepares the modified component data and uses EntityManager.addComponent
+     * to apply the changes, ensuring side effects like spatial index updates are triggered.
      * @param {ModifyComponentOperationParams|null|undefined} params - The parameters for the operation.
      * @param {ExecutionContext} execCtx - The execution context.
      * @implements {OperationHandler}
@@ -120,14 +122,13 @@ class ModifyComponentHandler {
     execute(params, execCtx) {
         const log = execCtx?.logger ?? this.#logger;
 
-        // 1. Validate Base Parameters
+        // 1. Validate Base Parameters (as before)
         if (!params || typeof params !== 'object') {
             log.warn('MODIFY_COMPONENT: params missing or invalid.', {params});
             return;
         }
-
         const {entity_ref, component_type, field, mode, value} = params;
-
+        // ... (all previous parameter validations for entity_ref, component_type, field, mode, value) ...
         if (!entity_ref) {
             log.warn('MODIFY_COMPONENT: "entity_ref" required.');
             return;
@@ -140,19 +141,16 @@ class ModifyComponentHandler {
             log.warn('MODIFY_COMPONENT: mode must be "set" or "inc".');
             return;
         }
-        // **Crucially, 'field' is now essential for this handler to function**
         if (field == null || typeof field !== 'string' || !field.trim()) {
             log.warn('MODIFY_COMPONENT: "field" parameter (non-empty string) is required for modification.');
-            return; // Cannot proceed without a field to modify
+            return;
         }
-        // Value validation specific to mode
         if (mode === 'inc' && typeof value !== 'number') {
             log.warn('MODIFY_COMPONENT: inc mode requires a numeric value.');
             return;
         }
-        // No specific validation for 'set' value type here, depends on the target field
 
-        // 2. Resolve Entity ID
+        // 2. Resolve Entity ID (as before)
         const entityId = this.#resolveEntityId(entity_ref, execCtx);
         if (!entityId) {
             log.warn('MODIFY_COMPONENT: could not resolve entity id.', {entity_ref});
@@ -160,46 +158,60 @@ class ModifyComponentHandler {
         }
 
         const trimmedComponentType = component_type.trim();
-        const path = field.trim(); // Use trimmed field path
+        const path = field.trim();
 
-        // 3. Get Component Data
-        // (Removed check for entityManager.getComponentData, constructor ensures it exists)
-        const compData = this.#entityManager.getComponentData(entityId, trimmedComponentType);
+        // 3. Get current component data
+        const currentCompData = this.#entityManager.getComponentData(entityId, trimmedComponentType);
 
-        if (compData === undefined) {
+        if (currentCompData === undefined) {
             log.warn(`MODIFY_COMPONENT: Component "${trimmedComponentType}" not found on entity "${entityId}". Cannot modify field "${path}".`);
             return;
         }
-        if (typeof compData !== 'object' || compData === null) {
-            // This should ideally not happen if components are always objects, but good safety check.
+        if (typeof currentCompData !== 'object' || currentCompData === null) {
             log.warn(`MODIFY_COMPONENT: Component "${trimmedComponentType}" on entity "${entityId}" is not an object. Cannot modify field "${path}".`);
             return;
         }
 
-        // 4. Perform Field-level Mutation
+        // 4. Clone the current data and perform field-level mutation on the clone
+        // This ensures we are passing a complete, modified component state to addComponent
+        const modifiedCompData = JSON.parse(JSON.stringify(currentCompData)); // Deep clone
+
         log.debug(`MODIFY_COMPONENT: Attempting mode "${mode}" on field "${path}" of component "${trimmedComponentType}" for entity "${entityId}".`);
 
-        let success = false;
+        let mutationSuccess = false;
         if (mode === 'set') {
-            success = setByPath(compData, path, value);
-            if (!success) {
-                log.warn(`MODIFY_COMPONENT: "set" operation failed. Could not set field at path "${path}". Check path validity and intermediate object structure.`);
-            } else {
-                log.debug(`MODIFY_COMPONENT: "set" operation successful for path "${path}".`);
-            }
+            mutationSuccess = setByPath(modifiedCompData, path, value);
         } else { // mode === 'inc'
-            success = incByPath(compData, path, /** @type {number} */ (value));
-            if (!success) {
-                log.warn(`MODIFY_COMPONENT: "inc" operation failed. Could not increment field at path "${path}". Ensure the target field exists and is a number.`);
-            } else {
-                log.debug(`MODIFY_COMPONENT: "inc" operation successful for path "${path}".`);
-            }
+            mutationSuccess = incByPath(modifiedCompData, path, /** @type {number} */ (value));
         }
-        // Note: If modifications directly mutate the object returned by getComponentData,
-        // and that object is a reference used internally by EntityManager, the change
-        // might persist automatically. If getComponentData returns a clone,
-        // an additional `entityManager.updateComponentData(entityId, component_type, compData)`
-        // call might be needed here after successful modification. Assuming direct mutation for now.
+
+        if (!mutationSuccess) {
+            log.warn(`MODIFY_COMPONENT: Local mutation (mode "${mode}") failed for field "${path}" on component "${trimmedComponentType}" for entity "${entityId}". Check path or if 'inc' target is a number.`);
+            return; // Abort if the local mutation on the clone failed
+        }
+
+        // 5. "Commit" the entire modified component data back through EntityManager.addComponent
+        // This allows EntityManager to handle its full update logic, including validation and side effects.
+        try {
+            // EntityManager.addComponent will:
+            // - Validate the 'modifiedCompData' against the schema.
+            // - Retrieve the *actual* oldLocationId from the entity *before* replacing the component.
+            // - Replace the component data on the entity.
+            // - Retrieve the newLocationId from the *newly set* component data.
+            // - Call spatialIndexManager.updateEntityLocation(entityId, actualOldLocationId, newLocationId).
+            const updatePersisted = this.#entityManager.addComponent(entityId, trimmedComponentType, modifiedCompData);
+
+            if (updatePersisted) { // addComponent should return true on success or throw
+                log.debug(`MODIFY_COMPONENT: Successfully updated component "${trimmedComponentType}" on entity "${entityId}" via EntityManager, triggering side effects.`);
+            } else {
+                // This path might not be hit if addComponent throws on failure per its contract.
+                log.warn(`MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure (returned false without throwing) for component "${trimmedComponentType}" on entity "${entityId}".`);
+            }
+        } catch (error) {
+            log.error(`MODIFY_COMPONENT: Error during EntityManager.addComponent for component "${trimmedComponentType}" on entity "${entityId}" after field modification: ${error.message}`, {error});
+            // Depending on desired behavior, you might want to re-throw or just log.
+            // If addComponent throws, the operation has failed.
+        }
     }
 }
 
