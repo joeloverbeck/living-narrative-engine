@@ -14,6 +14,7 @@ import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
 
 // --- ADDED IMPORT FOR SaveLoadService ---
 import SaveLoadService from '../../../services/saveLoadService.js';
+import {BrowserStorageProvider} from "../../../services/browserStorageProvider.js";
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -127,6 +128,9 @@ export function registerInfrastructure(container) {
         /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     ));
     log.debug(`Infrastructure Registration: Registered ${tokens.SystemDataRegistry}.`);
+
+    r.single(tokens.IStorageProvider, BrowserStorageProvider, [tokens.ILogger /*, other dependencies */]);
+    log.debug(`Infrastructure Registration: Registered ${String(tokens.IStorageProvider)} implemented by BrowserStorageProvider.`);
 
     // --- ADDED REGISTRATION FOR SaveLoadService ---
     // Assumes tokens.IStorageProvider is a valid, registered token.

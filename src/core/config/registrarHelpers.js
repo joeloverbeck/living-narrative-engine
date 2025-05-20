@@ -10,71 +10,8 @@
 /** @typedef {import('./appContainer.js').FactoryFunction} FactoryFunction */
 /** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[], dependencies?: DiToken[] }} RegistrationOptions */ // Added dependencies
 /** @typedef {(...args: any[]) => any} ConstructorAny */
+
 /** @template T @typedef {new (...args: any[]) => T} Constructor<T> */
-
-
-// NOTE: _createFactoryForObjectInjection might become unused by Registrar itself
-// if the underlying container handles class registrations directly.
-// However, the mock container's resolveSpy uses similar logic, so the helper can be kept.
-// The important part is that Registrar methods pass the *correct* second argument (value/Class/factory)
-// to the base container.register method.
-
-/**
- * INTERNAL helper function (potentially unused by Registrar after fix).
- * Creates a factory function suitable for AppContainer registration
- * that instantiates a class (`Ctor`) resolving its dependencies into a *single object map*
- * and injecting that map as the only argument to the constructor.
- *
- * @template T
- * @param {Constructor<T>} Ctor - The class constructor to instantiate.
- * @param {DiToken[]} [deps=[]] - An array of dependency tokens to resolve from the container.
- * @returns {FactoryFunction} A factory function that resolves dependencies into an object and calls the constructor.
- */
-const _createFactoryForObjectInjection = (Ctor, deps = []) => {
-    if (typeof Ctor !== 'function') {
-        console.error(`[_createFactoryForObjectInjection] Error: TargetClass provided is not a function. Value:`, Ctor);
-        throw new Error(`Invalid registration attempt: TargetClass must be a constructor function.`);
-    }
-    const factoryFn = (resolver) => {
-        const dependenciesMap = {};
-        const targetClassName = Ctor.name || '[AnonymousClass]';
-        deps.forEach((token, index) => {
-            let propName = '';
-            if (typeof token === 'string') {
-                propName = token;
-                if (propName.length > 1 && propName.startsWith('I') && propName[1] === propName[1].toUpperCase()) {
-                    propName = propName.substring(1);
-                }
-                propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-            } else if (typeof token === 'symbol') {
-                propName = Symbol.keyFor(token);
-                if (propName) {
-                    if (propName.startsWith('I') && propName.length > 1 && propName[1] === propName[1].toUpperCase()) {
-                        propName = propName.substring(1);
-                    }
-                    propName = propName.charAt(0).toLowerCase() + propName.slice(1);
-                }
-            }
-            if (!propName) {
-                propName = `dependency${index}`;
-                console.warn(`[_createFactory] Could not reliably derive property name for dependency token at index ${index} (value: ${String(token)}) needed by "${targetClassName}". Using fallback name "${propName}". Check token definition and naming conventions.`);
-            }
-            try {
-                dependenciesMap[propName] = resolver.resolve(token);
-            } catch (resolveError) {
-                console.error(`[_createFactory] Failed to resolve dependency "${String(token)}" (for derived property "${propName}") needed by "${targetClassName}". Root cause:`, resolveError);
-                throw new Error(`Failed to resolve dependency "${String(token)}" for "${targetClassName}": ${resolveError.message}`);
-            }
-        });
-        try {
-            return new Ctor(dependenciesMap);
-        } catch (constructorError) {
-            console.error(`[_createFactory] Error occurred during constructor execution for "${targetClassName}". Dependencies passed: { ${Object.keys(dependenciesMap).join(', ')} }`, constructorError);
-            throw constructorError;
-        }
-    };
-    return factoryFn;
-};
 
 /**
  * Provides a fluent interface for registering services with the DI container,

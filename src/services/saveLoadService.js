@@ -30,13 +30,14 @@ class SaveLoadService extends ISaveLoadService {
 
     /**
      * Creates a new SaveLoadService instance.
-     * @param {ILogger} logger - The logging service.
-     * @param {IStorageProvider} storageProvider - The storage provider service.
+     * @param {object} dependencies - The dependencies object.
+     * @param {ILogger} dependencies.logger - The logging service.
+     * @param {IStorageProvider} dependencies.storageProvider - The storage provider service.
      */
-    constructor(logger, storageProvider) {
+    constructor({logger, storageProvider}) { // <<< MODIFIED SIGNATURE with destructuring
         super();
-        if (!logger) throw new Error("SaveLoadService requires a valid ILogger instance.");
-        if (!storageProvider) throw new Error("SaveLoadService requires a valid IStorageProvider instance.");
+        if (!logger) throw new Error("SaveLoadService requires a valid ILogger instance (after destructuring).");
+        if (!storageProvider) throw new Error("SaveLoadService requires a valid IStorageProvider instance (after destructuring).");
         this.#logger = logger;
         this.#storageProvider = storageProvider;
         this.#logger.info('SaveLoadService initialized.');
