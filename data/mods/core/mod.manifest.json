@@ -13,7 +13,8 @@
       "position.component.json",
       "name.component.json",
       "description.component.json",
-      "exits.component.json"
+      "exits.component.json",
+      "perception_log.component.json"
     ],
     "characters": [
     ],
@@ -27,7 +28,8 @@
     ],
     "rules": [
       "turn_started.rule.json",
-      "turn_ended.rule.json"
+      "turn_ended.rule.json",
+      "log_perceptible_events.rule.json"
     ],
     "events": [
       "turn_started.event.json",
@@ -42,7 +44,8 @@
       "submit_command.event.json",
       "attempt_action.event.json",
       "player_turn_submitted.event.json",
-      "entity_spoke.event.json"
+      "entity_spoke.event.json",
+      "perceptible_event.event.json"
     ],
     "operations": [
     ]

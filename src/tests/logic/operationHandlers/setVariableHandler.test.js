@@ -4,162 +4,110 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import SetVariableHandler from '../../../logic/operationHandlers/setVariableHandler.js'; // Adjust path if needed
-// resolvePath is NOT used by the handler itself anymore.
+import SetVariableHandler from '../../../logic/operationHandlers/setVariableHandler.js';
+import jsonLogic from 'json-logic-js';
 
-// --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-// *** CORRECTED ExecutionContext typedef to match handler's actual usage and test setup ***
+
 /**
- * Represents the overall execution environment for an operation.
- * The handler now expects a 'context' property directly on this object.
- * @typedef {object} ExecutionContext
+ * @typedef {object} HandlerJsonLogicEvaluationContext
  * @property {object} context - The shared context object for storing/retrieving variables.
- * @property {any} [event] - Optional event details.
- * @property {any} [actor] - Optional actor details.
- * @property {any} [target] - Optional target details.
- * @property {any} [globals] - Optional globals.
- * @property {any} [entities] - Optional entities.
- * @property {any} [services] - Optional services container.
- * @property {ILogger} [logger] - DEPRECATED logger on context.
+ * @property {any} [event]
+ * @property {any} [actor]
+ * @property {any} [target]
+ * @property {ILogger} [logger]
+ */
+
+/**
+ * @typedef {object} OperationExecutionContext
+ * @property {HandlerJsonLogicEvaluationContext} evaluationContext
+ * @property {any} [event]
+ * @property {any} [actor]
+ * @property {any} [target]
+ * @property {ILogger} [logger]
  */
 /** @typedef {import('../../../logic/operationHandlers/setVariableHandler.js').SetVariableOperationParams} SetVariableOperationParams */
 
-// --- Mock services ---------------------------------------------------------
-// Use a fresh mock for each test suite run potentially
 const createMockLogger = () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
-    // Add a simple way to track logged messages if needed for complex assertions
-    // loggedMessages: [],
-    // info: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'info', message: args[0], details: args[1] })),
-    // warn: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'warn', message: args[0], details: args[1] })),
-    // error: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'error', message: args[0], details: args[1] })),
-    // debug: jest.fn((...args) => createMockLogger.loggedMessages.push({ level: 'debug', message: args[0], details: args[1] })),
+    loggedMessages: [],
 });
 
-// --- Helper – ExecutionContext factory -------------------------------------
-// *** CORRECTED Mock Builder to match handler's expectation of executionContext.context ***
 /**
- * Builds a mock ExecutionContext with the 'context' property at the top level.
- * Includes other common properties found in evaluation context for potential use.
- * @param {object} [contextDataOverrides={}] - Properties to merge into the top-level 'context' object.
- * @param {object} [otherOverrides={}] - Properties to merge into the root executionContext object (e.g., event, actor, logger).
- * @returns {ExecutionContext}
+ * Builds a mock OperationExecutionContext.
+ * @param {ILogger} loggerInstance - The logger instance to use in the root of the context.
+ * @param {object} [variableStoreData={}]
+ * @param {object} [evalContextShellProps={}]
+ * @param {object} [rootProps={}]
+ * @returns {OperationExecutionContext}
  */
-function buildCtx(contextDataOverrides = {}, otherOverrides = {}) {
-    // Base context structure - simplified, add more if needed by tests
-    const baseContextData = {
+function buildCtx(loggerInstance, variableStoreData = {}, evalContextShellProps = {}, rootProps = {}) {
+    const defaultVariableStore = {
         existingVar: 'pre-existing value',
-        nested: {
-            path: {
-                to: {value: 'deep context value'}
-            }
-        }
+        nested: {path: {to: {value: 'deep context value'}}}
     };
+    const finalVariableStore = {...defaultVariableStore, ...variableStoreData};
 
-    // Deep merge utility (simple implementation for demonstration)
-    const mergeDeep = (target, source) => {
-        const output = Object.assign({}, target); // Shallow copy target
-        if (isObject(target) && isObject(source)) {
-            Object.keys(source).forEach(key => {
-                if (isObject(source[key])) {
-                    if (!(key in target))
-                        Object.assign(output, {[key]: source[key]});
-                    else
-                        output[key] = mergeDeep(target[key], source[key]);
-                } else {
-                    Object.assign(output, {[key]: source[key]});
-                }
-            });
-        }
-        return output;
+    const defaultEvalContextShell = {
+        event: {type: 'EVAL_CTX_EVENT', id: 'event-in-eval-ctx'},
+        actor: {id: 'actor-in-eval-ctx', name: 'EvalActor'},
+        target: {id: 'target-in-eval-ctx', status: 'active'},
     };
+    const finalEvalContextShell = {...defaultEvalContextShell, ...evalContextShellProps};
 
-    const isObject = (item) => {
-        return (item && typeof item === 'object' && !Array.isArray(item));
-    };
-
-    // Create final context data with overrides
-    const finalContextData = mergeDeep(baseContextData, contextDataOverrides);
-
-    // Base execution context structure
-    const baseExecutionContext = {
-        context: finalContextData, // Context is now top-level
-        event: {
-            type: 'TEST_EVENT',
-            payload: {value: 123, nested: {key: 'event-payload-value'}},
+    return {
+        evaluationContext: {
+            ...finalEvalContextShell,
+            context: finalVariableStore,
         },
-        actor: {
-            id: 'actor-123',
-            components: {'core:health': {current: 50, max: 100}}
-        },
-        target: null,
-        globals: {},
-        entities: {},
-        services: { /* other services if needed */},
-        // logger: createMockLogger(), // Usually provided at handler creation
+        event: {type: 'ROOT_EVENT', id: 'event-at-root'},
+        actor: {id: 'actor-at-root'},
+        logger: loggerInstance, // Use passed logger instance
+        ...rootProps,
     };
-
-    // Apply root level overrides
-    return mergeDeep(baseExecutionContext, otherOverrides);
 }
 
-
-// --- Test-suite ------------------------------------------------------------
 describe('SetVariableHandler', () => {
-    /** @type {SetVariableHandler} */
     let handler;
-    /** @type {jest.Mocked<ILogger>} */
-    let mockLogger; // Use a per-test fresh logger
+    let mockLoggerInstance; // Renamed for clarity to avoid conflict with global mockLogger if any
 
     beforeEach(() => {
         jest.clearAllMocks();
-        mockLogger = createMockLogger(); // Create fresh mock logger
-        // Create a new handler instance for each test with the fresh mock logger
-        handler = new SetVariableHandler({logger: mockLogger});
-        // Clear the constructor log if needed (it logs debug on init)
-        mockLogger.debug.mockClear();
+        mockLoggerInstance = createMockLogger();
+        handler = new SetVariableHandler({logger: mockLoggerInstance});
+        mockLoggerInstance.debug.mockClear();
     });
 
-    // --- Constructor Validation ----------------------------------------------
     describe('Constructor', () => {
         test('throws if logger dependency is missing or invalid', () => {
             expect(() => new SetVariableHandler({})).toThrow(/ILogger instance/);
             expect(() => new SetVariableHandler({logger: null})).toThrow(/ILogger instance/);
-            // Pass a valid mock logger to test *other* dependencies if they existed
-            expect(() => new SetVariableHandler({logger: {info: jest.fn()}})).toThrow(/ILogger instance/); // Missing methods
+            expect(() => new SetVariableHandler({logger: {info: jest.fn()}})).toThrow(/ILogger instance/);
         });
 
         test('initializes successfully with a valid logger', () => {
-            // Reset mocks just before this specific test's constructor call if needed
             const freshLogger = createMockLogger();
             expect(() => new SetVariableHandler({logger: freshLogger})).not.toThrow();
             expect(freshLogger.debug).toHaveBeenCalledWith('SetVariableHandler initialized.');
         });
     });
 
-    // --- Parameter Validation (`execute`) ------------------------------------
     describe('Parameter Validation', () => {
-        // const baseExecCtx = buildCtx(); // Build the full ExecutionContext - now uses new structure
-
         test.each([
             ['null params', null, 'SET_VARIABLE: Missing or invalid parameters object.', {params: null}],
             ['undefined params', undefined, 'SET_VARIABLE: Missing or invalid parameters object.', {params: undefined}],
             ['non-object params', 'string', 'SET_VARIABLE: Missing or invalid parameters object.', {params: 'string'}],
-            // Destructuring [] results in undefined for variable_name/value, triggers variable_name check
             ['array params', [], 'SET_VARIABLE: Invalid or missing "variable_name" parameter. Must be a non-empty string.', {variable_name: undefined}],
         ])('logs error and returns if params object is invalid (%s)', (desc, invalidParams, expectedErrorMsg, expectedErrorObj) => {
-            const execCtx = buildCtx(); // Get a fresh context using the CORRECTED builder
-            const initialContextState = JSON.stringify(execCtx.context); // Store initial state of the CORRECT context
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            const initialVarStoreState = JSON.stringify(execCtx.evaluationContext.context);
             handler.execute(invalidParams, execCtx);
-            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg, expectedErrorObj);
-            // Ensure the CORRECT context remains unchanged
-            expect(JSON.stringify(execCtx.context)).toEqual(initialContextState);
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(expectedErrorMsg, expectedErrorObj);
+            expect(JSON.stringify(execCtx.evaluationContext.context)).toEqual(initialVarStoreState);
         });
-
 
         test.each([
             ['missing', {value: 1}],
@@ -169,214 +117,286 @@ describe('SetVariableHandler', () => {
             ['whitespace string', {value: 1, variable_name: '   '}],
             ['non-string', {value: 1, variable_name: 123}],
         ])('logs error and returns if "variable_name" is invalid (%s)', (desc, params) => {
-            const execCtx = buildCtx(); // CORRECTED builder
-            const initialContextState = JSON.stringify(execCtx.context); // CORRECT context path
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            const initialVarStoreState = JSON.stringify(execCtx.evaluationContext.context);
             handler.execute(params, execCtx);
-            expect(mockLogger.error).toHaveBeenCalledWith('SET_VARIABLE: Invalid or missing "variable_name" parameter. Must be a non-empty string.', {variable_name: params.variable_name});
-            expect(JSON.stringify(execCtx.context)).toEqual(initialContextState); // CORRECT context path
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith('SET_VARIABLE: Invalid or missing "variable_name" parameter. Must be a non-empty string.', {variable_name: params.variable_name});
+            expect(JSON.stringify(execCtx.evaluationContext.context)).toEqual(initialVarStoreState);
         });
 
-        // --- UPDATED TEST for received undefined value ---
         test('logs error and returns if resolved "value" is undefined', () => {
-            // Simulate the interpreter passing undefined after failing to resolve a placeholder
             const params = {variable_name: 'myVar', value: undefined};
-            const execCtx = buildCtx(); // CORRECTED builder
-            const initialContextState = JSON.stringify(execCtx.context); // CORRECT context path
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            const initialVarStoreState = JSON.stringify(execCtx.evaluationContext.context);
             handler.execute(params, execCtx);
-            // Expect the error message for receiving undefined
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                'SET_VARIABLE: Resolved "value" is undefined for variable "myVar". Assignment skipped. Check placeholder resolution.',
-                {params} // The handler logs the original params object
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                'SET_VARIABLE: Resolved "value" is undefined for variable "myVar". Assignment skipped. Check placeholder resolution or JsonLogic evaluation if applicable.',
+                {params}
             );
-            expect(JSON.stringify(execCtx.context)).toEqual(initialContextState); // Context unchanged
+            expect(JSON.stringify(execCtx.evaluationContext.context)).toEqual(initialVarStoreState);
         });
 
-        // --- CORRECTED TESTS for allowed 'falsy' values ---
-        // These failed before because context validation failed unexpectedly.
         test('does NOT log error if "value" is null', () => {
             const params = {variable_name: 'myVar', value: null};
-            const execCtx = buildCtx(); // CORRECTED builder - context validation now passes
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Error should NOT be called ---
-            expect(mockLogger.error).not.toHaveBeenCalled();
-            // --- ASSERTION FIX: Verify assignment happened correctly in the right context ---
-            expect(execCtx.context['myVar']).toBeNull();
+            expect(mockLoggerInstance.error).not.toHaveBeenCalled();
+            expect(execCtx.evaluationContext.context['myVar']).toBeNull();
         });
 
         test('does NOT log error if "value" is false', () => {
             const params = {variable_name: 'myVar', value: false};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Error should NOT be called ---
-            expect(mockLogger.error).not.toHaveBeenCalled();
-            // --- ASSERTION FIX: Verify assignment in the right context ---
-            expect(execCtx.context['myVar']).toBe(false);
+            expect(mockLoggerInstance.error).not.toHaveBeenCalled();
+            expect(execCtx.evaluationContext.context['myVar']).toBe(false);
         });
 
         test('does NOT log error if "value" is 0', () => {
             const params = {variable_name: 'myVar', value: 0};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Error should NOT be called ---
-            expect(mockLogger.error).not.toHaveBeenCalled();
-            // --- ASSERTION FIX: Verify assignment in the right context ---
-            expect(execCtx.context['myVar']).toBe(0);
+            expect(mockLoggerInstance.error).not.toHaveBeenCalled();
+            expect(execCtx.evaluationContext.context['myVar']).toBe(0);
         });
     });
 
-    // --- Execution Context Validation (`execute`) ----------------------------
-    // *** CORRECTED Execution Context Validation ***
     describe('Execution Context Validation', () => {
-        const validParams = {variable_name: 'v', value: 1}; // Value is pre-resolved
+        const validParams = {variable_name: 'v', value: 1};
 
-        // Test cases targeting the new validation:
-        // !executionContext || typeof executionContext.context !== 'object' || executionContext.context === null
-        const invalidContextTestCases = [
-            ['null executionContext', null],
-            ['undefined executionContext', undefined],
-            ['executionContext without context', {}], // context is undefined
-            ['executionContext with null context', {context: null}], // context is null
-            ['executionContext with non-object context', {context: 'string'}], // context is not an object
-            // Test case where context is technically an object, but an array (should pass current validation)
-            // ['executionContext with array context', { context: [] }], // This would PASS the current check
+        const invalidExecContextTestCases = [
+            ['null executionContext', null, {
+                hasExecutionContext: false,
+                hasEvaluationContext: false,
+                typeOfVariableStore: 'undefined'
+            }],
+            ['undefined executionContext', undefined, {
+                hasExecutionContext: false,
+                hasEvaluationContext: false,
+                typeOfVariableStore: 'undefined'
+            }],
+            ['executionContext without evaluationContext', {}, {
+                hasExecutionContext: true,
+                hasEvaluationContext: false,
+                typeOfVariableStore: 'undefined'
+            }],
+            ['executionContext with null evaluationContext', {evaluationContext: null}, {
+                hasExecutionContext: true,
+                hasEvaluationContext: false,
+                typeOfVariableStore: 'undefined'
+            }],
+            ['evaluationContext without context', {evaluationContext: {}}, {
+                hasExecutionContext: true,
+                hasEvaluationContext: true,
+                typeOfVariableStore: 'undefined'
+            }],
+            ['evaluationContext with null context', {evaluationContext: {context: null}}, {
+                hasExecutionContext: true,
+                hasEvaluationContext: true,
+                typeOfVariableStore: 'object'
+            }],
+            ['evaluationContext with non-object context', {evaluationContext: {context: 'string'}}, {
+                hasExecutionContext: true,
+                hasEvaluationContext: true,
+                typeOfVariableStore: 'string'
+            }],
         ];
 
-        test.each(invalidContextTestCases)('logs error and returns if execution context structure is invalid (%s)', (desc, invalidExecCtx) => {
+        test.each(invalidExecContextTestCases)('logs error and returns if execution context structure is invalid (%s)', (desc, invalidExecCtx, expectedDetails) => {
+            // For these tests, invalidExecCtx might not have the 'logger' property that buildCtx adds.
+            // If invalidExecCtx is null/undefined, it won't. If it's an object, we ensure our handler's logger is used.
             handler.execute(validParams, invalidExecCtx);
-
-            // --- ASSERTION FIX: Expect the CORRECT error message ---
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                'SET_VARIABLE: executionContext.context is missing or invalid. Cannot store variable.',
-                // The handler logs the received executionContext object
-                expect.objectContaining({executionContext: invalidExecCtx})
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
+                expectedDetails
             );
         });
 
-        // Keep this test as it's a valid edge case for the root object type
-        test('logs error and returns if executionContext is not an object', () => {
+        test('logs error and returns if executionContext is not an object (e.g. string)', () => {
             const invalidExecCtx = 'not an object';
             handler.execute(validParams, invalidExecCtx);
-            // --- ASSERTION FIX: Expect the CORRECT error message ---
-            // This fails the initial `!executionContext` check implicitly because typeof is not 'object'
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                'SET_VARIABLE: executionContext.context is missing or invalid. Cannot store variable.',
-                expect.objectContaining({executionContext: invalidExecCtx})
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
+                {hasExecutionContext: true, hasEvaluationContext: false, typeOfVariableStore: 'undefined'}
             );
         });
     });
 
-
-    // --- Value Setting (Handler receives resolved values) ---------------------
-    // *** CORRECTED Value Assignment Tests ***
     describe('Value Assignment', () => {
         test('sets literal string value', () => {
-            const params = {variable_name: 'message', value: 'Hello World'}; // Value is pre-resolved
-            const execCtx = buildCtx(); // CORRECTED builder
+            const params = {variable_name: 'message', value: 'Hello World'};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['message']).toBe('Hello World');
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "message" to value: "Hello World"');
-            expect(mockLogger.warn).not.toHaveBeenCalled();
-            expect(mockLogger.error).not.toHaveBeenCalled();
+            expect(execCtx.evaluationContext.context['message']).toBe('Hello World');
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "message" in evaluationContext.context to value: "Hello World"');
+            expect(mockLoggerInstance.warn).not.toHaveBeenCalled();
+            expect(mockLoggerInstance.error).not.toHaveBeenCalled();
         });
 
         test('sets literal number value', () => {
             const params = {variable_name: 'count', value: 42};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['count']).toBe(42);
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "count" to value: 42');
+            expect(execCtx.evaluationContext.context['count']).toBe(42);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "count" in evaluationContext.context to value: 42');
         });
 
         test('sets literal boolean value (true)', () => {
             const params = {variable_name: 'isActive', value: true};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['isActive']).toBe(true);
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isActive" to value: true');
+            expect(execCtx.evaluationContext.context['isActive']).toBe(true);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isActive" in evaluationContext.context to value: true');
         });
 
         test('sets literal boolean value (false)', () => {
             const params = {variable_name: 'isDisabled', value: false};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['isDisabled']).toBe(false);
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isDisabled" to value: false');
+            expect(execCtx.evaluationContext.context['isDisabled']).toBe(false);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "isDisabled" in evaluationContext.context to value: false');
         });
 
         test('sets literal null value', () => {
             const params = {variable_name: 'optionalData', value: null};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['optionalData']).toBeNull();
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "optionalData" to value: null');
+            expect(execCtx.evaluationContext.context['optionalData']).toBeNull();
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "optionalData" in evaluationContext.context to value: null');
         });
 
-        test('sets literal object value', () => {
-            const objValue = {key: 'value', nested: {num: 1}};
-            const params = {variable_name: 'config', value: objValue}; // Assume already resolved to this object
-            const execCtx = buildCtx(); // CORRECTED builder
+        test('sets literal object value (empty object)', () => {
+            const objValue = {};
+            const params = {variable_name: 'emptyConfig', value: objValue};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['config']).toEqual(objValue); // Use toEqual for objects/arrays
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "config" to value: ${JSON.stringify(objValue)}`);
+            expect(execCtx.evaluationContext.context['emptyConfig']).toEqual(objValue);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "emptyConfig" in evaluationContext.context to value: ${JSON.stringify(objValue)}`);
+            expect(mockLoggerInstance.debug).toHaveBeenCalledWith('SET_VARIABLE: Value for "emptyConfig" is an empty object {}. Using it directly.');
+        });
+
+        test('sets literal object value (non-empty object, treated as literal)', () => {
+            const objValue = {data: "some data", isLiteral: true};
+            const params = {variable_name: 'literalComplexObj', value: objValue};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            const mockApply = jest.spyOn(jsonLogic, 'apply');
+            // Simulate jsonLogic returning the object itself if it's not a rule it processes
+            mockApply.mockImplementation((rule, data) => rule);
+
+            handler.execute(params, execCtx);
+
+            expect(mockApply).toHaveBeenCalledWith(objValue, execCtx.evaluationContext);
+            expect(execCtx.evaluationContext.context['literalComplexObj']).toEqual(objValue);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "literalComplexObj" in evaluationContext.context to value: ${JSON.stringify(objValue)}`);
+            mockApply.mockRestore();
         });
 
         test('sets literal array value', () => {
             const arrValue = [1, 'two', true, null];
-            const params = {variable_name: 'items', value: arrValue}; // Assume already resolved
-            const execCtx = buildCtx(); // CORRECTED builder
+            const params = {variable_name: 'items', value: arrValue};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context ---
-            expect(execCtx.context['items']).toEqual(arrValue);
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "items" to value: ${JSON.stringify(arrValue)}`);
+            expect(execCtx.evaluationContext.context['items']).toEqual(arrValue);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith(`SET_VARIABLE: Setting context variable "items" in evaluationContext.context to value: ${JSON.stringify(arrValue)}`);
         });
 
         test('trims whitespace from variable_name before setting', () => {
             const params = {variable_name: '  paddedVar  ', value: 'trimmed'};
-            const execCtx = buildCtx(); // CORRECTED builder
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context properties ---
-            expect(execCtx.context).toHaveProperty('paddedVar');
-            expect(execCtx.context['paddedVar']).toBe('trimmed');
-            expect(execCtx.context).not.toHaveProperty('  paddedVar  ');
-            // --- ASSERTION FIX: Expect correct log message (uses trimmed name) ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "paddedVar" to value: "trimmed"');
+            expect(execCtx.evaluationContext.context).toHaveProperty('paddedVar');
+            expect(execCtx.evaluationContext.context['paddedVar']).toBe('trimmed');
+            expect(execCtx.evaluationContext.context).not.toHaveProperty('  paddedVar  ');
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "paddedVar" in evaluationContext.context to value: "trimmed"');
         });
 
         test('overwrites existing variable', () => {
-            const params = {variable_name: 'existingVar', value: 'new value'}; // Overwrite 'pre-existing value'
-            const execCtx = buildCtx(); // CORRECTED builder
-            // --- ASSERTION FIX: Check correct context for initial state ---
-            expect(execCtx.context['existingVar']).toBe('pre-existing value'); // Verify initial state
+            const params = {variable_name: 'existingVar', value: 'new value'};
+            const execCtx = buildCtx(mockLoggerInstance, {existingVar: 'pre-existing value'}); // Pass logger and initial store data
+            expect(execCtx.evaluationContext.context['existingVar']).toBe('pre-existing value');
             handler.execute(params, execCtx);
-            // --- ASSERTION FIX: Check correct context for overwritten value ---
-            expect(execCtx.context['existingVar']).toBe('new value'); // Verify overwritten value
-            // --- ASSERTION FIX: Expect correct log message ---
-            // *** UPDATED EXPECTED LOG MESSAGE ***
-            expect(mockLogger.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "existingVar" to value: "new value"');
+            expect(execCtx.evaluationContext.context['existingVar']).toBe('new value');
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "existingVar" in evaluationContext.context to value: "new value"');
         });
     });
 
-    // Removed obsolete test blocks related to placeholder resolution as per user file
+    describe('JsonLogic Value Evaluation', () => {
+        test('evaluates JsonLogic object value and sets the result', () => {
+            const jsonLogicRule = {"var": "actor.name"};
+            const params = {variable_name: 'actorNameFromLogic', value: jsonLogicRule};
+            const execCtx = buildCtx(
+                mockLoggerInstance, // Pass logger
+                {},
+                {actor: {id: 'actor-for-logic-eval', name: 'LogicActor'}}
+            );
+            handler.execute(params, execCtx);
+            expect(execCtx.evaluationContext.context['actorNameFromLogic']).toBe('LogicActor');
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "actorNameFromLogic" in evaluationContext.context to value: "LogicActor"');
+            expect(mockLoggerInstance.debug).toHaveBeenCalledWith('SET_VARIABLE: JsonLogic evaluation successful for "actorNameFromLogic". Result: "LogicActor"');
+        });
 
+        test('evaluates JsonLogic accessing context.variable and sets the result', () => {
+            const jsonLogicRule = {"+": [{"var": "context.existingVar"}, 5]};
+            const params = {variable_name: 'calculatedVar', value: jsonLogicRule};
+            const execCtx = buildCtx(
+                mockLoggerInstance, // Pass logger
+                {existingVar: 10}
+            );
+            handler.execute(params, execCtx);
+            expect(execCtx.evaluationContext.context['calculatedVar']).toBe(15);
+            expect(mockLoggerInstance.info).toHaveBeenCalledWith('SET_VARIABLE: Setting context variable "calculatedVar" in evaluationContext.context to value: 15');
+        });
+
+        test('logs error and skips assignment if JsonLogic evaluation fails', () => {
+            const invalidJsonLogicRule = {"invalidOperator": [1, 2]};
+            const params = {variable_name: 'failedLogicVar', value: invalidJsonLogicRule};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            handler.execute(params, execCtx);
+            expect(execCtx.evaluationContext.context).not.toHaveProperty('failedLogicVar');
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                `SET_VARIABLE: Error evaluating JsonLogic value for variable "failedLogicVar". Storing 'undefined'. Original value: ${JSON.stringify(invalidJsonLogicRule)}`,
+                // ***** THIS IS THE CORRECTED LINE *****
+                expect.objectContaining({errorMessage: expect.stringContaining('Unrecognized operation invalidOperator')})
+            );
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                `SET_VARIABLE: JsonLogic evaluation for variable "failedLogicVar" failed with an error (see previous log). Assignment skipped. Original value: ${JSON.stringify(invalidJsonLogicRule)}`
+            );
+        });
+
+        test('logs warning and skips assignment if JsonLogic evaluates to undefined (without error)', () => {
+            const jsonLogicRule = {"var": "nonExistentProperty"};
+            const mockApply = jest.spyOn(jsonLogic, 'apply').mockReturnValue(undefined);
+            const params = {variable_name: 'undefinedLogicResult', value: jsonLogicRule};
+            const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+            handler.execute(params, execCtx);
+            expect(execCtx.evaluationContext.context).not.toHaveProperty('undefinedLogicResult');
+            expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
+                `SET_VARIABLE: JsonLogic evaluation resulted in 'undefined' for variable "undefinedLogicResult". Assignment skipped. Original value: ${JSON.stringify(jsonLogicRule)}`
+            );
+            mockApply.mockRestore();
+        });
+
+        test('skips assignment if JsonLogic evaluation requires evaluationContext but it is missing (handler perspective)', () => {
+            const jsonLogicRule = {"var": "actor.name"};
+            const params = {variable_name: 'testVar', value: jsonLogicRule};
+            // This context is invalid because 'evaluationContext' is missing.
+            // The handler's first check for `variableStore` will fail.
+            const execCtxMissingEvalCtx = {logger: mockLoggerInstance}; // Does not have evaluationContext
+
+            handler.execute(params, execCtxMissingEvalCtx);
+
+            // Expect the initial validation error for the variable store
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
+                {hasExecutionContext: true, hasEvaluationContext: false, typeOfVariableStore: 'undefined'}
+            );
+            // Ensure the more specific error about JsonLogic evaluation is NOT called because the first check returns.
+            expect(mockLoggerInstance.error).not.toHaveBeenCalledWith(
+                expect.stringContaining('Cannot evaluate JsonLogic value for variable'),
+                expect.anything()
+            );
+            // And consequently, the variable is not set.
+            expect(execCtxMissingEvalCtx).not.toHaveProperty('evaluationContext'); // Still no eval context
+        });
+    });
 });

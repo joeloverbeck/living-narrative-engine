@@ -7,6 +7,7 @@
   "properties": {
     "$schema": {
       "type": "string",
+      "format": "uri",
       "description": "Optional. URI reference to the schema this document conforms to."
     },
     "id": {

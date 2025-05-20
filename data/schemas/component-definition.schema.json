@@ -2,9 +2,14 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/component-definition.schema.json",
   "title": "Component Definition",
-  "description": "Defines the structure for a single component type definition file, specifying its ID and the schema for its data payload.",
+  "description": "Defines the structure for a single component type definition file, specifying its ID, an optional schema declaration for itself, and the schema for its data payload.",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "The URI reference to the JSON Schema that this component definition document conforms to. Allows this document to declare its own schema (which should be this very schema: http://example.com/schemas/component-definition.schema.json)."
+    },
     "id": {
       "$ref": "common.schema.json#/definitions/namespacedId",
       "description": "The unique, namespaced identifier for this component type (e.g., 'core:health', 'game:openable'). This is used as the key in an entity's component map."

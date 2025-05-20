@@ -1,6 +1,7 @@
 // src/core/services/ajvSchemaValidator.js
 
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats'; // ADDED LINE: Import ajv-formats
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
@@ -45,12 +46,16 @@ class AjvSchemaValidator {
             // AC: AjvSchemaValidator constructor initializes an Ajv instance
             this.#ajv = new Ajv({
                 allErrors: true,    // Collect all errors
-                strictTypes: false, // Adjust based on schema strictness needs
-                // Consider adding formats if needed: require("ajv-formats")(this.#ajv)
+                strictTypes: false, // Adjust based on schema strictness needs. Consider setting to true or 'log' for stricter validation.
+                // MODIFIED SECTION: Initialize ajv-formats
             });
-            this.#logger.debug("AjvSchemaValidator: Ajv instance created successfully.");
+            addFormats(this.#ajv); // ADDED LINE: Initialize formats support
+            // You can also be more specific if you only need certain formats, e.g.:
+            // addFormats(this.#ajv, ['date-time', 'email']); // Example for specific formats
+
+            this.#logger.debug("AjvSchemaValidator: Ajv instance created and formats added successfully.");
         } catch (error) {
-            this.#logger.error('AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv:', error);
+            this.#logger.error('AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv or add formats:', error);
             throw new Error('AjvSchemaValidator: Failed to initialize the Ajv validation library.');
         }
     }

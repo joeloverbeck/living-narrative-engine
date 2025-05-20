@@ -3,7 +3,8 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
-/** @typedef {import('../defs.js').JsonLogicEvaluationContext} ExecutionContext */
+/** @typedef {import('../defs.js').JsonLogicEvaluationContext} BaseJsonLogicEvaluationContext */ // Renamed for clarity
+/** @typedef {import('../defs.js').ExecutionContext} OperationExecutionContext */ // The nested context passed to handlers
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 // <<< Ensure JsonLogicEvaluationService is NOT imported or used >>>
 
@@ -15,8 +16,8 @@ import jsonLogic from 'json-logic-js';
  * Placeholders in `value` are assumed to be pre-resolved by OperationInterpreter.
  * If the pre-resolved `value` is an object, it may be treated as JsonLogic to be evaluated.
  * @typedef {object} SetVariableOperationParams
- * @property {string} variable_name - Required. The name of the variable to set or update in the executionContext.context.
- * @property {*} value - Required. The value to assign (pre-resolved). Can be any valid JSON type, resolved type, or a JsonLogic object to be evaluated.
+ * @property {string} variable_name - Required. The name of the variable to set or update in the executionContext.evaluationContext.context.
+ * @property {*} value - Required. The value to assign (pre-resolved). Can be any valid JSON type, resolved type, or a JsonLogic object to be evaluated against executionContext.evaluationContext.
  */
 
 // -----------------------------------------------------------------------------
@@ -27,17 +28,15 @@ import jsonLogic from 'json-logic-js';
  * @class SetVariableHandler
  * Implements the OperationHandler interface for the "SET_VARIABLE" operation type.
  * Takes a variable name and a pre-resolved value. If the value is identified as
- * JsonLogic (a plain object), it evaluates it using `jsonLogic.apply`; otherwise,
- * it uses the value directly. Stores the final key-value pair in the
- * `executionContext.context` object.
+ * JsonLogic (a plain object), it evaluates it using `jsonLogic.apply` against the
+ * `executionContext.evaluationContext`. Otherwise, it uses the value directly.
+ * Stores the final key-value pair in the `executionContext.evaluationContext.context` object.
  *
  * @implements {OperationHandler}
  */
 class SetVariableHandler {
     /** @private @readonly @type {ILogger} */
     #logger;
-    // <<< Property REMOVED >>>
-    // #jsonLogicEvaluationService;
 
     /**
      * Creates an instance of SetVariableHandler.
@@ -45,18 +44,11 @@ class SetVariableHandler {
      * @param {ILogger} dependencies.logger - The logging service instance.
      * @throws {Error} If dependencies are missing or invalid.
      */
-    constructor({logger}) { // <<< Constructor ONLY accepts logger >>>
+    constructor({logger}) {
         if (!logger || typeof logger.debug !== 'function' || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function') {
-            // Keep logger validation
             throw new Error('SetVariableHandler requires a valid ILogger instance with debug, info, warn, and error methods.');
         }
-        // <<< REMOVED Validation and storage for jsonLogicEvaluationService >>>
-        // if (!jsonLogicEvaluationService || typeof jsonLogicEvaluationService.evaluate !== 'function') {
-        //     // This is the check causing the error in your current run
-        //     throw new Error('SetVariableHandler requires a valid JsonLogicEvaluationService instance with an evaluate method.'); // <<< THIS LINE SHOULD BE GONE
-        // }
         this.#logger = logger;
-        // this.#jsonLogicEvaluationService = jsonLogicEvaluationService; // <<< THIS LINE SHOULD BE GONE
         this.#logger.debug('SetVariableHandler initialized.');
     }
 
@@ -64,11 +56,14 @@ class SetVariableHandler {
     /**
      * Executes the SET_VARIABLE operation using pre-resolved parameters.
      * If the 'value' parameter is a plain object, it attempts to evaluate it as JsonLogic
-     * using the raw `jsonLogic.apply` method. Otherwise, uses the value directly.
-     * Sets or updates a variable in the `executionContext.context`.
+     * using `jsonLogic.apply` with `executionContext.evaluationContext` as the data source.
+     * Otherwise, uses the value directly.
+     * Sets or updates a variable in `executionContext.evaluationContext.context`.
      *
      * @param {OperationParams | SetVariableOperationParams | null | undefined} params - Parameters with `value` potentially pre-resolved. Requires `variable_name` (string) and `value` (*).
-     * @param {ExecutionContext} executionContext - The execution context (contains event, actor, target, and the shared `context` object for variables).
+     * @param {OperationExecutionContext} executionContext - The operation execution context. Expects this to be the nested structure
+     * (e.g., finalNestedExecutionContext from SystemLogicInterpreter) containing an `evaluationContext`
+     * property, which in turn contains the `context` object for variable storage.
      * @returns {void}
      * @implements {OperationHandler}
      */
@@ -90,97 +85,140 @@ class SetVariableHandler {
         const trimmedVariableName = variable_name.trim();
 
         if (value === undefined) {
-            logger.error(`SET_VARIABLE: Resolved "value" is undefined for variable "${trimmedVariableName}". Assignment skipped. Check placeholder resolution.`, {params});
+            // This check is important because placeholder resolution might result in 'undefined'
+            // if a placeholder cannot be found. We should not store a literal 'undefined'
+            // unless explicitly intended by a JsonLogic rule that evaluates to undefined.
+            logger.error(`SET_VARIABLE: Resolved "value" is undefined for variable "${trimmedVariableName}". Assignment skipped. Check placeholder resolution or JsonLogic evaluation if applicable.`, {params});
             return;
         }
 
-        // --- 2. Validate target context ---
-        if (!executionContext || typeof executionContext.context !== 'object' || executionContext.context === null) {
-            logger.error('SET_VARIABLE: executionContext.context is missing or invalid. Cannot store variable.', {executionContext});
+        // --- 2. Validate target variable store within executionContext ---
+        // The variableStore is expected to be executionContext.evaluationContext.context
+        const evaluationCtx = executionContext?.evaluationContext;
+        const variableStore = evaluationCtx?.context;
+
+        if (typeof variableStore !== 'object' || variableStore === null) {
+            logger.error('SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.', {
+                hasExecutionContext: !!executionContext,
+                hasEvaluationContext: !!evaluationCtx,
+                typeOfVariableStore: typeof variableStore
+            });
             return;
         }
 
         // --- 3. Evaluate Value if it's JsonLogic ---
         let finalValue;
         let evaluationOccurred = false;
+        let evaluationThrewError = false; // <<< New flag to track if the try/catch caught an error
+
+        const dataForJsonLogicEvaluation = evaluationCtx;
 
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             if (Object.keys(value).length > 0) {
-                logger.debug(`SET_VARIABLE: Value for "${trimmedVariableName}" is an object. Attempting JsonLogic evaluation.`);
-                try {
-                    // <<< Use jsonLogic.apply directly >>>
-                    finalValue = jsonLogic.apply(value, executionContext);
-                    evaluationOccurred = true;
-                    let evalResultString;
-                    try {
-                        evalResultString = JSON.stringify(finalValue);
-                    } catch {
-                        evalResultString = String(finalValue);
-                    }
-                    logger.debug(`SET_VARIABLE: JsonLogic evaluation successful for "${trimmedVariableName}". Result: ${evalResultString}`);
-                } catch (evalError) {
-                    logger.error(`SET_VARIABLE: Error evaluating JsonLogic value for variable "${trimmedVariableName}". Storing 'undefined'. Original value: ${JSON.stringify(value)}`, evalError);
+                logger.debug(`SET_VARIABLE: Value for "${trimmedVariableName}" is a non-empty object. Attempting JsonLogic evaluation using executionContext.evaluationContext as data source.`);
+                if (!dataForJsonLogicEvaluation) {
+                    logger.error(`SET_VARIABLE: Cannot evaluate JsonLogic value for variable "${trimmedVariableName}" because executionContext.evaluationContext is missing or invalid. Storing 'undefined'. Original value: ${JSON.stringify(value)}`, {hasExecutionContext: !!executionContext});
                     finalValue = undefined;
-                    evaluationOccurred = true; // Mark evaluation as attempted even if it failed
+                    evaluationOccurred = true;
+                    // evaluationThrewError = true; // Technically, this path is an error in setup, not JsonLogic eval itself.
+                    // The crucial part is that finalValue becomes undefined and evaluationOccurred is true.
+                    // The subsequent check will handle this. Let's see if this needs to be true.
+                    // If dataForJsonLogicEvaluation is missing, it's an issue *before* jsonLogic.apply is called.
+                    // The `evaluationThrewError` flag is specifically for errors *from* jsonLogic.apply().
+                } else {
+                    try {
+                        finalValue = jsonLogic.apply(value, dataForJsonLogicEvaluation);
+                        evaluationOccurred = true;
+                        let evalResultString;
+                        try {
+                            evalResultString = JSON.stringify(finalValue);
+                        } catch {
+                            evalResultString = String(finalValue);
+                        }
+                        logger.debug(`SET_VARIABLE: JsonLogic evaluation successful for "${trimmedVariableName}". Result: ${evalResultString}`);
+                    } catch (evalError) {
+                        evaluationThrewError = true; // <<< Set the flag here
+                        logger.error(`SET_VARIABLE: Error evaluating JsonLogic value for variable "${trimmedVariableName}". Storing 'undefined'. Original value: ${JSON.stringify(value)}`, {
+                            errorMessage: evalError instanceof Error ? evalError.message : String(evalError),
+                        });
+                        finalValue = undefined;
+                        evaluationOccurred = true;
+                    }
                 }
             } else {
                 logger.debug(`SET_VARIABLE: Value for "${trimmedVariableName}" is an empty object {}. Using it directly.`);
-                finalValue = value; // Use the empty object directly
+                finalValue = value;
             }
         } else {
-            // Value is not a non-null, non-array object, use it directly
             finalValue = value;
             logger.debug(`SET_VARIABLE: Value for "${trimmedVariableName}" is not a non-empty object. Using directly.`);
         }
 
-        // --- Check if evaluation resulted in undefined (potentially due to error or explicit undefined result from logic) ---
         if (evaluationOccurred && finalValue === undefined) {
-            // Log slightly differently based on whether an error actually occurred during eval
-            if (params && typeof params.value === 'object' && params.value !== null && !Array.isArray(params.value)) { // Check if value was initially an object
-                const originalValueString = JSON.stringify(params.value);
-                // Check if an error was explicitly logged during the try-catch above for evaluation
-                // This check is imperfect but gives a hint. A more robust way would be to set a flag in the catch block.
-                const evalFailedWithError = logger.loggedMessages?.some(log =>
-                    log.level === 'error' &&
-                    log.message.includes(`Error evaluating JsonLogic value for variable "${trimmedVariableName}"`)
-                );
+            const originalValueString = JSON.stringify(params.value);
+            if (evaluationThrewError) { // <<< Use the new flag here
+                logger.error(`SET_VARIABLE: JsonLogic evaluation for variable "${trimmedVariableName}" failed with an error (see previous log). Assignment skipped. Original value: ${originalValueString}`);
+            } else {
+                // This case means JsonLogic was attempted, no error was thrown by jsonLogic.apply,
+                // but the result was 'undefined'. Or, dataForJsonLogicEvaluation was missing.
+                // If dataForJsonLogicEvaluation was missing, an error was already logged.
+                // If the initial error for missing dataForJsonLogicEvaluation should also trigger the "failed with an error" message,
+                // then that specific logger.error call should also set evaluationThrewError = true.
+                // For now, let's assume evaluationThrewError is only for jsonLogic.apply() errors.
 
-                if (evalFailedWithError) {
-                    logger.error(`SET_VARIABLE: JsonLogic evaluation failed with error for variable "${trimmedVariableName}". Assignment skipped. Original value: ${originalValueString}`);
-                } else {
-                    logger.warn(`SET_VARIABLE: JsonLogic evaluation resulted in undefined for variable "${trimmedVariableName}" (without explicit error logged during eval). Assignment skipped. Original value: ${originalValueString}`);
+                // If `!dataForJsonLogicEvaluation` path was taken, `finalValue` is `undefined` and `evaluationOccurred` is `true`.
+                // `evaluationThrewError` would be `false`. So it would come here.
+                // We need to distinguish:
+                // 1. JsonLogic engine itself threw error (evaluationThrewError = true)
+                // 2. JsonLogic engine returned undefined (evaluationThrewError = false)
+                // 3. JsonLogic could not be attempted due to missing dataForJsonLogicEvaluation (evaluationThrewError = false, but an error was already logged)
+
+                // Let's refine: if an error regarding evaluation was logged for *any reason* related to attempting JsonLogic.
+                // The previous check for `!dataForJsonLogicEvaluation` logs an error.
+                // The `evaluationThrewError` is specific to `jsonLogic.apply`.
+                // The *intent* of the second error/warning is to summarize *why* assignment is skipped if `finalValue` is `undefined` post-evaluation.
+
+                // Consider if an error has already been logged in this evaluation block
+                let priorEvalRelatedErrorLogged = evaluationThrewError;
+                if (!dataForJsonLogicEvaluation && Object.keys(value).length > 0 && typeof value === 'object' && !Array.isArray(value)) {
+                    // This condition means we logged "Cannot evaluate JsonLogic value..."
+                    priorEvalRelatedErrorLogged = true;
                 }
 
-            } else {
-                // This case shouldn't typically happen if evaluationOccurred is true, but handle defensively
-                logger.error(`SET_VARIABLE: Evaluation occurred but resulted in undefined for variable "${trimmedVariableName}". Assignment skipped.`);
+
+                if (priorEvalRelatedErrorLogged) {
+                    logger.error(`SET_VARIABLE: JsonLogic evaluation attempt for variable "${trimmedVariableName}" failed or could not proceed (see previous log). Assignment skipped. Original value: ${originalValueString}`);
+                } else {
+                    // This means evaluationOccurred, finalValue is undefined, but no error was logged during the evaluation attempt.
+                    // e.g. JsonLogic rule like {"var": "this.does.not.exist"} which might resolve to undefined without throwing.
+                    logger.warn(`SET_VARIABLE: JsonLogic evaluation resulted in 'undefined' for variable "${trimmedVariableName}". Assignment skipped. Original value: ${originalValueString}`);
+                }
             }
-            return; // Stop processing if evaluation resulted in undefined
+            return;
         }
+        // If `value` was initially undefined (checked at the start) or if JsonLogic evaluation resulted in undefined,
+        // we would have returned already. If we reach here with `finalValue === undefined` it means the original
+        // `value` (non-object or empty object) was literally `undefined`, which is already handled by the first check on `value`.
 
-
-        // --- 4. Implement Core Logic (Assignment into executionContext.context) ---
+        // --- 4. Implement Core Logic (Assignment into variableStore) ---
         let finalValueStringForLog;
         try {
             finalValueStringForLog = JSON.stringify(finalValue);
         } catch (e) {
-            // Handle potential circular structures or BigInts in the final value
             finalValueStringForLog = String(finalValue);
-            logger.warn(`SET_VARIABLE: Could not JSON.stringify final value for logging (variable: "${trimmedVariableName}"). Using String() fallback.`, e);
+            logger.warn(`SET_VARIABLE: Could not JSON.stringify final value for logging (variable: "${trimmedVariableName}"). Using String() fallback. This might happen with circular structures or BigInts.`, {valueType: typeof finalValue});
         }
 
-        // *** This is the log message checked in the tests ***
-        logger.info(`SET_VARIABLE: Setting context variable "${trimmedVariableName}" to value: ${finalValueStringForLog}`);
+        logger.info(`SET_VARIABLE: Setting context variable "${trimmedVariableName}" in evaluationContext.context to value: ${finalValueStringForLog}`);
 
         try {
-            // Assign the final determined value to the context
-            executionContext.context[trimmedVariableName] = finalValue;
+            // Assign the final determined value to the correct context (variableStore)
+            variableStore[trimmedVariableName] = finalValue;
         } catch (assignmentError) {
-            // Catch potential errors during the assignment itself (e.g., if context becomes non-extensible)
-            logger.error(`SET_VARIABLE: Unexpected error during assignment for variable "${trimmedVariableName}".`, {
+            logger.error(`SET_VARIABLE: Unexpected error during assignment for variable "${trimmedVariableName}" into evaluationContext.context.`, {
                 error: assignmentError instanceof Error ? assignmentError.message : String(assignmentError),
                 variableName: trimmedVariableName,
-                valueBeingAssigned: finalValue // Log the value that failed to assign
+                // Do not log finalValue again if it's complex and caused stringify issues above
             });
             // Depending on desired behavior, you might want to re-throw or simply return here
         }
