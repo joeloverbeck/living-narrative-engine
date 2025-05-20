@@ -10,59 +10,73 @@ import {tokens} from '../../core/config/tokens.js'; // Import tokens
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../core/initializers/services/initializationService.js').default} InitializationService */
-/** @typedef {import('../../core/gameLoop.js').default} GameLoop */ // Still needed for InitializationResult type
+/** @typedef {import('../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+/** @typedef {import('../../services/playtimeTracker.js').default} PlaytimeTracker */
+/** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService */
+/** @typedef {import('../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+
 
 // --- Test Suite ---
-describe('GameEngine start() - Successful Initialization via InitializationService', () => {
+describe('GameEngine startNewGame() - Successful Initialization via InitializationService', () => {
 
     /** @type {jest.Mocked<AppContainer>} */
     let mockAppContainer;
     /** @type {jest.Mocked<ILogger>} */
     let mockLogger;
     /** @type {jest.Mocked<GameLoop>} */
-    let mockGameLoop;
+    let mockGameLoop; // Returned by InitializationService, not directly resolved by GameEngine
     /** @type {jest.Mocked<InitializationService>} */
     let mockInitializationService;
     /** @type {jest.Mocked<ValidatedEventDispatcher>} */
-    let mockValidatedEventDispatcher;
+    let mockValidatedEventDispatcher; // Though not directly used in startNewGame success path for events
     /** @type {jest.Mocked<ITurnManager>} */
     let mockTurnManager;
+    /** @type {jest.Mocked<PlaytimeTracker>} */
+    let mockPlaytimeTracker;
+    /** @type {jest.Mocked<GamePersistenceService>} */
+    let mockGamePersistenceService;
+    /** @type {jest.Mocked<IDataRegistry>} */
+    let mockDataRegistry;
+    /** @type {jest.Mocked<EntityManager>} */
+    let mockEntityManager;
+
 
     const testWorldName = 'testWorld';
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Mock ILogger
-        mockLogger = {
-            info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
-        };
-
-        // Mock GameLoop
-        mockGameLoop = {};
-
-        // Mock InitializationService
-        mockInitializationService = {
-            runInitializationSequence: jest.fn(),
-        };
-
-        // Mock ValidatedEventDispatcher
-        mockValidatedEventDispatcher = {
-            dispatchValidated: jest.fn().mockResolvedValue(true),
-        };
-
-        // Mock TurnManager
+        mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
+        mockGameLoop = {}; // Simple mock, as its properties aren't directly used by GameEngine post-init
+        mockInitializationService = {runInitializationSequence: jest.fn()};
+        mockValidatedEventDispatcher = {dispatchValidated: jest.fn().mockResolvedValue(true)};
         mockTurnManager = {
-            start: jest.fn().mockResolvedValue(undefined), stop: jest.fn().mockResolvedValue(undefined),
+            start: jest.fn().mockResolvedValue(undefined),
+            stop: jest.fn().mockResolvedValue(undefined),
+            setCurrentTurn: jest.fn()
         };
 
-        // Mock AppContainer
-        mockAppContainer = {
-            resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn(),
+        // Mocks for services resolved in GameEngine constructor
+        mockPlaytimeTracker = {
+            getTotalPlaytime: jest.fn().mockReturnValue(0),
+            reset: jest.fn(),
+            start: jest.fn(),
+            stop: jest.fn()
+        };
+        mockGamePersistenceService = {saveGame: jest.fn()};
+        mockDataRegistry = {getLoadedModManifests: jest.fn().mockReturnValue([]), getModDefinition: jest.fn()};
+        mockEntityManager = {
+            clearAll: jest.fn(),
+            activeEntities: new Map(),
+            addComponent: jest.fn(),
+            getEntityDefinition: jest.fn()
         };
 
-        // Configure default AppContainer resolve behavior
+
+        mockAppContainer = {resolve: jest.fn(), register: jest.fn(), disposeSingletons: jest.fn(), reset: jest.fn()};
+
         mockAppContainer.resolve.mockImplementation((key) => {
             switch (key) {
                 case tokens.ILogger:
@@ -73,11 +87,24 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
                     return mockValidatedEventDispatcher;
                 case tokens.ITurnManager:
                     return mockTurnManager;
-                case tokens.GameLoop:
-                    return mockGameLoop;
+                // tokens.GameLoop is not resolved by GameEngine directly.
+                // It's provided by InitializationService.
+
+                // Add cases for constructor dependencies
+                case tokens.PlaytimeTracker:
+                    return mockPlaytimeTracker;
+                case tokens.GamePersistenceService:
+                    return mockGamePersistenceService;
+                case tokens.IDataRegistry:
+                    return mockDataRegistry;
+                case tokens.EntityManager:
+                    return mockEntityManager;
                 default:
-                    console.warn(`MockAppContainer (beforeEach): Unexpected resolution attempt for key "${String(key)}".`);
-                    throw new Error(`MockAppContainer (beforeEach): Unexpected resolution attempt for key "${String(key)}".`);
+                    // This case should ideally not be hit if all dependencies are mocked.
+                    // If it is, the test setup might be missing a mock for a new/unexpected dependency.
+                    console.warn(`MockAppContainer (beforeEach SUCCESS tests): Unexpected resolution attempt for key "${String(key)}".`);
+                    // Throwing an error here can help catch missing mocks early.
+                    throw new Error(`MockAppContainer (beforeEach SUCCESS tests): Unexpected resolution attempt for key "${String(key)}".`);
             }
         });
 
@@ -88,105 +115,106 @@ describe('GameEngine start() - Successful Initialization via InitializationServi
     });
 
     // Test Case: Successful Initialization
-    it('should correctly delegate to InitializationService, set state, start TurnManager, log messages, and dispatch event on success', async () => {
+    it('should correctly delegate to InitializationService, set state, start TurnManager, and log messages on success', async () => {
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
-        mockAppContainer.resolve.mockClear(); // Clear constructor resolve call
-        mockLogger.info.mockClear(); // Clear constructor log call
+        // Clear mocks that might have been called during the constructor
+        mockAppContainer.resolve.mockClear();
+        mockLogger.info.mockClear();
+        mockLogger.debug.mockClear();
+        mockEntityManager.clearAll.mockClear();
 
-        await gameEngineInstance.start(testWorldName);
 
+        await gameEngineInstance.startNewGame(testWorldName);
+
+        // Assertions for calls made *during* startNewGame
+        expect(mockEntityManager.clearAll).toHaveBeenCalledTimes(1); // Called at the start of startNewGame
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.InitializationService);
         expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledTimes(1);
         expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(testWorldName);
         expect(mockAppContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
         expect(mockTurnManager.start).toHaveBeenCalledTimes(1);
+
         expect(gameEngineInstance.isInitialized).toBe(true);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Starting initialization sequence for world: ${testWorldName}`));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Initialization sequence reported success'));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Resolving TurnManager...'));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Starting TurnManager...'));
-        expect(mockValidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(0);
+
+        // Log assertions (updated for startNewGame messages)
+        expect(mockLogger.info).toHaveBeenCalledWith(`GameEngine: Starting NEW GAME initialization sequence for world: ${testWorldName}...`); // <<< CORRECTED
+        expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: Clearing EntityManager before new game initialization.');
+        expect(mockLogger.debug).toHaveBeenCalledWith('GameEngine: InitializationService resolved for new game.');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: New game initialization sequence reported success.');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Resolving TurnManager for new game...');
+        expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Starting TurnManager for new game...');
+
+        // ValidatedEventDispatcher is not used for a "game ready" message in startNewGame
+        expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     // Test Case: Already Initialized
-    it('should log a warning and return if start() is called when already initialized', async () => {
+    it('should log a warning and return if startNewGame() is called when already initialized', async () => {
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
 
         // Initial successful start
-        await gameEngineInstance.start(testWorldName);
+        await gameEngineInstance.startNewGame(testWorldName);
         expect(gameEngineInstance.isInitialized).toBe(true);
 
         // Clear mocks from the first run
-        jest.clearAllMocks();
+        mockLogger.warn.mockClear();
+        mockAppContainer.resolve.mockClear();
+        mockInitializationService.runInitializationSequence.mockClear();
+        mockTurnManager.start.mockClear();
+        mockValidatedEventDispatcher.dispatchValidated.mockClear();
+        mockEntityManager.clearAll.mockClear();
 
-        // Restore mocks needed for assertions (warn is the only one called)
-        mockLogger.warn = jest.fn();
-        // Note: We don't need to re-configure mockAppContainer.resolve for the second call,
-        // because it should NOT be called at all.
 
-        // Act: Call start again
-        await gameEngineInstance.start('anotherWorld');
+        // Act: Call startNewGame again
+        await gameEngineInstance.startNewGame('anotherWorld');
 
-        // Assert: Verify warning log
+        // Assert: Verify warning log (updated for startNewGame message)
         expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockLogger.warn).toHaveBeenCalledWith("GameEngine: start('anotherWorld') called, but engine is already initialized. Ignoring.");
+        expect(mockLogger.warn).toHaveBeenCalledWith(`GameEngine: startNewGame('anotherWorld') called, but engine is already initialized. Please stop the engine first.`);
 
-        // --- FIXED Assertions ---
-        // Verify no services were resolved during the second call because it exited early
+        // Verify no services were resolved or main methods called during the second attempt
+        expect(mockEntityManager.clearAll).not.toHaveBeenCalled();
         expect(mockAppContainer.resolve).not.toHaveBeenCalled();
-
-        // Verify no further initialization/startup attempt occurred
         expect(mockInitializationService.runInitializationSequence).not.toHaveBeenCalled();
         expect(mockTurnManager.start).not.toHaveBeenCalled();
         expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();
     });
 
     // Test Case: Invalid worldName
-    it('should throw an error and log if start() is called without a valid worldName', async () => {
+    it('should throw an error and log if startNewGame() is called without a valid worldName', async () => {
         const gameEngineInstance = new GameEngine({container: mockAppContainer});
-        const expectedError = new Error('GameEngine.start requires a valid non-empty worldName argument.');
+        const expectedError = new Error('GameEngine.startNewGame requires a valid non-empty worldName argument.');
+        const expectedLogMessage = 'GameEngine: Fatal Error - startNewGame() called without a valid worldName.';
 
-        jest.clearAllMocks(); // Clear constructor calls
-
-        // Re-configure resolve strictly for this test - only Logger should be resolved (implicitly by constructor)
-        // For the start call itself, only the error logger is needed before throwing.
-        // We don't expect any *new* resolve calls during the failing start().
-        mockAppContainer.resolve.mockImplementation((key) => {
-            if (key === tokens.ILogger) {
-                mockLogger = mockLogger || {error: jest.fn()}; // Ensure mock exists
-                mockLogger.error = mockLogger.error || jest.fn(); // Ensure error fn exists
-                return mockLogger;
-            }
-            // This path shouldn't be hit if only logger error is called before throw
-            console.warn(`MockAppContainer (Invalid Arg Test): Unexpected resolution attempt for key "${String(key)}".`);
-            throw new Error(`MockAppContainer (Invalid Arg Test): Unexpected resolution attempt for key "${String(key)}".`);
-        });
-        // Ensure logger.error is a mock fn
-        if (!mockLogger?.error || !jest.isMockFunction(mockLogger.error)) {
-            mockLogger = {...mockLogger, error: jest.fn()};
-        }
-        mockAppContainer.resolve.mockClear(); // Clear potential mock re-creation resolve
+        // Clear mocks from constructor
+        mockLogger.error.mockClear();
+        mockAppContainer.resolve.mockClear(); // Clear constructor resolve calls
+        mockInitializationService.runInitializationSequence.mockClear();
+        mockTurnManager.start.mockClear();
+        mockValidatedEventDispatcher.dispatchValidated.mockClear();
+        mockEntityManager.clearAll.mockClear();
 
         // Test null
-        await expect(gameEngineInstance.start(null)).rejects.toThrow(expectedError);
-        expect(mockLogger.error).toHaveBeenCalledWith('GameEngine: Fatal Error - start() called without a valid worldName.');
+        await expect(gameEngineInstance.startNewGame(null)).rejects.toThrow(expectedError);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         mockLogger.error.mockClear();
 
         // Test empty string
-        await expect(gameEngineInstance.start('')).rejects.toThrow(expectedError);
-        expect(mockLogger.error).toHaveBeenCalledWith('GameEngine: Fatal Error - start() called without a valid worldName.');
+        await expect(gameEngineInstance.startNewGame('')).rejects.toThrow(expectedError);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         mockLogger.error.mockClear();
 
         // Test whitespace string
-        await expect(gameEngineInstance.start('   ')).rejects.toThrow(expectedError);
-        expect(mockLogger.error).toHaveBeenCalledWith('GameEngine: Fatal Error - start() called without a valid worldName.');
+        await expect(gameEngineInstance.startNewGame('   ')).rejects.toThrow(expectedError);
+        expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         mockLogger.error.mockClear();
 
-        // Verify no initialization/startup attempt occurred
-        expect(mockAppContainer.resolve).not.toHaveBeenCalled(); // No *new* resolves during start calls
+        // Verify no main initialization/startup attempt occurred after the argument check
+        expect(mockEntityManager.clearAll).not.toHaveBeenCalled();
+        expect(mockAppContainer.resolve).not.toHaveBeenCalled(); // No *new* resolves during these startNewGame calls
         expect(mockInitializationService.runInitializationSequence).not.toHaveBeenCalled();
         expect(mockTurnManager.start).not.toHaveBeenCalled();
         expect(mockValidatedEventDispatcher.dispatchValidated).not.toHaveBeenCalled();

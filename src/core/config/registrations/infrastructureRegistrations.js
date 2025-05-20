@@ -1,5 +1,4 @@
 // src/core/config/registrations/infrastructureRegistrations.js
-// ****** MODIFIED FILE ******
 
 import EventBus from '../../eventBus.js';
 import SpatialIndexManager from '../../spatialIndexManager.js';
@@ -12,6 +11,9 @@ import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import {SystemServiceRegistry} from "../../services/systemServiceRegistry.js";
 import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
+
+// --- ADDED IMPORT FOR SaveLoadService ---
+import SaveLoadService from '../../../services/saveLoadService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -32,6 +34,8 @@ import {SystemDataRegistry} from "../../services/systemDataRegistry.js";
  * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher // For SafeEventDispatcher
  * @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
+ * @typedef {import('../../../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider // For SaveLoadService type hint
+ * @typedef {import('../../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface // For type hint
  */
 
 export function registerInfrastructure(container) {
@@ -72,32 +76,32 @@ export function registerInfrastructure(container) {
     log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader} (with VED dependency).`);
 
     // Register GameDataRepository against IGameDataRepository token
-    container.register(tokens.IGameDataRepository, // <<< MODIFIED TOKEN
-        c => new GameDataRepository( // Instantiates the concrete class
+    container.register(tokens.IGameDataRepository,
+        c => new GameDataRepository(
             /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
             /** @type {ILogger} */ (c.resolve(tokens.ILogger))
         ),
         {lifecycle: 'singleton'}
     );
-    log.debug(`Infrastructure Registration: Registered ${tokens.IGameDataRepository}.`); // <<< MODIFIED TOKEN
+    log.debug(`Infrastructure Registration: Registered ${tokens.IGameDataRepository}.`);
 
 
     // Register EntityManager against IEntityManager token
-    container.register(tokens.IEntityManager, // <<< MODIFIED TOKEN
-        c => new EntityManager( // Instantiates the concrete class
+    container.register(tokens.IEntityManager,
+        c => new EntityManager(
             /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
             /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
             /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
             /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
         ), {lifecycle: 'singleton'}
     );
-    log.debug(`Infrastructure Registration: Registered ${tokens.IEntityManager}.`); // <<< MODIFIED TOKEN
+    log.debug(`Infrastructure Registration: Registered ${tokens.IEntityManager}.`);
 
 
     // --- Register ValidatedEventDispatcher against its Interface Token ---
     container.register(tokens.IValidatedEventDispatcher, c => new ValidatedEventDispatcher({
         eventBus: c.resolve(tokens.EventBus),
-        gameDataRepository: c.resolve(tokens.IGameDataRepository), // Use IGameDataRepository
+        gameDataRepository: c.resolve(tokens.IGameDataRepository),
         schemaValidator: /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     }), {lifecycle: 'singleton'});
@@ -113,7 +117,7 @@ export function registerInfrastructure(container) {
 
 
     r.singletonFactory(tokens.SystemServiceRegistry, c => new SystemServiceRegistry(
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger)) // Resolve the logger dependency
+        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
     ));
     log.debug(`Infrastructure Registration: Registered ${tokens.SystemServiceRegistry}.`);
 
@@ -124,5 +128,20 @@ export function registerInfrastructure(container) {
     ));
     log.debug(`Infrastructure Registration: Registered ${tokens.SystemDataRegistry}.`);
 
+    // --- ADDED REGISTRATION FOR SaveLoadService ---
+    // Assumes tokens.IStorageProvider is a valid, registered token.
+    // If IStorageProvider is not yet registered, its registration would be a prerequisite,
+    // typically also within this infrastructure bundle.
+    r.single(tokens.ISaveLoadService, SaveLoadService, [
+        tokens.ILogger,
+        tokens.IStorageProvider // SaveLoadService constructor expects 'logger' and 'storageProvider'
+                                // Registrar.single will map tokens.ILogger to 'logger' and
+                                // tokens.IStorageProvider to 'storageProvider' in the dependency object.
+    ]);
+    log.debug(`Infrastructure Registration: Registered ${String(tokens.ISaveLoadService)} implemented by SaveLoadService.`);
+    // --- END ADDED REGISTRATION ---
+
     log.info('Infrastructure Registration: complete.');
 }
+
+// --- FILE END ---
