@@ -78,95 +78,123 @@ export class BrowserStorageProvider extends IStorageProvider {
     }
 
     async #getRelativeDirectoryHandle(directoryPath, options = {create: false}) {
-        // MODIFIED HERE: Always pass true to #getRootDirectoryHandle to allow prompting if the root is needed.
         const root = await this.#getRootDirectoryHandle(true);
-        // Original: const root = await this.#getRootDirectoryHandle(!!options.create);
 
-        if (!root) { // Should not happen if #getRootDirectoryHandle throws on failure to get handle
+        if (!root) {
             throw new Error("Root directory handle is not available.");
         }
-        if (!directoryPath || directoryPath === '.' || directoryPath === '/') {
+        // Normalize internal path before splitting
+        const normalizedDirectoryPath = directoryPath.replace(/^\/+|\/+$/g, '');
+        if (!normalizedDirectoryPath || normalizedDirectoryPath === '.') { // Root or current dir effectively
             return root;
         }
 
-        const parts = directoryPath.replace(/^\/+|\/+$/g, '').split('/');
+        const parts = normalizedDirectoryPath.split('/');
         let currentHandle = root;
         for (const part of parts) {
-            if (!part) continue;
+            if (!part) continue; // Should not happen after replace and split on non-empty string
             try {
                 currentHandle = await currentHandle.getDirectoryHandle(part, options);
             } catch (error) {
-                this.#logger.error(`Failed to get/create directory handle for "${part}" in path "${directoryPath}":`, error);
-                throw error; // Re-throw to be caught by the public method
+                this.#logger.error(`Failed to get/create directory handle for "${part}" in path "${normalizedDirectoryPath}":`, error);
+                throw error;
             }
         }
         return currentHandle;
     }
 
     async #getRelativeFileHandle(filePath, options = {create: false}) {
-        // MODIFIED HERE: Always pass true to #getRootDirectoryHandle to allow prompting if the root is needed.
         const root = await this.#getRootDirectoryHandle(true);
-        // Original: const root = await this.#getRootDirectoryHandle(!!options.create);
-
-        if (!root) { // Should not happen
+        if (!root) {
             throw new Error("Root directory handle is not available.");
         }
 
-        const pathParts = filePath.replace(/^\/+|\/+$/g, '').split('/');
+        // Normalize internal path before splitting
+        const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
+        const pathParts = normalizedFilePath.split('/');
+
         if (pathParts.length === 0 || (pathParts.length === 1 && !pathParts[0])) {
-            throw new Error(`Invalid file path provided: "${filePath}"`);
+            throw new Error(`Invalid file path provided (normalized to empty or root): "${filePath}" -> "${normalizedFilePath}"`);
         }
         const fileName = pathParts.pop();
-        if (!fileName) throw new Error(`Could not extract file name from path: "${filePath}"`);
+        if (!fileName) throw new Error(`Could not extract file name from path (normalized): "${filePath}" -> "${normalizedFilePath}"`);
 
         let directoryHandle = root;
         if (pathParts.length > 0) {
             const dirPath = pathParts.join('/');
-            // Pass options.create here because if we're creating a file, we might need to create the directory path.
             directoryHandle = await this.#getRelativeDirectoryHandle(dirPath, {create: !!options.create});
         }
 
         try {
             return await directoryHandle.getFileHandle(fileName, options);
         } catch (error) {
-            this.#logger.error(`Failed to get/create file handle for "${fileName}" in directory "${directoryHandle.name}" (path: ${filePath}):`, error);
-            throw error; // Re-throw
+            this.#logger.error(`Failed to get/create file handle for "${fileName}" in directory path "${pathParts.join('/')}" (original: ${filePath}):`, error);
+            throw error;
         }
     }
 
     async writeFileAtomically(filePath, data) {
-        this.#logger.debug(`BrowserStorageProvider: Attempting to write file to ${filePath}`);
+        // --- MODIFICATION START: Normalize filePath before using it to construct tempFilePath ---
+        const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
+        this.#logger.info(`BrowserStorageProvider: Beginning atomic write for ${normalizedFilePath}.`);
+        const tempFilePath = `${normalizedFilePath}.tmp`;
+        // --- MODIFICATION END ---
+
+        this.#logger.debug(`BrowserStorageProvider: Writing to temporary file: ${tempFilePath}`);
         try {
-            // #getRelativeFileHandle will now prompt if root is not set, due to the change above.
-            // The {create: true} option for getFileHandle is appropriate here.
-            const fileHandle = await this.#getRelativeFileHandle(filePath, {create: true});
-            const writable = await fileHandle.createWritable({keepExistingData: false});
-            await writable.write(data);
-            await writable.close();
-            this.#logger.info(`BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to file ${filePath}`);
-            return {success: true};
+            const tempFileHandle = await this.#getRelativeFileHandle(tempFilePath, {create: true});
+            const tempWritable = await tempFileHandle.createWritable({keepExistingData: false});
+            await tempWritable.write(data);
+            await tempWritable.close();
+            this.#logger.info(`BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to temporary file ${tempFilePath}.`);
         } catch (error) {
-            this.#logger.error(`BrowserStorageProvider: Error writing file ${filePath}: ${error.message}`, error);
-            return {success: false, error: error.message};
+            this.#logger.error(`BrowserStorageProvider: Error writing to temporary file ${tempFilePath}: ${error.message}`, error);
+            try {
+                await this.deleteFile(tempFilePath);
+                this.#logger.debug(`BrowserStorageProvider: Cleaned up temporary file ${tempFilePath} after write failure.`);
+            } catch (cleanupError) {
+                this.#logger.warn(`BrowserStorageProvider: Could not clean up temporary file ${tempFilePath} after write failure: ${cleanupError.message}`, cleanupError);
+            }
+            return {success: false, error: `Failed to write to temporary file: ${error.message}`};
         }
+
+        this.#logger.debug(`BrowserStorageProvider: Writing data from memory to final file: ${normalizedFilePath}`);
+        try {
+            // Use normalizedFilePath for the final write
+            const finalFileHandle = await this.#getRelativeFileHandle(normalizedFilePath, {create: true});
+            const finalWritable = await finalFileHandle.createWritable({keepExistingData: false});
+            await finalWritable.write(data);
+            await finalWritable.close();
+            this.#logger.info(`BrowserStorageProvider: Successfully replaced/wrote final file ${normalizedFilePath}.`);
+        } catch (error) {
+            this.#logger.error(`BrowserStorageProvider: Error writing to final file ${normalizedFilePath} (replacing original): ${error.message}`, error);
+            return {
+                success: false,
+                error: `Failed to replace original file with new data: ${error.message}. Temporary data saved at ${tempFilePath}.`
+            };
+        }
+
+        this.#logger.debug(`BrowserStorageProvider: Cleaning up temporary file ${tempFilePath}.`);
+        try {
+            await this.deleteFile(tempFilePath);
+            this.#logger.info(`BrowserStorageProvider: Successfully cleaned up temporary file ${tempFilePath}.`);
+        } catch (cleanupError) {
+            this.#logger.warn(`BrowserStorageProvider: Failed to clean up temporary file ${tempFilePath} after successful write to final path: ${cleanupError.message}`, cleanupError);
+        }
+
+        this.#logger.info(`BrowserStorageProvider: Atomic write to ${normalizedFilePath} completed successfully.`);
+        return {success: true};
     }
 
     async listFiles(directoryPath, pattern) {
         this.#logger.debug(`BrowserStorageProvider: Listing files in "${directoryPath}" with pattern "${pattern}"`);
         try {
-            // #getRelativeDirectoryHandle will now prompt if root is not set.
-            // {create: false} is correct for getDirectoryHandle as we are listing, not creating.
             const dirHandle = await this.#getRelativeDirectoryHandle(directoryPath, {create: false});
             const matchingFiles = [];
-
-            // --- CORRECTED CODE ---
-            // The 'pattern' argument is already a regex source string (e.g., "^manual_save_.*\\.sav$").
-            // No need to convert it from a glob-like pattern.
             const regexPattern = new RegExp(pattern);
-            // --- END CORRECTED CODE ---
 
             for await (const entry of dirHandle.values()) {
-                if (entry.kind === 'file' && regexPattern.test(entry.name)) {
+                if (entry.kind === 'file' && regexPattern.test(entry.name) && !entry.name.endsWith('.tmp')) {
                     matchingFiles.push(entry.name);
                 }
             }
@@ -177,21 +205,18 @@ export class BrowserStorageProvider extends IStorageProvider {
                 this.#logger.warn(`BrowserStorageProvider: Directory not found for listing: "${directoryPath}". Returning empty list.`);
                 return [];
             }
-            // Handle cases where user might have cancelled the directory picker prompt
             if (error.message && error.message.startsWith('Failed to obtain root directory handle')) {
                 this.#logger.warn(`BrowserStorageProvider: Could not list files from "${directoryPath}" as root directory selection was not completed (e.g., user cancelled). Error: ${error.message}`);
-                return []; // Return empty list as operation couldn't proceed
+                return [];
             }
             this.#logger.error(`BrowserStorageProvider: Error listing files in "${directoryPath}": ${error.message}`, error);
-            return []; // Return empty list on other errors
+            return [];
         }
     }
 
     async readFile(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Reading file ${filePath}`);
         try {
-            // #getRelativeFileHandle will now prompt if root is not set.
-            // {create: false} is correct as we are reading an existing file.
             const fileHandle = await this.#getRelativeFileHandle(filePath, {create: false});
             const file = await fileHandle.getFile();
             const contents = await file.arrayBuffer();
@@ -202,47 +227,44 @@ export class BrowserStorageProvider extends IStorageProvider {
             if (error.name === 'NotFoundError') {
                 throw new Error(`File not found: ${filePath}. Original error: ${error.message}`);
             }
-            // Handle cases where user might have cancelled the directory picker prompt
             if (error.message && error.message.startsWith('Failed to obtain root directory handle')) {
                 throw new Error(`Cannot read file: Root directory selection was not completed. Original error: ${error.message}`);
             }
-            throw error; // Re-throw other errors
+            throw error;
         }
     }
 
     async deleteFile(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Deleting file ${filePath}`);
         try {
-            // #getRootDirectoryHandle (called via #getRelativeDirectoryHandle) will now prompt if root is not set.
-            const pathParts = filePath.replace(/^\/+|\/+$/g, '').split('/');
-            if (pathParts.length === 0 || (pathParts.length === 1 && !pathParts[0])) {
-                throw new Error(`Invalid file path provided for deletion: "${filePath}"`);
-            }
+            // #getRelativeFileHandle which calls #getRelativeDirectoryHandle handles path normalization internally
+            const fileHandle = await this.#getRelativeFileHandle(filePath, {create: false}); // Ensure we get handle to delete
+
+            // To delete a file, we need its parent directory handle and the file's name.
+            const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
+            const pathParts = normalizedFilePath.split('/');
             const fileName = pathParts.pop();
             if (!fileName) throw new Error(`Could not extract file name for deletion from path: "${filePath}"`);
 
             let directoryHandle;
             if (pathParts.length > 0) {
                 const dirPath = pathParts.join('/');
-                // {create: false} as we are deleting from an existing directory.
                 directoryHandle = await this.#getRelativeDirectoryHandle(dirPath, {create: false});
             } else {
-                // Deleting from root, ensure promptIfMissing is effectively true if root is needed.
                 directoryHandle = await this.#getRootDirectoryHandle(true);
             }
 
             await directoryHandle.removeEntry(fileName);
-            this.#logger.info(`BrowserStorageProvider: Successfully deleted file ${filePath}`);
+            this.#logger.info(`BrowserStorageProvider: Successfully deleted file ${normalizedFilePath}`);
             return {success: true};
         } catch (error) {
             this.#logger.error(`BrowserStorageProvider: Error deleting file ${filePath}: ${error.message}`, error);
             if (error.name === 'NotFoundError') {
                 return {
-                    success: false,
-                    error: `File not found for deletion: ${filePath}. Original error: ${error.message}`
+                    success: true,
+                    error: `File not found for deletion (considered success): ${filePath}. Original error: ${error.message}`
                 };
             }
-            // Handle cases where user might have cancelled the directory picker prompt
             if (error.message && error.message.startsWith('Failed to obtain root directory handle')) {
                 return {
                     success: false,
@@ -256,23 +278,20 @@ export class BrowserStorageProvider extends IStorageProvider {
     async fileExists(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Checking if file exists: ${filePath}`);
         try {
-            // #getRelativeFileHandle will now prompt if root is not set.
-            // {create: false} is correct as we are checking for an existing file.
             await this.#getRelativeFileHandle(filePath, {create: false});
-            this.#logger.info(`BrowserStorageProvider: File exists: ${filePath}`);
+            this.#logger.info(`BrowserStorageProvider: File exists: ${filePath.replace(/^\/+|\/+$/g, '')}`);
             return true;
         } catch (error) {
             if (error.name === 'NotFoundError' || (error.message && error.message.toLowerCase().includes('not found'))) {
-                this.#logger.info(`BrowserStorageProvider: File does not exist: ${filePath}`);
+                this.#logger.info(`BrowserStorageProvider: File does not exist: ${filePath.replace(/^\/+|\/+$/g, '')}`);
                 return false;
             }
-            // Handle cases where user might have cancelled the directory picker prompt
             if (error.message && error.message.startsWith('Failed to obtain root directory handle')) {
-                this.#logger.info(`BrowserStorageProvider: Cannot check file existence for ${filePath} as root directory selection was not completed. Assuming false. Error: ${error.message}`);
+                this.#logger.info(`BrowserStorageProvider: Cannot check file existence for ${filePath.replace(/^\/+|\/+$/g, '')} as root directory selection was not completed. Assuming false. Error: ${error.message}`);
                 return false;
             }
-            this.#logger.warn(`BrowserStorageProvider: Error checking file existence for ${filePath}, assuming false. Error: ${error.message}`, error);
-            return false; // On other errors, assume false rather than throwing, to prevent crashes.
+            this.#logger.warn(`BrowserStorageProvider: Error checking file existence for ${filePath.replace(/^\/+|\/+$/g, '')}, assuming false. Error: ${error.message}`, error);
+            return false;
         }
     }
 }

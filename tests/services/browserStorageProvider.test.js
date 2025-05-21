@@ -15,292 +15,328 @@ const mockLogger = {
 };
 
 // --- Mock File System Access API ---
-// These will be the objects our mocked handles resolve to.
-// We'll store "written" data here for assertions.
 let mockFileSystemState;
 
-const mockWritableStream = {
-    // CORRECTED: Changed from arrow function to regular function to correctly bind 'this'
+const createMockWritableStream = (targetPath) => ({
     write: jest.fn().mockImplementation(async function (data) {
-        // Now 'this' will refer to the stream object that 'write' is called on,
-        // which has the 'targetPath' property.
-        if (this.targetPath === undefined) {
-            // This check can help debug if targetPath is still an issue
-            console.error("DEBUG: mockWritableStream.write called with undefined this.targetPath. 'this' is:", this);
-            throw new Error("Mock WritableStream: targetPath is undefined on 'this'.");
-        }
-        mockFileSystemState[this.targetPath] = new Uint8Array(data);
+        mockFileSystemState[this.targetPathValue] = new Uint8Array(data);
     }),
     close: jest.fn().mockResolvedValue(undefined),
-    // We can add seek, truncate if needed for other tests
-};
+    targetPathValue: targetPath,
+});
 
-const mockFileHandle = {
-    // name: set dynamically
+const createMockFileHandle = (name, fullPath) => ({
+    name,
     kind: 'file',
-    createWritable: jest.fn().mockImplementation(async function (options) {
-        // 'this' refers to the mockFileHandle instance
-        // Return a new stream instance each time
+    fullPath,
+    createWritable: jest.fn().mockImplementation(async function () {
         if (this.fullPath === undefined) {
-            // This check can help debug if fullPath is an issue on the file handle
-            console.error("DEBUG: mockFileHandle.createWritable called with undefined this.fullPath. 'this' is:", this);
             throw new Error("Mock FileHandle: fullPath is undefined on 'this' when creating writable.");
         }
-        return {
-            ...mockWritableStream,
-            targetPath: this.fullPath, // Pass the path to the stream for storing data
-            // Simulate keepExistingData: false by overwriting
-        };
+        return createMockWritableStream(this.fullPath);
     }),
-    getFile: jest.fn(), // For readFile tests
-    // fullPath: set dynamically (custom property for mock)
-};
+    getFile: jest.fn().mockImplementation(async function () {
+        if (mockFileSystemState[this.fullPath] && mockFileSystemState[this.fullPath].__isFileMock) {
+            return {
+                name: this.name,
+                arrayBuffer: async () => mockFileSystemState[this.fullPath].content.buffer,
+            };
+        }
+        const error = new Error(`Mock: File.getFile() not found: ${this.fullPath}`);
+        error.name = 'NotFoundError';
+        throw error;
+    }),
+});
 
-const mockDirectoryHandle = {
-    // name: set dynamically
+const mockDirectoryHandleProto = {
     kind: 'directory',
-    getFileHandle: jest.fn().mockImplementation(async function (name, options) {
-        const fullPath = (this.fullPath !== undefined ? `${this.fullPath}/` : '') + name;
-        if (mockFileSystemState[fullPath] && mockFileSystemState[fullPath].__isFileMock) {
-            return {...mockFileHandle, name, fullPath};
-        }
-        if (options && options.create) {
-            mockFileSystemState[fullPath] = {__isFileMock: true, content: new Uint8Array()}; // Mark as a mock file
-            return {...mockFileHandle, name, fullPath};
-        }
-        const error = new Error(`Mock: File not found: ${name}`);
-        error.name = 'NotFoundError';
-        throw error;
+    getFileHandle: jest.fn(),
+    getDirectoryHandle: jest.fn(),
+    removeEntry: jest.fn().mockResolvedValue(undefined),
+    values: jest.fn().mockImplementation(async function* () {
     }),
-    getDirectoryHandle: jest.fn().mockImplementation(async function (name, options) {
-        const fullPath = (this.fullPath !== undefined ? `${this.fullPath}/` : '') + name;
-        if (mockFileSystemState[fullPath] && mockFileSystemState[fullPath].__isDirectoryMock) {
-            return {...mockDirectoryHandle, name, fullPath};
-        }
-        if (options && options.create) {
-            mockFileSystemState[fullPath] = {__isDirectoryMock: true}; // Mark as a mock directory
-            return {...mockDirectoryHandle, name, fullPath};
-        }
-        const error = new Error(`Mock: Directory not found: ${name}`);
-        error.name = 'NotFoundError';
-        throw error;
-    }),
-    removeEntry: jest.fn(), // For deleteFile tests
-    values: jest.fn(),      // For listFiles tests
     queryPermission: jest.fn().mockResolvedValue('granted'),
     requestPermission: jest.fn().mockResolvedValue('granted'),
-    // fullPath: set dynamically (custom property for mock)
 };
 
-// --- Global Mock Setup ---
-// Store the original window.showDirectoryPicker if it exists (it won't in Node)
 const originalShowDirectoryPicker = global.window ? global.window.showDirectoryPicker : undefined;
 
 beforeEach(() => {
-    jest.clearAllMocks(); // Clear all mock call counts and implementations
-
-    mockFileSystemState = {}; // Reset our in-memory "file system" for each test
-
-    // Mock the global function
+    jest.clearAllMocks();
+    mockFileSystemState = {};
     global.window.showDirectoryPicker = jest.fn().mockImplementation(async () => {
-        mockFileSystemState['root'] = {__isDirectoryMock: true}; // Simulate root exists in our mock FS state
-        return {...mockDirectoryHandle, name: 'root', fullPath: ''}; // Root dir has an empty 'fullPath' string for our logic
-    });
-
-    // Reset implementations on the template mockDirectoryHandle to defaults
-    // This ensures that if a test uses a directory handle created by spreading mockDirectoryHandle,
-    // its getFileHandle/getDirectoryHandle methods have these general-purpose implementations.
-    mockDirectoryHandle.getFileHandle.mockImplementation(async function (name, options) {
-        const parentPath = this.fullPath !== undefined ? `${this.fullPath}/` : '';
-        const fullPath = parentPath + name;
-        if (mockFileSystemState[fullPath] && mockFileSystemState[fullPath].__isFileMock) {
-            return {...mockFileHandle, name, fullPath};
-        }
-        if (options && options.create) {
-            mockFileSystemState[fullPath] = {__isFileMock: true, content: new Uint8Array()};
-            return {...mockFileHandle, name, fullPath};
-        }
-        const error = new Error(`Mock (default impl): File not found: ${name} in ${this.fullPath}`);
-        error.name = 'NotFoundError';
-        throw error;
-    });
-    mockDirectoryHandle.getDirectoryHandle.mockImplementation(async function (name, options) {
-        const parentPath = this.fullPath !== undefined ? `${this.fullPath}/` : '';
-        const fullPath = parentPath + name;
-        if (mockFileSystemState[fullPath] && mockFileSystemState[fullPath].__isDirectoryMock) {
-            return {...mockDirectoryHandle, name, fullPath};
-        }
-        if (options && options.create) {
-            mockFileSystemState[fullPath] = {__isDirectoryMock: true};
-            return {...mockDirectoryHandle, name, fullPath};
-        }
-        const error = new Error(`Mock (default impl): Directory not found: ${name} in ${this.fullPath}`);
-        error.name = 'NotFoundError';
-        throw error;
+        return {
+            ...mockDirectoryHandleProto,
+            name: 'testRoot',
+            fullPath: '', // Representing the root
+        };
     });
 });
 
 afterEach(() => {
-    // Restore original window.showDirectoryPicker if it was defined
     if (global.window) {
         global.window.showDirectoryPicker = originalShowDirectoryPicker;
     }
 });
 
-
 describe('BrowserStorageProvider - writeFileAtomically', () => {
     let storageProvider;
-    let rootDirHandleMock; // This will be the specific instance returned by showDirectoryPicker
+    let rootDirHandleMockInstance;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         storageProvider = new BrowserStorageProvider({logger: mockLogger});
-
-        rootDirHandleMock = {
-            name: 'testRoot',
-            kind: 'directory',
-            fullPath: '', // Root directory's path for our mock logic
-            getFileHandle: jest.fn(),
-            getDirectoryHandle: jest.fn(),
-            queryPermission: jest.fn().mockResolvedValue('granted'),
-            requestPermission: jest.fn().mockResolvedValue('granted'),
-            removeEntry: jest.fn(),
-            values: jest.fn().mockImplementation(async function* () {
-            }),
-        };
-        global.window.showDirectoryPicker.mockResolvedValue(rootDirHandleMock);
+        rootDirHandleMockInstance = await global.window.showDirectoryPicker();
+        // Ensure subsequent calls in #getRootDirectoryHandle within a single test execution
+        // don't re-trigger showDirectoryPicker if not intended.
+        global.window.showDirectoryPicker.mockResolvedValue(rootDirHandleMockInstance);
     });
 
     test('should successfully write data to a new file in the root', async () => {
         const filePath = 'newFile.sav';
+        const tempFilePath = `${filePath}.tmp`;
         const data = new Uint8Array([1, 2, 3, 4, 5]);
 
-        const createdFileHandleMock = {
-            ...mockFileHandle,
-            name: 'newFile.sav',
-            fullPath: 'newFile.sav'
-        };
-        createdFileHandleMock.createWritable = jest.fn().mockImplementation(async function (options) {
-            if (this.fullPath === undefined) throw new Error("createWritable context error: fullPath missing");
-            return {...mockWritableStream, targetPath: this.fullPath};
-        });
+        const tempFileHandleMock = createMockFileHandle(tempFilePath, tempFilePath);
+        const finalFileHandleMock = createMockFileHandle(filePath, filePath);
 
-        rootDirHandleMock.getFileHandle.mockResolvedValue(createdFileHandleMock);
+        rootDirHandleMockInstance.getFileHandle
+            .mockImplementation(async (name, options) => {
+                if (name === tempFilePath) {
+                    if (options && options.create) mockFileSystemState[tempFilePath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return tempFileHandleMock;
+                }
+                if (name === filePath) {
+                    if (options && options.create) mockFileSystemState[filePath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return finalFileHandleMock;
+                }
+                throw new Error(`Unexpected getFileHandle in root: ${name}`);
+            });
+
+        rootDirHandleMockInstance.removeEntry.mockImplementation(async (name) => {
+            if (name === tempFilePath) {
+                delete mockFileSystemState[tempFilePath];
+                return Promise.resolve(undefined);
+            }
+            throw new Error(`Unexpected removeEntry in root: ${name}`);
+        });
 
         const result = await storageProvider.writeFileAtomically(filePath, data);
 
-        // Debug logging removed for brevity, add back if needed
         expect(result.success).toBe(true);
         expect(result.error).toBeUndefined();
-        expect(global.window.showDirectoryPicker).toHaveBeenCalledTimes(1);
-        expect(rootDirHandleMock.getFileHandle).toHaveBeenCalledWith('newFile.sav', {create: true});
-        expect(createdFileHandleMock.createWritable).toHaveBeenCalledWith({keepExistingData: false});
 
-        const streamInstance = await createdFileHandleMock.createWritable.mock.results[0].value;
-        expect(streamInstance.write).toHaveBeenCalledWith(data);
-        expect(streamInstance.close).toHaveBeenCalled();
+        const tempStreamInstance = await tempFileHandleMock.createWritable.mock.results[0].value;
+        expect(tempStreamInstance.write).toHaveBeenCalledWith(data);
+        expect(tempStreamInstance.close).toHaveBeenCalledTimes(1);
 
-        expect(mockFileSystemState['newFile.sav']).toEqual(data);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully wrote 5 bytes to file ${filePath}`));
+        const finalStreamInstance = await finalFileHandleMock.createWritable.mock.results[0].value;
+        expect(finalStreamInstance.write).toHaveBeenCalledWith(data);
+        expect(finalStreamInstance.close).toHaveBeenCalledTimes(1);
+        expect(mockFileSystemState[filePath]).toEqual(data);
+
+        expect(rootDirHandleMockInstance.removeEntry).toHaveBeenCalledWith(tempFilePath);
+        expect(mockFileSystemState[tempFilePath]).toBeUndefined();
+
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to temporary file ${tempFilePath}.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Successfully replaced/wrote final file ${filePath}.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Successfully cleaned up temporary file ${tempFilePath}.`);
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Atomic write to ${filePath} completed successfully.`);
     });
 
     test('should successfully write a file, creating an intermediate directory', async () => {
-        const filePath = 'saves/myGame.sav';
+        const dirPath = 'saves';
+        const fileName = 'myGame.sav';
+        const filePath = `${dirPath}/${fileName}`;
+        const tempFileName = `${fileName}.tmp`;
+        const tempFilePath = `${dirPath}/${tempFileName}`;
         const data = new Uint8Array([10, 20, 30]);
 
         const savesDirHandleMock = {
-            ...mockDirectoryHandle,
-            name: 'saves',
-            fullPath: 'saves',
+            ...mockDirectoryHandleProto,
+            name: dirPath,
+            fullPath: dirPath,
             getFileHandle: jest.fn(),
-            queryPermission: jest.fn().mockResolvedValue('granted'), // Ensure all methods exist
-            requestPermission: jest.fn().mockResolvedValue('granted'),
+            removeEntry: jest.fn(),
         };
-        const gameFileHandleMock = {
-            ...mockFileHandle,
-            name: 'myGame.sav',
-            fullPath: 'saves/myGame.sav',
-            createWritable: jest.fn().mockImplementation(async function (options) {
-                if (this.fullPath === undefined) throw new Error("createWritable context error: fullPath missing");
-                return {...mockWritableStream, targetPath: this.fullPath};
-            })
-        };
+        const tempFileHandleMock = createMockFileHandle(tempFileName, tempFilePath);
+        const finalFileHandleMock = createMockFileHandle(fileName, filePath);
 
-        rootDirHandleMock.getDirectoryHandle.mockImplementation(async (name, options) => {
-            if (name === 'saves' && options.create) {
-                mockFileSystemState['saves'] = {__isDirectoryMock: true};
-                savesDirHandleMock.getFileHandle.mockResolvedValue(gameFileHandleMock);
-                return savesDirHandleMock;
+        rootDirHandleMockInstance.getDirectoryHandle.mockImplementation(async (name, options) => {
+            if (name === dirPath) { // For create or lookup
+                if (options && options.create && !mockFileSystemState[dirPath]) {
+                    mockFileSystemState[dirPath] = {__isDirectoryMock: true};
+                }
+                if (mockFileSystemState[dirPath]?.__isDirectoryMock) {
+                    return savesDirHandleMock;
+                }
             }
-            const error = new Error(`Mock: Directory not found or unexpected in root: ${name}`);
-            error.name = 'NotFoundError';
-            throw error;
+            throw new Error(`Unexpected directory handle request in root: ${name}`);
+        });
+
+        savesDirHandleMock.getFileHandle
+            .mockImplementation(async (name, options) => {
+                if (name === tempFileName) {
+                    if (options && options.create) mockFileSystemState[tempFilePath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return tempFileHandleMock;
+                }
+                if (name === fileName) {
+                    if (options && options.create) mockFileSystemState[filePath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return finalFileHandleMock;
+                }
+                throw new Error(`Unexpected getFileHandle in ${dirPath}: ${name}`);
+            });
+
+        savesDirHandleMock.removeEntry.mockImplementation(async (name) => {
+            if (name === tempFileName) {
+                delete mockFileSystemState[tempFilePath];
+                return Promise.resolve(undefined);
+            }
+            throw new Error(`Unexpected removeEntry in ${dirPath}: ${name}`);
         });
 
         const result = await storageProvider.writeFileAtomically(filePath, data);
 
         expect(result.success).toBe(true);
-        expect(rootDirHandleMock.getDirectoryHandle).toHaveBeenCalledWith('saves', {create: true});
-        expect(savesDirHandleMock.getFileHandle).toHaveBeenCalledWith('myGame.sav', {create: true});
-        expect(gameFileHandleMock.createWritable).toHaveBeenCalledWith({keepExistingData: false});
+        expect(rootDirHandleMockInstance.getDirectoryHandle).toHaveBeenCalledWith(dirPath, {create: true}); // For temp file creation path
+        expect(rootDirHandleMockInstance.getDirectoryHandle).toHaveBeenCalledWith(dirPath, {create: true}); // For final file creation path
+        // For delete, #getRelativeDirectoryHandle is called with create:false. The mock above handles it.
 
-        const streamInstance = await gameFileHandleMock.createWritable.mock.results[0].value;
-        expect(streamInstance.write).toHaveBeenCalledWith(data);
-        expect(streamInstance.close).toHaveBeenCalled();
-        expect(mockFileSystemState['saves/myGame.sav']).toEqual(data);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Successfully wrote 3 bytes to file ${filePath}`));
+        const tempStreamInstance = await tempFileHandleMock.createWritable.mock.results[0].value;
+        expect(tempStreamInstance.write).toHaveBeenCalledWith(data);
+
+        const finalStreamInstance = await finalFileHandleMock.createWritable.mock.results[0].value;
+        expect(finalStreamInstance.write).toHaveBeenCalledWith(data);
+        expect(mockFileSystemState[filePath]).toEqual(data);
+
+        expect(savesDirHandleMock.removeEntry).toHaveBeenCalledWith(tempFileName);
+        expect(mockFileSystemState[tempFilePath]).toBeUndefined();
+
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Atomic write to ${filePath} completed successfully.`);
     });
 
-    test('should return error if underlying fileHandle.createWritable fails', async () => {
+    test('should return error if underlying tempFileHandle.createWritable fails', async () => {
         const filePath = 'errorFile.sav';
+        const tempFilePath = `${filePath}.tmp`;
         const data = new Uint8Array([1]);
 
-        const erroringFileHandleMock = {
-            ...mockFileHandle,
-            name: 'errorFile.sav',
-            fullPath: 'errorFile.sav',
-            createWritable: jest.fn().mockRejectedValue(new Error('Failed to create writable')),
-        };
-        rootDirHandleMock.getFileHandle.mockResolvedValue(erroringFileHandleMock);
+        const erroringTempFileHandleMock = createMockFileHandle(tempFilePath, tempFilePath);
+        erroringTempFileHandleMock.createWritable = jest.fn().mockRejectedValue(new Error('Failed to create temp writable'));
+
+        rootDirHandleMockInstance.getFileHandle.mockImplementation(async (name) => {
+            if (name === tempFilePath) return erroringTempFileHandleMock;
+            throw new Error("Test setup error: unexpected getFileHandle call for non-temp file");
+        });
+        rootDirHandleMockInstance.removeEntry.mockImplementation(async (name) => { // For cleanup
+            if (name === tempFilePath) {
+                delete mockFileSystemState[tempFilePath];
+                return Promise.resolve(undefined);
+            }
+        });
 
         const result = await storageProvider.writeFileAtomically(filePath, data);
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Failed to create writable');
+        expect(result.error).toBe('Failed to write to temporary file: Failed to create temp writable');
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Error writing file ${filePath}`),
-            expect.objectContaining({message: 'Failed to create writable'})
+            expect.stringContaining(`Error writing to temporary file ${tempFilePath}`),
+            expect.objectContaining({message: 'Failed to create temp writable'})
         );
+        expect(rootDirHandleMockInstance.removeEntry).toHaveBeenCalledWith(tempFilePath);
     });
 
-    test('should return error if writable.write fails', async () => {
+    test('should return error if temp writable.write fails', async () => {
         const filePath = 'writeError.sav';
+        const tempFilePath = `${filePath}.tmp`;
         const data = new Uint8Array([1]);
 
-        const mockStreamWithError = {
-            // CORRECTED: Use regular function for write
-            write: jest.fn().mockImplementation(async function (d) {
-                throw new Error('Disk quota exceeded');
-            }),
-            close: jest.fn().mockResolvedValue(undefined),
-            targetPath: 'writeError.sav' // Ensure targetPath is on the object if write uses it directly
-        };
-        const fileHandleMock = {
-            ...mockFileHandle,
-            name: 'writeError.sav',
-            fullPath: 'writeError.sav',
-            // This createWritable returns the mockStreamWithError which itself has targetPath
-            createWritable: jest.fn().mockResolvedValue(mockStreamWithError),
-        };
-        rootDirHandleMock.getFileHandle.mockResolvedValue(fileHandleMock);
+        const mockTempStreamWithError = createMockWritableStream(tempFilePath);
+        mockTempStreamWithError.write = jest.fn().mockRejectedValue(new Error('Temp disk quota exceeded'));
+
+        const tempFileHandleWithStreamErrorMock = createMockFileHandle(tempFilePath, tempFilePath);
+        tempFileHandleWithStreamErrorMock.createWritable = jest.fn().mockResolvedValue(mockTempStreamWithError);
+
+        rootDirHandleMockInstance.getFileHandle.mockImplementation(async (name) => {
+            if (name === tempFilePath) return tempFileHandleWithStreamErrorMock;
+            throw new Error("Test setup error: unexpected getFileHandle call for non-temp file");
+        });
+        rootDirHandleMockInstance.removeEntry.mockImplementation(async (name) => { // For cleanup
+            if (name === tempFilePath) {
+                delete mockFileSystemState[tempFilePath];
+                return Promise.resolve(undefined);
+            }
+        });
+
 
         const result = await storageProvider.writeFileAtomically(filePath, data);
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Disk quota exceeded');
-        expect(mockStreamWithError.write).toHaveBeenCalledWith(data);
+        expect(result.error).toBe('Failed to write to temporary file: Temp disk quota exceeded');
+        expect(mockTempStreamWithError.write).toHaveBeenCalledWith(data);
         expect(mockLogger.error).toHaveBeenCalledWith(
-            expect.stringContaining(`Error writing file ${filePath}`),
-            expect.objectContaining({message: 'Disk quota exceeded'})
+            expect.stringContaining(`Error writing to temporary file ${tempFilePath}`),
+            expect.objectContaining({message: 'Temp disk quota exceeded'})
+        );
+        expect(rootDirHandleMockInstance.removeEntry).toHaveBeenCalledWith(tempFilePath);
+    });
+
+    test('should return error and keep temp file if final write fails', async () => {
+        const filePath = 'finalWriteError.sav';
+        const tempFilePath = `${filePath}.tmp`;
+        const data = new Uint8Array([1, 2, 3]);
+
+        const tempFileHandleMock = createMockFileHandle(tempFilePath, tempFilePath);
+        const finalFileHandleMockWithError = createMockFileHandle(filePath, filePath);
+        finalFileHandleMockWithError.createWritable = jest.fn().mockRejectedValue(new Error('Final write failed'));
+
+        rootDirHandleMockInstance.getFileHandle
+            .mockImplementation(async (name, options) => {
+                if (name === tempFilePath) {
+                    if (options && options.create) mockFileSystemState[tempFilePath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return tempFileHandleMock;
+                }
+                if (name === filePath) {
+                    // Don't create mockFileSystemState entry here as the write will fail
+                    return finalFileHandleMockWithError;
+                }
+                throw new Error(`Unexpected getFileHandle in root: ${name}`);
+            });
+
+        rootDirHandleMockInstance.removeEntry.mockImplementation(async (name) => {
+            // Should not be called for tempFilePath in this test case
+            expect(name).not.toBe(tempFilePath);
+            throw new Error("removeEntry called unexpectedly in final write fail test");
+        });
+
+        const result = await storageProvider.writeFileAtomically(filePath, data);
+
+        expect(result.success).toBe(false);
+        expect(result.error).toBe(`Failed to replace original file with new data: Final write failed. Temporary data saved at ${tempFilePath}.`);
+
+        const tempStream = await tempFileHandleMock.createWritable.mock.results[0].value;
+        expect(tempStream.write).toHaveBeenCalledWith(data);
+        expect(mockFileSystemState[tempFilePath]).toEqual(data); // Temp file should contain the data
+
+        expect(finalFileHandleMockWithError.createWritable).toHaveBeenCalled();
+        expect(rootDirHandleMockInstance.removeEntry).not.toHaveBeenCalledWith(tempFilePath); // Crucial check
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`Error writing to final file ${filePath} (replacing original): Final write failed`),
+            expect.objectContaining({message: 'Final write failed'})
         );
     });
 
@@ -309,47 +345,76 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
         const normalizedPath = 'slashedDir/slashedFile.sav';
         const dirName = 'slashedDir';
         const fileName = 'slashedFile.sav';
+        const tempFileName = `${fileName}.tmp`;
+        const tempNormalizedPath = `${dirName}/${tempFileName}`;
         const data = new Uint8Array([7, 8, 9]);
 
         const slashedDirHandleMock = {
-            ...mockDirectoryHandle,
+            ...mockDirectoryHandleProto,
             name: dirName,
             fullPath: dirName,
             getFileHandle: jest.fn(),
-            queryPermission: jest.fn().mockResolvedValue('granted'),
-            requestPermission: jest.fn().mockResolvedValue('granted'),
+            removeEntry: jest.fn(),
         };
-        const slashedFileHandleMock = {
-            ...mockFileHandle,
-            name: fileName,
-            fullPath: normalizedPath,
-            createWritable: jest.fn().mockImplementation(async function (options) {
-                if (this.fullPath === undefined) throw new Error("createWritable context error: fullPath missing");
-                return {...mockWritableStream, targetPath: this.fullPath};
-            })
-        };
+        const tempFileHandleMock = createMockFileHandle(tempFileName, tempNormalizedPath);
+        const finalFileHandleMock = createMockFileHandle(fileName, normalizedPath);
 
-        rootDirHandleMock.getDirectoryHandle.mockImplementation(async (name, options) => {
-            if (name === dirName && options.create) {
-                mockFileSystemState[dirName] = {__isDirectoryMock: true};
-                slashedDirHandleMock.getFileHandle.mockResolvedValue(slashedFileHandleMock);
-                return slashedDirHandleMock;
+        rootDirHandleMockInstance.getDirectoryHandle.mockImplementation(async (name, options) => {
+            if (name === dirName) {
+                if (options && options.create && !mockFileSystemState[dirName]) {
+                    mockFileSystemState[dirName] = {__isDirectoryMock: true};
+                }
+                if (mockFileSystemState[dirName]?.__isDirectoryMock) {
+                    return slashedDirHandleMock;
+                }
             }
-            const error = new Error(`Mock: Directory (slashed) not found or unexpected: ${name}`);
-            error.name = 'NotFoundError';
-            throw error;
+            throw new Error(`Mock: Directory (slashed) not found or unexpected: ${name}`);
+        });
+
+        slashedDirHandleMock.getFileHandle
+            .mockImplementation(async (name, options) => {
+                if (name === tempFileName) {
+                    if (options && options.create) mockFileSystemState[tempNormalizedPath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return tempFileHandleMock;
+                }
+                if (name === fileName) {
+                    if (options && options.create) mockFileSystemState[normalizedPath] = {
+                        __isFileMock: true,
+                        content: new Uint8Array()
+                    };
+                    return finalFileHandleMock;
+                }
+                throw new Error(`Unexpected getFileHandle in ${dirName}: ${name}`);
+            });
+
+        slashedDirHandleMock.removeEntry.mockImplementation(async (name) => {
+            if (name === tempFileName) {
+                delete mockFileSystemState[tempNormalizedPath];
+                return Promise.resolve(undefined);
+            }
+            throw new Error(`Unexpected removeEntry in ${dirName}: ${name}`);
         });
 
         const result = await storageProvider.writeFileAtomically(filePathWithSlashes, data);
 
-        expect(result.success).toBe(true);
-        expect(rootDirHandleMock.getDirectoryHandle).toHaveBeenCalledWith(dirName, {create: true});
-        expect(slashedDirHandleMock.getFileHandle).toHaveBeenCalledWith(fileName, {create: true});
-        expect(slashedFileHandleMock.createWritable).toHaveBeenCalledWith({keepExistingData: false});
+        expect(result.success).toBe(true); // This was failing
+        expect(rootDirHandleMockInstance.getDirectoryHandle).toHaveBeenCalledWith(dirName, {create: true}); // Called for temp file path
+        expect(rootDirHandleMockInstance.getDirectoryHandle).toHaveBeenCalledWith(dirName, {create: true}); // Called for final file path
 
-        const streamInstance = await slashedFileHandleMock.createWritable.mock.results[0].value;
-        expect(streamInstance.write).toHaveBeenCalledWith(data);
-        expect(streamInstance.close).toHaveBeenCalled();
+        expect(slashedDirHandleMock.getFileHandle).toHaveBeenCalledWith(tempFileName, {create: true});
+        const tempStream = await tempFileHandleMock.createWritable.mock.results[0].value;
+        expect(tempStream.write).toHaveBeenCalledWith(data);
+
+        expect(slashedDirHandleMock.getFileHandle).toHaveBeenCalledWith(fileName, {create: true});
+        const finalStream = await finalFileHandleMock.createWritable.mock.results[0].value;
+        expect(finalStream.write).toHaveBeenCalledWith(data);
+
         expect(mockFileSystemState[normalizedPath]).toEqual(data);
+        expect(slashedDirHandleMock.removeEntry).toHaveBeenCalledWith(tempFileName);
+        expect(mockFileSystemState[tempNormalizedPath]).toBeUndefined();
+        expect(mockLogger.info).toHaveBeenCalledWith(`BrowserStorageProvider: Atomic write to ${normalizedPath} completed successfully.`);
     });
 });
