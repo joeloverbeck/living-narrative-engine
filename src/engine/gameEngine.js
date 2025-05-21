@@ -7,7 +7,7 @@ import {
     NEW_GAME_STARTED_ID,
     LOADED_GAME_STARTED_ID,
     GAME_STOPPED_ID,
-    ENGINE_INITIALIZING_UI,
+    ENGINE_INITIALIZING_UI, // This is the event in question
     ENGINE_READY_UI,
     ENGINE_OPERATION_IN_PROGRESS_UI,
     ENGINE_OPERATION_FAILED_UI,
@@ -87,14 +87,20 @@ class GameEngine {
 
     async startNewGame(worldName) {
         if (this.#isEngineInitialized) {
-            // Corrected typo in the log message below
             this.#logger.warn('GameEngine.startNewGame: Engine already initialized. Stopping existing game before starting new.');
             await this.stop();
         }
         this.#activeWorld = worldName;
         this.#logger.info(`GameEngine: Starting new game with world "${worldName}"...`);
 
-        await this.#safeEventDispatcher.dispatchSafely(ENGINE_INITIALIZING_UI, {worldName});
+        // --- MODIFICATION START ---
+        // Pass { allowSchemaNotFound: true } as the third argument (options)
+        await this.#safeEventDispatcher.dispatchSafely(
+            ENGINE_INITIALIZING_UI,
+            {worldName},
+            {allowSchemaNotFound: true}
+        );
+        // --- MODIFICATION END ---
 
         let initResult = null;
 

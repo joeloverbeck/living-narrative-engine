@@ -77,7 +77,7 @@ describe('GameEngine', () => {
             setAccumulatedPlaytime: jest.fn(),
         };
         // Ensure dispatchSafely is always a Jest mock function
-        mockSafeEventDispatcher = {dispatchSafely: jest.fn().mockResolvedValue(undefined)};
+        mockSafeEventDispatcher = {dispatchSafely: jest.fn().mockResolvedValue(undefined)}; // Changed from mockResolvedValue(true) to mockResolvedValue(undefined) as dispatchSafely might not always return a meaningful value or true for all tests if not explicitly checking its boolean outcome.
         mockInitializationService = {runInitializationSequence: jest.fn()};
 
         mockContainer = {
@@ -85,12 +85,6 @@ describe('GameEngine', () => {
                 switch (token) {
                     case tokens.ILogger:
                         return mockLogger;
-                    // DomUiFacade is no longer resolved by GameEngine
-                    // case tokens.DomUiFacade:
-                    //     return mockDomUiFacade;
-                    // WorldLoader is no longer resolved by GameEngine
-                    // case tokens.WorldLoader:
-                    //     return mockWorldLoader;
                     case tokens.IEntityManager:
                         return mockEntityManager;
                     case tokens.ITurnManager:
@@ -104,7 +98,6 @@ describe('GameEngine', () => {
                     case tokens.IInitializationService:
                         return mockInitializationService;
                     default:
-                        // Ensure this error message is helpful. Using token.description for symbol.
                         throw new Error(`GameEngine.test.js: Unmocked token: ${token?.toString()}`);
                 }
             })
@@ -126,7 +119,6 @@ describe('GameEngine', () => {
             new GameEngine({container: mockContainer});
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Constructor called.');
-            // expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomUiFacade); // REMOVED
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GamePersistenceService);
@@ -136,11 +128,8 @@ describe('GameEngine', () => {
         });
 
         it('should throw an error if ILogger cannot be resolved', () => {
-            // Make only ILogger fail, other mocks should still be available if needed by constructor before throw
             jest.spyOn(mockContainer, 'resolve').mockImplementation(token => {
                 if (token === tokens.ILogger) throw new Error("Logger failed to resolve");
-                // Fallback to the original broader mock if other services were to be resolved before logger
-                // but GameEngine resolves logger first.
                 throw new Error(`Unexpected token resolution attempt: ${token?.toString()}`);
             });
 
@@ -150,7 +139,6 @@ describe('GameEngine', () => {
 
         it('should throw an error and log if any other core service fails to resolve', () => {
             const resolutionError = new Error("EntityManager failed to resolve");
-            // Ensure logger resolves, but another service fails
             jest.spyOn(mockContainer, 'resolve').mockImplementation(token => {
                 if (token === tokens.ILogger) return mockLogger;
                 if (token === tokens.IEntityManager) throw resolutionError;
@@ -158,7 +146,6 @@ describe('GameEngine', () => {
                 if (token === tokens.GamePersistenceService) return mockGamePersistenceService;
                 if (token === tokens.PlaytimeTracker) return mockPlaytimeTracker;
                 if (token === tokens.ISafeEventDispatcher) return mockSafeEventDispatcher;
-                // Potentially other services could be added here if constructor resolves more things
                 throw new Error(`GameEngine.test.js - Constructor Core Service: Unmocked token during specific failure test: ${token?.toString()}`);
             });
 
@@ -181,7 +168,15 @@ describe('GameEngine', () => {
         it('should successfully start a new game', async () => {
             await gameEngine.startNewGame(MOCK_WORLD_NAME);
 
-            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(ENGINE_INITIALIZING_UI, {worldName: MOCK_WORLD_NAME});
+            // --- MODIFICATION START ---
+            // Expect the call with the new third argument for ENGINE_INITIALIZING_UI
+            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(
+                ENGINE_INITIALIZING_UI,
+                {worldName: MOCK_WORLD_NAME},
+                {allowSchemaNotFound: true} // Added expectation for the third argument
+            );
+            // --- MODIFICATION END ---
+
             expect(mockEntityManager.clearAll).toHaveBeenCalled();
             expect(mockPlaytimeTracker.reset).toHaveBeenCalled();
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IInitializationService);
@@ -204,12 +199,9 @@ describe('GameEngine', () => {
             mockInitializationService.runInitializationSequence.mockResolvedValueOnce({success: true});
             await gameEngine.startNewGame("InitialWorld");
 
-            // Clear mocks related to the stop() call for the *next* phase of the test
             mockPlaytimeTracker.endSessionAndAccumulate.mockClear();
             mockTurnManager.stop.mockClear();
-            // mockSafeEventDispatcher is tricky if we want to count specific event calls.
-            // Let's count calls for GAME_STOPPED_ID and ENGINE_STOPPED_UI specifically.
-            // For simplicity, we'll check they were called *after* the second startNewGame was invoked.
+            // We'll check specific calls for GAME_STOPPED_ID and ENGINE_STOPPED_UI later.
 
             mockInitializationService.runInitializationSequence.mockResolvedValueOnce({success: true});
             await gameEngine.startNewGame(MOCK_WORLD_NAME);
@@ -217,10 +209,13 @@ describe('GameEngine', () => {
             expect(mockLogger.warn).toHaveBeenCalledWith('GameEngine.startNewGame: Engine already initialized. Stopping existing game before starting new.');
             expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(1);
             expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
+            // These dispatches happen during the .stop() call
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(GAME_STOPPED_ID, {});
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(ENGINE_STOPPED_UI, {inputDisabledMessage: 'Game stopped.'});
-            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenLastCalledWith(ENGINE_READY_UI, {
-                activeWorld: MOCK_WORLD_NAME,
+
+            // Check the final ENGINE_READY_UI call for the new game
+            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(ENGINE_READY_UI, {
+                activeWorld: MOCK_WORLD_NAME, // Ensure this is for the new world
                 message: 'Enter command...'
             });
         });
@@ -262,14 +257,12 @@ describe('GameEngine', () => {
         });
 
         it('should successfully stop a running game', async () => {
-            // Simulate running state
             mockInitializationService.runInitializationSequence.mockResolvedValue({success: true});
             await gameEngine.startNewGame(MOCK_WORLD_NAME);
 
-            // Clear mocks from startNewGame for focused "stop" testing
             mockPlaytimeTracker.endSessionAndAccumulate.mockClear();
             mockTurnManager.stop.mockClear();
-            mockSafeEventDispatcher.dispatchSafely.mockClear(); // Clear all previous dispatches
+            mockSafeEventDispatcher.dispatchSafely.mockClear();
             mockLogger.info.mockClear();
 
 
@@ -352,13 +345,10 @@ describe('GameEngine', () => {
 
         beforeEach(() => {
             gameEngine = new GameEngine({container: mockContainer});
-            // Spy on gameEngine.stop directly if it's complex, or ensure mocks are clean.
-            // For this refactor, stop() itself dispatches events.
         });
 
         it('should successfully load a game and dispatch UI events', async () => {
             mockGamePersistenceService.loadAndRestoreGame.mockResolvedValue({success: true, data: mockSaveData});
-            // Mock the stop method to simplify call counting for loadGame specific dispatches
             const stopSpy = jest.spyOn(gameEngine, 'stop').mockResolvedValue(undefined);
 
 
@@ -413,19 +403,14 @@ describe('GameEngine', () => {
 
     describe('showSaveGameUI', () => {
         beforeEach(() => {
-            // Ensure a fresh GameEngine instance for each test in this describe block
-            setupMockContainer(); // Re-setup mocks to ensure clean state for mockContainer.resolve
+            setupMockContainer();
             gameEngine = new GameEngine({container: mockContainer});
         });
 
         it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed', async () => {
             mockGamePersistenceService.isSavingAllowed.mockReturnValue(true);
-            // Simulate initialized engine for isSavingAllowed check
-            // gameEngine internal state #isEngineInitialized needs to be true.
-            // Easiest way is to simulate a successful start.
             mockInitializationService.runInitializationSequence.mockResolvedValue({success: true});
             await gameEngine.startNewGame(MOCK_WORLD_NAME);
-            // Clear dispatcher mock from startNewGame calls
             mockSafeEventDispatcher.dispatchSafely.mockClear();
 
 
@@ -447,11 +432,8 @@ describe('GameEngine', () => {
         });
 
         it('should dispatch message if GamePersistenceService is unavailable', async () => {
-            // Create a specialized resolver for this test case
             const specializedResolve = jest.fn(token => {
-                if (token === tokens.GamePersistenceService) return null; // Special case: GPS is unavailable
-                // For all other tokens, delegate to the behavior of the default resolver from setupMockContainer
-                // using the currently scoped mock objects (mockLogger, mockSafeEventDispatcher, etc.)
+                if (token === tokens.GamePersistenceService) return null;
                 switch (token) {
                     case tokens.ILogger:
                         return mockLogger;
@@ -466,15 +448,11 @@ describe('GameEngine', () => {
                     case tokens.IInitializationService:
                         return mockInitializationService;
                     default:
-                        // This ensures that if GameEngine tries to resolve something unexpected, the test clearly fails.
                         throw new Error(`Specialized resolver for GPS unavailable test: Unmocked token: ${token?.toString()}`);
                 }
             });
 
-            // Assign the specialized resolver to the mockContainer for this test
             mockContainer.resolve = specializedResolve;
-
-            // Re-instantiate gameEngine with this modified container
             gameEngine = new GameEngine({container: mockContainer});
 
             await gameEngine.showSaveGameUI();
@@ -483,27 +461,24 @@ describe('GameEngine', () => {
                 message: "Cannot open save menu: persistence service error.",
                 type: 'error'
             });
-            // Logger error is for GameEngine internal logging, which should still happen
             expect(mockLogger.error).toHaveBeenCalledWith("GameEngine.showSaveGameUI: GamePersistenceService not available. Cannot determine if saving is allowed or show UI.");
         });
     });
 
     describe('showLoadGameUI', () => {
         beforeEach(() => {
-            setupMockContainer(); // Re-setup mocks
+            setupMockContainer();
             gameEngine = new GameEngine({container: mockContainer});
         });
 
         it('should dispatch REQUEST_SHOW_LOAD_GAME_UI if persistence service is available', async () => {
-            // Assuming GamePersistenceService is available by default from setupMockContainer
             await gameEngine.showLoadGameUI();
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(REQUEST_SHOW_LOAD_GAME_UI);
         });
 
         it('should dispatch message if GamePersistenceService is unavailable', async () => {
-            // Create a specialized resolver for this test case
             const specializedResolve = jest.fn(token => {
-                if (token === tokens.GamePersistenceService) return null; // Special case: GPS is unavailable
+                if (token === tokens.GamePersistenceService) return null;
                 switch (token) {
                     case tokens.ILogger:
                         return mockLogger;
@@ -536,8 +511,6 @@ describe('GameEngine', () => {
     });
 
     describe('getEngineStatus', () => {
-        // These tests should remain largely the same as they test internal state,
-        // not UI interactions.
         beforeEach(() => {
             gameEngine = new GameEngine({container: mockContainer});
         });

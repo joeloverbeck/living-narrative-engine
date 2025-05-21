@@ -1,4 +1,4 @@
-// main.js
+// src/main.js
 
 import GameEngine from './src/engine/gameEngine.js';
 import AppContainer from './src/config/appContainer.js';
@@ -79,12 +79,37 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         });
         logger.info('main.js: GameEngine instance created.');
 
+        // --- Initialize EngineUIManager (GE-REFAC-010) ---
+        // This service listens to GameEngine events to update the UI.
+        // It must be initialized before GameEngine starts dispatching UI-related events.
+        try {
+            logger.info('main.js: Initializing EngineUIManager...');
+            const engineUIManager = container.resolve(tokens.EngineUIManager);
+            if (!engineUIManager) {
+                // This case should ideally not be reached if DI registration is correct
+                // and the factory always returns an instance.
+                throw new Error('EngineUIManager instance could not be resolved from container (resolved as null/undefined).');
+            }
+            engineUIManager.initialize(); // This call subscribes EngineUIManager to events
+            logger.info('main.js: EngineUIManager initialized successfully.');
+        } catch (eumError) {
+            // Log critical error but allow application to continue for now.
+            // UI might not function correctly if EngineUIManager fails.
+            // Depending on requirements, this could be made a fatal error halting the app.
+            logger.error('main.js: CRITICAL error during EngineUIManager resolution or initialization. UI may not function as expected.', eumError);
+            // To make this fatal, uncomment the following lines:
+            // alert(`Fatal Error: Could not initialize core UI manager: ${eumError.message}. Application UI will be non-functional.`);
+            // throw eumError;
+        }
+
         // --- Initialize Save Game UI and Load Game UI ---
-        // These UI components need a reference to the gameEngine for their internal handlers.
+        // These UI components need a reference to the gameEngine for their internal handlers
+        // (e.g., to call gameEngine.triggerManualSave() or gameEngine.loadGame()).
+        // This is distinct from EngineUIManager's role.
         try {
             const saveGameUIInstance = container.resolve(tokens.SaveGameUI);
             if (saveGameUIInstance) {
-                saveGameUIInstance.init(gameEngine);
+                saveGameUIInstance.init(gameEngine); // Pass GameEngine instance
                 logger.info('main.js: SaveGameUI initialized with GameEngine.');
             } else {
                 logger.error('main.js: SaveGameUI instance could not be resolved from container for init.');
@@ -96,7 +121,7 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         try {
             const loadGameUIInstance = container.resolve(tokens.LoadGameUI);
             if (loadGameUIInstance) {
-                loadGameUIInstance.init(gameEngine);
+                loadGameUIInstance.init(gameEngine); // Pass GameEngine instance
                 logger.info('main.js: LoadGameUI initialized with GameEngine.');
             } else {
                 logger.error('main.js: LoadGameUI instance could not be resolved from container for init.');
@@ -107,28 +132,28 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
 
         // --- Hook up Menu Buttons to GameEngine methods ---
-        // GameEngine will use DomUiFacade internally to show these UIs.
+        // GameEngine will use EngineUIManager (via events) and DomUiFacade to show these UIs.
         const openSaveGameButton = document.getElementById('open-save-game-button');
         const openLoadGameButton = document.getElementById('open-load-game-button');
 
         if (openSaveGameButton && gameEngine) {
             openSaveGameButton.addEventListener('click', () => {
                 logger.debug('main.js: "Open Save Game UI" button clicked.');
-                gameEngine.showSaveGameUI(); // GameEngine handles showing the UI
+                gameEngine.showSaveGameUI(); // GameEngine dispatches event, EngineUIManager handles showing UI
             });
             logger.info('main.js: Save Game UI button listener attached.');
         } else {
-            logger.error('main.js: Could not find #open-save-game-button or gameEngine not available for listener.');
+            logger.warn('main.js: Could not find #open-save-game-button or gameEngine not available for listener.');
         }
 
         if (openLoadGameButton && gameEngine) {
             openLoadGameButton.addEventListener('click', () => {
                 logger.debug('main.js: "Open Load Game UI" button clicked.');
-                gameEngine.showLoadGameUI(); // GameEngine handles showing the UI
+                gameEngine.showLoadGameUI(); // GameEngine dispatches event, EngineUIManager handles showing UI
             });
             logger.info('main.js: Load Game UI button listener attached.');
         } else {
-            logger.error('main.js: Could not find #open-load-game-button or gameEngine not available for listener.');
+            logger.warn('main.js: Could not find #open-load-game-button or gameEngine not available for listener.');
         }
 
         // --- Start the Game ---
@@ -136,6 +161,7 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         // "New Game" would call gameEngine.startNewGame(ACTIVE_WORLD).
         // "Load Game" would call gameEngine.showLoadGameUI() (allowing player to pick a save, then GameEngine.loadGame is called by LoadGameUI).
         // For now, it starts a new game directly as per previous behavior.
+        // EngineUIManager should now be listening for UI events dispatched by startNewGame.
 
         logger.info(`main.js: Starting new game with world: ${ACTIVE_WORLD}...`);
         await gameEngine.startNewGame(ACTIVE_WORLD);

@@ -27,7 +27,7 @@ export const ENTITY_SPOKE_ID = 'core:entity_spoke';
  * //   worldName: string // The name of the world being initialized.
  * // }
  */
-export const ENGINE_INITIALIZING_UI = 'engine:ui_initializing';
+export const ENGINE_INITIALIZING_UI = 'core:ui_initializing';
 
 /**
  * Signals the engine has initialized (or loaded) and is ready for user input.
@@ -43,7 +43,7 @@ export const ENGINE_INITIALIZING_UI = 'engine:ui_initializing';
  * //   message: string           // A message to display, e.g., to enable input prompt.
  * // }
  */
-export const ENGINE_READY_UI = 'engine:ui_ready';
+export const ENGINE_READY_UI = 'core:ui_ready';
 
 /**
  * Signals a potentially blocking engine operation is underway.
@@ -59,7 +59,7 @@ export const ENGINE_READY_UI = 'engine:ui_ready';
  * //   inputDisabledMessage: string  // Message to show when disabling input, explaining why.
  * // }
  */
-export const ENGINE_OPERATION_IN_PROGRESS_UI = 'engine:ui_operation_in_progress';
+export const ENGINE_OPERATION_IN_PROGRESS_UI = 'core:ui_operation_in_progress';
 
 /**
  * Signals a significant engine operation has failed.
@@ -75,7 +75,7 @@ export const ENGINE_OPERATION_IN_PROGRESS_UI = 'engine:ui_operation_in_progress'
  * //   errorTitle: string    // A concise title for the error dialog or message area.
  * // }
  */
-export const ENGINE_OPERATION_FAILED_UI = 'engine:ui_operation_failed';
+export const ENGINE_OPERATION_FAILED_UI = 'core:ui_operation_failed';
 
 /**
  * Signals the engine has been stopped.
@@ -90,7 +90,7 @@ export const ENGINE_OPERATION_FAILED_UI = 'engine:ui_operation_failed';
  * //   inputDisabledMessage: string // Message to show when disabling input.
  * // }
  */
-export const ENGINE_STOPPED_UI = 'engine:ui_stopped';
+export const ENGINE_STOPPED_UI = 'core:ui_stopped';
 
 /**
  * Signals a request from the engine to display a general informational or error message to the user.
@@ -106,7 +106,7 @@ export const ENGINE_STOPPED_UI = 'engine:ui_stopped';
  * //   type: 'info' | 'error' | 'fatal' | 'warning' // The type of message, for appropriate UI styling.
  * // }
  */
-export const ENGINE_MESSAGE_DISPLAY_REQUESTED = 'engine:ui_message_display_requested';
+export const ENGINE_MESSAGE_DISPLAY_REQUESTED = 'core:ui_message_display_requested';
 
 /**
  * Signals a request from the engine to show the save game interface.
@@ -119,7 +119,7 @@ export const ENGINE_MESSAGE_DISPLAY_REQUESTED = 'engine:ui_message_display_reque
  * // Payload structure: {} (empty object)
  * // No specific data is sent with this event; its occurrence is the signal.
  */
-export const REQUEST_SHOW_SAVE_GAME_UI = 'engine:ui_request_show_save_game';
+export const REQUEST_SHOW_SAVE_GAME_UI = 'core:ui_request_show_save_game';
 
 /**
  * Signals a request from the engine to show the load game interface.
@@ -132,7 +132,7 @@ export const REQUEST_SHOW_SAVE_GAME_UI = 'engine:ui_request_show_save_game';
  * // Payload structure: {} (empty object)
  * // No specific data is sent with this event; its occurrence is the signal.
  */
-export const REQUEST_SHOW_LOAD_GAME_UI = 'engine:ui_request_show_load_game';
+export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
 
 /**
  * Signals that saving the game is currently not allowed.
@@ -147,4 +147,4 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'engine:ui_request_show_load_game';
  * // No specific data is sent with this event; its occurrence is the signal.
  * // The UI manager is expected to provide the appropriate user feedback.
  */
-export const CANNOT_SAVE_GAME_INFO = 'engine:ui_cannot_save_game_info';
+export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';

@@ -23,11 +23,12 @@ export class ISafeEventDispatcher {
      * @async
      * @param {string} eventName - The unique identifier of the event to dispatch.
      * @param {object} payload - The data associated with the event.
+     * @param {object} [options] - Optional settings to pass to the underlying validated dispatcher (e.g., { allowSchemaNotFound: true }).
      * @returns {Promise<boolean>} A promise resolving to `true` if the event was
      * successfully dispatched by the underlying dispatcher, and `false` otherwise
      * (due to validation failure, dispatch error, or exception).
      */
-    async dispatchSafely(eventName, payload) {
+    async dispatchSafely(eventName, payload, options) { // Added options parameter
         throw new Error('ISafeEventDispatcher.dispatchSafely method not implemented.');
     }
 
