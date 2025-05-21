@@ -20,6 +20,9 @@ import {IGamePersistenceService} from "../interfaces/IGamePersistenceService.js"
 
 // --- Import Tokens ---
 import {tokens} from '../config/tokens.js';
+// --- MODIFICATION START: Import the component ID constant ---
+import {CURRENT_ACTOR_COMPONENT_ID} from '../constants/componentIds.js'; // Assuming path is correct relative to this file
+// --- MODIFICATION END ---
 
 class GamePersistenceService extends IGamePersistenceService {
     /** @private @type {ILogger} */
@@ -101,6 +104,12 @@ class GamePersistenceService extends IGamePersistenceService {
         for (const entity of this.#entityManager.activeEntities.values()) {
             const components = {};
             for (const [componentTypeId, componentData] of entity.componentEntries) {
+                // --- MODIFICATION START: Filter out core:current_actor component ---
+                if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
+                    this.#logger.debug(`GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entity.id}' during save.`);
+                    continue; // Skip this component, do not add to save data
+                }
+                // --- MODIFICATION END ---
                 components[componentTypeId] = this.#deepClone(componentData);
             }
             entitiesData.push({
