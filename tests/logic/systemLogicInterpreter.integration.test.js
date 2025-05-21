@@ -191,7 +191,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
 
         expect(mockLogHandler).toHaveBeenCalledTimes(1);
         expect(mockLogHandler).toHaveBeenCalledWith(TEST_ACTION_LOG.parameters, expectedNestedCtx);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Finished action sequence for: Rule '${RULE_NO_COND_BASIC.rule_id}'`));
         expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
     });
 
@@ -229,7 +229,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
 
         expect(mockLogHandler).toHaveBeenCalledTimes(1);
         expect(mockLogHandler).toHaveBeenCalledWith(TEST_ACTION_LOG.parameters, expectedNestedCtx);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`<--- Finished action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Finished action sequence for: Rule '${RULE_COND_TRUE_BASIC.rule_id}'`));
     });
 
     it('does NOT execute actions when rule condition evaluates to false', async () => {

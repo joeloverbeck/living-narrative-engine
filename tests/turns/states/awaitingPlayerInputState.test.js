@@ -313,7 +313,9 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
             mockHandler.getTurnContext.mockReturnValue(contextWithoutSetChosenAction);
             await awaitingPlayerInputState.enterState();
             expect(superEnterSpy).toHaveBeenCalledWith(awaitingPlayerInputState._handler, null);
-            expect(mockLogger.warn).toHaveBeenCalledWith(`AwaitingPlayerInputState: ITurnContext.setChosenAction() not found. Cannot store action in context. ProcessingCommandState might rely on constructor argument.`);
+            // --- MODIFICATION: Correct expected log message ---
+            expect(mockLogger.warn).toHaveBeenCalledWith(`AwaitingPlayerInputState: ITurnContext.setChosenAction() not found. Cannot store action in context.`);
+            // --- END MODIFICATION ---
             expect(contextWithoutSetChosenAction.requestTransition).toHaveBeenCalledWith(
                 ProcessingCommandState,
                 [mockAction.commandString, mockAction]
@@ -417,7 +419,6 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         test('should call super.handleTurnEndedEvent if no actor in context', async () => {
             mockTestTurnContext.getActor.mockReturnValue(null);
             await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForCurrentActor);
-            // CORRECTED: Expect "undefined" instead of "null" for currentActor?.id when currentActor is null
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: core:turn_ended event for actor ${eventPayloadForCurrentActor.entityId} is not for current context actor undefined. Deferring to superclass.`));
             expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
             expect(superHandleTurnEndedEventSpy).toHaveBeenCalledWith(mockHandler, eventPayloadForCurrentActor);
@@ -430,7 +431,6 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
 
             await awaitingPlayerInputState.handleTurnEndedEvent(mockHandler, eventPayloadForCurrentActor);
 
-            // CORRECTED: Construct the expected string carefully to match JSON.stringify output
             const expectedPayloadString = JSON.stringify(eventPayloadForCurrentActor);
             expect(specificHandlerLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`AwaitingPlayerInputState: handleTurnEndedEvent received but no turn context. Payload: ${expectedPayloadString}. Deferring to superclass.`));
             expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
@@ -443,7 +443,9 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
             await awaitingPlayerInputState.destroy(mockHandler);
 
             const expectedErrorMessage = `Turn handler destroyed while actor ${testActor.id} was in AwaitingPlayerInputState.`;
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while state was active for actor ${testActor.id}. Ending turn via turnContext.`);
+            // --- MODIFICATION: Correct expected log message ---
+            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while state was active for actor ${testActor.id}. Ending turn via turnContext (may trigger AbortError if prompt was active).`);
+            // --- END MODIFICATION ---
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMessage);
             expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);

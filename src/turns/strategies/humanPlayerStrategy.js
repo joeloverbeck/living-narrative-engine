@@ -8,7 +8,6 @@
 /** @typedef {import('../../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 
 // JSDoc type definitions for structures expected from PlayerPromptService.prompt()
-// These are based on the refined ticket's prerequisites.
 /**
  * @typedef {object} PlayerPromptResolution
  * @description The structure of the object resolved by PlayerPromptService.prompt().
@@ -21,12 +20,11 @@
  * @description Represents an action available to the player.
  * @property {string} id - The unique identifier for the action definition (e.g., "core:wait", "ability:fireball").
  * @property {string} command - A representative command string or label for the action (e.g., "Wait", "Cast Fireball").
- * // Other properties might exist (e.g., description, parameters) but id and command are essential for this strategy.
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-// If PromptError is a specific class that might be caught and identified by type:
-// import { PromptError } from '../../errors/promptError.js'; // Path to PromptError definition
+// Import PromptError if it's used for instanceof checks beyond AbortError
+// import { PromptError } from '../../errors/promptError.js';
 
 import {IActorTurnStrategy} from '../interfaces/IActorTurnStrategy.js';
 
@@ -36,6 +34,7 @@ import {IActorTurnStrategy} from '../interfaces/IActorTurnStrategy.js';
  * @description Implements the IActorTurnStrategy for human-controlled players.
  * It uses the PlayerPromptService to asynchronously obtain a chosen action and
  * any associated speech from the player, then constructs an ITurnAction.
+ * It supports cancellation via an AbortSignal obtained from the TurnContext.
  */
 export class HumanPlayerStrategy extends IActorTurnStrategy {
     /**
@@ -47,56 +46,69 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
     /**
      * Determines the action a human player will take for the current turn.
-     * It calls the asynchronous `PlayerPromptService.prompt()` method to obtain
-     * the player's chosen action and optional speech. Based on this structured
-     * response, it constructs and resolves with an ITurnAction object.
-     *
-     * This method relies on `PlayerPromptService` to handle the full interaction
-     * with the player, including presenting choices and awaiting a confirmed selection.
+     * It calls `PlayerPromptService.prompt()` with a cancellation signal obtained
+     * from the `ITurnContext`.
      *
      * @async
-     * @param {ITurnContext} context - The turn context for the current turn, providing
-     * access to the actor, logger, player prompt service, etc.
-     * @returns {Promise<ITurnAction>} A Promise that resolves to an ITurnAction object
-     * representing the player's chosen action and parameters.
-     * @throws {Error} If essential services (like PlayerPromptService, Logger, or Actor)
-     * cannot be retrieved from the context.
-     * @throws {Error} If `playerPromptService.prompt()` rejects (e.g., due to
-     * timeout, invalid action from UI), the error is re-thrown. The specific type of
-     * error (e.g., `PromptError`) from the service will be preserved.
-     * @throws {Error} If the data received from `playerPromptService.prompt()` is malformed
-     * or missing essential parts (e.g., `playerData.action` is null, or `action.id` / `action.command` are not strings).
+     * @param {ITurnContext} context - The turn context for the current turn.
+     * @returns {Promise<ITurnAction>} A Promise that resolves to an ITurnAction object.
+     * @throws {Error|DOMException} If essential services are missing, playerData is malformed,
+     * or if the prompt operation fails or is aborted. `DOMException` with `name === 'AbortError'`
+     * is thrown if the prompt is cancelled.
      */
     async decideAction(context) {
         const logger = this._getLoggerFromContext(context);
-        let actor; // Declare actor here for broader scope in the final catch block if needed.
+        let actor;
 
         try {
-            // Retrieve essential services and the actor
             actor = this._getActorFromContext(context, logger);
             const playerPromptService = this._getPlayerPromptServiceFromContext(context, logger);
 
+            // --- MODIFICATION: Obtain cancellation signal from context ---
+            let cancellationSignal;
+            if (typeof context.getPromptSignal === 'function') {
+                cancellationSignal = context.getPromptSignal();
+                if (!(cancellationSignal instanceof AbortSignal)) {
+                    logger.warn(`HumanPlayerStrategy: context.getPromptSignal() for actor ${actor.id} did not return an AbortSignal. Proceeding without cancellation support for this prompt.`);
+                    cancellationSignal = undefined; // Ensure it's undefined if not valid
+                } else {
+                    logger.debug(`HumanPlayerStrategy: Obtained cancellation signal for actor ${actor.id}.`);
+                }
+            } else {
+                logger.warn(`HumanPlayerStrategy: context.getPromptSignal is not a function for actor ${actor.id}. Proceeding without cancellation support for this prompt.`);
+                cancellationSignal = undefined;
+            }
+            // --- END MODIFICATION ---
+
             logger.info(`HumanPlayerStrategy: Initiating decideAction for actor ${actor.id}.`);
 
-            let playerData; // Expected: { action: AvailableAction, speech: string | null }
+            let playerData;
             try {
-                logger.debug(`HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${actor.id}.`);
-                playerData = await playerPromptService.prompt(actor);
+                logger.debug(`HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${actor.id}${cancellationSignal ? ' with cancellation signal.' : '.'}`);
+                // --- MODIFICATION: Pass cancellationSignal to prompt ---
+                playerData = await playerPromptService.prompt(actor, {cancellationSignal});
+                // --- END MODIFICATION ---
                 logger.debug(`HumanPlayerStrategy: Received playerData for actor ${actor.id}. Details:`, playerData);
+
             } catch (promptError) {
-                // AC6: Catch and re-throw, logging first.
-                const errorMessage = `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${actor.id}.`;
-                logger.error(errorMessage, promptError); // Log with the original error object
-                throw promptError; // Re-throw the original error to preserve its type and details.
+                // --- MODIFICATION: Differentiate AbortError ---
+                if (promptError && promptError.name === 'AbortError') {
+                    // This is an expected cancellation, log less severely.
+                    logger.info(`HumanPlayerStrategy: Prompt for actor ${actor.id} was cancelled (aborted).`);
+                } else {
+                    // This is an unexpected error from PlayerPromptService (e.g., superseded, validation error)
+                    const errorMessage = `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${actor.id}.`;
+                    logger.error(errorMessage, promptError);
+                }
+                throw promptError; // Re-throw for AwaitingPlayerInputState to handle
+                // --- END MODIFICATION ---
             }
 
-            // AC7: Safeguard for playerData integrity.
             if (
                 !playerData ||
                 !playerData.action ||
                 typeof playerData.action.id !== 'string' || playerData.action.id.trim() === '' ||
                 typeof playerData.action.command !== 'string'
-                // playerData.speech can be null, so no check for typeof string needed unless explicitly non-null required.
             ) {
                 const errorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${actor.id}. Action ID and command string are mandatory.`;
                 logger.error(errorMsg, {receivedData: playerData});
@@ -104,32 +116,21 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             }
             logger.debug(`HumanPlayerStrategy: playerData for actor ${actor.id} validated successfully. Action ID: "${playerData.action.id}".`);
 
-            // AC8: Construct ITurnAction.
             /** @type {ITurnAction} */
             const turnAction = {
                 actionDefinitionId: playerData.action.id,
-                commandString: playerData.action.command, // For logging, echo, or simple display.
+                commandString: playerData.action.command,
                 resolvedParameters: {
-                    speech: playerData.speech, // playerData.speech can be string or null.
-                    // (Future Consideration from ticket) If playerData.action contains other
-                    // pre-resolved parameters relevant to the action execution, they should be
-                    // mapped into resolvedParameters here. For now, focus on speech.
+                    speech: playerData.speech,
                 },
             };
 
             logger.info(`HumanPlayerStrategy: Constructed ITurnAction for actor ${actor.id} with actionDefinitionId "${turnAction.actionDefinitionId}".`);
             logger.debug(`HumanPlayerStrategy: ITurnAction details for actor ${actor.id}:`, {turnActionDetails: turnAction});
 
-            return turnAction; // AC9: Return the constructed ITurnAction.
+            return turnAction;
 
         } catch (error) {
-            // This outer catch block handles errors from:
-            // - Helper methods (_getLoggerFromContext, _getActorFromContext, _getPlayerPromptServiceFromContext)
-            // - The re-thrown error from the playerPromptService.prompt() call
-            // - The error thrown by the playerData integrity check
-            // - Any other unexpected errors within this main try...catch block.
-
-            // Robustly determine actorIdForLog for the final error message
             let actorIdForLog = 'unknown_actor';
             if (actor && typeof actor.id === 'string' && actor.id.trim() !== '') {
                 actorIdForLog = actor.id;
@@ -140,10 +141,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
                         actorIdForLog = currentActorInCatch.id;
                     }
                 } catch (e) {
-                    // If getActor() itself throws here when trying to get ID for logging,
-                    // actorIdForLog remains 'unknown_actor'.
-                    // This inner catch prevents a new error from derailing the primary error logging.
-                    if (logger && typeof logger.warn === 'function') { // Check if logger is available
+                    if (logger && typeof logger.warn === 'function') {
                         logger.warn(`HumanPlayerStrategy: Could not retrieve actor ID in final catch block: ${e.message}`);
                     } else {
                         console.warn(`HumanPlayerStrategy: Could not retrieve actor ID in final catch block: ${e.message}`);
@@ -151,13 +149,19 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
                 }
             }
 
+            // --- MODIFICATION: Differentiate AbortError in final catch as well ---
+            if (error && error.name === 'AbortError') {
+                // If an AbortError reaches here, it means it wasn't handled more specifically above
+                // or originated from validation/construction logic after the prompt call.
+                // We still want to avoid logging it as a general failure.
+                logger.info(`HumanPlayerStrategy.decideAction: Operation for actor ${actorIdForLog} was cancelled (aborted). Error: ${error.message}`);
+            } else {
+                // Log other errors as before
+                logger.error(`HumanPlayerStrategy.decideAction: Operation failed for actor ${actorIdForLog}. Error: ${error.message}`, error);
+            }
+            // --- END MODIFICATION ---
 
-            // Most specific errors should have been logged closer to their source with full details.
-            // This log provides a general marker that decideAction failed.
-            // The original error object (with its stack) is included.
-            logger.error(`HumanPlayerStrategy.decideAction: Operation failed for actor ${actorIdForLog}. Error: ${error.message}`, error);
-
-            throw error; // Re-throw the error to be handled by the calling turn state.
+            throw error;
         }
     }
 
@@ -171,12 +175,12 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
     _getLoggerFromContext(context) {
         if (!context) {
             const errorMsg = 'HumanPlayerStrategy Critical: ITurnContext is null or undefined.';
-            console.error(errorMsg); // Use console.error as logger might not be available.
+            console.error(errorMsg);
             throw new Error(errorMsg);
         }
         if (typeof context.getLogger !== 'function') {
             const errorMsg = 'HumanPlayerStrategy Critical: context.getLogger is not a function.';
-            console.error(errorMsg); // Use console.error.
+            console.error(errorMsg);
             throw new Error(errorMsg);
         }
 
@@ -185,7 +189,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             loggerInstance = context.getLogger();
         } catch (e) {
             const errorMsg = `HumanPlayerStrategy Critical: context.getLogger() call failed. Details: ${e.message}`;
-            console.error(errorMsg, e); // Use console.error.
+            console.error(errorMsg, e);
             throw new Error(errorMsg);
         }
 
@@ -193,9 +197,9 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             typeof loggerInstance.info !== 'function' ||
             typeof loggerInstance.error !== 'function' ||
             typeof loggerInstance.debug !== 'function' ||
-            typeof loggerInstance.warn !== 'function') { // Added warn check for completeness
+            typeof loggerInstance.warn !== 'function') {
             const errorMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
-            console.error(errorMsg); // Use console.error as the logger instance is faulty.
+            console.error(errorMsg);
             throw new Error(errorMsg);
         }
         return loggerInstance;
@@ -210,11 +214,8 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
      * @private
      */
     _getActorFromContext(context, logger) {
-        // Context null check implicitly handled by _getLoggerFromContext if called first,
-        // but good for robustness if this method were called independently.
         if (!context) {
             const errorMsg = 'HumanPlayerStrategy Critical: ITurnContext is null (in _getActorFromContext).';
-            // logger might not be valid if context is null, but attempt logging if it was passed.
             if (logger && typeof logger.error === 'function') logger.error(errorMsg);
             else console.error(errorMsg);
             throw new Error(errorMsg);

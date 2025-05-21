@@ -1,4 +1,4 @@
-// tests/core/turns/strategies/humanPlayerStrategy.noChildLogger.test.js
+// tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js
 // --- FILE START ---
 
 import {HumanPlayerStrategy} from '../../../src/turns/strategies/humanPlayerStrategy.js'; // Adjust path as needed
@@ -30,6 +30,10 @@ const createMockTurnContext = (actor, logger, playerPromptService) => ({
     getActor: jest.fn(() => actor),
     getLogger: jest.fn(() => logger),
     getPlayerPromptService: jest.fn(() => playerPromptService),
+    // --- MODIFICATION: Add mock for getPromptSignal ---
+    getPromptSignal: jest.fn(() => undefined), // Simulate context not providing a specific signal for this test
+    // For tests specifically checking cancellation, you might return new AbortController().signal
+    // --- END MODIFICATION ---
 });
 
 // Mock for AvailableAction structure
@@ -72,39 +76,71 @@ describe('HumanPlayerStrategy', () => {
 
             const turnAction = await humanPlayerStrategy.decideAction(mockTurnContext);
 
-            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor); // Called with actor only
+            // --- MODIFICATION: Update assertion for prompt call ---
+            expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(
+                mockActor,
+                {cancellationSignal: undefined} // Expect options object with undefined signal from our mock
+            );
+            // --- END MODIFICATION ---
             expect(mockLogger.info).toHaveBeenCalledWith(`HumanPlayerStrategy: Constructed ITurnAction for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`);
             expect(turnAction).toEqual({
                 actionDefinitionId: playerData.action.id,
                 commandString: playerData.action.command,
                 resolvedParameters: {speech: playerData.speech},
             });
+            // Ensure getPromptSignal from mockTurnContext was called
+            expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
         });
-
-        // This test is obsolete as re-prompting is PlayerPromptService's responsibility
-        // it('should re-prompt if the first command is empty', async () => { ... });
-        // This test is also obsolete as trimming is not directly done on raw string by this strategy anymore
-        // it('should trim whitespace from the command', async () => { ... });
-
 
         it('should throw an error if PlayerPromptService.prompt fails, and log appropriately', async () => {
             const promptErrorMessage = 'Prompt service unavailable';
             const promptError = new Error(promptErrorMessage);
             mockPlayerPromptService.prompt.mockRejectedValueOnce(promptError);
 
-            await expect(humanPlayerStrategy.decideAction(mockTurnContext)).rejects.toThrow(promptError); // Expect original error
+            await expect(humanPlayerStrategy.decideAction(mockTurnContext)).rejects.toThrow(promptError);
 
-            // Log from the inner catch block (around prompt call)
             expect(mockLogger.error).toHaveBeenCalledWith(
                 `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
                 promptError
             );
-            // Log from the outer catch block in decideAction
             expect(mockLogger.error).toHaveBeenCalledWith(
                 `HumanPlayerStrategy.decideAction: Operation failed for actor ${mockActor.id}. Error: ${promptErrorMessage}`,
                 promptError
             );
+            // Ensure getPromptSignal from mockTurnContext was called
+            expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
         });
+
+        // --- MODIFICATION: Add a new test for AbortError handling ---
+        it('should log info and re-throw AbortError if PlayerPromptService.prompt is aborted', async () => {
+            const abortError = new DOMException('Prompt aborted', 'AbortError');
+            mockPlayerPromptService.prompt.mockRejectedValueOnce(abortError);
+
+            // Mock getPromptSignal to return an actual signal for this specific test,
+            // although PlayerPromptService itself would be the one throwing based on it.
+            // For this test, we just care that HumanPlayerStrategy handles the thrown AbortError.
+            const mockSignal = new AbortController().signal;
+            mockTurnContext.getPromptSignal.mockReturnValueOnce(mockSignal);
+
+            await expect(humanPlayerStrategy.decideAction(mockTurnContext)).rejects.toThrow(abortError);
+
+            // Should log info for AbortError, not error
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `HumanPlayerStrategy: Prompt for actor ${mockActor.id} was cancelled (aborted).`
+            );
+            // Should not log the standard error message for prompt failures
+            expect(mockLogger.error).not.toHaveBeenCalledWith(
+                `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
+                expect.anything()
+            );
+            // The outer catch should also log info for AbortError
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                `HumanPlayerStrategy.decideAction: Operation for actor ${mockActor.id} was cancelled (aborted). Error: ${abortError.message}`
+            );
+            expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
+        });
+        // --- END MODIFICATION ---
+
 
         describe('_getLoggerFromContext internal behavior (robustness checks)', () => {
             it('should throw if context is null', () => {
@@ -127,7 +163,6 @@ describe('HumanPlayerStrategy', () => {
                         throw getLoggerError;
                     })
                 };
-                // Corrected expected error message
                 const expectedMsg = `HumanPlayerStrategy Critical: context.getLogger() call failed. Details: ${getLoggerError.message}`;
                 expect(() => humanPlayerStrategy._getLoggerFromContext(faultyContext))
                     .toThrow(expectedMsg);
@@ -135,9 +170,8 @@ describe('HumanPlayerStrategy', () => {
             });
 
             it('should throw if logger from context is invalid (missing methods)', () => {
-                const incompleteLogger = {debug: jest.fn()}; // Missing info, error, warn
+                const incompleteLogger = {debug: jest.fn()};
                 const contextWithBadLogger = {getLogger: jest.fn(() => incompleteLogger)};
-                // Corrected expected error message
                 const expectedMsg = 'HumanPlayerStrategy Critical: Logger from ITurnContext is invalid or incomplete (missing required methods like info, error, debug, warn).';
                 expect(() => humanPlayerStrategy._getLoggerFromContext(contextWithBadLogger))
                     .toThrow(expectedMsg);
@@ -148,7 +182,7 @@ describe('HumanPlayerStrategy', () => {
         describe('_getActorFromContext internal behavior', () => {
             it('should throw if context.getActor is not a function', () => {
                 const invalidContext = createMockTurnContext(null, mockLogger, mockPlayerPromptService);
-                invalidContext.getActor = 'not-a-function'; // Break the mock
+                invalidContext.getActor = 'not-a-function';
                 expect(() => humanPlayerStrategy._getActorFromContext(invalidContext, mockLogger))
                     .toThrow('HumanPlayerStrategy Critical: context.getActor is not a function.');
                 expect(mockLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy Critical: context.getActor is not a function.');
@@ -156,11 +190,9 @@ describe('HumanPlayerStrategy', () => {
 
             it('should throw if context.getActor() returns null', () => {
                 const contextWithNullActor = createMockTurnContext(null, mockLogger, mockPlayerPromptService);
-                // Corrected expected error message
                 const expectedMsg = 'HumanPlayerStrategy Critical: Actor not available from ITurnContext or actor has an invalid ID.';
                 expect(() => humanPlayerStrategy._getActorFromContext(contextWithNullActor, mockLogger))
                     .toThrow(expectedMsg);
-                // Corrected log assertion
                 expect(mockLogger.error).toHaveBeenCalledWith(expectedMsg, {actorInstance: null});
             });
         });
@@ -168,7 +200,7 @@ describe('HumanPlayerStrategy', () => {
         describe('_getPlayerPromptServiceFromContext internal behavior', () => {
             it('should throw if context.getPlayerPromptService is not a function', () => {
                 const invalidContext = createMockTurnContext(mockActor, mockLogger, null);
-                invalidContext.getPlayerPromptService = 'not-a-function'; // Break the mock
+                invalidContext.getPlayerPromptService = 'not-a-function';
                 expect(() => humanPlayerStrategy._getPlayerPromptServiceFromContext(invalidContext, mockLogger))
                     .toThrow('HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.');
                 expect(mockLogger.error).toHaveBeenCalledWith('HumanPlayerStrategy Critical: context.getPlayerPromptService is not a function.');
@@ -176,18 +208,14 @@ describe('HumanPlayerStrategy', () => {
 
             it('should throw if context.getPlayerPromptService() returns null', () => {
                 const contextWithNullService = createMockTurnContext(mockActor, mockLogger, null);
-                // Make sure the mock inside createMockTurnContext is indeed returning null as intended for this test
                 contextWithNullService.getPlayerPromptService.mockReturnValue(null);
 
-                // Corrected expected error message
                 const expectedMsg = 'HumanPlayerStrategy Critical: PlayerPromptService not available from ITurnContext or is invalid (e.g., missing prompt method).';
                 expect(() => humanPlayerStrategy._getPlayerPromptServiceFromContext(contextWithNullService, mockLogger))
                     .toThrow(expectedMsg);
-                // Corrected log assertion
                 expect(mockLogger.error).toHaveBeenCalledWith(expectedMsg, {serviceInstance: null});
             });
         });
     });
 });
-
 // --- FILE END ---

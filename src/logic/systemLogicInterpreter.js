@@ -321,7 +321,7 @@ class SystemLogicInterpreter {
                 break;
             }
         }
-        this.#logger.info(`<--- Finished action sequence for: ${scopeDescription}.`);
+        this.#logger.info(`Finished action sequence for: ${scopeDescription}.`);
     }
 
     #handleIfOperation(ifOperation, finalNestedExecutionContext, parentScopeDesc, operationIndex) { // Receives FULL NESTED context

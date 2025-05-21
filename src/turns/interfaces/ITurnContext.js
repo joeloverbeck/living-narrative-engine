@@ -218,4 +218,26 @@ export class ITurnContext {
     getChosenAction() {
         throw new Error("Method 'getChosenAction()' must be implemented.");
     }
+
+    // --- NEW METHODS FOR CANCELLATION ---
+    /**
+     * Retrieves an AbortSignal that can be used to cancel long-running operations
+     * associated with this turn context, such as player prompts.
+     * @returns {AbortSignal} The AbortSignal.
+     */
+    getPromptSignal() {
+        throw new Error("Method 'getPromptSignal()' must be implemented.");
+    }
+
+    /**
+     * Signals that any active long-running operation (like a player prompt)
+     * associated with this turn context should be cancelled.
+     * This will trigger the 'abort' event on the signal obtained via `getPromptSignal()`.
+     * @returns {void}
+     */
+    cancelActivePrompt() {
+        throw new Error("Method 'cancelActivePrompt()' must be implemented.");
+    }
+
+    // --- END NEW METHODS ---
 }

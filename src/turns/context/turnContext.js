@@ -75,6 +75,7 @@ import {ITurnContext} from '../interfaces/ITurnContext.js';
  * container for essential data (like the current actor) and services (like logging,
  * player prompts, game world access) needed by turn states and strategies.
  * It aims to decouple turn logic from specific turn handler implementations.
+ * Includes an AbortController for managing cancellation of turn-specific operations.
  */
 export class TurnContext extends ITurnContext {
     /** @type {Entity} */
@@ -101,6 +102,13 @@ export class TurnContext extends ITurnContext {
      * @type {ITurnAction | null}
      */
     #chosenAction = null;
+
+    /**
+     * @private
+     * @type {AbortController}
+     * @description Manages cancellation for operations within this turn context.
+     */
+    #promptAbortController;
 
     /**
      * Creates an instance of TurnContext.
@@ -162,7 +170,11 @@ export class TurnContext extends ITurnContext {
         this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
         this.#onSetAwaitingExternalEventCallback = onSetAwaitingExternalEventCallback;
         this.#handlerInstance = handlerInstance;
-        this.#chosenAction = null; // Explicitly initialize here, though default is null.
+        this.#chosenAction = null;
+
+        // --- MODIFICATION: Initialize AbortController ---
+        this.#promptAbortController = new AbortController();
+        // --- END MODIFICATION ---
     }
 
     /** @override */
@@ -240,6 +252,15 @@ export class TurnContext extends ITurnContext {
 
     /** @override */
     endTurn(errorOrNull = null) {
+        // --- MODIFICATION: Abort any pending prompt when turn ends ---
+        // This ensures that if endTurn is called (e.g., due to an error or normal completion *before* prompt resolves),
+        // the prompt associated with this turn is also signalled to abort.
+        // Check if signal is already aborted to avoid redundant logging or errors from aborting again.
+        if (!this.#promptAbortController.signal.aborted) {
+            this.#logger.debug(`TurnContext.endTurn: Turn ending for actor ${this.#actor.id}. Aborting associated prompt signal.`);
+            this.cancelActivePrompt();
+        }
+        // --- END MODIFICATION ---
         this.#onEndTurnCallback(errorOrNull);
     }
 
@@ -257,21 +278,21 @@ export class TurnContext extends ITurnContext {
      * Prefer creating a new TurnContext with fresh, actor-appropriate dependencies.
      */
     cloneForActor(newActor) {
-        this.#logger.warn("TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies.");
+        this.#logger.warn("TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies. Also, AbortController is not cloned, a new one is made.");
         if (!newActor) {
             throw new Error('TurnContext.cloneForActor: newActor is required.');
         }
         // Cloning handlerInstance by reference is correct here as it's the same handler.
+        // IMPORTANT: A new AbortController is created for the cloned context.
         return new TurnContext({
             actor: newActor,
             logger: this.#logger,
-            services: this.#services, // Services bag is shared by reference - potential issue
-            strategy: this.#strategy, // Strategy is shared by reference - potential issue
-            onEndTurnCallback: this.#onEndTurnCallback, // Callback is shared - potential issue
+            services: this.#services,
+            strategy: this.#strategy,
+            onEndTurnCallback: this.#onEndTurnCallback,
             isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
             onSetAwaitingExternalEventCallback: this.#onSetAwaitingExternalEventCallback,
             handlerInstance: this.#handlerInstance
-            // Note: #chosenAction is NOT cloned; it's specific to the turn instance.
         });
     }
 
@@ -289,7 +310,6 @@ export class TurnContext extends ITurnContext {
     /** @override */
     getStrategy() {
         if (!this.#strategy) {
-            // This case should ideally be prevented by constructor validation
             const errorMsg = "TurnContext: IActorTurnStrategy instance was not provided or is missing.";
             this.#logger.error(errorMsg);
             throw new Error(errorMsg);
@@ -297,23 +317,13 @@ export class TurnContext extends ITurnContext {
         return this.#strategy;
     }
 
-    /**
-     * Stores the provided {@link ITurnAction} object.
-     * This method is typically called by `AwaitingPlayerInputState` after
-     * `IActorTurnStrategy.decideAction()` resolves.
-     * Logs (debug level) that the action is being set.
-     * @override
-     * @param {ITurnAction} action - The action chosen by the actor.
-     * @returns {void}
-     * @throws {Error} If the action is null or undefined.
-     */
+    /** @override */
     setChosenAction(action) {
         if (!action) {
             const errorMsg = "TurnContext.setChosenAction: Provided action cannot be null or undefined.";
             this.#logger.error(errorMsg);
             throw new Error(errorMsg);
         }
-        // Basic validation of the action object's structure based on ITurnAction
         if (typeof action.actionDefinitionId !== 'string' || !action.actionDefinitionId) {
             const errorMsg = "TurnContext.setChosenAction: Provided action must have a valid 'actionDefinitionId' string.";
             this.#logger.error(errorMsg, {receivedAction: action});
@@ -328,13 +338,7 @@ export class TurnContext extends ITurnContext {
         );
     }
 
-    /**
-     * Returns the stored {@link ITurnAction} object or `null` if no action has been set.
-     * This method is called by `ProcessingCommandState` to retrieve the action.
-     * Logs (debug level) when the action is retrieved, including if it's null.
-     * @override
-     * @returns {ITurnAction | null} The stored action or null.
-     */
+    /** @override */
     getChosenAction() {
         if (this.#chosenAction) {
             this.#logger.debug(
@@ -347,6 +351,24 @@ export class TurnContext extends ITurnContext {
         }
         return this.#chosenAction;
     }
+
+    // --- MODIFICATION: Implement new ITurnContext methods ---
+    /** @override */
+    getPromptSignal() {
+        return this.#promptAbortController.signal;
+    }
+
+    /** @override */
+    cancelActivePrompt() {
+        if (!this.#promptAbortController.signal.aborted) {
+            this.#logger.debug(`TurnContext.cancelActivePrompt: Aborting prompt for actor ${this.#actor.id}.`);
+            this.#promptAbortController.abort();
+        } else {
+            this.#logger.debug(`TurnContext.cancelActivePrompt: Prompt for actor ${this.#actor.id} already aborted.`);
+        }
+    }
+
+    // --- END MODIFICATION ---
 }
 
 // --- FILE END ---
