@@ -1,191 +1,209 @@
 // src/main.js
 
-import GameEngine from './src/engine/gameEngine.js';
-import AppContainer from './src/config/appContainer.js';
+import GameEngine from './src/engine/gameEngine.js'; // Remains for now, future tickets will move to a stage
 import {configureContainer} from './src/config/containerConfig.js';
 import {tokens} from './src/config/tokens.js';
+import {AppConfig} from './src/config/appConfig.js';
+import {displayFatalStartupError} from './src/bootstrapper/errorUtils.js';
+// Import all necessary stages
+import {
+    ensureCriticalDOMElementsStage,
+    setupDIContainerStage,
+    resolveCoreServicesStage,
+    // Future stage imports will go here:
+    // initializeGameEngineStage,
+    // initializeAuxiliaryServicesStage,
+    // setupApplicationEventListenersStage,
+    // startGameStage
+} from './src/bootstrapper/stages.js';
 
-// --- Define the Active World ---
-const ACTIVE_WORLD = 'demo'; // Specify the world to load
-
-// --- Bootstrap the Game Engine ---
+// --- Bootstrap the Application ---
 (async () => {
+    // Initial log, logger not available yet.
     console.log('main.js: Bootstrapping application...');
 
-    const outputDiv = document.getElementById('outputDiv');
-    const errorDiv = document.getElementById('error-output');
-    const inputElement = document.getElementById('speech-input');
-    const titleElement = document.querySelector('h1');
-
-    if (!outputDiv || !inputElement || !errorDiv || !titleElement) {
-        const missing = [
-            !outputDiv ? 'outputDiv' : null,
-            !inputElement ? 'speech-input' : null,
-            !errorDiv ? 'error-output' : null,
-            !titleElement ? 'h1 title' : null
-        ].filter(Boolean).join(', ');
-        const errorMsg = `Fatal Error: Cannot find required HTML elements: ${missing}. Application cannot start.`;
-        console.error('main.js:', errorMsg);
-        if (errorDiv) errorDiv.textContent = errorMsg; else alert(errorMsg);
-        if (titleElement) titleElement.textContent = 'Fatal Error!';
-        if (inputElement) inputElement.disabled = true;
-        return;
-    }
-
-    const container = new AppContainer();
-
-    try {
-        configureContainer(container, {outputDiv, inputElement, titleElement, document: document});
-    } catch (registrationError) {
-        const errorMsgForAlert = `Fatal Error during service registration: ${registrationError.message}. Check console.`;
-        console.error('Fatal Error: Failed to register core services:', registrationError);
-        alert(errorMsgForAlert);
-        if (titleElement) titleElement.textContent = 'Fatal Registration Error!';
-        if (inputElement) {
-            inputElement.disabled = true;
-            inputElement.placeholder = 'Registration Failed.';
-        }
-        try {
-            // Attempt to use logger if it was registered before failing
-            const tempLogger = container.resolve(tokens.ILogger);
-            if (tempLogger && typeof tempLogger.error === 'function') {
-                tempLogger.error('Fatal Error: Failed to register core services:', registrationError);
-            }
-        } catch (_) { /* ignore if logger itself failed or wasn't part of successful registration */
-        }
-        return;
-    }
-
-    let gameEngine = null;
+    /** @type {import('./src/bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
+    let uiElements;
+    /** @type {import('./src/config/appContainer.js').default | undefined} */
+    let container;
+    /** @type {import('./src/interfaces/coreServices.js').ILogger | null} */
     let logger = null;
+    /** @type {GameEngine | null} */
+    let gameEngine = null; // Will be populated by initializeGameEngineStage or current logic
+
+    let currentPhaseForError = 'Initial Setup'; // Generic phase before stages
 
     try {
-        logger = container.resolve(tokens.ILogger);
-    } catch (resolveError) {
-        console.error('Fatal Error: Could not resolve essential ILogger service:', resolveError);
-        alert('Fatal Error resolving logger. Check console.');
-        if (titleElement) titleElement.textContent = 'Fatal Logger Error!';
-        if (inputElement) {
-            inputElement.disabled = true;
-            inputElement.placeholder = 'Logger Resolution Failed.';
-        }
-        return;
-    }
+        // STAGE 1: Ensure Critical DOM Elements
+        currentPhaseForError = 'UI Element Validation';
+        // console.log is used here as logger is not yet available.
+        console.log(`main.js: Executing ${currentPhaseForError} stage...`);
+        uiElements = await ensureCriticalDOMElementsStage(document);
+        console.log(`main.js: ${currentPhaseForError} stage completed.`);
 
-    try {
-        logger.info('main.js: Creating GameEngine instance...');
+        // STAGE 2: Setup DI Container
+        currentPhaseForError = 'DI Container Setup';
+        console.log(`main.js: Executing ${currentPhaseForError} stage...`);
+        container = await setupDIContainerStage(uiElements, configureContainer);
+        console.log(`main.js: ${currentPhaseForError} stage completed.`);
+
+        // STAGE 3: Resolve Core Services (Logger)
+        currentPhaseForError = 'Core Services Resolution';
+        console.log(`main.js: Executing ${currentPhaseForError} stage...`);
+        const coreServices = await resolveCoreServicesStage(container, tokens);
+        logger = coreServices.logger; // Assign the resolved logger
+        logger.info(`main.js: ${currentPhaseForError} stage completed. Logger is now available.`);
+
+        // STAGE 4: Initialize Game Engine (Placeholder for initializeGameEngineStage)
+        currentPhaseForError = 'Game Engine Initialization (Interim)';
+        logger.info(`main.js: Executing ${currentPhaseForError}...`);
+        // This entire block will be refactored into initializeGameEngineStage later.
+        // Errors here will be caught by the main catch block.
         gameEngine = new GameEngine({
-            container: container
+            container: container // GameEngine will resolve its own logger from the container
         });
-        logger.info('main.js: GameEngine instance created.');
+        logger.info(`main.js: ${currentPhaseForError} completed.`);
 
-        // --- Initialize EngineUIManager (GE-REFAC-010) ---
-        // This service listens to GameEngine events to update the UI.
-        // It must be initialized before GameEngine starts dispatching UI-related events.
+        // STAGE 5: Initialize Auxiliary Services (Placeholder for initializeAuxiliaryServicesStage)
+        currentPhaseForError = 'Auxiliary Services Initialization (Interim)';
+        logger.info(`main.js: Executing ${currentPhaseForError}...`);
+        // This block will be refactored into initializeAuxiliaryServicesStage later.
         try {
             logger.info('main.js: Initializing EngineUIManager...');
             const engineUIManager = container.resolve(tokens.EngineUIManager);
             if (!engineUIManager) {
-                // This case should ideally not be reached if DI registration is correct
-                // and the factory always returns an instance.
+                // This specific error should ideally be handled within initializeAuxiliaryServicesStage in the future
+                // and provide its own phase. For now, it will use currentPhaseForError.
                 throw new Error('EngineUIManager instance could not be resolved from container (resolved as null/undefined).');
             }
-            engineUIManager.initialize(); // This call subscribes EngineUIManager to events
+            engineUIManager.initialize();
             logger.info('main.js: EngineUIManager initialized successfully.');
         } catch (eumError) {
-            // Log critical error but allow application to continue for now.
-            // UI might not function correctly if EngineUIManager fails.
-            // Depending on requirements, this could be made a fatal error halting the app.
-            logger.error('main.js: CRITICAL error during EngineUIManager resolution or initialization. UI may not function as expected.', eumError);
-            // To make this fatal, uncomment the following lines:
-            // alert(`Fatal Error: Could not initialize core UI manager: ${eumError.message}. Application UI will be non-functional.`);
-            // throw eumError;
+            // Re-throw to be caught by the main orchestrator's catch block.
+            // The main catch block will use currentPhaseForError if eumError.phase is not set.
+            throw new Error(`CRITICAL error during EngineUIManager resolution or initialization: ${eumError.message}`, {cause: eumError});
         }
 
-        // --- Initialize Save Game UI and Load Game UI ---
-        // These UI components need a reference to the gameEngine for their internal handlers
-        // (e.g., to call gameEngine.triggerManualSave() or gameEngine.loadGame()).
-        // This is distinct from EngineUIManager's role.
         try {
             const saveGameUIInstance = container.resolve(tokens.SaveGameUI);
             if (saveGameUIInstance) {
-                saveGameUIInstance.init(gameEngine); // Pass GameEngine instance
+                saveGameUIInstance.init(gameEngine);
                 logger.info('main.js: SaveGameUI initialized with GameEngine.');
             } else {
-                logger.error('main.js: SaveGameUI instance could not be resolved from container for init.');
+                // Deemed fatal if the instance cannot be resolved for essential UI.
+                throw new Error('SaveGameUI instance could not be resolved from container for init.');
             }
-        } catch (e) {
-            logger.error('main.js: Error resolving or initializing SaveGameUI.', e);
+        } catch (sgUiError) {
+            logger.error(`main.js: Error resolving or initializing SaveGameUI. This is considered a fatal bootstrap error.`, sgUiError);
+            // Re-throw to be caught by the main orchestrator's catch block.
+            throw new Error(`Failed to initialize SaveGameUI: ${sgUiError.message}`, {cause: sgUiError});
         }
 
         try {
             const loadGameUIInstance = container.resolve(tokens.LoadGameUI);
             if (loadGameUIInstance) {
-                loadGameUIInstance.init(gameEngine); // Pass GameEngine instance
+                loadGameUIInstance.init(gameEngine);
                 logger.info('main.js: LoadGameUI initialized with GameEngine.');
             } else {
-                logger.error('main.js: LoadGameUI instance could not be resolved from container for init.');
+                // Deemed fatal if the instance cannot be resolved for essential UI.
+                throw new Error('LoadGameUI instance could not be resolved from container for init.');
             }
-        } catch (e) {
-            logger.error('main.js: Error resolving or initializing LoadGameUI.', e);
+        } catch (lgUiError) {
+            logger.error(`main.js: Error resolving or initializing LoadGameUI. This is considered a fatal bootstrap error.`, lgUiError);
+            // Re-throw to be caught by the main orchestrator's catch block.
+            throw new Error(`Failed to initialize LoadGameUI: ${lgUiError.message}`, {cause: lgUiError});
         }
+        logger.info(`main.js: ${currentPhaseForError} completed.`);
 
-
-        // --- Hook up Menu Buttons to GameEngine methods ---
-        // GameEngine will use EngineUIManager (via events) and DomUiFacade to show these UIs.
+        // STAGE 6: Setup Application Event Listeners (Placeholder for setupApplicationEventListenersStage)
+        currentPhaseForError = 'Event Listener Setup (Interim)';
+        logger.info(`main.js: Executing ${currentPhaseForError}...`);
+        // This block will be refactored into setupApplicationEventListenersStage later.
+        // Errors here are less likely to be throwers unless document structure is unexpectedly missing
+        // and not caught by ensureCriticalDOMElementsStage.
         const openSaveGameButton = document.getElementById('open-save-game-button');
         const openLoadGameButton = document.getElementById('open-load-game-button');
 
         if (openSaveGameButton && gameEngine) {
             openSaveGameButton.addEventListener('click', () => {
                 logger.debug('main.js: "Open Save Game UI" button clicked.');
-                gameEngine.showSaveGameUI(); // GameEngine dispatches event, EngineUIManager handles showing UI
+                gameEngine.showSaveGameUI();
             });
             logger.info('main.js: Save Game UI button listener attached.');
         } else {
-            logger.warn('main.js: Could not find #open-save-game-button or gameEngine not available for listener.');
+            if (!openSaveGameButton) logger.warn('main.js: Could not find #open-save-game-button.');
+            if (!gameEngine) logger.warn('main.js: GameEngine not available for save game button listener.');
         }
 
         if (openLoadGameButton && gameEngine) {
             openLoadGameButton.addEventListener('click', () => {
                 logger.debug('main.js: "Open Load Game UI" button clicked.');
-                gameEngine.showLoadGameUI(); // GameEngine dispatches event, EngineUIManager handles showing UI
+                gameEngine.showLoadGameUI();
             });
             logger.info('main.js: Load Game UI button listener attached.');
         } else {
-            logger.warn('main.js: Could not find #open-load-game-button or gameEngine not available for listener.');
+            if (!openLoadGameButton) logger.warn('main.js: Could not find #open-load-game-button.');
+            if (!gameEngine) logger.warn('main.js: GameEngine not available for load game button listener.');
         }
 
-        // --- Start the Game ---
-        // TODO: Future: Implement a main menu screen here. Options: "New Game", "Load Game".
-        // "New Game" would call gameEngine.startNewGame(ACTIVE_WORLD).
-        // "Load Game" would call gameEngine.showLoadGameUI() (allowing player to pick a save, then GameEngine.loadGame is called by LoadGameUI).
-        // For now, it starts a new game directly as per previous behavior.
-        // EngineUIManager should now be listening for UI events dispatched by startNewGame.
-
-        logger.info(`main.js: Starting new game with world: ${ACTIVE_WORLD}...`);
-        await gameEngine.startNewGame(ACTIVE_WORLD);
-        // Errors from startNewGame are re-thrown and will be caught by the outer try-catch.
-
         window.addEventListener('beforeunload', () => {
-            // beforeunload is synchronous, so async operations might not complete.
-            // This is a best-effort attempt to stop the engine.
             if (gameEngine && gameEngine.getEngineStatus().isLoopRunning) {
                 logger.info("main.js: 'beforeunload' event triggered. Attempting to stop game engine.");
-                gameEngine.stop().catch(stopError => { // Call stop, but don't await; catch potential errors
+                gameEngine.stop().catch(stopError => {
+                    // Logger should still be available here
                     logger.error("main.js: Error during gameEngine.stop() in beforeunload:", stopError);
                 });
             }
         });
+        logger.info(`main.js: ${currentPhaseForError} completed.`);
 
-    } catch (engineError) {
-        const errorMsgForUser = (engineError instanceof Error) ? engineError.message : String(engineError);
-        logger.error('Fatal Error during GameEngine instantiation or start:', engineError);
-        alert(`Fatal Error during game setup: ${errorMsgForUser}. Check console.`);
-        if (titleElement) titleElement.textContent = 'Fatal Engine Setup Error!';
-        if (inputElement) {
-            inputElement.disabled = true;
-            inputElement.placeholder = 'Game Setup Failed.';
+        // STAGE 7: Start Game (Placeholder for startGameStage)
+        currentPhaseForError = 'Game Start (Interim)';
+        logger.info(`main.js: Executing ${currentPhaseForError} with world: ${AppConfig.ACTIVE_WORLD}...`);
+        if (!gameEngine) {
+            // This check is technically redundant if GameEngine initialization is fatal,
+            // but kept for clarity during this interim phase.
+            throw new Error("GameEngine not initialized before attempting to start game.");
         }
+        await gameEngine.startNewGame(AppConfig.ACTIVE_WORLD);
+        logger.info(`main.js: ${currentPhaseForError} completed.`);
+
+        logger.info('main.js: Application bootstrap completed successfully.');
+
+    } catch (bootstrapError) {
+        // Centralized error handling for all bootstrap stages
+        // Prioritize phase from the error object itself (set by stages)
+        // Fallback to currentPhaseForError if error.phase is not set (e.g. for errors within interim blocks)
+        // Further fallback if even currentPhaseForError was not updated before an early error.
+        const detectedPhase = bootstrapError.phase || currentPhaseForError ||
+            (uiElements && container && logger ? 'Application Logic/Runtime' :
+                (uiElements && container ? 'Core Services Resolution' :
+                    (uiElements ? 'DI Container Setup' :
+                        'UI Element Validation')));
+
+        const errorDetails = {
+            userMessage: `Application failed to start due to a critical error: ${bootstrapError.message}`,
+            consoleMessage: `Critical error during application bootstrap in phase: ${detectedPhase}.`,
+            errorObject: bootstrapError,
+            phase: `Bootstrap Orchestration - ${detectedPhase}`
+            // pageTitle and inputPlaceholder will use defaults in displayFatalStartupError
+        };
+
+        // Log to console if logger isn't available, otherwise use logger
+        const logFn = logger ? logger.error.bind(logger) : console.error;
+        logFn(`main.js: Bootstrap error caught in main orchestrator. Error Phase: "${errorDetails.phase}"`, bootstrapError);
+
+        // uiElements might be undefined if ensureCriticalDOMElementsStage failed.
+        // displayFatalStartupError needs to be robust enough to handle this.
+        displayFatalStartupError(
+            uiElements || { // Provide a minimal structure if uiElements is undefined
+                outputDiv: document.getElementById('outputDiv'), // Attempt to re-query
+                errorDiv: document.getElementById('error-output'), // Attempt to re-query
+                titleElement: document.querySelector('h1'), // Attempt to re-query
+                inputElement: document.getElementById('speech-input'), // Attempt to re-query
+                document: document
+            },
+            errorDetails
+        );
     }
 })();

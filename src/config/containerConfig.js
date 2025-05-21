@@ -1,5 +1,4 @@
 // src/core/config/containerConfig.js
-// ****** MODIFIED FILE ******
 
 // --- Import DI tokens & helpers ---
 import {tokens} from './tokens.js';
@@ -29,6 +28,14 @@ import {registerOrchestration} from './registrations/orchestrationRegistrations.
 import {registerAdapters} from './registrations/adapterRegistrations.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
+/** @typedef {import('../../bootstrapper/UIBootstrapper.js').EssentialUIElements} EssentialUIElements */ // Added for type safety
+
+/**
+ * @callback ConfigureContainerFunction
+ * @param {AppContainer} container - The application container instance.
+ * @param {EssentialUIElements} uiReferences - References to essential UI elements.
+ * @returns {void}
+ */
 
 /**
  * Configures the application's dependency‑injection container.
@@ -38,16 +45,14 @@ import {registerAdapters} from './registrations/adapterRegistrations.js';
  * explicit start‑up order.
  *
  * @param {AppContainer} container
- * @param {object} uiElements – external DOM references
- * @param {HTMLElement} uiElements.outputDiv
- * @param {HTMLInputElement} uiElements.inputElement
- * @param {HTMLElement} uiElements.titleElement
+ * @param {EssentialUIElements} uiElements – external DOM references. It expects an object like { outputDiv, inputElement, titleElement, document }.
  */
 export function configureContainer(
     container,
-    {outputDiv, inputElement, titleElement},
+    uiElements, // Renamed for clarity, its structure is EssentialUIElements
 ) {
     const registrar = new Registrar(container);
+    const {outputDiv, inputElement, titleElement, document: doc} = uiElements; // Destructure including document
 
     // --- Bootstrap logger early so bundles can use it ------------------------
     registrar.singletonFactory(tokens.ILogger, () => new ConsoleLogger());
@@ -62,7 +67,8 @@ export function configureContainer(
     registerInfrastructure(container); // Registers EventDispatchers, Registries etc. (Assumed to register GameDataRepository under IGameDataRepository)
 
     // 2. UI Layer (Depends on Infrastructure like EventDispatchers)
-    registerUI(container, {outputDiv, inputElement, titleElement, document: window.document});
+    // Pass the destructured elements including the document
+    registerUI(container, {outputDiv, inputElement, titleElement, document: doc});
 
     // 3. Domain Logic Services (Business rules, core calculations)
     registerDomainServices(container); // Registers CommandProcessor, PlayerPromptService, PerceptionUpdateService etc.
