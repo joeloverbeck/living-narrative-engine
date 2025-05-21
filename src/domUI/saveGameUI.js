@@ -153,7 +153,18 @@ class SaveGameUI {
             this.logger.error(`${this._logPrefix} Cannot show SaveGameUI: critical elements missing.`);
             return;
         }
+
+        // Ensure the element is part of the layout flow before adding .visible
         this.saveGameScreenEl.style.display = 'flex';
+
+        // Add .visible class to trigger animations (allow a tick for display change to register)
+        // A micro-task or rAF could be used here, but a minimal timeout is often robust.
+        setTimeout(() => {
+            if (this.saveGameScreenEl) { // Check again in case hide() was called rapidly
+                this.saveGameScreenEl.classList.add('visible');
+            }
+        }, 10); // Small delay to ensure transition starts correctly
+
         this.saveGameScreenEl.setAttribute('aria-hidden', 'false');
         this.selectedSlotData = null;
         this.saveNameInputEl.value = '';
@@ -172,10 +183,22 @@ class SaveGameUI {
             this.logger.warn(`${this._logPrefix} Attempted to hide UI while save is in progress. Hiding is allowed.`);
         }
         if (!this.saveGameScreenEl) return;
-        this.saveGameScreenEl.style.display = 'none';
+
+        // Remove .visible class to trigger fade-out animation
+        this.saveGameScreenEl.classList.remove('visible');
         this.saveGameScreenEl.setAttribute('aria-hidden', 'true');
         this._clearStatusMessage();
-        this.logger.debug(`${this._logPrefix} UI hidden.`);
+
+        // Wait for animation to complete before setting display: none
+        // The timeout duration should match your CSS transition duration (0.25s = 250ms)
+        setTimeout(() => {
+            if (this.saveGameScreenEl && !this.saveGameScreenEl.classList.contains('visible')) {
+                // Only hide if it wasn't shown again in the meantime
+                this.saveGameScreenEl.style.display = 'none';
+            }
+        }, 250); // Corresponds to the 0.25s transition in your CSS
+
+        this.logger.debug(`${this._logPrefix} UI hidden initiated.`);
         // Focus should be managed by the caller of hide(), e.g., back to the game menu button
     }
 

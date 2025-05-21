@@ -146,11 +146,22 @@ class LoadGameUI {
             this.logger.error(`${this._logPrefix} Cannot show LoadGameUI: critical elements missing.`);
             return;
         }
+
+        // Ensure the element is part of the layout flow before adding .visible
         this.loadGameScreenEl.style.display = 'flex';
+
+        // Add .visible class to trigger animations
+        setTimeout(() => {
+            if (this.loadGameScreenEl) { // Check again
+                this.loadGameScreenEl.classList.add('visible');
+            }
+        }, 10);
+
+
         this.loadGameScreenEl.setAttribute('aria-hidden', 'false');
-        this.selectedSlotData = null; //
-        this.confirmLoadButtonEl.disabled = true; //
-        this.deleteSaveButtonEl.disabled = true; //
+        this.selectedSlotData = null;
+        this.confirmLoadButtonEl.disabled = true;
+        this.deleteSaveButtonEl.disabled = true;
         this._clearStatusMessage();
         this._loadAndRenderSaveSlots(); // This is async
         if (this.cancelLoadButtonEl) {
@@ -164,10 +175,20 @@ class LoadGameUI {
             this.logger.warn(`${this._logPrefix} Attempted to hide UI while an operation is in progress. Hiding is allowed.`);
         }
         if (!this.loadGameScreenEl) return;
-        this.loadGameScreenEl.style.display = 'none';
+
+        // Remove .visible class to trigger fade-out animation
+        this.loadGameScreenEl.classList.remove('visible');
         this.loadGameScreenEl.setAttribute('aria-hidden', 'true');
         this._clearStatusMessage();
-        this.logger.debug(`${this._logPrefix} LoadGameUI hidden.`);
+
+        // Wait for animation to complete before setting display: none
+        setTimeout(() => {
+            if (this.loadGameScreenEl && !this.loadGameScreenEl.classList.contains('visible')) {
+                this.loadGameScreenEl.style.display = 'none';
+            }
+        }, 250); // Corresponds to the 0.25s transition in your CSS
+
+        this.logger.debug(`${this._logPrefix} LoadGameUI hidden initiated.`);
         // Focus management should be handled by the caller, e.g., back to game menu button
     }
 

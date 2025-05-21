@@ -1,56 +1,55 @@
 /* css/themes/_default-theme.css */
 
 :root {
-    /* "Clean Modern Codex" Theme */
+    /* "Vibrant Explorer" Theme */
 
     /* Colors */
-    --primary-text-color: #343a40; /* Dark Grey (WCAG AA on light BGs: 10.68:1) */
-    --secondary-text-color: #6c757d; /* Medium Grey (WCAG AA on light BGs: 4.56:1) */
-    --primary-bg-color: #f8f9fa; /* Very Light Grey / Off-white (Page background) */
-    --secondary-bg-color: #e9ecef; /* Light Grey (Headers, footers, UI chrome) */
+    --primary-text-color: #2c3e50; /* Dark Slate Blue - good contrast */
+    --secondary-text-color: #576574; /* Cool Grey - softer than before */
+    --primary-bg-color: #fdfdfd; /* Almost White - clean page background */
+    --secondary-bg-color: #f1f2f6; /* Light Cool Grey - for UI chrome */
 
-    --accent-color-primary: #007bff; /* Clear Blue - general accent */
-    --accent-color-focus-ring: rgba(0, 123, 255, 0.35); /* For focus box-shadow */
-    --accent-color-secondary: #adb5bd; /* Lighter Grey (Subtle accents, borders) */
+    --accent-color-primary: #1abc9c; /* Rich Teal/Cyan - main accent */
+    --accent-color-focus-ring: rgba(26, 188, 156, 0.35); /* For focus box-shadow */
+    --accent-color-secondary: #e67e22; /* Warm Orange - secondary accent for calls to action or highlights */
 
     --panel-bg-color: #FFFFFF; /* White (For content panels) */
-    --panel-border-color: #dee2e6; /* Light Grey (Subtle panel borders) */
+    --panel-border-color: #dfe4ea; /* Softer panel borders */
 
     --input-bg-color: #FFFFFF;
     --input-text-color: var(--primary-text-color);
     --input-border-color: #ced4da; /* Standard input border */
-    --input-placeholder-color: var(--secondary-text-color); /* Contrast: 4.56:1 on #FFF - OK */
+    --input-placeholder-color: var(--secondary-text-color);
 
     /* A11Y: Adjusted button colors for contrast */
-    --button-bg-color: #005cbf; /* Darker Blue for 4.5:1 contrast with white text */
+    --button-bg-color: var(--accent-color-primary); /* Use primary accent */
     --button-text-color: #FFFFFF;
-    --button-hover-bg-color: #004c9e; /* Even Darker Blue for hover, white text contrast: 5.79:1 */
-    --button-disabled-bg-color: #cce5ff;
-    --button-disabled-text-color: #86b7fe; /* Contrast on disabled bg: 1.57:1. WCAG doesn't strictly require for disabled, but noted. */
+    --button-hover-bg-color: #16a085; /* Darker Teal/Cyan for hover */
+    --button-disabled-bg-color: #d4f0eb; /* Lighter, desaturated teal */
+    --button-disabled-text-color: #7fccc2;
 
     /* NEW: Variables for selected action button for enhanced visual clarity */
-    --button-selected-bg-color: var(--accent-color-primary); /* #007bff - Brighter blue for selected */
+    --button-selected-bg-color: var(--accent-color-secondary); /* Orange for selected */
     --button-selected-text-color: #FFFFFF; /* White text */
-    --button-selected-border-color: var(--button-bg-color); /* #005cbf - Darker blue border, contrasts with selected bg */
-    --button-selected-glow-color: rgba(0, 123, 255, 0.45); /* Glow for emphasis, similar to focus ring but distinct */
+    --button-selected-border-color: #d35400; /* Darker Orange border */
+    --button-selected-glow-color: rgba(230, 126, 34, 0.45); /* Orange glow */
 
     /* Button Danger (for Delete) */
-    --button-danger-bg-color: #dc3545; /* Bootstrap Danger Red */
+    --button-danger-bg-color: #e74c3c; /* Softer Red */
     --button-danger-text-color: #FFFFFF;
-    --button-danger-hover-bg-color: #c82333; /* Darker Red */
-    --button-danger-border-color: #bd2130;
-
+    --button-danger-hover-bg-color: #c0392b; /* Darker Red */
+    --button-danger-border-color: #a93226;
 
     /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
-    --error-text-color: #721c24; /* Dark Red (Bootstrap alert style, 4.58:1 on #f8d7da, >7:1 on #FFF) */
-    --error-bg-color: #f8d7da; /* Light Red background for error messages/areas */
-    --success-text-color: #155724; /* Dark Green (Bootstrap alert style, 6.95:1 on #FFF) */
-    --info-text-color: #0c5460; /* Dark Teal/Blue (Bootstrap alert style, 6.85:1 on #FFF) */
-    --echo-text-color: var(--secondary-text-color); /* Muted grey for command echoes (4.56:1 on #FFF) - OK */
+    --error-text-color: #c0392b; /* Using the darker danger red for text */
+    --error-bg-color: #fadbd8; /* Light Red background for error messages/areas */
+    --success-text-color: #27ae60; /* Emerald Green */
+    --info-text-color: #2980b9; /* Belize Hole Blue (a calm, informative blue) */
+    --echo-text-color: var(--secondary-text-color);
 
     /* --- ADDED: Variables for speech messages --- */
-    --speech-text-color: #5e35b1; /* Deep Purple (Material Purple 700) - conspicuous and thematic */
-    --speech-bg-color: #f3e5f5; /* Light Purple tint (Material Purple 50) for background */
+    --speech-text-color: #8e44ad; /* Wisteria Purple - distinct for speech */
+    --speech-bg-color: #f5eef8; /* Light Purple tint for background */
     --speech-border-color: var(--speech-text-color); /* Border matches text color for emphasis */
     /* --- END ADDED --- */
 
@@ -75,16 +74,16 @@
     --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
 
     /* Borders */
-    --border-radius-xs: 2px; /* NEW */
+    --border-radius-xs: 2px;
     --border-radius-sm: 4px;
     --border-radius-md: 6px;
-    --border-width: 1px;
-    --border-color-subtle: var(--panel-border-color); /* Alias for clarity */
+    --border-width: 2px; /* CHANGED from 1px to 2px */
+    --border-color-subtle: var(--panel-border-color);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.07);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06); /* Slightly more noticeable for small elements */
+    --shadow-md: 0 5px 10px rgba(0, 0, 0, 0.1); /* Deeper shadow for panels, cards, etc. */
+    --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow for modals or elevated elements */
 }
 
 @media (max-width: 1024px) {
@@ -97,8 +96,6 @@
         --spacing-md: 10px;
         --spacing-sm: 7px;
     }
-
-    /* Other non-:root rules from this media query will be moved in later tickets */
 }
 
 @media (max-width: 768px) {
@@ -112,8 +109,6 @@
         --spacing-sm: 6px;
         --spacing-xs: 4px;
     }
-
-    /* Other non-:root rules from this media query will be moved in later tickets */
 }
 
 @media (max-width: 480px) {
@@ -126,6 +121,6 @@
         --spacing-sm: 5px;
         --spacing-xs: 3px;
     }
-
-    /* Other non-:root rules from this media query will be moved in later tickets */
 }
+
+s

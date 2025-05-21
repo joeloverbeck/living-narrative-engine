@@ -42,7 +42,7 @@ button:disabled, .button-like:disabled {
 /* Specific Focus for Buttons */
 button:focus-visible, .button-like:focus-visible {
     /* outline: none; is already set from utilities/_accessibility.css */
-    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring),
+    box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color), /* CHANGED to orange glow */
     0 0 0 0.30rem var(--panel-bg-color); /* Inner contrast ring */
 }
 

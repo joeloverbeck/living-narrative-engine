@@ -11,9 +11,9 @@
 
 /* General Focus Styles using :focus-visible */
 :focus-visible {
-    outline: 2px solid var(--accent-color-primary);
+    outline: 2px solid var(--accent-color-secondary); /* CHANGED to secondary accent */
     outline-offset: 2px;
-    box-shadow: 0 0 0 3px var(--accent-color-focus-ring);
+    box-shadow: 0 0 0 3px var(--button-selected-glow-color); /* CHANGED to orange glow */
 }
 
 /* Remove outline if a custom box-shadow is the primary indicator, but ensure it's clear */

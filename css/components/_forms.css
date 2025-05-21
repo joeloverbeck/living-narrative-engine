@@ -20,14 +20,14 @@
 
 /* Specific Focus for Command Input (uses :focus-visible) */
 #speech-input:focus-visible {
-    border-color: var(--accent-color-primary);
-    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+    border-color: var(--accent-color-secondary); /* CHANGED to secondary accent for border */
+    box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
 }
 
 /* Fallback focus style if :focus-visible is not supported */
 #speech-input:focus {
-    border-color: var(--accent-color-primary);
-    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+    border-color: var(--accent-color-secondary); /* CHANGED to secondary accent for border */
+    box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
 }
 
 /* Responsive padding adjustments for #speech-input */

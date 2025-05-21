@@ -15,19 +15,43 @@
     align-items: center;
     z-index: 1000; /* Ensure it's above other content */
     padding: var(--spacing-md); /* Add some padding for smaller screens */
+
+    /* --- Transition Additions --- */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease-in-out, visibility 0s linear 0.25s; /* Visibility transition for hiding */
+}
+
+/* New rule for when the modal is made visible (e.g., by adding a .visible class via JS) */
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s, 0s; /* Ensure visibility transition happens immediately when showing */
 }
 
 .modal-content {
     background-color: var(--panel-bg-color);
     padding: var(--spacing-lg);
     border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg); /* Now uses the enhanced shadow */
     width: 100%;
     max-width: 600px; /* Max width of the modal */
     max-height: 90vh; /* Max height */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* For internal scrolling of slot list */
+
+    /* --- Transition Additions --- */
+    opacity: 0;
+    transform: scale(0.95) translateY(10px); /* Start slightly smaller and lower */
+    /* Delay content transition slightly to let overlay appear first */
+    transition: opacity 0.25s ease-in-out 0.05s, transform 0.25s ease-in-out 0.05s;
+}
+
+/* New rule for when the modal is made visible */
+.modal-overlay.visible .modal-content {
+    opacity: 1;
+    transform: scale(1) translateY(0); /* Animate to full size and original position */
 }
 
 .modal-title {
@@ -103,7 +127,7 @@
 
 .save-slot:focus-visible { /* A11Y: Custom focus for slots */
     /* outline: none; already handled by general selector */
-    box-shadow: inset 0 0 0 2px var(--panel-bg-color), inset 0 0 0 4px var(--accent-color-primary);
+    box-shadow: inset 0 0 0 2px var(--panel-bg-color), inset 0 0 0 4px var(--accent-color-secondary); /* CHANGED to secondary accent for the outer ring */
     /* Similar to button focus but adapted for list items */
 }
 
