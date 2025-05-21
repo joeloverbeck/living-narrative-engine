@@ -3,14 +3,14 @@
 /**
  * @jest-environment node
  */
-import {ActionValidationService} from '../../services/actionValidationService.js';
-import {ActionTargetContext} from '../../models/actionTargetContext.js';
+import {ActionValidationService} from '../../src/services/actionValidationService.js';
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from '@jest/globals';
 // --- Import Checkers ---
-import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js';
-import {createMockPrerequisiteEvaluationService} from '../testUtils';
+import {DomainContextCompatibilityChecker} from '../../src/validation/domainContextCompatibilityChecker.js';
+import {createMockPrerequisiteEvaluationService} from '../testUtils.js';
 // --- Type Imports for Mocks (Optional but good practice) ---
-/** @typedef {import('../../services/prerequisiteEvaluationService').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
+/** @typedef {import('../../src/services/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
 // --- Mock Logger ---
 const mockLogger = {

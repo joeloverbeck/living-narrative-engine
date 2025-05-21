@@ -1,5 +1,5 @@
 // src/tests/domUI/actionButtonsRenderer.eventHandling.test.js
-import {ActionButtonsRenderer} from '../../domUI/index.js'; // Adjust path if needed
+import {ActionButtonsRenderer} from '../../src/domUI/index.js'; // Adjust path if needed
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // --- Mock Dependencies ---

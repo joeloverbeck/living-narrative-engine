@@ -1,17 +1,17 @@
 // src/actions/actionTypes.js
 
 // Ensure necessary imports for type hinting (won't be executed at runtime)
-/** @typedef {import('../core/interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */ // <<< CHANGED (path adjusted)
-/** @typedef {import('../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */       // <<< CHANGED (path adjusted)
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */ // <<< CHANGED (path adjusted)
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */       // <<< CHANGED (path adjusted)
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
+/** @typedef {import('../events/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
 // --- ADDED Import for ActionTargetContext ---
 /** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
 /** @typedef {import('../models/ActionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
-/** @typedef {import('../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext
-/** @typedef {import('../core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
+/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext
+/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext
 
 
 /**

@@ -1,8 +1,8 @@
 // Filename: src/tests/core/services/actionLoader.test.js
 
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals'; // Added afterEach
-import ActionLoader from '../../../core/loaders/actionLoader.js'; // Adjust path to your ActionLoader
-import {BaseManifestItemLoader} from '../../../core/loaders/baseManifestItemLoader.js'; // Base class for inheritance check
+import ActionLoader from '../../../src/loaders/actionLoader.js'; // Adjust path to your ActionLoader
+import {BaseManifestItemLoader} from '../../../src/loaders/baseManifestItemLoader.js'; // Base class for inheritance check
 
 // --- Mock Service Factories (Keep as is) ---
 const createMockConfiguration = (overrides = {}) => ({

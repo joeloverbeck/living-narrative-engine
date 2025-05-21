@@ -5,17 +5,17 @@
  * @jest-environment node
  */
 import {describe, expect, it, jest, beforeEach} from '@jest/globals';
-import {ActionValidationContextBuilder} from '../../services/actionValidationContextBuilder.js'; // Adjust path as needed
-import {ActionTargetContext} from '../../models/actionTargetContext.js'; // Adjust path as needed
+import {ActionValidationContextBuilder} from '../../src/services/actionValidationContextBuilder.js'; // Adjust path as needed
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js'; // Adjust path as needed
 // --- BEGIN FIX: Import component IDs for mocking ---
-import {EXITS_COMPONENT_ID, POSITION_COMPONENT_ID} from '../../constants/componentIds.js';
+import {EXITS_COMPONENT_ID, POSITION_COMPONENT_ID} from '../../src/constants/componentIds.js';
 // --- END FIX ---
 
 
 // --- Mock Dependencies ---
 
 // Mock ILogger
-/** @type {jest.Mocked<import('../../core/interfaces/coreServices.js').ILogger>} */
+/** @type {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} */
 const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
@@ -24,7 +24,7 @@ const mockLogger = {
 };
 
 // Mock EntityManager
-/** @type {jest.Mocked<import('../../entities/entityManager.js').default>} */
+/** @type {jest.Mocked<import('../../src/entities/entityManager.js').default>} */
 const mockEntityManager = {
     getEntityInstance: jest.fn(),
     getComponentData: jest.fn(), // Ensure this is part of the base mock
@@ -44,7 +44,7 @@ const mockEntityManager = {
  * Creates a mock Entity object.
  * @param {string} id - The entity ID.
  * @param {object | null} [componentsData=null] - Optional components data object.
- * @returns {jest.Mocked<import('../../entities/entity.js').default>}
+ * @returns {jest.Mocked<import('../../src/entities/entity.js').default>}
  */
 const createMockEntity = (id, componentsData = {mock: true}) => ({
     id: id,

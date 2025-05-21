@@ -1,13 +1,13 @@
 // src/domUI/actionButtonsRenderer.js
 
 import {RendererBase} from './rendererBase.js';
-import {PLAYER_TURN_SUBMITTED_ID} from "../core/constants/eventIds.js";
+import {PLAYER_TURN_SUBMITTED_ID} from "../constants/eventIds.js";
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn
+ * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/IValidatedEventDispatcher.js').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('../core/interfaces/CommonTypes').NamespacedId} NamespacedId
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  */

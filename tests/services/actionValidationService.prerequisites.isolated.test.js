@@ -6,17 +6,17 @@
 /**
  * @jest-environment node
  */
-import {ActionValidationService} from '../../services/actionValidationService.js';
-import {ActionTargetContext} from '../../models/actionTargetContext.js';
+import {ActionValidationService} from '../../src/services/actionValidationService.js';
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from '@jest/globals';
 
 // --- Service and Function Imports ---
 // REMOVED: import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // No longer directly used/mocked here
 // ADDED: Import the service ActionValidationService now delegates to
-import {PrerequisiteEvaluationService} from '../../services/prerequisiteEvaluationService.js';
+import {PrerequisiteEvaluationService} from '../../src/services/prerequisiteEvaluationService.js';
 // REMOVED: import {createActionValidationContext} from '../../logic/createActionValidationContext.js'; // AVS no longer takes this directly
 // --- Import the checker ACTUALLY used by ActionValidationService ---
-import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js';
+import {DomainContextCompatibilityChecker} from '../../src/validation/domainContextCompatibilityChecker.js';
 
 // Assuming a simple mock logger, replace with your actual logger/mocking library if needed
 const mockLogger = {
@@ -161,7 +161,7 @@ const createMockEntity = (
 
 // --- Mock PrerequisiteEvaluationService ---
 // ADDED: Mock the new dependency
-jest.mock('../../services/prerequisiteEvaluationService.js');
+jest.mock('../../src/services/prerequisiteEvaluationService.js');
 // ADDED: Declare variable for the mock instance
 let mockPrerequisiteEvaluationServiceInstance;
 

@@ -2,16 +2,16 @@
 
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
-import {ActionButtonsRenderer} from '../../domUI/index.js';
-import DocumentContext from '../../domUI/documentContext.js';
-import DomElementFactory from '../../domUI/domElementFactory.js';
-import ConsoleLogger from '../../core/services/consoleLogger.js';
-import ValidatedEventDispatcher from '../../services/validatedEventDispatcher.js';
-import {PLAYER_TURN_SUBMITTED_ID} from "../../core/constants/eventIds.js";
+import {ActionButtonsRenderer} from '../../src/domUI/index.js';
+import DocumentContext from '../../src/domUI/documentContext.js';
+import DomElementFactory from '../../src/domUI/domElementFactory.js';
+import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../../src/constants/eventIds.js";
 
-jest.mock('../../core/services/consoleLogger');
-jest.mock('../../services/validatedEventDispatcher');
-jest.mock('../../domUI/domElementFactory');
+jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/events/validatedEventDispatcher.js');
+jest.mock('../../src/domUI/domElementFactory.js');
 
 describe('ActionButtonsRenderer', () => {
     let dom;

@@ -4,7 +4,7 @@
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../services/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../services/actionValidationService.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../services/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
@@ -12,11 +12,11 @@
 /** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../core/services/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
+/** @typedef {import('../services/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
 
 // --- Dependency Imports ---
 import {ActionTargetContext} from '../models/actionTargetContext.js';
-import {IActionDiscoverySystem} from "../core/interfaces/IActionDiscoverySystem.js";
+import {IActionDiscoverySystem} from "../interfaces/IActionDiscoverySystem.js";
 import {EXITS_COMPONENT_ID} from '../constants/componentIds.js';
 
 

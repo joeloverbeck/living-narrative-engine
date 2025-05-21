@@ -3,17 +3,17 @@
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 // Import from specific file for clarity
-import {ActionButtonsRenderer} from '../../domUI/index.js'; // Using index import
-import DocumentContext from '../../domUI/documentContext.js';
-import DomElementFactory from '../../domUI/domElementFactory.js';
-import ConsoleLogger from '../../core/services/consoleLogger.js';
-import ValidatedEventDispatcher from '../../services/validatedEventDispatcher.js';
+import {ActionButtonsRenderer} from '../../src/domUI/index.js'; // Using index import
+import DocumentContext from '../../src/domUI/documentContext.js';
+import DomElementFactory from '../../src/domUI/domElementFactory.js';
+import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
 
 // Mock dependencies
-jest.mock('../../core/services/consoleLogger');
-jest.mock('../../services/validatedEventDispatcher');
+jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/events/validatedEventDispatcher.js');
 // Mock the factory module itself. Instances will be auto-mocks unless implemented.
-jest.mock('../../domUI/domElementFactory');
+jest.mock('../../src/domUI/domElementFactory.js');
 
 
 describe('ActionButtonsRenderer', () => {

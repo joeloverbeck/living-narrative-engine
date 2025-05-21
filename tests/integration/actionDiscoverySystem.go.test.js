@@ -7,36 +7,36 @@
  */
 
 // --- System Under Test ---
-import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
+import {ActionDiscoverySystem} from '../../src/systems/actionDiscoverySystem.js';
 
 // --- Core Dependencies to Mock ---
-import {GameDataRepository} from '../../core/services/gameDataRepository.js';
-import EntityManager from '../../entities/entityManager.js';
-import {ActionValidationService} from '../../services/actionValidationService.js';
-import ConsoleLogger from '../../core/services/consoleLogger.js';
-import {formatActionCommand as formatActionCommandFn} from '../../services/actionFormatter.js';
-import {getEntityIdsForScopes as getEntityIdsForScopesFn} from '../../services/entityScopeService.js';
+import {GameDataRepository} from '../../src/services/gameDataRepository.js';
+import EntityManager from '../../src/entities/entityManager.js';
+import {ActionValidationService} from '../../src/services/actionValidationService.js';
+import ConsoleLogger from '../../src/services/consoleLogger.js';
+import {formatActionCommand as formatActionCommandFn} from '../../src/services/actionFormatter.js';
+import {getEntityIdsForScopes as getEntityIdsForScopesFn} from '../../src/services/entityScopeService.js';
 
 // --- Helper Mocks/Types ---
-import {ActionTargetContext} from '../../models/actionTargetContext.js';
-import Entity from '../../entities/entity.js';
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
+import Entity from '../../src/entities/entity.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
-import {EXITS_COMPONENT_ID, POSITION_COMPONENT_ID} from '../../constants/componentIds.js';
+import {EXITS_COMPONENT_ID, POSITION_COMPONENT_ID} from '../../src/constants/componentIds.js';
 
-/** @typedef {import('../../types/actionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../../core/services/consoleLogger.js').default} ILogger */
+/** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../src/actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../src/services/consoleLogger.js').default} ILogger */
 // DiscoveredActionInfo is defined in ActionDiscoverySystem.js itself now
 // /** @typedef {import('../../systems/actionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
 
 
 // --- Mocking Dependencies ---
-jest.mock('../../core/services/gameDataRepository.js');
-jest.mock('../../entities/entityManager.js');
-jest.mock('../../services/actionValidationService.js');
-jest.mock('../../core/services/consoleLogger.js');
-jest.mock('../../services/actionFormatter.js');
-jest.mock('../../services/entityScopeService.js');
+jest.mock('../../src/services/gameDataRepository.js');
+jest.mock('../../src/entities/entityManager.js');
+jest.mock('../../src/services/actionValidationService.js');
+jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/services/actionFormatter.js');
+jest.mock('../../src/services/entityScopeService.js');
 
 describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
     /** @type {ActionDiscoverySystem} */
@@ -198,7 +198,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
     });
 
     it('should discover "go out to town" action when player is in adventurers guild and exit is available', async () => {
-        /** @type {import('../../systems/actionDiscoverySystem.js').DiscoveredActionInfo[]} */
+        /** @type {import('../../src/systems/actionDiscoverySystem.js').DiscoveredActionInfo[]} */
         const validActions = await actionDiscoverySystem.getValidActions(mockHeroEntity, mockActionContext);
 
         expect(validActions).toBeDefined();
