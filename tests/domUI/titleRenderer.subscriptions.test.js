@@ -1,7 +1,7 @@
 // src/tests/domUI/titleRenderer.test.js
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
-import {TitleRenderer} from '../../src/domUI/titleRenderer.js'; // Corrected import path if needed
-import {RendererBase} from '../../src/domUI/rendererBase.js'; // Needed for checking super.dispose
+import {TitleRenderer} from '../../src/domUI/index.js'; // Corrected import path if needed
+import {RendererBase} from '../../src/domUI/index.js'; // Needed for checking super.dispose
 
 // --- Mock Dependencies ---
 
