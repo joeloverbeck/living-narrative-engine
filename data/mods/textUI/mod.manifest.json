@@ -24,7 +24,8 @@
       "command_parse_failed.rule.json",
       "wait.rule.json",
       "go.rule.json",
-      "entity_speech.rule.json"
+      "entity_speech.rule.json",
+      "game_loaded.rule.json"
     ],
     "events": [
       "set_title.event.json",

@@ -2,7 +2,7 @@
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "enable_input_on_player_turn",
   "event_type": "core:player_turn_prompt",
-  "comment": "Listens for the prompt for player input. Enables the text command input UI and updates the available action buttons.",
+  "comment": "Listens for the prompt for player input. Enables the text command input UI and updates the available action buttons with actor context.",
   "actions": [
     {
       "type": "DISPATCH_EVENT",
@@ -14,10 +14,11 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Signal the action buttons renderer to update with the available actions from the triggering event's payload.",
+      "comment": "Signal the action buttons renderer to update with the available actions and actorId from the triggering event's payload.",
       "parameters": {
         "eventType": "textUI:update_available_actions",
         "payload": {
+          "actorId": "{event.payload.entityId}",
           "actions": "{event.payload.availableActions}"
         }
       }

@@ -1,7 +1,7 @@
 // src/domUI/actionButtonsRenderer.js
 
 import {RendererBase} from './rendererBase.js';
-import {PLAYER_TURN_SUBMITTED_ID} from "../constants/eventIds.js";
+import {PLAYER_TURN_SUBMITTED_ID} from "../constants/eventIds.js"; // Corrected path based on other files
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
@@ -18,34 +18,33 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../constants/eventIds.js";
  * @property {NamespacedId} id - The unique ID of the action definition (e.g., 'core:wait').
  * @property {string} name - The human-readable name of the action (e.g., "Wait", "Go"). Used for tooltip titles.
  * @property {string} command - The formatted command string (e.g., 'wait', 'go north'). Used for button text and for dispatching.
- * @property {string} description - A detailed description of the action for tooltips. (Now considered mandatory by #handleUpdateActions filter)
+ * @property {string} description - A detailed description of the action for tooltips.
  */
 
 /**
- * Represents the *inner* payload containing the actions array.
+ * Represents the *inner* payload for 'textUI:update_available_actions'.
+ * MODIFIED: Added actorId
  * @typedef {object} UIUpdateActionsInnerPayload
+ * @property {string} actorId - The ID of the actor these actions are for.
  * @property {AvailableAction[]} actions - An array of action objects available to the player.
  */
 
 /**
- * Represents the *full event object* received by the subscriber.
+ * Represents the *full event object* received by the subscriber for 'textUI:update_available_actions'.
  * @typedef {object} UIUpdateActionsEventObject
  * @property {string} type - The event type name (e.g., 'textUI:update_available_actions').
- * @property {UIUpdateActionsInnerPayload} payload - The inner payload containing the actions.
+ * @property {UIUpdateActionsInnerPayload} payload - The inner payload containing the actorId and actions.
  */
 
 /**
+ * Payload for core:player_turn_submitted, assuming it now includes submittedByActorId.
  * @typedef {object} CorePlayerTurnSubmittedPayload
+ * @property {string} submittedByActorId - The instance ID of the actor who submitted this turn.
  * @property {NamespacedId} actionId - The unique identifier of the selected AvailableAction.
  * @property {string | null} speech - The text from the speech input field, or null if empty.
  */
 
 
-/**
- * Manages the rendering of action buttons in a specified container element.
- * Subscribes to 'textUI:update_available_actions' to dynamically update the buttons.
- * Implements single-action selection logic and handles submission of the selected action.
- */
 export class ActionButtonsRenderer extends RendererBase {
     /** @private @type {HTMLElement} */
     #actionButtonsContainer;
@@ -69,6 +68,9 @@ export class ActionButtonsRenderer extends RendererBase {
     #speechInputElement = null;
     /** @type {(() => void) | null} @private */
     #boundHandleSendAction = null;
+
+    /** @private @type {string | null} */ // MODIFIED: Added to store current actor ID
+    #currentActorId = null;
 
     constructor({
                     logger,
@@ -161,13 +163,18 @@ export class ActionButtonsRenderer extends RendererBase {
         const eventTypeForLog = eventObject && typeof eventObject.type === 'string' ? eventObject.type : this._EVENT_TYPE_SUBSCRIBED;
         this.logger.debug(`${this._logPrefix} Received event object for '${eventTypeForLog}'.`, {eventObject});
 
+        // MODIFIED: Check for actorId in payload
         if (eventObject &&
             typeof eventObject === 'object' &&
             eventObject.payload &&
             typeof eventObject.payload === 'object' &&
+            typeof eventObject.payload.actorId === 'string' && // Check for actorId
+            eventObject.payload.actorId.trim().length > 0 &&
             Array.isArray(eventObject.payload.actions)) {
 
             const innerPayload = eventObject.payload;
+            this.#currentActorId = innerPayload.actorId; // Store actorId
+            this.logger.info(`${this._logPrefix} Actions received for actor ID: ${this.#currentActorId}`);
 
             const validActions = innerPayload.actions.filter(action => {
                 const isValid = action && typeof action === 'object' &&
@@ -186,7 +193,8 @@ export class ActionButtonsRenderer extends RendererBase {
             }
             this.render(validActions);
         } else {
-            this.logger.warn(`${this._logPrefix} Received invalid or incomplete event object structure for '${eventTypeForLog}'. Expected { type: '...', payload: { actions: [...] } }. Clearing action buttons.`, {receivedObject: eventObject});
+            this.logger.warn(`${this._logPrefix} Received invalid or incomplete event object structure for '${eventTypeForLog}'. Expected { type: '...', payload: { actorId: '...', actions: [...] } }. Clearing action buttons.`, {receivedObject: eventObject});
+            this.#currentActorId = null; // Clear actorId if payload is invalid
             this.render([]);
         }
     }
@@ -199,6 +207,7 @@ export class ActionButtonsRenderer extends RendererBase {
             }
         }
         this.selectedAction = null;
+        // this.#currentActorId = null; // MODIFIED: Reset actorId when clearing. Moved to render() and #handleUpdateActions for more specific control.
 
         if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
             this.sendButtonElement.disabled = true;
@@ -213,7 +222,15 @@ export class ActionButtonsRenderer extends RendererBase {
         this.availableActions = Array.isArray(actions) ? actions : [];
         this.selectedAction = null;
 
-        this.logger.debug(`${this._logPrefix} render() called. Total actions received: ${this.availableActions.length}. Selected action reset.`, {actions: this.availableActions});
+        // MODIFIED: If actions are empty, also clear the currentActorId
+        if (this.availableActions.length === 0) {
+            this.#currentActorId = null;
+            this.logger.debug(`${this._logPrefix} No actions to render, currentActorId cleared.`);
+        }
+
+
+        this.logger.debug(`${this._logPrefix} render() called. Total actions received: ${this.availableActions.length}. Selected action reset. Current actor for actions: ${this.#currentActorId || 'None'}`);
+
 
         if (!this.#actionButtonsContainer) {
             this.logger.error(`${this._logPrefix} Cannot render: 'actionButtonsContainer' is not set.`);
@@ -224,17 +241,19 @@ export class ActionButtonsRenderer extends RendererBase {
             return;
         }
 
-        this.#clearContainer();
+        this.#clearContainer(); // This will reset selectedAction and disable send button
 
         if (this.availableActions.length === 0) {
             this.logger.debug(`${this._logPrefix} No actions provided to render, container remains empty. Confirm button remains disabled.`);
             if (this.sendButtonElement && typeof this.sendButtonElement.disabled === 'boolean') {
                 this.sendButtonElement.disabled = true;
             }
+            // #currentActorId is already set to null above if actions were empty
             return;
         }
 
         this.availableActions.forEach(actionObject => {
+            // ... (button creation logic remains the same)
             if (!actionObject || typeof actionObject.id !== 'string' || actionObject.id.trim().length === 0) {
                 this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty id): `, {actionObject});
                 return;
@@ -247,16 +266,15 @@ export class ActionButtonsRenderer extends RendererBase {
                 this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty name for tooltip): `, {actionObject});
                 return;
             }
-            // MODIFIED: Add guard for description
             if (typeof actionObject.description !== 'string' || actionObject.description.trim().length === 0) {
                 this.logger.warn(`${this._logPrefix} Skipping invalid action object during render (missing or empty description): `, {actionObject});
                 return;
             }
 
             const buttonText = actionObject.command.trim();
-            const actionId = actionObject.id; // Already validated to be a non-empty string
-            const actionNameForTooltip = actionObject.name.trim(); // Already validated
-            const actionDescription = actionObject.description.trim(); // Now validated by the guard above
+            const actionId = actionObject.id;
+            const actionNameForTooltip = actionObject.name.trim();
+            const actionDescription = actionObject.description.trim();
 
             if (typeof this.#domElementFactory.button !== 'function') {
                 this.logger.error(`${this._logPrefix} domElementFactory.button is not a function. Cannot create action button.`);
@@ -344,6 +362,13 @@ export class ActionButtonsRenderer extends RendererBase {
             if (typeof this.sendButtonElement.disabled === 'boolean') this.sendButtonElement.disabled = true;
             return;
         }
+
+        // MODIFIED: Check if #currentActorId is available
+        if (!this.#currentActorId) {
+            this.logger.error(`${this._logPrefix} #handleSendAction: Cannot send action because currentActorId is not set. This might indicate an issue with receiving or processing the '${this._EVENT_TYPE_SUBSCRIBED}' event correctly.`);
+            return;
+        }
+
         let speechText = '';
         if (this.#speechInputElement && typeof this.#speechInputElement.value === 'string') {
             speechText = this.#speechInputElement.value.trim();
@@ -354,19 +379,32 @@ export class ActionButtonsRenderer extends RendererBase {
         }
         const actionId = this.selectedAction.id;
         const actionName = this.selectedAction.name;
-        const commandToDispatch = this.selectedAction.command;
-        this.logger.info(`${this._logPrefix} Attempting to send action: '${actionName}' (ID: ${actionId}, Command: '${commandToDispatch}'), Speech: "${speechText}"`);
+        const commandToDispatch = this.selectedAction.command; // For logging
+
+        this.logger.info(`${this._logPrefix} Attempting to send action: '${actionName}' (ID: ${actionId}, Command: '${commandToDispatch}') for actor ${this.#currentActorId}, Speech: "${speechText}"`);
+
         if (!this.validatedEventDispatcher || typeof this.validatedEventDispatcher.dispatchValidated !== 'function') {
             this.logger.error(`${this._logPrefix} ValidatedEventDispatcher not available or 'dispatchValidated' method is missing. Cannot send action.`);
             return;
         }
-        const eventPayload = {actionId, speech: speechText || null};
+
+        // MODIFIED: Construct eventPayload with submittedByActorId
+        /** @type {CorePlayerTurnSubmittedPayload} */
+        const eventPayload = {
+            submittedByActorId: this.#currentActorId, // Use the stored actor ID
+            actionId,
+            speech: speechText || null
+        };
+
         try {
+            // dispatchValidated expects the payload to match the schema for PLAYER_TURN_SUBMITTED_ID
+            // which now requires submittedByActorId.
             const dispatchResult = await this.validatedEventDispatcher.dispatchValidated(
                 PLAYER_TURN_SUBMITTED_ID, eventPayload
             );
+
             if (dispatchResult) {
-                this.logger.debug(`${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionId}'.`);
+                this.logger.debug(`${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionId}' by actor '${this.#currentActorId}'.`);
                 if (this.#speechInputElement && typeof this.#speechInputElement.value === 'string') this.#speechInputElement.value = '';
                 const selectedButton = this.#actionButtonsContainer.querySelector(`button.action-button.selected[data-action-id="${actionId}"]`);
                 if (selectedButton && selectedButton.classList && typeof selectedButton.classList.remove === 'function') {
@@ -376,6 +414,7 @@ export class ActionButtonsRenderer extends RendererBase {
                 }
                 this.selectedAction = null;
                 if (typeof this.sendButtonElement.disabled === 'boolean') this.sendButtonElement.disabled = true;
+                // Do not clear #currentActorId here, it remains valid until new actions for a (potentially different) actor arrive.
             } else {
                 this.logger.error(`${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action ID '${actionId}'. dispatchValidated returned false.`, {payload: eventPayload});
             }
@@ -385,6 +424,30 @@ export class ActionButtonsRenderer extends RendererBase {
                 payload: eventPayload
             });
         }
+    }
+
+    /**
+     * FOR TEST PURPOSES ONLY.
+     * Returns the current value of the private #currentActorId field.
+     * @returns {string | null}
+     * @ignore
+     */
+
+    /* istanbul ignore next */
+    _getTestCurrentActorId() {
+        return this.#currentActorId;
+    }
+
+    /**
+     * FOR TEST PURPOSES ONLY.
+     * Sets the value of the private #currentActorId field.
+     * @param {string | null} actorId - The actor ID to set.
+     * @ignore
+     */
+
+    /* istanbul ignore next */
+    _setTestCurrentActorId(actorId) {
+        this.#currentActorId = actorId;
     }
 
     dispose() {
@@ -406,6 +469,7 @@ export class ActionButtonsRenderer extends RendererBase {
         this.#clearContainer();
         this.availableActions = [];
         this.#speechInputElement = null;
+        this.#currentActorId = null; // MODIFIED: Clear actorId on dispose
         this.logger.info(`${this._logPrefix} ActionButtonsRenderer disposed.`);
         super.dispose();
         this.#isDisposed = true;

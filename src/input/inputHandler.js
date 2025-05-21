@@ -127,13 +127,14 @@ class InputHandler extends IInputHandler {
      */
     _handleGlobalKeyDown(event) {
         // Avoid capturing 'i' if typed into the input field itself
-        if (event.key.toLowerCase() === 'i' && event.target !== this.#inputElement) {
+        /*if (event.key.toLowerCase() === 'i' && event.target !== this.#inputElement) {
             event.preventDefault();
             console.log("InputHandler: Detected 'I' key press. Dispatching ui:toggle_inventory.");
             // Use the new dispatcher
             this.#validatedEventDispatcher.dispatchValidated('ui:toggle_inventory', {})
                 .catch(err => console.error("InputHandler: Failed to dispatch 'ui:toggle_inventory'", err));
         }
+        */
         // Add other global key operationHandlers here
     }
 

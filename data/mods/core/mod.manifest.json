@@ -52,7 +52,8 @@
       "ui_request_show_load_game.event.json",
       "ui_stopped.event.json",
       "game_stopped.event.json",
-      "ui_operation_in_progress.event.json"
+      "ui_operation_in_progress.event.json",
+      "game_loaded.event.json"
     ],
     "operations": [
     ]

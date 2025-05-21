@@ -1,4 +1,4 @@
-// src/tests/domUI/actionButtonsRenderer.render.test.js
+// tests/domUI/actionButtonsRenderer.render.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 import {ActionButtonsRenderer} from '../../src/domUI/index.js';
@@ -160,9 +160,14 @@ describe('ActionButtonsRenderer', () => {
 
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
             const finalButtons = actionButtonsContainer.querySelectorAll('button.action-button');
-            expect(finalButtons.length).toBe(2);
+            expect(finalButtons.length).toBe(2); // This will fail if querySelectorAll is not mocked or JSDOM doesn't update live
+            // However, the primary check is removeChild and appendChild calls.
+            // For robustness, it's better to check actionButtonsContainer.children.length after appendChild mocks.
 
             let containerText = '';
+            // Assuming appendChild mock doesn't actually add to JSDOM, let's check what was intended to be added
+            // If appendChild is a real JSDOM method (not spiedOn to prevent behavior), then this is fine.
+            // Given jest.spyOn(actionButtonsContainer, 'appendChild'); it means the real method is called.
             actionButtonsContainer.childNodes.forEach(node => {
                 if (node.tagName === 'BUTTON') containerText += node.textContent;
             });
@@ -186,15 +191,19 @@ describe('ActionButtonsRenderer', () => {
             expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
             expect(actionButtonsContainer.children.length).toBe(0);
             expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
+
+            // Check for the specific debug logs in the expected order and content
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} render() called. Total actions received: 0. Selected action reset.`),
-                {actions: []}
+                `${CLASS_PREFIX} No actions to render, currentActorId cleared.`
             );
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Action buttons container cleared, selected action reset, confirm button disabled.`)
+                `${CLASS_PREFIX} render() called. Total actions received: 0. Selected action reset. Current actor for actions: None`
             );
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} No actions provided to render, container remains empty. Confirm button remains disabled.`)
+                `${CLASS_PREFIX} Action buttons container cleared, selected action reset, confirm button disabled.`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} No actions provided to render, container remains empty. Confirm button remains disabled.`
             );
             expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringMatching(/Rendered \d+ action buttons/));
             expect(actionButtonsContainer.appendChild).not.toHaveBeenCalled();
@@ -219,17 +228,16 @@ describe('ActionButtonsRenderer', () => {
 
             actions.forEach((actionObject, index) => {
                 expect(mockDomElementFactoryInstance.button).toHaveBeenCalledWith(actionObject.command.trim(), 'action-button');
-                const renderedButton = actionButtonsContainer.children[index]; // Actual JSDOM element
+                const renderedButton = actionButtonsContainer.children[index];
                 expect(renderedButton).not.toBeNull();
                 expect(renderedButton.tagName).toBe('BUTTON');
                 expect(renderedButton.textContent).toBe(actionObject.command);
                 expect(renderedButton.classList.contains('action-button')).toBe(true);
 
                 const expectedTooltip = `${actionObject.name}\n\nDescription:\n${actionObject.description}`;
-                expect(renderedButton.getAttribute('title')).toBe(expectedTooltip); // Check JSDOM element attribute
+                expect(renderedButton.getAttribute('title')).toBe(expectedTooltip);
                 expect(renderedButton.getAttribute('data-action-id')).toBe(actionObject.id);
 
-                // The button returned by the factory (which is a mock element) should have addEventListener called
                 const mockButtonFromFactory = mockDomElementFactoryInstance.button.mock.results[index].value;
                 expect(mockButtonFromFactory.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
             });
@@ -238,30 +246,31 @@ describe('ActionButtonsRenderer', () => {
 
         it('should skip invalid actions (e.g., missing name/command/description) and log warning', () => {
             const validAction1 = createValidTestAction('test:valid1', 'Valid One', 'do one', 'Description one.');
-            // Invalid actions according to the guards in render():
-            const invalidActionNoName = {id: 'test:no_name', command: 'cmd_no_name', description: 'Desc no name'}; // Name missing
-            const invalidActionNoCmd = {id: 'test:no_cmd', name: 'Name No Cmd', description: 'Desc no cmd'}; // Command missing
-            const invalidActionNoDesc = {id: 'test:no_desc', name: 'Name No Desc', command: 'cmd_no_desc'}; // Description undefined - will cause .trim() error if not guarded
+            const invalidActionNoName = {id: 'test:no_name', command: 'cmd_no_name', description: 'Desc no name'};
+            const invalidActionNoCmd = {id: 'test:no_cmd', name: 'Name No Cmd', description: 'Desc no cmd'};
+            const invalidActionNoDesc = {
+                id: 'test:no_desc',
+                name: 'Name No Desc',
+                command: 'cmd_no_desc',
+                description: ""
+            }; // Ensure description is string for .trim()
             const actionEmptyCmd = createValidTestAction('test:empty_cmd', 'Empty Command Test', ' ', 'Valid desc for empty cmd');
             const actionEmptyName = createValidTestAction('test:empty_name', ' ', 'empty_name_cmd', 'Description for empty name');
-            const actionEmptyDesc = createValidTestAction('test:empty_desc', 'Empty Desc Test', 'empty_desc_cmd', ' '); // Empty description string
+            const actionEmptyDesc = createValidTestAction('test:empty_desc', 'Empty Desc Test', 'empty_desc_cmd', ' ');
 
             const actions = [
                 validAction1,
                 invalidActionNoName,
                 invalidActionNoCmd,
-                // To avoid TypeError with description.trim(), ensure description is at least an empty string if missing.
-                // Or the renderer guard will catch `typeof description !== 'string'`.
-                {...invalidActionNoDesc, description: ""}, //Explicitly empty to be caught by new guard
+                invalidActionNoDesc,
                 actionEmptyCmd,
                 actionEmptyName,
                 actionEmptyDesc,
                 null,
             ];
 
-            const expectedRenderedActions = [validAction1]; // Only fully valid one
-            // Warnings from render loop: noName, noCmd, noDesc(now "" but caught by guard), emptyCmd, emptyName, emptyDesc. Null is skipped earlier.
-            const expectedWarningsFromRenderLoop = 7;
+            const expectedRenderedActions = [validAction1];
+            const expectedWarningsFromRenderLoop = 7; // null is not caught by these specific warnings, it's pre-filtered.
 
             const renderer = createRenderer();
             mockLogger.warn.mockClear();
@@ -277,16 +286,10 @@ describe('ActionButtonsRenderer', () => {
 
             expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty name for tooltip): `, {actionObject: invalidActionNoName});
             expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty command): `, {actionObject: invalidActionNoCmd});
-            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty description): `, {
-                actionObject: {
-                    ...invalidActionNoDesc,
-                    description: ""
-                }
-            });
+            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty description): `, {actionObject: invalidActionNoDesc});
             expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty command): `, {actionObject: actionEmptyCmd});
             expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty name for tooltip): `, {actionObject: actionEmptyName});
             expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Skipping invalid action object during render (missing or empty description): `, {actionObject: actionEmptyDesc});
-            // The 'null' action is skipped by `!actionObject` before specific property warnings.
         });
 
 
@@ -295,14 +298,14 @@ describe('ActionButtonsRenderer', () => {
             actionButtonsContainer.appendChild(oldButton);
             actionButtonsContainer.appendChild.mockClear();
             const renderer = createRenderer();
-            const testCases = ['not an array', null, undefined, {actions: []}]; // {actions:[]} is not an array itself for 'actions' param
+            const testCases = ['not an array', null, undefined, {actions: []}];
             testCases.forEach(inputCase => {
                 mockLogger.error.mockClear();
                 mockLogger.debug.mockClear();
                 actionButtonsContainer.removeChild.mockClear();
                 mockDomElementFactoryInstance.button.mockClear();
 
-                if (!actionButtonsContainer.contains(oldButton)) { // Ensure old button is present
+                if (!actionButtonsContainer.contains(oldButton)) {
                     actionButtonsContainer.appendChild(oldButton);
                     actionButtonsContainer.appendChild.mockClear();
                 }
@@ -313,8 +316,9 @@ describe('ActionButtonsRenderer', () => {
                     expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(oldButton);
                 }
                 expect(actionButtonsContainer.children.length).toBe(0);
+                // This specific log includes "Current actor for actions: None" when actions are empty
                 expect(mockLogger.debug).toHaveBeenCalledWith(
-                    expect.stringContaining(`${CLASS_PREFIX} render() called. Total actions received: 0. Selected action reset.`), {actions: []}
+                    expect.stringContaining(`${CLASS_PREFIX} render() called. Total actions received: 0. Selected action reset. Current actor for actions: None`)
                 );
                 expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
             });
@@ -328,11 +332,16 @@ describe('ActionButtonsRenderer', () => {
             ];
             const expectedFinalButtonCount = 2;
 
-            mockDomElementFactoryInstance.button.mockReset();
+            mockDomElementFactoryInstance.button.mockReset(); // Reset to clear previous implementations or calls
             mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
                 if (text === 'fail_command') return null;
                 const classes = cls ? (Array.isArray(cls) ? cls : cls.split(' ').filter(c => c)) : [];
-                return createMockElement('button', '', classes, text);
+                const btn = createMockElement('button', '', classes, text);
+                // Ensure tagName is correctly reported for mock elements if not native JSDOM
+                if (btn.tagName !== 'BUTTON') {
+                    Object.defineProperty(btn, 'tagName', {value: 'BUTTON', configurable: true});
+                }
+                return btn;
             });
 
             const renderer = createRenderer();

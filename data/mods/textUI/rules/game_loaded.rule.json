@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "ui_notify_game_loaded",
+  "comment": "Displays a message in the text UI when a game has been successfully loaded, indicating the source of the loaded game.",
+  "event_type": "core:game_loaded",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Send an informational message to the UI indicating that the game has been loaded, referencing the save identifier.",
+      "parameters": {
+        "eventType": "textUI:display_message",
+        "payload": {
+          "message": "Game successfully loaded from: {event.payload.saveIdentifier}.",
+          "type": "info",
+          "allowHtml": false
+        }
+      }
+    }
+  ]
+}
