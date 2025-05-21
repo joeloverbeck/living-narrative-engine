@@ -1,20 +1,27 @@
 // src/services/gamePersistenceService.js
 
+import {IGamePersistenceService} from "../interfaces/IGamePersistenceService.js";
+
 // --- JSDoc Type Imports ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-/** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */ // Added for loadResult typing
+/** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */ // Assuming this is the concrete type used internally, PlaytimeTracker interface is handled at injection point
 /** @typedef {import('../core/config/appContainer.js').default} AppContainer */
-/** @typedef {import('../core/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../core/services/worldLoader.js').default} WorldLoader */ // Assuming this path based on GameEngine context
+/** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+/** @typedef {import('../core/services/worldLoader.js').default} WorldLoader */
+
+// --- Interface Import for Implements ---
+/** @typedef {import('../core/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
+/** @typedef {import('../core/interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
+
 
 // --- Import Tokens ---
-import {tokens} from '../core/config/tokens.js';
+import {tokens} from '../config/tokens.js';
 
 // Note: Assuming MissingDependencyError is a custom error. If not, a standard Error will be used.
 // For now, we'll use a standard Error as MissingDependencyError is not defined in the provided context.
@@ -22,8 +29,9 @@ import {tokens} from '../core/config/tokens.js';
 /**
  * Service responsible for orchestrating the capture and restoration of game state,
  * as well as interacting with the ISaveLoadService for file operations.
+ * @implements {IGamePersistenceService}
  */
-class GamePersistenceService {
+class GamePersistenceService extends IGamePersistenceService {
     /**
      * To store an ILogger instance.
      * @private
@@ -85,6 +93,8 @@ class GamePersistenceService {
                     playtimeTracker,
                     container
                 }) {
+        super();
+
         const missingDependencies = [];
         if (!logger) missingDependencies.push('logger');
         if (!saveLoadService) missingDependencies.push('saveLoadService');
@@ -460,49 +470,49 @@ class GamePersistenceService {
      * @async
      * @public
      * @param {string} saveIdentifier - The unique identifier for the save file to be loaded (e.g., a filename or path).
-     * @returns {Promise<{success: boolean, error?: string}>} A promise resolving to an object indicating the outcome
+     * @returns {Promise<LoadAndRestoreResult>} A promise resolving to an object indicating the outcome
      * of the entire load and restore operation.
-     * On success: { success: true }
-     * On failure: { success: false, error: "Detailed error message" }
      */
     async loadAndRestoreGame(saveIdentifier) {
         this.#logger.info(`GamePersistenceService: Attempting to load and restore game from identifier: ${saveIdentifier}.`);
 
-        // Check if this.#saveLoadService is available
         if (!this.#saveLoadService) {
             const errorMsg = 'SaveLoadService is not available. Cannot load game.';
             this.#logger.error(`GamePersistenceService.loadAndRestoreGame: ${errorMsg}`);
-            return {success: false, error: errorMsg};
+            return {success: false, error: errorMsg, data: null};
         }
 
-        // Load Raw Data
         /** @type {LoadGameResult} */
         let loadResult;
         try {
             loadResult = await this.#saveLoadService.loadGameData(saveIdentifier);
         } catch (serviceError) {
-            // This catch is for unexpected errors from loadGameData itself (e.g., if it throws instead of returning a structured error)
             const errorMsg = `An unexpected error occurred while calling SaveLoadService.loadGameData for "${saveIdentifier}": ${serviceError.message}`;
             this.#logger.error(`GamePersistenceService.loadAndRestoreGame: ${errorMsg}`, serviceError);
-            return {success: false, error: `Unexpected error during data loading: ${serviceError.message}`};
+            return {success: false, error: `Unexpected error during data loading: ${serviceError.message}`, data: null};
         }
 
-
-        // Handle Load Result
         if (!loadResult || !loadResult.success || !loadResult.data) {
             const reason = loadResult?.error || 'No data returned from loadGameData or load failed.';
             this.#logger.error(`GamePersistenceService.loadAndRestoreGame: Failed to load raw game data from ${saveIdentifier}. Reason: ${reason}`);
-            return {success: false, error: loadResult?.error || "Failed to load raw game data from storage."};
+            return {
+                success: false,
+                error: loadResult?.error || "Failed to load raw game data from storage.",
+                data: null
+            };
         }
 
         this.#logger.info(`GamePersistenceService.loadAndRestoreGame: Raw game data successfully loaded from ${saveIdentifier}. Proceeding with state restoration.`);
+        const gameDataToRestore = /** @type {SaveGameStructure} */ (loadResult.data);
+        const restoreResult = await this.restoreGameState(gameDataToRestore);
 
-        // Restore Game State
-        // The 'data' field of loadResult should be the SaveGameStructure
-        const restoreResult = await this.restoreGameState(/** @type {SaveGameStructure} */ (loadResult.data));
-
-        // Return Result
-        return restoreResult;
+        if (restoreResult.success) {
+            this.#logger.info(`GamePersistenceService.loadAndRestoreGame: Game state restored successfully for ${saveIdentifier}.`);
+            return {success: true, data: gameDataToRestore};
+        } else {
+            this.#logger.error(`GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`);
+            return {success: false, error: restoreResult.error || "Failed to restore game state.", data: null};
+        }
     }
 }
 

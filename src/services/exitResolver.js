@@ -8,8 +8,8 @@ import {NAME_COMPONENT_ID} from '../constants/componentIds.js';
 import {getDisplayName, TARGET_MESSAGES} from '../utils/messages.js';
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
  * @typedef {object} FetchedExitData
